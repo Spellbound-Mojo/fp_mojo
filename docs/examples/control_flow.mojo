@@ -86,3 +86,4 @@ def main() raises:
     print("owned fori:", fori_loop[0,4,unroll=0](Weighted(0),0))
     var weighted_scan = scan(WeightedScan(0), 0, iter(range(1, 4)))
     print("owned scan:", weighted_scan[0], weighted_scan[1])
+    print("owned while:", while_loop(StopAfter(0, 3), Advance(0), 0))

@@ -875,3 +875,27 @@ The contract intentionally differs from iterator `map_accumulate`: control scans
 collect an iterator before stepping, support reverse and static unrolling, and
 wrap step errors separately from length errors. Both continue to share owned
 carry/output movement through `_ScanOutputs`.
+
+
+## Owned bodies in while loops
+
+Ordinary `while_loop` owns moved or temporary repeatable bodies, while existing
+named shared predicate/body calls remain borrowed. Two library admissions retain
+the predicate's ownership choice and delegate to `while_loop_mut` with the local
+body owner. Four thin native predicate signatures make the same delegation;
+they retain the existing register/memory and exact-error admission rules.
+Capturing predicates enter through `BorrowSignature.capture`.
+
+`_while_mut_owned` remains the sole validation and receiver-storage boundary;
+`_predicate_repeated`, `_while_repeated` and `_loops._while` retain invocation,
+scheduling and carry cleanup. The shared assertions use the neutral prefix
+`while loop:` because both public names reach that boundary. The optional `E=`
+selection is checked against the exact common error, including borrowed origins.
+No callback is copied, and `mut_ref` retains either original owner after failure.
+
+Legacy function-trait inference still crashes Mojo 1.2 for invalid raw native
+predicates with owned or mutable carry arguments. This reproduces before the
+owned-body overloads, including when the body is a valid temporary. Reordering
+native type parameters did not change it. These probes are recorded separately
+from passing library-callable rejections; they do not justify weakening the
+predicate's required read-only carry convention.

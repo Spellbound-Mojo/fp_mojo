@@ -1,4 +1,4 @@
-# error: constraint failed: while_loop_mut: incompatible errors
+# error: constraint failed: while loop: incompatible errors
 from fp.control import while_loop_mut
 from while_predicate_support import Predicate, Body
 

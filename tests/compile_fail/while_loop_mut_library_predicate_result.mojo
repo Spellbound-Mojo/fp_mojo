@@ -1,4 +1,4 @@
-# error: while_loop_mut: the predicate must return Bool
+# error: while loop: the predicate must return Bool
 from fp.control import while_loop_mut
 from fp.callables import MutableUnary, BorrowCallable
 @fieldwise_init

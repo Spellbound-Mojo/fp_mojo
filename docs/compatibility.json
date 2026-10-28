@@ -349,7 +349,7 @@
     },
     "control": {
       "scope": "Loops, state transitions and early termination.",
-      "restrictions": "Native callback signatures and exact common raised errors remain part of admission. An invalid native fori_loop callback with a mut Int index can crash Mojo 1.2 during inference; library callable index constraints reject normally.",
+      "restrictions": "Native callback signatures and exact common raised errors remain part of admission. Invalid raw native fori_loop indices with mut Int, and while_loop predicates with var or mut carry arguments, can crash Mojo 1.2 during inference; library callable constraints reject normally.",
       "evidence": [
         "docs/examples/control_flow.mojo",
         "tests/runtime/test_fori_loop_mut.mojo",
@@ -396,7 +396,25 @@
         "tests/compile_fail/control_scan_owned_output_origin.mojo",
         "tests/compile_fail/control_scan_owned_reuse.mojo",
         "tests/compile_fail/control_scan_owned_shape.mojo",
-        "tests/compile_fail/control_scan_owned_static_length.mojo"
+        "tests/compile_fail/control_scan_owned_static_length.mojo",
+        "tests/runtime/test_while_loop_owned.mojo",
+        "tests/ownership/test_while_loop_owned.mojo",
+        "tests/compile_fail/while_owned_alias.mojo",
+        "tests/compile_fail/while_owned_body_bare.mojo",
+        "tests/compile_fail/while_owned_body_input.mojo",
+        "tests/compile_fail/while_owned_body_once.mojo",
+        "tests/compile_fail/while_owned_body_result.mojo",
+        "tests/compile_fail/while_owned_error_origin.mojo",
+        "tests/compile_fail/while_owned_errors.mojo",
+        "tests/compile_fail/while_owned_output_origin.mojo",
+        "tests/compile_fail/while_owned_predicate_bare.mojo",
+        "tests/compile_fail/while_owned_predicate_once.mojo",
+        "tests/compile_fail/while_owned_predicate_payload.mojo",
+        "tests/compile_fail/while_owned_predicate_result.mojo",
+        "tests/compile_fail/while_owned_predicate_reuse.mojo",
+        "tests/compile_fail/while_owned_reuse.mojo",
+        "tests/compile_fail/while_owned_selected_error.mojo",
+        "tests/compile_fail/while_owned_selected_raising_error.mojo"
       ]
     },
     "algebra": {

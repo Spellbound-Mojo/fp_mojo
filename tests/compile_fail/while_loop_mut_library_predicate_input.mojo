@@ -1,4 +1,4 @@
-# error: while_loop_mut: the predicate must read the carry
+# error: while loop: the predicate must read the carry
 from fp.control import while_loop_mut
 from fp.callables import MutableUnary, BorrowCallable
 @fieldwise_init

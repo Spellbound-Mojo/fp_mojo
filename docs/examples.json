@@ -73,7 +73,7 @@
       "stdout": "ready: batch=12, workers=4\n"
     },
     "docs/examples/control_flow.mojo": {
-      "stdout": "while: 16\nfori: 10\nscan: 6 [6, 5, 3]\nmutable fori: 20 calls: 4\nmutable while: 10 calls: 4\nstateful predicate: 6 checks: 4 steps: 3\nowned fori: 20\nowned scan: 14 [1, 5, 14]\n"
+      "stdout": "while: 16\nfori: 10\nscan: 6 [6, 5, 3]\nmutable fori: 20 calls: 4\nmutable while: 10 calls: 4\nstateful predicate: 6 checks: 4 steps: 3\nowned fori: 20\nowned scan: 14 [1, 5, 14]\nowned while: 6\n"
     },
     "docs/examples/dictionary_values.mojo": {
       "stdout": "lengths: 2 1\n"

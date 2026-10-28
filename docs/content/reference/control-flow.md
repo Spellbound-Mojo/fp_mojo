@@ -26,6 +26,14 @@ unrolling semantics. It borrows the callback, so pass a named mutable variable.
 Neither the callback nor carry is copied. Generic wrappers can forward any
 repeatable binary callback using its exact `Error` type.
 
+Use `while_loop(predicate, body^, carry)` for an owned shared or mutable library
+body. A temporary body needs no transfer marker, and `mut_ref(body)` retains
+its updates. The predicate can be an owned or borrowed library callback, a
+plain function or a stored thin pointer. `mut_ref(predicate)` retains a mutable
+predicate too. A named shared predicate/body pair keeps its borrowed shared
+behavior. Each owned callback is destroyed on success or failure, including
+when the first predicate is false.
+
 Use `while_loop_mut(predicate, body, carry)` for a named unary body that needs
 exclusive access to its receiver. It accepts `MutableUnary` or `Unary` with
 `Carry -> Carry`, prefers mutable invocation when both are present, and keeps
@@ -42,11 +50,10 @@ repeat. The example retains a predicate that allows three steps, then inspects
 its four checks, including the final false result. Capture a closure or pointer alias once with
 `BorrowSignature[A, Bool, E].capture(callback)`, then reuse the named predicate.
 `E` defaults to `Never`. Predicate and body errors must be the same exact type,
-including origins, or one must be `Never`; `while_loop` keeps its shared-body
-behavior.
+including origins, or one must be `Never`.
 
-Generic wrappers can name the exact combined error with
-`while_loop_mut[E=MyError](predicate, body, carry)`. For example, a generic
+Generic wrappers can name the exact combined error with `E=MyError` on either
+`while_loop` or `while_loop_mut`. For example, a generic
 non-raising predicate and a body `F` can use `E=F.Error`, matching the wrapper's
 `raises F.Error`. Ordinary calls infer the error. The explicit selection must
 equal that inferred error, so it cannot widen or replace an error type.
@@ -88,3 +95,8 @@ The result is `10`, and the body retains four calls.
 The owned scan example passes `WeightedScan(0)` directly. Its state increases the
 weight on each input, producing carry `14` and outputs `[1, 5, 14]`. The output
 type is inferred from the callback's pair result.
+
+The owned while-loop example passes `StopAfter(0, 3)` and `Advance(0)` directly.
+The predicate allows three body calls, whose increasing increments yield `6`.
+Use the ordinary operation name whether callbacks are functions or stateful
+library values; ownership determines whether their state remains afterward.

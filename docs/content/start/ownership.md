@@ -100,6 +100,7 @@ partial application, composition or a reusable owner for captured state.
 | Inspect or reuse callback state after an operation | `mut_ref(callback)` | Lends a named callback exclusively to an operation that owns its callback. The reference retains every repeatable shape and the original origin; consuming it leaves the original intact. |
 | Retain callback state across a conditional loop | `while_loop_mut(predicate, body, carry)` | Borrows a named unary body exclusively and retains its state. Pass `mut_ref(predicate)` to retain mutable predicate state too; the predicate only reads the carry. |
 | Transfer callback state into a scan | `scan(step^, carry, source)` | Owns a repeatable step and infers its output; `mut_ref(step)` retains updated state. |
+| Transfer callback state into a while loop | `while_loop(predicate, body^, carry)` | Owns the repeatable body; owned predicates use the same receiver rule. Pass `mut_ref` to retain either callback. |
 | Transfer callback state into a counted loop | `fori_loop(lower, upper, body^, carry)` | Owns a shared or mutable repeatable body; mutable invocation wins, and empty bounds still consume it. |
 | Retain callback state across a counted loop | `fori_loop_mut(lower, upper, body, carry)` | Borrows a named library body exclusively; state remains in the caller, including after an error. |
 | Capture one library call as a Result | `attempt_once(thunk^)` or `attempt_once(mut_ref(thunk))` | Uses the thunk’s existing receiver modes; a reference keeps the original state available, including after failure. |

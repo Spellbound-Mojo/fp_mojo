@@ -3001,6 +3001,30 @@
     {
      "sha256": "cde9515e62764c583a50b36916227a748c5c30ef8739ab5237befcce8637b3b4",
      "signature": "def while_loop[A: Movable & Deinitable, R: Movable & Deinitable, PE: Movable & Deinitable, BE: Movable & Deinitable, //, P: def(A) raises PE -> R, F: def(var A) raises BE -> A]( cond_fun: P, body_fun: F, var init_val: A ) raises _CommonError[PE, BE] -> A where R == Bool and _ErrorCompatible[_CommonError[PE, BE], PE] and _ErrorCompatible[_CommonError[PE, BE], BE]:"
+    },
+    {
+     "sha256": "8f6a1e0a5cc5e1d4f1eac3191b0784066efc68a0978f1ceaae7c1032f9bd3162",
+     "signature": "def while_loop[A: Movable & Deinitable, P: BorrowCallable, F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]]( cond_fun: P, var body_fun: F, var init_val: A ) raises E -> A:"
+    },
+    {
+     "sha256": "0fc464d2e68b34aac8783180663fc5c5deed77455c88e52263bac0b220b5bbda",
+     "signature": "def while_loop[A: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[P.Failure, F.Error]]( var cond_fun: P, var body_fun: F, var init_val: A ) raises E -> A:"
+    },
+    {
+     "sha256": "977335ac6b6564eee7c223a60bb0a928950f42b12f46342d0d9176cc36956c66",
+     "signature": "def while_loop[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, //, E: Movable & Deinitable = F.Error]( cond_fun: def(A) thin -> R, var body_fun: F, var init_val: A ) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F]:"
+    },
+    {
+     "sha256": "8215d70c591e904ac23a4d4ccf2371162241ce9574b23d14fd5b1959775633ea",
+     "signature": "def while_loop[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, B: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, E: Movable & Deinitable = F.Error]( cond_fun: def(B) thin -> R, var body_fun: F, var init_val: A ) raises E -> A where B == A and R == Bool and _WhileBody[A, F]:"
+    },
+    {
+     "sha256": "30c34375fa5e336a2c887ecccb608821eb2b5b6a1781e9952004da9fb77b12a8",
+     "signature": "def while_loop[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, PE: Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[PE, F.Error]]( cond_fun: def(A) raises PE thin -> R, var body_fun: F, var init_val: A ) raises E -> A where not conforms_to(A, TrivialRegisterPassable) and R == Bool and _WhileBody[A, F] and _CommonErrorCompatible[PE, F.Error]:"
+    },
+    {
+     "sha256": "a4d65741691b36bdfce59457ef9f7d746dfc879676c72b32f597997ba135cdc3",
+     "signature": "def while_loop[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, B: TrivialRegisterPassable, R: RegisterPassable & Deinitable, PE: Movable & Deinitable, //, E: Movable & Deinitable = _CommonError[PE, F.Error]]( cond_fun: def(B) raises PE thin -> R, var body_fun: F, var init_val: A ) raises E -> A where B == A and R == Bool and _WhileBody[A, F] and _CommonErrorCompatible[PE, F.Error]:"
     }
    ],
    "provider": "control/loops"

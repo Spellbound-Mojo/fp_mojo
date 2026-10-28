@@ -21,6 +21,11 @@ moved or temporary repeatable bodies with that preference; `mut_ref(body)`
 retains the original state. Named shared bodies keep their borrowed behavior.
 Both forms share bounds, unrolling and errors.
 
+Ordinary `while_loop(predicate, body^, carry)` owns a repeatable library body;
+mutable invocation wins over shared. It accepts owned or borrowed predicates
+through the same boundary. `mut_ref` retains either original receiver. Named
+shared predicate/body pairs keep their borrowed shared calls.
+
 `while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively
 with the same repeated receiver preference. It also owns shared or mutable
 borrowing predicates; pass `mut_ref(predicate)` to retain their updated state.

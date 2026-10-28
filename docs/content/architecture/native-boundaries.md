@@ -8,6 +8,14 @@ API without a separate review.
 
 ## Mojo 1.2 compatibility
 
+- Invalid raw native `while_loop` predicates taking the carry as `var` or `mut`
+  can crash Mojo 1.2 during function-trait inference. A minimal call is
+  `while_loop(bad, Body(0), 0)` with a valid mutable unary library body and
+  `bad(mut value: Int) -> Bool` (or `var value`). Both forms crash on the
+  committed baseline and the owned-body prototype; reordering native type
+  parameters does not help. Predicates must read the carry. Selected
+  `BorrowSignature` adapters and library borrowing contracts retain their
+  separate admission checks. The raw crash probes are not passing rejections.
 - An invalid native `fori_loop` callback taking its index as `mut Int` can crash
   Mojo 1.2 during inference instead of producing a diagnostic. The minimal
   call is `fori_loop(0, 2, bad, 0)`, where
