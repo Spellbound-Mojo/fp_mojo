@@ -3,14 +3,9 @@
 from pathlib import Path
 
 from native_signatures import (
-    MD,
-    Operand,
-    argument,
-    factory_pointer,
     native_dispatch,
-    native_adapter,
     NATIVE_INVOCATIONS,
-    variants,
+    native_factories,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,41 +74,18 @@ def unary_factories():
         "# only for admission, then copy it into the existing NativeUnary owner.\n"
         "# No-value signatures must be admitted literally on Mojo 1.2.\n"
     ]
-    operand = Operand("A", "o", known=False)
-    for raising in (False, True):
-        for void in (False, True):
-            for abi in variants([operand], None if void else "R"):
-                pointer = factory_pointer(abi)
-                parameters = list(abi.parameters)
-                if raising:
-                    parameters += [("E", MD)]
-                parameters += pointer.parameters
-                declarations = [name + ": " + bound for name, bound in parameters]
-                signature = (
-                    "def("
-                    + argument("A", "o", thin=True, known=False)
-                    + ")"
-                    + (" raises E" if raising else "")
-                    + " thin"
-                    + ("" if void else " -> R")
-                )
-                result = "type_of(None)" if void else "R"
-                error = "E" if raising else "Never"
-                target = native_adapter(
-                    "owned", ["A"], result, error, "type_of(function)", raising
-                )
-                where = (
-                    " where " + " and ".join(pointer.conditions)
-                    if pointer.conditions
-                    else ""
-                )
-                out += [
-                    f'def as_unary[{", ".join(declarations + ["//"])}](\n'
-                    f"    {pointer.argument}: {signature}\n"
-                    f") -> {target}{where}:\n"
-                    '    """Store a native pointer with its exact signature and copyability."""\n'
-                    f"    return {target}(function)\n\n\n"
-                ]
+    for factory in native_factories("owned", ["A"]):
+        parameters = [*factory.parameters, *factory.pointer.parameters]
+        declarations = [name + ": " + bound for name, bound in parameters]
+        conditions = factory.pointer.conditions
+        where = " where " + " and ".join(conditions) if conditions else ""
+        out += [
+            f'def as_unary[{", ".join(declarations + ["//"])}](\n'
+            f"    {factory.argument}\n"
+            f") -> {factory.adapter}{where}:\n"
+            '    """Store a native pointer with its exact signature and copyability."""\n'
+            f"    return {factory.adapter}(function)\n\n\n"
+        ]
     return "".join(out)
 
 

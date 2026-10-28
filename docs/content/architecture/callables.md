@@ -104,11 +104,16 @@ site, which the library uses where closures cannot reach:
   inferred from it. Each function is stored as a `_ThinFunction`, a `Thunk`,
   `Unary` or `Binary` value, and the chain goes through the ordinary planner.
 - Two-stage mixed `flow` and `compose` use the same spelled native signature
-  boundary beside one library stage. `factory_pointer` supplies the existing
-  register/memory evidence and symbolic fallback; `native_adapter` selects
+  boundary beside one library stage. The `native_factories` descriptor also
+  drives `as_unary` pointer admission: it owns pure/raising and literal
+  no-value signatures, obtains register/memory evidence and the symbolic
+  fallback from `factory_pointer`, and uses `native_adapter` to select
   the existing owner. The overload constructs `Composition`, whose constructor
   performs the same capability, arity, type and error checks as library-only
   composition. There is no additional plan, storage or invocation mechanism.
+  Consumers retain their own library-stage bounds and parameter order around
+  that descriptor. The consolidation emits byte-for-byte identical native
+  and composition source, including public signatures and overload order.
 - Match clauses are plain functions and lambdas without captures, through one
   generated overload per clause count; each clause's signature is read at a
   parameter of its own function type.

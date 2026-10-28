@@ -23,7 +23,7 @@ import generate_result_syntax as result_syntax
 import generate_traversal_syntax as traversal_syntax
 import generate_effect_syntax as effect_syntax
 import generate_nary_syntax as nary_syntax
-from native_signatures import Operand, variants, factory_pointer, native_adapter
+from native_signatures import native_factories
 
 MD = 'Movable & Deinitable'
 MAX = 8
@@ -117,33 +117,22 @@ def mixed_composition_overloads():
             for arity in arities:
                 payloads = ['A', 'B'][:arity]
                 mode = ('thunk', 'owned', 'binary')[arity]
-                for raising in (False, True):
-                    for void in (False, True):
-                        for abi in variants([Operand(p, 'o', known=False) for p in payloads], None if void else 'R'):
-                            pointer = factory_pointer(abi)
-                            parameters = list(abi.parameters)
-                            if raising:
-                                parameters += [('E', MD)]
-                            parameters += [('F', MD), *pointer.parameters]
-                            declarations = [f'{p}: {bound}' for p, bound in parameters] + ['//']
-                            signature = ('def(' + ', '.join('var ' + p for p in payloads) + ')'
-                                         + (' raises E' if raising else '') + ' thin'
-                                         + ('' if void else ' -> R'))
-                            adapter = native_adapter(mode, payloads, 'type_of(None)' if void else 'R',
-                                                     'E' if raising else 'Never', 'type_of(function)', raising)
-                            arguments = [f'{pointer.argument}: {signature}', 'var stage: F']
-                            types = [adapter, 'F']
-                            values = [adapter + '(function)', 'stage^']
-                            if native_first == reverse:
-                                arguments.reverse()
-                                types.reverse()
-                                values.reverse()
-                            result = f'Composition[{reverse}, {arity if native_first else "_Arity[F]"}, {", ".join(types)}]'
-                            conditions = ['_Once[F]', *pointer.conditions]
-                            out.append(f'\n\ndef {name}[{", ".join(declarations)}](\n'
-                                       f'    {", ".join(arguments)}\n) -> {result} where {" and ".join(conditions)}:\n'
-                                       '    """Compose a plain function or stored pointer with one library stage."""\n'
-                                       f'    return {result}({", ".join(values)})\n')
+                for factory in native_factories(mode, payloads):
+                    parameters = [*factory.parameters, ('F', MD), *factory.pointer.parameters]
+                    declarations = [f'{p}: {bound}' for p, bound in parameters] + ['//']
+                    arguments = [factory.argument, 'var stage: F']
+                    types = [factory.adapter, 'F']
+                    values = [factory.adapter + '(function)', 'stage^']
+                    if native_first == reverse:
+                        arguments.reverse()
+                        types.reverse()
+                        values.reverse()
+                    result = f'Composition[{reverse}, {arity if native_first else "_Arity[F]"}, {", ".join(types)}]'
+                    conditions = ['_Once[F]', *factory.pointer.conditions]
+                    out.append(f'\n\ndef {name}[{", ".join(declarations)}](\n'
+                               f'    {", ".join(arguments)}\n) -> {result} where {" and ".join(conditions)}:\n'
+                               '    """Compose a plain function or stored pointer with one library stage."""\n'
+                               f'    return {result}({", ".join(values)})\n')
     return ''.join(out)
 
 

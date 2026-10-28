@@ -352,6 +352,42 @@ def variants(operands, result="R", *, result_register=None):
             )
 
 
+@dataclass(frozen=True)
+class NativeFactory:
+    """One owned thin-pointer admission, independent of its public consumer."""
+    parameters: tuple
+    pointer: FactoryPointer
+    argument: str
+    adapter: str
+
+
+def native_factories(mode, payloads, *, name="function", result="R", error="E"):
+    """Spell native factory signatures with shared ABI and no-value evidence.
+
+    Consumers place their own parameters around the native parameters and the
+    fallback pointer origin. The pointer is copied into an existing owner;
+    its admission borrow never becomes a stored callback origin.
+    """
+    if mode not in ("thunk", "owned", "binary"):
+        raise ValueError("Native factories require zero, one or two owned operands")
+    if len(payloads) != len(CALLBACK_SHAPES[mode].inputs):
+        raise ValueError("Native factory shape and operands must agree")
+    operands = [Operand(p, "o", known=False) for p in payloads]
+    for raising in (False, True):
+        for void in (False, True):
+            for abi in variants(operands, None if void else result):
+                pointer = factory_pointer(abi, name=name)
+                parameters = abi.parameters + (((error, MD),) if raising else ())
+                signature = ("def(" + ", ".join(argument(p, "o", thin=True, known=False) for p in payloads) + ")"
+                             + (" raises " + error if raising else "") + " thin"
+                             + ("" if void else " -> " + result))
+                output = "type_of(None)" if void else result
+                failure = error if raising else "Never"
+                adapter = native_adapter(mode, payloads, output, failure, f"type_of({name})", raising)
+                yield NativeFactory(parameters, pointer, pointer.argument + ": " + signature,
+                                    adapter)
+
+
 # Dispatch is separate from admission: the complete native F is already known.
 # Concrete ABI witnesses must be introduced in comptime branches before forming
 # its function type, including register results and borrowed register operands.
