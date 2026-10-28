@@ -150,7 +150,9 @@ Binary Partial, shared binary Composition and the shared binary forms of
 Flipped and FlippedFunction opt into `_BinaryViewable`. This marker needs no
 output projection: Binary already fixes both operands, output and error.
 The same shared descriptor constructs `_SharedBinaryRef` for indexed mapping
-and zipping, and for carry/output scans. Opting in only standard wrappers preserves custom callables:
+and zipping, and for carry/output scans. Handwritten snapshot-scan admission
+constructs the same view and delegates to its original owner.
+Opting in only standard wrappers preserves custom callables:
 a custom implicit-copy value implementing Binary and MutableBinary must keep
 the owned overload's preference for `call_mut`. A general borrowed Binary
 overload would silently choose its shared `call` instead.

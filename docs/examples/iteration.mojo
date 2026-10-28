@@ -1,6 +1,8 @@
 """Lazy selection, ordered reduction, and initial-first snapshots."""
 from fp.iteration import fold_left, reduce_optional
 from fp.iteration import map, filter, filter_map, flat_map, scan_left, collect_list
+from fp.iteration import iterated
+from fp.functions import partial
 from std.testing import assert_equal
 
 def add(var total: Int, var value: Int) -> Int:
@@ -8,6 +10,9 @@ def add(var total: Int, var value: Int) -> Int:
 
 def subtract(var total: Int, var value: Int) -> Int:
     return total - value
+
+def weighted(scale: Int, total: Int, value: Int) -> Int:
+    return total + scale * value
 
 def main() raises:
     var values: List[Int] = [-1, 1, 3]
@@ -65,3 +70,7 @@ def main() raises:
     assert_equal(Bool(empty), False)
     for i in range(len(snapshots)):
         print(snapshots[i])
+    var step = partial(weighted, 2)
+    print("weighted:", iterated(range(1, 4)).scan_left(step, 0).collect_list())
+    print("again:", collect_list(scan_left(step, 10, range(1, 3))))
+    print("initial:", iterated(range(0)).scan_left(step^, 5).collect_list())

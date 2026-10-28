@@ -590,6 +590,13 @@ no output projection. Existing explicit bindings and generic forwarding remain
 available. Callback receiver lifetime stays distinct from carry and output
 ownership, including on empty input and abandonment.
 
+`scan_left` has a handwritten shared admission overload that constructs the
+same `_SharedBinaryRef` and delegates to its original owned overload. This
+keeps its `Copyable` accumulator constraint and `_snapshot_step` policy:
+construction pulls nothing, the initial snapshot invokes no callback, and
+each yielded snapshot copies the accumulator exactly once. An explicit move
+still transfers the callback through owned admission.
+
 Native callback bridges remain signature-specific: lazy scans own and mutably
 call their captures, while control scan borrows its native callback. Control
 scan keeps its existing length validation, reversal, unrolling, error wrapping

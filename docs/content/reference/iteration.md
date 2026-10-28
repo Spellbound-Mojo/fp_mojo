@@ -181,7 +181,10 @@ available. The callback borrow follows the [shared lifetime rules](../start/owne
 while the iterator owns its carry independently.
 
 Use `scan_left` when each accumulator snapshot is an output, including the
-initial snapshot. Use `fp.control.scan` for eager finite scans that return the
+initial snapshot. It supports the same named binary callback reuse. The
+accumulator must remain `Copyable`: each yielded snapshot is an independent
+copy, including the sole snapshot produced for an empty source.
+Use `fp.control.scan` for eager finite scans that return the
 final carry and collected outputs. Its native errors and scheduling are unchanged.
 Generic native wrappers preserve `A`, `T`, `Y` and forward them explicitly;
 `ScanMapIterator[A,T,Y,I,F]` names the concrete lazy iterator, including origins.

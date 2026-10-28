@@ -139,7 +139,7 @@
       "stdout": "value: 0\nwarning: zero accepted\nindependent diagnostics: 3\nsequential diagnostics: 2\n"
     },
     "docs/examples/iteration.mojo": {
-      "stdout": "0\n2\n8\n"
+      "stdout": "0\n2\n8\nweighted: [0, 2, 6, 12]\nagain: [10, 12, 16]\ninitial: [5]\n"
     },
     "docs/examples/iteration_alignment.mojo": {
       "stdout": "[both=0,10, left=1]\n[both=0,10, right=11, right=12]\npresent: True True\npresent: True False\nmoved: [both=0,10]\n"

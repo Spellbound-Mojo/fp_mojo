@@ -97,12 +97,17 @@ are still `0` afterwards. `collect_list` then pulls every snapshot:
 3. The last pull doubles `3` to `6` and yields the total `8`.
 
 Collecting makes three predicate calls, two map calls and two scan steps, and
-the program prints `0`, `2` and `8`. If a consumer abandons the chain early,
+the first chain prints `0`, `2` and `8`. If a consumer abandons the chain early,
 native cleanup destroys the current adapter state and the rest of the owned
 source; the tail is never evaluated.
 
 The second chain makes three `odd` calls on `range(1, 4)` and two `pair`
 expansions, and yields `[1, 11, 3, 13]`.
+
+The final scans reuse `step = partial(weighted, 2)` with different initial
+totals, producing `[0, 2, 6, 12]` and `[10, 12, 16]`. Passing `step^` transfers
+the callback to the empty scan, which yields just its initial snapshot `[5]`.
+The same reuse works with shared binary compositions and binary `flip` wrappers.
 
 A projection bound with `partial(price, unit_price)` can be reused by name in
 `.sum_by(cost)` and `.max_by(cost)`, as well as eager Pipeline reductions.

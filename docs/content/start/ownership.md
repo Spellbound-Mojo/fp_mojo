@@ -106,7 +106,7 @@ captures. Pass `callback^` to transfer it through an owned overload. A custom
 callable's shared receiver protocol alone does not promise this automatic
 adaptation; use the ownership form documented by the operation.
 
-For `zip_with`, `map_with_index` and `scan_map`, a two-argument partial, shared binary
+For `zip_with`, `map_with_index`, `scan_map` and `scan_left`, a two-argument partial, shared binary
 composition or binary `flip` wrapper supports the same named reuse. The
 [indexed mapping example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
 uses one partial in both operations.

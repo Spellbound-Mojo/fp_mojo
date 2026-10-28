@@ -7,7 +7,8 @@ Standard `chain`, `zip`, `take` and the like stay in `std.iter` and
 """
 
 from fp.callables.products import _OptionalCell
-from fp.callables._views import _UnaryViewable, _BorrowViewable
+from fp.callables._views import _UnaryViewable, _BorrowViewable, _BinaryViewable
+from fp.callables._receiver import _SharedBinaryRef
 from fp.algebra.instances import _OptionalElement
 from fp.callables._scan import _Carry
 from ._callbacks import _snapshot_step
@@ -641,6 +642,13 @@ def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: Binary](var 
 ) -> _Scan[A, F.Second, _Source[I], F] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never:
     """Lazily yield the snapshots of a scan with a library `Binary` step."""
     return _Scan[A, F.Second, _Source[I], F](function^, initial^, _source(source^), False, False)
+
+
+def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](
+    ref[o] function: F, var initial: A, var source: I
+) -> _Scan[A, F.Second, _Source[I], _SharedBinaryRef[F, o]] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never:
+    """Retain a shared step while yielding the same native accumulator snapshots."""
+    return scan_left(_SharedBinaryRef[F, o](Pointer(to=function)), initial^, source^)
 
 
 def filter[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](ref[o] predicate: C, var source: I

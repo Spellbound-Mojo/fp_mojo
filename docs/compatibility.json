@@ -178,7 +178,17 @@
         "tests/compile_fail/scan_callback_view_lifetime.mojo",
         "tests/compile_fail/scan_callback_view_once.mojo",
         "tests/compile_fail/scan_callback_view_origin.mojo",
-        "tests/compile_fail/scan_callback_view_shape.mojo"
+        "tests/compile_fail/scan_callback_view_shape.mojo",
+        "tests/runtime/test_snapshot_callback_views.mojo",
+        "tests/ownership/test_snapshot_callback_views_ownership.mojo",
+        "tests/compile_fail/snapshot_callback_view_accumulator.mojo",
+        "tests/compile_fail/snapshot_callback_view_arity.mojo",
+        "tests/compile_fail/snapshot_callback_view_error.mojo",
+        "tests/compile_fail/snapshot_callback_view_input.mojo",
+        "tests/compile_fail/snapshot_callback_view_lifetime.mojo",
+        "tests/compile_fail/snapshot_callback_view_once.mojo",
+        "tests/compile_fail/snapshot_callback_view_origin.mojo",
+        "tests/compile_fail/snapshot_callback_view_output.mojo"
       ]
     },
     "control": {
