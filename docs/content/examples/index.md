@@ -1,5 +1,8 @@
 # Examples
 
+- [Composable monoids](../reference/algebra.md#accumulate-several-outputs-together):
+  accumulate a count and log together, and merge dictionary totals by key.
+
 Each example is a complete program in `docs/examples/` that you can run and
 change. Run it from the repository root:
 

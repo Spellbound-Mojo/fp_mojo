@@ -57,6 +57,9 @@
     "docs/examples/combine_effects.mojo": {
       "stdout": "Hello Mojo!\nitems: 1 2 3\nchoices: ab aB Ab AB\n"
     },
+    "docs/examples/composable_monoids.mojo": {
+      "stdout": "report: 3 abc\ntotals: 5 4\n"
+    },
     "docs/examples/composition_reuse.mojo": {
       "stdout": "mapped: [4, 6]\nreused: 8\nvalidated: 2 3\nfallback: unavailable\nmixed: [6, 9]\nmirrored: 9\nrunning: [0, 2, 8, 22]\nextended: price=6! price=9!\nextended reverse: price=9\ncombined: price=18!\npair stage: 8\n"
     },

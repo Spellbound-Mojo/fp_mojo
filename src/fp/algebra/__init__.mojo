@@ -64,7 +64,7 @@ from .contracts import ApContract, ProductContract, Map2Contract, IfContract, An
 from .sequencing import FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
 
 from ._derived import map2, product, ap, flatten, sequence
-from .monoids import StringMonoid, ListMonoid
+from .monoids import StringMonoid, ListMonoid, IntSumMonoid, IntProductMonoid, SIMDSumMonoid, BoolAllMonoid, BoolAnyMonoid, ProductMonoid, OptionalMonoid, DictMonoid
 
 from .conditional import if_effect
 

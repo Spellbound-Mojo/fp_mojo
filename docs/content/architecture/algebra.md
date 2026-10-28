@@ -16,7 +16,7 @@ origins remain available to the compiler throughout composition.
 | Interfaces | `Functor` (`map`), `Filterable` (`filter`), `FunctorFilter` (`filter_map`), `Applicative` (`pure`, `map2_lazy`), `ApplicativeError` (`fail`, `or_else`), `ErrorMapping` (`bimap`), `Monad` (`flat_map`), `Traversable` (`traverse`), `Semigroup` (`combine`), `Monoid` (`empty`, `combine`) |
 | Derived operations | `map2`, `ap`, `flatten`, `sequence`, defined once over the interfaces |
 | Native instances | `IdentityFamily` (a bare value), `OptionalFamily`, `ResultFamily[E]`, `ValidationFamily[S]`, `ListFamily`, using the standard carriers |
-| Monoids | `StringMonoid`, `ListMonoid[A]` |
+| Monoids | String/List concatenation, native numeric and boolean policies, `ProductMonoid`, `OptionalMonoid`, `DictMonoid` |
 | Transformers | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`; `Reader`, `State` and `Writer` are these over `IdentityFamily` |
 
 An instance is a compile-time dictionary: a type whose operations are static
@@ -24,6 +24,31 @@ methods and whose result and error types are associated aliases. The public free
 functions forward to it, and the caller selects it explicitly:
 `map[OptionalFamily](f, value^)`. List's applicative combination is Cartesian in
 left-major order.
+
+## Compose accumulation policies
+
+`ProductMonoid[L, R]` combines a native pair component by component. Identities
+and combinations run left component first; a raised error skips the right
+operation. Both component error types must be identical or `Never`. The owned
+pair splitter moves all fields into ordinary owners before either operation
+can fail, so native cleanup also destroys untouched components. Nested product
+dictionaries describe larger products without a second accumulation driver.
+
+`OptionalMonoid[S]` gives a Semigroup an absent identity. A sole present value
+moves through unchanged; two present values use the existing optional
+accumulator. It combines payloads, rather than choosing the first present
+alternative. `DictMonoid[K, S]` consumes dictionaries and combines duplicate
+values in left/right order through `S`. Native draining and removal move keys
+and values without requiring copies. Native table iteration order is not part
+of its algebraic identity: laws compare mappings. A failure destroys partial
+output and the remaining input; external callback effects are not rolled back.
+
+`IntSumMonoid`, `IntProductMonoid`, `BoolAllMonoid` and `BoolAnyMonoid` have the
+native identities zero, one, true and false. Boolean operands are evaluated
+before combination. `SIMDSumMonoid` adds numeric lanes independently, sharing
+the implementation of ordinary iterator sums. Native overflow and floating-point
+rounding remain visible; floating addition is not associative and cannot justify
+reassociation. These policies do not introduce parallel reduction.
 
 ## Filtering families
 

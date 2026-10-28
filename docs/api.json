@@ -1151,6 +1151,150 @@
    "summary": "The admission, result and error of flat_map with a library callable.",
    "traits": []
   },
+  "algebra.BoolAllMonoid": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "The native error of combination; Never by default.",
+     "name": "Error"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first boolean.",
+        "name": "left",
+        "type": "Bool",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second boolean.",
+        "name": "right",
+        "type": "Bool",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True only when both operands are true.",
+       "type": "Bool"
+      },
+      "signature": "def combine(var left: Bool, var right: Bool) -> Bool",
+      "summary": "Conjoin two already evaluated booleans."
+     }
+    ],
+    "empty": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The conjunction identity.",
+       "type": "Bool"
+      },
+      "signature": "def empty() -> Bool",
+      "summary": "Return True."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "algebra/monoids",
+   "signature": "struct BoolAllMonoid(Monoid)",
+   "summary": "Boolean conjunction with True identity; operands are already evaluated.",
+   "traits": [
+    "Monoid",
+    "Semigroup"
+   ]
+  },
+  "algebra.BoolAnyMonoid": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "The native error of combination; Never by default.",
+     "name": "Error"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first boolean.",
+        "name": "left",
+        "type": "Bool",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second boolean.",
+        "name": "right",
+        "type": "Bool",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True when either operand is true.",
+       "type": "Bool"
+      },
+      "signature": "def combine(var left: Bool, var right: Bool) -> Bool",
+      "summary": "Disjoin two already evaluated booleans."
+     }
+    ],
+    "empty": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The disjunction identity.",
+       "type": "Bool"
+      },
+      "signature": "def empty() -> Bool",
+      "summary": "Return False."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "algebra/monoids",
+   "signature": "struct BoolAnyMonoid(Monoid)",
+   "summary": "Boolean disjunction with False identity; operands are already evaluated.",
+   "traits": [
+    "Monoid",
+    "Semigroup"
+   ]
+  },
   "algebra.CombineContract": {
    "aliases": [
     {
@@ -1248,6 +1392,93 @@
    "signature": "comptime DequeFamily = _DequeFamily",
    "summary": "Map and filter native Deque elements, preserving their order and settings.",
    "traits": []
+  },
+  "algebra.DictMonoid": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    }
+   ],
+   "description": "Keys and values move; neither requires Copyable. Right entries are visited\nin native iteration order. Key iteration order of the merged dictionary\nis not a monoid guarantee; laws compare key/value mappings. Expected cost\nis linear in right entries, plus combination costs and native table growth.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The earlier dictionary, consumed and reused.",
+        "name": "left",
+        "type": "Self.Value",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The later dictionary, drained and consumed.",
+        "name": "right",
+        "type": "Self.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The exact duplicate-value combination error. Partial output and\nremaining entries are destroyed; external effects are not rolled back.",
+      "returns": {
+       "doc": "The merged native dictionary with owned keys and values.",
+       "type": "Self.Value"
+      },
+      "signature": "def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value",
+      "summary": "Consume right entries into left, combining only duplicate keys."
+     }
+    ],
+    "empty": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The union identity.",
+       "type": "Self.Value"
+      },
+      "signature": "def empty() -> Self.Value",
+      "summary": "Construct an empty native dictionary."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The native dictionary key type.",
+     "inferred": false,
+     "name": "K",
+     "type": "KeyElement & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The Semigroup for duplicate values.",
+     "inferred": false,
+     "name": "S",
+     "type": "Semigroup",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/monoids",
+   "signature": "struct DictMonoid[K: KeyElement & Deinitable, S: Semigroup](Monoid)",
+   "summary": "Union native dictionaries, combining duplicate values left before right.",
+   "traits": [
+    "Monoid",
+    "Semigroup"
+   ]
   },
   "algebra.EnsureContract": {
    "aliases": [
@@ -2633,6 +2864,150 @@
    "signature": "struct IfContract[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]",
    "summary": "The admission, result and construction error of an effectful conditional.",
    "traits": []
+  },
+  "algebra.IntProductMonoid": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "The native error of combination; Never by default.",
+     "name": "Error"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first operand.",
+        "name": "left",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second operand.",
+        "name": "right",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Their native product.",
+       "type": "Int"
+      },
+      "signature": "def combine(var left: Int, var right: Int) -> Int",
+      "summary": "Multiply two native integers."
+     }
+    ],
+    "empty": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "One.",
+       "type": "Int"
+      },
+      "signature": "def empty() -> Int",
+      "summary": "Return one, the multiplicative identity."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "algebra/monoids",
+   "signature": "struct IntProductMonoid(Monoid)",
+   "summary": "Native Int multiplication with one identity; overflow follows native arithmetic.",
+   "traits": [
+    "Monoid",
+    "Semigroup"
+   ]
+  },
+  "algebra.IntSumMonoid": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "The native error of combination; Never by default.",
+     "name": "Error"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The first operand.",
+        "name": "left",
+        "type": "Int",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The second operand.",
+        "name": "right",
+        "type": "Int",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Their native sum.",
+       "type": "Int"
+      },
+      "signature": "def combine(var left: Int, var right: Int) -> Int",
+      "summary": "Add two native integers."
+     }
+    ],
+    "empty": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Zero.",
+       "type": "Int"
+      },
+      "signature": "def empty() -> Int",
+      "summary": "Return the additive identity."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "algebra/monoids",
+   "signature": "struct IntSumMonoid(Monoid)",
+   "summary": "Native Int addition with zero identity; overflow follows native Int arithmetic.",
+   "traits": [
+    "Monoid",
+    "Semigroup"
+   ]
   },
   "algebra.IorFamily": {
    "aliases": [
@@ -4845,6 +5220,86 @@
     "_Lifting"
    ]
   },
+  "algebra.OptionalMonoid": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    }
+   ],
+   "description": "Two present values combine left before right; a sole present value moves\nthrough unchanged. This is payload combination, not first-present fallback.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The earlier Optional, consumed.",
+        "name": "left",
+        "type": "Self.Value",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The later Optional, consumed.",
+        "name": "right",
+        "type": "Self.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The Semigroup's exact error, only when both are present.",
+      "returns": {
+       "doc": "Absence, the sole present payload, or their ordered combination.",
+       "type": "Self.Value"
+      },
+      "signature": "def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value",
+      "summary": "Combine present values through the shared optional accumulator."
+     }
+    ],
+    "empty": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An absent Optional.",
+       "type": "Self.Value"
+      },
+      "signature": "def empty() -> Self.Value",
+      "summary": "Return absence without invoking the Semigroup."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The present payloads' Semigroup, including its exact native error.",
+     "inferred": false,
+     "name": "S",
+     "type": "Semigroup",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/monoids",
+   "signature": "struct OptionalMonoid[S: Semigroup](Monoid)",
+   "summary": "Adjoin absence as the identity of any Semigroup.",
+   "traits": [
+    "Monoid",
+    "Semigroup"
+   ]
+  },
   "algebra.OrElseIfContract": {
    "aliases": [
     {
@@ -4968,6 +5423,93 @@
    "signature": "comptime ProductContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _Pair[I.Element[V], I.Element[W]]]",
    "summary": "The exact contract of pairing two already evaluated carriers.",
    "traits": []
+  },
+  "algebra.ProductMonoid": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    }
+   ],
+   "description": "Nest this dictionary for larger products. Each component moves exactly\nonce. The second operation is skipped if the first raises; native cleanup\ndestroys all unconsumed components. Errors must be identical or Never.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The earlier pair, consumed.",
+        "name": "left",
+        "type": "Self.Value",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The later pair, consumed.",
+        "name": "right",
+        "type": "Self.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The exact common component error, stopping immediately.",
+      "returns": {
+       "doc": "A pair of combined components, without copying payloads.",
+       "type": "Self.Value"
+      },
+      "signature": "def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value",
+      "summary": "Combine corresponding owned components in component order."
+     }
+    ],
+    "empty": [
+     {
+      "args": [],
+      "description": "",
+      "error": "Self.Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The exact common component error.",
+      "returns": {
+       "doc": "A native pair of identities.",
+       "type": "Self.Value"
+      },
+      "signature": "def empty() raises Self.Error -> Self.Value",
+      "summary": "Construct the two identities from left to right."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The first component's monoid.",
+     "inferred": false,
+     "name": "L",
+     "type": "Monoid",
+     "variadic": false
+    },
+    {
+     "description": "The second component's monoid.",
+     "inferred": false,
+     "name": "R",
+     "type": "Monoid",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/monoids",
+   "signature": "struct ProductMonoid[L: Monoid, R: Monoid](Monoid)",
+   "summary": "Combine native pairs component-wise, first component before second.",
+   "traits": [
+    "Monoid",
+    "Semigroup"
+   ]
   },
   "algebra.RebindingFunctor": {
    "aliases": [
@@ -5731,6 +6273,97 @@
     "Monad",
     "Traversable",
     "_Lifting"
+   ]
+  },
+  "algebra.SIMDSumMonoid": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "",
+     "name": "Admitted"
+    },
+    {
+     "description": "The native error of combination; Never by default.",
+     "name": "Error"
+    }
+   ],
+   "description": "Floating-point addition is not associative. Floating instances are ordered\naccumulation policies, not a license to reassociate or parallelize a fold.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "combine": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The earlier vector.",
+        "name": "left",
+        "type": "Self.Value",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The later vector.",
+        "name": "right",
+        "type": "Self.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Their lane-wise sum.",
+       "type": "Self.Value"
+      },
+      "signature": "def combine(var left: Self.Value, var right: Self.Value) -> Self.Value",
+      "summary": "Add matching lanes without reducing or reassociating them."
+     }
+    ],
+    "empty": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The numeric zero vector.",
+       "type": "Self.Value"
+      },
+      "signature": "def empty() -> Self.Value",
+      "summary": "Return a zero in every lane."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "An integral or floating-point element type.",
+     "inferred": false,
+     "name": "dtype",
+     "type": "DType",
+     "variadic": false
+    },
+    {
+     "description": "The number of lanes.",
+     "inferred": false,
+     "name": "size",
+     "type": "SIMDLength",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/monoids",
+   "signature": "struct SIMDSumMonoid[dtype: DType, size: SIMDLength](Monoid)",
+   "summary": "Ordered lane-wise numeric addition, with native arithmetic semantics.",
+   "traits": [
+    "Monoid",
+    "Semigroup"
    ]
   },
   "algebra.Semigroup": {

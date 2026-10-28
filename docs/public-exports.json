@@ -15250,6 +15250,174 @@
       },
       "provider": "algebra/monoids"
     },
+    "algebra.IntSumMonoid": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct IntSumMonoid(Monoid):"
+      ],
+      "methods": {
+        "empty": [
+          {
+            "signature": "def empty() -> Int:",
+            "sha256": "a83f47e3ad41cf496ef4becd4a729019b43293ea4e81d01cede0c94847d2b2c8"
+          }
+        ],
+        "combine": [
+          {
+            "signature": "def combine(var left: Int, var right: Int) -> Int:",
+            "sha256": "866f1cde3b1fcb678c9ca0f777b568ee18be32f2e0479c0c3d7ba0a9fcffe133"
+          }
+        ]
+      },
+      "provider": "algebra/monoids"
+    },
+    "algebra.IntProductMonoid": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct IntProductMonoid(Monoid):"
+      ],
+      "methods": {
+        "empty": [
+          {
+            "signature": "def empty() -> Int:",
+            "sha256": "a83f47e3ad41cf496ef4becd4a729019b43293ea4e81d01cede0c94847d2b2c8"
+          }
+        ],
+        "combine": [
+          {
+            "signature": "def combine(var left: Int, var right: Int) -> Int:",
+            "sha256": "866f1cde3b1fcb678c9ca0f777b568ee18be32f2e0479c0c3d7ba0a9fcffe133"
+          }
+        ]
+      },
+      "provider": "algebra/monoids"
+    },
+    "algebra.SIMDSumMonoid": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct SIMDSumMonoid[dtype: DType, size: SIMDLength](Monoid):"
+      ],
+      "methods": {
+        "empty": [
+          {
+            "signature": "def empty() -> Self.Value:",
+            "sha256": "3fbb32d2072f85a88f08875496405aa4d3a45b8e5de7f9772d09904ee1809265"
+          }
+        ],
+        "combine": [
+          {
+            "signature": "def combine(var left: Self.Value, var right: Self.Value) -> Self.Value:",
+            "sha256": "043615ffd397af8f9cf779c97946624f3b3c8b17f63b002d6efad99f9f1b9a19"
+          }
+        ]
+      },
+      "provider": "algebra/monoids"
+    },
+    "algebra.BoolAllMonoid": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct BoolAllMonoid(Monoid):"
+      ],
+      "methods": {
+        "empty": [
+          {
+            "signature": "def empty() -> Bool:",
+            "sha256": "2f2696e58a50baea01d2f306f5d97477f3b696ea2a84a7720f3cad550b64d213"
+          }
+        ],
+        "combine": [
+          {
+            "signature": "def combine(var left: Bool, var right: Bool) -> Bool:",
+            "sha256": "6d1b0c2cdccc1f08156979d76c82b05e4cd00ef1862b064845ed459d42de8919"
+          }
+        ]
+      },
+      "provider": "algebra/monoids"
+    },
+    "algebra.BoolAnyMonoid": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct BoolAnyMonoid(Monoid):"
+      ],
+      "methods": {
+        "empty": [
+          {
+            "signature": "def empty() -> Bool:",
+            "sha256": "2f2696e58a50baea01d2f306f5d97477f3b696ea2a84a7720f3cad550b64d213"
+          }
+        ],
+        "combine": [
+          {
+            "signature": "def combine(var left: Bool, var right: Bool) -> Bool:",
+            "sha256": "6d1b0c2cdccc1f08156979d76c82b05e4cd00ef1862b064845ed459d42de8919"
+          }
+        ]
+      },
+      "provider": "algebra/monoids"
+    },
+    "algebra.ProductMonoid": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct ProductMonoid[L: Monoid, R: Monoid](Monoid):"
+      ],
+      "methods": {
+        "empty": [
+          {
+            "signature": "def empty() raises Self.Error -> Self.Value:",
+            "sha256": "a40e50db3fcc57c0309fd85016cf1eb0ae5c80bf744806dda848e1a3828e7f29"
+          }
+        ],
+        "combine": [
+          {
+            "signature": "def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value:",
+            "sha256": "a89f4a37eb873f560ae14a4169a867ec75b3f08a75b092323c8578665f419ab9"
+          }
+        ]
+      },
+      "provider": "algebra/monoids"
+    },
+    "algebra.OptionalMonoid": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct OptionalMonoid[S: Semigroup](Monoid):"
+      ],
+      "methods": {
+        "empty": [
+          {
+            "signature": "def empty() -> Self.Value:",
+            "sha256": "3fbb32d2072f85a88f08875496405aa4d3a45b8e5de7f9772d09904ee1809265"
+          }
+        ],
+        "combine": [
+          {
+            "signature": "def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value:",
+            "sha256": "a89f4a37eb873f560ae14a4169a867ec75b3f08a75b092323c8578665f419ab9"
+          }
+        ]
+      },
+      "provider": "algebra/monoids"
+    },
+    "algebra.DictMonoid": {
+      "kind": "type or alias",
+      "declarations": [
+        "struct DictMonoid[K: KeyElement & Deinitable, S: Semigroup](Monoid):"
+      ],
+      "methods": {
+        "empty": [
+          {
+            "signature": "def empty() -> Self.Value:",
+            "sha256": "3fbb32d2072f85a88f08875496405aa4d3a45b8e5de7f9772d09904ee1809265"
+          }
+        ],
+        "combine": [
+          {
+            "signature": "def combine(var left: Self.Value, var right: Self.Value) raises Self.Error -> Self.Value:",
+            "sha256": "a89f4a37eb873f560ae14a4169a867ec75b3f08a75b092323c8578665f419ab9"
+          }
+        ]
+      },
+      "provider": "algebra/monoids"
+    },
     "algebra.ValidationFamily": {
       "kind": "type or alias",
       "declarations": [

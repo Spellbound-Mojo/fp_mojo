@@ -515,6 +515,22 @@ conditional aliases through a guarded `Functor` boundary.
 
 <!-- api: algebra -->
 
+## Accumulate several outputs together
+
+Use `ProductMonoid` for several independently accumulated values, and nest it
+for larger products. `OptionalMonoid` adds an absent identity to a Semigroup;
+`DictMonoid` merges dictionaries by combining values at duplicate keys. Both
+support move-only payloads. Numeric and boolean policies make common totals
+available to Writer and generic folds as well as ordinary iterator reductions.
+
+<!-- example: docs/examples/composable_monoids.mojo -->
+
+The product counts three records while keeping their text in order. The
+dictionary merges repeated keys by addition. Boolean monoids combine already
+computed values; use `any` or `all` when source traversal should short-circuit.
+Floating SIMD sums retain native rounding and ordered evaluation, so their
+addition must not be reassociated using the Monoid laws.
+
 ## Use one set of operations over four carriers
 
 <!-- example: docs/examples/algebra_core.mojo -->
