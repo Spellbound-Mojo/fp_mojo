@@ -17,6 +17,17 @@ struct _SharedUnaryRef[F: Unary, o: ImmOrigin](Unary, ImplicitlyCopyable):
 
 
 @fieldwise_init
+struct _SharedBorrowRef[F: BorrowCallable, o: ImmOrigin](BorrowCallable, ImplicitlyCopyable):
+    """Retain a shared receiver while borrowing each operand for its call."""
+    var function: Pointer[Self.F, Self.o]
+    comptime Payload = Self.F.Payload
+    comptime Result = Self.F.Result
+    comptime Failure = Self.F.Failure
+    def invoke(self, ref payload: Self.Payload) raises Self.Failure capturing -> Self.Result:
+        return self.function[].invoke(payload)
+
+
+@fieldwise_init
 struct _MutableUnaryRef[F: UnaryContract & Movable & Deinitable, o: MutOrigin](MutableUnary, OnceUnary):
     """An exclusive receiver retained by a computation, without copying state."""
     var function: Pointer[Self.F, Self.o]

@@ -7,9 +7,9 @@ read, and their arguments are borrowed. Keyword binding, reordering, owned
 remaining parameters and capturing targets are written as native closures.
 """
 from std.builtin.rebind import rebind, downcast
-from fp.callables.protocols import Thunk, Unary, Binary
-from fp.callables._views import _UnaryViewable
-from fp.callables._receiver import _SharedUnaryRef
+from fp.callables.protocols import Thunk, Unary, Binary, BorrowCallable
+from fp.callables._views import _UnaryViewable, _BorrowViewable
+from fp.callables._receiver import _SharedUnaryRef, _SharedBorrowRef
 
 
 comptime _Bound = Copyable & Deinitable
@@ -53,7 +53,7 @@ comptime _Fn[R: Movable & Deinitable, E: Movable & Deinitable, Bs: TypeList[Trai
 struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
                Bs: TypeList[Trait=_Bound, ...], Rs: TypeList[Trait=_Rest, ...]](
     Copyable, Thunk where Rs.length == 0, Unary where Rs.length == 1, Binary where Rs.length == 2,
-    _UnaryViewable where Rs.length == 1
+    _UnaryViewable where Rs.length == 1, _BorrowViewable where Rs.length == 1
 ):
     """A plain function with copies of its leading arguments, returned by `partial`.
 
@@ -64,7 +64,10 @@ struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
     A named unary Partial can be reused as a Pipeline or Result callback without
     copying its stored prefix for admission. Each invocation still supplies the
     native function with fresh copies of the bound arguments. An explicit move
-    transfers the Partial, including into deferred computations.
+    transfers the Partial, including into deferred computations. Unary partials
+    also implement `BorrowCallable`: predicates, observers and borrowed-payload
+    handlers call the same native function without consuming the payload.
+    Selected Pipeline operations can reuse these partials by name.
 
     Parameters:
         R: The function's result type.
@@ -88,6 +91,32 @@ struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
     def _unary_view[o: ImmOrigin](ref[o] self) -> Self._View[o]:
         comptime assert Self.Rs.length == 1
         return Self._View[o](Pointer(to=self))
+
+    comptime Payload = Self.Rs[0]
+    """The borrowed remaining argument of a unary partial."""
+    comptime Result = Self.R
+    """The result of a borrowed-argument call."""
+    comptime Failure = Self.E
+    """The error of a borrowed-argument call."""
+    comptime _BorrowView[o: ImmOrigin] = _SharedBorrowRef[downcast[Self, BorrowCallable], o]
+
+    def _borrow_view[o: ImmOrigin](ref[o] self) -> Self._BorrowView[o]:
+        comptime assert Self.Rs.length == 1
+        return Self._BorrowView[o](Pointer(to=self))
+
+    def invoke(self, ref payload: Self.Payload) raises Self.Failure capturing -> Self.Result:
+        """Call a unary partial while borrowing its argument.
+
+        Args:
+            payload: The remaining argument, borrowed for the call.
+
+        Returns:
+            The native function's result.
+
+        Raises:
+            The native function's error, unchanged.
+        """
+        return self._call(payload)
 
     def __call__(self, *rest: *Self.Rs) raises Self.E -> Self.R:
         """Call the function with the bound arguments followed by `rest`.
@@ -126,8 +155,9 @@ struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,
         return self._call(first, second)
 
     def _call[Pack: TypeList[Trait=_Rest, ...], //](self, *rest: *Pack) raises Self.E -> Self.R:
-        # The one native call. Pack is Rs for every caller above; rebinding the
-        # stored function to the same pack-typed signature changes nothing.
+        # Every public protocol view must retain the stored native signature.
+        comptime assert _Fn[Self.R, Self.E, Self.Bs, Pack] == _Fn[Self.R, Self.E, Self.Bs, Self.Rs], "partial: remaining argument types and arity must match"
+        # Rebinding to the same pack-typed signature changes nothing.
         comptime n = Self.Bs.length
         ref b = self.bound
         # --- partial invocation (generated) ---

@@ -136,13 +136,16 @@ def callback(mode, kind, arg="function", second=False):
         else ("C", "A" if mode == "owned" else "P", "R", "X", "o")
     )
     if kind == "view":
-        if mode != "owned":
-            raise ValueError("Shared unary views consume their explicit operand")
-        view = f"{f}._View[{o}]"
+        if mode not in ("owned", "borrow"):
+            raise ValueError("Shared callback views require one argument")
+        trait, alias, method = (("_UnaryViewable", "_View", "_unary_view") if mode == "owned"
+                                else ("_BorrowViewable", "_BorrowView", "_borrow_view"))
+        view = f"{f}.{alias}[{o}]"
+        metadata = callable_metadata(mode, view)
         return Callback(
-            [f"{f}: _UnaryViewable", f"{o}: ImmOrigin"], [],
-            f"ref[{o}] {arg}: {f}", view, f"{arg}._unary_view()",
-            view + ".Arg", view + ".Out", view + ".Error", mode,
+            [f"{f}: {trait}", f"{o}: ImmOrigin"], [],
+            f"ref[{o}] {arg}: {f}", view, f"{arg}.{method}()",
+            metadata.inputs[0], metadata.result, metadata.error, mode,
         )
     if kind == "library":
         trait = callable_protocol(mode)

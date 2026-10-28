@@ -274,7 +274,9 @@ Unary `partial` values support the same reuse: bind a prefix once, then pass the
 callback by name to several operations. Each invocation still copies the bound
 values as specified by `partial`; passing the callback does not copy its stored
 prefix. The [partial application example](../reference/functions.md#bind-leading-arguments-with-partial)
-shows a reusable multiplier.
+shows a reusable multiplier and threshold predicate. A named partial also
+works in `.filter`, `.filter_not`, `.tap_each`, `.pair_with`, `.ensure` and
+`.fold`, borrowing each payload for the duration of the native call.
 
 A stored `as_unary` adapter follows the same rule: reuse it by name, or pass
 `callback^` to transfer its captures. The [native callback example](../reference/callables.md)

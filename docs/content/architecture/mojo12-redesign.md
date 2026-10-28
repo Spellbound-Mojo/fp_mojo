@@ -3831,3 +3831,30 @@ and abandonment, stored thin-pointer independence, native errors, inferred
 traversal targets, and output origins that outlive a local adapter. Invalid
 input/output types, extracting a borrowed adapter, and escaping a local output
 origin remain ordinary compiler rejections.
+
+### Partial predicates and observers retain the native read convention
+
+Partial's remaining native arguments were already read-only, but its callable
+protocols only exposed consumed operands. A unary Partial now also implements
+`BorrowCallable`, with `invoke` forwarding to the same `_call` owner. The
+bound prefix is still copied once at construction and once per invocation;
+borrowing a payload requires no copy or move of that payload.
+
+Selected Pipeline admission uses `_BorrowViewable` and `_SharedBorrowRef` to
+retain a named partial without copying its stored prefix. The shared callback
+descriptor selects metadata by argument convention, while operation generators
+continue to delegate execution, error propagation and cleanup to their existing
+owners. Shared observers use the library callback's error-channel selection,
+including mapping-only families and intrinsic Result fallback. Effectful
+predicates infer native target families from the view's result. No
+predicate-specific runner or copy loop is introduced.
+
+Named predicates and observers can be reused across filtering, effectful queries,
+validation, pairing and borrowed Result folds. A deferred observer retains the
+partial's borrow, and an explicit move transfers its prefix. The canonical
+`_call` also checks that each protocol entry point retains the exact stored
+function signature before rebinding it, rejecting wrong-arity direct `call` or
+`invoke` methods. Ownership tests track both prefix copies and move-only payload
+destruction, including deferred execution and abandonment. Direct and lazy API
+admission will share the same descriptor in a subsequent pass; their existing
+owned BorrowCallable overloads already accept temporary or moved partials.

@@ -639,6 +639,14 @@ operation. Deferred operations retain its borrow until they run or are
 discarded. A partial returning a native Optional, Result or List can also
 supply the inferred target for `traverse` or `then`.
 
+The same unary partial can serve as a predicate, observer or borrowed-payload
+handler in selected pipelines. For example, bind a threshold once with
+`partial(above, 2)`, then reuse it in `.filter(predicate)` and
+`.filter_not(predicate)`. `.tap_each`, `.pair_with`, `.ensure` and `.fold`
+also accept named partials. The remaining native argument is borrowed, so
+these calls do not require a copyable payload. Their bound prefix follows
+the same copy-per-invocation rule as other partial calls.
+
 <!-- example: docs/examples/partial.mojo -->
 
 `partial(twice, value)` copies `4` when it is built and passes a fresh copy on

@@ -3782,6 +3782,10 @@
             "sha256": "893d5effb270e1f91812f06121f63b965b7fc7d0cae97786f33928a052e02085"
           },
           {
+            "signature": "def tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Pipeline[Self.I, Self.V, Self.E] where C._BorrowView[o].Payload == Self.V:",
+            "sha256": "447ac5be0b5f39be7e08c41a3af0265f1870370efbf875c092d56e53564df274"
+          },
+          {
             "signature": "def tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.V) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[Self.I, Self.V, Self.E]:",
             "sha256": "0071dd252c21c7e01706371744729911f6455ce218781639067723a1e09c85d9"
           },
@@ -3832,6 +3836,10 @@
             "sha256": "7cd41ce86593d0ec92fd90487a64416dde60ccbb2e4ad6ac032aab75f6dcb8bc"
           },
           {
+            "signature": "def tap_each[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C._BorrowView[o], False]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C._BorrowView[o], False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C._BorrowView[o], False]], Self.E] where C._BorrowView[o].Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C._BorrowView[o], False]]:",
+            "sha256": "910e69d54ea4abee36ee12a127ae31a811818d164970bb0ceb2aabaf412ede85"
+          },
+          {
             "signature": "def tap_each[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]], Self.E] where _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]]:",
             "sha256": "350b6ad08a67db8591fe437b82c193a7e36f1b52c4fc99e14851de5a189e533c"
           },
@@ -3880,6 +3888,10 @@
           {
             "signature": "def pair_with[C: BorrowCallable](deinit self, var function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C, True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C, True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C, True]], Self.E] where C.Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C, True]]:",
             "sha256": "06696d28e31f420801e518b5d4e52bd0ea1d4db4eb592f60cd4352931f132c8f"
+          },
+          {
+            "signature": "def pair_with[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], C._BorrowView[o], True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], C._BorrowView[o], True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], C._BorrowView[o], True]], Self.E] where C._BorrowView[o].Payload == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], C._BorrowView[o], True]]:",
+            "sha256": "60d6fc34312716c3f0a420ed4d58b79b5a44223868f68a473d5c8f241255b9db"
           },
           {
             "signature": "def pair_with[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises Self.I.MapError[Self.V, _Observe[Self.I.Element[Self.V], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]] -> Pipeline[_MappedFamily[Self.I, _Observe[Self.I.Element[Self.V], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True].Out], Self.I.Mapped[Self.V, _Observe[Self.I.Element[Self.V], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], Self.E] where _MapCompatible[Self.I, Self.V, _Observe[Self.I.Element[Self.V], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]]:",
@@ -5028,6 +5040,10 @@
             "sha256": "fb438759892c56dd84e33524fdb9febde585de1343d2519360bd627ebcfd5d43"
           },
           {
+            "signature": "def min_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C._BorrowView[o].Payload == _FoldElement[Self.V] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "0af6d72951c4ff07d137b2251b61175bed7096fdfc57200274689e254d3fb051"
+          },
+          {
             "signature": "def min_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable):",
             "sha256": "bcfcbb10c00d4697fbf6693301642550d0a46e97d12e32f0c17f44d9b9829a69"
           },
@@ -5076,6 +5092,10 @@
           {
             "signature": "def max_by[C: BorrowCallable, //](deinit self, var function: C) raises C.Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C.Payload == _FoldElement[Self.V] and conforms_to(C.Result, Comparable & Movable & Deinitable):",
             "sha256": "24e70579d8f0fe457575c94ed8be9dcbe67610c19c8d2debce965ef81fcab120"
+          },
+          {
+            "signature": "def max_by[C: _BorrowViewable, o: ImmOrigin, //](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where C._BorrowView[o].Payload == _FoldElement[Self.V] and conforms_to(C._BorrowView[o].Result, Comparable & Movable & Deinitable):",
+            "sha256": "47b49bae43e8a1f306c6a9e36a6309947a830ae2f06f1bf0e144e8759e120c65"
           },
           {
             "signature": "def max_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where conforms_to(R, Comparable & Movable & Deinitable):",
@@ -5144,6 +5164,10 @@
             "sha256": "ee8f284327a252645b91dc28e9d6a48d3a4e568d33a24291f7e7b685d6788703"
           },
           {
+            "signature": "def all_effect[C: _BorrowViewable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[C._BorrowView[o].Result]]](deinit self, ref[o] function: C) raises AllContract[J, Self.V, C._BorrowView[o]].Error -> Pipeline[J, AllContract[J, Self.V, C._BorrowView[o]].Out, Self.E] where AllContract[J, Self.V, C._BorrowView[o]].Compatible:",
+            "sha256": "f760af9914ae13cdbc04158bd9e6e08d8c3cbeaf39eb295cabb151a627b17de0"
+          },
+          {
             "signature": "def all_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) -> R = def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where AllContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:",
             "sha256": "adf9011aae6b5bd027b6482106c45a3850b695629bf3b519c06665d141143e76"
           },
@@ -5194,6 +5218,10 @@
             "sha256": "5d12039b35210135e95a9a9cba477562d2cdbc329998d2d43918b71307148641"
           },
           {
+            "signature": "def any_effect[C: _BorrowViewable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[C._BorrowView[o].Result]]](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, C._BorrowView[o]].Error -> Pipeline[J, AnyContract[J, Self.V, C._BorrowView[o]].Out, Self.E] where AnyContract[J, Self.V, C._BorrowView[o]].Compatible:",
+            "sha256": "61cb91717fe240ab2b54cfd72249d6ec60f7dc3be285656af138e3b28dfe8583"
+          },
+          {
             "signature": "def any_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) -> R = def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where AnyContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:",
             "sha256": "21a24157d5562a6dbdf021c1ad1009d590dc9e5dda0ece2945fb13024a9088c6"
           },
@@ -5242,6 +5270,10 @@
           {
             "signature": "def find_effect[C: BorrowCallable, //, J: Monad = _Binding[_InferredApplicative[C.Result]]](deinit self, var function: C) raises FindContract[J, Self.V, C].Error -> Pipeline[J, FindContract[J, Self.V, C].Out, Self.E] where FindContract[J, Self.V, C].Compatible:",
             "sha256": "b291f99f97883d3e7126e3b8fe2edca3a3fdb16c6df1e910c94d580921e780fa"
+          },
+          {
+            "signature": "def find_effect[C: _BorrowViewable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[C._BorrowView[o].Result]]](deinit self, ref[o] function: C) raises FindContract[J, Self.V, C._BorrowView[o]].Error -> Pipeline[J, FindContract[J, Self.V, C._BorrowView[o]].Out, Self.E] where FindContract[J, Self.V, C._BorrowView[o]].Compatible:",
+            "sha256": "79109638fd0248fc99f7fc9558e53ebe955c407a91ff4ddbf02bfc46cb0b3240"
           },
           {
             "signature": "def find_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(_FoldElement[Self.V]) -> R = def(_FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where FindContract[J, Self.V, _NativeBorrowRef[_FoldElement[Self.V], R, Never, C, False, o]].Compatible:",
@@ -5620,6 +5652,10 @@
             "sha256": "c885844bdc4cf3a683c97d615257008ef6e6d7181782a16359b4365bcff80f3e"
           },
           {
+            "signature": "def traverse_tap[C: _BorrowViewable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[C._BorrowView[o].Result]](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]], Self.E] where conforms_to(Self.I, Traversable) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]] and _CarrierCompatible[J, C._BorrowView[o].Result] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]]:",
+            "sha256": "9174f2f6da00f93114e0845852f1f29f6acc2ebb28e47f927f0187d7b948a6f4"
+          },
+          {
             "signature": "def traverse_tap[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(Self.I.Element[Self.V]) -> R = def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]]:",
             "sha256": "817e16c75aa2f7f1bc51dc0fe872c3adaf6211de192be24da665c8370ee0ae51"
           },
@@ -5668,6 +5704,10 @@
           {
             "signature": "def filter_effect[C: BorrowCallContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Result]](deinit self, var function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]]]]], Self.E] where conforms_to(Self.I, Traversable) and C.Payload == Self.I.Element[Self.V] and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]] and _CarrierCompatible[J, C.Result] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]] and conforms_to(Self.I, FunctorFilter) and J.Element[C.Result] == Bool and J.Element[_TraverseTap[Self.I.Element[Self.V], J, C, True].Out] == Optional[Self.I.Element[Self.V]] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, True]]]]]:",
             "sha256": "809145db6590337315de0ca1b8ecb3d125a9ba18c921f292324e0d1b2ef45914"
+          },
+          {
+            "signature": "def filter_effect[C: _BorrowViewable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[C._BorrowView[o].Result]](deinit self, ref[o] function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]]]]], Self.E] where conforms_to(Self.I, Traversable) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]] and _CarrierCompatible[J, C._BorrowView[o].Result] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]] and conforms_to(Self.I, FunctorFilter) and J.Element[C._BorrowView[o].Result] == Bool and J.Element[_TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True].Out] == Optional[Self.I.Element[Self.V]] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], True]]]]]:",
+            "sha256": "688ef72104dfff676dbf3c21760e0925db5cd1dcf60c59b34215057a0081de6c"
           },
           {
             "signature": "def filter_effect[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(Self.I.Element[Self.V]) -> R = def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]]]]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]] and _CarrierCompatible[J, R] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]] and conforms_to(Self.I, FunctorFilter) and J.Element[R] == Bool and J.Element[_TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True].Out] == Optional[Self.I.Element[Self.V]] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True]]]]]:",
@@ -6212,6 +6252,10 @@
             "sha256": "cdf165404fa01d3d4342f03a53186120b3572bd96ec27ef4c559f57893e32231"
           },
           {
+            "signature": "def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C._BorrowView[o]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C._BorrowView[o]].Out, Self.E] where conforms_to(Self.I, Filterable) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and C._BorrowView[o].Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):",
+            "sha256": "50ec7777d15413ec79900c63ed72e36a0247e05c78bf0748fb366a9eeb482fca"
+          },
+          {
             "signature": "def filter[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):",
             "sha256": "c5ecd3625b7580842084dd75cd597ecc4fb802126ae7e272acee2eecc30d1312"
           },
@@ -6260,6 +6304,10 @@
           {
             "signature": "def filter_not[C: BorrowCallable](deinit self, var predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C, True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C, True].Out, Self.E] where conforms_to(Self.I, Filterable) and C.Payload == Self.I.Element[Self.V] and C.Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):",
             "sha256": "f76e7e7c2f14fda21d0afcdd8f763d16a4ba87d5eeae7df3ba7ebc7e436d26ec"
+          },
+          {
+            "signature": "def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, C._BorrowView[o], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, C._BorrowView[o], True].Out, Self.E] where conforms_to(Self.I, Filterable) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and C._BorrowView[o].Result == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):",
+            "sha256": "aec111231467bb8f18f9098a99e562409dd4a4d4c3dcbed91dff8f4a133de112"
           },
           {
             "signature": "def filter_not[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C) raises FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True].Error -> Pipeline[downcast[_Filtering[Self.I].FilteredFamily, Functor], FilterContract[_Filtering[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], True].Out, Self.E] where conforms_to(Self.I, Filterable) and R == Bool and conforms_to(_Filtering[Self.I].FilteredFamily, Functor):",
@@ -6388,6 +6436,10 @@
             "sha256": "ed6c27ec3ef8686d9719fc6d63f3c37d1b243c2c7fd02367c007cc216cbee046"
           },
           {
+            "signature": "def flat_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C._BorrowView[o]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C._BorrowView[o]]], Self.E] where conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], C._BorrowView[o].Result] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C._BorrowView[o]]]:",
+            "sha256": "9d305325f8b486804ecdb92d617f81bf26b89da27c1be047f2001eb4040a0fc1"
+          },
+          {
             "signature": "def flat_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]]]:",
             "sha256": "60d78f57880569961775bf121a7cd38e170aadf4a4ba488e3dd3d1d9380957ed"
           },
@@ -6436,6 +6488,10 @@
           {
             "signature": "def flat_pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C, False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C, False, True]], Self.E] where conforms_to(Self.I, Monad) and C.Payload == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], C.Result] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C, False, True]]:",
             "sha256": "cf6ace6b8b07261fc8c1509856a27579b87859c13a7905286d50688ca7005271"
+          },
+          {
+            "signature": "def flat_pair_with[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C._BorrowView[o], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C._BorrowView[o], False, True]], Self.E] where conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _CarrierCompatible[_Binding[Self.I], C._BorrowView[o].Result] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], C._BorrowView[o], False, True]]:",
+            "sha256": "be6a76172f04e66e3c1ae28f6de8fb686004de0ebddc3d4069ccf2287b199330"
           },
           {
             "signature": "def flat_pair_with[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False, True]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False, True]], Self.E] where conforms_to(Self.I, Monad) and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False, True]]:",
@@ -6556,6 +6612,10 @@
             "sha256": "872ddc6f1713dce96de7124596eacf5d02e1079708af1a52573bb3a2ddd506cd"
           },
           {
+            "signature": "def ensure[C: BorrowCallContract & Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, var predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, C, G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C, G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, C, G._BorrowView[q]].Compatible:",
+            "sha256": "959fe14bfda4821708ae3ebd455e42e0ed15eb3e69956e62561cd2919066458c"
+          },
+          {
             "signature": "def ensure[C: BorrowCallContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Self.I.Element[Self.V]) -> S](deinit self, var predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, C, _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C, _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and EnsureContract[_Ensuring[Self.I], Self.V, C, _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
             "sha256": "94c840a3bd92b2e5b9744c163e874b99ac6cd60c255a958dd2e05a302edafeb4"
           },
@@ -6600,8 +6660,64 @@
             "sha256": "5d2eff0d7a795eacfa17db3d7912f3afa04dfca5593506ba4f76a9482b3e9699"
           },
           {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], G].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], G].Compatible:",
+            "sha256": "932987f9d8dbedfd672aee1e6e4142134cdaead849ea6bf04e140ca04458009c"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], G._BorrowView[q]].Compatible:",
+            "sha256": "2b27bfc098a866f8a285591fd4849b70f1a48e790fd77861573bb95d1436027e"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Self.I.Element[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
+            "sha256": "ca0a0e27d5ad3375323d5e13b3709c1aca25502c3d3d2f60e28ce496812c3a1e"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Self.I.Element[Self.V]) raises Self.E -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Self.E, G, True, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Self.E, G, True, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Self.E, G, True, q]].Compatible:",
+            "sha256": "b36ac253f3761cf2217b3ce8bc314e4c02ac904897491e106152c97fa33b8425"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Self.I.Element[Self.V]) raises Never -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, True, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, True, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and Self.E != Never and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, True, q]].Compatible:",
+            "sha256": "5369bc66d1dcbdd7cae88fb1333edbc52a22553241c6c715887438cbd926440d"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Self.I.Element[Self.V]) thin -> S) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Never, def(Self.I.Element[Self.V]) thin -> S, False]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Never, def(Self.I.Element[Self.V]) thin -> S, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Never, def(Self.I.Element[Self.V]) thin -> S, False]].Compatible:",
+            "sha256": "e7a928071892691e91faf790df01e75eec92f19d293c4cc2ba2c4944d4ce643a"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Self.I.Element[Self.V]) thin -> S) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Never, def(Self.I.Element[Self.V]) thin -> S, False]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Never, def(Self.I.Element[Self.V]) thin -> S, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Never, def(Self.I.Element[Self.V]) thin -> S, False]].Compatible:",
+            "sha256": "724ad1d6e8619154a5767741e8bae45277732f9583e168daf46a2302198a3113"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Q) thin -> S) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Never, def(Q) thin -> S, False]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Never, def(Q) thin -> S, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and Q == Self.I.Element[Self.V] and not conforms_to(S, RegisterPassable) and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Never, def(Q) thin -> S, False]].Compatible:",
+            "sha256": "76dc5bb789f8c40484e2b2e7957088da0a01a09c7699e2e5c2a5a344cc7b7726"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Q) thin -> S) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Never, def(Q) thin -> S, False]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Never, def(Q) thin -> S, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and Q == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Never, def(Q) thin -> S, False]].Compatible:",
+            "sha256": "60a140bb38d9a71f454fe0654482b3b7e07c1f0b0cb98e4e31946595bf2c4b12"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Self.I.Element[Self.V]) raises Y thin -> S) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Y, def(Self.I.Element[Self.V]) raises Y thin -> S, True]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Y, def(Self.I.Element[Self.V]) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Y, def(Self.I.Element[Self.V]) raises Y thin -> S, True]].Compatible:",
+            "sha256": "f535d684178a2c3dc55b20e348fd59e7efa76d0641a7d578f9703964e1153078"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Self.I.Element[Self.V]) raises Y thin -> S) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Y, def(Self.I.Element[Self.V]) raises Y thin -> S, True]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Y, def(Self.I.Element[Self.V]) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Self.I.Element[Self.V], S, Y, def(Self.I.Element[Self.V]) raises Y thin -> S, True]].Compatible:",
+            "sha256": "91d27d3fbb070e00ebe8a685d790918ab469e397386beb64d0e73d2aed5719a3"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Q) raises Y thin -> S) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Y, def(Q) raises Y thin -> S, True]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Y, def(Q) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _ErrorCompatible[Self.E, Y] and Q == Self.I.Element[Self.V] and not conforms_to(S, RegisterPassable) and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Y, def(Q) raises Y thin -> S, True]].Compatible:",
+            "sha256": "f71566e792f1b479c4d9298e8253142e5e7cd18dfe75a2733a2a3c27bcf1b9c9"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Q) raises Y thin -> S) raises EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Y, def(Q) raises Y thin -> S, True]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Y, def(Q) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _ErrorCompatible[Self.E, Y] and Q == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, C._BorrowView[o], _NativeBorrow[Q, S, Y, def(Q) raises Y thin -> S, True]].Compatible:",
+            "sha256": "c0d5b7431a987121227fc6d666a2723bed5b4292d145797025ab887447e737aa"
+          },
+          {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C, var make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], G].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], G].Compatible:",
             "sha256": "6b1ae65be9dcd2f7a6dbf0c7e6d0789221f48ed3b564896afcc38d251b3c2778"
+          },
+          {
+            "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], G._BorrowView[q]].Compatible:",
+            "sha256": "45e1b3ca47ee726260b0345a783172e8fa386b3c778c8878c2815d0e0a760d92"
           },
           {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(Self.I.Element[Self.V]) -> R, G: def(Self.I.Element[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
@@ -6652,6 +6768,10 @@
             "sha256": "8a47b663c499c9b54d0131a22acf6bb50aaddc109ca0bbda4c8fa6f67d55a683"
           },
           {
+            "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], G._BorrowView[q]].Compatible:",
+            "sha256": "f80ea3f24c22363c292ef183ab4ea8522596696c0dae877a6c85a7d0e6629ddb"
+          },
+          {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Self.E -> R, G: def(Self.I.Element[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
             "sha256": "c84e51d0f5ac358522ad224ba677d38c50d3231f8a4909c32fa34c7dc1675680"
           },
@@ -6698,6 +6818,10 @@
           {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C, var make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], G].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and Self.E != Never and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], G].Compatible:",
             "sha256": "539ec64054722e9bc55b0e9a70aaa9dcfbd18cdfcf35df4458ce87c04c5354f7"
+          },
+          {
+            "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and Self.E != Never and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], G._BorrowView[q]].Compatible:",
+            "sha256": "5737edf22f614e967a725ea5fdbc34780cd05b26b02b7cd8642cc0929a671b28"
           },
           {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(Self.I.Element[Self.V]) raises Never -> R, G: def(Self.I.Element[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and Self.E != Never and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
@@ -6748,6 +6872,10 @@
             "sha256": "3292056067af005f2202d764979387f0dcdf0389a96c8f26808c3e233b77e34e"
           },
           {
+            "signature": "def ensure[R: RegisterPassable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], G._BorrowView[q]].Compatible:",
+            "sha256": "8de987b4baf94efbf6c11008acd2a4cc10029ca897807342dc7cba53b61624d9"
+          },
+          {
             "signature": "def ensure[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Self.I.Element[Self.V]) -> S](deinit self, predicate: def(Self.I.Element[Self.V]) thin -> R, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
             "sha256": "243db7e8a2deb9e4bd625b2483b4948bbd99000f515584361ca75f16a8a9df6d"
           },
@@ -6794,6 +6922,10 @@
           {
             "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, predicate: def(P) thin -> R, var make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], G].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and P == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], G].Compatible:",
             "sha256": "681e3917a28bde3488249fdfcb3753b700ee8f894e1f6f16e9a9027ff5c925d7"
+          },
+          {
+            "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, predicate: def(P) thin -> R, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and P == Self.I.Element[Self.V] and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], G._BorrowView[q]].Compatible:",
+            "sha256": "c4abedec8522ff3b552a256814b39636691fb7ab86bc50072f0ef8ff21b15e5c"
           },
           {
             "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Self.I.Element[Self.V]) -> S](deinit self, predicate: def(P) thin -> R, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and P == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
@@ -6844,6 +6976,10 @@
             "sha256": "c38de441884b80b768cf7fd28ce67e5a51c7b352b01cfaf628707edbb7623dd2"
           },
           {
+            "signature": "def ensure[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], G._BorrowView[q]].Compatible:",
+            "sha256": "bc24f50bf848b5983ec46850557c4889b38c011faef6b20c3b1a97512399c3fa"
+          },
+          {
             "signature": "def ensure[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Self.I.Element[Self.V]) -> S](deinit self, predicate: def(Self.I.Element[Self.V]) raises X thin -> R, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
             "sha256": "6f67afc6ce77c01d8a87e6a92f9d1bb850e334a4093833531c4e7f7653acef33"
           },
@@ -6890,6 +7026,10 @@
           {
             "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, predicate: def(P) raises X thin -> R, var make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], G].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], G].Compatible:",
             "sha256": "26828efb30e495b87dd6e20d4a1fd80a9a46bb126ba3fbc45bb975be7cfeae57"
+          },
+          {
+            "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, predicate: def(P) raises X thin -> R, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], G._BorrowView[q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], G._BorrowView[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and G._BorrowView[q].Payload == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], G._BorrowView[q]].Compatible:",
+            "sha256": "141f04e3527a0f87c1387646e944e52a4160d6921b6d67e94b84cabf1406ea20"
           },
           {
             "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Self.I.Element[Self.V]) -> S](deinit self, predicate: def(P) raises X thin -> R, ref[q] make_error: G) raises EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Error -> Pipeline[Self.I, EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and EnsureContract[_Ensuring[Self.I], Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], _NativeBorrowRef[Self.I.Element[Self.V], S, Never, G, False, q]].Compatible:",
@@ -6940,6 +7080,10 @@
             "sha256": "57577b7daf9c3007802264c86a0f52fbd18f2b476189b505e011d75af95327e4"
           },
           {
+            "signature": "def ensure[C: BorrowCallContract & Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, G._BorrowView[q].Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C.Result == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (C.Failure == Never or G._BorrowView[q].Failure == Never or C.Failure == G._BorrowView[q].Failure):",
+            "sha256": "cfa20a3c254bf664efab7166bf38f0b45f69302b05a61cb3ecb1d315fd467474"
+          },
+          {
             "signature": "def ensure[C: BorrowCallContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Success[Self.V]) -> S](deinit self, var predicate: C, ref[q] make_error: G) raises C.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C.Result == Bool and S == _Failure[Self.V] and (C.Failure == Never or Never == Never or C.Failure == Never):",
             "sha256": "15d98661ec06795c5d832b94b1e1e52d4151d19890cb1510e20f16159cb30aa9"
           },
@@ -6984,8 +7128,64 @@
             "sha256": "0529dde85840aea6bf71a50660849ccdecf9f6bab36febf305c3c0df5273556b"
           },
           {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[C._BorrowView[o].Failure, G.Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and G.Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and G.Result == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or G.Failure == Never or C._BorrowView[o].Failure == G.Failure):",
+            "sha256": "2e7eeb020f69f38241903187c962dc3c2a5d7f88166897fbca60d65727918287"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, G._BorrowView[q].Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or G._BorrowView[q].Failure == Never or C._BorrowView[o].Failure == G._BorrowView[q].Failure):",
+            "sha256": "609b6fc9d629423ba31b7f84807c4c0ea71bb7c27ae976f0ad83725a617049a5"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Success[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "6ac26279b416fa5ac0c128d57382b6ff4ad4aedfa6ae4a6cea2354c5c2b71142"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Success[Self.V]) raises Self.E -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Self.E] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Self.E == Never or C._BorrowView[o].Failure == Self.E):",
+            "sha256": "3c22d15da64fc4a656878991140269c9dfbc5165fcb5f27c2b5e5a5d669ee652"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Success[Self.V]) raises Never -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and Self.E != Never and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "19df3553cf0b3118af4cced6a37305e07d3bb67202f0b06878469e76280ae3cf"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(_Success[Self.V]) thin -> S) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "adf0a11baab2ca591b7b84a89f4f6c98363d93f098e65be99d2c070a95b82293"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(_Success[Self.V]) thin -> S) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "b45a8183ac193706cb4d2fa9d5ff77a5eb75e74d4d3108f64987aa8754015321"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Q) thin -> S) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and Q == _Success[Self.V] and not conforms_to(S, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "313f3ea9d5e4f6a3cb1c3cc319973109e6191c432d4ddefd5a62f59b3449541c"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Q) thin -> S) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and Q == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "b984bb234f9c7922f0d4385a2289101955c5341ca60c18ad4a197789f0b70583"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(_Success[Self.V]) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "04d01aada2c78c31db5dc52c1d62cd4a5420a3c9ca39e01fdf20ffe8ca5377ea"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(_Success[Self.V]) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "5540498f1a68dd730f4fdbcefa53c9a51c4a661cdfbb4437909535b26a5f9aa3"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Q) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Success[Self.V] and not conforms_to(S, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "26b31bb1c332dd8d07de6e066492c4ce91f594ae82fb909c228b9a9a1b349345"
+          },
+          {
+            "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, make_error: def(Q) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Failure[Self.V] and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "e18ba5e741b4efac68f09fc37d16e425d01cd260f0f5d8009838460089c01ee7"
+          },
+          {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] predicate: C, var make_error: G) raises G.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G.Result == _Failure[Self.V] and (Never == Never or G.Failure == Never or Never == G.Failure):",
             "sha256": "ed74f11e8d2fd4a8fc1e92178a35567b8b8a009499731899dc45ddd388eed232"
+          },
+          {
+            "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises G._BorrowView[q].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "0f66a990fdd922c18fb68fe905eb7ae2d67f448d2d347d408b9a1c389039515a"
           },
           {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) -> R, G: def(_Success[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and S == _Failure[Self.V] and (Never == Never or Never == Never or Never == Never):",
@@ -7036,6 +7236,10 @@
             "sha256": "c236ebca6d20409041aa6038e1bd9c5c4b5016b2cc6f3a2a76ebfd4d9610e8e1"
           },
           {
+            "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Self.E, G._BorrowView[q].Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (Self.E == Never or G._BorrowView[q].Failure == Never or Self.E == G._BorrowView[q].Failure):",
+            "sha256": "43c945a47ee82531d24a5f31a046ae70edea9507c3c321cb429c107b9fa4d7bb"
+          },
+          {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R, G: def(_Success[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises Self.E -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and S == _Failure[Self.V] and (Self.E == Never or Never == Never or Self.E == Never):",
             "sha256": "b5267389d00a72d435a1b8da1463885eb113553f616d995aaae29e197218b39e"
           },
@@ -7082,6 +7286,10 @@
           {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C, var make_error: G) raises G.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G.Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G.Result == _Failure[Self.V] and (Never == Never or G.Failure == Never or Never == G.Failure):",
             "sha256": "955273e7abcc91759d4d8286e82ebf8dedb1f997d706ea96752b675faaf61299"
+          },
+          {
+            "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises G._BorrowView[q].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "77fb88364726d1115c181c7879fd8acf8a1fbc0d4afe0e24472e3d71c0a686d1"
           },
           {
             "signature": "def ensure[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R, G: def(_Success[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and S == _Failure[Self.V] and (Never == Never or Never == Never or Never == Never):",
@@ -7132,6 +7340,10 @@
             "sha256": "11114d4145a9d22e4c1fb7348b7af40464a9e3e40ea202eb14406b0f3bb18770"
           },
           {
+            "signature": "def ensure[R: RegisterPassable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, predicate: def(_Success[Self.V]) thin -> R, ref[q] make_error: G) raises G._BorrowView[q].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "185d1ab6bb9728c46af5b9ca18c9be7e3b193391110631c664c6a0f63929afe6"
+          },
+          {
             "signature": "def ensure[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Success[Self.V]) -> S](deinit self, predicate: def(_Success[Self.V]) thin -> R, ref[q] make_error: G) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and S == _Failure[Self.V] and (Never == Never or Never == Never or Never == Never):",
             "sha256": "c6361410d95d5f5629213d75e8a86a456b3c2e005a8d4ee3de777be7106d8968"
           },
@@ -7178,6 +7390,10 @@
           {
             "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, predicate: def(P) thin -> R, var make_error: G) raises G.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and G.Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G.Result == _Failure[Self.V] and (Never == Never or G.Failure == Never or Never == G.Failure):",
             "sha256": "c2c622ebd0950a51aea028b51ef6d6275d190d7598ccf692ce7f2cdc6ba329c5"
+          },
+          {
+            "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, predicate: def(P) thin -> R, ref[q] make_error: G) raises G._BorrowView[q].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "9f4669d1bbf1c71e7a21972fd4f9a26ed891984862f6b229ad77c8485cd41bc3"
           },
           {
             "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Success[Self.V]) -> S](deinit self, predicate: def(P) thin -> R, ref[q] make_error: G) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and S == _Failure[Self.V] and (Never == Never or Never == Never or Never == Never):",
@@ -7228,6 +7444,10 @@
             "sha256": "8363cea563087916a37402be455467cbe6343fe36c4998e24682682124f5a9d4"
           },
           {
+            "signature": "def ensure[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, predicate: def(_Success[Self.V]) raises X thin -> R, ref[q] make_error: G) raises _CommonError[X, G._BorrowView[q].Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (X == Never or G._BorrowView[q].Failure == Never or X == G._BorrowView[q].Failure):",
+            "sha256": "00acc151e077715864232429e69d817c64f824403dafb922434bc3ec21e29375"
+          },
+          {
             "signature": "def ensure[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Success[Self.V]) -> S](deinit self, predicate: def(_Success[Self.V]) raises X thin -> R, ref[q] make_error: G) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and S == _Failure[Self.V] and (X == Never or Never == Never or X == Never):",
             "sha256": "3cbffb43f5ea8212b1ca767dfbc5027f4e7575f4df96b830dbe48436cf1efd7a"
           },
@@ -7274,6 +7494,10 @@
           {
             "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, predicate: def(P) raises X thin -> R, var make_error: G) raises _CommonError[X, G.Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and G.Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G.Result == _Failure[Self.V] and (X == Never or G.Failure == Never or X == G.Failure):",
             "sha256": "d9c997f71e637735a561fcbefb394890a821858c2037c14c7b27b2d77fca4f08"
+          },
+          {
+            "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, predicate: def(P) raises X thin -> R, ref[q] make_error: G) raises _CommonError[X, G._BorrowView[q].Failure] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and G._BorrowView[q].Payload == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G._BorrowView[q].Result == _Failure[Self.V] and (X == Never or G._BorrowView[q].Failure == Never or X == G._BorrowView[q].Failure):",
+            "sha256": "af22e4a8f96026e22b8c91b61b34e466cbe8299586133b43f725d277f255f0ee"
           },
           {
             "signature": "def ensure[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Success[Self.V]) -> S](deinit self, predicate: def(P) raises X thin -> R, ref[q] make_error: G) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and S == _Failure[Self.V] and (X == Never or Never == Never or X == Never):",
@@ -7326,6 +7550,10 @@
             "sha256": "d8a474e0e19860b3525b2186414a16c93e516df544dba57d157dd9c948626314"
           },
           {
+            "signature": "def attempt_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises AttemptTapContract[_Ensuring[Self.I], Self.V, C._BorrowView[o]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, C._BorrowView[o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and AttemptTapContract[_Ensuring[Self.I], Self.V, C._BorrowView[o]].Compatible:",
+            "sha256": "56190f41483fd408aa9b111c5d170688523571e2fab305b682b7e6531d0ce09c"
+          },
+          {
             "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure]) -> R](deinit self, ref[o] function: C) raises AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, False, o]].Error -> Pipeline[Self.I, AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and conforms_to(Self.I, Monad) and AttemptTapContract[_Ensuring[Self.I], Self.V, _NativeBorrowRef[Result[Self.I.Element[Self.V], _Ensuring[Self.I].Failure], R, Never, C, False, o]].Compatible:",
             "sha256": "e8819a68b2bf9dd9557c7051869a45e359a69141bff5a93c4a418882dc99a3b1"
           },
@@ -7372,6 +7600,10 @@
           {
             "signature": "def attempt_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C.Result == Result[_Success[C.Result], _Failure[Self.V]]:",
             "sha256": "1073ab512ff50d7abdd09dfc09cf519266a3445f2798f51faa15f310d515d47d"
+          },
+          {
+            "signature": "def attempt_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Result[_Success[C._BorrowView[o].Result], _Failure[Self.V]]:",
+            "sha256": "826604751a6734502e64326f00c75f50c7b37d09d8064067cf30facd729bfe4b"
           },
           {
             "signature": "def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[_Success[Self.V], _Failure[Self.V]]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Result[_Success[R], _Failure[Self.V]]:",
@@ -7564,6 +7796,10 @@
             "sha256": "47fdbef16a4b5e1fd9c0272c86cec74993925bba6d8592b99f34106cf24e30bf"
           },
           {
+            "signature": "def tap_err[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises TapErrContract[Self.I, Self.V, C._BorrowView[o]].Error -> Pipeline[TapErrContract[Self.I, Self.V, C._BorrowView[o]].Family, TapErrContract[Self.I, Self.V, C._BorrowView[o]].Out, Self.E] where TapErrContract[Self.I, Self.V, C._BorrowView[o]].Compatible:",
+            "sha256": "20a92dab105e5d575608566a276be3e73e73c7765df2b360b9fa966f7e5ce5e1"
+          },
+          {
             "signature": "def tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Recovering[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises TapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, TapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and TapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Compatible:",
             "sha256": "53115f2e46f21d1d92523059e99df6b06d4ca9572b4befa0eee43e35a6475423"
           },
@@ -7702,6 +7938,10 @@
             "sha256": "0e4fe98f2aa2f56c8e8e69f8bb94b6ab9b53dcae6139c28c465b0ec3c632ee3a"
           },
           {
+            "signature": "def flat_tap_err[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises FlatTapErrContract[_Recovering[Self.I], Self.V, C._BorrowView[o]].Error -> Pipeline[Self.I, FlatTapErrContract[_Recovering[Self.I], Self.V, C._BorrowView[o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and FlatTapErrContract[_Recovering[Self.I], Self.V, C._BorrowView[o]].Compatible:",
+            "sha256": "9379f3090b4be731e3d4d326de99bdb4df413af6f913126e34f8c825f52aa47c"
+          },
+          {
             "signature": "def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Recovering[Self.I].Failure) -> R](deinit self, ref[o] function: C) raises FlatTapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Error -> Pipeline[Self.I, FlatTapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and FlatTapErrContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o]].Compatible:",
             "sha256": "af66399e8b9c8ed8543ab76c9d187a08979cfbbdbf34cd323ad5c360ddfa8684"
           },
@@ -7748,6 +7988,10 @@
           {
             "signature": "def flat_tap_err[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C.Result == Result[_Success[C.Result], _Failure[Self.V]]:",
             "sha256": "c2304869b2c737d7db113ccccd1bfc46847df9e24f425647109ba9ee9e8cfaa5"
+          },
+          {
+            "signature": "def flat_tap_err[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Result[_Success[C._BorrowView[o].Result], _Failure[Self.V]]:",
+            "sha256": "805993bdfe54ee588e4642eb46413e47e93fd18dd26681c45f5c631308cdcb0c"
           },
           {
             "signature": "def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_Failure[Self.V]) -> R](deinit self, ref[o] function: C) raises Never -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Result[_Success[R], _Failure[Self.V]]:",
@@ -7830,6 +8074,42 @@
           {
             "signature": "def recover_if[C: BorrowCallContract & Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, var predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S) raises RecoverIfContract[_Recovering[Self.I], Self.V, C, NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C, NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C, NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Compatible and _ErrorCompatible[Self.E, Y]:",
             "sha256": "eccbd4cd78cc8e42096b889bee5046d3c2f4b23bcfd001753a8b8b2bd1442930"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G].Compatible:",
+            "sha256": "6f1ddbf5a22c6d8d2edb32ed1e8b794c420bde77301c53c7f4d64715ffcfb8f9"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] function: G) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G._View[q]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G._View[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G._View[q]].Compatible:",
+            "sha256": "28b6c018baf20c9a7979e249ba50452b946f164e6ee9607762b15de4d8e021de"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Recovering[Self.I].Failure) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, False, q]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, False, q]].Compatible:",
+            "sha256": "d9d645a3e652d11ae8780ce3afc1927c9c1b0b5c1a5942a92881ba45ad7bd694"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Recovering[Self.I].Failure) raises Self.E -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Self.E, G, True, q]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Self.E, G, True, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Self.E, G, True, q]].Compatible:",
+            "sha256": "5ac98f30d89971d8fd1d69c21337d469df5058295804f975938cdf0a0775e087"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Recovering[Self.I].Failure) raises Never -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, True, q]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, True, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, True, q]].Compatible and Self.E != Never:",
+            "sha256": "10d7cb5756d6cc8e91cc728c10e4941b6ad59e709bcb5f8181ee7c75eb098c61"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Compatible and not conforms_to(S, RegisterPassable):",
+            "sha256": "55c14053a8c44c256f0fc876b6f7d56b74bfb7cdc1675d619c0bbdf611708b51"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Compatible:",
+            "sha256": "40b2158640ffe3e134d994288020bc21521594f0026856829b70df3492dd33fe"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Compatible and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable):",
+            "sha256": "67d2df3d6a0e3983a6f09e065e4b592a6e4e7bc7fb361141fb04628b928fe21f"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S) raises RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Compatible and _ErrorCompatible[Self.E, Y]:",
+            "sha256": "a7661fe1119f7ce3ad2d05336b0bc9824cccea88d17c636c8252a384fb5d1351"
           },
           {
             "signature": "def recover_if[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(_Recovering[Self.I].Failure) -> R](deinit self, ref[o] predicate: C, var function: G) raises RecoverIfContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o], G].Error -> Pipeline[Self.I, RecoverIfContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and RecoverIfContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o], G].Compatible:",
@@ -8118,6 +8398,42 @@
           {
             "signature": "def recover_if[C: BorrowCallContract & Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, var predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C.Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Failure[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C.Result == Bool and S == _Success[Self.V] and (C.Failure == Never or Y == Never or C.Failure == Y):",
             "sha256": "641b6ed7e4eb8978310f565075d5c68e76aa3e773e85e8ca1d73abb0d361e5fd"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[C._BorrowView[o].Failure, G.Error] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and G.Arg == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and G.Out == _Success[Self.V] and (C._BorrowView[o].Failure == Never or G.Error == Never or C._BorrowView[o].Failure == G.Error):",
+            "sha256": "7ea92d9d5034a31ec2d5962c2278f2fdc62cdf4e691a8c89a3c13b9132bbd86a"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, G._View[q].Error] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and G._View[q].Arg == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and G._View[q].Out == _Success[Self.V] and (C._BorrowView[o].Failure == Never or G._View[q].Error == Never or C._BorrowView[o].Failure == G._View[q].Error):",
+            "sha256": "a8fd1ab6e8006e38f2df1181085dbd32c716bdada644bf4f1e2e25a9e043fd96"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Success[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "776eed4837a40e107e571a9f8e9537ff32c8bacc2b5d8f7ce8e6e2618d8d9f00"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Self.E] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Success[Self.V] and (C._BorrowView[o].Failure == Never or Self.E == Never or C._BorrowView[o].Failure == Self.E):",
+            "sha256": "a467193e5e4b980647e948f58b87e2ad6ccfc8de28205e63d06dd045bfac7086"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and Self.E != Never and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Success[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "36adedf24eaf53e4c0d4eed4346d8848a1f57bf8be1f879b2ff0014edccc92d4"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Success[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "b476a0840f653b0355d505ea7090300c8e76946e58d50c2ae4fae28e27cd0978"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Success[Self.V] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "71a68b2bb8e133533f23bfe23f07666abfd6d9362996c766e6d56befec3ba8f8"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Success[Self.V] and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "fc2652b59d2ea2bd77d1a48139103a0e85f4775453521224e47845ba5b641f02"
+          },
+          {
+            "signature": "def recover_if[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == _Success[Self.V] and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "522e164d00eed1d41d11c3c6f32d90410429a486052b756e841e308bb004c793"
           },
           {
             "signature": "def recover_if[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(_Failure[Self.V]) -> R](deinit self, ref[o] predicate: C, var function: G) raises G.Error -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Arg == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G.Out == _Success[Self.V] and (Never == Never or G.Error == Never or Never == G.Error):",
@@ -8410,6 +8726,42 @@
             "sha256": "280a245b0a1c996f9747f46f0fe047da8227775079f3930b2936b8ba46b6e070"
           },
           {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G].Compatible:",
+            "sha256": "5f04339052e55b4082fca4453f54b4524279925fbcd67f9fe0b13678a703cefa"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] function: G) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G._View[q]].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G._View[q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], G._View[q]].Compatible:",
+            "sha256": "1901bf5ed566eb13cfc9b428fcd16e8fa4f25362614524e1fc36a1121c53c5b2"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Recovering[Self.I].Failure) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, False, q]].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, False, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, False, q]].Compatible:",
+            "sha256": "a16a2051b890c9c4a85291cd4abcd20e862f70874ce527994c1b0d6a03e7e6a2"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Recovering[Self.I].Failure) raises Self.E -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Self.E, G, True, q]].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Self.E, G, True, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Self.E, G, True, q]].Compatible:",
+            "sha256": "c57937443c0364ed0ec707b736417ea688a5f1eb7e99f5e5ada4a459d6e6d3db"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Recovering[Self.I].Failure) raises Never -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, True, q]].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, True, q]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], _NativeUnaryRef[_Recovering[Self.I].Failure, S, Never, G, True, q]].Compatible and Self.E != Never:",
+            "sha256": "966632d5f8dd0bf830010092eaead3e7b9680ca43442cae8593b42d00c1137eb"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Compatible and not conforms_to(S, RegisterPassable):",
+            "sha256": "12ecfd6acfb1eba56688f10302d39c65e1984e1fff660447a3d035f5b262afce"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Never, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) thin -> S, False]].Compatible:",
+            "sha256": "c084410bc9825c856d5e91449ec678b174ea9ce25217570f178a2c509b1a925e"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Compatible and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable):",
+            "sha256": "852e57002304289399426b1367db46d79aa24913a3572f40f3e976bb4e79196c"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S) raises OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, C._BorrowView[o], NativeUnary[_Recovering[Self.I].Failure, S, Y, def(var _NativeOwnedArg[_Recovering[Self.I].Failure]) raises Y thin -> S, True]].Compatible and _ErrorCompatible[Self.E, Y]:",
+            "sha256": "d12763ff6687780c3b236f0629cd4697fba7f5ace259a9fb587d6c0a35bfbdbe"
+          },
+          {
             "signature": "def or_else_if[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(_Recovering[Self.I].Failure) -> R](deinit self, ref[o] predicate: C, var function: G) raises OrElseIfContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o], G].Error -> Pipeline[Self.I, OrElseIfContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o], G].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseIfContract[_Recovering[Self.I], Self.V, _NativeBorrowRef[_Recovering[Self.I].Failure, R, Never, C, False, o], G].Compatible:",
             "sha256": "854ad4401bd996e8b484b0b394ce022774ae62114fea72fb0a2c5d3510c084d1"
           },
@@ -8696,6 +9048,42 @@
           {
             "signature": "def or_else_if[C: BorrowCallContract & Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, var predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C.Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Failure[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C.Result == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (C.Failure == Never or Y == Never or C.Failure == Y):",
             "sha256": "962da931bbc18e577677d5f62a90785acc86fc26c9db35226af1ec5e51c13c25"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[C._BorrowView[o].Failure, G.Error] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and G.Arg == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and G.Out == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or G.Error == Never or C._BorrowView[o].Failure == G.Error):",
+            "sha256": "06614d16c4e599a07925e3a5c1fa3038d021549e3c0d6b9bf63ab4c951887cff"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, G._View[q].Error] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and G._View[q].Arg == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and G._View[q].Out == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or G._View[q].Error == Never or C._BorrowView[o].Failure == G._View[q].Error):",
+            "sha256": "9e68e750370a0f946eaf6a7a71c35362373cbdf54de4bca8439fbbba63f2e716"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "5b19c8fda1a23696bd67571c615f54b6d2f49e353d2623c4694f209fcaac484a"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Self.E] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or Self.E == Never or C._BorrowView[o].Failure == Self.E):",
+            "sha256": "fa38b4949b6816bb48b4223c5964351beeb32a8a271bb85bd32af06063c9deb4"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var _Failure[Self.V]) raises Never -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and Self.E != Never and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "10266eec5c4cc9f4bc84e45d12a298133f794f620ac48e1554bb274444779e48"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "2635637a32d046456d1a9618899cc3eb1decd828be8d3802ffc4865310ab6072"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) thin -> S) raises C._BorrowView[o].Failure -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "25611e1b2809c7759bddcf237b8b40efe4fd6f9c3bcd1128fb23bf7606a7550c"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(S, RegisterPassable) and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "685b8205e4e3ce033e3a2544ac1b3f8c12c0594bd871c0eacc3e962c5bf0cc42"
+          },
+          {
+            "signature": "def or_else_if[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] predicate: C, function: def(var _NativeOwnedArg[_Failure[Self.V]]) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Failure[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and C._BorrowView[o].Result == Bool and S == Result[_Success[Self.V], _Failure[Self.V]] and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "8e43417b3159c26bb07f65c01457b030923a8901d40344ea675a68397a9ed4e0"
           },
           {
             "signature": "def or_else_if[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(_Failure[Self.V]) -> R](deinit self, ref[o] predicate: C, var function: G) raises G.Error -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Arg == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping) and R == Bool and G.Out == Result[_Success[Self.V], _Failure[Self.V]] and (Never == Never or G.Error == Never or Never == G.Error):",
@@ -11274,6 +11662,10 @@
             "sha256": "eadb1dded0bdea8330b5661ac473f078c5d91f7954dc6bd060953a8832a72736"
           },
           {
+            "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Failure, G._BorrowView[q].Failure] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and G._BorrowView[q].Payload == _Failure[Self.V] and C.Result == G._BorrowView[q].Result and (C.Failure == Never or G._BorrowView[q].Failure == Never or C.Failure == G._BorrowView[q].Failure):",
+            "sha256": "fb9751a048a1dcfcf34784bf1136535a3bc611b3454d19ea09f73dec9aae55d7"
+          },
+          {
             "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Failure, Never] -> C.Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Payload == _Success[Self.V] and C.Result == S and (C.Failure == Never or Never == Never or C.Failure == Never):",
             "sha256": "8dceb6d338c5cd0236c80013735b023297533fe18c4d98f01b71040f75cdd897"
           },
@@ -11318,8 +11710,64 @@
             "sha256": "bbacba566db8763cafff9c876e49a44792a6c36cb356eae5cd889ace2f5ca428"
           },
           {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._BorrowView[o].Failure, G.Failure] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and G.Payload == _Failure[Self.V] and C._BorrowView[o].Result == G.Result and (C._BorrowView[o].Failure == Never or G.Failure == Never or C._BorrowView[o].Failure == G.Failure):",
+            "sha256": "a7acf3da311cafdb2e72c83e0851fa34bdb6223a6eaf9916ff849ba352d58efa"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._BorrowView[o].Failure, G._BorrowView[q].Failure] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and G._BorrowView[q].Payload == _Failure[Self.V] and C._BorrowView[o].Result == G._BorrowView[q].Result and (C._BorrowView[o].Failure == Never or G._BorrowView[q].Failure == Never or C._BorrowView[o].Failure == G._BorrowView[q].Failure):",
+            "sha256": "3de8e847306f96eca7095244acbcf073b68996426583e699ba9dc346958a7dbf"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._BorrowView[o].Failure, Never] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "d341735bcfe3d32b8fbdee1529b4ca868c5eb02c9351df2eb10dd574dce30bba"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Self.E -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._BorrowView[o].Failure, Self.E] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Self.E == Never or C._BorrowView[o].Failure == Self.E):",
+            "sha256": "ca95c9d684db8db05b8fc00dd69cf8bcd13d841362c24f2a3430c8c00e5d267e"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) raises Never -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._BorrowView[o].Failure, Never] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and Self.E != Never and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "b1f4e89dc869b37f6024138f3f8104fc0a8e57b419225f4f0a46bfde22df4d41"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[C._BorrowView[o].Failure, Never] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "680398e79d461f177cef2e7682f81cda37d6080bec88cb6772260b5656526fd3"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) thin -> S) raises _CommonError[C._BorrowView[o].Failure, Never] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "6f5557d056f23c5bb94e5aa9e2f1b8c15dfc219a595eab9824aacf704a48bd7f"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[C._BorrowView[o].Failure, Never] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "7b0256c390ef8d4b9535c0d8b045a5d3039b655c407978437f6fa883e658bfa0"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(Q) thin -> S) raises _CommonError[C._BorrowView[o].Failure, Never] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and Q == _Failure[Self.V] and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Never == Never or C._BorrowView[o].Failure == Never):",
+            "sha256": "1b7b583c9b10aeec5896b1f6e3157198b10c6017ffa9037705ce632816b2b68e"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and not conforms_to(S, RegisterPassable) and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "4ad49b3e013f678d36b4b897edd9958d2a286fcea64f2853a46a80706039d1c9"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(_Failure[Self.V]) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and not conforms_to(_Failure[Self.V], TrivialRegisterPassable) and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "ce9737840617961f99e37eacf90e9aed0cbebd16ad89d6b7195bf76be8243d34"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: Movable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and not conforms_to(S, RegisterPassable) and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "033dac2f59d7e18218153eee82d78a319401e8b9453eb0ab8b6a415e85f934bf"
+          },
+          {
+            "signature": "def fold[C: _BorrowViewable, o: ImmOrigin, Q: TrivialRegisterPassable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable](deinit self, ref[o] on_ok: C, on_err: def(Q) raises Y thin -> S) raises _CommonError[C._BorrowView[o].Failure, Y] -> C._BorrowView[o].Result where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C._BorrowView[o].Payload == _Success[Self.V] and _ErrorCompatible[Self.E, Y] and Q == _Failure[Self.V] and C._BorrowView[o].Result == S and (C._BorrowView[o].Failure == Never or Y == Never or C._BorrowView[o].Failure == Y):",
+            "sha256": "34e74d72e84f41f00594520b0b4e37e13d67b6937a0c28f5071a9155ce9c5ee8"
+          },
+          {
             "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
             "sha256": "2fad6fd6c48c4c1c1e22638761f0f9cb616c759c3538484356e9d91f25aacd67"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(_Success[Self.V]) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "ffbde4806e7b1e22e515d16578d87acecee7ddabaf36513dab789337cf4c2e11"
           },
           {
             "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) -> R, G: def(_Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Never == Never or Never == Never or Never == Never):",
@@ -11370,6 +11818,10 @@
             "sha256": "c4fa562771067ca590658d9fdde08e22c334acf1023789317a7cc9d4f988ea43"
           },
           {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (Self.E == Never or G._BorrowView[q].Failure == Never or Self.E == G._BorrowView[q].Failure):",
+            "sha256": "4d2d858dd48fb5c6887740c8ad421df41f18c2095982045dbc49d11b5095d2f7"
+          },
+          {
             "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Self.E -> R, G: def(_Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Self.E, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == S and (Self.E == Never or Never == Never or Self.E == Never):",
             "sha256": "f85103deffa4c3f93b3816eea77e66a8036ccd7d1be1541b6e63aadc13845842"
           },
@@ -11416,6 +11868,10 @@
           {
             "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
             "sha256": "94934ac67c5c654447f91ac9d810c6a635b3a2d5be2e0e24e3e532565a1c6ecb"
+          },
+          {
+            "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "6935b69027c68189bb712baf12281a8b8441ac6caaaa4571d582319e4c4c0e49"
           },
           {
             "signature": "def fold[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(_Success[Self.V]) raises Never -> R, G: def(_Failure[Self.V]) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and Self.E != Never and R == S and (Never == Never or Never == Never or Never == Never):",
@@ -11466,6 +11922,10 @@
             "sha256": "32b970bff8757196ad919e135c937f00dc1ba9413b373e9fd98b0273523d566f"
           },
           {
+            "signature": "def fold[R: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "e93899476f1a3c5436714ec30f2721c75abdfae15c5f3d3e7920192d82a91bb7"
+          },
+          {
             "signature": "def fold[R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
             "sha256": "9661dc308c088c07f458bc825d2ed7da00961f5043df251044f40c27549aa573"
           },
@@ -11512,6 +11972,10 @@
           {
             "signature": "def fold[R: RegisterPassable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) thin -> R, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
             "sha256": "1c16a1276224b1ac15c1a5d89eda551d19fb59988b84ec31204950a3593c02d7"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "2db780bcb59ca2df4d7c12f32c84f7dafe6701253e0e1069d4d2c4be1dd82242"
           },
           {
             "signature": "def fold[R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(_Success[Self.V]) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
@@ -11562,6 +12026,10 @@
             "sha256": "9f947517f317a19d12bb1c77b025abab8c0925a527d1032a3d99ecafaef32c8d"
           },
           {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "b9469f519829d52a73cc463690d6295a5c1e93181cadcafd0c148349e3055dfc"
+          },
+          {
             "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == S and (Never == Never or Never == Never or Never == Never):",
             "sha256": "e2e512c14c50e7bf5bfde1298a7be7284d59e140a13c78acde0b900d6b03487f"
           },
@@ -11608,6 +12076,10 @@
           {
             "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(P) thin -> R, var on_err: G) raises _CommonError[Never, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and G.Payload == _Failure[Self.V] and R == G.Result and (Never == Never or G.Failure == Never or Never == G.Failure):",
             "sha256": "06684b243b2e6029987d7b4398b637a8497de1712668f964c5d20687aad9ce84"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (Never == Never or G._BorrowView[q].Failure == Never or Never == G._BorrowView[q].Failure):",
+            "sha256": "c9a4d05e0104d74c3c4a423d866c7bb24f790ec7a438f14c9db937f1af659ee5"
           },
           {
             "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(P) thin -> R, ref[q] on_err: G) raises _CommonError[Never, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and P == _Success[Self.V] and R == S and (Never == Never or Never == Never or Never == Never):",
@@ -11658,6 +12130,10 @@
             "sha256": "f21607c5e58f4d01bca5744dc35d47884e5d288218da7231ed8863911e347307"
           },
           {
+            "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (X == Never or G._BorrowView[q].Failure == Never or X == G._BorrowView[q].Failure):",
+            "sha256": "64d7e24c725fa51679f9cb59b5bf37b36066670c7e4e0237dfc04140bc0e88ab"
+          },
+          {
             "signature": "def fold[R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
             "sha256": "4e9029ef20d2d50d4973b84d693840203733d99435563574579df89a402942c1"
           },
@@ -11704,6 +12180,10 @@
           {
             "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and G.Payload == _Failure[Self.V] and R == G.Result and (X == Never or G.Failure == Never or X == G.Failure):",
             "sha256": "fc0fbbf8dbd1dc3a9402f60dc2e7a427849447ced24c1253067fac52a7c17d71"
+          },
+          {
+            "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (X == Never or G._BorrowView[q].Failure == Never or X == G._BorrowView[q].Failure):",
+            "sha256": "4181b5baa89478a0323f3d621456a5756b1275ed92ee213d1d366be073469861"
           },
           {
             "signature": "def fold[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(_Success[Self.V]) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and not conforms_to(_Success[Self.V], TrivialRegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
@@ -11754,6 +12234,10 @@
             "sha256": "9e96f1fad2fd2c996a9e87cfb5c78624809d9d830522b86e6aa5d489135d47c0"
           },
           {
+            "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (X == Never or G._BorrowView[q].Failure == Never or X == G._BorrowView[q].Failure):",
+            "sha256": "3b34d32aab4e94baaaf0ec6698600ef53bbde9c133b7d0b51a0c5f25cdd01b83"
+          },
+          {
             "signature": "def fold[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and not conforms_to(R, RegisterPassable) and R == S and (X == Never or Never == Never or X == Never):",
             "sha256": "1c235a4ddce5d92fdc5ce0227bf9c22b4ebe5f802a7ebe2aafa74457f89000a6"
           },
@@ -11800,6 +12284,10 @@
           {
             "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, on_ok: def(P) raises X thin -> R, var on_err: G) raises _CommonError[X, G.Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and G.Payload == _Failure[Self.V] and R == G.Result and (X == Never or G.Failure == Never or X == G.Failure):",
             "sha256": "8507e522ffb41f6f4eed9f1934f80872e882ac3366b36da452226173bf2cf986"
+          },
+          {
+            "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, G._BorrowView[q].Failure] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and G._BorrowView[q].Payload == _Failure[Self.V] and R == G._BorrowView[q].Result and (X == Never or G._BorrowView[q].Failure == Never or X == G._BorrowView[q].Failure):",
+            "sha256": "8a5119fcee3ebb60739ef1034265b84c6d8d1d2c501c2e9d93f0ba6c73dd373f"
           },
           {
             "signature": "def fold[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(_Failure[Self.V]) -> S](deinit self, on_ok: def(P) raises X thin -> R, ref[q] on_err: G) raises _CommonError[X, Never] -> R where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Success[Self.V] and R == S and (X == Never or Never == Never or X == Never):",
@@ -12241,6 +12729,12 @@
         "struct Partial[R: Movable & Deinitable, E: Movable & Deinitable,"
       ],
       "methods": {
+        "invoke": [
+          {
+            "signature": "def invoke(self, ref payload: Self.Payload) raises Self.Failure capturing -> Self.Result:",
+            "sha256": "c60befb92ea072d81a407809b2b369ac1297801abc89053afaf7049b5fd42d76"
+          }
+        ],
         "call": [
           {
             "signature": "def call(self) raises Self.E -> Self.R:",

@@ -47,7 +47,8 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 params=cb.parameters + cb.explicit, argument=cb.argument,
                 adapter_type=cb.type, build=cb.build, result=cb.result,
                 error=cb.error, conditions=[cb.payload + " == " + payload],
-                target=f"_ViewTarget[{C}, {o}]", family=f"_ViewFamily[{C}, {o}]",
+                target=f"_ViewTarget[{C}, {o}]" if mode == "owned" else f"_InferredApplicative[{cb.result}]",
+                family=f"_ViewFamily[{C}, {o}]" if mode == "owned" else f"_NativeFamily[{cb.result}]",
                 is_native=False,
             )
         if kind == "library":
@@ -105,7 +106,9 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         # Known operands project their exact native convention; only the result
         # needs separate register/memory bounds during callback inference.
         # Closure borrows and owned thin-pointer storage keep the same adapters.
-        for kind in (("library",) if library else ()) + (("view",) if view else ()) + ("pure", "raising", "never"):
+        # Library predicates and observers can expose a retained shared receiver.
+        # Owned-operand views remain selected explicitly for origin-indexed chains.
+        for kind in (("library",) if library else ()) + (("view",) if view or (mode == "borrow" and library) else ()) + ("pure", "raising", "never"):
             yield callback(mode, kind, payload, arg, second=second, repeatable=repeatable)
         # Read parameters need explicit TrivialRegisterPassable evidence at
         # overload selection; a conditional read-type projection loses it.
@@ -916,7 +919,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         contract = f"AttemptTapContract[{family}, Self.V, {cb['adapter_type']}]"
         runner = f"_AttemptTap[{family}, Self.V, {cb['adapter_type']}]"
         conditions = ["conforms_to(Self.I, ApplicativeError)", "conforms_to(Self.I, Monad)"]
-        if cb["adapter_type"] != "C": conditions += cb["conditions"]
+        if cb["is_native"]: conditions += cb["conditions"]
         conditions += [contract + ".Compatible"]
         emit("attempt_tap", cb, cb["params"], cb["argument"], contract + ".Out", contract + ".Error",
              "Self.I", conditions, f"{runner}.apply(self.value^, {cb['build']})",
@@ -961,7 +964,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         for capability, witness in capabilities:
             payload = primary.input("Self.I.Element[Self.V]", witness + ".Failure")
             for cb in native_callbacks(primary.mode, payload, primary.argument):
-                if not operation.effect and cb["adapter_type"] == "C":
+                if not operation.effect and not cb["is_native"]:
                     if capability == "ErrorMapping": continue
                     selected = "Self.I"
                     conditions = []
@@ -969,13 +972,13 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                     selected = witness
                     conditions = [f"conforms_to(Self.I, {capability})"]
                     if capability == "ErrorMapping": conditions += ["not conforms_to(Self.I, ApplicativeError)"]
-                    if cb["adapter_type"] != "C": conditions += cb["conditions"]
+                    if cb["is_native"]: conditions += cb["conditions"]
                 contract = f"{contract_name}[{selected}, Self.V, {cb['adapter_type']}]"
                 conditions += [contract + ".Compatible"]
                 runner = (f"_observe_error[{selected}, Self.V, {cb['adapter_type']}, True]"
                           if operation.effect else f"_tap_err[{selected}]")
                 emit(operation.name, cb, cb["params"], cb["argument"], contract + ".Out", contract + ".Error",
-                     contract + ".Family" if not operation.effect and cb["adapter_type"] == "C" else "Self.I",
+                     contract + ".Family" if not operation.effect and not cb["is_native"] else "Self.I",
                      conditions, f"{runner}({cb['build']}, self.value^)",
                      "Observe the selected stored-error layer using its family's timing and error policy.")
 
