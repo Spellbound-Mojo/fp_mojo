@@ -4,7 +4,7 @@ from fp.callables.native import _NativeOwnedArg, NativeUnary, NativeBorrow, _Nat
 from fp.callables._conditional import _guard_owned
 from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables._retention import _Retain
-from fp.callables._transforms import _Retained, _ObserveOnce
+from fp.callables._transforms import _Retained, _ObserveOnce, _Fill
 from fp.callables.protocols import Binary
 from fp.callables._identity import Identity
 from fp.callables.protocols import Unary, OnceUnary, UnaryContract, BorrowCallable
@@ -717,6 +717,38 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     ) raises F.Error -> Result[F.Out, Self.E] where F.Arg == Self.T:
         """Transform the success value with a library unary callback."""
         return _result_transform[Self.T, Self.E, F.Out, Self.E, F, True, True](function^, self^)
+
+    def fill[U: Movable & Deinitable](deinit self, var value: U) -> Result[U, Self.E]:
+        """Replace a success with an already evaluated value; preserve a stored error.
+
+        Consumes both the Result and the replacement without copying. On Ok,
+        the old payload is destroyed and the replacement moves into Ok. On
+        Err, the replacement is destroyed and the original error moves through.
+        Both output types retain their exact origins. No stored error is raised.
+        This is Cats `Functor.as`, named `fill` throughout this library.
+
+        Parameters:
+            U: The replacement type, inferred from the value.
+
+        Args:
+            value: The replacement, consumed even when the Result is Err.
+
+        Returns:
+            `Ok(value)`, or the original `Err`.
+        """
+        return self^.map(_Fill[Self.T, U](value^))
+
+    def void(deinit self) -> Result[NoneType, Self.E]:
+        """Discard a success payload while preserving success or the stored error.
+
+        Consumes the Result without copying or raising its error. This is
+        `fill(None)`, following Cats `Functor.void`. The stored error retains
+        its exact type and origins.
+
+        Returns:
+            `Ok(None)`, or the original `Err`.
+        """
+        return self^.fill[NoneType](None)
 
     def flatten(deinit self) -> Self.T where conforms_to(Self.T, _ResultType) and Self.T == Result[downcast[Self.T, _ResultType].Value, Self.E]:
         """Remove one nested Result layer, preserving success or either stored error.

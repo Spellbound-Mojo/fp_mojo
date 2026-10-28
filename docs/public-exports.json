@@ -3574,6 +3574,12 @@
       "signature": "def ensure[C: _BorrowViewable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:"
      }
     ],
+    "fill": [
+     {
+      "sha256": "c0b62149ad9632ead8a414bea2b7b9383ae9802b27d0bcc8935d187ba7a8ae9a",
+      "signature": "def fill[U: Movable & Deinitable](deinit self, var value: U) -> Result[U, Self.E]:"
+     }
+    ],
     "flat_map": [
      {
       "sha256": "80d9989f8c1079b9a2b90b692a97f7f60034bff048cb564e3d872ac80126340d",
@@ -4456,6 +4462,12 @@
      {
       "sha256": "c9526f67d6f210b39d2b2e29649ca27ab4da5344365e84520303838dd1f562c2",
       "signature": "def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where R == Self.T:"
+     }
+    ],
+    "void": [
+     {
+      "sha256": "d339f59c7b3e7edb0627fc06190629b5c7cbcdc57040237e54d136964f3f3cde",
+      "signature": "def void(deinit self) -> Result[NoneType, Self.E]:"
      }
     ]
    },

@@ -30381,6 +30381,38 @@
       "summary": "Keep an accepted success or construct a stored error from its borrowed value."
      }
     ],
+    "fill": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The replacement, consumed even when the Result is Err.",
+        "name": "value",
+        "type": "U",
+        "variadic": false
+       }
+      ],
+      "description": "Consumes both the Result and the replacement without copying. On Ok,\nthe old payload is destroyed and the replacement moves into Ok. On\nErr, the replacement is destroyed and the original error moves through.\nBoth output types retain their exact origins. No stored error is raised.\nThis is Cats `Functor.as`, named `fill` throughout this library.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The replacement type, inferred from the value.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "`Ok(value)`, or the original `Err`.",
+       "type": "Result[U, Self.E]"
+      },
+      "signature": "def fill[U: Movable & Deinitable](deinit self, var value: U) -> Result[U, Self.E]",
+      "summary": "Replace a success with an already evaluated value; preserve a stored error."
+     }
+    ],
     "flat_map": [
      {
       "args": [
@@ -41875,6 +41907,22 @@
       },
       "signature": "def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where R == Self.T",
       "summary": "Plain raising form of `value_or`; infer the exact native error."
+     }
+    ],
+    "void": [
+     {
+      "args": [],
+      "description": "Consumes the Result without copying or raising its error. This is\n`fill(None)`, following Cats `Functor.void`. The stored error retains\nits exact type and origins.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "`Ok(None)`, or the original `Err`.",
+       "type": "Result[NoneType, Self.E]"
+      },
+      "signature": "def void(deinit self) -> Result[NoneType, Self.E]",
+      "summary": "Discard a success payload while preserving success or the stored error."
      }
     ]
    },

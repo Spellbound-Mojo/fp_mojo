@@ -95,6 +95,25 @@ of the stored `E`. Library callables keep their declared error automatically.
 Selecting a closure's error first also lets incompatible callbacks receive
 normal diagnostics on Mojo 1.2.
 
+## Replace or discard a successful value
+
+Use `result^.fill(value)` to replace an Ok payload, or `result^.void()` to
+keep only success or failure. The example above replaces a count with
+`"accepted"`; discarding a successful count still produces Ok, and discarding
+a failed count keeps `"negative count"` as its error. These methods need no
+Pipeline or callback.
+
+This follows [Cats `Functor.as` and `Functor.void`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/Functor.scala).
+The library uses `fill` consistently for replacement. It infers the new value's
+type and returns `Result[U, E]`; `void` returns `Result[NoneType, E]`. Both
+consume the original Result without raising a stored error.
+
+The replacement is evaluated before `fill`, including on Err. It moves into
+Ok without copying, or is destroyed on Err. Move-only replacements work;
+borrowed replacements and stored errors retain their original owners. Use
+`map` when computing the replacement should happen only on success. For a
+selected chain, `pipeline(result^).fill(value)` and `.void()` remain available.
+
 ## Work with the error as a value
 
 `swap()` exchanges the two Result cases: `Ok(value)` becomes `Err(value)` and

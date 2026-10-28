@@ -53,3 +53,7 @@ def main() raises:
     print("flattened:", nested^.flatten().get_or(0))
     var rejected = checked(-1).map(checked)
     print("flattened error:", rejected^.flatten().swap().get_or(String()))
+
+    print("filled:", checked(5).fill(String("accepted")).get_or(String()))
+    print("void:", checked(5).void().is_ok())
+    print("void error:", checked(-1).void().swap().get_or(String()))

@@ -360,7 +360,18 @@
         "tests/compile_fail/result_flatten_not_nested.mojo",
         "tests/compile_fail/result_flatten_optional.mojo",
         "tests/compile_fail/result_flatten_origin.mojo",
-        "tests/compile_fail/result_flatten_output_origin.mojo"
+        "tests/compile_fail/result_flatten_output_origin.mojo",
+        "tests/runtime/test_result_fill.mojo",
+        "tests/ownership/test_result_fill.mojo",
+        "tests/ownership/test_owned_fill.mojo",
+        "tests/compile_fail/result_fill_borrowed.mojo",
+        "tests/compile_fail/result_fill_consumed.mojo",
+        "tests/compile_fail/result_fill_error_origin.mojo",
+        "tests/compile_fail/result_fill_error_type.mojo",
+        "tests/compile_fail/result_fill_output_origin.mojo",
+        "tests/compile_fail/result_fill_replacement_reuse.mojo",
+        "tests/compile_fail/result_fill_void_consumed.mojo",
+        "tests/compile_fail/result_fill_void_error_origin.mojo"
       ]
     },
     "iteration": {

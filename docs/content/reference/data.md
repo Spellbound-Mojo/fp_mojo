@@ -55,6 +55,19 @@ without copying its payload.
 `pipeline(result^)`, retaining the native error setting. Combine it with
 `to_optional()` to keep only the error; see [working with the error as a value](../tutorial/results.md#work-with-the-error-as-a-value).
 
+## Replace or discard a success
+
+`result^.fill(value)` returns `Result[U, E]`, inferring U from the replacement.
+`result^.void()` returns `Result[NoneType, E]`. An Err passes through unchanged;
+neither method raises it. Both consume the Result without copying, and `fill`
+also consumes its eagerly evaluated replacement, destroying it on Err. The
+output preserves the exact value and error origins, including move-only state.
+
+These direct methods follow the same mapping path as Pipeline replacement and
+discarding. `fill` is the library's spelling of Cats `Functor.as`; `void` is
+replacement with None. See [replacing or discarding a successful value](../tutorial/results.md#replace-or-discard-a-successful-value)
+for the executable example and eager evaluation rules.
+
 ## Flatten a nested Result
 
 `nested^.flatten()` removes one layer from `Result[Result[T, E], E]`, returning

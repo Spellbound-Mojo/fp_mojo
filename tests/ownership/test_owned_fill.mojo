@@ -18,8 +18,10 @@ def result_fill[route: Int](ok: Bool) raises:
         output = pipeline(source^).fill(Token(3, state)).get()
     elif route == 1:
         output = piped(source^).fill(Token(3, state)).get()
-    else:
+    elif route == 2:
         output = piped(source^).fill[ResultFamily[Token]](Token(3, state)).get()
+    else:
+        output = source^.fill(Token(3, state))
     assert_equal(output.is_ok(), ok)
     assert_equal(state[].drops[1], Int(ok))
     assert_equal(state[].drops[2], 0)
@@ -77,6 +79,17 @@ def copy_policy() raises:
     assert_equal(state[].drops[3], 8)
 
 
+def direct_copy_policy(ok: Bool) raises:
+    var state = trace()
+    var source = Result[Int, Int](Ok(1)) if ok else Result[Int, Int](Err(2))
+    var output = source^.fill(Counted(state))
+    assert_equal(state[].factories, 0)
+    assert_equal(state[].drops[3], Int(not ok))
+    assert_equal(output.is_ok(), ok)
+    _ = output^
+    assert_equal(state[].drops[3], 1)
+
+
 def deferred[execute: Bool]() raises:
     var state = trace()
     comptime R = Reader[Int]
@@ -126,6 +139,9 @@ def main() raises:
         for present in [False, True]:
             result_fill[route](present)
             optional_fill[route](present)
+    for ok in [False, True]:
+        result_fill[3](ok)
+        direct_copy_policy(ok)
     copy_policy()
     family_failure()
     deferred[False]()
