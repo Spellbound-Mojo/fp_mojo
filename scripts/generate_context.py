@@ -46,7 +46,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             return dict(
                 params=cb.parameters + cb.explicit, argument=cb.argument,
                 adapter_type=cb.type, build=cb.build, result=cb.result,
-                error=cb.error, conditions=[cb.payload + " == " + payload],
+                error=cb.error, conditions=[cb.payload + " == " + payload] if cb.payload else [],
                 target=f"_ViewTarget[{C}, {o}]" if mode == "owned" else f"_InferredApplicative[{cb.result}]",
                 family=f"_ViewFamily[{C}, {o}]" if mode == "owned" else f"_NativeFamily[{cb.result}]",
                 is_native=False,
@@ -1110,7 +1110,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                         f'        """Consume the native Result and return one {payload_mode}-payload handler value directly."""\n'
                         f'        return {invoke}(rebind_var[{Source}](self.value^), {builds[0]}, {builds[1]})\n')
     def value_terminal(name, mode, arg, summary, input_type, output_type, source_conditions, invoke):
-        for cb in native_callbacks(mode, input_type, arg, view=mode == "owned"):
+        for cb in native_callbacks(mode, input_type, arg, view=mode in ("owned", "thunk")):
             params = callback_parameters([cb])
             if params and params[-1] == "//": params.pop()
             conditions = source_conditions + cb["conditions"] + [f'{cb["result"]} == {output_type}']
@@ -1136,7 +1136,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                    "Return the present Optional value or invoke a default factory only on absence.",
                    "", element, ["OptionalFamily.CarrierCompatible[Self.V]"],
                    lambda cb: f'rebind_var[{element}](_optional_get_or_else[{cb["adapter_type"]}](rebind_var[Optional[{cb["result"]}]](self.value^), {cb["build"]}))')
-    for cb in native_callbacks("thunk", "", "make_error"):
+    for cb in native_callbacks("thunk", "", "make_error", view=True):
         result = f'Result[{element}, {cb["result"]}]'
         emit("to_result", cb, callback_parameters([cb]), cb["argument"], result,
              cb["error"], f'ResultFamily[{cb["result"]}]',

@@ -12,10 +12,10 @@ from fp.callables.invoke import call_once, invoke_borrowed, invoke_borrowed_once
 from fp.adt.data import Cases, Data, Value, _ChoiceType
 from std.builtin.rebind import rebind_var, downcast
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from fp.callables.protocols import BorrowCallContract, ThunkContract
+from fp.callables.protocols import BorrowCallContract, ThunkContract, Thunk
 from fp.callables.native import (_call_native, _call_native_borrow, _Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing,
                                  _NativeBorrowRef, _NativeUnaryRef, _Thunk, _RaisingThunk)
-from fp.callables._receiver import _SharedBorrowRef, _SharedUnaryRef, _borrow_once_as, _thunk_once_as, _unary_once_as
+from fp.callables._receiver import _SharedThunkRef, _SharedBorrowRef, _SharedUnaryRef, _borrow_once_as, _thunk_once_as, _unary_once_as
 from fp.callables._transforms import _IgnoreInput, _BorrowedUnary, _ValueThunk
 
 
@@ -239,8 +239,9 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
 
         Like Cats Either's `getOrElse`, evaluation of the default is lazy.
         Mojo expresses that explicitly with a factory: it runs only on Err.
-        The Result and a library factory are consumed, including destruction
-        of a skipped factory. Native factories are borrowed in place.
+        The Result and an owned library factory are consumed, including
+        destruction of a skipped factory. Named shared factories and native
+        factories are borrowed in place; a move or temporary retains ownership.
         Plain functions infer their native error. For a captured factory raising
         a custom error, use `pipeline(result^).raising[X]().get_or_else(factory)`.
         Non-raising, Never and Error closures work directly. Library factories
@@ -259,6 +260,10 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The factory's exact native error; Never for non-raising factories.
         """
         return self^.value_or(_IgnoreInput[Self.E, C](make_default^))
+
+    def get_or_else[C: Thunk](deinit self, make_default: C) raises C.Error -> Self.T where C.Out == Self.T:
+        """Borrow a reusable shared factory and invoke it only on Err."""
+        return self^.get_or_else(_SharedThunkRef[C, origin_of(make_default)](Pointer(to=make_default)))
 
     def swap(deinit self) -> Result[Self.E, Self.T]:
         """Exchange success and stored failure, moving the active payload.

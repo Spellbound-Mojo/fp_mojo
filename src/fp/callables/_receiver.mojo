@@ -1,10 +1,20 @@
 """Origin-tracked callback receivers and selected-error invocation boundaries."""
 from std.builtin.rebind import downcast, rebind_var, rebind
 from fp._internal.errors import _ErrorCompatible, _propagate_error
-from fp.callables.protocols import CallContract, UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, Binary, OnceBinary, MutableBinary, ThunkContract, OnceThunk, MutableThunk, BorrowCallContract, BorrowCallable, BorrowOnceCallable, BorrowMutableCallable
+from fp.callables.protocols import CallContract, UnaryContract, Unary, MutableUnary, OnceUnary, BinaryContract, Binary, OnceBinary, MutableBinary, ThunkContract, Thunk, OnceThunk, MutableThunk, BorrowCallContract, BorrowCallable, BorrowOnceCallable, BorrowMutableCallable
 from fp.callables.invoke import _OnceBorrowAvailable, RepeatableBorrow, invoke_borrowed_repeated, RepeatableUnary, RepeatableBinary, RepeatableThunk, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
 from fp.callables.protocols import BorrowMutableCallable as _MutableBorrow
 from fp.callables.invoke import RepeatableBorrow as _RepeatableBorrow, invoke_borrowed_repeated as _borrow_repeated_as
+
+
+@fieldwise_init
+struct _SharedThunkRef[F: Thunk, o: ImmOrigin](Thunk, ImplicitlyCopyable):
+    """Retain a shared factory without copying or consuming its captures."""
+    var function: Pointer[Self.F, Self.o]
+    comptime Out = Self.F.Out
+    comptime Error = Self.F.Error
+    def call(self) raises Self.Error -> Self.Out:
+        return self.function[].call()
 
 
 @fieldwise_init

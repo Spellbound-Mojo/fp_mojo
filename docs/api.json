@@ -34462,7 +34462,7 @@
         "variadic": false
        }
       ],
-      "description": "Like Cats Either's `getOrElse`, evaluation of the default is lazy.\nMojo expresses that explicitly with a factory: it runs only on Err.\nThe Result and a library factory are consumed, including destruction\nof a skipped factory. Native factories are borrowed in place.\nPlain functions infer their native error. For a captured factory raising\na custom error, use `pipeline(result^).raising[X]().get_or_else(factory)`.\nNon-raising, Never and Error closures work directly. Library factories\nretain their declared error without an extra context.",
+      "description": "Like Cats Either's `getOrElse`, evaluation of the default is lazy.\nMojo expresses that explicitly with a factory: it runs only on Err.\nThe Result and an owned library factory are consumed, including\ndestruction of a skipped factory. Named shared factories and native\nfactories are borrowed in place; a move or temporary retains ownership.\nPlain functions infer their native error. For a captured factory raising\na custom error, use `pipeline(result^).raising[X]().get_or_else(factory)`.\nNon-raising, Never and Error closures work directly. Library factories\nretain their declared error without an extra context.",
       "error": "C.Error",
       "parameters": [
        {
@@ -34481,6 +34481,36 @@
       },
       "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> Self.T where C.Out == Self.T",
       "summary": "Return the success value, or call a zero-argument default factory."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "C.Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Thunk",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self.T"
+      },
+      "signature": "def get_or_else[C: Thunk](deinit self, make_default: C) raises C.Error -> Self.T where C.Out == Self.T",
+      "summary": "Borrow a reusable shared factory and invoke it only on Err."
      },
      {
       "args": [
@@ -157073,6 +157103,43 @@
        }
       ],
       "description": "",
+      "error": "_SharedThunkRef[C, o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Thunk",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_Success[Self.V]"
+      },
+      "signature": "def get_or_else[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_default: C) raises _SharedThunkRef[C, o].Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _SharedThunkRef[C, o].Out == _Success[Self.V]",
+      "summary": "Return the success value or invoke a default factory only on Err."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "Never",
       "parameters": [
        {
@@ -157356,6 +157423,43 @@
        "type": "OptionalFamily.Element[Self.V]"
       },
       "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and C.Out == OptionalFamily.Element[Self.V]",
+      "summary": "Return the present Optional value or invoke a default factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_default",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_SharedThunkRef[C, o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Thunk",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "OptionalFamily.Element[Self.V]"
+      },
+      "signature": "def get_or_else[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_default: C) raises _SharedThunkRef[C, o].Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _SharedThunkRef[C, o].Out == OptionalFamily.Element[Self.V]",
       "summary": "Return the present Optional value or invoke a default factory only on absence."
      },
      {
@@ -232679,6 +232783,43 @@
        "type": "Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E]"
       },
       "signature": "def to_result[C: ThunkContract & Movable & Deinitable](deinit self, var make_error: C) raises C.Error -> Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]",
+      "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "make_error",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_SharedThunkRef[C, o].Error",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Thunk",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[ResultFamily[_SharedThunkRef[C, o].Out], Result[OptionalFamily.Element[Self.V], _SharedThunkRef[C, o].Out], Self.E]"
+      },
+      "signature": "def to_result[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_error: C) raises _SharedThunkRef[C, o].Error -> Pipeline[ResultFamily[_SharedThunkRef[C, o].Out], Result[OptionalFamily.Element[Self.V], _SharedThunkRef[C, o].Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]",
       "summary": "Convert a native Optional to Result, invoking the error factory only on absence."
      },
      {

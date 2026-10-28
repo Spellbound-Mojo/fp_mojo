@@ -3887,6 +3887,10 @@
       "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable]( deinit self, var make_default: C ) raises C.Error -> Self.T where C.Out == Self.T:"
      },
      {
+      "sha256": "95915073d273101928f0ff9c5795059720107735141c45ae7af11a905fe2a95e",
+      "signature": "def get_or_else[C: Thunk](deinit self, make_default: C) raises C.Error -> Self.T where C.Out == Self.T:"
+     },
+     {
       "sha256": "fca0b07fa0f492b5c526c7c740f505b8e5b14f48f25280508e964d78df707b8c",
       "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:"
      },
@@ -13827,6 +13831,10 @@
       "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and C.Out == _Success[Self.V]:"
      },
      {
+      "sha256": "c44d4a3e09c2fb179b5e158af56b13d873ab079ba7216c43b58cb9a77c506986",
+      "signature": "def get_or_else[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_default: C) raises _SharedThunkRef[C, o].Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _SharedThunkRef[C, o].Out == _Success[Self.V]:"
+     },
+     {
       "sha256": "344bd61b02cc6348db2621f1375a967a5cd4dab7d750751fa632e40ec8e6db21",
       "signature": "def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:"
      },
@@ -13857,6 +13865,10 @@
      {
       "sha256": "97ffeb504f194de78e20bfa09e25d1b010de080ebde5c8a1bd22d2dea3d43a26",
       "signature": "def get_or_else[C: ThunkContract & Movable & Deinitable](deinit self, var make_default: C) raises C.Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and C.Out == OptionalFamily.Element[Self.V]:"
+     },
+     {
+      "sha256": "5bebe230f4a572d181a8e1328eedd3ace795f09a8657ee193e38f8ef7b0dc979",
+      "signature": "def get_or_else[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_default: C) raises _SharedThunkRef[C, o].Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _SharedThunkRef[C, o].Out == OptionalFamily.Element[Self.V]:"
      },
      {
       "sha256": "1550f6b731c8674121b7dd91cfe58b8a3a6f373cb5c8c37309a0dee6e0d544f9",
@@ -19183,6 +19195,10 @@
      {
       "sha256": "7d29baf4e2048017ef51d2bbfe7c5e0abec4d0d106376ade8aca68e58fe91ecf",
       "signature": "def to_result[C: ThunkContract & Movable & Deinitable](deinit self, var make_error: C) raises C.Error -> Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:"
+     },
+     {
+      "sha256": "24ee19ed03ed83f087de3f9aa9ec88bd0fd27ce17abb0a010d18143f416568b6",
+      "signature": "def to_result[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_error: C) raises _SharedThunkRef[C, o].Error -> Pipeline[ResultFamily[_SharedThunkRef[C, o].Out], Result[OptionalFamily.Element[Self.V], _SharedThunkRef[C, o].Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:"
      },
      {
       "sha256": "b2ebf54b01892fd45a48ae48d5294b868d79f06e5c0ea976516c8263f4297e4f",

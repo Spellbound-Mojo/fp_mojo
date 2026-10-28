@@ -61,8 +61,9 @@ the success in Mojo's native `Optional`.
 
 The same methods finish a `pipeline` directly: no `.get()` or private payload
 access is needed. Each consumes its Result, so use `result^` for a named
-local. Move-only payloads work without copying. A skipped library callback is
-destroyed; a captured native callback remains borrowed and can be reused.
+local. Move-only payloads work without copying. A skipped owned library callback is
+destroyed. Native callbacks and named shared default factories stay borrowed
+and can be reused.
 
 When both branches need formatting, finish with `.fold(describe, describe_error)`.
 Each handler borrows its payload, and the pipeline releases that payload after

@@ -268,9 +268,18 @@ An explicit move continues through the operation's owned callback overload.
 
 | Operand contract | Admission | Retained receiver |
 |---|---|---|
+| No operands | `Thunk` at immediate default and error factories | `_SharedThunkRef` |
 | One owned operand | `_UnaryViewable._View[o]` | `_SharedUnaryRef` for a fixed-output Unary, or Kleisli's origin-indexed view |
 | One borrowed operand | `_BorrowViewable._BorrowView[o]` | `_SharedBorrowRef` for a BorrowCallable |
 | Two owned operands | `_BinaryViewable` | `_SharedBinaryRef` for a fixed-output Binary |
+
+Shared lazy defaults use this same view boundary for direct Result
+`get_or_else`, Result and Optional pipeline defaults, and Optional `to_result`.
+Only admission is added: Result and `_optional_get_or_else` /
+`_optional_to_result` still select the branch and own payload cleanup. The
+shared thunk view invokes `call`, even if its owner also supports mutable or
+consuming calls. An explicit move keeps canonical consuming receiver selection;
+`mut_ref` retains canonical mutable receiver selection.
 
 Unary Partial, NativeUnary and ordinary Composition use the fixed-output view.
 A unary ordinary composition exposes shared admission only when all its stages

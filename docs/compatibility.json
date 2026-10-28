@@ -273,7 +273,23 @@
         "tests/compile_fail/result_fold_mixed_fold_owned_result_origin.mojo",
         "tests/compile_fail/result_fold_mixed_fold_owned_reuse.mojo",
         "tests/compile_fail/result_fold_mixed_fold_result_origin.mojo",
-        "tests/compile_fail/result_fold_mixed_fold_reuse.mojo"
+        "tests/compile_fail/result_fold_mixed_fold_reuse.mojo",
+        "tests/runtime/test_shared_defaults.mojo",
+        "tests/ownership/test_shared_defaults.mojo",
+        "tests/compile_fail/shared_defaults_conversion_effect.mojo",
+        "tests/compile_fail/shared_defaults_conversion_reuse.mojo",
+        "tests/compile_fail/shared_defaults_optional_effect.mojo",
+        "tests/compile_fail/shared_defaults_optional_origin.mojo",
+        "tests/compile_fail/shared_defaults_optional_output.mojo",
+        "tests/compile_fail/shared_defaults_optional_reuse.mojo",
+        "tests/compile_fail/shared_defaults_pipeline_effect.mojo",
+        "tests/compile_fail/shared_defaults_pipeline_origin.mojo",
+        "tests/compile_fail/shared_defaults_pipeline_output.mojo",
+        "tests/compile_fail/shared_defaults_pipeline_reuse.mojo",
+        "tests/compile_fail/shared_defaults_result_effect.mojo",
+        "tests/compile_fail/shared_defaults_result_origin.mojo",
+        "tests/compile_fail/shared_defaults_result_output.mojo",
+        "tests/compile_fail/shared_defaults_result_reuse.mojo"
       ]
     },
     "iteration": {

@@ -30,9 +30,9 @@ from fp.algebra._effect_combinators import _IfEffect, _if_effect, _AllLive, _Boo
 from fp.algebra._accumulation import _FirstPresent
 from fp.callables.native import _NativeOwnedArg, _NativeUnaryRef, _NativeBorrowRef, _NativeBorrow, _NativeThunkRef, _NativeThunk, NativeUnary, _NativeBinaryRef, _NativeBinary
 from fp.callables.invoke import RepeatableBorrow, RepeatableBinary
-from fp.callables._receiver import _OnceBorrowAvailable
+from fp.callables._receiver import _SharedThunkRef, _OnceBorrowAvailable
 from fp.callables._transforms import _ObserveOnce
-from fp.callables.protocols import UnaryContract, BorrowCallable, BorrowCallContract, ThunkContract, BinaryContract, Binary
+from fp.callables.protocols import UnaryContract, BorrowCallable, BorrowCallContract, ThunkContract, Thunk, BinaryContract, Binary
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._nary import _OwnedNativeNary1, _OwnedNativeNary2, _OwnedNativeNary3, _OwnedNativeNary4, _OwnedNativeNary5, _OwnedNativeNary6, _OwnedNativeNary7, _OwnedNativeNary8, _NativeNary1, _NativeNary2, _NativeNary3, _NativeNary4, _NativeNary5, _NativeNary6, _NativeNary7, _NativeNary8
 from fp.callables._transforms import _Apply, _Replace, _TupleWith, _Fill, _ValueThunk, _Pair, _Observe, _BorrowedUnary, _IgnoreInput
@@ -9007,6 +9007,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(make_default^)
 
     @always_inline
+    def get_or_else[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_default: C) raises _SharedThunkRef[C, o].Error -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _SharedThunkRef[C, o].Out == _Success[Self.V]:
+        """Return the success value or invoke a default factory only on Err."""
+        return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_SharedThunkRef[C, o](Pointer(to=make_default)))
+
+    @always_inline
     def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> _Success[Self.V] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and R == _Success[Self.V]:
         """Return the success value or invoke a default factory only on Err."""
         return rebind_var[Result[_Success[Self.V], _Failure[Self.V]]](self.value^).get_or_else(_NativeThunkRef[R, Never, C, False, o](Pointer(to=make_default)))
@@ -9064,6 +9069,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[C](rebind_var[Optional[C.Out]](self.value^), make_default^))
 
     @always_inline
+    def get_or_else[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_default: C) raises _SharedThunkRef[C, o].Error -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _SharedThunkRef[C, o].Out == OptionalFamily.Element[Self.V]:
+        """Return the present Optional value or invoke a default factory only on absence."""
+        return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_SharedThunkRef[C, o]](rebind_var[Optional[_SharedThunkRef[C, o].Out]](self.value^), _SharedThunkRef[C, o](Pointer(to=make_default))))
+
+    @always_inline
     def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and R == OptionalFamily.Element[Self.V]:
         """Return the present Optional value or invoke a default factory only on absence."""
         return rebind_var[OptionalFamily.Element[Self.V]](_optional_get_or_else[_NativeThunkRef[R, Never, C, False, o]](rebind_var[Optional[R]](self.value^), _NativeThunkRef[R, Never, C, False, o](Pointer(to=make_default))))
@@ -9115,6 +9125,11 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact callback or family error; it never becomes a stored Result error.
         """
         return Pipeline[ResultFamily[C.Out], Result[OptionalFamily.Element[Self.V], C.Out], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], C](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), make_error^))
+
+    @always_inline
+    def to_result[C: Thunk, o: ImmOrigin](deinit self, ref[o] make_error: C) raises _SharedThunkRef[C, o].Error -> Pipeline[ResultFamily[_SharedThunkRef[C, o].Out], Result[OptionalFamily.Element[Self.V], _SharedThunkRef[C, o].Out], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:
+        """Convert a native Optional to Result, invoking the error factory only on absence."""
+        return Pipeline[ResultFamily[_SharedThunkRef[C, o].Out], Result[OptionalFamily.Element[Self.V], _SharedThunkRef[C, o].Out], Self.E](_optional_to_result[OptionalFamily.Element[Self.V], _SharedThunkRef[C, o]](rebind_var[Optional[OptionalFamily.Element[Self.V]]](self.value^), _SharedThunkRef[C, o](Pointer(to=make_error))))
 
     @always_inline
     def to_result[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_error: C) raises Never -> Pipeline[ResultFamily[R], Result[OptionalFamily.Element[Self.V], R], Self.E] where OptionalFamily.CarrierCompatible[Self.V]:

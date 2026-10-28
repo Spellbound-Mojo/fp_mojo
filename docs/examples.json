@@ -208,7 +208,7 @@
       "stdout": "optional total = 42\n"
     },
     "docs/examples/optional_default.mojo": {
-      "stdout": "configured: example.org\ndefault: localhost\ndefaults computed: 1\n"
+      "stdout": "configured: example.org\ndefault: localhost\ndefaults computed: 1\nreused defaults: localhost localhost\nreused error: localhost\n"
     },
     "docs/examples/optional_result.mojo": {
       "stdout": "https://example.org\nhost is missing\n"

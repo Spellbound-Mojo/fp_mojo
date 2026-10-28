@@ -617,6 +617,14 @@ calls the zero-argument factory on absence. The same spelling finishes a Result
 on its stored error branch. The returned value has the exact payload type and
 no pipeline wrapper. See the [Optional default example](../tutorial/pipelines.md#finish-an-optional-with-a-lazy-default).
 
+A named shared library `Thunk` is reusable in both `get_or_else` and
+`to_result`: pass the same `factory` to several calls. Its captures stay in
+place even when the factory is skipped or raises. Passing `factory^` or a
+temporary transfers ownership; `mut_ref(factory)` retains mutable state.
+The Optional default example reuses `DefaultHost` across Optional, Result and
+error construction. A library factory keeps its exact result and raised-error
+types, including origins, without an additional error context.
+
 Factories that return `NoneType()` can supply an explicit unit payload. A
 procedure with no return value has a different native type; it is not a default
 for `Optional[NoneType]`. Native callback errors use the selected pipeline

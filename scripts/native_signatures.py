@@ -138,9 +138,10 @@ def callback(mode, kind, arg="function", second=False):
         else ("C", "A" if mode == "owned" else "P", "R", "X", "o")
     )
     if kind == "view":
-        if mode == "binary":
-            trait = "_BinaryViewable"
-            view = f"_SharedBinaryRef[{f}, {o}]"
+        if mode in ("binary", "thunk"):
+            trait = "_BinaryViewable" if mode == "binary" else "Thunk"
+            owner = "_SharedBinaryRef" if mode == "binary" else "_SharedThunkRef"
+            view = f"{owner}[{f}, {o}]"
             build = f"{view}(Pointer(to={arg}))"
         elif mode in ("owned", "borrow"):
             trait, alias, method = (("_UnaryViewable", "_View", "_unary_view") if mode == "owned"
@@ -148,12 +149,12 @@ def callback(mode, kind, arg="function", second=False):
             view = f"{f}.{alias}[{o}]"
             build = f"{arg}.{method}()"
         else:
-            raise ValueError("Shared callback views require one or two arguments")
+            raise ValueError("No shared callback view for " + mode)
         metadata = callable_metadata(mode, view)
         return Callback(
             [f"{f}: {trait}", f"{o}: ImmOrigin"], [],
             f"ref[{o}] {arg}: {f}", view, build,
-            metadata.inputs[0], metadata.result, metadata.error, mode,
+            metadata.inputs[0] if metadata.inputs else "", metadata.result, metadata.error, mode,
         )
     if kind == "library":
         trait = callable_protocol(mode)

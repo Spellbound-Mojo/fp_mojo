@@ -29,6 +29,11 @@ These Cats-inspired operations are also terminal methods on `pipeline(result)`;
 they return the value directly. See [finishing with a value](../tutorial/results.md#finish-with-a-value)
 for lazy defaults, ownership and native error selection.
 
+`get_or_else(factory)` borrows a named shared `Thunk`, so the same lazy
+factory can serve several Results or Optional pipelines. A moved or temporary
+factory is consumed, including disposal when skipped. Use `mut_ref(factory)`
+to retain mutable state; receiver selection stays explicit in the argument.
+
 `value_or(handler)`, `recover(handler)` and `or_else(handler)` also borrow
 reusable shared Kleisli handlers without copying their captures. They run only
 on `Err`; a successful value skips the handler. Passing `handler^` instead
