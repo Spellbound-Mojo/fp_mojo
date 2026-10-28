@@ -477,21 +477,39 @@ def pair_projection_source(path):
     return spliced(path, ''.join(out), '# --- pair projection native admission (generated) ---\n', '# --- end pair projection native admission ---\n', '')
 
 
-def split_overloads():
+def pair_callback_overloads(operation):
     # Only admission has a cross product. Pair transfer, invocation, ordering,
     # receiver selection and error joining remain in MappedPair/Composition.
+    assert operation in ('split', 'merge')
     out = []
+    owner = 'Split' if operation == 'split' else 'Merge'
+    summary = ('Transform both pair elements with native or library unary callbacks.'
+               if operation == 'split' else 'Compute two results from one copyable input with unary callbacks.')
+    description = ("Types are inferred from the callbacks. Construction stores native pointers\n"
+                   "    and owns library callbacks without invoking them. Pair transfer, left-to-right\n"
+                   "    execution, receiver capabilities and exact errors follow ordinary composition."
+                   if operation == 'split' else
+                   "Both callbacks must accept the same copyable type. Each call gives one input\n"
+                   "    copy to the left callback and the original to the right. Construction stores\n"
+                   "    callbacks without invoking them. Execution and exact errors follow composition.")
+    returns = ('A composition transforming both elements of an owned pair.'
+               if operation == 'split' else 'A composition computing both results from one copyable input.')
     factories = [list(native_factories('owned', [f'A{i}'], name=name,
                      result=f'R{i}', error=f'E{i}', origin=f'q{i}'))
                  for i, name in enumerate(('left', 'right'))]
     descriptions = {}
     for i, side in enumerate(('first', 'second')):
-        descriptions.update({f'A{i}': f"The {side} element's type.",
+        descriptions.update({f'A{i}': (f"The {side} element's type." if operation == 'split'
+                                         else f"The {side} callback's input type."),
                              f'R{i}': f"The {side} callback's result type.",
                              f'E{i}': f"The {side} callback's error type.",
                              f'q{i}': f"The {side} pointer admission borrow's origin."})
     descriptions.update(F="The first element's library callback type.",
                         G="The second element's library callback type.")
+    left_description = ("The first element's callback." if operation == 'split'
+                        else 'The callback receiving one copy of each input.')
+    right_description = ("The second element's callback." if operation == 'split'
+                         else 'The callback receiving each original input.')
     for left in [None, *factories[0]]:
         for right in [None, *factories[1]]:
             if left is None and right is None:
@@ -510,28 +528,28 @@ def split_overloads():
                     types.append(factory.adapter)
                     values.append(f'{factory.adapter}({name})')
                     conditions.extend(factory.pointer.conditions)
+            if operation == 'merge':
+                conditions.append(f'_MergeInput[{", ".join(types)}]')
             declarations = [f'{key}: {bound}' for key, bound in parameters] + ['//']
             where = ' where ' + ' and '.join(conditions) if conditions else ''
             documented = ''.join(f'        {key}: {descriptions[key]}\n' for key, _ in parameters)
-            out.append(f'''def split[{", ".join(declarations)}](
+            out.append(f'''def {operation}[{", ".join(declarations)}](
     {", ".join(arguments)}
-) -> Split[{", ".join(types)}]{where}:
-    """Transform both pair elements with native or library unary callbacks.
+) -> {owner}[{", ".join(types)}]{where}:
+    """{summary}
 
-    Types are inferred from the callbacks. Construction stores native pointers
-    and owns library callbacks without invoking them. Pair transfer, left-to-right
-    execution, receiver capabilities and exact errors follow ordinary composition.
+    {description}
 
     Parameters:
 {documented}
     Args:
-        left: The first element's callback.
-        right: The second element's callback.
+        left: {left_description}
+        right: {right_description}
 
     Returns:
-        A composition transforming both elements of an owned pair.
+        {returns}
     """
-    return split({", ".join(values)})
+    return {operation}({", ".join(values)})
 
 
 ''')
@@ -539,9 +557,12 @@ def split_overloads():
 
 
 def products_source(path):
-    return splice_source(pair_projection_source(path), split_overloads(),
-                         '# --- pair split native admission (generated) ---\n',
-                         '# --- end pair split native admission ---\n', '')
+    source = pair_projection_source(path)
+    for operation in ('split', 'merge'):
+        source = splice_source(source, pair_callback_overloads(operation),
+                               f'# --- pair {operation} native admission (generated) ---\n',
+                               f'# --- end pair {operation} native admission ---\n', '')
+    return source
 
 
 def main():

@@ -734,6 +734,22 @@ both callbacks to support that receiver. Named shared results can be borrowed
 in mapping operations, and `.then(next)` continues the resulting pair's chain.
 No-value results retain their native tuple element types.
 
+Use `merge(left, right)` to compute two results from one input, following
+Cats' `Arrow.merge`. For example, `merge(display, double)(6)` yields
+`(String("price=6"), 12)`. Both callbacks must accept the same exact input type,
+which must be `Copyable`. Each call copies that input once for the left callback
+and moves the original to the right callback. Copying uses the type's native
+copy operation, including any shared references that operation retains.
+Construction does not copy inputs or callbacks.
+
+The returned `Merge` is an ordinary flat composition. It shares `split`'s
+left-to-right order, exact error joining, receiver capabilities and named
+shared reuse. If the left callback raises, the right callback is skipped and
+its unused original input is released. A mutable merge runs through a named
+variable's `call_mut` or a compatible lazy mapping operation. Move-only inputs
+can be supplied separately through `split` when both branches have their own
+owned value.
+
 Use `.then(next)` to grow an existing composition one stage at a time. A plain
 function, stored thin pointer or library stage is accepted directly. Move a
 named chain with `chain^.then(next)`; the result owns its stages and construction

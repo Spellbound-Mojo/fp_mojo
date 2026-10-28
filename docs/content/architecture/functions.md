@@ -20,6 +20,7 @@ tupled(f)((a, b))               = f(a, b)
 first[Other](f)((a, b))         = (f(a), b)
 second[Other](f)((a, b))        = (a, f(b))
 split(f, g)((a, b))             = (f(a), g(b))
+merge(f, g)(a)                  = (f(copy(a)), g(a))
 ```
 
 These equations describe logical calls. `args` is zero, one or two arguments for
@@ -103,6 +104,21 @@ descriptor as single callback admission, with distinct temporary borrow origins
 for each pointer. The generated cross product is limited to native signatures;
 every body immediately delegates to the library factory. Existing single
 callback signatures retain their original parameter names and placement.
+
+`merge(left, right)` follows Cats' `Arrow.merge`: duplicate the input, then
+apply `split`. Mojo's owned arguments make the duplication explicit. The
+internal `_Duplicate` primitive in `callables/_transforms` makes exactly one
+native copy for the left branch and transfers the original to the right.
+The common `_MergeInput` condition requires identical callback input types
+and `Copyable`; both library and native factories use that same condition.
+
+The factory prepends `_Duplicate` using composition's existing `.compose`
+operation. `Merge` therefore has one flat three-stage tuple, with no nested
+callback owner, new runner or second error policy. Callback captures can remain
+move-only even though the input is copyable. `split` and `merge` share a native
+admission generator; only the input compatibility condition and descriptions
+differ. Tests observe the copy count, distinguish copy from original, and
+check cleanup when either branch raises or lazy work is abandoned.
 
 ## Pipelines
 

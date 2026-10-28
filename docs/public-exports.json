@@ -5331,6 +5331,13 @@
    },
    "provider": "callables/products"
   },
+  "functions.Merge": {
+   "declarations": [
+    "comptime Merge[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Composition[False, 1, _Duplicate[downcast[F.Arg, Copyable & Deinitable]], MappedPair[F, G.Arg, True], MappedPair[G, F.Out, False]]"
+   ],
+   "kind": "type or alias",
+   "provider": "functions/products"
+  },
   "functions.OrElseContract": {
    "declarations": [
     "struct OrElseContract[I: Functor, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]:"
@@ -18896,6 +18903,688 @@
     }
    ],
    "provider": "functions/kleisli"
+  },
+  "functions.merge": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "3ddbb25f3d39ed161b09707029c65ca808914613cbdd68556c9d471a81fceca2",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable]( var left: F, var right: G ) -> Merge[F, G] where _OnceUnaryAvailable[F] and _OnceUnaryAvailable[G] and _MergeInput[F, G]:"
+    },
+    {
+     "sha256": "ef053a649f2867206f0254bce68e92fdb6a658e5f30c8146bd51171d22353f80",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( var left: F, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "ccb1d55ea3ba5379e38bb8b1e3438cea1230a3cee5c6766ba7d345791a0e1db7",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( var left: F, right: def(var A1) thin -> R1 ) -> Merge[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and not conforms_to(A1, RegisterPassable) and _MergeInput[F, NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "17b565551f050500986b840764ec4ca5d5f204f6796b8cc3e4b35757eed7408d",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( var left: F, right: def(var A1) thin -> R1 ) -> Merge[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and not conforms_to(R1, RegisterPassable) and _MergeInput[F, NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "4e6441e05cd44f14a92984482678db023cc46baf7be534a707ca0a47aadfa528",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( var left: F, right: def(var A1) thin -> R1 ) -> Merge[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "3c9f3a9eac73131b474886d6b25d15471c60c2140c435c4f9fa10d9594b42707",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( var left: F, ref[q1] right: def(var A1) thin ) -> Merge[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "66befa064e021e7743fc6c8dd0734251a0e0b6b66eb36d83e9c6dd910b199e2c",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( var left: F, right: def(var A1) thin ) -> Merge[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "34f5b35340eb71e31f289da7114257e2e683ded931c81e2ebb407f33c23e6f01",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( var left: F, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "8563bc540cd28edcb73bc8c07689b68ba5092aadad35af42f2f6957b73c927cf",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( var left: F, right: def(var A1) raises E1 thin -> R1 ) -> Merge[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and not conforms_to(A1, RegisterPassable) and _MergeInput[F, NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "e87ed0983511274522ffd4561a0f0303dfec927297d82a14a4a35b0e4f84aa14",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( var left: F, right: def(var A1) raises E1 thin -> R1 ) -> Merge[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and not conforms_to(R1, RegisterPassable) and _MergeInput[F, NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "7a557bd144577d288a74e47c29ae5bc0daabe179d4c5b00254e60f647fe65247",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( var left: F, right: def(var A1) raises E1 thin -> R1 ) -> Merge[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "23407db48a7c6f9e458c6e3eda284816b5fca909ae1ebda54b3f6277b5bb2f11",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( var left: F, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "240eae066370a33b3ee2e904b21396f506894de339903d49f3c41b8bd96390fe",
+     "signature": "def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( var left: F, right: def(var A1) raises E1 thin ) -> Merge[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "4e222ff71dbb90408fdb7f978fb1b9108a19fb45541971dff3d3d90b58df3341",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, var right: G ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], G]:"
+    },
+    {
+     "sha256": "c8e49d0667a85d7d58f8f10f2cb8f23d4d44e84f49956e5068de80a3e0fa93e4",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "63386b907d05c6448dcd02aeaa4005755afae203e8d185570a5460a45b587c16",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "49307b1d4d22c31721f9405293736810d03abf3e9b65f2ecb0059764358ab397",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "cf2ea2eb62cf0de2eb0f66c9f70debd93e503d93ebf6b28bd2cbad969ee60345",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "5510dd595f0a350152171e0945dc8edaa8d4f19c3a6e0b29b7bfe7686e935ffa",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "9a4a24b9753f14868cb12e0c546c87bdf85a6d78bc03a19a6f9ae995aa230eac",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d698e9d259e4b0eb804bd80acb958861a4530d6d72f6c9f1efdf92f8387a0616",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "e9906bc7ab707e1d26aa105d485e69f678709f8e6bd0fd6c439e11ece940b03e",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "1b833877d94b30251c1dc5bc68acddb7d1b7c21a8cb59fb297ae7024756f093a",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "99327523b627a863c5d56cf8431171702820c7d016232c3c979c446a50bbc9f6",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "73bf034c95827e296ef719c3bd1bcd27c22eb8b0a96ac18c6d019620336eb303",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "19ecdb8b6575e4342cb0deaa673e83010146a8e9d7722696e95e39c770fbfc39",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "3866219af478b85c943cc78739595ec28dfae162363f2354e751bf54fec1d877",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) thin -> R0, var right: G ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], G] where not conforms_to(A0, RegisterPassable) and _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], G]:"
+    },
+    {
+     "sha256": "3170df6b24fe4c5e1287551753c6486ebe10ac1ee12e51530009de898a3a4802",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "cd99369866862c68a27a5e0d1f51f6bc3387252771f8ebe3a32feaddc74b56ba",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "e821aa54998761d908ee27cab8097441a20ba31de341d8798f18065db29468e9",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "cafd24504d3634a2992f54c7be9152a7cf45f7f84ffe79f67a8990923d2a7cc5",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "720fed74be9967e0875a74e2f06f9bdc180502dbb6c9bcccca280a2c9ddeecc0",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "e13471b2bd85db2308bd043033a6199ccaf15926db5aaa0d3157af05351996bc",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "fda06663a150c9059042735dd1d3fb1d76424999dfae3ad58a30ee77804a37d5",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "de3a77b85af491a0663f1f841fdb7bab432b744e2c19a9f79320370afbdc505f",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "bd80c7a6481b395fdb323917d701dd920a5aa9afbe23a1223841dad966824fd0",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "10783252098b8e919c79b4518209f8410db9e34973620a27532ab32b8f7d04b0",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "5e07a3bb12110da18d5c824005498d6cf071551ddc3873ea317f345819324e7b",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "6dbae6cd1903440055c8c97243ae5b5d64250ffca8968e6a9eef22ba52f4aa2e",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "0685516a9beeb64249ef3420ff9a80b8363d9348ef036e9b2a69d1bb2cb0985e",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) thin -> R0, var right: G ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], G] where not conforms_to(R0, RegisterPassable) and _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], G]:"
+    },
+    {
+     "sha256": "fe6fb253db1e786ae48d2b2fab0df6b59601b7ef5b491388e7bdfd2e2761d9dd",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "4fe0323f0000385d7c78ad73f26c3c89a9894f3545fa8e25136d3fb07d22e016",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "6fe0f66149f816cfe402efa3d01c9e2d55d508eefdeb2330bb04d64aa33da797",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "caa5e05c89878fea3c0a2f51628023ba32a6ace329f1c9c4f1c51e567689d122",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "283a0ee03841a6ccc5129df35c891c992b42f27ec16dc4022a27be0c7fcb41fb",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "486e4ad017b76502ea29b3be26a37f7b7f58b2d4f24ae0e84e1f993aa5488342",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "e0b406a4b0d7c05697dca37fff64bd9aa930ffb0543d4bde13b2b07504e69b00",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "86bc52433dbd7c454392fa789efa12b436577db62c64a93ceab56858ef71a484",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "682e6dd82173e47e0b5d87be1a655d67bcc8e3158e0674ea2423a994d7accdfc",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "35f333723bf6238a36e6b5dbaa183544921e2d24ef95a9c35d3d7508bf11cf81",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "30949555165fde76972dc74dd32648384e6eb23fb4e58ee918e0437149d5cd90",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "9c9149e32ccd82429efcc603d7216947ea21aefbd6dab26c3f819c72495ab4b2",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "84fa28e05e2c28787cd1b52b62a68d12861563b676612694ddf51bfb0b213dc1",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) thin -> R0, var right: G ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], G]:"
+    },
+    {
+     "sha256": "13d6d78d5c72f543d895ca0a49044325f145633b5a35811d124943244e63fc1f",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "3108f2bfa92950aa8440c37593af52dc3b39dbbcb1c367794a0080edb195c324",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "667186bc3a89e562e30d8e3404c90213f4b3df85f24036c122079f2543d807fe",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "02100e579eb9b26eaa83728f1b334b8e571c2eded74659dd318fa575793e86a3",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "b5a45637c744d2eb1177d21f071fb5363603ab5aafd0b5bd7e94f30fe47b1415",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "1ab026a5248dfb1d2fa93bfafbfe3de7ac6d6e989d1e070f1b640770cb5ab237",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "f6a9a5dc07cbd94692bd029bf0ba50eec12200cfc894368feacc1ecad29b29b2",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "f624044e19c12104a4654b3eb9cd0d5d227b8b2d3bab48a64c7e7494c3f9dbd0",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "77b5e55424400c4b547eca1ca0537484d4d7732db57cb932c51d8baf82dce5d2",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "78eee9fba2a0aa57a82c4a6a0106bc897cc2d88efdd3d9bdfebbe3b90797986d",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "0ff159a078e0e4aa6d1c40cf3cb2429ba70370388515d042a06e712fbcdf147f",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "687614be1382169a53db7caa0e92d87a8a74aa478c076d75404d9fc99ead8a82",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "38287e986bfa0d43e23f166b199ab1344660bd0516f730edce16536c57539412",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, var right: G ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], G]:"
+    },
+    {
+     "sha256": "c7060b321bcf1ffa9c9f3fe97ace1a7e37739f11c4a193e01738f0704c6e0e37",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "086360bd6fc7f99d3a0ef1ddbed07ceaa79e53722637ec06dbc74ee73024436d",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "4fc4619439f65fd87dcd71ecd160ac67e63a7a2a9e42de9d9e04dc278cbc2864",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d8f8eac4ac4efdc2db14665a371ac4281175ffb100cd20560464a6d98b7ba527",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "dac2d1a090f3a554c102092355e3c925e8f40bcebdd639123b5454499cd7068a",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "424d431d4b2d23fddd03391ed82f0d69ebb820bfe58f05a35b8a75a2e16252cd",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) thin ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "6f2af78ded1492a45d692d5314412eb1e4df3e7fb56274a2194399955a7d5fb0",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "cdabb50296f1cc19b89b5a55069db61d9e8fbc3be777bc467b5ea67c38948c9b",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "6e763b5e988fd0c3b8672bd269cca617b661efac8819a9d793777febfd750043",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "dc9e47b58b1ca8494e93e4529439c4645397e0013b059088ad2ffc8e5590c648",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "3ee8ed7defc463e4ae154f851ce6243e3640017cfab2105abdd63de029376376",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "59f3552f8529428e2aab391c1aa7aabb970a1659441cc2f5938054b491b95366",
+     "signature": "def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "5fcd810ea0d6b9898cdf01be94f6f9118f63a74d7a6c6c9c8f1c15bf434a59d0",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) thin, var right: G ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], G]:"
+    },
+    {
+     "sha256": "b5c2769e8b5a7379b1a8e0e1bee42407376ec1962ae05fb1d33e535284c5d70e",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "6a8bd013bab18636f79f4f9aa0f3524014ff79db359edea429c87fb5b5a8c3e5",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "8b1750291752418a1b5bce3a3b02175e168e2c40bec9225bbc45f77a95688131",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "cd5163a8df36aa3c335a8567c7df3b2e0de87f3ff04557686736da835e283148",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d15e19626bec8d783b289851d1dd3128159a20229476437e09ae44906b9733a5",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "27a33f6cec978d82a59023a70efedd4d2586d189caafceea6b48cda3c18701f6",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) thin ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "34305066fcb6decd5236cebb78c20d22da4b7c1b6348a5ce144f844e61e135e6",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "7fb17faed204de1c58a66c9745e2c3bb5764a880afaefc3002e1e420454fa3be",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "a09f840707c035021b9add051c969035ee6a47a62b98c5b9c41949b8615ba96e",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "dc173d79a09f678bc6eabdd61a3de294b5cf14caa289e5ec96599628d5d71a8d",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "c5f6a6954a252201ba8d81a3b57d92624e667e8ac7feb92f515f782093ab86d6",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "a4381231c17cf3d586630a1f6597ae2608493ae717ddfe68419d640e2830bce7",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) thin, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "fb28c2172bd3ac3d2cdd3b88eebf58846d511bc051cebd31357b92fffdb465cb",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, var right: G ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], G]:"
+    },
+    {
+     "sha256": "257adffe024ccee520888198e3fe9f784652d8ee09650fecc5eda32171815a76",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "0bc11b6f0e9aa0079e7fb314ba00b9c8f0b68986db209bedccbc55527ba54d62",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "5f88f530f8fb305196c025a3cce9324eeb8bfa7c53826cdb0cc2f81db1822d77",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "d8df9e9b0c7d5cea70b5e1ab79e52f4cf6b7c97017feabdf73f8117971dd96dc",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "acada67425d1e42e8bd6f246d84955c72e3a4817353a8f7276dce592bbd67c77",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "7bd9f7cb4413ae78b2c32dc8b4b3b5265db0cca923b8dadc6afcd941f4b5b78c",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "394abca94db3916d054451e3462ca69b24b952e99f6d58357f03274844d3ec76",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "df8a55a3a26d1ca8dfdf5daca0d61cb2fea50c79f2f3f29f8dce64cf2e2219b1",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "5eb5bad3f4bc6a780f7c94af23eecfa9cd2f95d81cebef5d66f86b692f8990bc",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "da925a08b9bbe3eb8db9d37ae282285836ffeac4b7efaf4bdfd06be0b7a3e245",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "e76fd35b2d7d147d8fa6e55a9f26978e4d7e2e3f8454cf07657d819bd930e776",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "450044237a3a9c0a88b69f7761da75cd375dbcd8eabf54a533965d690722dc09",
+     "signature": "def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "c7449dd2ba1249adbec6c4bf63b0a4f9763778db3f982ade19020d21e074c67a",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, var right: G ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], G] where not conforms_to(A0, RegisterPassable) and _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], G]:"
+    },
+    {
+     "sha256": "f028286930814699395cd13dbf6125c37db63754198a4513a81d6cc5be4a0587",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "8bfada20fe83d938d73f4ec73811f1df3ec2b912bbec001e085ecf165672dc7e",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "94c140eedffb10a01d2e48fd0fb2909ca8ab041db769d26d61f2b785ab31688d",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "8fded05ff40932b0e08875f2ee0be5b008224aa5f85819fc762d040d412b9c71",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "7cc3240fe8fb4e346cd92af8202f07c893315e3defe4df0c68208535bf44295b",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "059724fb4e1764a4f096c612cbb9b89bba0ae9bab19529dc341eafa1c3c4cbd9",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "55ac9512514eb1db46c8da345917d97d567661ce51df00445904f4d4c2fc6f94",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "46e3f1d758c6b944c7130b29c7b2fef6bc8cb01766f56f53a8a6b0d184a6d3db",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "472a3859891eb0da5f25a829df2751d10843ba91e4a939fcfed4d994fd46cbf0",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "10f00b6be43bb18c21565bfd0872db179fbe5620b1984baf689a5582a6fbaf22",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "e51b0599401fcee0c03ab30a0f0187d1ba5d38987434b65d9ffaf143cf861cb5",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "316d66ff3927dedb9d9f87409d50904237566b87a5ed2d33f03db80881aeea93",
+     "signature": "def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "00c7efcbbf865be5b08603e6dd0358ec1730a695b4a2c665b899d260ff435cc1",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, var right: G ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], G] where not conforms_to(R0, RegisterPassable) and _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], G]:"
+    },
+    {
+     "sha256": "9e7f5ff00fba993b118ec0233379d726866a34ae40197d073f247990c346d504",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "4cd88df3efbe23e3c011e49c2231250b760265f8ab51ac3c4888e591c5a7ca06",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "07c443066d0e0d57999adaa29c6d9f55f142d9217a7e5a64ba09a410c384ef94",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "22a649ef05a7ec717ecc7d413ae65963039fcb96f9651d2cb90db61e3fd83fe1",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "6c489d580b434849c88c5aaf935d799998c5067f9d012aa6c66246e31f505238",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "b5474c9bc24f49c0c9e6501bc760d2bc39df18790071feda860d5f4449caceb1",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "59b3674e21756d2e2140e188853221e069fa5ebf5452fa4b54f44224fa0da8e5",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "fc21c4a6ddf684c1f1410a0cf747fa704e6d2a4571210daa20086c2583dcb017",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "1200f38650e1ea0dbed11cd511b98063a1774bcf95b7e22dd20e885033aa3da4",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "6ec23e27504c1f80f94c22e4335133b7172420bf047145146f17846e83ae8a8a",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "b3056c10f7fd088ce54bb0c3143e768c8c86ec4ece7212e76b7a1125b1bb9e4e",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "48f44c1f4b32aa433ce85b6ae39989946ff7cb7592ba728cd03822ab6900fdf3",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "f52d2bdeb5e825ac82d296f51b8d595cb76bcb7a721b16ec75165472d2c5cbae",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, var right: G ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], G]:"
+    },
+    {
+     "sha256": "e5ed20765a90fa4026b3f1217010edbfe6bd9043c61dc997e7608867b90a976e",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "83a1961b16bea149924b75a2ff98c8c4ac6a5ee2c43fcf242e9c0f9e5be297e8",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "9189bc91392896cd91c97c0565f99eadb88c2e57006d425337c83d57d8faa40d",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "18ea024f13c4600725b34876aeccde063b84e4b3a6c2d3dbed19e54c41c6b0ea",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "f228835b3781dcfe13616f71acdda251c4326cc4a106a36da5a2dbe107159086",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "93c8de3ebc07374e2411eb7061019858aa57fb8ebb7e90d63a4fbb8a92bccc10",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "f5f9b2ed9edfbedff67f4148603b1e4210be0bf19e7ba019ae0188d67612f6e2",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "a949389db17b2b0176442f710737578a921d4f8d1c7379ef41c18de915000aed",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "898cd08c3d8b03049211fdf88fccdcce117d2e2f1a532c5a1d4986a3bf8ba286",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "e2c404012309cde1d754b7211b4d70eb81b8e80ff4b51ed2faa7e990ff05880b",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "b61bd07d6489241c2192cde73b33a0f385df8ca1b1a5c006b1a0156b2dc89349",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "424809acb97cbde0c97738841cb181e3414b2ad54ad00b757760dadf8d3c5c54",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "e1d0d6fa0758ba136a3a36c3364b6030ddebe17075bf6923b88622b4066d233d",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, var right: G ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], G]:"
+    },
+    {
+     "sha256": "919e8684677075737d4940071a5f9dee45a30e2dd73c02fd1301b682cc1e5bab",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "3d389863d1d9bb5477dfd098608143edbc8ef7a29838167c9d6006beff42bb0f",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "0e7a5289db3a8d835c0f886d4f6f2076b4405388bd320e70f9aa730e1ca79289",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "7241408bd4f931a405684e58ca98d36556db4a96b7564ac9944458c85c243008",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "6f2407819f32b71935f634610ddb87fa9bc7166c075a026c1990b9abd6133c6a",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "0f04d7459722150573e9ae898c09028c0fba44d6a9219a8b17df7b401699e002",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "6dcecfdd274d69d4097a261f2fe036a94f1930cf23fdea1414e967d7568c4d15",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "6a84b9fdaa7ee66544c7108c60dd9913fbdd8cbd22b90b3a43fe230ed25bdce0",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "117ad85c24848431970f30c241e0445e158c761a8e5963046c84f98dd6d353fd",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "fd3eff46009edc45f8f9fcf9112f0911d838b4b2fb20a84920458f1bab984e20",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "83d105b41bedd0fafac3bc08d17c5794e387ebf7a6704326cfe47bdbc02dd671",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "a2efddebb0e476b9c1eb9b06e0cbe8d63b06d7f7849aa32a2fd45ee80490bddc",
+     "signature": "def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "19cdc33b4e0731801b50e32d2b10019c5d03050c51b805515f7987cb680427d0",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //]( left: def(var A0) raises E0 thin, var right: G ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], G]:"
+    },
+    {
+     "sha256": "b29b584cc6df306a0db19a33832c6e110875f905c90c06252579e1264577c416",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "af62f2fe2a142dcd43a7f95b1ab8dfbbaf541c2e3cb11f01449bdd7a342b6f6c",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "8d2b4c1a129ba40408c7d5fee3f8fe22eb1b680b08818a2cb6f2ccbf9a0582cb",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "4d03c27c120e0b69f00eb1d7f1c54f7c4881dc53b7af166b7f267a505c9e77f7",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "a7a1011ffb4959fa7978489d3165e27d79fe96b2e575a6238ec8a5870f582714",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "9369fbe07a0dda149852ce276e2f4c1928e8425238fb942b1d42c93d42abb9d7",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) thin ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:"
+    },
+    {
+     "sha256": "deb113ab3aa4faf148203a5c0541569ef4b634cb34b59d6a5319d87115d5a337",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "ca0dc849ceb95b90d1963c7761ba4818699af85c965f0b9461d3eb8ee5f60f81",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "7eb39b8449b831e6c26cdd03e3551404ad5a60b1a5080d4c7d5bd58ff6ef43c3",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "8ff9445259810ff37d095ab72c60146483817f888a7be244108102bf96ed5dfa",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1 ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "92e301f039554410c7cc6fcfc620e0f2b62221483d11984aed358a847ab90c53",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //]( left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    },
+    {
+     "sha256": "bea1f4c2b20e56ccae8e1ed69a73f642ef7645a191550724b002da48085aeaf7",
+     "signature": "def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //]( left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin ) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:"
+    }
+   ],
+   "provider": "functions/products"
   },
   "functions.partial": {
    "kind": "function",

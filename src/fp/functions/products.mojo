@@ -1,5 +1,7 @@
 """Transform native pair components through existing unary composition."""
+from std.builtin.rebind import downcast
 from fp.callables.protocols import UnaryContract
+from fp.callables._transforms import _Duplicate
 from fp.callables.invoke import _OnceUnaryAvailable
 from fp.callables.products import MappedPair
 from fp.callables.native import NativeUnary
@@ -4966,3 +4968,4385 @@ def split[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Regis
 
 
 # --- end pair split native admission ---
+
+
+comptime _MergeInput[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = F.Arg == G.Arg and conforms_to(F.Arg, Copyable)
+
+comptime Merge[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Composition[False, 1, _Duplicate[downcast[F.Arg, Copyable & Deinitable]], MappedPair[F, G.Arg, True], MappedPair[G, F.Out, False]]
+"""A flat composition computing two results from one copyable input.
+
+Returned by `merge(left, right)`. Each call makes one input copy for the left
+callback and moves the original to the right callback. Callback storage,
+receiver capabilities, errors and origins follow ordinary composition.
+
+Parameters:
+    F: The first callback's type.
+    G: The second callback's type, with the same input as `F`.
+"""
+
+
+def merge[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](
+    var left: F, var right: G
+) -> Merge[F, G] where _OnceUnaryAvailable[F] and _OnceUnaryAvailable[G] and _MergeInput[F, G]:
+    """Compute two results from one copyable input, inferring its type.
+
+    `merge(f, g)(value)` copies the input once for `f` and moves the original
+    into `g`. Both callbacks must accept the same exact type, which must be
+    `Copyable`. Construction owns the callbacks without invoking or copying
+    them. Each call invokes the left callback first; if it raises, the right
+    callback is skipped and its unused input is released.
+
+    The result is an ordinary flat composition. Raising callbacks must share
+    one exact error type; non-raising callbacks can join either side. Shared,
+    mutable and consuming calls require both callbacks to support that receiver.
+    Capturing unary closures enter through `as_unary`. Native no-value output
+    remains `type_of(None)` in the result pair.
+
+    Parameters:
+        F: The first callback's type.
+        G: The second callback's type, with the same input as `F`.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition from `F.Arg` to `Tuple[F.Out, G.Out]`.
+    """
+    return split(left^, right^).compose(_Duplicate[downcast[F.Arg, Copyable & Deinitable]]())
+
+
+# --- pair merge native admission (generated) ---
+def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    var left: F, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    var left: F, right: def(var A1) thin -> R1
+) -> Merge[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and not conforms_to(A1, RegisterPassable) and _MergeInput[F, NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    var left: F, right: def(var A1) thin -> R1
+) -> Merge[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and not conforms_to(R1, RegisterPassable) and _MergeInput[F, NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    var left: F, right: def(var A1) thin -> R1
+) -> Merge[F, NativeUnary[A1, R1, Never, type_of(right), False]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    var left: F, ref[q1] right: def(var A1) thin
+) -> Merge[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    var left: F, right: def(var A1) thin
+) -> Merge[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    var left: F, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    var left: F, right: def(var A1) raises E1 thin -> R1
+) -> Merge[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and not conforms_to(A1, RegisterPassable) and _MergeInput[F, NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    var left: F, right: def(var A1) raises E1 thin -> R1
+) -> Merge[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and not conforms_to(R1, RegisterPassable) and _MergeInput[F, NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    var left: F, right: def(var A1) raises E1 thin -> R1
+) -> Merge[F, NativeUnary[A1, R1, E1, type_of(right), True]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    var left: F, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[F: UnaryContract & Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    var left: F, right: def(var A1) raises E1 thin
+) -> Merge[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _OnceUnaryAvailable[F] and _MergeInput[F, NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        F: The first element's library callback type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(left^, NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, var right: G
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), right^)
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, var right: G
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], G] where not conforms_to(A0, RegisterPassable) and _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), right^)
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, var right: G
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], G] where not conforms_to(R0, RegisterPassable) and _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), right^)
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, var right: G
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), right^)
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin -> R0, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin -> R0, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, var right: G
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), right^)
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) thin, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, G: UnaryContract & Movable & Deinitable, //](
+    left: def(var A0) thin, var right: G
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), right^)
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    left: def(var A0) thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    left: def(var A0) thin, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) thin, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) thin, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), Never, type_of(left), False], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), Never, type_of(left), False](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, var right: G
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), right^)
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, var right: G
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], G] where not conforms_to(A0, RegisterPassable) and _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), right^)
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(A0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, var right: G
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], G] where not conforms_to(R0, RegisterPassable) and _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), right^)
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: Movable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where not conforms_to(R0, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, var right: G
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), right^)
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin -> R0, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, R0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin -> R0, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, R0, E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        R0: The first callback's result type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, R0, E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, G: UnaryContract & Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, var right: G
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), right^)
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    ref[q0] left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: Movable & Deinitable, E0: Movable & Deinitable, q0: ImmOrigin, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    ref[q0] left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        q0: The first pointer admission borrow's origin.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, G: UnaryContract & Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin, var right: G
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], G] where _OnceUnaryAvailable[G] and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], G]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        G: The second element's library callback type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), right^)
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin, right: def(var A1) thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) thin
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, //](
+    left: def(var A0) raises E0 thin, right: def(var A1) thin
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), Never, type_of(right), False]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, type_of(None), Never, type_of(right), False](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(A1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: Movable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where not conforms_to(R1, RegisterPassable) and _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, R1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin -> R1
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, R1, E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        R1: The second callback's result type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, R1, E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: Movable & Deinitable, E1: Movable & Deinitable, q1: ImmOrigin, //](
+    left: def(var A0) raises E0 thin, ref[q1] right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+        q1: The second pointer admission borrow's origin.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+def merge[A0: RegisterPassable & Deinitable, E0: Movable & Deinitable, A1: RegisterPassable & Deinitable, E1: Movable & Deinitable, //](
+    left: def(var A0) raises E0 thin, right: def(var A1) raises E1 thin
+) -> Merge[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]] where _MergeInput[NativeUnary[A0, type_of(None), E0, type_of(left), True], NativeUnary[A1, type_of(None), E1, type_of(right), True]]:
+    """Compute two results from one copyable input with unary callbacks.
+
+    Both callbacks must accept the same copyable type. Each call gives one input
+    copy to the left callback and the original to the right. Construction stores
+    callbacks without invoking them. Execution and exact errors follow composition.
+
+    Parameters:
+        A0: The first callback's input type.
+        E0: The first callback's error type.
+        A1: The second callback's input type.
+        E1: The second callback's error type.
+
+    Args:
+        left: The callback receiving one copy of each input.
+        right: The callback receiving each original input.
+
+    Returns:
+        A composition computing both results from one copyable input.
+    """
+    return merge(NativeUnary[A0, type_of(None), E0, type_of(left), True](left), NativeUnary[A1, type_of(None), E1, type_of(right), True](right))
+
+
+# --- end pair merge native admission ---

@@ -27,6 +27,15 @@ struct _Pair[A: Movable & Deinitable, B: Movable & Deinitable](Binary, Copyable,
 
 
 @fieldwise_init
+struct _Duplicate[A: Copyable & Deinitable](Unary, Copyable, Defaultable):
+    """Give the left branch one explicit copy and the right branch the original."""
+    comptime Arg = Self.A
+    comptime Out = Tuple[Self.A, Self.A]
+    def call(self, var arg: Self.A) -> Self.Out:
+        return (arg.copy(), arg^)
+
+
+@fieldwise_init
 struct _Apply[U: UnaryContract & Movable & Deinitable](Binary, Copyable, Defaultable):
     """Call the left element, a unary callback, with the right element."""
     comptime First = Self.U

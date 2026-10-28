@@ -87,6 +87,7 @@ partial application, composition or a reusable owner for captured state.
 | Call an existing function or capture local values | Native function or closure | The operation's signature determines whether it borrows or owns the callback. Captured references retain their origins. |
 | Bind leading positional arguments | `partial(function, prefix...)` | Copies the bound arguments when built and on every invocation; the remaining arguments are borrowed. Use a closure for keyword binding or owned/mutable remaining arguments. |
 | Compose ordinary transformations | `flow(first, second)` or `compose(second, first)` | Passes each whole result to the next stage; `flow` reads left to right. |
+| Compute two results from one input | `merge(left, right)` | Requires the same copyable input type; copies once for the left callback and transfers the original to the right. |
 | Transform both pair elements | `split(left, right)` | Infers both types, moves both elements, and invokes the callbacks left to right through ordinary composition. |
 | Transform one pair element | `first[Other](callback)` or `second[Other](callback)` | Moves the untouched element through without copying it; callback receiver modes, errors and origins are preserved. |
 | Apply a binary callback to a pair | `tupled(function)` | Owns the callback, consumes both pair elements without copies, and retains shared, mutable or consuming receiver requirements. |
