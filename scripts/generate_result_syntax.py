@@ -1,6 +1,6 @@
 """Result combinator admission and Piped forwarding; no execution is generated."""
 from itertools import product
-from native_signatures import callback, native_adapter, Operand, variants, argument as native_argument
+from native_signatures import callback, callable_metadata, callable_protocol, native_adapter, Operand, variants, argument as native_argument
 from operation_specs import RESULT_DOCS as DOCS, RESULT_OUTCOMES as OUTCOMES, RESULT_OPERATIONS, RESULT_TERMINALS, SEQUENCING
 
 MD = 'Movable & Deinitable'
@@ -156,7 +156,54 @@ def methods(piped=False):
     out.append(outcome_methods(piped))
     if not piped:
         out.append(terminal_methods())
+        out.append(mixed_fold_methods())
     return ''.join(out)+'\n'
+
+
+def mixed_fold_methods():
+    """Admit one thin function and one library handler; folds own execution."""
+    out = []
+    for name, mode, convention, shared_view in (
+        ('fold', 'borrow', 'r', '_SharedBorrowRef'),
+        ('fold_owned', 'owned', 'o', '_SharedUnaryRef'),
+    ):
+        metadata = callable_metadata(mode, 'C')
+        receiver = 'self' if mode == 'borrow' else 'deinit self'
+        source = 'self' if mode == 'borrow' else 'self^'
+        for library_first, owned, raising in product((True, False), repeat=3):
+            library_name, native_name = ('on_ok', 'on_err') if library_first else ('on_err', 'on_ok')
+            library_payload, native_payload = ('Self.T', 'Self.E') if library_first else ('Self.E', 'Self.T')
+            native_error = 'X' if raising else 'Never'
+            protocol = callable_protocol(mode, repeatable=not owned)
+            bound = protocol + (' & '+MD if owned else '')
+            library = ('var ' if owned else '') + library_name + ': C'
+            library_value = library_name+'^' if owned else f'{shared_view}[C, origin_of({library_name})](Pointer(to={library_name}))'
+            errors = (metadata.error, native_error) if library_first else (native_error, metadata.error)
+            error = f'_CommonError[{", ".join(errors)}]'
+            # Infer the native result independently in both positions. A result
+            # selected from C prevents Mojo 1.2 inferring native-first calls.
+            result = metadata.result if library_first else 'R'
+            for abi in variants([Operand(native_payload, convention, read_parameter='A')]):
+                params = [f'C: {bound}', *(f'{p}: {b}' for p, b in abi.parameters)]
+                if raising:
+                    params.append(f'X: {MD}')
+                signature = f'def({native_argument(abi.payloads[0], convention, thin=True)})'
+                signature += (' raises X' if raising else '') + ' thin -> R'
+                native = f'{native_name}: {signature}'
+                conditions = [f'{metadata.inputs[0]} == {library_payload}', f'{metadata.result} == R', *abi.conditions,
+                              f'({metadata.error} == Never or {native_error} == Never or {metadata.error} == {native_error})']
+                # Thin pointer values need no capture origin. Own that trivial
+                # value through the existing adapter; register arguments have
+                # no memory origin from which to construct a borrowed view.
+                adapter = native_adapter(mode, [native_payload], 'R', native_error, f'type_of({native_name})', raising,
+                                         owner='NativeBorrow' if mode == 'borrow' else 'NativeUnary')
+                native_value = f'{adapter}({native_name})'
+                args = (library, native) if library_first else (native, library)
+                values = (library_value, native_value) if library_first else (native_value, library_value)
+                out.append(f'\n    @always_inline\n    def {name}[{", ".join(params)}]({receiver}, {", ".join(args)}) raises {error} -> {result} where {" and ".join(conditions)}:\n'
+                           f'        """Mix a plain function with a library handler; preserve its shared or owned receiver."""\n'
+                           f'        return {source}.{name}_once({", ".join(values)})\n')
+    return ''.join(out)
 
 
 

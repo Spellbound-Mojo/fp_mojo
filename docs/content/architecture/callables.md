@@ -247,6 +247,17 @@ payload; iterator predicates, `while_loop` predicates and Result folds use this
 route. The library never asserts two origins equal or rebinds a result to a
 different origin to make a call compile.
 
+Direct Result folds admit a plain function beside a library handler through
+thin native signatures generated from the shared ABI descriptors. The native
+result is inferred independently before equality with the library result is
+checked; selecting it from the library contract blocks inference when the
+native handler comes first in Mojo 1.2. Named shared handlers become existing
+shared views; moved handlers keep their receiver contract. The thin pointer
+value is stored in `NativeBorrow` or `NativeUnary`, since register arguments
+have no memory origin for a pointer view. All forms delegate to `fold_once`
+or `fold_owned_once`; branch choice, cleanup and receiver precedence stay there.
+Captures enter through the existing selected borrowing or unary adapters.
+
 ## Shared callback views
 
 Callback storage and receiver invocation have separate owners. An operation

@@ -164,8 +164,16 @@ Pass `mut_ref(on_ok)` and `mut_ref(on_err)` to retain mutable state. The example
 folds `Ok(12)` this way, then prints handler counts `1 0`: only the success
 handler ran. Its borrowing fold leaves the source Result available afterward.
 You can mix a named shared handler with a moved or retained mutable handler:
-`shared` remains reusable across the final two calls, which produce `12` and
+`shared` remains reusable across the two mixed library calls, which produce `12` and
 `22`. Errors and outputs retain their exact types and origins.
+
+A plain function or stored thin function pointer can occupy either position
+beside a library handler. `fold_owned(double, shared)` doubles an `Ok` payload;
+`fold(mut_ref(on_ok), double)` doubles an `Err` payload while keeping the
+mutable success handler available. No adapter or explicit type argument is
+needed for these calls. To mix a capturing native callback with a library
+handler, use `BorrowSignature[Payload, Output].capture(callback)` for `fold`
+or `as_unary(callback)` for `fold_owned`.
 
 Existing `fold_once` and `fold_owned_once` calls remain supported as explicit
 forms that consume both handler arguments. Ordinary calls no longer need a

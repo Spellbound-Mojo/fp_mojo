@@ -22,3 +22,15 @@ struct Bare(BorrowCallContract, UnaryContract, Movable):
     comptime Result = Int
     comptime Arg = Int
     comptime Out = Int
+
+
+from fp.callables import Unary, BorrowCallable
+@fieldwise_init
+struct Shared(Unary,BorrowCallable):
+    comptime Arg=Int
+    comptime Payload=Int
+    comptime Out=Int
+    comptime Result=Int
+    var offset:Int
+    def call(self,var value:Int)->Int: return value+self.offset
+    def invoke(self,ref value:Int)->Int: return value+self.offset

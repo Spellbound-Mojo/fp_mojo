@@ -3621,6 +3621,134 @@
      {
       "sha256": "0c9a361f9765a99de5e749f8eca9d4f5534185bbe33d877365c6d5e748727b70",
       "signature": "def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallable](self, var on_ok: F, on_err: G ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):"
+     },
+     {
+      "sha256": "16eb1a50cdcadb5f81c6bbf85a9e86f3e02c8e6139ce8a9f10b740276ef013a4",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "2170a5df18f0c8895940bad6ed7698ae4beeb6d7d707378439c1197615b52d52",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "ce06a3a236ebf4ea92578a273a4367d7069a714011cbd3aaa095a6df3084ffec",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "1e16a4ad7d9b7fad790fe615d35353339ab7fe85ef3af8624c6b938f106f6150",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "ccfd5a7681eca279b1527176296cba2ff7a72360dbf3298b4da4a30c9bdd6758",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "1634123b1ddbb581cd31f73c3c0bf7401a3c5bb6b784c583061db371532d9b97",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable](self, var on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "6c8547522768df273ff77fe944d1cd6a73543139a5da92c6d8d4c40a5c034cf4",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, var on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "674c09e3563eef954c19bf2db5dd49d8727f2523c7c97742dd110ba0bb367304",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, var on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "718ea631b14e7c73eb97d48127debf7cd983c0a874b61f48ffbd2a2aa157a0f5",
+      "signature": "def fold[C: BorrowCallable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "2702b9826f59974419378750d3904ea549f096e171d325ae304eb083ac9362b1",
+      "signature": "def fold[C: BorrowCallable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "fd968621e4a4d0c5d0d0d6ac38271dc1aaf7c5b98695ba92296a64a0c62c2c72",
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "6e8f4ebd30aa54b05eda1014fc0812eba7804608c5e7d1590f8730c5f3220a50",
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "7db3a2c4751b5a5ced1c8ee14d3ea8fe82d1e767d2a1871038c069a59108200a",
+      "signature": "def fold[C: BorrowCallable, R: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "ab56e2ef6853026fc3bdef849fbb616b873a3755877c0cf82b2caeebd531b535",
+      "signature": "def fold[C: BorrowCallable, R: RegisterPassable & Deinitable](self, on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "749d56492817c923762893992b6a0160bce814a6ccc37bcd8fd90694e3585538",
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "e2df43ed55d28acdf22925ef198658576a5affc612cad9f0f3695fbcdf0ff87c",
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "84ceba950ee060230d75ec96e76a894a6b088f25339ccb501098bd32f58577fb",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "f224eeef6e76929ff6899f3c10208b0778a8dc1810b9177a57d3c723fbb9a26a",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "a3a14817cb5a8ff5096bf734105071c7e166c20c9a3daf767c7e79d189d1b15c",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "1dcd5e8c3e6c1d2f7e2d61252f05fa7401525b1bea49d0cc2ec363baa0cbb7c6",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "22d63d0c45cff8dcee0e52c27101a2ef0af0a4ddc3d371fe1a1c577df147b645",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable](self, on_ok: def(Self.T) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "d913eed2397cdd92924a42aa2983e80a58f420d6dce42b7f5705016a49a16693",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable](self, on_ok: def(Self.T) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "ea92b7c680791dabc0b6cbf322bd5934770e76335b5cf7f27095e597201c4267",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: def(A) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "f32e5bdd543c02702733f56b29628dc5cbb3794ad78eaa68519cd666e8a8b1c1",
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: def(A) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "bed690bce1213cccfffd9a4818168acd6bd4b6c0814521a48c3c84fb21ac05f5",
+      "signature": "def fold[C: BorrowCallable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "dc9afeb5c146ef720dcf0fdd5295a429985cc6b71d92c0c7cb1a7f5e058421d9",
+      "signature": "def fold[C: BorrowCallable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "dd8cfabd7ceda0c7a35b46e0e559b26dfa29f3c58f986d7a5100f851884380b7",
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "d7d483d6a6ef22a62224ee02c5f2a127cd3bf5a6d24872213b7fb2664e21f5d2",
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or X == Never or C.Failure == X):"
+     },
+     {
+      "sha256": "dc0a9e913e5c53295e0f92cdbe04a0f25b85693eb4b48aba15fe6f7696d04931",
+      "signature": "def fold[C: BorrowCallable, R: Movable & Deinitable](self, on_ok: def(Self.T) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "3b73ca635fea397d5397d2d51c455de8b08ba3377d5b7f9690f0248292514850",
+      "signature": "def fold[C: BorrowCallable, R: RegisterPassable & Deinitable](self, on_ok: def(Self.T) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "b04b222768a8ffce19ffc893e554ea20c626781192f19c625afc20f1178168e1",
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: def(A) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):"
+     },
+     {
+      "sha256": "b61153965e180ff0c2e8073f9e312860826c70123cdfc0d283b47610bc6dccf8",
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: def(A) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or Never == Never or C.Failure == Never):"
      }
     ],
     "fold_once": [
@@ -3661,6 +3789,70 @@
      {
       "sha256": "8ba943463236efd9e23ac00d8ea5f3266015e52eb3ce7dd7e47e650e25e2b00c",
       "signature": "def fold_owned[F: UnaryContract & Movable & Deinitable, G: Unary](deinit self, var on_ok: F, on_err: G ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):"
+     },
+     {
+      "sha256": "9b5978bf207340cf6d659c9ba412137d5b6cb2be3d9aaf7885f71c045d73a7ab",
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):"
+     },
+     {
+      "sha256": "996dec0117b70bda847529d81d79aeead1260308ba4e25d2ec3f80701540a999",
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or X == Never or C.Error == X):"
+     },
+     {
+      "sha256": "d2cab22ac1b67e80cdd678422e086063a509b4e94aa21ad6f2fdf0f857dab70b",
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):"
+     },
+     {
+      "sha256": "c272c2603a37dfc3c95266ee36da50ad1d9b34cceb55c1ede06b30086c0ffa38",
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):"
+     },
+     {
+      "sha256": "37d2aed3ee6643c2563ff158598c93321d610548a1d198b2c1b1dc25de3894a0",
+      "signature": "def fold_owned[C: Unary, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):"
+     },
+     {
+      "sha256": "36d051d106766090dccc7430128dbe9a26f1920c88bf122d33dd04ec7b1ee3d1",
+      "signature": "def fold_owned[C: Unary, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or X == Never or C.Error == X):"
+     },
+     {
+      "sha256": "0a4ea14173d25bbe5f89823cd620a154599cd6fdda72683fc78c8491b3d3f957",
+      "signature": "def fold_owned[C: Unary, R: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):"
+     },
+     {
+      "sha256": "622345e8c00dfdb28e270ae41d24bc558f5339b4f45777915689d66b24d0ef5b",
+      "signature": "def fold_owned[C: Unary, R: RegisterPassable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):"
+     },
+     {
+      "sha256": "b62af7ecd4a7af47a5eb04d0f9ffaa25edb8c27fccf976d0068400b261f68cff",
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):"
+     },
+     {
+      "sha256": "cab01e56f05ca1cf3bf6637471ce02c3477e3314ca2cf53210271318709e2340",
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or X == Never or C.Error == X):"
+     },
+     {
+      "sha256": "01bcba25723a7ef024c2618057f11dd2e4efb4802ee40217b41f1657d7e2719c",
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, var on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):"
+     },
+     {
+      "sha256": "9aba844b7e3e6a30ca168bde07c34cf3a65f6d34fa7069fc22f65a17393da8d6",
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, var on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):"
+     },
+     {
+      "sha256": "64343b8a9fd595f170d3d9209fa7134114fcf77c4238f6745cbd46b9500cdfd9",
+      "signature": "def fold_owned[C: Unary, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):"
+     },
+     {
+      "sha256": "cd60359c9aac1c58b1d63db36165a8d5064a6d62d75ddd79d5807a2e229ccfeb",
+      "signature": "def fold_owned[C: Unary, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or X == Never or C.Error == X):"
+     },
+     {
+      "sha256": "40a78243deec04dd440ac2710e58533e5f423791ab08a8814a125422ee677eee",
+      "signature": "def fold_owned[C: Unary, R: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):"
+     },
+     {
+      "sha256": "656ee17bfc0eba838eace9b57256d52b1765c963a10c75dd4e445f03a0b90815",
+      "signature": "def fold_owned[C: Unary, R: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):"
      }
     ],
     "fold_owned_once": [

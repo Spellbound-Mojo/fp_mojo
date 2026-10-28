@@ -221,7 +221,7 @@
     },
     "data": {
       "scope": "Result, Optional integration, non-empty lists, Ior and Capture.",
-      "restrictions": "Capture supports zero to eight owned positional operands; mixed conventions and homogeneous keyword packs support at most three positional operands; stored native pointers use kwargs as the pack name. Legacy attempt has diagnostic restrictions.",
+      "restrictions": "Capture supports zero to eight owned positional operands; mixed conventions and homogeneous keyword packs support at most three positional operands; stored native pointers use kwargs as the pack name. Legacy attempt has diagnostic restrictions. Mixed Result folds accept plain functions and stored thin pointers directly; captures use BorrowSignature.capture or as_unary. Invalid native success handlers using mut in fold/fold_owned or var in fold can crash Mojo 1.2 during inference.",
       "evidence": [
         "docs/examples/capture_native.mojo",
         "docs/examples/result_once.mojo",
@@ -249,7 +249,31 @@
         "tests/compile_fail/result_fold_ownership_inactive_reuse.mojo",
         "tests/compile_fail/result_fold_ownership_mixed_output.mojo",
         "tests/compile_fail/result_fold_ownership_owned_output.mojo",
-        "tests/compile_fail/result_fold_ownership_payload.mojo"
+        "tests/compile_fail/result_fold_ownership_payload.mojo",
+        "tests/runtime/test_result_fold_mixed.mojo",
+        "tests/runtime/test_result_fold_mixed_abi.mojo",
+        "tests/ownership/test_result_fold_mixed.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_error_origin.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_errors.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_missing_receiver.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_native_err_input.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_native_err_mut.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_native_err_output.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_native_err_owned.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_native_ok_input.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_native_ok_output.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_error_origin.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_errors.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_missing_receiver.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_native_err_input.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_native_err_mut.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_native_err_output.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_native_ok_input.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_native_ok_output.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_result_origin.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_owned_reuse.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_result_origin.mojo",
+        "tests/compile_fail/result_fold_mixed_fold_reuse.mojo"
       ]
     },
     "iteration": {

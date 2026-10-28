@@ -46,6 +46,10 @@ struct Offset(Unary):
         return value + self.amount
 
 
+def double(value: Int) -> Int:
+    return value * 2
+
+
 def main():
     var formatter = Format(String('value '))
     var value: Result[Int, Int] = Ok(12)
@@ -61,3 +65,5 @@ def main():
     var shared = Offset(10)
     print("mixed error:", Result[Int,Int](Err(12)).fold_owned(shared,mut_ref(on_err)))
     print("mixed success:", Result[Int,Int](Ok(12)).fold_owned(shared,mut_ref(on_err)))
+    print("native success:", Result[Int,Int](Ok(12)).fold_owned(double,shared))
+    print("native error:", Result[Int,Int](Err(12)).fold(mut_ref(on_ok),double))

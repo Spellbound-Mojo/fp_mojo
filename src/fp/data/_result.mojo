@@ -1,6 +1,6 @@
 """Typed result values stored in place: a native Variant of `Ok` and `Err`."""
 from fp.callables.native import _NativeThunkRef
-from fp.callables.native import _NativeOwnedArg, NativeUnary, _NativeThunk
+from fp.callables.native import _NativeOwnedArg, NativeUnary, NativeBorrow, _NativeThunk
 from fp.callables._conditional import _guard_owned
 from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables._retention import _Retain
@@ -1752,6 +1752,246 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where R == Self.T:
         """Plain raising form of `get_or_else`; infer the exact native error."""
         return self^.get_or_else(_NativeThunk[R, X, type_of(make_default), True](make_default))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable](self, var on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, var on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, var on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: RegisterPassable & Deinitable](self, on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable](self, on_ok: def(Self.T) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable](self, on_ok: def(Self.T) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: def(A) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: def(A) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: Movable & Deinitable](self, on_ok: def(Self.T) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: RegisterPassable & Deinitable](self, on_ok: def(Self.T) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: def(A) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: def(A) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(on_ok^, NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(on_ok^, NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(on_ok^, NativeUnary[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(on_ok^, NativeUnary[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold_owned[C: Unary, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(_SharedUnaryRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold_owned[C: Unary, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(_SharedUnaryRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold_owned[C: Unary, R: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(_SharedUnaryRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeUnary[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold_owned[C: Unary, R: RegisterPassable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(_SharedUnaryRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeUnary[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, var on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, var on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold_owned[C: Unary, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedUnaryRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold_owned[C: Unary, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedUnaryRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold_owned[C: Unary, R: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedUnaryRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold_owned[C: Unary, R: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedUnaryRef[C, origin_of(on_err)](Pointer(to=on_err)))
 
     # --- end Result combinators ---
 

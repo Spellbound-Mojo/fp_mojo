@@ -8,6 +8,16 @@ API without a separate review.
 
 ## Mojo 1.2 compatibility
 
+- Mixed Result folds use thin signatures for the native handler. A prototype
+  with generic native function traits admitted captures but introduced seven
+  additional crashes across fourteen invalid-signature probes, so it was not
+  adopted. The thin signatures reject eleven probes normally. The remaining
+  three crashes reproduce on the prior committed source: a native success
+  handler taking `mut Int` in `fold` or `fold_owned`, or `var Int` in `fold`,
+  paired with a valid library error handler. These invalid calls are tracked
+  compiler limitations, not passing rejection tests. Capturing callbacks use
+  `BorrowSignature.capture` or `as_unary` before entering the library boundary.
+
 - Invalid raw native `while_loop` predicates taking the carry as `var` or `mut`
   can crash Mojo 1.2 during function-trait inference. A minimal call is
   `while_loop(bad, Body(0), 0)` with a valid mutable unary library body and

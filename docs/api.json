@@ -31292,6 +31292,1638 @@
       },
       "signature": "def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallable](self, var on_ok: F, on_err: G) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure)",
       "summary": "Fold with library handlers whose ownership follows their arguments."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(Self.E) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(Self.E) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(A) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(A) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(Self.E) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(Self.E) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable](self, var on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, var on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, var on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(Self.E) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(Self.E) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(A) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(A) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(Self.E) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallable, R: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(Self.E) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallable, R: RegisterPassable & Deinitable](self, on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Failure, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Result"
+      },
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(Self.T) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(Self.T) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(A) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(A) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(Self.T) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable](self, on_ok: def(Self.T) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(Self.T) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable](self, on_ok: def(Self.T) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(A) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: def(A) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(A) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: def(A) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(Self.T) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(Self.T) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(A) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(A) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or X == Never or C.Failure == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(Self.T) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallable, R: Movable & Deinitable](self, on_ok: def(Self.T) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(Self.T) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallable, R: RegisterPassable & Deinitable](self, on_ok: def(Self.T) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(A) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: def(A) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(A) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Failure]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: def(A) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or Never == Never or C.Failure == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
      }
     ],
     "fold_once": [
@@ -31860,6 +33492,766 @@
       },
       "signature": "def fold_owned[F: UnaryContract & Movable & Deinitable, G: Unary](deinit self, var on_ok: F, on_err: G) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error)",
       "summary": "Fold with library handlers whose ownership follows their arguments."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or X == Never or C.Error == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: Unary, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, X]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: Unary, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or X == Never or C.Error == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: Unary, R: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "C",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "def(var _NativeOwnedArg[Self.E]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[C.Error, Never]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "C.Out"
+      },
+      "signature": "def fold_owned[C: Unary, R: RegisterPassable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[Self.T]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[Self.T]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or X == Never or C.Error == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, var on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, var on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[Self.T]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[C: Unary, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[Self.T]) raises X thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[X, C.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[C: Unary, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or X == Never or C.Error == X)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[C: Unary, R: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_ok",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> R",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "on_err",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_CommonError[Never, C.Error]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "Unary",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "R"
+      },
+      "signature": "def fold_owned[C: Unary, R: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never)",
+      "summary": "Mix a plain function with a library handler; preserve its shared or owned receiver."
      }
     ],
     "fold_owned_once": [
