@@ -313,6 +313,32 @@ Borrowed callback adapters keep their named owner alive for the call, and
 borrowed outputs retain their native origins. Use `fp.control.scan` when you
 need reverse traversal, length validation or static scheduling.
 
+## Traverse into an effect
+
+`iterated(source).traverse(callback)` infers its target from the complete callback
+result: Optional, Result, List, or a recipe declaring its Reader, State or Writer
+family. It collects successful payloads into a List inside that effect.
+`.traverse_void(callback)` infers the same target and discards successful
+payloads without building an output list.
+
+<!-- example: docs/examples/fluent_effects.mojo -->
+
+Result inference selects ordinary fail-fast Result behavior. Choose
+`.traverse[ValidationFamily[YourSemigroup]](callback)` explicitly to accumulate
+stored errors. Explicit targets also select external families and transformer
+layers whose native representation does not identify that layer. Existing
+positional family, callback-type and native-error bindings keep their order.
+
+Both terminals consume the source from its current position. Callback calls,
+short-circuiting and deferred execution follow the selected family: Reader and
+State pull nothing until `run`. Native errors and borrowed origins are retained;
+move-only payloads need no copy unless the target family's branching requires it.
+Shared and mutable library callbacks can be moved into either terminal. A named
+shared callable view can be reused by `traverse`; callbacks must support repeated
+invocation. Native function names and captured callbacks retain their existing
+admission rules. Stored thin function pointers retain their existing admission
+limitation; use a native function name or an explicit library callable.
+
 ## Effectful search and reduction
 
 <!-- example: docs/examples/iteration_effect_search.mojo -->

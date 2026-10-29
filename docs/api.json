@@ -286975,6 +286975,182 @@
        }
       ],
       "description": "",
+      "error": "_InferredApplicative[R].CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]",
+      "parameters": [
+       {
+        "description": "The callback input type, including its native origins.",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The native callback result type.",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The origin of the borrowed native callback.",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "The callback type, retaining its receiver, captures and error contract.",
+        "inferred": true,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect containing transformed payloads; Iter and direct calls gather a List.",
+       "type": "_InferredApplicative[R].Collected[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]"
+      },
+      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //](deinit self, ref[o] function: F) raises _InferredApplicative[R].CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] -> _InferredApplicative[R].Collected[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] where Self.I.Element == A and _InferredApplicative[R].CollectCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]",
+      "summary": "Infer the target effect from the callback result and collect a List."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_InferredApplicative[R].CollectError[Self.I, _NativeUnaryRef[A, R, E, F, True, o]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_InferredApplicative[R].Collected[Self.I, _NativeUnaryRef[A, R, E, F, True, o]]"
+      },
+      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //](deinit self, ref[o] function: F) raises _InferredApplicative[R].CollectError[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] -> _InferredApplicative[R].Collected[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] where Self.I.Element == A and _InferredApplicative[R].CollectCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o]]",
+      "summary": "Infer the target effect from the callback result and collect a List."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_InferredApplicative[F._View[o].Out].CollectError[Self.I, F._View[o]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_InferredApplicative[F._View[o].Out].Collected[Self.I, F._View[o]]"
+      },
+      "signature": "def traverse[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises _InferredApplicative[F._View[o].Out].CollectError[Self.I, F._View[o]] -> _InferredApplicative[F._View[o].Out].Collected[Self.I, F._View[o]] where Self.I.Element == F._View[o].Arg and _InferredApplicative[F._View[o].Out].CollectCompatible[Self.I, F._View[o]]",
+      "summary": "Infer the target effect from the callback result and collect a List."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_InferredApplicative[F.Out].CollectError[Self.I, F]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_InferredApplicative[F.Out].Collected[Self.I, F]"
+      },
+      "signature": "def traverse[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises _InferredApplicative[F.Out].CollectError[Self.I, F] -> _InferredApplicative[F.Out].Collected[Self.I, F] where Self.I.Element == F.Arg and _InferredApplicative[F.Out].CollectCompatible[Self.I, F]",
+      "summary": "Infer the target effect from the callback result and collect a List."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "The callback, borrowed in place; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
       "error": "G.CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]",
       "parameters": [
        {
@@ -287715,6 +287891,166 @@
        "type": "G._Looped[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]"
       },
       "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, G._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]] -> G._Looped[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]",
+      "summary": "Traverse effects without retaining successful outputs."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; calls follow the operation's evaluation order.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _InferredApplicative[F.Out]._LoopError[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]]]",
+      "parameters": [
+       {
+        "description": "The callback type, retaining its receiver, captures and error contract.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.",
+        "inferred": true,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback, monoid or family error; Never for a non-raising operation.",
+      "returns": {
+       "doc": "The target effect of NoneType, without an output collection. A Piped Result source instead preserves its stored error inside Result[NoneType, E] in that effect. Target failures follow the effect.",
+       "type": "_InferredApplicative[F.Out]._Looped[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]]"
+      },
+      "signature": "def traverse_void[F: UnaryContract & Movable & Deinitable, X: AnyType = _InferError, //](deinit self, var function: F) raises _EntryError[X, _InferredApplicative[F.Out]._LoopError[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]]] -> _InferredApplicative[F.Out]._Looped[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]] where _Source[Self.I].Element == F.Arg and _CarrierCompatible[_InferredApplicative[F.Out], F.Out] and _InferredApplicative[F.Out]._LoopCompatible[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]]",
+      "summary": "Traverse effects without retaining successful outputs."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_Unary[A, R]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]]"
+      },
+      "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], X: AnyType = _InferError, //](deinit self, ref[o] function: F) raises _EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]]] -> _InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[_InferredApplicative[R], R] and _InferredApplicative[R]._LoopCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]]",
+      "summary": "Traverse effects without retaining successful outputs."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_RaisingUnary[A, R, E]",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]"
+      },
+      "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError, //](deinit self, ref[o] function: F) raises _EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]] -> _InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[_InferredApplicative[R], R] and _InferredApplicative[R]._LoopCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]",
       "summary": "Traverse effects without retaining successful outputs."
      }
     ],

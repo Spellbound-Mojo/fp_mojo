@@ -368,6 +368,9 @@ For fluent binary callbacks, the native parameter names are `A`, `B`, `R` and
 
 Use `iterated(source)` for a range, borrowed iterator or custom iterator.
 Its elements follow native iteration: iterating a dictionary yields keys.
+Its `traverse(callback)` and `traverse_void(callback)` infer a recognized target
+from the callback result, just as Pipeline does. Explicit target and callback
+bindings retain their order; see [iterator traversal](iteration.md#traverse-into-an-effect).
 Iterator sources continue at their current position, and adapters fuse
 exhaustion. Abandoning a lazy chain destroys its owned state without calling
 remaining transformations.
@@ -558,8 +561,8 @@ The operation adds no collection beyond the carrier produced by combination.
 The callback below returns a transformed number, but `traverse_tap` keeps the
 input numbers. Its Result target is inferred from `check`. Finish a Result
 pipeline with `.raise_on_err()` to extract success and propagate a stored error.
-The iterator's `traverse_void[ResultFamily[String]]` checks the whole iterator
-without collecting those numbers; its target selection remains explicit.
+The iterator's `traverse_void(check)` infers Result from the callback and checks
+the whole iterator without collecting those numbers.
 
 <!-- example: docs/examples/fluent_effects.mojo -->
 

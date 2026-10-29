@@ -23520,6 +23520,22 @@
     ],
     "traverse": [
      {
+      "sha256": "e02895fd172025a26bf8ffb8c9e49396b8100c93d0ca3a6fa7a523473d87ddc3",
+      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //](deinit self, ref[o] function: F) raises _InferredApplicative[R].CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] -> _InferredApplicative[R].Collected[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] where Self.I.Element == A and _InferredApplicative[R].CollectCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]:"
+     },
+     {
+      "sha256": "d0aa35530732a8b9fe8c37408df91df48712bf56e70fbf184ac05a915acc8c5c",
+      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //](deinit self, ref[o] function: F) raises _InferredApplicative[R].CollectError[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] -> _InferredApplicative[R].Collected[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] where Self.I.Element == A and _InferredApplicative[R].CollectCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o]]:"
+     },
+     {
+      "sha256": "3796d975a0e2b64dfaef5a5c296345d79dcf6d306b13156831c161655f2467b7",
+      "signature": "def traverse[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises _InferredApplicative[F._View[o].Out].CollectError[Self.I, F._View[o]] -> _InferredApplicative[F._View[o].Out].Collected[Self.I, F._View[o]] where Self.I.Element == F._View[o].Arg and _InferredApplicative[F._View[o].Out].CollectCompatible[Self.I, F._View[o]]:"
+     },
+     {
+      "sha256": "9c08c80db4382ff958c7989367247dca04a89e9f47902e41da866be98e0cf1c3",
+      "signature": "def traverse[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises _InferredApplicative[F.Out].CollectError[Self.I, F] -> _InferredApplicative[F.Out].Collected[Self.I, F] where Self.I.Element == F.Arg and _InferredApplicative[F.Out].CollectCompatible[Self.I, F]:"
+     },
+     {
       "sha256": "17cd80c6d13f1fda4a10e5f9bbe7c9c3770f962f809de07bdb6b4d8513788403",
       "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: _Unary[A, R]](deinit self, ref[o] function: F ) raises G.CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] -> G.Collected[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] where Self.I.Element == A and G.CollectCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]:"
      },
@@ -23576,6 +23592,18 @@
      {
       "sha256": "bc654feaa82f9f2d3a0f536ccbe15d116b574a62928883a6c54897d92222ef3a",
       "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, G._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]] -> G._Looped[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]:"
+     },
+     {
+      "sha256": "6f229eca8a729dd9838904470912486db5d1a4134dbc8152f3ef0b6edb750725",
+      "signature": "def traverse_void[F: UnaryContract & Movable & Deinitable, X: AnyType = _InferError, //](deinit self, var function: F) raises _EntryError[X, _InferredApplicative[F.Out]._LoopError[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]]] -> _InferredApplicative[F.Out]._Looped[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]] where _Source[Self.I].Element == F.Arg and _CarrierCompatible[_InferredApplicative[F.Out], F.Out] and _InferredApplicative[F.Out]._LoopCompatible[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]]:"
+     },
+     {
+      "sha256": "7020408807e3a35d9b353e328dead7a84856cc3e96f70f00f156fa042d5f07ae",
+      "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], X: AnyType = _InferError, //](deinit self, ref[o] function: F) raises _EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]]] -> _InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[_InferredApplicative[R], R] and _InferredApplicative[R]._LoopCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]]:"
+     },
+     {
+      "sha256": "699afb10c7bfea958815c11ec6d101d46550bef4df15fc5e3c91b53a2875b73f",
+      "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError, //](deinit self, ref[o] function: F) raises _EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]] -> _InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[_InferredApplicative[R], R] and _InferredApplicative[R]._LoopCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]:"
      }
     ],
     "tuple_left": [

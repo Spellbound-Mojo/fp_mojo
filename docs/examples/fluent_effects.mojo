@@ -2,7 +2,6 @@
 from fp.data import Result, Ok, Err
 from fp.functions import pipeline
 from fp.iteration import iterated
-from fp.algebra import ResultFamily
 from fp.callables import as_unary
 from std.testing import assert_equal
 
@@ -34,7 +33,7 @@ def main() raises:
     var values: List[Int] = [1, 2, 3]
     var retained = pipeline(values^).traverse_tap(check).raise_on_err()
     print("retained:", retained)
-    var checked = iterated(range(3)).traverse_void[ResultFamily[String]](check)
+    var checked = iterated(range(3)).traverse_void(check)
     print("all checked:", checked.is_ok())
     var source_error = pipeline(Result[Int, String](Err(String("source error")))).traverse_void(check).raise_on_err()
     print("source error preserved:", source_error.is_err())

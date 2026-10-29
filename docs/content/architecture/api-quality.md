@@ -548,12 +548,33 @@ syntax. Compatibility Piped bindings remain documented under their own name.
 The generic-wrapper table includes the existing OrElseContract and its export
 owner. These changes add no library execution or ownership mechanism.
 
+## Iterator traversal inference
+
+Iter's `traverse(callback)` and `traverse_void(callback)` now select the target
+from the complete callback result, using the same family recognition as Pipeline.
+This removes the last explicit Result target from the fluent combination example.
+Optional and Result short-circuit, List branches, and declared Reader, State and
+Writer recipes retain their own execution timing and result types. Validation,
+external families and erased transformer layers remain explicitly selectable.
+
+The new overloads place inferred parameters before Mojo's inference barrier and
+forward to the existing explicit entries. Existing positional family, callback
+and native-error parameters keep their order. The shared traversal generator
+renders discard admission for both forms; collection signatures use the shared
+callback descriptors. Family contracts, accumulation and ownership retain their
+existing owners. No additional runtime wrapper or error conversion is introduced.
+
+Focused tests cover deferred execution and abandonment, state and Writer output,
+external targets, generic forwarding, shared/mutable callbacks, move-only values
+and errors, borrowed origins and ordinary invalid calls. Stored thin callback
+admission remains a separate existing limitation to address through the native
+signature owner.
+
 ## Next passes
 
-1. Give Iter traversal terminals the same target inference as Pipeline, starting
-   with `traverse` and `traverse_void`. Reuse the canonical family inference and
-   execution owners, preserving explicit family/error bindings and ordinary
-   invalid-call diagnostics.
+1. Reuse the shared native-signature machinery for stored thin callback admission
+   on iterator traversal terminals, preserving existing explicit bindings and
+   exact callback errors rather than requiring user-written wrapper lambdas.
 2. Remove remaining private Result inspections from user-facing examples using
    public consuming or borrowing operations, without adding payload copies
    merely for display.

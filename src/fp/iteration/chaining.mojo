@@ -29,7 +29,7 @@ from fp.algebra.protocols import Monad
 from fp.algebra.operations import _EntryError, _InferError
 from fp.data._result import _ResultType
 from fp.callables._views import _UnaryViewable, _BorrowViewable
-from fp.algebra.instances import _OptionalElement
+from fp.algebra.instances import _InferredApplicative, _OptionalElement
 from fp.callables.protocols import BinaryContract
 from fp.callables._views import _BinaryViewable
 from fp.callables._receiver import _SharedBinaryRef
@@ -1680,6 +1680,64 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
         return _traverse_then[ListFamily, G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]]]]]]]](_Same[downcast[_Source[Self.I].Element, Movable & Deinitable]](), self._iterator^, _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _Same[downcast[_Source[Self.I].Element, Movable & Deinitable]]]]]())
+
+    def traverse_void[F: UnaryContract & Movable & Deinitable, X: AnyType = _InferError, //](deinit self, var function: F) raises _EntryError[X, _InferredApplicative[F.Out]._LoopError[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]]] -> _InferredApplicative[F.Out]._Looped[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]] where _Source[Self.I].Element == F.Arg and _CarrierCompatible[_InferredApplicative[F.Out], F.Out] and _InferredApplicative[F.Out]._LoopCompatible[Self.I, F, _Discard[_InferredApplicative[F.Out].Element[F.Out]]]:
+        """Traverse effects without retaining successful outputs.
+
+        Parameters:
+            F: The callback type, retaining its receiver, captures and error contract.
+            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
+
+        Args:
+            function: The callback, consumed; calls follow the operation's evaluation order.
+
+        Returns:
+            The target effect of NoneType, without an output collection. A Piped Result source instead preserves its stored error inside Result[NoneType, E] in that effect. Target failures follow the effect.
+
+        Raises:
+            The exact callback, monoid or family error; Never for a non-raising operation.
+        """
+        return self^.traverse_void[_InferredApplicative[F.Out], X=X](function^)
+
+    def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], X: AnyType = _InferError, //](deinit self, ref[o] function: F) raises _EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]]] -> _InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[_InferredApplicative[R], R] and _InferredApplicative[R]._LoopCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, Never, F, False, o].Out]]]:
+        """Traverse effects without retaining successful outputs."""
+        return self^.traverse_void[_InferredApplicative[R], X=X](function)
+
+    def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError, //](deinit self, ref[o] function: F) raises _EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]] -> _InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[_InferredApplicative[R], R] and _InferredApplicative[R]._LoopCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]:
+        """Traverse effects without retaining successful outputs."""
+        return self^.traverse_void[_InferredApplicative[R], X=X](function)
+
+    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //](deinit self, ref[o] function: F) raises _InferredApplicative[R].CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] -> _InferredApplicative[R].Collected[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] where Self.I.Element == A and _InferredApplicative[R].CollectCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]:
+        """Infer the target effect from the callback result and collect a List.
+
+        Parameters:
+            A: The callback input type, including its native origins.
+            R: The native callback result type.
+            o: The origin of the borrowed native callback.
+            F: The callback type, retaining its receiver, captures and error contract.
+
+        Args:
+            function: The callback, borrowed in place; calls follow the operation's evaluation order.
+
+        Returns:
+            The target effect containing transformed payloads; Iter and direct calls gather a List.
+
+        Raises:
+            The exact callback, monoid or family error; Never for a non-raising operation.
+        """
+        return self^.traverse[_InferredApplicative[R]](function)
+
+    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //](deinit self, ref[o] function: F) raises _InferredApplicative[R].CollectError[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] -> _InferredApplicative[R].Collected[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] where Self.I.Element == A and _InferredApplicative[R].CollectCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o]]:
+        """Infer the target effect from the callback result and collect a List."""
+        return self^.traverse[_InferredApplicative[R]](function)
+
+    def traverse[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises _InferredApplicative[F._View[o].Out].CollectError[Self.I, F._View[o]] -> _InferredApplicative[F._View[o].Out].Collected[Self.I, F._View[o]] where Self.I.Element == F._View[o].Arg and _InferredApplicative[F._View[o].Out].CollectCompatible[Self.I, F._View[o]]:
+        """Infer the target effect from the callback result and collect a List."""
+        return self^.traverse[_InferredApplicative[F._View[o].Out]](function)
+
+    def traverse[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises _InferredApplicative[F.Out].CollectError[Self.I, F] -> _InferredApplicative[F.Out].Collected[Self.I, F] where Self.I.Element == F.Arg and _InferredApplicative[F.Out].CollectCompatible[Self.I, F]:
+        """Infer the target effect from the callback result and collect a List."""
+        return self^.traverse[_InferredApplicative[F.Out]](function^)
 
     def par_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //, S: Semigroup = _ListErrors[R]](deinit self, ref[o] function: F) raises ListFamily.TraverseError[ValidationFamily[S], Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] -> ListFamily.Traversed[ValidationFamily[S], Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] where Self.I.Element == A and ListFamily.TargetCompatible[ValidationFamily[S], Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] and _CarrierCompatible[ValidationFamily[S], R]:
         """Apply par_traverse through the carrier's Traversable capability.
