@@ -249,11 +249,12 @@ policy, and report runtime/ownership equivalence alongside compilation cost.
 
 ## Milestone comparison
 
-The checkpoint at [8c36f19](https://github.com/Spellbound-Mojo/fp_mojo/tree/8c36f19b410c645ffd867ce77a983a860cd2562f)
-qualifies the first nine passes. The complete precompiled-package O3 suite
-passed 1,007 non-benchmark programs and two diagnostic benchmarks; all 2,670
-rejection fixtures produced their declared diagnostics without crashes. The
-ten reference workflows passed all 40 source/package O0/O3 builds with exact
+The checkpoint at [a89e752](https://github.com/Spellbound-Mojo/fp_mojo/tree/a89e7525dc0d8da7ed615bc853251c00ec134381)
+qualifies the first sixteen passes. The complete source and precompiled-package
+O3 suites each passed 1,029 non-benchmark programs and two diagnostic benchmarks.
+All 2,716 rejection fixtures produced their declared diagnostics without crashes
+through both import routes. The ten reference workflows passed all 40
+source/package O0/O3 builds with exact
 output checks. New ownership, generic-forwarding and invalid-call cases also
 have focused source/package O0/O3 evidence from their implementation passes.
 
@@ -262,9 +263,9 @@ have focused source/package O0/O3 evidence from their implementation passes.
 | Result values | Direct tuple attachment accepts move-only values; generic wrappers have public attachment contracts. | Repeating families still need copies. |
 | Collections and validation | Introductory examples use a clear eager/lazy choice and public Result inspection. | Validation remains an explicit policy choice. |
 | Capture | Stateful capture works as a mutable callback in mapping, traversal and lazy composition. | Mixed native argument conventions still need explicit binding; these examples retain that spelling. |
-| Reader, State and Writer | Declared recipes infer their family; selected chains support execution, environment scoping and log operations. | Erased transformer layers need explicit selection; deferred native callbacks retain their origins. |
-| IO | Finalization and execution stay in one chain through the existing IO owners. | Consumed recipes and cooperative cancellation retain this library's execution contract. |
-| Traversal, folds and resource composition | The reference behavior remains qualified; declared target recipes share family inference. | This checkpoint introduces no new resource runtime. |
+| Reader, State and Writer | Declared recipes infer their family; chains support execution, environment scoping and log operations. State sequences independent recipes with `product_r`; Writer appends logs with `tell` after an ordinary value callback. | Erased transformer layers need explicit selection; deferred native callbacks retain their origins. |
+| IO | Finalization, outcome-aware cleanup and execution stay in one chain through the existing IO owners. | Consumed recipes and cooperative cancellation retain this library's execution contract. |
+| Traversal, folds and resource composition | Declared target recipes share family inference. Resources support `use_void`, public generic scope metadata, and direct stored-pointer IO factories. | Lifecycle execution remains with the existing resource and scoped IO owners. |
 
 The selected Pipeline inventory now covers every legacy Piped method name.
 That is useful for discoverability, but does not make signatures, error
@@ -278,19 +279,22 @@ before the concurrent full-suite qualification.
 
 | Client | Baseline median seconds | Current median seconds (range) | Baseline median RSS MiB | Current median RSS MiB (range) |
 |---|---|---|---|---|
-| `result_values` | 7.75 | 7.41 (7.38–8.57) | 268.4 | 276.1 (272.3–277.9) |
-| `inferred_traversal` | 7.15 | 6.87 (6.33–6.96) | 266.1 | 263.6 (261.4–275.4) |
-| `capture_arguments` | 5.26 | 5.09 (5.06–5.35) | 246.5 | 245.2 (244.9–254.1) |
+| `result_values` | 7.75 | 7.43 (7.38–7.47) | 268.4 | 274.4 (274.1–277.7) |
+| `inferred_traversal` | 7.15 | 6.69 (6.15–6.80) | 266.1 | 268.4 (268.2–269.2) |
+| `capture_arguments` | 5.26 | 5.08 (4.99–5.29) | 246.5 | 243.4 (243.3–245.4) |
 
-Costs remain close to the baseline. The Result client uses 7.7 MiB more median
+Costs remain close to the baseline. The Result client uses 6.0 MiB more median
 peak memory; three observations per client do not establish a speedup or a
 performance regression. The other seven workflows remain unmeasured.
-Reports are retained in `.cache/api-roadmap/pass10/`; the
+Reports are retained in `.cache/api-roadmap/pass17/`; the
 [qualification catalog](../guides/compatibility.md#qualification-checkpoint)
-names the source commit and report digests. The complete current source suite,
-the full standalone documentation matrix, copied-source delivery, macOS and
-device execution were not rerun in this checkpoint. All 117 examples did run
-inside the complete precompiled-package O3 suite.
+names the source commit and report digests. Completed workflow and measurement
+reports survived an environment interruption and passed fresh artifact/log
+audits. The unfinished full suites restarted in new output directories against
+the same frozen inputs. Incomplete attempts do not count toward qualification.
+The full standalone documentation matrix, copied-source delivery, macOS and
+device execution were not rerun. All 117 examples ran inside both complete O3
+suites. Earlier checkpoints remain in the catalog's qualification history.
 
 ## Keeping one result from two effects
 
@@ -433,11 +437,17 @@ ABI bounds; concrete callers do not.
 
 ## Next passes
 
-1. Repeat the complete qualification and workflow/cost checkpoint after the
-   Writer, resource and scope changes. Revisit remaining example-only factories
-   using actual clients, ownership ledgers and generic callers as evidence.
-2. Use the measured workflow gaps to choose the next Cats-inspired convenience
-   operation, keeping execution and ownership in existing capability owners.
+1. Extend shared native borrowing admission to `asks`, `inspect` and
+   `scoped_io`. Packaged probes currently reject stored pointers in these
+   helpers; the resource methods already accept them. Preserve positional
+   bindings, generic ABI evidence, exact errors and external borrow origins.
+2. Revisit Reader and State examples that copy an entire input just to project
+   one value. Prefer the existing borrowing capabilities where their callback
+   ownership fits the client, and verify the copy/drop behavior explicitly.
+3. Evaluate result-only and state-only execution against Cats'
+   [runA and runS](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/data/IndexedStateT.scala)
+   clients. Add a terminal only where it removes real tuple plumbing while
+   preserving the base carrier and ownership.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

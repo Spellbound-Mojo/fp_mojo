@@ -9,7 +9,7 @@ use the `nightly` source checkout.
 ## Qualification checkpoint
 
 The functional checkpoint is
-[`8c36f19`](https://github.com/Spellbound-Mojo/fp_mojo/commit/8c36f19b410c645ffd867ce77a983a860cd2562f),
+[`a89e752`](https://github.com/Spellbound-Mojo/fp_mojo/commit/a89e7525dc0d8da7ed615bc853251c00ec134381),
 using Mojo 1.2.0 (2016d0cd) on Linux x86-64. Production sources, fixtures and
 runner inputs stayed unchanged throughout qualification. The precompiled
 package is bound to those sources by its retained manifest and artifact hashes.
@@ -17,11 +17,12 @@ The checkpoint update itself changes documentation only.
 
 <!-- compatibility: current-qualification -->
 
-The complete positive suite and rejection fixtures ran through precompiled
-package imports at O3. The ten API-quality reference workflows ran through
-source and package imports at O0 and O3. This checkpoint does not rerun the
-entire source suite, the full standalone documentation matrix, or copied-source
-delivery. All 117 examples also ran inside the precompiled-package O3 suite.
+The complete positive suite and rejection fixtures ran through both source
+and precompiled-package imports at O3. Each import route passed 1,029 programs
+and two diagnostic benchmarks, plus 2,716 rejection fixtures. The ten API-quality
+reference workflows passed all 40 source/package O0/O3 builds. All 117 examples
+also ran inside both complete O3 suites. The full standalone documentation
+matrix and copied-source delivery were not rerun.
 Both benchmark programs executed alongside compiler jobs; their timings are
 diagnostic observations. The rejection corpus retains explicit type hints in
 its documented legacy controls; it does not prove universal crash-free
@@ -48,8 +49,8 @@ The checkpoint also passed 38 tooling tests and a strict documentation build.
 The [downloadable catalog](../downloads/docs/compatibility.json) records the
 source commit, production tree, report digests, representative evidence,
 operation contracts and migration assignments. Raw logs and executables are
-retained in local `.cache` run folders; the catalog is a summary, not a portable
-copy of those artifacts. The commands in
+retained in local `.cache` run folders or hash-verified archives; the catalog
+is a summary, not a portable copy of those artifacts. The commands in
 [development](../contributing/development.md#verification-gates) reproduce the gates.
 
 macOS arm64 has a locked environment but has not been qualified on Mojo 1.2 in
