@@ -34,11 +34,19 @@ struct _Guard[T: Movable & Deinitable](Movable):
         self.cell[].lock.store(0)
 
 
+def _try_lock[T: Movable & Deinitable](cell: ArcPointer[_Cell[T]]) -> Optional[_Guard[T]]:
+    """Attempt the canonical cell guard without blocking a cooperative poll."""
+    var expected = UInt8(0)
+    if cell[].lock.compare_exchange(expected, UInt8(1)):
+        return Optional(_Guard(cell.copy()))
+    return None
+
+
 def _lock[T: Movable & Deinitable, E: Movable & Deinitable](cell: ArcPointer[_Cell[T]], context: IOContext[E]) -> Optional[_Guard[T]]:
     while not context.canceled():
-        var expected = UInt8(0)
-        if cell[].lock.compare_exchange(expected, UInt8(1)):
-            return Optional(_Guard(cell.copy()))
+        var guard = _try_lock(cell)
+        if guard:
+            return guard^
         sleep(0.001)
     return None
 

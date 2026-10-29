@@ -10,6 +10,7 @@ from fp.callables.native import _NativeThunk, NativeUnary, _NativeBorrow, _Thunk
 from fp.data import Result, Ok, Err
 from fp._internal.errors import _ErrorCompatible
 from .outcomes import EffectFailure, Outcome, _capture, _finish
+from .outcomes import _failure_as as _scope_failure
 from ._io_core import IOContext, delay
 from .finalization import _finalize_outcome, _ConstantFinalizer
 
@@ -178,14 +179,6 @@ struct _ConstantResource[T: AnyType, R: _ResourceType](BorrowOnceCallable):
     comptime Result = Self.R
     def invoke_once(deinit self, ref value: Self.Payload) -> Self.Result:
         return self.right^
-
-
-def _scope_failure[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](var failure: Outcome[U, E]) -> Outcome[T, E]:
-    """Retype an already-checked unsuccessful acquisition without losing errors."""
-    if not failure:
-        return None
-    var result = failure.take()
-    return Optional(Result[T, EffectFailure[E]](Err(result^._take_err())))
 
 
 def _lease_outcome[T: Movable & Deinitable, E: Movable & Deinitable, R: _Releaser](var acquired: Outcome[T, E], var release: R
