@@ -797,9 +797,36 @@ errors, move-only payloads, independent origins, Reader/State deferral and exact
 execution errors. Rejections include moving a chain while a deferred result
 still borrows it, incompatible carriers and single-use callback programs.
 
+## Full compatibility after traversal simplification
+
+Commit [`dacbc9d`](https://github.com/Spellbound-Mojo/fp_mojo/commit/dacbc9d7f048f7fc12527bfebfde53ce09193665)
+passed the complete maintained O3 corpus through both source and precompiled
+package imports: 1,078 programs, 2 diagnostic benchmarks and 2,904 rejection
+fixtures per route. All 119 examples also passed the full standalone O0/O3
+matrix through both import routes (476 builds). The checkpoint audits frozen
+inputs, package bindings, raw diagnostics, exact example output and executable
+hashes. Reports are retained in `.cache/api-roadmap/pass38/current/`; the
+[qualification catalog](../guides/compatibility.md#qualification-checkpoint)
+records the commit and report digests.
+
+One rejection fixture's obsolete `CarrierCompatible` marker was updated to
+`TraverseTapContract` after confirming normal compiler rejection. Its Mojo body
+is unchanged. The corrected fixture passed source/package O0/O3 compilation;
+the complete corpus was then qualified against the named commit with frozen
+production, fixture and runner inputs. No compiler results from earlier
+production revisions were reused.
+
+This is functional qualification of the named commit. It retains the documented
+limits on legacy hinted rejection controls and does not establish compile-cost
+or benchmark improvements. Other platforms, copied-source delivery and private
+experimental suites remain outside this checkpoint.
+
 ## Next passes
 
-1. Qualify the accumulated changes across the complete library corpus.
+1. Review remaining iterator traversal and discard forms for consistent
+   callable-family selection, using the now-shared view metadata.
+2. Continue removing redundant callback adaptation in maintained collection
+   workflows where an existing callable view already supplies the contract.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

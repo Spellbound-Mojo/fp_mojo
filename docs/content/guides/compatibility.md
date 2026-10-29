@@ -9,33 +9,40 @@ use the `nightly` source checkout.
 ## Qualification checkpoint
 
 The functional checkpoint is
-[`710e52b`](https://github.com/Spellbound-Mojo/fp_mojo/commit/710e52b3a09bed233e2a5080a80f6b31b5c05adb),
-using Mojo 1.2.0 (2016d0cd) on Linux x86-64. Production sources, fixtures and
-runner inputs stayed unchanged throughout qualification. The precompiled
-package is bound to those sources by its retained manifest and artifact hashes.
-The checkpoint update itself changes documentation only.
+[`dacbc9d`](https://github.com/Spellbound-Mojo/fp_mojo/commit/dacbc9d7f048f7fc12527bfebfde53ce09193665),
+using Mojo 1.2.0 (2016d0cd) on Linux x86-64. Retained compiler inputs are verified
+against this commit and stayed unchanged throughout complete qualification.
+The precompiled package is bound to the production sources by its retained
+manifest and artifact hashes. The checkpoint update itself
+changes documentation only.
 
 <!-- compatibility: current-qualification -->
 
-The complete positive suite and rejection fixtures ran through both source
-and precompiled-package imports at O3. Each import route passed 1,041 programs
-and two diagnostic benchmarks, plus 2,750 rejection fixtures. Twelve API-quality
-reference workflows passed all 48 source/package O0/O3 builds. All 119 examples
-also ran inside both complete O3 suites. Five clients have three isolated cold
-builds each. A further 18 paired cold builds compare three unchanged clients
-against the preceding source checkpoint on the same host. The full standalone
-documentation matrix and copied-source delivery were not rerun.
-Both benchmark programs executed alongside compiler jobs; their timings are
-diagnostic observations. The rejection corpus retains explicit type hints in
-its documented legacy controls; it does not prove universal crash-free
-diagnostics for invalid calls.
+Both source and precompiled-package imports passed the complete O3 corpus:
+1,078 maintained programs, 2 diagnostic benchmarks and 2,904 rejection fixtures
+per route. All 119 documentation examples additionally passed their full
+standalone source/package O0/O3 matrix: 476 builds with exact output checks.
+This checkpoint includes the shared traversal contracts and direct reusable
+iterator callback APIs. It does not replace the focused O0/O3 ownership and
+rejection matrices recorded for their individual implementation passes.
 
-The [performance page](../architecture/performance.md#mojo-12-capture-qualification)
-retains earlier cold-build observations at their named commits. Prior functional,
-installation and measurement checkpoints remain in the downloadable catalog's
-qualification history. The [API-quality comparison](../architecture/api-quality.md#milestone-comparison)
-adds nine isolated cold builds of three clients under the same policy. Their
-costs remain close to the baseline; the sample does not establish a speedup.
+The rejection fixture for an invalid `traverse_tap` callback now expects the
+shared `TraverseTapContract` diagnostic. Its Mojo body is unchanged, and the
+corrected fixture additionally passed source/package O0/O3 checks with normal
+compiler rejections. The complete checkpoint includes that correction and the
+Pipeline outcome/recovery additions present in the named commit.
+
+The rejection corpus retains explicit type hints in its documented legacy
+controls; these results do not establish universal crash-free diagnostics for
+invalid calls. Benchmarks ran alongside compiler jobs and remain diagnostic.
+Cold compilation cost, copied-source delivery, other platforms and private
+experimental suites were not requalified in this checkpoint.
+
+Earlier cold-build and paired-comparison observations remain associated with
+their named commits on the [performance page](../architecture/performance.md#mojo-12-capture-qualification)
+and [API-quality comparison](../architecture/api-quality.md#milestone-comparison).
+Prior functional, installation and measurement checkpoints remain in the
+catalog's qualification history.
 
 ## Historical baseline
 
