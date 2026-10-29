@@ -740,12 +740,30 @@ Reader. Rejections cover receiver, payload, retained ownership and incompatible
 native errors at both retention and finishing boundaries. Source-specific
 construction timing remains observable through the public Error projection.
 
+## Typed iterator postprocessing targets
+
+Iter's library-callable `flat_traverse` and `traverse_filter` now infer their
+target from the callable's complete output metadata. The existing family slots
+gain defaults through the shared traversal generator. There are no new overloads,
+execution bodies, callback wrappers or runtime storage. Existing explicit native
+and library parameter positions retain their meaning.
+
+The traversal example adapts native callbacks with `as_unary` for both flattening
+and selection. Raw native
+callbacks can still select their family explicitly. Validation and external
+families remain explicit because the carrier alone does not select those policies.
+
+Tests cover generic forwarding, mutable callback reuse, fail-fast Result and
+accumulating Validation targets, List branching, deferred Reader errors and State
+results, move-only cleanup and independent payload/error origins. Rejection tests
+use ordinary calls for incompatible inputs, payloads, consuming receivers,
+explicit targets, errors, reuse and origins.
+
 ## Next passes
 
-1. Simplify the remaining explicit iterator traversal selections for typed
-   library callables, using their complete output metadata.
-2. Review generic traversal postprocessing against the public contract pattern,
-   then qualify the accumulated changes across the complete library corpus.
+1. Review generic traversal postprocessing against the public contract pattern,
+   sharing the existing traversal and finishing requirements.
+2. Qualify the accumulated changes across the complete library corpus.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

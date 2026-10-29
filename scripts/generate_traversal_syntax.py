@@ -119,6 +119,8 @@ def methods(mode, carrier=None, *, inferred=False):
                     family_parameter += f' = _InferredApplicative[{elem}]'
                 elif mode == 'iter' and name in ('traverse_tap', 'filter_effect') and kind == 'library':
                     family_parameter += ' = _InferredApplicative[C.Result]'
+                elif mode == 'iter' and name in ('flat_traverse', 'traverse_filter') and kind == 'library':
+                    family_parameter += ' = _InferredApplicative[F.Out]'
                 params += [family_parameter, *native_params, 'X: AnyType = _InferError']
             retained_error = discard and carrier and carrier.name == 'Result'
             callback=operation.retained(elem, 'G', cb) if borrowing else cb

@@ -3,7 +3,7 @@ from fp.data import Result, Ok, Err
 from fp.functions import pipeline, kleisli
 from fp.algebra import ResultFamily
 from fp.iteration import iterated
-from fp.callables import BorrowSignature
+from fp.callables import BorrowSignature, as_unary
 from std.testing import assert_equal, assert_true
 
 
@@ -50,3 +50,11 @@ def main() raises:
     var predicate = BorrowSignature[Int,Result[Bool,String]].capture(keep_even)
     var filtered = iterated(range(1,5)).filter_effect(predicate^).raise_on_err()
     print("iterated selection:", filtered)
+
+    var iter_expanded = iterated(range(1, 3)).flat_traverse(as_unary(expand)).raise_on_err()
+    assert_equal(iter_expanded, [1, 10, 2, 20])
+    print("iterated expansion:", iter_expanded)
+
+    var iter_selected = iterated(range(1, 5)).traverse_filter(as_unary(select_even)).raise_on_err()
+    assert_equal(iter_selected, [20, 40])
+    print("iterated present values:", iter_selected)

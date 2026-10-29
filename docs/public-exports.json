@@ -22948,8 +22948,8 @@
     ],
     "flat_traverse": [
      {
-      "sha256": "7c3b41f0a28c0735bb2397db84d5c3740a97359ae8f039a1b82e54481677780a",
-      "signature": "def flat_traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F], G.MapError[ListFamily.Traversed[G, Self.I, F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]] where _Source[Self.I].Element == F.Arg and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F], G.MapError[ListFamily.Traversed[G, Self.I, F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]]]], ListFamily.TraverseError[G, Self.I, F]] and G.Element[F.Out] == List[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and ListFamily.TargetCompatible[G, Self.I, F]:"
+      "sha256": "308e1328761542ef78d388436e0d3cac7c5030d5c740eee5f86b950b2010e93c",
+      "signature": "def flat_traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F], G.MapError[ListFamily.Traversed[G, Self.I, F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]] where _Source[Self.I].Element == F.Arg and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F], G.MapError[ListFamily.Traversed[G, Self.I, F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]]]], ListFamily.TraverseError[G, Self.I, F]] and G.Element[F.Out] == List[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and ListFamily.TargetCompatible[G, Self.I, F]:"
      },
      {
       "sha256": "2d39370a812577705c848a5384205d6fd11d7a744421f0990c8499e786624304",
@@ -23600,8 +23600,8 @@
     ],
     "traverse_filter": [
      {
-      "sha256": "bde492f997f2fc9a763f80ea1cf2572d2f10e7d9181c52f920100fd2b2bf933d",
-      "signature": "def traverse_filter[F: UnaryContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F], G.MapError[ListFamily.Traversed[G, Self.I, F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]] where _Source[Self.I].Element == F.Arg and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F], G.MapError[ListFamily.Traversed[G, Self.I, F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]]]], ListFamily.TraverseError[G, Self.I, F]] and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and ListFamily.TargetCompatible[G, Self.I, F]:"
+      "sha256": "25321442f980ce017aa72f1ce8ff313105c9bfeabbf7e31382ee95e4f6815680",
+      "signature": "def traverse_filter[F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F], G.MapError[ListFamily.Traversed[G, Self.I, F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]] where _Source[Self.I].Element == F.Arg and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F], G.MapError[ListFamily.Traversed[G, Self.I, F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F]]]]]], ListFamily.TraverseError[G, Self.I, F]] and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and ListFamily.TargetCompatible[G, Self.I, F]:"
      },
      {
       "sha256": "0af5be4887a579706022d3658a443ffd8099e83759835d771dfe22d54c14189b",

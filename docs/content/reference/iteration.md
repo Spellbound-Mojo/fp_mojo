@@ -390,6 +390,26 @@ stored deferred computation's execution error.
 
 <!-- example: docs/examples/traversal_composition.mojo -->
 
+## Flatten or select effectful results
+
+For a repeatable library unary callable, `iterated(values^).flat_traverse(function)` infers
+the target from its complete output type and flattens the successful List
+payloads. `traverse_filter(function)` collects present Optional payloads instead.
+An absent inner Optional skips one result; an absent outer Optional or a stored
+Result error follows the target's failure policy.
+
+Use `as_unary(function)` to supply the same contract for a native callback, or
+retain explicit `.flat_traverse[Family](function)` and
+`.traverse_filter[Family](function)` calls. An owned callable is consumed;
+`shared_ref(function)` and `mut_ref(function)` retain its owner for reuse. Keep
+that owner alive until a deferred computation finishes.
+
+Both terminals consume the iterator from its current position. Empty input
+lifts an empty List. Reader and State defer traversal and postprocessing until
+execution, preserving exact callback errors. Validation and third-party families
+remain explicit choices; native Result inference remains fail-fast. Existing
+positional and named family/error bindings keep their meaning.
+
 ## Sequence existing effects
 
 Use `iterated(effects^).sequence()` when the elements are already effects.
