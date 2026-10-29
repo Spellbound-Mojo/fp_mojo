@@ -845,19 +845,21 @@
       "methods": [
         "local",
         "listen",
-        "censor"
+        "censor",
+        "tell"
       ],
       "status": "selected",
       "families": "Current family supplies Local, Listen or Censor; continuation uses the capability Family.",
       "callbacks": "Native closure borrows and owned thin functions use existing descriptors; library callbacks retain their receivers and exact errors.",
-      "ownership": "Consumes the recipe; local borrows its environment, listen copies its log once, and censor consumes a possibly move-only log.",
+      "ownership": "Consumes the recipe; local borrows its environment, listen copies its log once, and censor consumes a possibly move-only log. Appending binds the log by value; repeating bases copy that log without copying payloads.",
       "errors": "Exact capability construction error; deferred execution retains exact callback errors and origins.",
       "timing": "The capability and base family own evaluation, copies and scope restoration. Inner layers require an explicit lifted capability through the free operations.",
       "owner": [
         "src/fp/effects/capabilities.mojo",
         "src/fp/effects/reader.mojo",
         "src/fp/effects/writer.mojo",
-        "scripts/generate_context.py"
+        "scripts/generate_context.py",
+        "src/fp/callables/_binding.mojo"
       ],
       "evidence": [
         "tests/runtime/test_pipeline_scopes.mojo",
@@ -873,7 +875,18 @@
         "tests/compile_fail/pipeline_scope_local_error.mojo",
         "tests/compile_fail/pipeline_scope_local_escape.mojo",
         "tests/compile_fail/pipeline_scope_local_result.mojo",
-        "tests/compile_fail/pipeline_scope_reuse.mojo"
+        "tests/compile_fail/pipeline_scope_reuse.mojo",
+        "tests/runtime/test_writer_tell.mojo",
+        "tests/runtime/test_writer_tell_effects.mojo",
+        "tests/runtime/test_writer_tell_origins.mojo",
+        "tests/ownership/test_writer_tell_owned.mojo",
+        "tests/compile_fail/writer_tell_branching_owned_log.mojo",
+        "tests/compile_fail/writer_tell_free_carrier.mojo",
+        "tests/compile_fail/writer_tell_log_escape.mojo",
+        "tests/compile_fail/writer_tell_origin.mojo",
+        "tests/compile_fail/writer_tell_reuse.mojo",
+        "tests/compile_fail/writer_tell_wrong_family.mojo",
+        "tests/compile_fail/writer_tell_wrong_log.mojo"
       ]
     },
     {

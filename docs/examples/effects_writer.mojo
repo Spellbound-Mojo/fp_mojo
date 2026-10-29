@@ -8,8 +8,8 @@ from std.testing import assert_equal
 comptime PricingWriter = Writer[StringMonoid]
 
 
-def add_fee(amount: Int) -> type_of(writer[PricingWriter, Int](Tuple(String(), 0))):
-    return writer[PricingWriter, Int](Tuple(String("fee +2"), amount + 2))
+def add_fee(amount: Int) -> Int:
+    return amount + 2
 
 
 def bracket(var log: String) -> String:
@@ -23,7 +23,7 @@ def main() raises:
     print("notice:", notice[0])
 
     var initial = writer[PricingWriter, Int](Tuple(String("start; "), 3))
-    var output = pipeline(initial^).flat_map(add_fee).listen().censor(bracket).run()
+    var output = pipeline(initial^).map(add_fee).tell("fee +2").listen().censor(bracket).run()
     assert_equal(output[0], "[start; fee +2]")
     assert_equal(output[1][0], 5)
     assert_equal(output[1][1], "start; fee +2")

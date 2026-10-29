@@ -1,6 +1,7 @@
 """Explicit, compile-time selections of environment and state capabilities."""
 from std.builtin.rebind import downcast
-from fp.algebra.protocols import Monad, _Lifting
+from fp.algebra.protocols import Monad, _Lifting, _SemigroupBinary
+from fp.callables._binding import _BindSecond
 from fp.callables.protocols import BorrowCallContract, UnaryContract, OnceUnary
 from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing, NativeUnary, as_unary, _Unary, _RaisingUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
@@ -504,6 +505,56 @@ def tell[I: Tell](var log: I.Log.Value) raises I.TellError -> I.Told where I.Tel
         The capability's exact native construction error.
     """
     return I.tell(log^)
+
+
+struct TellContract[I: Censor, V: Movable & Deinitable]:
+    """Append a log to an existing computation without changing its payload.
+
+    This is the contract for two-argument tell and Pipeline.tell. The selected
+    Censor capability owns admission, timing and representation. Repeated base
+    maps copy the appended log; single-use maps consume it. Payloads are never
+    copied by this operation. Generic wrappers forward Compatible.
+
+    Parameters:
+        I: The selected log capability, including an explicit lifted selection.
+        V: The original carrier, retaining its exact native origins.
+    """
+    comptime Family = Self.I.Family
+    """The selected capability's carrier family."""
+    comptime _Append = _BindSecond[_SemigroupBinary[Self.I.Log]]
+    comptime Compatible = Self.I.CensorCompatible[Self.V, Self._Append]
+    """Whether this carrier admits appending, including repetition requirements."""
+    comptime Out = Self.I.Censored[Self.V, Self._Append]
+    """The resulting carrier with its original payload and extended log."""
+    comptime Error = Self.I.CensorError[Self.V, Self._Append]
+    """The native construction error; deferred errors stay on the carrier."""
+
+
+def tell[V: Movable & Deinitable, //, I: Censor](var log: I.Log.Value, var value: V
+) raises TellContract[I, V].Error -> TellContract[I, V].Out where TellContract[I, V].Compatible:
+    """Append output after this computation's log, preserving its payload.
+
+    The one-argument overload constructs a computation with NoneType payload.
+    This overload scopes the supplied computation through Censor: it preserves
+    the selected layer, stored failure behavior and deferred execution. The
+    existing log is the left operand of the monoid combination. No empty log
+    is constructed. A repeating base requires a copyable appended log.
+
+    Parameters:
+        V: The existing carrier.
+        I: The selected Censor capability.
+
+    Args:
+        log: The appended output, consumed with its native origins.
+        value: The computation, consumed without copying its payload.
+
+    Returns:
+        A carrier preserving the original payload and extending its log.
+
+    Raises:
+        The contract's exact construction error, separate from execution.
+    """
+    return I.censor(TellContract[I, V]._Append(_SemigroupBinary[I.Log](), log^), value^)
 
 
 def listen[V: Movable & Deinitable, //, I: Listen](var value: V

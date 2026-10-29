@@ -5913,6 +5913,13 @@
    },
    "provider": "effects/protocols"
   },
+  "effects.TellContract": {
+   "declarations": [
+    "struct TellContract[I: Censor, V: Movable & Deinitable]:"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/capabilities"
+  },
   "effects.Writer": {
    "declarations": [
     "comptime Writer[W: Monoid] = WriterT[IdentityFamily, W]"
@@ -6513,6 +6520,10 @@
     {
      "sha256": "d22b1025db61412691fcb116dc0f4255577c7a4a721f57f4495519cc6f4647c4",
      "signature": "def tell[I: Tell](var log: I.Log.Value) raises I.TellError -> I.Told where I.TellAvailable:"
+    },
+    {
+     "sha256": "0af23d62083d61e72943edbfa6d197aeb413e6edaa551a3fbc1135d4fd80a8a1",
+     "signature": "def tell[V: Movable & Deinitable, //, I: Censor](var log: I.Log.Value, var value: V ) raises TellContract[I, V].Error -> TellContract[I, V].Out where TellContract[I, V].Compatible:"
     }
    ],
    "provider": "effects/capabilities"
@@ -19503,6 +19514,12 @@
      {
       "sha256": "7c7cf0193c7ac37f73aa7fe9209729ecefa9bf11ac9efcd4511d8889b176ef9c",
       "signature": "def tap_err[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping):"
+     }
+    ],
+    "tell": [
+     {
+      "sha256": "33ba3bde968ec04f3a81ce7dd86a940c9efe9374a53b8553f6fe6a5e00a8ebbc",
+      "signature": "def tell(deinit self, var log: _CensorCapability[Self.I].Log.Value) raises TellContract[_CensorCapability[Self.I], Self.V].Error -> Pipeline[TellContract[_CensorCapability[Self.I], Self.V].Family, TellContract[_CensorCapability[Self.I], Self.V].Out, Self.E] where conforms_to(Self.I, Censor) and TellContract[_CensorCapability[Self.I], Self.V].Compatible:"
      }
     ],
     "then": [

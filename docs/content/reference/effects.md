@@ -260,7 +260,17 @@ WriterT, OptionalT and ResultT support these selections.
 
 <!-- example: docs/examples/writer_capabilities.mojo -->
 
-`tell` consumes output and produces a `None` payload. `listen` consumes a
+`tell[C](log)` consumes output and produces a `None` payload.
+`tell[C](log, computation)` appends to an existing computation's selected log
+and preserves its payload; selected Writer chains spell this `.tell(log)`.
+It delegates to `censor` with an owned, right-bound monoid combination, so
+existing output precedes the appended output and no empty log is constructed.
+Single-use bases consume the log; repeating bases such as List copy the
+appended log per branch. The original payload can remain move-only in either
+case. Construction consumes the supplied log even if the base has no payload
+on which to apply it.
+
+`listen` consumes a
 computation and changes its payload from `A` to `(A, Log.Value)`, while retaining
 the output log. It copies the selected log once when the selected Writer's base
 mapping runs. Rearranging that pair through the outer layers moves it without
@@ -293,7 +303,13 @@ turning it into success. In `WriterT[ResultFamily[E], Log]`, a stored failure ha
 no log payload: neither the observation copy nor the censor callback runs.
 Native exceptions remain native, and no operation adds rollback.
 
-Generic forwarders retain `TellAvailable`, `ListenCompatible[V]`, or
+Generic append forwarders retain `TellContract[C, V].Compatible` and use its
+`Family`, `Out` and `Error` projections. Its error describes construction:
+an eager Writer can raise the monoid's error immediately, while a deferred
+base keeps that error on its execution. Selected inner logs use an explicit
+`LiftCensor` through the free two-argument `tell`.
+
+Generic forwarders for the other entries retain `TellAvailable`, `ListenCompatible[V]`, or
 `CensorCompatible[V, F]`. Censor forwarders also retain the exact equalities
 between `F.Arg`, `F.Out` and `C.Log.Value`. Admission checks the selected base,
 carrier shape, copyability where needed, native errors and embedded origins.

@@ -49,7 +49,7 @@ from fp.data._result import Result
 from fp.effects.protocols import ReaderFamily, StateFamily, WriterFamily, ReaderAction, Local, Listen, Censor
 from fp.effects.operations import run as _run_effect, _Reader, _State
 from fp.effects.writer import run_writer as _run_writer
-from fp.effects.capabilities import local as _local_effect, listen as _listen_effect, censor as _censor_effect
+from fp.effects.capabilities import local as _local_effect, listen as _listen_effect, censor as _censor_effect, tell as _tell_effect, TellContract
 from fp.effects._io_core import IOContract, CancellationToken, run_io as _run_pipeline_io
 from fp.effects.finalization import _FinalizerCompatible, _IOGuarantee, guarantee as _guarantee, on_cancel as _on_cancel
 from fp.effects.finalization import GuaranteeCaseContract, guarantee_case as _guarantee_case
@@ -603,6 +603,21 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def censor[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Censor) and _ErrorCompatible[Self.E, X] and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]]:
         """Transform this recipe's log while preserving its payload."""
         return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]], Self.E](_censor_effect[_CensorCapability[Self.I]](NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def tell(deinit self, var log: _CensorCapability[Self.I].Log.Value) raises TellContract[_CensorCapability[Self.I], Self.V].Error -> Pipeline[TellContract[_CensorCapability[Self.I], Self.V].Family, TellContract[_CensorCapability[Self.I], Self.V].Out, Self.E] where conforms_to(Self.I, Censor) and TellContract[_CensorCapability[Self.I], Self.V].Compatible:
+        """Append output after this recipe's log, preserving its payload and evaluation timing.
+
+        Args:
+            log: The appended log, consumed; repeated branches copy it without copying the payload.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[TellContract[_CensorCapability[Self.I], Self.V].Family, TellContract[_CensorCapability[Self.I], Self.V].Out, Self.E](_tell_effect[_CensorCapability[Self.I]](log^, self.value^))
 
     @always_inline
     def listen(deinit self) raises _ListenCapability[Self.I].ListenError[Self.V] -> Pipeline[_ListenCapability[Self.I].Family, _ListenCapability[Self.I].Listened[Self.V], Self.E] where conforms_to(Self.I, Listen) and _ListenCapability[Self.I].ListenCompatible[Self.V]:

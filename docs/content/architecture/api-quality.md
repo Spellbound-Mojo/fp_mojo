@@ -341,6 +341,28 @@ captured, unopened recipes do neither, and cleanup failures follow body failures
 The library's exit case exposes success, error and cancellation state; this
 does not claim Cats Effect's complete Outcome or asynchronous runtime model.
 
+## Appending Writer output without a recipe factory
+
+Cats' [Writer example](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/docs/datatypes/writer.md)
+appends output directly:
+
+```scala
+val tellExample = Writer("tell example", 1).tell("log append")
+tellExample.run
+```
+
+The Mojo Writer tutorial now uses `.map(add_fee).tell("fee +2")`. Its callback
+returns an ordinary Int; it no longer constructs a Writer or spells its recipe
+type. The two-argument free `tell` supports explicitly selected inner logs,
+and `TellContract` supplies generic admission, result, family and error metadata.
+
+Appending delegates to the existing Censor capability. The shared binary
+argument binder now supports either operand; the appended log is bound on the
+right of the existing monoid combination. There is one implementation of bound
+value movement, repeated copies and invocation. A one-shot base moves its log;
+a branching base copies only the appended log. Neither route copies payloads.
+This also preserves nested-log selection, stored failures and deferred errors.
+
 ## Next passes
 
 1. Revisit remaining example-only factories and concrete recipe return

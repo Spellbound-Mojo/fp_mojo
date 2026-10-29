@@ -216,6 +216,14 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                  "Scope a recipe under a transformed environment; the enclosing environment is unchanged."
                  if name == "local" else "Transform this recipe's log while preserving its payload.")
 
+    selection = "_CensorCapability[Self.I]"
+    contract = f"TellContract[{selection}, Self.V]"
+    emit("tell", {}, [], f"var log: {selection}.Log.Value", contract + ".Out",
+         contract + ".Error", contract + ".Family",
+         ["conforms_to(Self.I, Censor)", contract + ".Compatible"],
+         f"_tell_effect[{selection}](log^, self.value^)",
+         "Append output after this recipe's log, preserving its payload and evaluation timing.")
+
     selection = "_ListenCapability[Self.I]"
     emit("listen", {}, [], "", f"{selection}.Listened[Self.V]",
          f"{selection}.ListenError[Self.V]", f"{selection}.Family",
@@ -1323,6 +1331,7 @@ def documented(source):
         "initial": "The initial accumulator, consumed.",
         "other": "The already evaluated second carrier, consumed.",
         "finalizer": "The cleanup factory; native closures are borrowed, thin pointers owned, library callbacks consumed. It runs later with the exit case and returns IO in the body's error family.",
+        "log": "The appended log, consumed; repeated branches copy it without copying the payload.",
         "old": "The payload to compare against, consumed.",
         "new": "The replacement payload, copied into matching positions.",
         "values": "The already evaluated carrier of arguments, consumed.",

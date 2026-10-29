@@ -53436,6 +53436,50 @@
    "summary": "Append output to one explicitly selected log, in execution order.",
    "traits": []
   },
+  "effects.TellContract": {
+   "aliases": [
+    {
+     "description": "The selected capability's carrier family.",
+     "name": "Family"
+    },
+    {
+     "description": "Whether this carrier admits appending, including repetition requirements.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The resulting carrier with its original payload and extended log.",
+     "name": "Out"
+    },
+    {
+     "description": "The native construction error; deferred errors stay on the carrier.",
+     "name": "Error"
+    }
+   ],
+   "description": "This is the contract for two-argument tell and Pipeline.tell. The selected\nCensor capability owns admission, timing and representation. Repeated base\nmaps copy the appended log; single-use maps consume it. Payloads are never\ncopied by this operation. Generic wrappers forward Compatible.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected log capability, including an explicit lifted selection.",
+     "inferred": false,
+     "name": "I",
+     "type": "Censor",
+     "variadic": false
+    },
+    {
+     "description": "The original carrier, retaining its exact native origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct TellContract[I: Censor, V: Movable & Deinitable]",
+   "summary": "Append a log to an existing computation without changing its payload.",
+   "traits": []
+  },
   "effects.Writer": {
    "aliases": [],
    "description": "",
@@ -58636,6 +58680,50 @@
      },
      "signature": "def tell[I: Tell](var log: I.Log.Value) raises I.TellError -> I.Told where I.TellAvailable",
      "summary": "Record output in the selected log, with NoneType payload."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The appended output, consumed with its native origins.",
+       "name": "log",
+       "type": "I.Log.Value",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The computation, consumed without copying its payload.",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "The one-argument overload constructs a computation with NoneType payload.\nThis overload scopes the supplied computation through Censor: it preserves\nthe selected layer, stored failure behavior and deferred execution. The\nexisting log is the left operand of the monoid combination. No empty log\nis constructed. A repeating base requires a copyable appended log.",
+     "error": "TellContract[I, V].Error",
+     "parameters": [
+      {
+       "description": "The existing carrier.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The selected Censor capability.",
+       "inferred": false,
+       "name": "I",
+       "type": "Censor",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The contract's exact construction error, separate from execution.",
+     "returns": {
+      "doc": "A carrier preserving the original payload and extending its log.",
+      "type": "TellContract[I, V].Out"
+     },
+     "signature": "def tell[V: Movable & Deinitable, //, I: Censor](var log: I.Log.Value, var value: V) raises TellContract[I, V].Error -> TellContract[I, V].Out where TellContract[I, V].Compatible",
+     "summary": "Append output after this computation's log, preserving its payload."
     }
    ],
    "provider": "effects/capabilities",
@@ -234806,6 +234894,30 @@
       },
       "signature": "def tap_err[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[ResultFamily[_Failure[Result[_Success[Self.V], _Failure[Self.V]]]], Result[_Success[Self.V], _Failure[Self.V]], Self.E] where conforms_to(Self.V, _ResultType) and Self.V == Result[_Success[Self.V], _Failure[Self.V]] and _ErrorCompatible[Self.E, X] and P == _Failure[Self.V] and not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping)",
       "summary": "Inspect a borrowed stored error and retain the Result."
+     }
+    ],
+    "tell": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The appended log, consumed; repeated branches copy it without copying the payload.",
+        "name": "log",
+        "type": "_CensorCapability[Self.I].Log.Value",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "TellContract[_CensorCapability[Self.I], Self.V].Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[TellContract[_CensorCapability[Self.I], Self.V].Family, TellContract[_CensorCapability[Self.I], Self.V].Out, Self.E]"
+      },
+      "signature": "def tell(deinit self, var log: _CensorCapability[Self.I].Log.Value) raises TellContract[_CensorCapability[Self.I], Self.V].Error -> Pipeline[TellContract[_CensorCapability[Self.I], Self.V].Family, TellContract[_CensorCapability[Self.I], Self.V].Out, Self.E] where conforms_to(Self.I, Censor) and TellContract[_CensorCapability[Self.I], Self.V].Compatible",
+      "summary": "Append output after this recipe's log, preserving its payload and evaluation timing."
      }
     ],
     "then": [

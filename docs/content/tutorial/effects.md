@@ -93,9 +93,10 @@ are appended in execution order.
 the example unwraps the value with `.run()` and prints the log itself.
 
 `writer` constructs a Writer value from `(log, payload)`. The initial value has
-log `"start; "` and payload 3. `.flat_map(add_fee)` passes 3 to `add_fee`,
-which returns payload 5 and log `"fee +2"`. Writer combines the logs into
-`"start; fee +2"`.
+log `"start; "` and payload 3. `.map(add_fee)` changes the payload to 5,
+and `.tell("fee +2")` appends output, producing log `"start; fee +2"`.
+The callback is an ordinary `Int`-to-`Int` function. Use `flat_map` when the
+next computation itself produces both a payload and a log.
 
 `listen` keeps that log and pairs the payload with a copy of it. `censor` then
 formats the outer log with brackets. The final result is:

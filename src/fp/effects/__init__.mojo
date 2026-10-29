@@ -57,7 +57,7 @@ its documented thread-safety obligations.
 """
 from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
 from .reader import ReaderT, Reader
-from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, ask, local, get, put, modify, tell, listen, censor
+from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, TellContract, ask, local, get, put, modify, tell, listen, censor
 from .state import StateT, State
 from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
