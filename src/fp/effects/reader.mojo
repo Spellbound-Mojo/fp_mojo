@@ -10,7 +10,7 @@ from fp.algebra.contracts import MapContract, CombineContract
 from std.builtin.rebind import rebind_var, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import _fold_as, _pure, ApplicativeError, ErrorMapping, Monad, _Accumulate, _LiveAccumulator
+from fp.algebra.protocols import Functor, _fold_as, _pure, ApplicativeError, ErrorMapping, Monad, _Accumulate, _LiveAccumulator
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary,
                                     OnceThunk, MutableBinary, BorrowCallContract, BorrowCallable, BorrowOnceCallable)
@@ -372,7 +372,7 @@ struct _ReaderChoice[M: Monad, A: ReaderAction, B: ReaderAction](
 
 
 @fieldwise_init
-struct _ReaderHoist[A: Movable & Deinitable, S: ReaderAction, H: _CarrierOp, Target: AnyType = S.Family](
+struct _ReaderHoist[A: Movable & Deinitable, S: ReaderAction, H: _CarrierOp, Target: Functor = S.Family](
     ReaderAction, Copyable where conforms_to(S, Copyable) and conforms_to(H, Copyable)
 ):
     """Run the original source, then apply an operation into the admitted family."""

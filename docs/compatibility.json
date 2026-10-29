@@ -116,7 +116,7 @@
     },
     "functions": {
       "scope": "Selected Pipeline, legacy Piped, composition, partial application and Kleisli.",
-      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands.",
+      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands. Declared Reader, State, Writer and IO carriers select their family; erased transformer layers and alternative policies still need explicit selection. Whole-recipe mapping uses then or explicit Identity.",
       "evidence": [
         "docs/examples/selected_pipeline.mojo",
         "docs/examples/selected_workflow.mojo",
@@ -268,7 +268,16 @@
         "tests/compile_fail/owned_tuple_right_repeated.mojo",
         "tests/compile_fail/owned_tuple_source_origin.mojo",
         "tests/compile_fail/owned_tuple_source_reuse.mojo",
-        "tests/compile_fail/owned_tuple_string_dict.mojo"
+        "tests/compile_fail/owned_tuple_string_dict.mojo",
+        "tests/runtime/test_inferred_effect_families.mojo",
+        "tests/ownership/test_inferred_effect_families.mojo",
+        "tests/compile_fail/inferred_family_argument.mojo",
+        "tests/compile_fail/inferred_family_erased_layer.mojo",
+        "tests/compile_fail/inferred_family_native_error.mojo",
+        "tests/compile_fail/inferred_family_no_functor.mojo",
+        "tests/compile_fail/inferred_family_origin.mojo",
+        "tests/compile_fail/inferred_family_source_reuse.mojo",
+        "tests/compile_fail/inferred_family_wrong_run.mojo"
       ]
     },
     "adt": {
@@ -630,7 +639,7 @@
     },
     "effects": {
       "scope": "Reader, State, Writer and transformer capabilities.",
-      "restrictions": "Deferred computations retain callback borrows and alternative representations. Public carrier predicates validate each layer; Reader result admission uses the actual run origin. Carrier stability and Writer identity restrictions remain documented.",
+      "restrictions": "Deferred computations retain callback borrows and alternative representations. Public carrier predicates validate each layer; Reader result admission uses the actual run origin. Carrier stability and Writer identity restrictions remain documented. ReaderAction and StateAction family metadata requires Functor; inference preserves each recipe's declared family.",
       "evidence": [
         "docs/examples/environment_capabilities.mojo",
         "docs/examples/stateful_capabilities.mojo",
@@ -639,7 +648,16 @@
         "tests/runtime/test_context_deferred_admission.mojo",
         "tests/runtime/test_context_deferred_admission_endpoints.mojo",
         "tests/runtime/test_context_deferred_admission_origins.mojo",
-        "tests/ownership/test_context_deferred_admission_ownership.mojo"
+        "tests/ownership/test_context_deferred_admission_ownership.mojo",
+        "tests/runtime/test_inferred_effect_families.mojo",
+        "tests/ownership/test_inferred_effect_families.mojo",
+        "tests/compile_fail/inferred_family_argument.mojo",
+        "tests/compile_fail/inferred_family_erased_layer.mojo",
+        "tests/compile_fail/inferred_family_native_error.mojo",
+        "tests/compile_fail/inferred_family_no_functor.mojo",
+        "tests/compile_fail/inferred_family_origin.mojo",
+        "tests/compile_fail/inferred_family_source_reuse.mojo",
+        "tests/compile_fail/inferred_family_wrong_run.mojo"
       ]
     },
     "matching": {

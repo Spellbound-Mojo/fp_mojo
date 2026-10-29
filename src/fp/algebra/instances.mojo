@@ -17,16 +17,20 @@ from fp.callables._receiver import _unary_repeated_as
 from ._branches import _OptionalGuard, _ResultGuard, _TraverseBranch
 from ._result_accumulation import _result_map2, _result_loop, _ResultLoopCompatible, _FirstError
 from .filtering import _Select, _Keep
-from .protocols import (_NativeFoldCompatible, _LiveAccumulator, _pure, Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
+from .protocols import (_FamilyCarrier, _NativeFoldCompatible, _LiveAccumulator, _pure, Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
                         _next_item, _start_as, _combine_as, _map_accumulate, _Append, _LinearLoopCompatible, _LinearProducerCompatible)
 
 
 comptime _ListElement[V: Movable & Deinitable] = downcast[downcast[V, IterableOwned].IteratorOwnedType.Element, Movable & Deinitable]
 
 
-# Native carrier recognition has one owner. Guard iterable projection before
-# inspecting its element; scalar and custom values use the caller's fallback.
+# Carrier recognition has one owner. Effects declare their family through
+# shared metadata; no effect implementation is imported into algebra. Guard
+# iterable projection before inspecting its element. Bare values use fallback.
+# A declaration is authoritative, including in generic wrappers; native
+# recognition applies only to values without that declaration.
 comptime _NativeFamily[V: Movable & Deinitable, Fallback: Functor = IdentityFamily]: Functor = (
+    downcast[V, _FamilyCarrier].Family if conforms_to(V, _FamilyCarrier) else
     ResultFamily[downcast[V, _ResultType].Error] if conforms_to(V, _ResultType) else
     (ListFamily if V == List[_ListElement[V]] else
      OptionalFamily if V == Optional[_ListElement[V]] else Fallback)

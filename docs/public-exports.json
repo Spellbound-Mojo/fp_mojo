@@ -21144,8 +21144,8 @@
      "signature": "def pipeline[V: Movable & Deinitable, //, I: Functor](var value: V) -> Pipeline[I, V]:"
     },
     {
-     "sha256": "d220bf59d231f031bcf0e7e7aad82288bf53a4dd3336e9123866282e82ebeffa",
-     "signature": "def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[_NativeFamily[V], V] where _NativeFamily[V] == IdentityFamily:"
+     "sha256": "a3706f9405a753d27cdafdc04aa2a3ba3b513d6d7a6693555f46a22f0a54fc11",
+     "signature": "def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[_NativeFamily[V], V] where _NativeFamily[V] == IdentityFamily or conforms_to(V, _FamilyCarrier):"
     }
    ],
    "provider": "functions/context"

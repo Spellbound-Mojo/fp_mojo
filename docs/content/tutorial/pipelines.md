@@ -92,8 +92,8 @@ See [Results and recovery](results.md).
 
 ## Gather effects without family annotations
 
-Use `.traverse(callback)` when each payload produces an Optional, Result or
-List. The pipeline infers the target family from the callback's return type.
+Use `.traverse(callback)` when each payload produces an Optional, Result,
+List or an effect recipe with a declared family. The pipeline infers the target family from the callback's return type.
 Use `.sequence()` when the effects already exist. Both keep the source shape
 inside the selected target effect and continue in that effect's family:
 
@@ -107,7 +107,8 @@ move-only ownership are preserved.
 
 Use an explicit family when choosing another policy, such as
 `.traverse[ValidationFamily[Policy]](validate)` for error accumulation or
-`.traverse[Reader[Environment]](make_action)` for deferred execution. Existing
+an erased transformer layer. Reader, State, Writer and IO recipes identify
+their family directly; see [effect-family inference](../reference/functions.md#inference-for-effect-recipes). Existing
 explicit family and callback type bindings remain available.
 
 The same target inference applies to the other Pipeline traversal methods:

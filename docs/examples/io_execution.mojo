@@ -1,5 +1,5 @@
-from fp.algebra import map
-from fp.effects import IO, delay, run_io, guarantee, canceled
+from fp.functions import pipeline
+from fp.effects import delay, run_io, guarantee, canceled
 
 def read_number() -> Int:
     print("read")
@@ -12,7 +12,7 @@ def finish():
     print("finalize")
 
 def main():
-    var program = guarantee(map[IO[Error]](twice, delay[Error](read_number)), delay[Error](finish))
+    var program = guarantee(pipeline(delay[Error](read_number)).map(twice).get(), delay[Error](finish))
     print("program ready")
     var outcome = run_io(program^)
     if outcome:

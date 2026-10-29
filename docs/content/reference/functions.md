@@ -16,10 +16,11 @@ return their final value directly. For a reusable generic wrapper, follow the
 
 ## Select family and native errors before callbacks
 
-`pipeline(values)` starts a `Pipeline` for List, Optional or Result. Other
+`pipeline(values)` starts a `Pipeline` for List, Optional or Result. Reader,
+State and IO recipes and Writer values select their declared family. Bare
 values use Identity: `map` applies its callback to the whole bare value once.
-`pipeline[Family](value)` selects another Functor explicitly, including a
-deferred family. Call `raising[E]()` once to select native callback errors.
+`pipeline[Family](value)` selects a Functor explicitly. Call `raising[E]()` once
+to select native callback errors.
 Existing explicit payload bindings, such as `pipeline[T=Int](values)`, remain
 available. For a list literal, use `pipeline[Int]([1, 2])` or
 `pipeline[Int]([])`; this avoids an explicit `List[Int](...)` constructor.
@@ -35,6 +36,32 @@ and performs no iteration or callback invocation.
 capabilities. Result combinators use their existing branch and ownership rules.
 `map_err` and `map_both` use the selected family's `ErrorMapping` capability.
 Result infers a new `ResultFamily` from the transformed stored-error type.
+
+### Inference for effect recipes
+
+The same family selector serves pipeline construction, `then` continuation and
+inferred targets for traversal, sequencing, folds and searches. It recognizes
+native Optional, Result and List carriers and the declared family of Reader,
+State, Writer and IO recipes. A field named `Family` on an unrelated struct
+does not opt it in. A recipe's declared family must implement Functor; each
+operation retains its own stronger capability and admission requirements.
+
+Selection does not execute a recipe. `pipeline(reader).map(transform).get()`
+builds another Reader recipe; `run` still performs the work. Native errors,
+owned values and borrowed origins follow the selected family's existing rules.
+The [Reader example](effects.md) demonstrates this without repeating the family
+on every map.
+
+This changes the default for declared effect recipes from Identity to their
+own family. To transform the whole recipe as a value, use `.then(function)`
+or explicitly choose `pipeline[IdentityFamily](recipe)`. Existing explicit
+family and positional callback bindings keep their meaning.
+
+Some transformer layers share their base's representation. For example,
+`ResultT[Reader[Env], E]` stores a Reader of Result, so its declared carrier
+family is Reader. Select ResultT explicitly to map the inner success. Likewise,
+validation still needs an explicit policy. Inference never reconstructs an
+erased layer or chooses an alternative policy from its payload.
 
 Stored thin native pointers can be passed directly to these selected operations,
 including Result handlers and the existing `fold_left(step, initial)` and
@@ -424,7 +451,7 @@ native closures remain borrowed for that computation's lifetime.
 
 Effectful terminals consume an iterator or owned iterable into a Monad target.
 `all_effect(predicate)`, `any_effect(predicate)` and `find_effect(predicate)`
-infer native Optional, Result and List targets from the callback result. Their
+infer [recognized target families](#inference-for-effect-recipes) from the callback result. Their
 explicit `[Target]` forms retain custom or deferred policies. They borrow each item and require a Bool inside
 the target effect. Each branch stops at its decisive answer without another
 source pull. Empty input yields True, False or an absent Optional respectively.
@@ -432,7 +459,7 @@ source pull. Empty input yields True, False or an absent Optional respectively.
 present Optional inside the effect. An absent outer Optional or stored Result
 error still stops the entire computation according to the target's rules.
 
-`fold_effect(initial).run(step)` infers native Optional, Result and List targets.
+`fold_effect(initial).run(step)` infers [recognized target families](#inference-for-effect-recipes).
 It binds the initial accumulator before
 admitting a consuming binary callback. This ordering lets Mojo diagnose wrong
 argument conventions without inferring the accumulator at the same boundary.
@@ -444,7 +471,7 @@ accepts `run[Target](step)`. Both forms use the same fold contract and execution
 Existing `Piped.fold_effect(step, initial)` retains its original syntax.
 `fold_map_effect[Monoid](transform)` consumes items into effectful monoid
 values and combines them in order, starting with the identity. The callback
-infers a native Optional, Result or List target. The original
+infers a [recognized target family](#inference-for-effect-recipes). The original
 `fold_map_effect[Target, Monoid](transform)` form retains explicit custom
 policies and positional callback type bindings. Both `find_map_effect(chain)`
 and `fold_map_effect[Monoid](chain)` borrow a reusable shared Kleisli chain and
@@ -476,10 +503,9 @@ Arrays use O(N) temporary List storage to avoid moving Mojo 1.2's owning Array
 iterator; their elements still move once without copying. Other native iterators
 continue from their current position.
 
-`traverse(transform)` and `sequence()` infer native Optional, Result and List
-targets from the callback result or existing effect element. Use
+`traverse(transform)` and `sequence()` infer [recognized target families](#inference-for-effect-recipes) from the callback result or existing effect element. Use
 `traverse[TargetFamily](transform)` and `sequence[TargetFamily]()` to select
-another policy, including validation or a deferred effect. Both continue in
+another policy, including validation or an erased transformer layer. Both continue in
 the target effect family. `traverse_tap(effect)` borrows each
 payload, runs its effect and retains the original on success, discarding the
 effect's payload. `filter_effect(predicate)` runs a borrowing
@@ -496,7 +522,7 @@ A library BorrowOnceCallable works with single-use sources such as Optional;
 List needs repeatable callbacks. Original move-only payloads are supported
 when the target does not need to duplicate them; List branching requires copies.
 
-These derived methods also infer native Optional, Result and List targets;
+These derived methods also infer [recognized target families](#inference-for-effect-recipes);
 their explicit `[Target]` form keeps custom target policies available.
 `traverse_filter`, `flat_traverse` and `traverse_void` also accept reusable
 Kleisli chains directly. They borrow the shared chain and inherit its selected

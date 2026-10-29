@@ -9,7 +9,7 @@ from fp.algebra.contracts import MapContract, BindContract
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue
-from fp.algebra.protocols import (_fold_as, _pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _AccumulatePair, _LiveAccumulator, _BindFirst, _Lazy, _start_as)
+from fp.algebra.protocols import (Functor, _fold_as, _pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _AccumulatePair, _LiveAccumulator, _BindFirst, _Lazy, _start_as)
 from fp.algebra.instances import IdentityFamily
 from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary, Binary, MutableBinary)
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
@@ -477,7 +477,7 @@ struct _StateChoice[M: Monad, A: StateAction, B: StateAction](
 
 
 @fieldwise_init
-struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp, Target: AnyType = S.Family](
+struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp, Target: Functor = S.Family](
     StateAction, Copyable where conforms_to(S, Copyable) and conforms_to(H, Copyable)
 ):
     """Run the original source, then apply an operation into the admitted family."""

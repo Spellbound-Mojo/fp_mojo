@@ -529,12 +529,12 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 emit("run", cb, inferred_target_parameters(cb, capability="Monad"), cb["argument"],
                      result, error, "J", conditions,
                      f'_EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run({cb["build"]})',
-                     "Infer a native target from the step and execute through the selected fold stage.", wrap=False)
+                     "Infer the target family from the step and execute through the selected fold stage.", wrap=False)
                 inferred_fold_body.append(body.pop())
         if folding:
             body.append('''
     def fold_effect[A: Movable & Deinitable, //](deinit self, var initial: A) -> _InferredEffectFoldStage[Self.V, A, Self.E]:
-        """Bind the initial accumulator; run(step) infers the native target and admits the callback."""
+        """Bind the initial accumulator; run(step) infers the target family and admits the callback."""
         return _InferredEffectFoldStage[Self.V, A, Self.E](self.value^, initial^)
 
     def fold_effect[A: Movable & Deinitable, //, J: Monad](deinit self, var initial: A) -> _EffectFoldStage[J, Self.V, A, Self.E]:
@@ -1332,7 +1332,7 @@ def documented(source):
                     if p["name"] == "U" and name in ("fill", "tuple_left", "tuple_right") else
                     "The error Semigroup; inferred list errors concatenate in order."
                     if p["name"] == "S" and name.startswith("par_") else
-                    "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy."
+                    "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy."
                     if p["name"] == "J" and name in ("traverse", "sequence", *TRAVERSALS, "all_effect", "any_effect", "find_effect", "find_map_effect") else params[p["name"]]
                 ) + "\n"
                 for p in spec["parameters"]

@@ -50375,7 +50375,8 @@
    "signature": "trait ReaderAction(_Computation)",
    "summary": "A computation that reads a borrowed environment when run: a value of a `ReaderT` family.",
    "traits": [
-    "_Computation"
+    "_Computation",
+    "_FamilyCarrier"
    ]
   },
   "effects.ReaderFamily": {
@@ -52316,7 +52317,8 @@
    "signature": "trait StateAction(_Computation)",
    "summary": "A computation that consumes a state when run and returns the base carrier of `(Value, State)`: a value of a `StateT` family.",
    "traits": [
-    "_Computation"
+    "_Computation",
+    "_FamilyCarrier"
    ]
   },
   "effects.StateFamily": {
@@ -54043,6 +54045,7 @@
    "traits": [
     "Copyable",
     "_Computation",
+    "_FamilyCarrier",
     "_WriterType"
    ]
   },
@@ -117336,7 +117339,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -117924,7 +117927,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -134809,7 +134812,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -136229,7 +136232,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -137152,7 +137155,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Monad",
@@ -138367,7 +138370,7 @@
       "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]]",
       "parameters": [
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -139895,7 +139898,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -150484,7 +150487,7 @@
        "type": "_InferredEffectFoldStage[Self.V, A, Self.E]"
       },
       "signature": "def fold_effect[A: Movable & Deinitable, //](deinit self, var initial: A) -> _InferredEffectFoldStage[Self.V, A, Self.E]",
-      "summary": "Bind the initial accumulator; run(step) infers the native target and admits the callback."
+      "summary": "Bind the initial accumulator; run(step) infers the target family and admits the callback."
      },
      {
       "args": [
@@ -227741,7 +227744,7 @@
       "error": "_Traversing[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]]",
       "parameters": [
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -227765,7 +227768,7 @@
       "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]]",
       "parameters": [
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -227789,7 +227792,7 @@
       "error": "J._LoopError[Self.V, Identity[_FoldElement[Self.V]], _Discard[J.Element[_FoldElement[Self.V]]]]",
       "parameters": [
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -233725,7 +233728,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -234123,7 +234126,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -234521,7 +234524,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -235109,7 +235112,7 @@
         "variadic": false
        },
        {
-        "description": "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.",
+        "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
         "inferred": false,
         "name": "J",
         "type": "Applicative",
@@ -262111,8 +262114,8 @@
       "doc": "",
       "type": "Pipeline[_NativeFamily[V], V]"
      },
-     "signature": "def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[_NativeFamily[V], V] where _NativeFamily[V] == IdentityFamily",
-     "summary": "Start a pipeline over a bare value with the Identity family."
+     "signature": "def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[_NativeFamily[V], V] where _NativeFamily[V] == IdentityFamily or conforms_to(V, _FamilyCarrier)",
+     "summary": "Select a recipe's declared family, or Identity for a bare value."
     }
    ],
    "provider": "functions/context",

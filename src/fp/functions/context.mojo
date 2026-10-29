@@ -8,7 +8,7 @@ from fp.algebra.non_empty import NonEmptyListFamily
 from fp.data.non_empty_list import NonEmptyList
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.data._result import _ResultType, _fold_result_owned, _call_transform
-from fp.algebra.protocols import _MappedFamily, Functor, Filterable, Monad, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Traversable, Monoid, Semigroup
+from fp.algebra.protocols import _FamilyCarrier, _MappedFamily, Functor, Filterable, Monad, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Traversable, Monoid, Semigroup
 from fp.algebra.validation import ValidationFamily, _ListErrors
 from fp.algebra.instances import ListFamily, OptionalFamily, ResultFamily, IdentityFamily, _NativeFamily, _InferredApplicative, _ListElement
 from fp.algebra.contracts import FoldContract, AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, MapContract, FilterMapContract, BindContract, TraverseContract, FilterContract, CombineContract
@@ -137,42 +137,42 @@ struct _InferredEffectFoldStage[V: Movable & Deinitable, A: Movable & Deinitable
 
     @always_inline
     def run[C: BinaryContract & Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[C.Out]]](deinit self, var function: C) raises FoldContract[J, Self.V, C].Error -> Pipeline[J, FoldContract[J, Self.V, C].Out, Self.E] where C.First == Self.A and C.Second == _FoldElement[Self.V] and RepeatableBinary[C] and FoldContract[J, Self.V, C].Compatible:
-        """Infer a native target from the step and execute through the selected fold stage."""
+        """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(function^)
 
     @always_inline
     def run[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(var Self.A, var _FoldElement[Self.V]) -> R = def(var Self.A, var _FoldElement[Self.V]) -> R](deinit self, ref[o] function: C) raises FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, False, o]].Out, Self.E] where RepeatableBinary[_NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, False, o]] and FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, False, o]].Compatible:
-        """Infer a native target from the step and execute through the selected fold stage."""
+        """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, False, o](Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(var Self.A, var _FoldElement[Self.V]) raises Self.E -> R = def(var Self.A, var _FoldElement[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Self.E, C, True, o]].Out, Self.E] where RepeatableBinary[_NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Self.E, C, True, o]] and FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Self.E, C, True, o]].Compatible:
-        """Infer a native target from the step and execute through the selected fold stage."""
+        """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Self.E, C, True, o](Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, o: ImmOrigin, //, J: Monad = _Binding[_InferredApplicative[R]], C: def(var Self.A, var _FoldElement[Self.V]) raises Never -> R = def(var Self.A, var _FoldElement[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, True, o]].Out, Self.E] where Self.E != Never and RepeatableBinary[_NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, True, o]] and FoldContract[J, Self.V, _NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, True, o]].Compatible:
-        """Infer a native target from the step and execute through the selected fold stage."""
+        """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinaryRef[Self.A, _FoldElement[Self.V], R, Never, C, True, o](Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where not conforms_to(R, RegisterPassable) and RepeatableBinary[_NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]] and FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible:
-        """Infer a native target from the step and execute through the selected fold stage."""
+        """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False](function))
 
     @always_inline
     def run[R: RegisterPassable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R) raises FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Out, Self.E] where RepeatableBinary[_NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]] and FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False]].Compatible:
-        """Infer a native target from the step and execute through the selected fold stage."""
+        """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinary[Self.A, _FoldElement[Self.V], R, Never, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) thin -> R, False](function))
 
     @always_inline
     def run[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and RepeatableBinary[_NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]] and FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible:
-        """Infer a native target from the step and execute through the selected fold stage."""
+        """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True](function))
 
     @always_inline
     def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Monad = _Binding[_InferredApplicative[R]]](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R) raises FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E] where _ErrorCompatible[Self.E, X] and RepeatableBinary[_NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]] and FoldContract[J, Self.V, _NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Compatible:
-        """Infer a native target from the step and execute through the selected fold stage."""
+        """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True](function))
     # --- end inferred effect fold admission ---
 
@@ -2351,7 +2351,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -2430,7 +2430,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -2509,7 +2509,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -2588,7 +2588,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -2642,7 +2642,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[J, FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Out, Self.E](_fold_effect[J, Self.V, _SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]], _FirstPresent[_ListElement[J.Element[R]]], FindMapContract[J, Self.V, NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]].Error](_SearchStep[_ListElement[J.Element[R]], NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True]](NativeUnary[_FoldElement[Self.V], R, X, def(var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True](function)), Optional[_ListElement[J.Element[R]]](), self.value^))
 
     def fold_effect[A: Movable & Deinitable, //](deinit self, var initial: A) -> _InferredEffectFoldStage[Self.V, A, Self.E]:
-        """Bind the initial accumulator; run(step) infers the native target and admits the callback.
+        """Bind the initial accumulator; run(step) infers the target family and admits the callback.
 
         Parameters:
             A: The accumulator type, inferred from the initial value and preserved by every step.
@@ -3006,7 +3006,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -3065,7 +3065,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -3144,7 +3144,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -3223,7 +3223,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -3281,7 +3281,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """Traverse and finish inside the selected target effect.
 
         Parameters:
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3297,7 +3297,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -3355,7 +3355,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """Traverse and finish inside the selected target effect.
 
         Parameters:
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3371,7 +3371,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             C: The first library callback type, retaining its receiver and origins.
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Args:
             function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
@@ -3474,7 +3474,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """Traverse effects and discard successful payloads, retaining source Result errors.
 
         Parameters:
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -3566,7 +3566,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         """Sequence existing effects and continue in the target family.
 
         Parameters:
-            J: The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy.
+            J: The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -11547,8 +11547,8 @@ def pipeline[V: Movable & Deinitable, //, I: Functor](var value: V) -> Pipeline[
     """
     return Pipeline[I, V](value^)
 
-def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[_NativeFamily[V], V] where _NativeFamily[V] == IdentityFamily:
-    """Start a pipeline over a bare value with the Identity family."""
+def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[_NativeFamily[V], V] where _NativeFamily[V] == IdentityFamily or conforms_to(V, _FamilyCarrier):
+    """Select a recipe's declared family, or Identity for a bare value."""
     return Pipeline[_NativeFamily[V], V](value^)
 
 

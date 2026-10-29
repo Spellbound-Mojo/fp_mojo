@@ -1,5 +1,5 @@
 """Read pricing configuration with Reader and scope a change with local."""
-from fp.algebra import map
+from fp.functions import pipeline
 from fp.effects import Reader, ask, local, run
 from std.testing import assert_equal
 
@@ -25,7 +25,7 @@ def main() raises:
         calls += 1
         return settings.unit_price * 3 + settings.shipping
 
-    var standard = map[PricingReader](quote, ask[PricingReader]())
+    var standard = pipeline(ask[PricingReader]()).map(quote).get()
     assert_equal(calls, 0)
     print("before run: calls =", calls)
     var total = run[PricingReader](standard^, pricing)
@@ -33,7 +33,7 @@ def main() raises:
     assert_equal(calls, 1)
     print("standard total:", total)
 
-    var quoted = map[PricingReader](quote, ask[PricingReader]())
+    var quoted = pipeline(ask[PricingReader]()).map(quote).get()
     var promotion = local[PricingReader](free_shipping, quoted^)
     var discounted = run[PricingReader](promotion^, pricing)
     assert_equal(discounted, 36)

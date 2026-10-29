@@ -28,6 +28,16 @@ from fp.callables._binding import _BindFirst
 # Shared wording for family admission that includes receiver requirements.
 comptime _CALLBACK_ADMISSION = "family operation requires compatible carriers and callback receivers; branching callbacks must be repeatable"
 
+trait _FamilyCarrier(Movable, Deinitable):
+    """Declared carrier metadata, shared by algebra selection and effect recipes.
+
+    A declared family supplies the Functor contract needed by selection.
+    This marker owns no execution, admission or storage policy.
+    """
+    comptime Family: Functor
+    comptime Value: Movable & Deinitable
+
+
 trait Functor:
     """A carrier family whose payload can be transformed without changing its context: `map`.
 

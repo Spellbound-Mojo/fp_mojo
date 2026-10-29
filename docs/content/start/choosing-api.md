@@ -19,6 +19,11 @@ The [pipeline tutorial](../tutorial/pipelines.md), [iteration tutorial](../tutor
 and [Result tutorial](../tutorial/results.md) develop the first four choices.
 The [effects reference](../reference/effects.md) covers resources and IO.
 
+Reader, State, Writer and IO values already identify their family, so
+`pipeline(recipe).map(callback)` uses that family automatically. The chain
+retains deferred execution. Choose an explicit family for a different policy
+or an erased transformer layer; see [effect-family inference](../reference/functions.md#inference-for-effect-recipes).
+
 ## Work directly with a Result
 
 Use direct methods when the task is about one Result. `map` transforms an Ok,

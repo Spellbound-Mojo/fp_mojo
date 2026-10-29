@@ -8,7 +8,7 @@ A Writer value wraps its base carrier; OptionalT/ResultT values are base
 carriers.
 """
 from std.builtin.rebind import downcast
-from fp.algebra.protocols import Monad, Monoid, _Lifting
+from fp.algebra.protocols import Monad, Monoid, _Lifting, _FamilyCarrier
 from fp.callables.protocols import BorrowCallContract, UnaryContract
 
 
@@ -314,10 +314,9 @@ comptime _CHOICE_FAMILY = "choice: branches belong to different effect families"
 comptime _CHOICE_VALUE = "choice: branch payload types must agree"
 
 
-trait _Computation(Movable, Deinitable):
+trait _Computation(_FamilyCarrier):
     """A value that records the effect family it belongs to and its payload."""
-    comptime Family: AnyType
-    comptime Value: Movable & Deinitable
+    pass
 
 
 trait ReaderAction(_Computation):

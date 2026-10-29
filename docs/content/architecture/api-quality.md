@@ -128,6 +128,18 @@ builds `nextLong` and `nextBoolean` as instructions and runs them with an
 initial seed. The library's existing State family is the corresponding starting
 point for composing deferred state transitions.
 
+Declared effect families now participate in the shared family selector used by
+Pipeline, continuation and inferred target operations. Reader, State, Writer
+and IO clients can omit repeated family bindings. Their common metadata lives
+in algebra, so selection does not import effect implementations. The Family
+member now requires Functor, rejecting invalid declarations before selection;
+operation-specific capability and carrier checks remain with their owners.
+
+The Reader, State and IO examples now map through `pipeline(recipe)` while
+preserving deferred execution and their output. Whole-recipe transformations
+use `then` or explicit Identity. Erased transformer layers retain explicit
+selection: a Reader containing Result does not identify ResultT's policy.
+
 ## Milestones and pass boundaries
 
 | Order | Milestone | Completion criterion |
