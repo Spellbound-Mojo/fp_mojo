@@ -2,7 +2,7 @@
 from fp.algebra import ListFamily
 from fp.effects import ResultT
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from std.testing import assert_equal
 
 comptime Entry = Result[Int, String]
@@ -26,17 +26,18 @@ def explain_entry(var error: String) -> String: return "failed: " + error
 
 def main() raises:
     var source: List[Entry] = [Entry(Ok(4)), Entry(Ok(-1)), Entry(Err(String("missing")))]
-    var results = (
-        piped(source^)
-        .ensure[Entries](positive_entry, reject_entry)
-        .attempt_tap[Entries](inspect_entry)
-        .redeem_with[Entries](double_entry, recover_entry)
-        .redeem[Entries](render_entry, explain_entry)
+    var rendered: List[Result[String, String]] = (
+        pipeline[Entries](source^)
+        .ensure(positive_entry, reject_entry)
+        .attempt_tap(inspect_entry)
+        .redeem_with(double_entry, recover_entry)
+        .redeem(render_entry, explain_entry)
         .get()
     )
+    var results = pipeline(rendered^).sequence().raise_on_err()
     assert_equal(len(results), 3)
-    assert_equal(results[0]._ok().value, "value=8")
-    assert_equal(results[1]._ok().value, "failed: nonpositive")
-    assert_equal(results[2]._ok().value, "value=0")
+    assert_equal(results[0], "value=8")
+    assert_equal(results[1], "failed: nonpositive")
+    assert_equal(results[2], "value=0")
     for result in results:
-        print(result._ok().value)
+        print(result)

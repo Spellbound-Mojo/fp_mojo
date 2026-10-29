@@ -596,17 +596,31 @@ payloads without display-only copies or private storage access.
 The transport example uses the common `run` entry for Writer and retains its
 native `Int` error inside the workflow. Its application entry converts an
 unexpected code to `Error`, as Mojo requires for `main`. Expected output,
-deferred observation counts and state/log ordering stay unchanged. Remaining
-collection examples need a separate pass because their Results are borrowed
-from List entries.
+deferred observation counts and state/log ordering stay unchanged. Collection examples use the consuming and borrowing patterns below.
+
+## Public collection outcomes
+
+All documentation examples now use public Result operations. The collection
+recovery and shared-outcome examples sequence recovered Results before consuming
+their success values. Mixed outcomes use a consuming fold: formatting allocates
+the numeric description and moves the existing error String unchanged. The
+selected-layer mapping example uses borrowing folds to inspect either Int case.
+The shared-outcome chain also selects its family once through Pipeline.
+
+The two sequenced collections declare their public `List[Result[...]]` type at
+the boundary. Mojo 1.2 accepts those declarations but can reject the same terminal
+with an inferred projection-rich element type, reporting an associated stored
+error as incompatible with the caller's native Error. Simple inferred Result
+collections compile directly. This is a remaining inference limitation, not a
+new conversion or a change to the library's error contract.
 
 ## Next passes
 
-1. Remove remaining private Result inspections from collection examples using
-   public consuming or borrowing operations, without adding payload copies
-   merely for display.
-2. Review related iterator effect terminals for the same inferred target and
-   callback consistency, prioritizing common workflows and sharing admission
+1. Review iterator sequencing terminals for inferred targets consistent with
+   Pipeline, retaining explicit Validation and external-family selection.
+2. Investigate concrete native type admission for the collection error-inference
+   limitation above, using these real workflows as regression examples.
+3. Review remaining iterator effect callbacks for consistent admission, sharing
    descriptors before expanding overload sets.
 
 Each pass retains the commit/push boundary above and proceeds to the next

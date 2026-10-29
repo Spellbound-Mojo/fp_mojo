@@ -163,8 +163,10 @@ with its return structurally fixed to `Result[U, E]` to retain error origins.
 
 ## Validate and observe outcomes
 
-`ensure`, `redeem`, `redeem_with` and `attempt_tap` also accept an explicit
-error-capable family on Piped. These forms keep that family's stored-error type.
+Select an error-capable family once with `pipeline[Family](source^)`, then use
+`ensure`, `redeem`, `redeem_with` and `attempt_tap` without repeating the family.
+The compatibility Piped forms below select the family on each operation and
+keep that family's stored-error type.
 
 | Method | Callback contract | Required capability |
 |---|---|---|
@@ -182,6 +184,12 @@ observer success. An observer failure replaces it, and an empty observer effect
 stays empty. Native raised errors remain separate from stored outcomes.
 
 <!-- example: docs/examples/shared_outcomes.mojo -->
+
+The example finishes by selecting the outer List and calling `sequence()`.
+This consumes a List of Results into a Result containing a List; `raise_on_err()`
+then returns the rendered strings or raises the stored error. Both operations
+move payloads. When outcomes remain mixed, use `fold_owned` to format each
+selected branch, as in the recovery example, or borrowing `fold` to inspect it.
 
 ResultFamily and ResultT support all four methods. ReaderT, StateT, WriterT
 and OptionalT inherit support from an appropriate base. Validation supports
