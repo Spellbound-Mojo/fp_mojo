@@ -3,8 +3,8 @@
 | Family | Value | Additional operations |
 |---|---|---|
 | `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |
-| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `inspect`, `put`, `modify` |
-| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |
+| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `run_value`, `run_state`, `lift`, `get`, `inspect`, `put`, `modify` |
+| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `run_value`, `run_log`, `lift`, `tell`, `listen`, `censor` |
 | `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |
 | `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |
 
@@ -61,7 +61,7 @@ from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen
 from .state import StateT, State
 from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
-from .operations import run, run_value, run_state, RunValueContract, RunStateContract, action, lift
+from .operations import run, run_value, run_state, run_log, RunValueContract, RunStateContract, WriterValueContract, WriterLogContract, action, lift
 from .projections import LiftProject, asks, inspect
 from .outcomes import EffectFailure, Outcome, ExitCase
 from .resources import Resource, ResourceContract, resource, pure_resource

@@ -1739,20 +1739,22 @@
       ]
     },
     {
-      "name": "Selected State execution output",
+      "name": "Selected effect execution output",
       "methods": [
         "run_value",
-        "run_state"
+        "run_state",
+        "run_log"
       ],
       "status": "selected",
-      "families": "StateFamily, retaining its base effect",
-      "callbacks": "The recipe callback and the shared owned pair selector.",
-      "ownership": "Consumes recipe and initial state; moves the selected output and disposes of the other without copying.",
-      "errors": "The compatible exact native error of recipe execution and base-map construction, independent of raising selection.",
-      "timing": "Runs State now and maps over its base; a deferred base remains unexecuted.",
+      "families": "StateFamily or WriterFamily, retaining its base effect",
+      "callbacks": "The existing recipe callbacks and shared owned pair selector.",
+      "ownership": "Consumes the recipe and any initial State input; moves the selected output and disposes of the other without copying.",
+      "errors": "State retains the compatible native execution/map error; Writer retains native base-map construction errors. Both are independent of raising selection.",
+      "timing": "State runs with its initial input; Writer unwraps. Both map over the base and leave a deferred base unexecuted.",
       "owner": [
         "src/fp/effects/operations.mojo",
-        "src/fp/callables/_transforms.mojo"
+        "src/fp/callables/_transforms.mojo",
+        "src/fp/effects/writer.mojo"
       ],
       "evidence": [
         "tests/runtime/test_state_outputs.mojo",
@@ -1768,7 +1770,20 @@
         "tests/compile_fail/state_outputs_reuse.mojo",
         "tests/compile_fail/state_outputs_shape.mojo",
         "tests/compile_fail/state_outputs_state_escape.mojo",
-        "tests/compile_fail/state_outputs_value_escape.mojo"
+        "tests/compile_fail/state_outputs_value_escape.mojo",
+        "tests/runtime/test_writer_outputs.mojo",
+        "tests/runtime/test_writer_outputs_origins.mojo",
+        "tests/ownership/test_writer_outputs_owned.mojo",
+        "tests/compile_fail/writer_outputs_argument.mojo",
+        "tests/compile_fail/writer_outputs_error_escape.mojo",
+        "tests/compile_fail/writer_outputs_family.mojo",
+        "tests/compile_fail/writer_outputs_log_escape.mojo",
+        "tests/compile_fail/writer_outputs_plain.mojo",
+        "tests/compile_fail/writer_outputs_reuse.mojo",
+        "tests/compile_fail/writer_outputs_shape.mojo",
+        "tests/compile_fail/writer_outputs_state.mojo",
+        "tests/compile_fail/writer_outputs_state_only.mojo",
+        "tests/compile_fail/writer_outputs_value_escape.mojo"
       ]
     }
   ],

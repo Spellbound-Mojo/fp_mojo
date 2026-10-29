@@ -96,7 +96,9 @@ are appended in execution order.
 <!-- example: docs/examples/effects_writer.mojo -->
 
 `tell("ready")` records a log with a `None` payload. It does not print anything;
-the example unwraps the value with `.run()` and prints the log itself.
+the example selects the log with `.run_log()` and prints it. Use `.run_value()`
+when only the payload is needed, or `.run()` for both outputs. These keep the
+base effect and move the selected output without copying the other one.
 
 `writer` constructs a Writer value from `(log, payload)`. The initial value has
 log `"start; "` and payload 3. `.map(add_fee)` changes the payload to 5,

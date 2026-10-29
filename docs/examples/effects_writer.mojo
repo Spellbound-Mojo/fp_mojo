@@ -17,10 +17,9 @@ def bracket(var log: String) -> String:
 
 
 def main() raises:
-    var notice = pipeline(tell[PricingWriter]("ready")).run()
-    assert_equal(notice[0], "ready")
-    comptime assert type_of(notice[1]) == NoneType
-    print("notice:", notice[0])
+    var notice = pipeline(tell[PricingWriter]("ready")).run_log()
+    assert_equal(notice, "ready")
+    print("notice:", notice)
 
     var initial = writer[PricingWriter, Int](Tuple(String("start; "), 3))
     var output = pipeline(initial^).map(add_fee).tell("fee +2").listen().censor(bracket).run()

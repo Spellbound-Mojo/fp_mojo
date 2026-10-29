@@ -31,6 +31,8 @@ the free `run_io(program^)` entry also remains available.
 State chains can use `.run_value(initial_state)` or `.run_state(initial_state)`
 when only one output is needed; both preserve the base effect without copying
 the unused tuple element.
+Writer chains use `.run_value()` for the payload or `.run_log()` for the log,
+with the same ownership and base-effect preservation.
 Reader chains can scope configuration with `.local(callback)`. Writer chains
 can observe their log with `.listen()` and transform it with `.censor(callback)`
 before `.run()`. These use the current family's capabilities; explicit lifted

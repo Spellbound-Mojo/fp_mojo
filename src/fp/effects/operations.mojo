@@ -5,7 +5,7 @@ from fp.algebra.contracts import MapContract
 from fp.algebra._adapt import _map_as
 from fp.callables._transforms import _KeepOperand
 from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible, _propagate_error
-from .protocols import ReaderAction, StateAction, _Acting, ReaderFamily, StateFamily, _FAMILY_MISMATCH
+from .protocols import ReaderAction, StateAction, _Acting, ReaderFamily, StateFamily, WriterFamily, _FAMILY_MISMATCH
 
 
 # The family parameter selects the overload. A computation type named through
@@ -111,6 +111,7 @@ def run_value[V: Movable & Deinitable, //, I: StateFamily](var action: V, var st
 
     Like Cats' runA, this maps over the ordinary run result. A deferred base is
     returned without executing it; absent or failed base results stay intact.
+    Another overload selects a Writer payload without an initial-state argument.
 
     Parameters:
         V: The computation type, including its ownership and origins.
@@ -151,6 +152,95 @@ def run_state[V: Movable & Deinitable, //, I: StateFamily](var action: V, var st
         The compatible native error of State execution and base mapping.
     """
     return _run_selected_state[I, False](action^, state^)
+
+
+struct _WriterRunSelection[I: WriterFamily, V: Movable & Deinitable, log: Bool]:
+    """Select one Writer output through normal unwrapping and base mapping."""
+    comptime Projector = _KeepOperand[Self.I.Log.Value, Self.I.Element[Self.V], Self.log]
+    comptime Mapping = MapContract[Self.I.Base, Self.I.Unwrapped[Self.V], Self.Projector]
+    comptime Compatible = Self.I.CarrierCompatible[Self.V] and Self.Mapping.InvocationCompatible
+    comptime Family = Self.Mapping.Family
+    comptime Out = Self.Mapping.Out
+    comptime Error = Self.Mapping.Error
+
+
+comptime WriterValueContract[I: WriterFamily, V: Movable & Deinitable] = _WriterRunSelection[I, V, False]
+"""Admission, result and native map error of selecting a Writer payload.
+
+Generic wrappers forward Compatible, return Out and raise Error. Family is
+the resulting base family. Unwrapping does not execute a deferred base; its
+mapping keeps the base's timing, native errors and embedded origins. The
+selected payload moves onward and its log is disposed of without copying.
+
+Parameters:
+    I: The selected Writer family, including its base Monad and log Monoid.
+    V: The complete Writer value type, including captures and origins.
+"""
+
+
+comptime WriterLogContract[I: WriterFamily, V: Movable & Deinitable] = _WriterRunSelection[I, V, True]
+"""Admission, result and native map error of selecting a Writer log.
+
+This shares WriterValueContract's unwrapping and mapping policy, selecting
+the log. Forward Compatible, Out and Error in generic wrappers. Family names
+the resulting base family. Neither the log nor the discarded payload is copied.
+
+Parameters:
+    I: The selected Writer family, including its base Monad and log Monoid.
+    V: The complete Writer value type, including captures and origins.
+"""
+
+
+def _run_selected_writer[V: Movable & Deinitable, //, I: WriterFamily, log: Bool](var value: V
+) raises _WriterRunSelection[I, V, log].Error -> _WriterRunSelection[I, V, log].Out where _WriterRunSelection[I, V, log].Compatible:
+    comptime C = _WriterRunSelection[I, V, log]
+    return _map_as[C.Error, I.Base](C.Projector(), I.unwrap(value^))
+
+
+def run_value[V: Movable & Deinitable, //, I: WriterFamily](var value: V
+) raises WriterValueContract[I, V].Error -> WriterValueContract[I, V].Out where WriterValueContract[I, V].Compatible:
+    """Remove a Writer layer, keeping its payload in the base effect.
+
+    Like Cats' WriterT.value, this maps over the unwrapped carrier. A deferred
+    base remains unexecuted; the log is discarded when the base maps its pair.
+
+    Parameters:
+        V: The complete Writer value type, including its ownership and origins.
+        I: The selected Writer family.
+
+    Args:
+        value: The Writer value, consumed once.
+
+    Returns:
+        The base carrier of the payload, without copying either tuple element.
+
+    Raises:
+        The base map's exact native construction error.
+    """
+    return _run_selected_writer[I, False](value^)
+
+
+def run_log[V: Movable & Deinitable, //, I: WriterFamily](var value: V
+) raises WriterLogContract[I, V].Error -> WriterLogContract[I, V].Out where WriterLogContract[I, V].Compatible:
+    """Remove a Writer layer, keeping its log in the base effect.
+
+    Like Cats' WriterT.written, this maps over the unwrapped carrier. A deferred
+    base remains unexecuted; the payload is discarded when the base maps its pair.
+
+    Parameters:
+        V: The complete Writer value type, including its ownership and origins.
+        I: The selected Writer family.
+
+    Args:
+        value: The Writer value, consumed once.
+
+    Returns:
+        The base carrier of the log, without copying either tuple element.
+
+    Raises:
+        The base map's exact native construction error.
+    """
+    return _run_selected_writer[I, True](value^)
 
 
 def action[F: Movable & Deinitable, //, I: _Acting, T: Movable & Deinitable](var f: F) -> I.Endpoint[T, F] where I.EndpointCompatible[T, F]:

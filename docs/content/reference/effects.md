@@ -87,6 +87,29 @@ Execution and base-map construction errors must agree unless one is `Never`;
 their common error is preserved exactly. Pipeline `.raising[E]()` does not
 change it. Embedded value, state and error origins remain intact.
 
+## Choose a Writer output
+
+Finish a Writer pipeline with `.run_value()` for its payload, `.run_log()` for
+its written log, or `.run()` for both. The free selected-output operations are
+`run_value[Family](value)` and `run_log[Family](value)`. These correspond to
+Cats' WriterT `value` and `written` projections.
+
+<!-- example: docs/examples/writer_outputs.mojo -->
+
+Each terminal unwraps the existing Writer carrier and maps the shared pair
+selector over the base. It preserves Optional absence, Result failure and
+deferred execution. The selected output moves onward; the other is disposed
+of without copying. Reading the log does not need the copy that `listen` uses
+to retain both the original log and an observed copy.
+
+Generic wrappers use `WriterValueContract[I, V]` or `WriterLogContract[I, V]`:
+forward `Compatible`, return `Out`, raise `Error` and retain `Family` when
+continuing over the base. `Error` is base-map construction's exact native error,
+independent of Pipeline `.raising[E]()`. A deferred base retains its own later
+execution errors and all embedded origins. State uses the separate
+`RunValueContract` and `RunStateContract` because its runner also consumes an
+initial state and may raise before base mapping.
+
 ## Project without copying an environment or state
 
 `asks[Reader[Config]](projection)` borrows Config and returns only the requested

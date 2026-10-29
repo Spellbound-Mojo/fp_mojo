@@ -47,7 +47,7 @@ from fp.iteration.folds import fold_left as _context_fold_left, reduce_optional 
 from fp.data.control import ControlFlow
 from fp.data._result import Result
 from fp.effects.protocols import ReaderFamily, StateFamily, WriterFamily, ReaderAction, Local, Listen, Censor
-from fp.effects.operations import run as _run_effect, run_value as _run_value, run_state as _run_state, RunValueContract, RunStateContract, _Reader, _State
+from fp.effects.operations import run as _run_effect, run_value as _run_value, run_state as _run_state, run_log as _run_log, RunValueContract, RunStateContract, WriterValueContract, WriterLogContract, _Reader, _State
 from fp.effects.writer import run_writer as _run_writer
 from fp.effects.capabilities import local as _local_effect, listen as _listen_effect, censor as _censor_effect, tell as _tell_effect, TellContract
 from fp.effects._io_core import IOContract, CancellationToken, run_io as _run_pipeline_io
@@ -399,6 +399,32 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact base carrier, preserving ownership and origins.
         """
         return _run_writer[_WriterFamily[Self.I]](self.value^)
+
+    def run_value(deinit self) raises WriterValueContract[_WriterFamily[Self.I], Self.V].Error -> WriterValueContract[_WriterFamily[Self.I], Self.V].Out where conforms_to(Self.I, WriterFamily) and WriterValueContract[_WriterFamily[Self.I], Self.V].Compatible:
+        """Remove the selected Writer layer, retaining its payload in the base effect.
+
+        Returns:
+            The exact base carrier of the payload; mapping discards the log
+            without copying it. A deferred base remains unexecuted.
+
+        Raises:
+            The exact native base-map construction error, independent of
+            the pipeline's raising selection.
+        """
+        return _run_value[_WriterFamily[Self.I]](self.value^)
+
+    def run_log(deinit self) raises WriterLogContract[_WriterFamily[Self.I], Self.V].Error -> WriterLogContract[_WriterFamily[Self.I], Self.V].Out where conforms_to(Self.I, WriterFamily) and WriterLogContract[_WriterFamily[Self.I], Self.V].Compatible:
+        """Remove the selected Writer layer, retaining its log in the base effect.
+
+        Returns:
+            The exact base carrier of the log; mapping discards the payload
+            without copying it. A deferred base remains unexecuted.
+
+        Raises:
+            The exact native base-map construction error, independent of
+            the pipeline's raising selection.
+        """
+        return _run_log[_WriterFamily[Self.I]](self.value^)
 
     # Keep selection facts visible to generic callers; a conditional alias hides
     # these proofs from Mojo. IOContract remains the owner of IO admission.

@@ -6064,6 +6064,13 @@
    },
    "provider": "effects/protocols"
   },
+  "effects.WriterLogContract": {
+   "declarations": [
+    "comptime WriterLogContract[I: WriterFamily, V: Movable & Deinitable] = _WriterRunSelection[I, V, True]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/operations"
+  },
   "effects.WriterT": {
    "declarations": [
     "struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):"
@@ -6159,6 +6166,13 @@
     ]
    },
    "provider": "effects/writer"
+  },
+  "effects.WriterValueContract": {
+   "declarations": [
+    "comptime WriterValueContract[I: WriterFamily, V: Movable & Deinitable] = _WriterRunSelection[I, V, False]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/operations"
   },
   "effects.action": {
    "kind": "function",
@@ -6694,6 +6708,16 @@
    ],
    "provider": "effects/_io_core"
   },
+  "effects.run_log": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "4d3c463ca741acd1500b9a22c98455a07ec57d3214014a76b063c2dc02de9c16",
+     "signature": "def run_log[V: Movable & Deinitable, //, I: WriterFamily](var value: V ) raises WriterLogContract[I, V].Error -> WriterLogContract[I, V].Out where WriterLogContract[I, V].Compatible:"
+    }
+   ],
+   "provider": "effects/operations"
+  },
   "effects.run_state": {
    "kind": "function",
    "overloads": [
@@ -6710,6 +6734,10 @@
     {
      "sha256": "7cf08b3f1a051e9564faed6e0798bf31d2e2a65fccbb5168b17f6750f0f68afe",
      "signature": "def run_value[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType ) raises RunValueContract[I, V].Error -> RunValueContract[I, V].Out where RunValueContract[I, V].Compatible:"
+    },
+    {
+     "sha256": "4847ea01e3b8312f0e03cdf0fa8fdc9b3209aecc0659aba71f69d35fcf1708af",
+     "signature": "def run_value[V: Movable & Deinitable, //, I: WriterFamily](var value: V ) raises WriterValueContract[I, V].Error -> WriterValueContract[I, V].Out where WriterValueContract[I, V].Compatible:"
     }
    ],
    "provider": "effects/operations"
@@ -19268,6 +19296,12 @@
       "signature": "def run_io(deinit self, token: CancellationToken) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible:"
      }
     ],
+    "run_log": [
+     {
+      "sha256": "badee13df4fb9be6db1dd4c31171e6829b97d1d9b5de64fb1de961bc54841cc5",
+      "signature": "def run_log(deinit self) raises WriterLogContract[_WriterFamily[Self.I], Self.V].Error -> WriterLogContract[_WriterFamily[Self.I], Self.V].Out where conforms_to(Self.I, WriterFamily) and WriterLogContract[_WriterFamily[Self.I], Self.V].Compatible:"
+     }
+    ],
     "run_state": [
      {
       "sha256": "080d0e1dc00b71291ceb1cc10e3ccd4acadc4668195b1a69c27181bce677a69a",
@@ -19278,6 +19312,10 @@
      {
       "sha256": "e8e0516ec4f8c24839dbb9058cacb8ade036c67ef543c4cf09a524ab59bbd4d4",
       "signature": "def run_value(deinit self, var state: _StateFamily[Self.I].StateType) raises RunValueContract[_StateFamily[Self.I], Self.V].Error -> RunValueContract[_StateFamily[Self.I], Self.V].Out where conforms_to(Self.I, StateFamily) and RunValueContract[_StateFamily[Self.I], Self.V].Compatible:"
+     },
+     {
+      "sha256": "98304b3c74d1fa943c0a8830496bbd148f10e7d1c4a9c4c087a8436db95bd483",
+      "signature": "def run_value(deinit self) raises WriterValueContract[_WriterFamily[Self.I], Self.V].Error -> WriterValueContract[_WriterFamily[Self.I], Self.V].Out where conforms_to(Self.I, WriterFamily) and WriterValueContract[_WriterFamily[Self.I], Self.V].Compatible:"
      }
     ],
     "sequence": [

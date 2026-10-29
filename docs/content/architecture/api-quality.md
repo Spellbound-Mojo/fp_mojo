@@ -487,12 +487,24 @@ third-party base-map failures, move-only cleanup, abandoned deferred results
 and repeated List mapping. Invalid families, state types, output shapes,
 incompatible native errors, reuse and escaping borrows use ordinary calls.
 
+## Writer output selection through the same pair owner
+
+Writer pipelines now finish with `.run_value()` or `.run_log()` when only one
+output is needed. They follow Cats'
+[value and written](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/data/WriterT.scala)
+by mapping over the unwrapped base carrier. The Writer tutorial's notice uses
+`.run_log()` directly and retains its existing output.
+
+Both Writer terminals share one admission descriptor and implementation. They
+use the same operand selector and pair-transfer owner as State, retaining
+native moves, exact map errors, deferred timing and independent value/log
+origins. Writer's public generic contracts remain separate from State's initial
+state and run-error requirements. The additional `run_value` overload preserves
+the existing State calls; invalid calls retain ordinary compiler diagnostics.
+
 ## Next passes
 
-1. Review Writer clients against Cats' value/log projections. Reuse the pair
-   selection policy where callers need only the payload or written log, keeping
-   the base effect and move-only disposal behavior explicit.
-2. Run the next source/package compatibility and compile-cost checkpoint after
+1. Run the next source/package compatibility and compile-cost checkpoint after
    these terminal changes, including the new examples and ordinary diagnostics.
 
 Each pass retains the commit/push boundary above and proceeds to the next
