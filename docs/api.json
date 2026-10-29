@@ -26465,7 +26465,7 @@
   },
   "data.Capture": {
    "aliases": [],
-   "description": "`Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\nargument types and ownership before callback inference. Use `borrow` for\nshared access, `mutable` for exclusive access, and `take` for consumption.\nUp to three mixed positional operands can be followed by `kwargs`. `args` binds\nzero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\nAn unused bundle destroys its owned arguments without calling anything.\n\nConstruct `Capture[E]()` before direct `run` or `stateful` admission.\nThis fixes E before a native callback is matched. A reusable context such\nas `var capture = Capture[E]()` also provides `capture.args(...)`,\n`capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n`capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\nPure functions produce `Result[R, Never]`; raising functions retain E.\nNo-value callbacks return `Result[None, E]`. Native callbacks are borrowed\nfor the call; library thunk owners are consumed and retain their own error.\nThunks use consuming, mutable, then shared receiver priority. Pass\n`mut_ref(thunk)` to retain a reusable owner and its updated state.\nEmpty keyword packs require K or a typed dictionary. `stateful` owns an\nexplicit state value for repeated calls through a plain native function.\nExisting `attempt` entry points remain available for compatibility.",
+   "description": "`Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\nargument types and ownership before callback inference. Use `borrow` for\nshared access, `mutable` for exclusive access, and `take` for consumption.\nUp to three mixed positional operands can be followed by `kwargs`. `args` binds\nzero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\nAn unused bundle destroys its owned arguments without calling anything.\n\nConstruct `Capture[E]()` before direct `run` or `stateful` admission.\nThis fixes E before a native callback is matched. A reusable context such\nas `var capture = Capture[E]()` also provides `capture.args(...)`,\n`capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n`capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\nPure functions produce `Result[R, Never]`; raising functions retain E.\nNo-value callbacks return `Result[None, E]`. Native callbacks are borrowed\nfor the call; library thunk owners are consumed and retain their own error.\nThunks use consuming, mutable, then shared receiver priority. Pass\n`mut_ref(thunk)` to retain a reusable owner and its updated state.\nEmpty keyword packs require K or a typed dictionary. `stateful` owns an\nexplicit state value for repeated calls through a plain native function.\nIts owner is a mutable unary callable returning Result without raising.\nPass mut_ref(owner) to map or traverse while retaining its state, or move\nowner into the operation. Mapping keeps outcomes; traversal stops on Err.\nExisting `attempt` entry points remain available for compatibility.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -27823,7 +27823,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, Never, type_of(function), False]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]",
@@ -27874,7 +27874,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, Never, type_of(function), False]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable)",
@@ -27925,7 +27925,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, Never, type_of(function), False]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable)",
@@ -27976,7 +27976,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, Never, type_of(function), False]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]",
@@ -28027,7 +28027,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, type_of(None), Never, type_of(function), False]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]",
@@ -28071,7 +28071,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, type_of(None), Never, type_of(function), False]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]",
@@ -28136,7 +28136,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, X, type_of(function), True]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]",
@@ -28194,7 +28194,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, X, type_of(function), True]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(A, RegisterPassable) and _ErrorCompatible[Self.E, X]",
@@ -28252,7 +28252,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, X, type_of(function), True]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]",
@@ -28310,7 +28310,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, R, X, type_of(function), True]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]",
@@ -28368,7 +28368,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, type_of(None), X, type_of(function), True]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]",
@@ -28419,7 +28419,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A movable owner with run(value), state() and into_state() methods.",
+       "doc": "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
        "type": "_Stateful[S, A, type_of(None), X, type_of(function), True]"
       },
       "signature": "def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]",

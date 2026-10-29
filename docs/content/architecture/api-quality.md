@@ -114,6 +114,20 @@ to forward admission, result, construction error and continuation family without
 naming private adapters. Both additions use the same tuple callback and map
 policy; they introduce no new execution mechanism.
 
+Stateful native capture now participates in ordinary callback composition.
+Its existing owner implements the mutable unary contract by delegating to
+`run`, returning the captured Result with no native raise. The capture-context
+example uses inferred traversal and retains the owner's updated state without
+a user-written callable struct. Mapping keeps individual outcomes; traversal
+stops on the first stored error. Lazy evaluation and native origin tracking
+remain with the existing iterator and callback-reference implementations.
+
+This native interoperation has a different evaluation contract from deferred
+state programs. Cats' [State example](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/docs/datatypes/state.md)
+builds `nextLong` and `nextBoolean` as instructions and runs them with an
+initial seed. The library's existing State family is the corresponding starting
+point for composing deferred state transitions.
+
 ## Milestones and pass boundaries
 
 | Order | Milestone | Completion criterion |

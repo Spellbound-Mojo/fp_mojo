@@ -9,7 +9,7 @@ so native cleanup handles a partially transferred value if the callback raises.
 No allocation or type erasure is added.
 """
 from std.collections import StringDict
-from fp.callables.protocols import ThunkContract
+from fp.callables.protocols import ThunkContract, MutableUnary
 from fp.callables._binding import _BoundThunk
 from fp.callables.native import _NativeOwnedArg
 from fp.data._result import Result
@@ -9316,6 +9316,9 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
     `mut_ref(thunk)` to retain a reusable owner and its updated state.
     Empty keyword packs require K or a typed dictionary. `stateful` owns an
     explicit state value for repeated calls through a plain native function.
+    Its owner is a mutable unary callable returning Result without raising.
+    Pass mut_ref(owner) to map or traverse while retaining its state, or move
+    owner into the operation. Mapping keeps outcomes; traversal stops on Err.
     Existing `attempt` entry points remain available for compatibility.
 
     Parameters:
@@ -9639,7 +9642,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, Never, type_of(function), False](function, state^)
     def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False] where not conforms_to(A, RegisterPassable):
@@ -9655,7 +9658,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, Never, type_of(function), False](function, state^)
     def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False] where not conforms_to(R, RegisterPassable):
@@ -9671,7 +9674,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, Never, type_of(function), False](function, state^)
     def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]:
@@ -9687,7 +9690,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, Never, type_of(function), False](function, state^)
     def stateful[S: Movable & Deinitable, A: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]:
@@ -9703,7 +9706,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, type_of(None), Never, type_of(function), False](function, state^)
     def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, //](self, function: def(mut S, var A) thin, var state: S) -> _Stateful[S, A, type_of(None), Never, type_of(function), False]:
@@ -9718,7 +9721,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, type_of(None), Never, type_of(function), False](function, state^)
     def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]:
@@ -9736,7 +9739,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, X, type_of(function), True](function, state^)
     def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(A, RegisterPassable) and _ErrorCompatible[Self.E, X]:
@@ -9753,7 +9756,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, X, type_of(function), True](function, state^)
     def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
@@ -9770,7 +9773,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, X, type_of(function), True](function, state^)
     def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]:
@@ -9787,7 +9790,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, X, type_of(function), True](function, state^)
     def stateful[S: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]:
@@ -9804,7 +9807,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, type_of(None), X, type_of(function), True](function, state^)
     def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]:
@@ -9820,7 +9823,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             state: The explicit state, moved into the reusable owner.
 
         Returns:
-            A movable owner with run(value), state() and into_state() methods.
+            A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, type_of(None), X, type_of(function), True](function, state^)
     @staticmethod
@@ -10010,9 +10013,12 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
 
 struct _Stateful[S: Movable & Deinitable, A: Movable & Deinitable,
                 R: Movable & Deinitable, E: Movable & Deinitable,
-                F: Movable & Deinitable, raising: Bool](Movable):
+                F: Movable & Deinitable, raising: Bool](MutableUnary):
     var _state: Self.S
     var _function: _OptionalCell[Self.F]
+    comptime Arg = Self.A
+    comptime Out = Result[Self.R, Self.E]
+    comptime Error = Never
     def __init__(out self, var function: Self.F, var state: Self.S):
         self._function = Optional(function^)
         self._state = state^
@@ -10023,4 +10029,6 @@ struct _Stateful[S: Movable & Deinitable, A: Movable & Deinitable,
     def run(mut self, var value: Self.A) -> Result[Self.R, Self.E]:
         var arguments = _ArgsMO[Self.S, Self.A, origin_of(self._state), Self.E](Pointer(to=self._state), value^)
         return arguments^._run[Self.R, Self.E, Self.F, Self.raising](self._function.value())
+    def call_mut(mut self, var value: Self.Arg) -> Self.Out:
+        return self.run(value^)
 

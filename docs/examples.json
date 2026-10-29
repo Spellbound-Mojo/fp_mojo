@@ -46,7 +46,7 @@
       "stdout": "books: 41\ninvalid quantity\npurchased books ; balance: 6\n"
     },
     "docs/examples/capture_context.mojo": {
-      "stdout": "ready\npaid: 6\ndeclined: -2\nsaved state: 15\n"
+      "stdout": "ready\npaid: 6\ndeclined: -2\nsaved state: 15\ntraversal error: -10 ; state: -10\n"
     },
     "docs/examples/capture_native.mojo": {
       "stdout": "payment: 3; declined: -2; balance: -2\ncount: 5\n"

@@ -400,7 +400,17 @@
         "tests/compile_fail/tuple_api_direct_error_type.mojo",
         "tests/compile_fail/tuple_api_direct_source_origin.mojo",
         "tests/compile_fail/tuple_api_direct_source_reuse.mojo",
-        "tests/compile_fail/tuple_api_direct_value_reuse.mojo"
+        "tests/compile_fail/tuple_api_direct_value_reuse.mojo",
+        "tests/runtime/test_capture_state_callback.mojo",
+        "tests/ownership/test_capture_state_callback.mojo",
+        "tests/compile_fail/capture_state_callback_argument.mojo",
+        "tests/compile_fail/capture_state_callback_error_origin.mojo",
+        "tests/compile_fail/capture_state_callback_moved.mojo",
+        "tests/compile_fail/capture_state_callback_output_origin.mojo",
+        "tests/compile_fail/capture_state_callback_owner_escape.mojo",
+        "tests/compile_fail/capture_state_callback_owner_lifetime.mojo",
+        "tests/compile_fail/capture_state_callback_shared.mojo",
+        "tests/compile_fail/capture_state_callback_stored_error.mojo"
       ]
     },
     "iteration": {

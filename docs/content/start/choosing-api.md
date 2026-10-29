@@ -11,6 +11,7 @@ a reusable callable when you need to store or compose a computation.
 | Process a sequence lazily or stop after a prefix | `iterated(source)` | `.to_list()`, a fold, a search, or native iteration |
 | Capture an immediate native call's raised error | `Capture[E]` | `.run(callback)` after binding any arguments |
 | Build a function to call later | `flow`, `compose` or `partial` | Pass the resulting callable directly to an operation |
+| Repeatedly call a native function with owned mutable state | `Capture[E]().stateful(step, state^)` | Pass `mut_ref(owner)` to map or traverse; inspect `state()` or consume `into_state()` afterward |
 | Acquire resources and release them after use | `resource[E](acquire, release)` | `.use(callback)` on the consumed scope |
 | Describe deferred IO with explicit finalization or cancellation | `delay[E](callback)` and IO operations | `run_io(program^)` at the execution boundary |
 

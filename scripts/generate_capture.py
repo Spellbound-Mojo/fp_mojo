@@ -319,7 +319,7 @@ so native cleanup handles a partially transferred value if the callback raises.
 No allocation or type erasure is added.
 """
 from std.collections import StringDict
-from fp.callables.protocols import ThunkContract
+from fp.callables.protocols import ThunkContract, MutableUnary
 from fp.callables._binding import _BoundThunk
 from fp.callables.native import _NativeOwnedArg
 from fp.data._result import Result
@@ -393,9 +393,12 @@ out += ["""    @staticmethod
 # factory is thin: users pass owned mutable state explicitly, not in captures.
 state_class = """struct _Stateful[S: Movable & Deinitable, A: Movable & Deinitable,
                 R: Movable & Deinitable, E: Movable & Deinitable,
-                F: Movable & Deinitable, raising: Bool](Movable):
+                F: Movable & Deinitable, raising: Bool](MutableUnary):
     var _state: Self.S
     var _function: _OptionalCell[Self.F]
+    comptime Arg = Self.A
+    comptime Out = Result[Self.R, Self.E]
+    comptime Error = Never
     def __init__(out self, var function: Self.F, var state: Self.S):
         self._function = Optional(function^)
         self._state = state^
@@ -406,6 +409,8 @@ state_class = """struct _Stateful[S: Movable & Deinitable, A: Movable & Deinitab
     def run(mut self, var value: Self.A) -> Result[Self.R, Self.E]:
         var arguments = _ArgsMO[Self.S, Self.A, origin_of(self._state), Self.E](Pointer(to=self._state), value^)
         return arguments^._run[Self.R, Self.E, Self.F, Self.raising](self._function.value())
+    def call_mut(mut self, var value: Self.Arg) -> Self.Out:
+        return self.run(value^)
 
 """
 state_factory = ""
@@ -490,7 +495,7 @@ def document(text):
     before, public = text[:pos], text[pos:]
     public = public.replace(
         "struct Capture[E: Movable & Deinitable = Error]:\n",
-        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to three mixed positional operands can be followed by `kwargs`. `args` binds\n    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising functions retain E.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; library thunk owners are consumed and retain their own error.\n    Thunks use consuming, mutable, then shared receiver priority. Pass\n    `mut_ref(thunk)` to retain a reusable owner and its updated state.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native callback error type, selected before inference; Error by default.\n    """\n',
+        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to three mixed positional operands can be followed by `kwargs`. `args` binds\n    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising functions retain E.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; library thunk owners are consumed and retain their own error.\n    Thunks use consuming, mutable, then shared receiver priority. Pass\n    `mut_ref(thunk)` to retain a reusable owner and its updated state.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Its owner is a mutable unary callable returning Result without raising.\n    Pass mut_ref(owner) to map or traverse while retaining its state, or move\n    owner into the operation. Mapping keeps outcomes; traversal stops on Err.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native callback error type, selected before inference; Error by default.\n    """\n',
     )
     descriptions = {
         "run": (
@@ -519,7 +524,7 @@ def document(text):
         ),
         "stateful": (
             "Own explicit state for repeated calls through a plain native function.",
-            "A movable owner with run(value), state() and into_state() methods.",
+            "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
         ),
     }
     parameter_docs = {

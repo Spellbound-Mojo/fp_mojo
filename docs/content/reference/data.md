@@ -129,6 +129,23 @@ context as an actual receiver.
 can also append operands with `take`. Mixed conventions and keyword calls
 support up to three positional operands.
 
+The owner returned by `stateful` is also a mutable unary library callable.
+Pass `mut_ref(owner)` to retain its updated state, or `owner^` to transfer it
+to an operation. Each call consumes an input and returns `Result[R, E]`;
+native errors are captured, so the callable itself raises `Never`. Existing
+`run(value)`, `state()` and `into_state()` methods keep the same behavior.
+
+Use `.map(mut_ref(owner))` to keep an outcome for each input, or
+`.traverse(mut_ref(owner))` to stop on the first Err and collect successes.
+The Result target is inferred. A failed call retains mutations already made
+to the state. An empty source does not call the function. A lazy map calls it
+only when pulled, and an abandoned owner releases its state without invoking
+the function. Native origin tracking keeps borrowed owners alive; sequential
+updates through `owner.run(...)` before a lazy pull are visible to that pull.
+
+This is an immediate native-state adapter. For a deferred program that threads
+state through composed effects, use [State](effects.md#program-against-a-selected-state).
+
 <!-- example: docs/examples/capture_context.mojo -->
 
 ## Select a native argument convention
