@@ -6,6 +6,9 @@ one-shot callable accepting `Completion[T, E]` and returning `NoneType`. Its exa
 native error is `E` or `Never`; cleanup is a `Machine` returning `NoneType` with
 the same `E`. No production async API is exported.
 
+The subsequent [nursery pass](async-nurseries.md) adds bounded runtime admission
+and joins dynamically accepted callback machines through their withdrawal.
+
 ## Ownership and terminal decisions
 
 Cleanup is owned **before** registration begins. Registration is synchronous and

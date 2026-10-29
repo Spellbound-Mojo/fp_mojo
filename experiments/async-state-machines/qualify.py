@@ -22,7 +22,7 @@ from fp_tools.library import precompile
 from fp_tools.runs import RunContext
 from fp_tools.runtime import accepted, audit_command, command, positive_int, sha, write_json
 
-POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins"}
+POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins", "nurseries", "nursery_origins"}
 REGRESSIONS = (
     "tests/runtime/test_io_finalization.mojo",
     "tests/runtime/test_resource_scopes.mojo",

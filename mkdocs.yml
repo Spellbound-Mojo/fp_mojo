@@ -78,6 +78,7 @@ nav:
       - Async composition plan: architecture/async-composition-plan.md
       - Async composition implementation: architecture/async-composition-implementation.md
       - Async callback registration: architecture/async-callbacks.md
+      - Dynamic async nurseries: architecture/async-nurseries.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md

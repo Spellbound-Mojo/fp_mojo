@@ -440,13 +440,17 @@ struct _TryTake[T: Movable & Deinitable](OnceUnary, Copyable):
     comptime Arg = Deque[Self.T]
     comptime Out = Tuple[Self.Arg, Optional[Self.T]]
     def call_once(deinit self, var values: Self.Arg) -> Self.Out:
-        if len(values) == 0:
-            return (values^, Optional[Self.T]())
-        try:
-            var value = values.popleft()
-            return (values^, Optional(value^))
-        except:
-            abort("fp.effects: nonempty queue failed to remove its head")
+        var value = _try_pop(values)
+        return (values^, value^)
+
+
+def _try_pop[T: Movable & Deinitable](mut values: Deque[T]) -> Optional[T]:
+    if len(values) == 0:
+        return None
+    try:
+        return Optional(values.popleft())
+    except:
+        abort("fp.effects: nonempty queue failed to remove its head")
 
 
 @fieldwise_init

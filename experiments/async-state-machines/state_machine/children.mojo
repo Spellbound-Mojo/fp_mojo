@@ -7,40 +7,72 @@ from .kernel import Machine, Step, Wait, _Slot, _tick
 from .scopes import ScopedMachine
 
 
+struct _Child[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    var slot: _Slot[Self.P, Self.T, Self.E]
+    var context: IOContext[Self.E]
+
+    def __init__(out self, var program: Self.P):
+        self.slot = _Slot[Self.P, Self.T, Self.E](program^)
+        self.context = IOContext[Self.E](CancellationToken(), False)
+
+    def cancel(self):
+        if not self.slot.done():
+            self.context.request_cancel()
+
+    def ready(self, now: Int) -> Bool:
+        return self.slot.ready(now, self.context)
+
+    def include(self, mut wait: Wait):
+        if not self.slot.done():
+            wait.include(self.slot._wait, self.context)
+
+
+struct _Drain(Copyable):
+    var requested: Bool
+
+    def __init__(out self):
+        self.requested = False
+
+    def observe[E: Movable & Deinitable](mut self, context: IOContext[E], failed: Bool) -> Bool:
+        if not self.requested and (context.canceled() or failed):
+            self.requested = True
+            return True
+        return False
+
+    def waiting(self) -> Wait:
+        var wait = Wait.never()
+        # A delivered parent request must not spin while masked children park.
+        wait.interruptible = not self.requested
+        return wait^
+
+
 struct _Pair[P: Movable & Deinitable, Q: Movable & Deinitable,
     T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var left: _Slot[Self.P, Self.T, Self.E]
-    var right: _Slot[Self.Q, Self.U, Self.E]
-    var left_context: IOContext[Self.E]
-    var right_context: IOContext[Self.E]
+    var left: _Child[Self.P, Self.T, Self.E]
+    var right: _Child[Self.Q, Self.U, Self.E]
     var turn: Int
-    var draining: Bool
+    var drain: _Drain
     var completed: Bool
 
     def __init__(out self, var left: Self.P, var right: Self.Q):
-        self.left = _Slot[Self.P, Self.T, Self.E](left^)
-        self.right = _Slot[Self.Q, Self.U, Self.E](right^)
-        self.left_context = IOContext[Self.E](CancellationToken(), False)
-        self.right_context = IOContext[Self.E](CancellationToken(), False)
+        self.left = _Child[Self.P, Self.T, Self.E](left^)
+        self.right = _Child[Self.Q, Self.U, Self.E](right^)
         self.turn = 0
-        self.draining = False
+        self.drain = _Drain()
         self.completed = False
 
     def stop_if_needed(mut self, context: IOContext[Self.E]):
-        if not self.draining and (context.canceled() or self.left.failed() or self.right.failed()):
-            self.draining = True
-            if not self.left.done():
-                self.left_context.request_cancel()
-            if not self.right.done():
-                self.right_context.request_cancel()
+        if self.drain.observe(context, self.left.slot.failed() or self.right.slot.failed()):
+            self.left.cancel()
+            self.right.cancel()
 
     def select(mut self, context: IOContext[Self.E]) -> Int:
         if self.completed:
             abort("child group polled after completion")
         self.stop_if_needed(context)
         var now = monotonic()
-        var left_ready = self.left.ready(now, self.left_context)
-        var right_ready = self.right.ready(now, self.right_context)
+        var left_ready = self.left.ready(now)
+        var right_ready = self.right.ready(now)
         if left_ready and (self.turn == 0 or not right_ready):
             self.turn = 1
             return 0
@@ -51,16 +83,12 @@ struct _Pair[P: Movable & Deinitable, Q: Movable & Deinitable,
 
     def after_poll(mut self, context: IOContext[Self.E]) -> Step[Tuple[Self.T, Self.U], Self.E]:
         self.stop_if_needed(context)
-        if self.left.done() and self.right.done():
+        if self.left.slot.done() and self.right.slot.done():
             self.completed = True
-            return .ready(_zip_outcomes(self.left.take_outcome(), self.right.take_outcome()))
-        var wait = Wait.never()
-        # A delivered parent request must not spin while masked children park.
-        wait.interruptible = not self.draining
-        if not self.left.done():
-            wait.include(self.left._wait, self.left_context)
-        if not self.right.done():
-            wait.include(self.right._wait, self.right_context)
+            return .ready(_zip_outcomes(self.left.slot.take_outcome(), self.right.slot.take_outcome()))
+        var wait = self.drain.waiting()
+        self.left.include(wait)
+        self.right.include(wait)
         return .pending(wait^)
 
 
@@ -77,9 +105,9 @@ struct Both[P: Machine, Q: Machine](Machine):
         comptime assert Self.P.Error == Self.Q.Error
         match self._pair.select(context):
             case 0:
-                _ = _tick(self._pair.left, self._pair.left_context)
+                _ = _tick(self._pair.left.slot, self._pair.left.context)
             case 1:
-                _ = _tick(rebind[_Slot[Self.Q, Self.Q.Value, Self.Q.Error]](self._pair.right), rebind[IOContext[Self.Q.Error]](self._pair.right_context))
+                _ = _tick(rebind[_Slot[Self.Q, Self.Q.Value, Self.Q.Error]](self._pair.right.slot), rebind[IOContext[Self.Q.Error]](self._pair.right.context))
             case _:
                 pass
         return self._pair.after_poll(context)
@@ -115,9 +143,9 @@ struct ScopedBoth[P: ScopedMachine, Q: ScopedMachine](ScopedMachine):
         comptime assert Self.P.Error == Self.Q.Error and Self.P.Input == Self.Q.Input
         match self._pair.select(context):
             case 0:
-                _ = _tick_scoped(self._pair.left, value, self._pair.left_context)
+                _ = _tick_scoped(self._pair.left.slot, value, self._pair.left.context)
             case 1:
-                _ = _tick_scoped(rebind[_Slot[Self.Q, Self.Q.Value, Self.Q.Error]](self._pair.right), rebind[Self.Q.Input](value), rebind[IOContext[Self.Q.Error]](self._pair.right_context))
+                _ = _tick_scoped(rebind[_Slot[Self.Q, Self.Q.Value, Self.Q.Error]](self._pair.right.slot), rebind[Self.Q.Input](value), rebind[IOContext[Self.Q.Error]](self._pair.right.context))
             case _:
                 pass
         return self._pair.after_poll(context)
