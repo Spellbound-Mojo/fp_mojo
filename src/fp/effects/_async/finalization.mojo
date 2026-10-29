@@ -13,6 +13,7 @@ from .kernel import Machine, Step, Wait, _Slot, _tick
 from .scopes import ScopedMachine, CleanupMachine, Scope, _ProgramUse
 from .children import _tick_scoped
 from .composition import Pure, pure
+from .family import Machine as _ApplicationMachine, Async
 
 
 struct _ScopedCleanup[F: ScopedMachine, only_cancel: Bool = False, resource: Bool = False](CleanupMachine):
@@ -71,7 +72,7 @@ def on_cancel[P: Machine, Q: Machine](var program: P, var finalizer: Q) -> Guara
 
 @fieldwise_init
 struct Poll[E: Movable & Deinitable](Copyable):
-    var source: _SyncPoll[Self.E]
+    var _source: _SyncPoll[Self.E]
     comptime Applied[P: Machine] = _Polled[P, Self.E]
     def apply[P: Machine](self, var program: P) -> _Polled[P, Self.E]:
         comptime assert P.Error == Self.E, "poll requires the same exact error type"
@@ -79,14 +80,15 @@ struct Poll[E: Movable & Deinitable](Copyable):
 
 
 @fieldwise_init
-struct _Polled[P: Machine, E: Movable & Deinitable](Machine):
+struct _Polled[P: Machine, E: Movable & Deinitable](_ApplicationMachine):
+    comptime Family = Async[Self.E]
     comptime Value = Self.P.Value
     comptime Error = Self.E
     var slot: _Slot[Self.P, Self.P.Value, Self.P.Error]
     var handle: Poll[Self.E]
     def poll(mut self, context: IOContext[Self.E]) -> Step[Self.Value, Self.E]:
         comptime assert Self.P.Error == Self.E
-        var restored = self.handle.source._restore(context)
+        var restored = self.handle._source._restore(context)
         _ = _tick(self.slot, rebind[IOContext[Self.P.Error]](restored))
         if self.slot.done():
             return rebind_var[Step[Self.Value, Self.E]](self.slot.take_step())

@@ -63,6 +63,8 @@ REGRESSION_STDOUT = {
 }
 POSITIVE.update({"resource_composition", "resource_lifecycle", "resource_owned", "resource_release_factory"})
 POSITIVE.update({"pipeline_attempt", "pipeline_recovery_native"})
+POSITIVE.update({"application_native", "application_aliases", "coordination_family", "resource_generic"})
+POSITIVE.update({"application_errors", "application_owned"})
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
@@ -132,7 +134,7 @@ def main():
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
                     memory_limit_bytes=6 * 1024**3,
-                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
+                    werror=True, compiler_threads=1, compile_timeout={"application_errors": 900, "application_owned": 900, "application_native": 900, "application_aliases": 900, "coordination_family": 900, "resource_generic": 900, "depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 

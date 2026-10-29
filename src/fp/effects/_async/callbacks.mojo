@@ -9,9 +9,14 @@ from fp.callables._binding import _OwnedUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.effects import IOContext, CancellationToken, Outcome
 from fp.effects.coordination import _Cell, _lock, _try_lock
-from fp.effects.outcomes import _capture, _finish, _failure_as, _ExitState
+from fp.effects.outcomes import _discard, _capture, _finish, _failure_as, _ExitState
 from fp.effects._io_core import _settle
 from .kernel import Machine, Step, Wait, Signal, _Slot, _tick
+
+
+# Both native no-result signatures and explicit unit values are admissible.
+# Registration discards its unit through the canonical result owner.
+comptime _CallbackUnit[T: Movable & Deinitable] = T == NoneType or T == type_of(None)
 
 
 @fieldwise_init
@@ -35,12 +40,12 @@ struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _C
     comptime Value = Self.T
     comptime Error = Self.E
     var _cell: ArcPointer[_Cell[_CompletionState[Self.T, Self.E]]]
-    var signal: Signal
+    var _signal: Signal
     var _mask: IOContext[Self.E]
 
     def __init__(out self):
         self._cell = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_CompletionState[Self.T, Self.E](False, None))))
-        self.signal = Signal()
+        self._signal = Signal()
         self._mask = IOContext[Self.E](CancellationToken(), True)
 
     def complete(self, var outcome: Outcome[Self.T, Self.E]) -> Bool:
@@ -52,7 +57,7 @@ struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _C
             guard.cell[].slot.value().result = Optional(outcome^)
         # Never destroy rejected payloads or invoke producers while locked.
         _ = guard^
-        self.signal.notify()
+        self._signal.notify()
         return accepted
 
     def _select(self, cancel: Bool) -> Optional[Outcome[Self.T, Self.E]]:
@@ -73,7 +78,7 @@ struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _C
         guard.cell[].slot.value().closed = True
         var selected = guard.cell[].slot.value().take()
         _ = guard^
-        self.signal.notify()
+        self._signal.notify()
         if selected:
             return _finish(selected.take(), failed^)
         return _failure_as[Self.T](failed^)
@@ -91,9 +96,9 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
     var phase: Int
 
     def __init__(out self, var register: Self.F, var cleanup: Self.C):
-        comptime assert Self.F.Arg == Completion[Self.Value, Self.Error] and Self.F.Out == NoneType
+        comptime assert Self.F.Arg == Completion[Self.Value, Self.Error] and _CallbackUnit[Self.F.Out]
         comptime assert _OnceUnaryAvailable[Self.F] and _ErrorCompatible[Self.Error, Self.F.Error]
-        comptime assert Self.C.Value == NoneType and Self.C.Error == Self.Error
+        comptime assert _CallbackUnit[Self.C.Value] and Self.C.Error == Self.Error
         self.register = Optional(register^)
         self.completion = Completion[Self.Value, Self.Error]()
         self.cleanup = _Slot[Self.C, Self.C.Value, Self.C.Error](cleanup^)
@@ -102,9 +107,9 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
         self.phase = 0
 
     def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
-        comptime assert Self.F.Arg == Completion[Self.Value, Self.Error] and Self.F.Out == NoneType
+        comptime assert Self.F.Arg == Completion[Self.Value, Self.Error] and _CallbackUnit[Self.F.Out]
         comptime assert _OnceUnaryAvailable[Self.F] and _ErrorCompatible[Self.Error, Self.F.Error]
-        comptime assert Self.C.Value == NoneType and Self.C.Error == Self.Error
+        comptime assert _CallbackUnit[Self.C.Value] and Self.C.Error == Self.Error
         match self.phase:
             case 0:
                 if context.canceled():
@@ -112,17 +117,17 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
                     return .ready(None)
                 var registered = _capture[Self.Error](_OwnedUnary(self.register.take(), rebind_var[Self.F.Arg](self.completion.copy())))
                 if registered.is_err():
-                    self.begin_cleanup(self.completion._registration_failed(rebind_var[Outcome[NoneType, Self.Error]](Optional(registered^))), context)
+                    self.begin_cleanup(self.completion._registration_failed(Optional(_discard(registered^))), context)
                 else:
                     self.phase = 1
                 return .pending(Wait())
             case 1:
-                var revision = self.completion.signal.revision()
+                var revision = self.completion._signal.revision()
                 var selected = self.completion._select(context.canceled())
                 if selected:
                     self.begin_cleanup(selected.take(), context)
                     return .pending(Wait())
-                var wait = Wait.changed(self.completion.signal, revision)
+                var wait = Wait.changed(self.completion._signal, revision)
                 wait.interruptible = not context._masked
                 return .pending(wait^)
             case 2:
@@ -131,7 +136,7 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
                     var wait = self.cleanup.waiting()
                     wait.interruptible = False
                     return .pending(wait^)
-                var cleanup = rebind_var[Outcome[NoneType, Self.Error]](self.cleanup.take_outcome())
+                var cleanup = rebind_var[Outcome[Self.C.Value, Self.Error]](self.cleanup.take_outcome())
                 var outcome = _finish(self.completed.take().outcome(), cleanup^)
                 self.phase = 3
                 return .ready(_settle(outcome^, context))

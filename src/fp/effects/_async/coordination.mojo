@@ -10,6 +10,7 @@ from fp.effects.outcomes import _failure_as
 from fp._internal.cells import _try_lock
 from fp.callables import OnceUnary
 from .kernel import Machine, Step, Wait
+from .family import Machine as _ApplicationMachine, Async, _Recipe
 from .composition import Bind, Pure, pure, bind
 from .scopes import Scope, CleanupMachine, _ProgramUse
 
@@ -24,7 +25,8 @@ def _attempt[P: _RefAction](mut action: Optional[P], context: IOContext[P.Select
     return .ready(action.take()._locked(locked.take(), context, notify))
 
 
-struct _Once[P: _RefAction](Machine):
+struct _Once[P: _RefAction](_ApplicationMachine):
+    comptime Family = Async[Self.Error]
     comptime Value = Self.P.Value
     comptime Error = Self.P.SelectedError
     var action: Optional[Self.P]
@@ -42,7 +44,8 @@ struct _Once[P: _RefAction](Machine):
         return step^
 
 
-struct _Await[A: Movable & Deinitable, P: _RefAction & Copyable](Machine):
+struct _Await[A: Movable & Deinitable, P: _RefAction & Copyable](_ApplicationMachine):
+    comptime Family = Async[Self.Error]
     comptime Value = Self.A
     comptime Error = Self.P.SelectedError
     var template: Self.P
@@ -89,22 +92,29 @@ struct _Await[A: Movable & Deinitable, P: _RefAction & Copyable](Machine):
 
 struct Deferred[T: Copyable & Deinitable](Copyable):
     """Shared single-assignment value; waiting readers receive owned copies."""
+    comptime Complete[E: Movable & Deinitable] = _Once[_RefModify[Optional[Self.T], Bool, E, _Complete[Self.T]]]
+    """The exact unopened machine returned by complete."""
+    comptime TryGet[E: Movable & Deinitable] = _Once[_RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]
+    """The exact unopened machine returned by try_get."""
+    comptime Get[E: Movable & Deinitable] = _Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]
+    """The exact unopened machine returned by get."""
     var _source: _Deferred[Self.T]
 
     def __init__(out self):
         self._source = _Deferred[Self.T]()
 
-    def complete[E: Movable & Deinitable](self, var value: Self.T) -> _Once[_RefModify[Optional[Self.T], Bool, E, _Complete[Self.T]]]:
+    def complete[E: Movable & Deinitable](self, var value: Self.T) -> Self.Complete[E]:
         return _Once(self._source.complete[E](value^))
 
-    def try_get[E: Movable & Deinitable](self) -> _Once[_RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]:
+    def try_get[E: Movable & Deinitable](self) -> Self.TryGet[E]:
         return _Once(self._source.try_get[E]())
 
-    def get[E: Movable & Deinitable](self) -> _Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]:
+    def get[E: Movable & Deinitable](self) -> Self.Get[E]:
         return _Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]](self._source.get[E]()._into_attempt(), False)
 
 
-struct _Offer[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
+struct _Offer[T: Movable & Deinitable, E: Movable & Deinitable](_ApplicationMachine):
+    comptime Family = Async[Self.Error]
     comptime Value = NoneType
     comptime Error = Self.E
     comptime Attempt = _RefModify[Deque[Self.T], Optional[Self.T], Self.E, _TryOffer[Self.T]]
@@ -144,24 +154,34 @@ struct _Offer[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
 
 struct Queue[T: Movable & Deinitable](Copyable):
     """Bounded FIFO of owned values; waiting offers retain rejected inputs."""
+    comptime Size[E: Movable & Deinitable] = _Once[_RefInspect[Deque[Self.T], E, _Size[Self.T]]]
+    """The exact unopened machine returned by size."""
+    comptime TryOffer[E: Movable & Deinitable] = _Once[_RefModify[Deque[Self.T], Optional[Self.T], E, _TryOffer[Self.T]]]
+    """The exact unopened machine returned by try_offer."""
+    comptime Offer[E: Movable & Deinitable] = _Offer[Self.T, E]
+    """The exact unopened machine returned by offer."""
+    comptime TryTake[E: Movable & Deinitable] = _Once[_RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]
+    """The exact unopened machine returned by try_take."""
+    comptime Take[E: Movable & Deinitable] = _Await[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]
+    """The exact unopened machine returned by take."""
     var _source: _Queue[Self.T]
 
     def __init__(out self, capacity: Int) raises:
         self._source = _Queue[Self.T](capacity)
 
-    def size[E: Movable & Deinitable](self) -> _Once[_RefInspect[Deque[Self.T], E, _Size[Self.T]]]:
+    def size[E: Movable & Deinitable](self) -> Self.Size[E]:
         return _Once(self._source.size[E]())
 
-    def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> _Once[_RefModify[Deque[Self.T], Optional[Self.T], E, _TryOffer[Self.T]]]:
+    def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> Self.TryOffer[E]:
         return _Once(self._source.try_offer[E](value^))
 
-    def offer[E: Movable & Deinitable](self, var value: Self.T) -> _Offer[Self.T, E]:
+    def offer[E: Movable & Deinitable](self, var value: Self.T) -> Self.Offer[E]:
         return _Offer[Self.T, E](self._source, value^)
 
-    def try_take[E: Movable & Deinitable](self) -> _Once[_RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]:
+    def try_take[E: Movable & Deinitable](self) -> Self.TryTake[E]:
         return _Once(self._source.try_take[E]())
 
-    def take[E: Movable & Deinitable](self) -> _Await[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]:
+    def take[E: Movable & Deinitable](self) -> Self.Take[E]:
         return _Await[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]](self._source.take[E]()._into_attempt(), True)
 
 
@@ -188,17 +208,23 @@ struct _WithPermit[P: Machine](OnceUnary):
 
 struct Semaphore(Copyable):
     """Cancelable acquisition with canonical owned permits and scoped use."""
+    comptime Available[E: Movable & Deinitable] = _Once[_RefInspect[Int, E, _Copy[Int]]]
+    """The exact unopened machine returned by available."""
+    comptime Acquire[E: Movable & Deinitable] = _Await[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]]
+    """The exact unopened machine returned by acquire."""
+    comptime WithPermit[P: Machine] = _Recipe[Bind[_Await[Permit, _RefModify[Int, Optional[Permit], P.Error, _Reserve]], _WithPermit[P]]]
+    """The exact unopened machine returned by with_permit."""
     var _source: _Semaphore
 
     def __init__(out self, permits: Int) raises:
         self._source = _Semaphore(permits)
 
-    def available[E: Movable & Deinitable](self) -> _Once[_RefInspect[Int, E, _Copy[Int]]]:
+    def available[E: Movable & Deinitable](self) -> Self.Available[E]:
         return _Once(self._source.available[E]())
 
-    def acquire[E: Movable & Deinitable](self) -> _Await[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]]:
+    def acquire[E: Movable & Deinitable](self) -> Self.Acquire[E]:
         return _Await[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]](self._source.acquire[E]()._into_attempt(), False)
 
-    def with_permit[P: Machine](self, var program: P) -> Bind[_Await[Permit, _RefModify[Int, Optional[Permit], P.Error, _Reserve]], _WithPermit[P]]:
+    def with_permit[P: Machine](self, var program: P) -> Self.WithPermit[P]:
         # Acquire cancelably, then transfer the owned permit into a Scope.
-        return bind(self.acquire[P.Error](), _WithPermit(program^))
+        return _Recipe(bind(self.acquire[P.Error](), _WithPermit(program^)))

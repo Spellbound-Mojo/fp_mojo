@@ -67,11 +67,11 @@ The first surface has three boundaries:
 
 | Boundary | Supported names | Purpose |
 |---|---|---|
-| Application | `Async[E]`, `AsyncResource`, constructors and coordination handles below; `RaceResult`, `Poll`, `Duration` | Build unopened, concretely typed work; compose with existing `Pipeline` |
+| Application | `Async[E]`, `AsyncResource`, constructors and coordination handles below; `RaceResult`, `Poll`, `Duration`, `Instant` | Build unopened, concretely typed work; compose with existing `Pipeline` |
 | Host | `Driver`, `Progress`, `Clock`, `run` | Own execution, deliver events, observe deadlines, and drain shutdown |
 | Extension, from `.protocols` | `Machine`, `ScopedMachine`, `CleanupMachine`, `Step`, `Wait`, `Signal`, `Context` | Implement cooperative leaf operations and bodies with per-poll loans |
 
-`Context[E]` is a public alias of canonical `IOContext[E]`. Add `now() -> Int`
+`Context[E]` is a public alias of canonical `IOContext[E]`. Add `now() -> Instant`
 to that canonical context so extensions can read the inherited clock without
 accessing `_clock`. The existing `canceled()` and `request_cancel()` retain
 their meanings. Tokens, mask markers, parent registrations, slots, subscriptions,
@@ -429,7 +429,7 @@ and context fields are not public extension points.
 |---|---|
 | `completed: Bool` | The entire subtree, including owned external work and cleanup, is terminal |
 | `runnable: Bool` | More work can be attempted immediately, including a due timer |
-| `deadline: Optional[Int]` | Earliest live deadline in the supplied clock's nanoseconds |
+| `deadline: Optional[Instant]` | Earliest live deadline in the supplied clock's origin |
 | `polls: Int` | Root polls performed by this call |
 | `timers: Int` | Timer events processed by this call |
 
@@ -459,9 +459,12 @@ prevent shutdown. Moving a driver preserves all these obligations.
 self-contained work. They use the same Driver with the existing 1 ms idle-sleep
 fallback. Host-delivered callbacks normally use Driver directly.
 
-`Clock()` reads monotonic nanoseconds. `Clock.manual(now=0)` creates shared
-deterministic time; `advance_to(now)` only advances a manual clock. Absolute
-deadlines use that clock's origin and are not wall-clock timestamps.
+`Clock()` reads monotonic time as an opaque `Instant`. `Clock.manual(now=0)`
+accepts a checked nonnegative initial `Int` nanosecond count and creates shared
+deterministic time. `advance_to(instant)` only advances a manual clock. Absolute
+deadlines use that clock's origin and are not wall-clock timestamps. `Instant`
+arithmetic accepts checked `Duration`; its private wide counter permits a
+valid relative timer to cross `Int.MAX` without a domain error or abandoned root.
 
 ## Outcomes, invalid inputs, and extension rules
 
@@ -501,8 +504,12 @@ The experiment currently aborts for invalid budgets, nursery limits, timer
 ranges, and deadline overflow. Those checks need an explicit migration before
 publication. A checked duration alone does not prove that an entry-time absolute
 deadline fits in `Int`: clock range, duration range, and timer admission must be
-designed together. Resolve overflow without fabricating arbitrary `E`, abandoning
-an entered root, or silently truncating time. This is a focused design and test
+designed together. The agreed resolution uses opaque `Instant` for clock
+readings, waits, host deadlines, and manual advances, with a wide pure-Mojo
+counter. Relative conversion preserves the existing 10**18-nanosecond limit.
+The implementation must qualify carry, ordering, and timer completion past
+`Int.MAX` without fabricating arbitrary `E`, abandoning an entered root, or
+silently truncating time. This is a focused design and test
 gate. Consuming unfinished execution remains a protocol violation; ordinary
 invalid configuration should not abort a host process. Duplicate callback
 completion retains the documented `False` result and is not a protocol violation.
@@ -522,7 +529,8 @@ Direct application polling is outside the supported execution contract; Driver
 and the library's child owners perform it.
 
 Supported waits are `Wait()` for a scheduling yield, `Wait.never()` for no ordinary
-wake source, `Wait.changed(signal, revision)`, and `Wait.until(deadline)`.
+wake source, `Wait.changed(signal, revision)`, and `Wait.until(deadline)` with an
+opaque `Instant` from the inherited clock.
 Cancellation remains a wake source when the context permits observation.
 `Signal` exposes construction, `revision()`, and `notify()` only. Read the revision
 before inspecting the associated state, then return the captured revision if
@@ -726,6 +734,34 @@ native and deferred materialization, move-only successes and failures, external
 origins, recovery-only custom families, missing-capability rejections, async
 cancellation bypass, and selected native recovery. Generated overloads, the
 module DAG, reviewed exports, API documentation, and the rendered docs also pass.
+
+The application recipe adapters and logical aliases now forward to the canonical
+owners with explicit Async family metadata. Coordination operations and
+`Poll.apply` participate in Pipeline selection. `ResourcePlan` supplies the
+native bound for generic resource helpers; `AsyncResource[P]` exposes
+`MapCompatible[F]`, `UseCompatible[F]`, and `BindCompatible[F]` as the shared
+admission predicates, including exact error and origin
+requirements, without exposing independent acquisition or release operations.
+Generic family forwarding uses the public `BindContract` and `TailRecContract`;
+concrete results agree with the `Bind` and `Loop` aliases.
+
+Owned native delay admits ordinary functions, closures and stored thin pointers
+through the canonical native thunk. Callback registration accepts native
+no-result signatures and explicit `NoneType` unit values. The canonical result
+discard operation normalizes registration results internally; delayed return
+values retain their actual native type. Stored unary pointers can use the
+existing public `as_unary` adapter. This remains a private implementation stage;
+the opt-in namespaces await checked time admission and the publication checks.
+
+The application pass has 52 distinct successful source/package O0/O3 routes
+across `application-recipes-1`, `application-complete-3`, and
+`application-final-4`. The final report passes 24/24, including owned native
+captures, all three generic resource admission predicates, native resource
+composition, and error/origin/loan rejection. Earlier failed admission probes
+and the environment-interrupted `application-generics-2` run are retained as
+evidence; the interrupted run is not counted as qualification. Native error
+identity, native unit signatures, external origins, and coordination family
+selection are covered. API freshness, module DAG checks, and rendered docs pass.
 
 ## Implementation passes after agreement
 

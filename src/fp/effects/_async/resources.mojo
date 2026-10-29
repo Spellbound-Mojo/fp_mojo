@@ -53,29 +53,37 @@ struct _ScopedBuild[F: BorrowCallContract & Movable & Deinitable, E: Movable & D
         return rebind_var[Step[Self.Value, Self.E]](self.active.value().take_step())
 
 
-trait _Plan(Movable, Deinitable):
+trait ResourcePlan(Movable, Deinitable):
+    """The native bound for an inferred resource acquisition plan.
+
+    Use this bound to name AsyncResource[P] in generic helpers. Plans are supplied
+    by resource constructors and composition; AsyncResource owns their execution.
+    No plan storage or independent release operation is part of this contract.
+    """
     comptime Value: Movable & Deinitable
+    """The owned value made available by successful acquisition."""
     comptime Error: Movable & Deinitable
-    comptime Used[U: ScopedMachine]: Machine
+    """The exact error shared by acquisition, use and release."""
+    comptime _Used[U: ScopedMachine]: Machine
     """The application machine built from a scoped body descriptor."""
-    def use[U: ScopedMachine](deinit self, var body: U) -> Self.Used[U]:
+    def _use[U: ScopedMachine](deinit self, var body: U) -> Self._Used[U]:
         ...
 
 
 @fieldwise_init
-struct _Acquire[A: Machine, C: CleanupMachine](_Plan):
+struct _Acquire[A: Machine, C: CleanupMachine](ResourcePlan):
     comptime Value = Self.A.Value
     comptime Error = Self.A.Error
-    comptime Used[U: ScopedMachine] = Scope[Self.A, U, Self.C]
+    comptime _Used[U: ScopedMachine] = Scope[Self.A, U, Self.C]
     """The application machine built from a scoped body descriptor."""
     var acquire: Self.A
     var cleanup: Self.C
-    def use[U: ScopedMachine](deinit self, var body: U) -> Self.Used[U]:
-        return Self.Used[U](self.acquire^, body^, self.cleanup^)
+    def _use[U: ScopedMachine](deinit self, var body: U) -> Self._Used[U]:
+        return Self._Used[U](self.acquire^, body^, self.cleanup^)
 
 
 trait _AsyncResourceType(Movable, Deinitable):
-    comptime Plan: _Plan
+    comptime Plan: ResourcePlan
     def _into_plan(deinit self) -> Self.Plan:
         ...
 
@@ -84,26 +92,26 @@ trait _AsyncResourceType(Movable, Deinitable):
 struct _UseResource[F: BorrowCallContract & Movable & Deinitable, U: ScopedMachine](BorrowOnceCallable):
     comptime Payload = Self.F.Payload
     comptime Right = downcast[Self.F.Result, _AsyncResourceType].Plan
-    comptime Result = Self.Right.Used[Self.U]
+    comptime Result = Self.Right._Used[Self.U]
     comptime Failure = Self.F.Failure
     var factory: Self.F
     var body: Self.U
     def invoke_once(deinit self, ref value: Self.Payload) raises Self.Failure -> Self.Result:
         var resource = _borrow_once_as[Self.Failure](value, self.factory^)
-        return rebind_var[downcast[Self.F.Result, _AsyncResourceType]](resource^)._into_plan().use(self.body^)
+        return rebind_var[downcast[Self.F.Result, _AsyncResourceType]](resource^)._into_plan()._use(self.body^)
 
 
 @fieldwise_init
-struct _Join[L: _Plan, F: BorrowCallContract & Movable & Deinitable](_Plan):
+struct _Join[L: ResourcePlan, F: BorrowCallContract & Movable & Deinitable](ResourcePlan):
     comptime Right = downcast[Self.F.Result, _AsyncResourceType].Plan
     comptime Value = Self.Right.Value
     comptime Error = Self.L.Error
-    comptime Used[U: ScopedMachine] = Self.L.Used[_ScopedBuild[_UseResource[Self.F, U], Self.Error]]
+    comptime _Used[U: ScopedMachine] = Self.L._Used[_ScopedBuild[_UseResource[Self.F, U], Self.Error]]
     """The application machine built from a scoped body descriptor."""
     var left: Self.L
     var factory: Self.F
-    def use[U: ScopedMachine](deinit self, var body: U) -> Self.Used[U]:
-        return self.left^.use(_ScopedBuild[_UseResource[Self.F, U], Self.Error](_UseResource(self.factory^, body^)))
+    def _use[U: ScopedMachine](deinit self, var body: U) -> Self._Used[U]:
+        return self.left^._use(_ScopedBuild[_UseResource[Self.F, U], Self.Error](_UseResource(self.factory^, body^)))
 
 
 @fieldwise_init
@@ -117,7 +125,7 @@ struct _PureFactory[T: Movable & Deinitable, E: Movable & Deinitable](Unary, Def
 
 
 @fieldwise_init
-struct AsyncResource[P: _Plan](_AsyncResourceType):
+struct AsyncResource[P: ResourcePlan](_AsyncResourceType):
     """An unopened resource plan, consumed by composition or scoped use.
 
     Acquisitions and releases may suspend. Each use runs through the canonical
@@ -134,10 +142,17 @@ struct AsyncResource[P: _Plan](_AsyncResourceType):
     """The owned resource value lent during use."""
     comptime Error = Self.P.Error
     """The exact domain error of acquisition, use and cleanup."""
-    comptime Used[U: ScopedMachine] = _Recipe[Self.P.Used[U]]
+    comptime Used[U: ScopedMachine] = _Recipe[Self.P._Used[U]]
     """The application machine built from a scoped body descriptor."""
     comptime Use[F: BorrowCallContract & Movable & Deinitable] = Self.Used[_ScopedBuild[F, Self.Error]]
     """The application machine built by a borrowing body factory."""
+    comptime _FactoryCompatible[F: BorrowCallContract & Movable & Deinitable] = F.Payload == Self.Value and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.Error, F.Failure]
+    comptime MapCompatible[F: BorrowCallContract & Movable & Deinitable] = Self._FactoryCompatible[F]
+    """Exact borrowed input, receiver and factory-error admission for map."""
+    comptime UseCompatible[F: BorrowCallContract & Movable & Deinitable] = Self._FactoryCompatible[F] and conforms_to(F.Result, Machine) and downcast[F.Result, Machine].Error == Self.Error
+    """Exact borrowing factory admission and independently owned body error family."""
+    comptime BindCompatible[F: BorrowCallContract & Movable & Deinitable] = Self._FactoryCompatible[F] and conforms_to(F.Result, _AsyncResourceType) and downcast[F.Result, _AsyncResourceType].Plan.Error == Self.Error
+    """Exact borrowing factory admission and dependent resource error family."""
     comptime Bound[F: BorrowCallContract & Movable & Deinitable] = AsyncResource[_Join[Self.P, F]]
     """The dependent resource recipe returned by flat_map."""
     comptime Mapped[F: BorrowCallContract & Movable & Deinitable] = AsyncResource[_Join[Self.P, _MapScopeFactory[F, Self.Error, _PureFactory[F.Result, Self.Error]]]]
@@ -157,8 +172,8 @@ struct AsyncResource[P: _Plan](_AsyncResourceType):
         Returns:
             A machine owning the complete acquisition, body and cleanup lifetime.
         """
-        return _Recipe(self._plan^.use(body^))
-    def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var body: F) -> Self.Use[F] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.Error, F.Failure] and conforms_to(F.Result, Machine) and downcast[F.Result, Machine].Error == Self.Error:
+        return _Recipe(self._plan^._use(body^))
+    def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var body: F) -> Self.Use[F] where Self.UseCompatible[F]:
         """Build an independently owned body through one fresh resource loan.
 
         Parameters:
@@ -172,7 +187,7 @@ struct AsyncResource[P: _Plan](_AsyncResourceType):
             an acquired resource; the returned body cannot retain the fresh loan.
         """
         return self^.use(_ScopedBuild[F, Self.Error](body^))
-    def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Bound[F] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.Error, F.Failure] and conforms_to(F.Result, _AsyncResourceType) and downcast[F.Result, _AsyncResourceType].Plan.Error == Self.Error:
+    def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Bound[F] where Self.BindCompatible[F]:
         """Acquire a dependent resource and release it before this resource.
 
         Parameters:
@@ -185,7 +200,7 @@ struct AsyncResource[P: _Plan](_AsyncResourceType):
             An unopened plan exposing the inner value while retaining both owners.
         """
         return AsyncResource(_Join(self._plan^, function^))
-    def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Mapped[F] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.Error, F.Failure]:
+    def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Mapped[F] where Self.MapCompatible[F]:
         """Project an owned value while retaining the original release owner.
 
         Parameters:
@@ -199,27 +214,27 @@ struct AsyncResource[P: _Plan](_AsyncResourceType):
         """
         return self^.flat_map(_MapScopeFactory[F, Self.Error, _PureFactory[F.Result, Self.Error]](function^))
 
-    def use[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Use[_NativeBorrow[A, R, Never, F, False]] where A == Self.Value and _ErrorCompatible[Self.Error, Never] and conforms_to(R, Machine) and downcast[R, Machine].Error == Self.Error:
+    def use[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Use[_NativeBorrow[A, R, Never, F, False]] where Self.UseCompatible[_NativeBorrow[A, R, Never, F, False]]:
         """Adapt a native borrowing callback through the canonical callable boundary."""
         return self^.use(_NativeBorrow[A, R, Never, F, False](function^))
 
-    def use[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Use[_NativeBorrow[A, R, X, F, True]] where A == Self.Value and _ErrorCompatible[Self.Error, X] and conforms_to(R, Machine) and downcast[R, Machine].Error == Self.Error:
+    def use[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Use[_NativeBorrow[A, R, X, F, True]] where Self.UseCompatible[_NativeBorrow[A, R, X, F, True]]:
         """Adapt a native borrowing callback through the canonical callable boundary."""
         return self^.use(_NativeBorrow[A, R, X, F, True](function^))
 
-    def map[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Mapped[_NativeBorrow[A, R, Never, F, False]] where A == Self.Value and _ErrorCompatible[Self.Error, Never]:
+    def map[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Mapped[_NativeBorrow[A, R, Never, F, False]] where Self.MapCompatible[_NativeBorrow[A, R, Never, F, False]]:
         """Adapt a native borrowing callback through the canonical callable boundary."""
         return self^.map(_NativeBorrow[A, R, Never, F, False](function^))
 
-    def map[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Mapped[_NativeBorrow[A, R, X, F, True]] where A == Self.Value and _ErrorCompatible[Self.Error, X]:
+    def map[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Mapped[_NativeBorrow[A, R, X, F, True]] where Self.MapCompatible[_NativeBorrow[A, R, X, F, True]]:
         """Adapt a native borrowing callback through the canonical callable boundary."""
         return self^.map(_NativeBorrow[A, R, X, F, True](function^))
 
-    def flat_map[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Bound[_NativeBorrow[A, R, Never, F, False]] where A == Self.Value and _ErrorCompatible[Self.Error, Never] and conforms_to(R, _AsyncResourceType) and downcast[R, _AsyncResourceType].Plan.Error == Self.Error:
+    def flat_map[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Bound[_NativeBorrow[A, R, Never, F, False]] where Self.BindCompatible[_NativeBorrow[A, R, Never, F, False]]:
         """Adapt a native borrowing callback through the canonical callable boundary."""
         return self^.flat_map(_NativeBorrow[A, R, Never, F, False](function^))
 
-    def flat_map[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Bound[_NativeBorrow[A, R, X, F, True]] where A == Self.Value and _ErrorCompatible[Self.Error, X] and conforms_to(R, _AsyncResourceType) and downcast[R, _AsyncResourceType].Plan.Error == Self.Error:
+    def flat_map[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Bound[_NativeBorrow[A, R, X, F, True]] where Self.BindCompatible[_NativeBorrow[A, R, X, F, True]]:
         """Adapt a native borrowing callback through the canonical callable boundary."""
         return self^.flat_map(_NativeBorrow[A, R, X, F, True](function^))
 
