@@ -1,4 +1,4 @@
-"""Generate selected-context admission; Result and algebra own execution."""
+"""Generate selected-context admission; operation owners retain execution."""
 
 from pathlib import Path
 from itertools import product
@@ -195,6 +195,33 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             f"\n    @always_inline\n    def {name}{('[' + ', '.join(params) + ']') if params else ''}({receiver}{arguments}) raises {error} -> {target}{constraints}:\n"
             f'        """{summary}"""\n{prelude}        return {returned}\n'
         )
+
+    # Capability scopes use the ordinary callback descriptors and their existing
+    # effect operations. The capability owns timing, admission and output family.
+    for name, trait, mode, selection, payload, output, error in (
+        ("local", "Local", "borrow", "_LocalCapability[Self.I]", "Environment", "Localized", "LocalError"),
+        ("censor", "Censor", "owned", "_CensorCapability[Self.I]", "Log.Value", "Censored", "CensorError"),
+    ):
+        expected = f"{selection}.{payload}"
+        for cb in native_callbacks(mode, expected, "function", view=True):
+            adapter = cb["adapter_type"]
+            compatible = (f"{selection}.LocalCompatible[Self.V]" if name == "local"
+                          else f"{selection}.CensorCompatible[Self.V, {adapter}]")
+            conditions = [f"conforms_to(Self.I, {trait})", *cb["conditions"],
+                          f"{cb['result']} == {expected}", compatible]
+            emit(name, cb, cb["params"], cb["argument"],
+                 f"{selection}.{output}[Self.V, {adapter}]",
+                 f"{selection}.{error}[Self.V, {adapter}]", f"{selection}.Family",
+                 conditions, f"_{name}_effect[{selection}]({cb['build']}, self.value^)",
+                 "Scope a recipe under a transformed environment; the enclosing environment is unchanged."
+                 if name == "local" else "Transform this recipe's log while preserving its payload.")
+
+    selection = "_ListenCapability[Self.I]"
+    emit("listen", {}, [], "", f"{selection}.Listened[Self.V]",
+         f"{selection}.ListenError[Self.V]", f"{selection}.Family",
+         ["conforms_to(Self.I, Listen)", f"{selection}.ListenCompatible[Self.V]"],
+         f"_listen_effect[{selection}](self.value^)",
+         "Pair the payload with a copy of this recipe's log, retaining the output log.")
 
     # Observation delegates receiver selection to its retention adapter. The
     # whole-value tap runs once now; payload observers belong to the family's

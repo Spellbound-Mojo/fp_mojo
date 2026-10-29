@@ -171,6 +171,22 @@ documentation. Generated overloads receive generated documentation;
 handwritten execution methods retain their own outcome and ownership contracts.
 A tooling regression checks preservation and idempotence across every region.
 
+Reader environment scoping and Writer log operations now stay in the selected
+chain. Cats' [Reader implementation](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/data/package.scala)
+expresses the same environment-to-environment scope through its Kleisli owner:
+
+```scala
+def local[A, R](f: R => R)(fa: Reader[R, A]): Reader[R, A] = Kleisli.local(f)(fa)
+```
+
+Pipeline's `local`, `listen` and `censor` delegate to the existing capability
+operations. Their native and library callback signatures reuse the ordinary
+context descriptors; execution is not regenerated. The Reader pricing example
+no longer extracts and rewraps a recipe around `local`, and the Writer example
+uses one `flat_map(...).listen().censor(...).run()` chain. Listening still copies
+the log once when its base executes; censoring accepts move-only logs and
+captures. Explicit lifted capabilities continue to select inner layers.
+
 ## Milestones and pass boundaries
 
 | Order | Milestone | Completion criterion |

@@ -1,7 +1,7 @@
 """Accumulate a pricing log with Writer, then inspect and format it."""
 from fp.algebra import StringMonoid
 from fp.functions import pipeline
-from fp.effects import Writer, writer, tell, listen, censor
+from fp.effects import Writer, writer, tell
 from std.testing import assert_equal
 
 
@@ -23,10 +23,7 @@ def main() raises:
     print("notice:", notice[0])
 
     var initial = writer[PricingWriter, Int](Tuple(String("start; "), 3))
-    var charged = pipeline(initial^).flat_map(add_fee).get()
-    var observed = listen[PricingWriter](charged^)
-    var formatted = censor[PricingWriter](bracket, observed^)
-    var output = pipeline(formatted^).run()
+    var output = pipeline(initial^).flat_map(add_fee).listen().censor(bracket).run()
     assert_equal(output[0], "[start; fee +2]")
     assert_equal(output[1][0], 5)
     assert_equal(output[1][1], "start; fee +2")

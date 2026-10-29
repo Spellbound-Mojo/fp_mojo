@@ -69,6 +69,21 @@ The [IO example](effects.md#io-cancellation-and-finalization) uses this
 chain without extracting and rewrapping intermediate recipes. The free
 `run_io`, `guarantee` and `on_cancel` functions remain available.
 
+Use `.local(change_environment)` when the selected family supplies `Local`.
+The callback borrows the environment and returns its replacement; the enclosing
+environment stays unchanged. Writer families supply `.listen()` to pair each
+payload with a copy of its log, and `.censor(change_log)` to consume and replace
+the log while preserving the payload. Listening requires a copyable log;
+censoring supports move-only logs. A deferred base controls callback and copy
+timing. Native closures retain their borrows, stored thin functions are owned,
+and library callbacks retain their declared invocation modes and errors.
+
+These methods select the family already held by the pipeline. Use the free
+capability operations with `LiftLocal`, `LiftListen` or `LiftCensor` when an
+inner transformer layer needs an explicit selection. Generic wrappers forward
+the existing capability predicates and use that capability's `Family`, output
+and construction-error projections.
+
 This changes the default for declared effect recipes from Identity to their
 own family. To transform the whole recipe as a value, use `.then(function)`
 or explicitly choose `pipeline[IdentityFamily](recipe)`. Existing explicit

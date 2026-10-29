@@ -54,6 +54,14 @@ callback admission and does not change the recipe's execution error.
 Extract with `.get()` to keep a recipe unexecuted; use `run_io` for IO's
 outcome and cancellation boundary.
 
+Selected capability scopes also stay in the chain: `.local(callback)` scopes
+the current environment, `.listen()` pairs the payload with a copy of its log,
+and `.censor(callback)` replaces that log. The selected family must provide the
+corresponding `Local`, `Listen` or `Censor` capability. They retain the free
+operations' scope, timing, origin and error rules. Explicit `LiftLocal`,
+`LiftListen` and `LiftCensor` selections remain available through the free
+operations for inner transformer layers.
+
 <!-- api: effects -->
 
 ## Project without copying an environment or state

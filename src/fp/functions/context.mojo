@@ -46,15 +46,19 @@ from fp.iteration.reductions import _find_map, _fold_map, _extremum, _IntSum, _S
 from fp.iteration.folds import fold_left as _context_fold_left, reduce_optional as _context_reduce_optional, fold_until as _context_fold_until
 from fp.data.control import ControlFlow
 from fp.data._result import Result
-from fp.effects.protocols import ReaderFamily, StateFamily, WriterFamily, ReaderAction
+from fp.effects.protocols import ReaderFamily, StateFamily, WriterFamily, ReaderAction, Local, Listen, Censor
 from fp.effects.operations import run as _run_effect, _Reader, _State
 from fp.effects.writer import run_writer as _run_writer
+from fp.effects.capabilities import local as _local_effect, listen as _listen_effect, censor as _censor_effect
 from fp.effects._io_core import IOContract, CancellationToken, run_io as _run_pipeline_io
 from fp.effects.finalization import _FinalizerCompatible, _IOGuarantee, guarantee as _guarantee, on_cancel as _on_cancel
 
 comptime _ReaderFamily[I: Functor] = downcast[I, ReaderFamily]
 comptime _StateFamily[I: Functor] = downcast[I, StateFamily]
 comptime _WriterFamily[I: Functor] = downcast[I, WriterFamily]
+comptime _LocalCapability[I: Functor] = downcast[I, Local]
+comptime _ListenCapability[I: Functor] = downcast[I, Listen]
+comptime _CensorCapability[I: Functor] = downcast[I, Censor]
 
 comptime _Recovering[I: Functor] = downcast[I, ApplicativeError]
 comptime _Ensuring[I: Functor] = downcast[I, ApplicativeError & Monad]
@@ -208,6 +212,10 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     the existing effect runners and finalization owner. Map, flat_map,
     filter and filter_map delegate to the family's evaluation and ownership
     rules, including deferred execution and retained callback borrows.
+
+    `local` scopes the selected environment. `listen` pairs a payload with its
+    log, and `censor` transforms that log. Each delegates to the selected
+    capability, preserving its output family and construction error.
 
     `elements()` selects native List, Array, Deque, LinkedList or NonEmptyList
     element operations without naming a family. It only moves the carrier and
@@ -438,6 +446,154 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     def elements[T: Movable & Deinitable](deinit self) -> Pipeline[NonEmptyListFamily, Self.V, Self.E] where Self.V == NonEmptyList[T]:
         """Select native sequence element operations without naming a family."""
         return Pipeline[NonEmptyListFamily, Self.V, Self.E](self.value^)
+
+    @always_inline
+    def local[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises _LocalCapability[Self.I].LocalError[Self.V, C] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, C], Self.E] where conforms_to(Self.I, Local) and C.Payload == _LocalCapability[Self.I].Environment and C.Result == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged.
+
+        Parameters:
+            C: The first library callback type, retaining its receiver and origins.
+
+        Args:
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, C], Self.E](_local_effect[_LocalCapability[Self.I]](function^, self.value^))
+
+    @always_inline
+    def local[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises _LocalCapability[Self.I].LocalError[Self.V, C._BorrowView[o]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, C._BorrowView[o]], Self.E] where conforms_to(Self.I, Local) and C._BorrowView[o].Payload == _LocalCapability[Self.I].Environment and C._BorrowView[o].Result == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, C._BorrowView[o]], Self.E](_local_effect[_LocalCapability[Self.I]](function._borrow_view(), self.value^))
+
+    @always_inline
+    def local[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_LocalCapability[Self.I].Environment) -> R](deinit self, ref[o] function: C) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, False, o]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Local) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, False, o]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, False, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def local[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_LocalCapability[Self.I].Environment) raises Self.E -> R](deinit self, ref[o] function: C) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Self.E, C, True, o]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Local) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Self.E, C, True, o]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Self.E, C, True, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def local[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_LocalCapability[Self.I].Environment) raises Never -> R](deinit self, ref[o] function: C) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, True, o]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Local) and Self.E != Never and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, True, o]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, True, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def local[R: Movable & Deinitable, //](deinit self, function: def(_LocalCapability[Self.I].Environment) thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]], Self.E] where conforms_to(Self.I, Local) and not conforms_to(_LocalCapability[Self.I].Environment, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False](function), self.value^))
+
+    @always_inline
+    def local[R: RegisterPassable & Deinitable, //](deinit self, function: def(_LocalCapability[Self.I].Environment) thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]], Self.E] where conforms_to(Self.I, Local) and not conforms_to(_LocalCapability[Self.I].Environment, TrivialRegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False](function), self.value^))
+
+    @always_inline
+    def local[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Local) and P == _LocalCapability[Self.I].Environment and not conforms_to(R, RegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrow[P, R, Never, def(P) thin -> R, False](function), self.value^))
+
+    @always_inline
+    def local[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Local) and P == _LocalCapability[Self.I].Environment and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrow[P, R, Never, def(P) thin -> R, False](function), self.value^))
+
+    @always_inline
+    def local[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(_LocalCapability[Self.I].Environment) raises X thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Local) and _ErrorCompatible[Self.E, X] and not conforms_to(_LocalCapability[Self.I].Environment, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def local[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(_LocalCapability[Self.I].Environment) raises X thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Local) and _ErrorCompatible[Self.E, X] and not conforms_to(_LocalCapability[Self.I].Environment, TrivialRegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def local[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Local) and _ErrorCompatible[Self.E, X] and P == _LocalCapability[Self.I].Environment and not conforms_to(R, RegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def local[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Local) and _ErrorCompatible[Self.E, X] and P == _LocalCapability[Self.I].Environment and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:
+        """Scope a recipe under a transformed environment; the enclosing environment is unchanged."""
+        return Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E](_local_effect[_LocalCapability[Self.I]](_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def censor[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises _CensorCapability[Self.I].CensorError[Self.V, C] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, C], Self.E] where conforms_to(Self.I, Censor) and C.Arg == _CensorCapability[Self.I].Log.Value and C.Out == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, C]:
+        """Transform this recipe's log while preserving its payload.
+
+        Parameters:
+            C: The first library callback type, retaining its receiver and origins.
+
+        Args:
+            function: The callback, borrowed or consumed according to the selected signature; captures retain their native origins.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, C], Self.E](_censor_effect[_CensorCapability[Self.I]](function^, self.value^))
+
+    @always_inline
+    def censor[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises _CensorCapability[Self.I].CensorError[Self.V, C._View[o]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, C._View[o]], Self.E] where conforms_to(Self.I, Censor) and C._View[o].Arg == _CensorCapability[Self.I].Log.Value and C._View[o].Out == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, C._View[o]]:
+        """Transform this recipe's log while preserving its payload."""
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, C._View[o]], Self.E](_censor_effect[_CensorCapability[Self.I]](function._unary_view(), self.value^))
+
+    @always_inline
+    def censor[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _CensorCapability[Self.I].Log.Value) -> R](deinit self, ref[o] function: C) raises _CensorCapability[Self.I].CensorError[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, False, o]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Censor) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, False, o]]:
+        """Transform this recipe's log while preserving its payload."""
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, False, o]], Self.E](_censor_effect[_CensorCapability[Self.I]](_NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, False, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def censor[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _CensorCapability[Self.I].Log.Value) raises Self.E -> R](deinit self, ref[o] function: C) raises _CensorCapability[Self.I].CensorError[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Self.E, C, True, o]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Censor) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Self.E, C, True, o]]:
+        """Transform this recipe's log while preserving its payload."""
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Self.E, C, True, o]], Self.E](_censor_effect[_CensorCapability[Self.I]](_NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Self.E, C, True, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def censor[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _CensorCapability[Self.I].Log.Value) raises Never -> R](deinit self, ref[o] function: C) raises _CensorCapability[Self.I].CensorError[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, True, o]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Censor) and Self.E != Never and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, True, o]]:
+        """Transform this recipe's log while preserving its payload."""
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, True, o]], Self.E](_censor_effect[_CensorCapability[Self.I]](_NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, True, o](Pointer(to=function)), self.value^))
+
+    @always_inline
+    def censor[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]], Self.E] where conforms_to(Self.I, Censor) and not conforms_to(R, RegisterPassable) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]]:
+        """Transform this recipe's log while preserving its payload."""
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]], Self.E](_censor_effect[_CensorCapability[Self.I]](NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False](function), self.value^))
+
+    @always_inline
+    def censor[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]], Self.E] where conforms_to(Self.I, Censor) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]]:
+        """Transform this recipe's log while preserving its payload."""
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]], Self.E](_censor_effect[_CensorCapability[Self.I]](NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False](function), self.value^))
+
+    @always_inline
+    def censor[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Censor) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]]:
+        """Transform this recipe's log while preserving its payload."""
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]], Self.E](_censor_effect[_CensorCapability[Self.I]](NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def censor[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Censor) and _ErrorCompatible[Self.E, X] and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]]:
+        """Transform this recipe's log while preserving its payload."""
+        return Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]], Self.E](_censor_effect[_CensorCapability[Self.I]](NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True](function), self.value^))
+
+    @always_inline
+    def listen(deinit self) raises _ListenCapability[Self.I].ListenError[Self.V] -> Pipeline[_ListenCapability[Self.I].Family, _ListenCapability[Self.I].Listened[Self.V], Self.E] where conforms_to(Self.I, Listen) and _ListenCapability[Self.I].ListenCompatible[Self.V]:
+        """Pair the payload with a copy of this recipe's log, retaining the output log.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[_ListenCapability[Self.I].Family, _ListenCapability[Self.I].Listened[Self.V], Self.E](_listen_effect[_ListenCapability[Self.I]](self.value^))
 
     @always_inline
     def tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Pipeline[Self.I, Self.V, Self.E] where C.Payload == Self.V and _OnceBorrowAvailable[C]:

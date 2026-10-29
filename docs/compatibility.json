@@ -116,7 +116,7 @@
     },
     "functions": {
       "scope": "Selected Pipeline, legacy Piped, composition, partial application and Kleisli.",
-      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands. Declared Reader, State, Writer and IO carriers select their family; erased transformer layers and alternative policies still need explicit selection. Whole-recipe mapping uses then or explicit Identity. Pipeline.run delegates to selected Reader, State or Writer runners; IO retains run_io. IO pipelines expose run_io, guarantee and on_cancel through the existing IO contracts and owners.",
+      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands. Declared Reader, State, Writer and IO carriers select their family; erased transformer layers and alternative policies still need explicit selection. Whole-recipe mapping uses then or explicit Identity. Pipeline.run delegates to selected Reader, State or Writer runners; IO retains run_io. IO pipelines expose run_io, guarantee and on_cancel through the existing IO contracts and owners. Selected local, listen and censor delegate through current-family capabilities; explicit lifted capabilities still use the free operations.",
       "evidence": [
         "docs/examples/selected_pipeline.mojo",
         "docs/examples/selected_workflow.mojo",
@@ -303,7 +303,21 @@
         "tests/compile_fail/pipeline_io_guarantee_state.mojo",
         "tests/compile_fail/pipeline_io_plain.mojo",
         "tests/compile_fail/pipeline_io_reader.mojo",
-        "tests/compile_fail/pipeline_io_reuse.mojo"
+        "tests/compile_fail/pipeline_io_reuse.mojo",
+        "tests/runtime/test_pipeline_scopes.mojo",
+        "tests/ownership/test_pipeline_scopes.mojo",
+        "tests/compile_fail/pipeline_scope_callback_escape.mojo",
+        "tests/compile_fail/pipeline_scope_censor_argument.mojo",
+        "tests/compile_fail/pipeline_scope_censor_error.mojo",
+        "tests/compile_fail/pipeline_scope_censor_result.mojo",
+        "tests/compile_fail/pipeline_scope_family.mojo",
+        "tests/compile_fail/pipeline_scope_listen_family.mojo",
+        "tests/compile_fail/pipeline_scope_listen_move_only.mojo",
+        "tests/compile_fail/pipeline_scope_local_argument.mojo",
+        "tests/compile_fail/pipeline_scope_local_error.mojo",
+        "tests/compile_fail/pipeline_scope_local_escape.mojo",
+        "tests/compile_fail/pipeline_scope_local_result.mojo",
+        "tests/compile_fail/pipeline_scope_reuse.mojo"
       ]
     },
     "adt": {
@@ -709,7 +723,21 @@
         "tests/compile_fail/pipeline_io_guarantee_state.mojo",
         "tests/compile_fail/pipeline_io_plain.mojo",
         "tests/compile_fail/pipeline_io_reader.mojo",
-        "tests/compile_fail/pipeline_io_reuse.mojo"
+        "tests/compile_fail/pipeline_io_reuse.mojo",
+        "tests/runtime/test_pipeline_scopes.mojo",
+        "tests/ownership/test_pipeline_scopes.mojo",
+        "tests/compile_fail/pipeline_scope_callback_escape.mojo",
+        "tests/compile_fail/pipeline_scope_censor_argument.mojo",
+        "tests/compile_fail/pipeline_scope_censor_error.mojo",
+        "tests/compile_fail/pipeline_scope_censor_result.mojo",
+        "tests/compile_fail/pipeline_scope_family.mojo",
+        "tests/compile_fail/pipeline_scope_listen_family.mojo",
+        "tests/compile_fail/pipeline_scope_listen_move_only.mojo",
+        "tests/compile_fail/pipeline_scope_local_argument.mojo",
+        "tests/compile_fail/pipeline_scope_local_error.mojo",
+        "tests/compile_fail/pipeline_scope_local_escape.mojo",
+        "tests/compile_fail/pipeline_scope_local_result.mojo",
+        "tests/compile_fail/pipeline_scope_reuse.mojo"
       ]
     },
     "matching": {
@@ -804,6 +832,42 @@
         "tests/compile_fail/pipeline_io_plain.mojo",
         "tests/compile_fail/pipeline_io_reader.mojo",
         "tests/compile_fail/pipeline_io_reuse.mojo"
+      ]
+    },
+    {
+      "name": "Selected capability scopes",
+      "methods": [
+        "local",
+        "listen",
+        "censor"
+      ],
+      "status": "selected",
+      "families": "Current family supplies Local, Listen or Censor; continuation uses the capability Family.",
+      "callbacks": "Native closure borrows and owned thin functions use existing descriptors; library callbacks retain their receivers and exact errors.",
+      "ownership": "Consumes the recipe; local borrows its environment, listen copies its log once, and censor consumes a possibly move-only log.",
+      "errors": "Exact capability construction error; deferred execution retains exact callback errors and origins.",
+      "timing": "The capability and base family own evaluation, copies and scope restoration. Inner layers require an explicit lifted capability through the free operations.",
+      "owner": [
+        "src/fp/effects/capabilities.mojo",
+        "src/fp/effects/reader.mojo",
+        "src/fp/effects/writer.mojo",
+        "scripts/generate_context.py"
+      ],
+      "evidence": [
+        "tests/runtime/test_pipeline_scopes.mojo",
+        "tests/ownership/test_pipeline_scopes.mojo",
+        "tests/compile_fail/pipeline_scope_callback_escape.mojo",
+        "tests/compile_fail/pipeline_scope_censor_argument.mojo",
+        "tests/compile_fail/pipeline_scope_censor_error.mojo",
+        "tests/compile_fail/pipeline_scope_censor_result.mojo",
+        "tests/compile_fail/pipeline_scope_family.mojo",
+        "tests/compile_fail/pipeline_scope_listen_family.mojo",
+        "tests/compile_fail/pipeline_scope_listen_move_only.mojo",
+        "tests/compile_fail/pipeline_scope_local_argument.mojo",
+        "tests/compile_fail/pipeline_scope_local_error.mojo",
+        "tests/compile_fail/pipeline_scope_local_escape.mojo",
+        "tests/compile_fail/pipeline_scope_local_result.mojo",
+        "tests/compile_fail/pipeline_scope_reuse.mojo"
       ]
     },
     {

@@ -11070,6 +11070,44 @@
       "signature": "def before[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) raises _Binding[Self.I].BindError[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]], Self.E] where conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and _CarrierCompatible[_Binding[Self.I], R] and _BindCompatible[_Binding[Self.I], Self.V, _EffectRetain[Self.I.Element[Self.V], _Binding[Self.I], _IgnoreInput[Self.I.Element[Self.V], _NativeThunk[R, X, def() raises X thin -> R, True]]]]:"
      }
     ],
+    "censor": [
+     {
+      "sha256": "26e88e9cffe484753b84589097d5d9065347515c52018e7d40a819b0dc3aedee",
+      "signature": "def censor[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises _CensorCapability[Self.I].CensorError[Self.V, C] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, C], Self.E] where conforms_to(Self.I, Censor) and C.Arg == _CensorCapability[Self.I].Log.Value and C.Out == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, C]:"
+     },
+     {
+      "sha256": "7245089c5bf735c19b81354f1dde01dc22f392c08c27616959ad15a7863dd8e2",
+      "signature": "def censor[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises _CensorCapability[Self.I].CensorError[Self.V, C._View[o]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, C._View[o]], Self.E] where conforms_to(Self.I, Censor) and C._View[o].Arg == _CensorCapability[Self.I].Log.Value and C._View[o].Out == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, C._View[o]]:"
+     },
+     {
+      "sha256": "1e30c0017af308541632ed76f864a74952504a9ad5e7d27508e29180dd5084f6",
+      "signature": "def censor[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _CensorCapability[Self.I].Log.Value) -> R](deinit self, ref[o] function: C) raises _CensorCapability[Self.I].CensorError[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, False, o]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Censor) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, False, o]]:"
+     },
+     {
+      "sha256": "3cffd358a197925acd2956aa0a61c81a0787d3bc005cd72cd286fe85e9124126",
+      "signature": "def censor[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _CensorCapability[Self.I].Log.Value) raises Self.E -> R](deinit self, ref[o] function: C) raises _CensorCapability[Self.I].CensorError[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Self.E, C, True, o]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Censor) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Self.E, C, True, o]]:"
+     },
+     {
+      "sha256": "d933bf51310b09c8c10f5463f05e0812ee48e34d40a22fd048e97cdae8763762",
+      "signature": "def censor[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _CensorCapability[Self.I].Log.Value) raises Never -> R](deinit self, ref[o] function: C) raises _CensorCapability[Self.I].CensorError[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, True, o]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Censor) and Self.E != Never and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, _NativeUnaryRef[_CensorCapability[Self.I].Log.Value, R, Never, C, True, o]]:"
+     },
+     {
+      "sha256": "f74d630414199b613ae8923129144f6b35a9a33834d81a2fa267423c1761791a",
+      "signature": "def censor[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]], Self.E] where conforms_to(Self.I, Censor) and not conforms_to(R, RegisterPassable) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]]:"
+     },
+     {
+      "sha256": "3c07a3a787940132467329abac058e1da0454bc7121fac9310f154592b49a497",
+      "signature": "def censor[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]], Self.E] where conforms_to(Self.I, Censor) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, Never, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) thin -> R, False]]:"
+     },
+     {
+      "sha256": "19357c393ce14447115db04295b4b3ef57eed8968e432ed9c5978cef5ec7875e",
+      "signature": "def censor[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Censor) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]]:"
+     },
+     {
+      "sha256": "e8c438277ed0d2a4f452b16a061fb6313cfb9617bde2c4235c9290920c8ca44b",
+      "signature": "def censor[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R) raises _CensorCapability[Self.I].CensorError[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]] -> Pipeline[_CensorCapability[Self.I].Family, _CensorCapability[Self.I].Censored[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Censor) and _ErrorCompatible[Self.E, X] and R == _CensorCapability[Self.I].Log.Value and _CensorCapability[Self.I].CensorCompatible[Self.V, NativeUnary[_CensorCapability[Self.I].Log.Value, R, X, def(var _NativeOwnedArg[_CensorCapability[Self.I].Log.Value]) raises X thin -> R, True]]:"
+     }
+    ],
     "combine_all": [
      {
       "sha256": "dbc784d78898cfac3b88c57afdbab997065cdc8a887d62734d94a68aad4cd0db",
@@ -14274,6 +14312,66 @@
      {
       "sha256": "79dae33ed0b306650d14386a110e3e0f8889114d9f735145cad0d7b5cb364749",
       "signature": "def if_effect[R: RegisterPassable & Deinitable, X: Movable & Deinitable, S: RegisterPassable & Deinitable, Y: Movable & Deinitable, //](deinit self, on_true: def() raises X thin -> R, on_false: def() raises Y thin -> S) raises _Binding[Self.I].BindError[Self.V, _ErrorProbe[Bool, _Binding[Self.I]._Joined[R, S], _CommonError[X, Y]]] -> Pipeline[Self.I, _Binding[Self.I].Bound[Self.V, _IfEffect[_Binding[Self.I], _NativeThunk[R, X, def() raises X thin -> R, True], _NativeThunk[S, Y, def() raises Y thin -> S, True]]], Self.E] where conforms_to(Self.I, Monad) and Self.I.Element[Self.V] == Bool and _ErrorCompatible[Self.E, X] and _ErrorCompatible[Self.E, Y] and _Binding[Self.I].Element[R] == _Binding[Self.I].Element[S] and _ErrorCompatible[_CommonError[X, Y], X] and _ErrorCompatible[_CommonError[X, Y], Y] and _BindCompatible[_Binding[Self.I], Self.V, _IfEffect[_Binding[Self.I], _NativeThunk[R, X, def() raises X thin -> R, True], _NativeThunk[S, Y, def() raises Y thin -> S, True]]] and _CarrierCompatible[_Binding[Self.I], Self.V] and _CarrierCompatible[_Binding[Self.I], R] and _CarrierCompatible[_Binding[Self.I], S]:"
+     }
+    ],
+    "listen": [
+     {
+      "sha256": "3bfb7cd9287e4a7c7b6c4cbb683a346ee292e1b4af17edd444172d209a5ec2be",
+      "signature": "def listen(deinit self) raises _ListenCapability[Self.I].ListenError[Self.V] -> Pipeline[_ListenCapability[Self.I].Family, _ListenCapability[Self.I].Listened[Self.V], Self.E] where conforms_to(Self.I, Listen) and _ListenCapability[Self.I].ListenCompatible[Self.V]:"
+     }
+    ],
+    "local": [
+     {
+      "sha256": "767d5e2c96289ca6b307616bad24b398d22decb6e536e8df5b8e014a6ffb679b",
+      "signature": "def local[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises _LocalCapability[Self.I].LocalError[Self.V, C] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, C], Self.E] where conforms_to(Self.I, Local) and C.Payload == _LocalCapability[Self.I].Environment and C.Result == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "783a127699da3b7229e381a5ca37d2d7cf8b96568cf3f7cb56847200744eab1b",
+      "signature": "def local[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises _LocalCapability[Self.I].LocalError[Self.V, C._BorrowView[o]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, C._BorrowView[o]], Self.E] where conforms_to(Self.I, Local) and C._BorrowView[o].Payload == _LocalCapability[Self.I].Environment and C._BorrowView[o].Result == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "e3bd0b10a762472997f0f98c5e50bc7350f6a9a92a5a20ac584538e87031c607",
+      "signature": "def local[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_LocalCapability[Self.I].Environment) -> R](deinit self, ref[o] function: C) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, False, o]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, False, o]], Self.E] where conforms_to(Self.I, Local) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "dc79a4f9b7bfcb90111e647566569384e9071a4f92e36e03c0a6a3b3fc8478d2",
+      "signature": "def local[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_LocalCapability[Self.I].Environment) raises Self.E -> R](deinit self, ref[o] function: C) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Self.E, C, True, o]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Self.E, C, True, o]], Self.E] where conforms_to(Self.I, Local) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "ab91999ab403398337e4923e2f88e312240f495d1f5fa366ae325550141b83ab",
+      "signature": "def local[R: Movable & Deinitable, o: ImmOrigin, //, C: def(_LocalCapability[Self.I].Environment) raises Never -> R](deinit self, ref[o] function: C) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, True, o]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrowRef[_LocalCapability[Self.I].Environment, R, Never, C, True, o]], Self.E] where conforms_to(Self.I, Local) and Self.E != Never and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "ca2924e91e4bc3f87d02217ac79ffc2a42d9b0600b3fae93a5bc304e4e702659",
+      "signature": "def local[R: Movable & Deinitable, //](deinit self, function: def(_LocalCapability[Self.I].Environment) thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]], Self.E] where conforms_to(Self.I, Local) and not conforms_to(_LocalCapability[Self.I].Environment, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "abef84272633ff590a6649a40e9e36c782a95e9f4cb5f0985a559a5f0e34a28b",
+      "signature": "def local[R: RegisterPassable & Deinitable, //](deinit self, function: def(_LocalCapability[Self.I].Environment) thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, Never, def(_LocalCapability[Self.I].Environment) thin -> R, False]], Self.E] where conforms_to(Self.I, Local) and not conforms_to(_LocalCapability[Self.I].Environment, TrivialRegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "b91dfd6494802fc5a8bff8abd7cb64f259bb24cfcdd9760d46e2ddc98ba7bd1e",
+      "signature": "def local[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, function: def(P) thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Local) and P == _LocalCapability[Self.I].Environment and not conforms_to(R, RegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "5e9887dd12ed1f03ec1b79810761d860084024c98956c4ac56a7618a352d5836",
+      "signature": "def local[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, function: def(P) thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]], Self.E] where conforms_to(Self.I, Local) and P == _LocalCapability[Self.I].Environment and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "fafc533ee4aedb2d80a7c11bc0943205612a59c24e96425313832153a74a6748",
+      "signature": "def local[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(_LocalCapability[Self.I].Environment) raises X thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Local) and _ErrorCompatible[Self.E, X] and not conforms_to(_LocalCapability[Self.I].Environment, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "3f81cb204ba6fee880b15808e7f4c18431bddf002d346f2eab1bcea550651f51",
+      "signature": "def local[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(_LocalCapability[Self.I].Environment) raises X thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[_LocalCapability[Self.I].Environment, R, X, def(_LocalCapability[Self.I].Environment) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Local) and _ErrorCompatible[Self.E, X] and not conforms_to(_LocalCapability[Self.I].Environment, TrivialRegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "b80b66105a3282f5362552b4e7e7967b29d2bbb9955640ce69f7095002b31d12",
+      "signature": "def local[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Local) and _ErrorCompatible[Self.E, X] and P == _LocalCapability[Self.I].Environment and not conforms_to(R, RegisterPassable) and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
+     },
+     {
+      "sha256": "69239f34933d480d579d6f4e79095b4a1acba2e7210c25836e339ab24766e3c7",
+      "signature": "def local[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises _LocalCapability[Self.I].LocalError[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] -> Pipeline[_LocalCapability[Self.I].Family, _LocalCapability[Self.I].Localized[Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]], Self.E] where conforms_to(Self.I, Local) and _ErrorCompatible[Self.E, X] and P == _LocalCapability[Self.I].Environment and R == _LocalCapability[Self.I].Environment and _LocalCapability[Self.I].LocalCompatible[Self.V]:"
      }
     ],
     "map": [
