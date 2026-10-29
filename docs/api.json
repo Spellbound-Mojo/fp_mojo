@@ -54802,7 +54802,7 @@
       "doc": "A program with the body's success type and combined failure outcomes.",
       "type": "_IOGuarantee[P, Q]"
      },
-     "signature": "def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q) -> _IOGuarantee[P, Q] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error",
+     "signature": "def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q) -> _IOGuarantee[P, Q] where _FinalizerCompatible[P, Q]",
      "summary": "Finalize an entered IO body exactly once, with cancellation masked."
     }
    ],
@@ -55538,7 +55538,7 @@
       "doc": "The body outcome combined with any cancellation-cleanup errors.",
       "type": "_IOGuarantee[P, Q, True]"
      },
-     "signature": "def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q) -> _IOGuarantee[P, Q, True] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error",
+     "signature": "def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q) -> _IOGuarantee[P, Q, True] where _FinalizerCompatible[P, Q]",
      "summary": "Run masked cleanup only when the entered body observes cancellation."
     }
    ],
@@ -117307,7 +117307,7 @@
   },
   "functions.Pipeline": {
    "aliases": [],
-   "description": "Start with `pipeline(value)` for native carriers, declared effect recipes or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. `run(environment)`\nexecutes Reader, `run(state)` executes State, and `run()` unwraps Writer.\nThese delegate to the existing effect runners. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`elements()` selects native List, Array, Deque, LinkedList or NonEmptyList\nelement operations without naming a family. It only moves the carrier and\npreserves the selected native error. The chosen family's shape and\ncapabilities still apply: Array keeps its length; NonEmptyList filtering\nproduces List. Other whole-value pipelines keep their existing semantics.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. Observation preserves the selected family and native error context.\nMapping rebinds RebindingFunctor; filtering follows FilteredFamily or MapFilteredFamily; NonEmptyList filtering\ncontinues as List because it may discard every element.\n\n`flat_tap` and `flat_pair_with` sequence borrowing effects through the\nselected Monad, retaining originals or pairing them with each projection.\n`before` sequences a factory and keeps originals; `followed_by` keeps its\nproduced payloads. The family owns skipping, branching and deferred timing.\nRetained originals need Copyable only when successful effects duplicate them.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional, Result or declared effect family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nMapping conveniences retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\n`if_effect(on_true, on_false)` uses the selected Monad's Bool condition.\nA failed or absent condition skips both factories. Native closures remain\nborrowed; thin pointers and library factories are owned. Repeated sources\nrequire repeatable factories. Deferred families retain their invocation\ntiming and can join distinct carrier representations with one payload type.\n\n`par_map_n`, `par_product_n`, `par_traverse` and `par_sequence` use ordered\nValidation accumulation for stored Result errors. Native raises stop\nimmediately. List-valued errors infer concatenation; an explicit Semigroup\nselects another error policy. N-ary methods retain the selected source\nfamily; accumulating traversal continues in the resulting Result family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
+   "description": "Start with `pipeline(value)` for native carriers, declared effect recipes or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. `run(environment)`\nexecutes Reader, `run(state)` executes State, and `run()` unwraps Writer.\n`run_io()` executes IO with its exact outcome and cancellation boundary.\n`guarantee` and `on_cancel` attach deferred IO cleanup. These delegate to\nthe existing effect runners and finalization owner. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`elements()` selects native List, Array, Deque, LinkedList or NonEmptyList\nelement operations without naming a family. It only moves the carrier and\npreserves the selected native error. The chosen family's shape and\ncapabilities still apply: Array keeps its length; NonEmptyList filtering\nproduces List. Other whole-value pipelines keep their existing semantics.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. Observation preserves the selected family and native error context.\nMapping rebinds RebindingFunctor; filtering follows FilteredFamily or MapFilteredFamily; NonEmptyList filtering\ncontinues as List because it may discard every element.\n\n`flat_tap` and `flat_pair_with` sequence borrowing effects through the\nselected Monad, retaining originals or pairing them with each projection.\n`before` sequences a factory and keeps originals; `followed_by` keeps its\nproduced payloads. The family owns skipping, branching and deferred timing.\nRetained originals need Copyable only when successful effects duplicate them.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional, Result or declared effect family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nMapping conveniences retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\n`if_effect(on_true, on_false)` uses the selected Monad's Bool condition.\nA failed or absent condition skips both factories. Native closures remain\nborrowed; thin pointers and library factories are owned. Repeated sources\nrequire repeatable factories. Deferred families retain their invocation\ntiming and can join distinct carrier representations with one payload type.\n\n`par_map_n`, `par_product_n`, `par_traverse` and `par_sequence` use ordered\nValidation accumulation for stored Result errors. Native raises stop\nimmediately. List-valued errors infer concatenation; an explicit Semigroup\nselects another error policy. N-ary methods retain the selected source\nfamily; accumulating traversal continues in the resulting Result family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
    "fields": [
     {
      "description": "The carrier owned by this pipeline.",
@@ -158346,6 +158346,38 @@
       "summary": "Return the present Optional value or invoke a default factory only on absence."
      }
     ],
+    "guarantee": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The deferred cleanup program, consumed into the recipe.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A finalizer in the body's exact IO error family.",
+        "inferred": false,
+        "name": "Q",
+        "type": "ReaderAction",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A pipeline with masked cleanup and ordered body/cleanup failures.\nConstruction executes neither program; unopened scopes stay unopened.",
+       "type": "Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q], Self.E]"
+      },
+      "signature": "def guarantee[Q: ReaderAction](deinit self, var finalizer: Q) -> Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q], Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _FinalizerCompatible[_Reader[Self.V], Q]",
+      "summary": "Finalize an entered IO body after success, failure or cancellation."
+     }
+    ],
     "if_effect": [
      {
       "args": [
@@ -179061,6 +179093,38 @@
       },
       "signature": "def min_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable)",
       "summary": "Reduce the consumed source in order through the canonical terminal driver."
+     }
+    ],
+    "on_cancel": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The deferred cancellation cleanup, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A cleanup program in the body's exact IO error family.",
+        "inferred": false,
+        "name": "Q",
+        "type": "ReaderAction",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A pipeline retaining all body and cleanup errors. Ordinary success\nor failure skips cleanup unless cancellation was also observed.",
+       "type": "Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q, True], Self.E]"
+      },
+      "signature": "def on_cancel[Q: ReaderAction](deinit self, var finalizer: Q) -> Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q, True], Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _FinalizerCompatible[_Reader[Self.V], Q]",
+      "summary": "Run masked cleanup when an entered IO body observes cancellation."
      }
     ],
     "or_else": [
@@ -227803,6 +227867,44 @@
       },
       "signature": "def run(deinit self) -> _WriterFamily[Self.I].Unwrapped[Self.V] where conforms_to(Self.I, WriterFamily) and _WriterFamily[Self.I].CarrierCompatible[Self.V]",
       "summary": "Remove a Writer layer, returning its base carrier of `(log, value)`."
+     }
+    ],
+    "run_io": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The exact success, accumulated failure or cancellation outcome.",
+       "type": "IOContract[_Reader[Self.V]].Out"
+      },
+      "signature": "def run_io(deinit self) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible",
+      "summary": "Consume a selected IO program at its synchronous execution boundary."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The borrowed token; execution never resets it.",
+        "name": "token",
+        "type": "CancellationToken",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The exact IO outcome. An already-canceled token skips unopened work.",
+       "type": "IOContract[_Reader[Self.V]].Out"
+      },
+      "signature": "def run_io(deinit self, token: CancellationToken) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible",
+      "summary": "Execute with a shared cancellation token, preserving its current state."
      }
     ],
     "sequence": [

@@ -22,6 +22,24 @@ class GeneratedOverloadTests(unittest.TestCase):
     def test_selected_context_matches_the_generator(self):
         self.assertEqual(context.OUTPUT.read_text(), context.source())
 
+    def test_context_documentation_preserves_handwritten_regions(self):
+        before = ('    def run_io(deinit self, token: CancellationToken) -> Outcome:\n'
+                  '        """Preserve the token and return an IO outcome."""\n'
+                  '        return execute(self.value^, token)\n')
+        generated = ('    def map[C: Movable & Deinitable](deinit self, var function: C) -> Self.V:\n'
+                     '        """Map through the selected family."""\n'
+                     '        return apply(function^, self.value^)\n')
+        after = ('    def custom(var finalizer: Recipe) -> Recipe:\n'
+                 '        """Keep this domain-specific contract intact."""\n'
+                 '        return finalizer^\n')
+        for start, end, _ in context.SECTIONS:
+            with self.subTest(section=start):
+                rendered = context.documented(before + start + generated + end + after)
+                self.assertTrue(rendered.startswith(before + start))
+                self.assertTrue(rendered.endswith(end + after))
+                self.assertIn('Args:\n            function:', rendered)
+                self.assertEqual(rendered, context.documented(rendered))
+
     def test_partial_arities_match_the_generator(self):
         self.assertEqual(partial.OUTPUT.read_text(), partial.source())
 

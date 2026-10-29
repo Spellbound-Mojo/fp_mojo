@@ -6108,8 +6108,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "0b8befb56c4b42e6dff3a15c52149dd31b3edca4c3550d802c856f1a990d5ce0",
-     "signature": "def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error:"
+     "sha256": "dbbc3f71a0c6487937d615f773d58f59796ef9dc25d3f9c29fcb37685ced4872",
+     "signature": "def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q] where _FinalizerCompatible[P, Q]:"
     }
    ],
    "provider": "effects/finalization"
@@ -6212,8 +6212,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "24369ac986d1fac49f70d96ffd2e2dc703824f859e362f18383aeb9d3fa06f68",
-     "signature": "def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q, True] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error:"
+     "sha256": "fbba9a3f8c5d9f5528dd76b7adc0a2c4ba318e7689506cc3bb1851eddfaf481b",
+     "signature": "def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q, True] where _FinalizerCompatible[P, Q]:"
     }
    ],
    "provider": "effects/finalization"
@@ -14012,6 +14012,12 @@
       "signature": "def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> OptionalFamily.Element[Self.V] where OptionalFamily.CarrierCompatible[Self.V] and _ErrorCompatible[Self.E, X] and R == OptionalFamily.Element[Self.V]:"
      }
     ],
+    "guarantee": [
+     {
+      "sha256": "c90ffdfbd49f90f3fbb0014ed5dece58af06bb2a849bac9507bb88a81a66b00d",
+      "signature": "def guarantee[Q: ReaderAction](deinit self, var finalizer: Q) -> Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q], Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _FinalizerCompatible[_Reader[Self.V], Q]:"
+     }
+    ],
     "if_effect": [
      {
       "sha256": "24e2a03f9d87f9efc2e1a78ca66c7010440398f2274a84ac4faca46b6c67b9b0",
@@ -15402,6 +15408,12 @@
      {
       "sha256": "67f7688edbc2f25a6ffcf41d6766a201c776c7cd2110a90fab7e452c55b74206",
       "signature": "def min_by[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) raises X -> Pipeline[_NativeFamily[Optional[_FoldElement[Self.V]]], Optional[_FoldElement[Self.V]], Self.E] where _ErrorCompatible[Self.E, X] and P == _FoldElement[Self.V] and conforms_to(R, Comparable & Movable & Deinitable):"
+     }
+    ],
+    "on_cancel": [
+     {
+      "sha256": "4fa3e14833082bea2b2fac1124fe0c16f61189382b29aa2ae90166f7fee3a922",
+      "signature": "def on_cancel[Q: ReaderAction](deinit self, var finalizer: Q) -> Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q, True], Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _FinalizerCompatible[_Reader[Self.V], Q]:"
      }
     ],
     "or_else": [
@@ -18754,6 +18766,16 @@
      {
       "sha256": "7175172b3b189f65038006f87728721a08e4e1852a20de101283c2a711b17b75",
       "signature": "def run(deinit self) -> _WriterFamily[Self.I].Unwrapped[Self.V] where conforms_to(Self.I, WriterFamily) and _WriterFamily[Self.I].CarrierCompatible[Self.V]:"
+     }
+    ],
+    "run_io": [
+     {
+      "sha256": "e1ad98758b1f0f3e5d1b0db75954147b0d85c202b7e9fa6dad4737fdf7099fd9",
+      "signature": "def run_io(deinit self) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible:"
+     },
+     {
+      "sha256": "6c78896bfe81d17711d74a11b69f214e74841097327516bc8b5b5b1e0b39e963",
+      "signature": "def run_io(deinit self, token: CancellationToken) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible:"
      }
     ],
     "sequence": [

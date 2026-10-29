@@ -12,6 +12,8 @@ from .outcomes import Outcome, EffectFailure, ExitCase, _ExitState, _capture, _f
 from ._io_core import IO, IOContext, IOContract, _run_io, _settle
 from .scoped import ScopedIO, _run_scoped
 
+comptime _FinalizerCompatible[P: ReaderAction, Q: ReaderAction] = IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error
+
 
 def _finalize[P: ReaderAction, F: ScopedIO, o: ImmOrigin, only_cancel: Bool = False](var program: P, var finalizer: F, ref[o] env: IOContext[F.Error]
 ) -> Outcome[P.Value, F.Error] where IOContract[P].Compatible and IOContract[P].Error == F.Error and F.Input == ExitCase[F.Error]:
@@ -50,13 +52,12 @@ struct _IOGuarantee[P: ReaderAction, Q: ReaderAction, only_cancel: Bool = False]
     comptime Value = Self.P.Value
     comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
-        comptime assert IOContract[Self.P].Compatible and IOContract[Self.Q].Compatible
-        comptime assert IOContract[Self.Q].Error == Self.E
+        comptime assert _FinalizerCompatible[Self.P, Self.Q]
         return rebind_var[Self.Out[o]](_finalize[only_cancel=Self.only_cancel](self.program^, _ConstantFinalizer(self.finalizer^), rebind[IOContext[IOContract[Self.Q].Error]](env)))
 
 
 def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q
-) -> _IOGuarantee[P, Q] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error:
+) -> _IOGuarantee[P, Q] where _FinalizerCompatible[P, Q]:
     """Finalize an entered IO body exactly once, with cancellation masked.
 
     Finalization runs after success, failure or cancellation. All errors remain
@@ -77,7 +78,7 @@ def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q
 
 
 def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q
-) -> _IOGuarantee[P, Q, True] where IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error:
+) -> _IOGuarantee[P, Q, True] where _FinalizerCompatible[P, Q]:
     """Run masked cleanup only when the entered body observes cancellation.
 
     Also runs when the body both fails and observes cancellation. Ordinary

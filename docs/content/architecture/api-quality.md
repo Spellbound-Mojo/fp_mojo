@@ -148,6 +148,29 @@ a deferred base unexecuted. Generic callers forward the existing family
 admission predicates. The State example also uses `followed_by(get[State])`
 to remove a callback whose only purpose was to ignore the previous result.
 
+IO pipelines now compose finalization and execution without extracting and
+rewrapping intermediate recipes. The corresponding Cats Effect
+[syntax implementation](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel/shared/src/main/scala/cats/effect/kernel/syntax/MonadCancelSyntax.scala)
+delegates directly to its effect owner:
+
+```scala
+def guarantee(fin: F[Unit])(implicit F: MonadCancel[F, ?]): F[A] =
+  F.guarantee(wrapped, fin)
+```
+
+Pipeline's `guarantee` and `on_cancel` similarly call the existing IO operations;
+their shared finalizer-admission predicate lives with finalization. `run_io`
+delegates to the existing host boundary, with an optional shared token.
+Cancellation, cleanup order and exact outcomes retain their existing semantics.
+Generic selection constraints remain visible in method signatures so Mojo can
+prove them from public IO contracts. No callback-type hint or new execution
+implementation is needed.
+
+Context generation now shares one region inventory for source replacement and
+documentation. Generated overloads receive generated documentation;
+handwritten execution methods retain their own outcome and ownership contracts.
+A tooling regression checks preservation and idempotence across every region.
+
 ## Milestones and pass boundaries
 
 | Order | Milestone | Completion criterion |

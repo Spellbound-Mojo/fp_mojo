@@ -58,8 +58,16 @@ carrier of `(log, value)`; a deferred base remains unexecuted. These methods
 consume the pipeline and delegate to the existing effect runners. Reader
 borrows its environment, State consumes its state, and both retain the
 recipe's exact execution error independently of `raising[E]()`. Use `.get()`
-when the next caller should receive the unexecuted carrier. IO retains its
-explicit `run_io` boundary.
+when the next caller should receive the unexecuted carrier.
+
+For IO, `.guarantee(cleanup)` and `.on_cancel(cleanup)` consume a cleanup recipe
+from the same IO error family. Both remain deferred. `.run_io()` executes the
+selected IO pipeline; `.run_io(token)` uses the caller's cancellation token
+without resetting it. These methods preserve the existing IO outcome and
+finalization rules, including skipped unopened scopes and ordered errors.
+The [IO example](effects.md#io-cancellation-and-finalization) uses this
+chain without extracting and rewrapping intermediate recipes. The free
+`run_io`, `guarantee` and `on_cancel` functions remain available.
 
 This changes the default for declared effect recipes from Identity to their
 own family. To transform the whole recipe as a value, use `.then(function)`

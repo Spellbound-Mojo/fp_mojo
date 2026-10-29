@@ -116,7 +116,7 @@
     },
     "functions": {
       "scope": "Selected Pipeline, legacy Piped, composition, partial application and Kleisli.",
-      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands. Declared Reader, State, Writer and IO carriers select their family; erased transformer layers and alternative policies still need explicit selection. Whole-recipe mapping uses then or explicit Identity. Pipeline.run delegates to selected Reader, State or Writer runners; IO retains run_io.",
+      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands. Declared Reader, State, Writer and IO carriers select their family; erased transformer layers and alternative policies still need explicit selection. Whole-recipe mapping uses then or explicit Identity. Pipeline.run delegates to selected Reader, State or Writer runners; IO retains run_io. IO pipelines expose run_io, guarantee and on_cancel through the existing IO contracts and owners.",
       "evidence": [
         "docs/examples/selected_pipeline.mojo",
         "docs/examples/selected_workflow.mojo",
@@ -289,7 +289,21 @@
         "tests/compile_fail/pipeline_run_reuse.mojo",
         "tests/compile_fail/pipeline_run_shape.mojo",
         "tests/compile_fail/pipeline_run_state_argument.mojo",
-        "tests/compile_fail/pipeline_run_writer_family.mojo"
+        "tests/compile_fail/pipeline_run_writer_family.mojo",
+        "tests/runtime/test_pipeline_io.mojo",
+        "tests/ownership/test_pipeline_io.mojo",
+        "tests/compile_fail/pipeline_io_bad_token.mojo",
+        "tests/compile_fail/pipeline_io_cancel_error.mojo",
+        "tests/compile_fail/pipeline_io_capture_escape.mojo",
+        "tests/compile_fail/pipeline_io_context_escape.mojo",
+        "tests/compile_fail/pipeline_io_family.mojo",
+        "tests/compile_fail/pipeline_io_finalizer_reuse.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_error.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_reader.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_state.mojo",
+        "tests/compile_fail/pipeline_io_plain.mojo",
+        "tests/compile_fail/pipeline_io_reader.mojo",
+        "tests/compile_fail/pipeline_io_reuse.mojo"
       ]
     },
     "adt": {
@@ -651,7 +665,7 @@
     },
     "effects": {
       "scope": "Reader, State, Writer and transformer capabilities.",
-      "restrictions": "Deferred computations retain callback borrows and alternative representations. Public carrier predicates validate each layer; Reader result admission uses the actual run origin. Carrier stability and Writer identity restrictions remain documented. ReaderAction and StateAction family metadata requires Functor; inference preserves each recipe's declared family. Selected Pipeline.run retains family admission, exact execution errors and origins; Writer unwraps without executing a deferred base.",
+      "restrictions": "Deferred computations retain callback borrows and alternative representations. Public carrier predicates validate each layer; Reader result admission uses the actual run origin. Carrier stability and Writer identity restrictions remain documented. ReaderAction and StateAction family metadata requires Functor; inference preserves each recipe's declared family. Selected Pipeline.run retains family admission, exact execution errors and origins; Writer unwraps without executing a deferred base. Fluent IO finalization preserves the exact IO family, skipped unopened scopes, masking and ordered failures; shared cancellation tokens are never reset.",
       "evidence": [
         "docs/examples/environment_capabilities.mojo",
         "docs/examples/stateful_capabilities.mojo",
@@ -681,7 +695,21 @@
         "tests/compile_fail/pipeline_run_reuse.mojo",
         "tests/compile_fail/pipeline_run_shape.mojo",
         "tests/compile_fail/pipeline_run_state_argument.mojo",
-        "tests/compile_fail/pipeline_run_writer_family.mojo"
+        "tests/compile_fail/pipeline_run_writer_family.mojo",
+        "tests/runtime/test_pipeline_io.mojo",
+        "tests/ownership/test_pipeline_io.mojo",
+        "tests/compile_fail/pipeline_io_bad_token.mojo",
+        "tests/compile_fail/pipeline_io_cancel_error.mojo",
+        "tests/compile_fail/pipeline_io_capture_escape.mojo",
+        "tests/compile_fail/pipeline_io_context_escape.mojo",
+        "tests/compile_fail/pipeline_io_family.mojo",
+        "tests/compile_fail/pipeline_io_finalizer_reuse.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_error.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_reader.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_state.mojo",
+        "tests/compile_fail/pipeline_io_plain.mojo",
+        "tests/compile_fail/pipeline_io_reader.mojo",
+        "tests/compile_fail/pipeline_io_reuse.mojo"
       ]
     },
     "matching": {
@@ -742,6 +770,40 @@
         "tests/compile_fail/pipeline_run_shape.mojo",
         "tests/compile_fail/pipeline_run_state_argument.mojo",
         "tests/compile_fail/pipeline_run_writer_family.mojo"
+      ]
+    },
+    {
+      "name": "IO execution and finalization",
+      "methods": [
+        "run_io",
+        "guarantee",
+        "on_cancel"
+      ],
+      "status": "selected",
+      "families": "Selected IO[E]",
+      "callbacks": "Existing IO recipes; finalizers use the same exact IO error family.",
+      "ownership": "Consumes the pipeline and attached cleanup; native captures retain their ownership and origins.",
+      "errors": "Exact Outcome[Value, E], including ordered body and cleanup errors and cancellation state. No native error escapes run_io.",
+      "timing": "Composition is deferred. run_io executes synchronously; unopened scopes skip cleanup and tokens are never reset.",
+      "owner": [
+        "src/fp/effects/_io_core.mojo",
+        "src/fp/effects/finalization.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_pipeline_io.mojo",
+        "tests/ownership/test_pipeline_io.mojo",
+        "tests/compile_fail/pipeline_io_bad_token.mojo",
+        "tests/compile_fail/pipeline_io_cancel_error.mojo",
+        "tests/compile_fail/pipeline_io_capture_escape.mojo",
+        "tests/compile_fail/pipeline_io_context_escape.mojo",
+        "tests/compile_fail/pipeline_io_family.mojo",
+        "tests/compile_fail/pipeline_io_finalizer_reuse.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_error.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_reader.mojo",
+        "tests/compile_fail/pipeline_io_guarantee_state.mojo",
+        "tests/compile_fail/pipeline_io_plain.mojo",
+        "tests/compile_fail/pipeline_io_reader.mojo",
+        "tests/compile_fail/pipeline_io_reuse.mojo"
       ]
     },
     {

@@ -13,7 +13,7 @@ a reusable callable when you need to store or compose a computation.
 | Build a function to call later | `flow`, `compose` or `partial` | Pass the resulting callable directly to an operation |
 | Repeatedly call a native function with owned mutable state | `Capture[E]().stateful(step, state^)` | Pass `mut_ref(owner)` to map or traverse; inspect `state()` or consume `into_state()` afterward |
 | Acquire resources and release them after use | `resource[E](acquire, release)` | `.use(callback)` on the consumed scope |
-| Describe deferred IO with explicit finalization or cancellation | `delay[E](callback)` and IO operations | `run_io(program^)` at the execution boundary |
+| Describe deferred IO with explicit finalization or cancellation | `pipeline(delay[E](callback))` and `.guarantee(cleanup)` | `.run_io()` or `.run_io(token)` at the execution boundary |
 
 The [pipeline tutorial](../tutorial/pipelines.md), [iteration tutorial](../tutorial/iteration.md)
 and [Result tutorial](../tutorial/results.md) develop the first four choices.
@@ -26,7 +26,8 @@ or an erased transformer layer; see [effect-family inference](../reference/funct
 Finish a Reader chain with `.run(environment)`, a State chain with
 `.run(initial_state)`, or unwrap a Writer chain with `.run()`. Writer returns
 its base carrier without executing a deferred base. Use `.get()` to extract
-an unexecuted recipe and `run_io` at IO's execution boundary.
+an unexecuted recipe. IO pipelines use `.run_io()` at their execution boundary;
+the free `run_io(program^)` entry also remains available.
 
 ## Work directly with a Result
 

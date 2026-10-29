@@ -1,5 +1,5 @@
 from fp.functions import pipeline
-from fp.effects import delay, run_io, guarantee, canceled
+from fp.effects import delay, canceled
 
 def read_number() -> Int:
     print("read")
@@ -12,14 +12,14 @@ def finish():
     print("finalize")
 
 def main():
-    var program = guarantee(pipeline(delay[Error](read_number)).map(twice).get(), delay[Error](finish))
+    var program = pipeline(delay[Error](read_number)).map(twice).guarantee(delay[Error](finish))
     print("program ready")
-    var outcome = run_io(program^)
+    var outcome = program^.run_io()
     if outcome:
         var result = outcome.take()
         try:
             print("value:", result^.raise_on_err())
         except failure:
             print("errors:", len(failure.errors))
-    var cancellation = run_io(guarantee(canceled[Error](), delay[Error](finish)))
+    var cancellation = pipeline(canceled[Error]()).guarantee(delay[Error](finish)).run_io()
     print("canceled:", not cancellation)

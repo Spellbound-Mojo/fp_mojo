@@ -46,9 +46,11 @@ from fp.iteration.reductions import _find_map, _fold_map, _extremum, _IntSum, _S
 from fp.iteration.folds import fold_left as _context_fold_left, reduce_optional as _context_reduce_optional, fold_until as _context_fold_until
 from fp.data.control import ControlFlow
 from fp.data._result import Result
-from fp.effects.protocols import ReaderFamily, StateFamily, WriterFamily
+from fp.effects.protocols import ReaderFamily, StateFamily, WriterFamily, ReaderAction
 from fp.effects.operations import run as _run_effect, _Reader, _State
 from fp.effects.writer import run_writer as _run_writer
+from fp.effects._io_core import IOContract, CancellationToken, run_io as _run_pipeline_io
+from fp.effects.finalization import _FinalizerCompatible, _IOGuarantee, guarantee as _guarantee, on_cancel as _on_cancel
 
 comptime _ReaderFamily[I: Functor] = downcast[I, ReaderFamily]
 comptime _StateFamily[I: Functor] = downcast[I, StateFamily]
@@ -201,7 +203,9 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
     once with `raising[E]()`. Pure callbacks keep Never; library callbacks
     keep their declared errors. `get()` extracts the value. `run(environment)`
     executes Reader, `run(state)` executes State, and `run()` unwraps Writer.
-    These delegate to the existing effect runners. Map, flat_map,
+    `run_io()` executes IO with its exact outcome and cancellation boundary.
+    `guarantee` and `on_cancel` attach deferred IO cleanup. These delegate to
+    the existing effect runners and finalization owner. Map, flat_map,
     filter and filter_map delegate to the family's evaluation and ownership
     rules, including deferred execution and retained callback borrows.
 
@@ -353,6 +357,57 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact base carrier, preserving ownership and origins.
         """
         return _run_writer[_WriterFamily[Self.I]](self.value^)
+
+    # Keep selection facts visible to generic callers; a conditional alias hides
+    # these proofs from Mojo. IOContract remains the owner of IO admission.
+    def run_io(deinit self) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible:
+        """Consume a selected IO program at its synchronous execution boundary.
+
+        Returns:
+            The exact success, accumulated failure or cancellation outcome.
+        """
+        return _run_pipeline_io(rebind_var[_Reader[Self.V]](self.value^))
+
+    def run_io(deinit self, token: CancellationToken) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible:
+        """Execute with a shared cancellation token, preserving its current state.
+
+        Args:
+            token: The borrowed token; execution never resets it.
+
+        Returns:
+            The exact IO outcome. An already-canceled token skips unopened work.
+        """
+        return _run_pipeline_io(rebind_var[_Reader[Self.V]](self.value^), token)
+
+    def guarantee[Q: ReaderAction](deinit self, var finalizer: Q) -> Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q], Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _FinalizerCompatible[_Reader[Self.V], Q]:
+        """Finalize an entered IO body after success, failure or cancellation.
+
+        Parameters:
+            Q: A finalizer in the body's exact IO error family.
+
+        Args:
+            finalizer: The deferred cleanup program, consumed into the recipe.
+
+        Returns:
+            A pipeline with masked cleanup and ordered body/cleanup failures.
+            Construction executes neither program; unopened scopes stay unopened.
+        """
+        return Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q], Self.E](_guarantee(rebind_var[_Reader[Self.V]](self.value^), finalizer^))
+
+    def on_cancel[Q: ReaderAction](deinit self, var finalizer: Q) -> Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q, True], Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _FinalizerCompatible[_Reader[Self.V], Q]:
+        """Run masked cleanup when an entered IO body observes cancellation.
+
+        Parameters:
+            Q: A cleanup program in the body's exact IO error family.
+
+        Args:
+            finalizer: The deferred cancellation cleanup, consumed.
+
+        Returns:
+            A pipeline retaining all body and cleanup errors. Ordinary success
+            or failure skips cleanup unless cancellation was also observed.
+        """
+        return Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q, True], Self.E](_on_cancel(rebind_var[_Reader[Self.V]](self.value^), finalizer^))
 
     # --- selected context methods (generated) ---
     # Generated by scripts/generate_context.py; callbacks adapt signatures only.
