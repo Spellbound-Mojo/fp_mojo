@@ -19,27 +19,7 @@ from fp.callables.invoke import _OnceUnaryAvailable
 from fp.callables.products import _take_pair
 from fp.callables.native import NativeUnary, _Unary, _NativeBorrow, _Borrowing, _RaisingBorrowing
 from fp._internal.errors import _ErrorCompatible
-
-
-@fieldwise_init
-struct _Cell[T: Movable & Deinitable](Movable):
-    var lock: Atomic[UInt8]
-    var slot: Optional[Self.T]
-
-
-@fieldwise_init
-struct _Guard[T: Movable & Deinitable](Movable):
-    var cell: ArcPointer[_Cell[Self.T]]
-    def __deinit__(deinit self):
-        self.cell[].lock.store(0)
-
-
-def _try_lock[T: Movable & Deinitable](cell: ArcPointer[_Cell[T]]) -> Optional[_Guard[T]]:
-    """Attempt the canonical cell guard without blocking a cooperative poll."""
-    var expected = UInt8(0)
-    if cell[].lock.compare_exchange(expected, UInt8(1)):
-        return Optional(_Guard(cell.copy()))
-    return None
+from fp._internal.cells import _Cell, _Guard, _try_lock
 
 
 def _lock[T: Movable & Deinitable, E: Movable & Deinitable](cell: ArcPointer[_Cell[T]], context: IOContext[E]) -> Optional[_Guard[T]]:

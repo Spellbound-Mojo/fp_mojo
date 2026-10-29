@@ -55,7 +55,7 @@ struct Bind[P: Machine, F: UnaryContract & Movable & Deinitable](Machine):
             case 0:
                 _ = _tick(self.source, context)
                 if not self.source.done():
-                    return .pending(self.source._wait.copy())
+                    return .pending(self.source.waiting())
                 var outcome = self.source.take_outcome()
                 if not outcome or outcome.value().is_err():
                     self.phase = 3
@@ -77,7 +77,7 @@ struct Bind[P: Machine, F: UnaryContract & Movable & Deinitable](Machine):
             case 2:
                 _ = _tick(self.next.value(), rebind[IOContext[Self.Next.Error]](context))
                 if not self.next.value().done():
-                    return .pending(self.next.value()._wait.copy())
+                    return .pending(self.next.value().waiting())
                 self.phase = 3
                 return .ready(rebind_var[Outcome[Self.Value, Self.Error]](self.next.value().take_outcome()))
             case _:
@@ -138,7 +138,7 @@ struct Loop[F: UnaryContract & Movable & Deinitable](Machine):
             return .pending(Wait())
         _ = _tick(self.active.value(), context)
         if not self.active.value().done():
-            return .pending(self.active.value()._wait.copy())
+            return .pending(self.active.value().waiting())
         var outcome = self.active.value().take_outcome()
         self.active = None
         if not outcome or outcome.value().is_err():

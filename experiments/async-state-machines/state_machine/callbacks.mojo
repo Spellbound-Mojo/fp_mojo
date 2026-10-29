@@ -128,7 +128,7 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
             case 2:
                 _ = _tick(self.cleanup, rebind[IOContext[Self.C.Error]](self.masked.value()))
                 if not self.cleanup.done():
-                    var wait = self.cleanup._wait.copy()
+                    var wait = self.cleanup.waiting()
                     wait.interruptible = False
                     return .pending(wait^)
                 var cleanup = rebind_var[Outcome[NoneType, Self.Error]](self.cleanup.take_outcome())

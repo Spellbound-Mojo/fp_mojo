@@ -1,29 +1,11 @@
 """Typed resumable work with no coroutine intrinsics or context-switch ABI."""
-from std.atomic import Atomic
-from std.memory import ArcPointer, OwnedPointer
-from std.time import monotonic, sleep
+from std.memory import OwnedPointer
+from std.time import sleep
 from std.os import abort
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
 from fp.effects._io_core import _settle
 from fp.data import Result, Ok
-
-
-struct Signal(Copyable):
-    var _revision: ArcPointer[Atomic[UInt64]]
-
-    def __init__(out self):
-        self._revision = ArcPointer(Atomic(UInt64(0)))
-
-    def revision(self) -> UInt64:
-        return self._revision[].load()
-
-    def notify(self):
-        var old = self._revision[].load()
-        while True:
-            if old == UInt64.MAX:
-                abort("signal revision exhausted")
-            if self._revision[].compare_exchange(old, old + 1):
-                return
+from fp._internal.waking import _Event as Signal, _Runtime, _Ticket, _Subscription, _Waker, _Clock as Clock
 
 
 @fieldwise_init
@@ -97,6 +79,53 @@ struct Wait(Copyable):
         return self.runnable
 
 
+struct _Scheduled(Movable):
+    var runtime: _Runtime
+    var ticket: _Ticket
+    var subscriptions: List[_Subscription]
+
+    def __init__(out self, runtime: _Runtime, parent: Optional[_Ticket], tag: Int):
+        self.runtime = runtime.copy()
+        self.ticket = runtime.allocate(parent, tag)
+        self.subscriptions = List[_Subscription]()
+
+    def __deinit__(deinit self):
+        self.subscriptions.clear()
+        self.runtime.retire(self.ticket)
+
+    def begin(mut self):
+        self.subscriptions.clear()
+        self.runtime.begin(self.ticket)
+
+    def cancel_subscription(mut self, token: CancellationToken, target: _Waker):
+        var revision = token._event.revision()
+        self.subscriptions.append(token._event.subscribe(revision, target))
+        if token.requested():
+            _ = target.wake()
+
+    def arm[E: Movable & Deinitable](mut self, wait: Wait, context: IOContext[E]):
+        if wait.runnable:
+            self.runtime.arm(self.ticket, True, None)
+            return
+        if not wait.signal and not len(wait._wakes) and (not wait.interruptible or context._masked):
+            self.runtime.arm(self.ticket, False, wait.deadline)
+            return
+        var target = self.runtime.waker(self.ticket)
+        var deadline = wait.deadline.copy()
+        if wait.signal:
+            self.subscriptions.append(wait.signal.value().subscribe(wait.revision, target))
+        if wait.interruptible and not context._masked:
+            self.cancel_subscription(context._token, target)
+        for wake in wait._wakes:
+            if wake.signal:
+                self.subscriptions.append(wake.signal.value().subscribe(wake.revision, target))
+            if wake.token:
+                self.cancel_subscription(wake.token.value(), target)
+            if wake.deadline and (not deadline or wake.deadline.value() < deadline.value()):
+                deadline = wake.deadline.copy()
+        self.runtime.arm(self.ticket, wait.runnable, deadline)
+
+
 struct Step[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
     # Outer absence means pending; inner absence is a completed cancellation.
     var completed: Optional[Outcome[Self.T, Self.E]]
@@ -136,13 +165,17 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
     var _wait: Wait
     var entered: Bool
     var polls: Int
+    var _scheduled: Optional[_Scheduled]
+    var _tag: Int
 
-    def __init__(out self, var program: Self.P):
+    def __init__(out self, var program: Self.P, tag: Int = 0):
         self._program = Optional(OwnedPointer(program^))
         self._result = None
         self._wait = Wait()
         self.entered = False
         self.polls = 0
+        self._scheduled = None
+        self._tag = tag
 
     def __deinit__(deinit self):
         if self.entered and not self.done():
@@ -152,9 +185,30 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
         return not self._program
 
     def ready(self, now: Int, context: IOContext[Self.E]) -> Bool:
+        if self._scheduled:
+            return self._scheduled.value().runtime.ready(self._scheduled.value().ticket)
         return not self.done() and self._wait.ready(now, context)
 
+    def prepare(mut self, context: IOContext[Self.E]):
+        if not self.done() and not self._scheduled and context._runtime:
+            self._scheduled = Optional(_Scheduled(context._runtime.value(), context._parent, self._tag))
+
+    def poll_context(self, context: IOContext[Self.E]) -> IOContext[Self.E]:
+        var nested = context.copy()
+        if self._scheduled:
+            nested._parent = Optional(self._scheduled.value().ticket.copy())
+        return nested^
+
+    def waiting(self) -> Wait:
+        if self._scheduled:
+            var wait = Wait.never()
+            wait.interruptible = False
+            return wait^
+        return self._wait.copy()
+
     def enter(mut self, context: IOContext[Self.E]) -> Bool:
+        if self._scheduled:
+            self._scheduled.value().begin()
         if not self.entered and context.canceled():
             self.accept(Step[Self.T, Self.E].ready(None), context)
             return False
@@ -166,8 +220,11 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
         if step.completed:
             self._result = Optional(_settle(step^.outcome(), context))
             self._program = None
+            self._scheduled = None
         else:
             self._wait = step^.waiting()
+            if self._scheduled:
+                self._scheduled.value().arm(self._wait, context)
 
     def failed(self) -> Bool:
         return self.done() and (not self._result.value() or self._result.value().value().is_err())
@@ -179,10 +236,11 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
 
 
 def _tick[P: Machine](mut slot: _Slot[P, P.Value, P.Error], context: IOContext[P.Error]) -> Bool:
-    if not slot.ready(monotonic(), context):
+    slot.prepare(context)
+    if not slot.ready(context._clock.now(), context):
         return False
     if slot.enter(context):
-        var step = slot._program.value()[].poll(context)
+        var step = slot._program.value()[].poll(slot.poll_context(context))
         slot.accept(step^, context)
     return True
 
@@ -195,6 +253,8 @@ struct Task[P: Machine](Movable, not Deinitable):
     def __init__(out self, var program: Self.P, token: CancellationToken):
         self._slot = _Slot[Self.P, Self.P.Value, Self.P.Error](program^)
         self.context = IOContext[Self.P.Error](token.copy(), False)
+        self.context._runtime = Optional(_Runtime())
+        self._slot.prepare(self.context)
 
     def done(self) -> Bool:
         return self._slot.done()
@@ -206,18 +266,80 @@ struct Task[P: Machine](Movable, not Deinitable):
         self.context.request_cancel()
 
     def tick(mut self) -> Bool:
+        while self.context._runtime.value().fire_due(self.context._clock.now()):
+            pass
+        return self._poll_ready()
+
+    def _poll_ready(mut self) -> Bool:
         return _tick(self._slot, self.context)
 
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
         return self._slot.take_outcome()
 
 
+@fieldwise_init
+struct Progress(Copyable):
+    var completed: Bool
+    var runnable: Bool
+    var deadline: Optional[Int]
+    var polls: Int
+    var timers: Int
+
+
+struct Driver[P: Machine](Movable, not Deinitable):
+    """Nonblocking host boundary; the linear owner still includes all cleanup."""
+    var task: Task[Self.P]
+    var _timer_turn: Bool
+
+    def __init__(out self, var program: Self.P, token: CancellationToken, clock: Clock):
+        self.task = Task(program^, token)
+        self.task.context._clock = clock.copy()
+        self._timer_turn = True
+
+    def __init__(out self, var program: Self.P):
+        self = Self(program^, CancellationToken(), Clock())
+
+    def cancel(self):
+        self.task.cancel()
+
+    def poll(mut self, budget: Int) -> Progress:
+        if budget < 0:
+            abort("driver budget must be nonnegative")
+        var polls = 0
+        var timers = 0
+        while polls + timers < budget and not self.task.done():
+            var now = self.task.context._clock.now()
+            var ready = self.task.ready(now)
+            if (self._timer_turn or not ready) and self.task.context._runtime.value().fire_due(now):
+                timers += 1
+                self._timer_turn = False
+            elif ready:
+                _ = self.task._poll_ready()
+                polls += 1
+                self._timer_turn = True
+            else:
+                break
+        var deadline = self.task.context._runtime.value().next_deadline()
+        var ready = not self.task.done() and (self.task.ready(self.task.context._clock.now()) or (Bool(deadline) and deadline.value() <= self.task.context._clock.now()))
+        return Progress(self.task.done(), ready, deadline^, polls, timers)
+
+    def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
+        return self.task^.finish()
+
+
+def _host_idle(progress: Progress):
+    # Compatibility fallback only. Driver.poll never calls this function.
+    if not progress.runnable and not progress.completed:
+        sleep(0.001)
+
+
 def run[P: Machine](var program: P, token: CancellationToken) -> Outcome[P.Value, P.Error]:
-    var task = Task(program^, token)
-    while not task.done():
-        if not task.tick():
-            sleep(0.001)
-    return task^.finish()
+    var driver = Driver(program^, token, Clock())
+    var progress = driver.poll(64)
+    while not progress.completed:
+        _host_idle(progress)
+        progress = driver.poll(64)
+    return driver^.finish()
 
 
 def run[P: Machine](var program: P) -> Outcome[P.Value, P.Error]:
@@ -228,13 +350,14 @@ def run_pair[P: Machine, Q: Machine](var first: P, var second: Q,
     first_token: CancellationToken, second_token: CancellationToken
 ) -> Tuple[Outcome[P.Value, P.Error], Outcome[Q.Value, Q.Error]]:
     """Finite batch driver; each ready task gets at most one poll per round."""
-    var left = Task(first^, first_token)
-    var right = Task(second^, second_token)
-    while not left.done() or not right.done():
-        var progress = left.tick()
-        progress = right.tick() or progress
-        if not progress:
-            # Tasks stay parked; this host-idle strategy is deliberately basic.
+    var left = Driver(first^, first_token, Clock())
+    var right = Driver(second^, second_token, Clock())
+    while True:
+        var a = left.poll(1)
+        var b = right.poll(1)
+        if a.completed and b.completed:
+            break
+        if not a.runnable and not b.runnable:
             sleep(0.001)
     return (left^.finish(), right^.finish())
 
@@ -254,7 +377,7 @@ struct Sleep[E: Movable & Deinitable](Machine):
     def poll(mut self, context: IOContext[Self.E]) -> Step[NoneType, Self.E]:
         if context.canceled():
             return Step[NoneType, Self.E].ready(None)
-        var now = monotonic()
+        var now = context._clock.now()
         if not self._deadline:
             if now > Int.MAX - self._duration:
                 abort("monotonic deadline overflow")

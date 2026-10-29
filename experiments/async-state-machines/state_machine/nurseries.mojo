@@ -3,7 +3,6 @@ from std.atomic import Atomic
 from std.collections import Deque
 from std.memory import ArcPointer
 from std.os import abort
-from std.time import monotonic
 from fp.data import Result, Ok
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
 from fp.effects.coordination import _Cell, _lock, _try_lock, _try_pop
@@ -89,6 +88,7 @@ struct Nursery[P: Machine](Machine):
     var _turn: Int
     var _phase: Int
     var _collected: Int
+    var _active: Int
     var _result: Optional[Outcome[Self.Value, Self.Error]]
 
     def __init__(out self, limit: Int):
@@ -102,6 +102,7 @@ struct Nursery[P: Machine](Machine):
         self._turn = 0
         self._phase = 0
         self._collected = 0
+        self._active = 0
         self._result = Optional(Outcome[Self.Value, Self.Error](Result[Self.Value, EffectFailure[Self.Error]](Ok(Self.Value()))))
 
     def __deinit__(deinit self):
@@ -148,27 +149,38 @@ struct Nursery[P: Machine](Machine):
             closed = incoming.closed
             more = incoming.more
             if incoming.program:
-                var child = _Child[Self.P, Self.P.Value, Self.P.Error](incoming.program.take())
+                var child = _Child[Self.P, Self.P.Value, Self.P.Error](incoming.program.take(), len(self._children))
                 if self._drain.requested:
                     child.cancel()
+                child.attach(context)
                 self._children.append(child^)
+                self._active += 1
         var count = len(self._children)
-        var now = monotonic()
-        for offset in range(count):
-            var index = (self._turn + offset) % count
-            if self._children[index].ready(now):
-                self._turn = (index + 1) % count
-                _ = _tick(self._children[index].slot, self._children[index].context)
-                self._stop(context, self._children[index].slot.failed())
-                break
-        var complete = closed and not more
+        var selected: Optional[Int] = None
+        if context._runtime and context._parent:
+            selected = context._runtime.value().next_child(context._parent.value())
+        else:
+            var now = context._clock.now()
+            for offset in range(count):
+                var index = (self._turn + offset) % count
+                if self._children[index].ready(now):
+                    self._turn = (index + 1) % count
+                    selected = Optional(index)
+                    break
+        if selected:
+            var index = selected.value()
+            _ = _tick(self._children[index].slot, self._children[index].context)
+            if self._children[index].slot.done():
+                self._active -= 1
+            self._stop(context, self._children[index].slot.failed())
+        var complete = closed and not more and self._active == 0
         var wait = self._drain.waiting()
         wait.signal = Optional(self._admission._signal.copy())
         wait.revision = revision
         wait.runnable = more
-        for index in range(count):
-            complete = complete and self._children[index].slot.done()
-            self._children[index].include(wait)
+        if not context._runtime:
+            for index in range(count):
+                self._children[index].include(wait)
         if complete:
             self._phase = 1
             return .pending(Wait())

@@ -1,5 +1,4 @@
 """Structured child pairs: one owner, independent tokens, and complete draining."""
-from std.time import monotonic
 from std.os import abort
 from fp.effects import CancellationToken, IOContext
 from fp.effects.outcomes import _zip_outcomes
@@ -11,9 +10,13 @@ struct _Child[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dei
     var slot: _Slot[Self.P, Self.T, Self.E]
     var context: IOContext[Self.E]
 
-    def __init__(out self, var program: Self.P):
-        self.slot = _Slot[Self.P, Self.T, Self.E](program^)
+    def __init__(out self, var program: Self.P, tag: Int = 0):
+        self.slot = _Slot[Self.P, Self.T, Self.E](program^, tag)
         self.context = IOContext[Self.E](CancellationToken(), False)
+
+    def attach(mut self, parent: IOContext[Self.E]):
+        self.context._inherit(parent)
+        self.slot.prepare(self.context)
 
     def cancel(self):
         if not self.slot.done():
@@ -23,7 +26,7 @@ struct _Child[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dei
         return self.slot.ready(now, self.context)
 
     def include(self, mut wait: Wait):
-        if not self.slot.done():
+        if not self.slot.done() and not self.slot._scheduled:
             wait.include(self.slot._wait, self.context)
 
 
@@ -56,7 +59,7 @@ struct _Pair[P: Movable & Deinitable, Q: Movable & Deinitable,
 
     def __init__(out self, var left: Self.P, var right: Self.Q):
         self.left = _Child[Self.P, Self.T, Self.E](left^)
-        self.right = _Child[Self.Q, Self.U, Self.E](right^)
+        self.right = _Child[Self.Q, Self.U, Self.E](right^, 1)
         self.turn = 0
         self.drain = _Drain()
         self.completed = False
@@ -70,7 +73,12 @@ struct _Pair[P: Movable & Deinitable, Q: Movable & Deinitable,
         if self.completed:
             abort("child group polled after completion")
         self.stop_if_needed(context)
-        var now = monotonic()
+        self.left.attach(context)
+        self.right.attach(context)
+        if context._runtime and context._parent:
+            var next = context._runtime.value().next_child(context._parent.value())
+            return next.value() if next else -1
+        var now = context._clock.now()
         var left_ready = self.left.ready(now)
         var right_ready = self.right.ready(now)
         if left_ready and (self.turn == 0 or not right_ready):
@@ -121,10 +129,11 @@ def _tick_scoped[P: ScopedMachine, o: ImmOrigin](mut slot: _Slot[P, P.Value, P.E
     ref[o] value: P.Input, context: IOContext[P.Error]
 ) -> Bool:
     # Only this native invocation boundary differs from _tick; slot policy is shared.
-    if not slot.ready(monotonic(), context):
+    slot.prepare(context)
+    if not slot.ready(context._clock.now(), context):
         return False
     if slot.enter(context):
-        var step = slot._program.value()[].poll(value, context)
+        var step = slot._program.value()[].poll(value, slot.poll_context(context))
         slot.accept(step^, context)
     return True
 

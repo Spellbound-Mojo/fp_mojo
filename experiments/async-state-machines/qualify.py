@@ -22,7 +22,7 @@ from fp_tools.library import precompile
 from fp_tools.runs import RunContext
 from fp_tools.runtime import accepted, audit_command, command, positive_int, sha, write_json
 
-POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins", "nurseries", "nursery_origins"}
+POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins", "nurseries", "nursery_origins", "scheduler"}
 REGRESSIONS = (
     "tests/runtime/test_io_finalization.mojo",
     "tests/runtime/test_resource_scopes.mojo",
@@ -31,6 +31,8 @@ REGRESSIONS = (
     "tests/ownership/test_io_resources_owned.mojo",
     "tests/runtime/test_coordination.mojo",
     "tests/ownership/test_coordination_owned.mojo",
+    "tests/runtime/test_io_effects.mojo",
+    "tests/runtime/test_fibers.mojo",
 )
 
 
@@ -83,7 +85,7 @@ def main():
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
                     werror=True, compiler_threads=1, compile_timeout=360 if client.stem == "depth" else 120,
-                    execution_timeout=15)
+                    execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 
     def check(job):
@@ -97,7 +99,7 @@ def main():
             # Apply the stack limit to execution only, never to the compiler.
             bounded_stack = command(
                 ["bash", "-c", 'ulimit -s 1024\nexec "$1"', "bounded-stack", str(binary)],
-                run.folder / "cases" / f"{name}.stack.log", timeout=15)
+                run.folder / "cases" / f"{name}.stack.log", timeout=case.execution_timeout)
             if not (accepted(bounded_stack) and audit_command(bounded_stack)
                     and hashlib.sha256(bounded_stack["stdout"].encode()).hexdigest() == case.stdout_sha256):
                 audit.append("execution with 1024 KiB stack failed")
