@@ -84,6 +84,7 @@ nav:
       - Resumable async coordination: architecture/async-coordination.md
       - Structured async control plan: architecture/async-control-plan.md
       - Structured races and timeouts: architecture/async-racing.md
+      - Async integration workload: architecture/async-workload.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md

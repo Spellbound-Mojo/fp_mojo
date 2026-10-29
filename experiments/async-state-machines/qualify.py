@@ -22,7 +22,7 @@ from fp_tools.library import precompile
 from fp_tools.runs import RunContext
 from fp_tools.runtime import accepted, audit_command, command, positive_int, sha, write_json
 
-POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins", "nurseries", "nursery_origins", "scheduler", "async_coordination", "coordination_owned", "coordination_origins", "racing", "racing_origins", "timeouts"}
+POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins", "nurseries", "nursery_origins", "scheduler", "async_coordination", "coordination_owned", "coordination_origins", "racing", "racing_origins", "timeouts", "workload"}
 REGRESSIONS = (
     "tests/runtime/test_io_finalization.mojo",
     "tests/runtime/test_resource_scopes.mojo",
@@ -91,7 +91,7 @@ def main():
                 case = CompileCase.from_source(
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
-                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240}.get(client.stem, 120),
+                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "workload": 360}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 
