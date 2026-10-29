@@ -399,19 +399,45 @@ also derives it from the resource. This avoids requiring the compiler to
 transport associated-type equality through an independently inferred IOContext,
 and removes two casts from finalization.
 
-The compatibility probes found an existing limitation: resource methods reject
-stored thin native function pointers, including against the preceding packaged
-commit. This is separate from ordinary function and closure calls. The next
-signature pass will use the existing native ABI descriptors to address it.
+The compatibility probes found that resource methods rejected stored thin
+native pointers against the preceding packaged commit. The following pass
+addresses that gap.
+
+## Stored resource factories without adapters
+
+Cats Effect expresses `evalMap(f)` and `evalTap(f)` in terms of a resource's
+existing scope. Mojo's corresponding methods now accept a stored thin pointer
+with the same direct call syntax as a named function: `scope.eval_map(pointer)`.
+`use(pointer)` follows the same admission rule. Pointers are copied at admission;
+execution remains deferred in the existing scoped runner.
+
+The native signature generator emits all three admission surfaces from the
+shared read/result ABI descriptors. Pure, `raises Never` and typed-raising
+functions retain their exact signatures; the existing library-callable and
+closure parameter positions remain unchanged. Mutable and consuming callbacks
+are rejected because a resource factory borrows the acquired value.
+
+The scoped adapter retains the already inferred ReaderAction type as an
+explicit witness, with an exact equality check against the callback result.
+This keeps generic IO error proofs intact instead of re-projecting the program
+through a callback's associated result type. The default witness preserves
+existing scoped adapters. No invocation, capture storage or lifecycle policy
+is duplicated.
+
+Coverage includes all four register/memory ABI combinations, generic forwarding,
+move-only resource cleanup, abandonment, native build failures, and independent
+external value/error origins. Rejection fixtures use ordinary call syntax and
+check incompatible inputs, results, error families, conventions and escaping
+borrows. Generic helpers declaring native pointer types still need the native
+ABI bounds; concrete callers do not.
 
 ## Next passes
 
-1. Support stored thin callbacks at the resource use/projection boundary through
-   the existing native-signature descriptors. Preserve current positional
-   bindings and distinguish native ABI evidence from shared scope admission.
-2. Repeat the complete qualification and workflow/cost checkpoint after the
+1. Repeat the complete qualification and workflow/cost checkpoint after the
    Writer, resource and scope changes. Revisit remaining example-only factories
    using actual clients, ownership ledgers and generic callers as evidence.
+2. Use the measured workflow gaps to choose the next Cats-inspired convenience
+   operation, keeping execution and ownership in existing capability owners.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

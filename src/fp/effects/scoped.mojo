@@ -78,15 +78,18 @@ def _run_scoped[F: ScopedIO, o: ImmOrigin, c: ImmOrigin, E: Movable & Deinitable
 
 
 @fieldwise_init
-struct _ScopedFactory[F: BorrowCallContract & Movable & Deinitable](ScopedIO):
+struct _ScopedFactory[F: BorrowCallContract & Movable & Deinitable, P: ReaderAction = downcast[F.Result, ReaderAction]](ScopedIO):
     var function: Self.F
-    comptime Program = downcast[Self.F.Result, ReaderAction]
+    # Native admission can retain its already inferred ReaderAction witness.
+    # Re-projecting it through F.Result loses generic IO error equalities in 1.2.
+    comptime Program = Self.P
     comptime Input = Self.F.Payload
     comptime Value = Self.Program.Value
     comptime Error = IOContract[Self.Program].Error
     comptime BuildError = Self.F.Failure
     comptime Action[o: ImmOrigin] = Self.Program
     def build[o: ImmOrigin](deinit self, ref[o] value: Self.Input) raises Self.BuildError -> Self.Action[o]:
+        comptime assert Self.F.Result == Self.Program
         return rebind_var[Self.Program](_borrow_once_as[Self.BuildError](value, self.function^))
 
 

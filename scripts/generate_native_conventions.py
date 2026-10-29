@@ -3,6 +3,8 @@
 from pathlib import Path
 
 from native_signatures import (
+    MD,
+    factory_pointer,
     native_dispatch,
     NATIVE_INVOCATIONS,
     native_factories,
@@ -13,6 +15,9 @@ from native_signatures import (
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/callables/native.mojo"
+RESOURCE_OUTPUT = ROOT / "src/fp/effects/effectful_resources.mojo"
+RESOURCE_START = "    # --- resource callback admission (generated) ---\n"
+RESOURCE_END = "    # --- end resource callback admission ---\n"
 ADAPTER_START = "# --- native unary admission (generated) ---\n"
 ADAPTER_END = "# --- end native unary admission ---\n"
 BINARY_START = "# --- native binary admission (generated) ---\n"
@@ -227,6 +232,62 @@ def borrow_capture_pointers():
     return ''.join(out)
 
 
+def resource_callbacks():
+    """Adapt owned callbacks and copied thin pointers to one scoped IO owner."""
+    out = []
+    for name, projection in (("use", "Used"), ("eval_map", "EvalMapped"), ("eval_tap", "EvalTapped")):
+        def emit(parameters, argument, adapter, build, conditions, description, *, program=None):
+            factory = f"_ScopedFactory[{adapter}" + (", " + program if program else "") + "]"
+            result = f"Self.{projection}[{factory}]"
+            admission = [*conditions, f"_ScopedFactoryCompatible[{adapter}]",
+                         f"Self.ScopedCompatible[{factory}]"]
+            out.append(f'''\n    def {name}[{", ".join(parameters)}](deinit self, {argument}) -> {result} where {" and ".join(admission)}:
+        """{description}"""
+        return self^.{name}({build})
+''')
+
+        # Preserve the existing native parameter positions and ownership.
+        emit([f"F: BorrowCallContract & {MD}"], "var function: F", "F",
+             "_scoped_io(function^)", [],
+             "Adapt an input-independent IO factory to the shared scoped runner.")
+        for raising in (False, True):
+            error = "X" if raising else "Never"
+            parameters = ["P: AnyType", f"V: {MD}"] + ([f"X: {MD}"] if raising else [])
+            bound = "_RaisingBorrowing[P, V, X]" if raising else "_Borrowing[P, V]"
+            parameters += ["//", "F: " + bound]
+            adapter = native_adapter("borrow", ["P"], "V", error, "F", raising)
+            emit(parameters, "var function: F", adapter, adapter + "(function^)", [],
+                 "Adapt a native borrowing IO factory without executing it.")
+
+        # The resource fixes the input before native ABI inference. The shared
+        # fallback borrows a symbolic pointer only for admission, then copies it;
+        # no callback origin enters the resulting resource or IO program.
+        for raising in (False, True):
+            error = "X" if raising else "Never"
+            for abi in variants([Operand("Self.Value", "r", read_parameter="P")], "V"):
+                pointer = factory_pointer(abi)
+                parameters = [f"{p}: " + ("ReaderAction" + (" & RegisterPassable" if bound != MD else "")
+                                          if p == "V" else bound)
+                              for p, bound in abi.parameters]
+                parameters += ([f"X: {MD}"] if raising else [])
+                parameters += [f"{p}: {bound}" for p, bound in pointer.parameters] + ["//"]
+                signature = (f"def({abi.payloads[0]})" + (" raises X" if raising else "")
+                             + " thin -> V")
+                adapter = native_adapter("borrow", list(abi.payloads), "V", error,
+                                         "type_of(function)", raising)
+                emit(parameters, pointer.argument + ": " + signature, adapter,
+                     f"_ScopedFactory[{adapter}, V]({adapter}(function))", pointer.conditions,
+                     "Copy a stored thin IO factory into the existing callback owner; execution stays deferred.", program="V")
+    return "".join(out)
+
+
+def resource_source(text=None):
+    text = RESOURCE_OUTPUT.read_text() if text is None else text
+    before, remaining = text.split(RESOURCE_START, 1)
+    _, after = remaining.split(RESOURCE_END, 1)
+    return before + RESOURCE_START + resource_callbacks() + RESOURCE_END + after
+
+
 def source(text=None):
     text = OUTPUT.read_text() if text is None else text
     for name in NATIVE_INVOCATIONS:
@@ -252,3 +313,5 @@ def source(text=None):
 if __name__ == "__main__":
     OUTPUT.write_text(source())
     print(f"wrote {OUTPUT.relative_to(ROOT)}")
+    RESOURCE_OUTPUT.write_text(resource_source())
+    print(f"wrote {RESOURCE_OUTPUT.relative_to(ROOT)}")

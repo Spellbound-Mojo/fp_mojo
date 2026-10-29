@@ -495,11 +495,18 @@ importing private lifecycle types. The resource owns the error family; the
 factory must match it and the acquired input type. The scoped runner checks
 `Action[o]` against the declared value and error at the fresh execution origin.
 
-Ordinary native callbacks continue to be adapted by the resource methods.
+Native callbacks are adapted by the resource methods. `use`, `eval_map` and
+`eval_tap` also accept stored thin pointers directly, with no adapter or extra
+type arguments. The pointer is copied into the deferred program; reassigning
+the caller's pointer does not change an already constructed program. Native
+callbacks borrow the resource and must return an IO recipe in its error family.
+They may raise that exact error type or `Never` while constructing the recipe.
 Generic helpers can accept `ScopedIO` and callers can use `scoped_io(callback)`
-for an input-independent action. A stored thin function pointer is currently
-not accepted directly by these methods; named functions and closures remain
-supported.
+for an input-independent action. A helper which declares a generic native
+pointer type must also describe its register/memory calling convention in its
+type bounds, as required by Mojo's native function ABI. The resulting action
+keeps external borrow origins; it cannot borrow the fresh resource input unless
+the factory implements `ScopedIO` directly.
 
 These operations currently run through the synchronous cooperative IO backend.
 They establish effectful lifecycle semantics; suspending asynchronous execution

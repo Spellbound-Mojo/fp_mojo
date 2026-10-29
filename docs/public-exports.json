@@ -5126,6 +5126,38 @@
      {
       "sha256": "76a4b61a6cb2bd28c6282435ba9b4b12e26146cdc216372b72786c979b0bb7b3",
       "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]:"
+     },
+     {
+      "sha256": "c89ed3544fd5878162b9cca03e736d4bf25c5546f60cec326837ba6552c56ddf",
+      "signature": "def eval_map[V: ReaderAction, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "34f284bfc0204c5bf83d88841ca34cc1f22cd9ab1c74f40bc2a655281a3a5ed5",
+      "signature": "def eval_map[V: ReaderAction & RegisterPassable, //](deinit self, function: def(Self.Value) thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "2260dd42838ddfc5e2be08f8e7a58731b673da0185aa74237028de1f3e7ccef3",
+      "signature": "def eval_map[P: TrivialRegisterPassable, V: ReaderAction, //](deinit self, function: def(P) thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "dbcc3653e2f784f3dd2da46e89ce9c127dd6334fbce34fa6e6a91ebbc03b0478",
+      "signature": "def eval_map[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, //](deinit self, function: def(P) thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "02665ebab53d2d62de9081a5999ab6c2ec488ed2fc71330673504619c35c453c",
+      "signature": "def eval_map[V: ReaderAction, X: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) raises X thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "80a8957347d59845ff6f5369f1d7fcf481ec33aac37669f9653c425e16bcc2c3",
+      "signature": "def eval_map[V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.Value) raises X thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "c6b4127e276be4a7d9f16c47cd31b42c499c2f1efbf568cc2d09c7fa044b702a",
+      "signature": "def eval_map[P: TrivialRegisterPassable, V: ReaderAction, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "030d2a873a1e1c36e8dd9985f5f0b08818dbc39eadf1f26e473638f41d6aa6ba",
+      "signature": "def eval_map[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:"
      }
     ],
     "eval_tap": [
@@ -5144,6 +5176,38 @@
      {
       "sha256": "a4d5589b67e8524582aeadc70fda8e5894b9d3879b8ec5af0559190a7be04626",
       "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]:"
+     },
+     {
+      "sha256": "f7db587347ebad637281de283618f467866dffc88404dc0b9e34fa52e599b9c0",
+      "signature": "def eval_tap[V: ReaderAction, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "02c3fce8b0e54f0d7bf09f5893ed69b720b6092b847eae8f06a11fd3949cc64d",
+      "signature": "def eval_tap[V: ReaderAction & RegisterPassable, //](deinit self, function: def(Self.Value) thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "0fb69f2a18922633f9226f95e561e260e32160f0bb06589e3baf82cafc3660a6",
+      "signature": "def eval_tap[P: TrivialRegisterPassable, V: ReaderAction, //](deinit self, function: def(P) thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "70db1a79aec2f2571c350fd3994759a2a93bf9f223d519e3afb0a5ba6f8d1232",
+      "signature": "def eval_tap[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, //](deinit self, function: def(P) thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "ae1ae98451f47363d56ccefdd1b42fc6c11a32df75df9adf45d02809213e1313",
+      "signature": "def eval_tap[V: ReaderAction, X: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) raises X thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "f1be05a726c07b4f95e13b015cf06326020168f2af7259d1a362e49593c3534c",
+      "signature": "def eval_tap[V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.Value) raises X thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "54d35e21e5c6c074b719fc4d89a5933d02917dea79aeb95db993f859d788e560",
+      "signature": "def eval_tap[P: TrivialRegisterPassable, V: ReaderAction, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "9905515409d386ccceb450c24fafd975090705805f0484c9db9ad6f6c737fdf7",
+      "signature": "def eval_tap[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:"
      }
     ],
     "flat_map": [
@@ -5202,6 +5266,38 @@
      {
       "sha256": "d0a0140e7184e2e17749d385935da6da21cbdaa30f3a98009973433ff4b53395",
       "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]:"
+     },
+     {
+      "sha256": "35e8baf419e2efd6e8f3aca9804b2fba05807fc78f7a579f49209d2570423536",
+      "signature": "def use[V: ReaderAction, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "8d5ff67332e193b87173fb598dad013dd2ddc59ebd51d5acd655d480a9efc27d",
+      "signature": "def use[V: ReaderAction & RegisterPassable, //](deinit self, function: def(Self.Value) thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "b53d65f016587accdf56f748b319349f92123d4d4353047025ac92580190b7f2",
+      "signature": "def use[P: TrivialRegisterPassable, V: ReaderAction, //](deinit self, function: def(P) thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "b0f2a7957ef2b524f026f574d9827586d4d1466ed1681e77b87e0f135da0ed9e",
+      "signature": "def use[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, //](deinit self, function: def(P) thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:"
+     },
+     {
+      "sha256": "1d0f48ea98eca75f6c756d1cd34ff05fdc83561dd28dc4eda5de78bb7efe4745",
+      "signature": "def use[V: ReaderAction, X: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) raises X thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "b94262d0203926ed09f65d2bf5b16ca61a897a9d9954aa7d7675b39bad9d1579",
+      "signature": "def use[V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.Value) raises X thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "c24d9526f8c384ec780e83e167a8d0202cfa5eb08cb3d15fc79bf9a3b99ac66d",
+      "signature": "def use[P: TrivialRegisterPassable, V: ReaderAction, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:"
+     },
+     {
+      "sha256": "417752913bf48f897cffe93d80bff469a6325e20455fa3057faba37102bf8466",
+      "signature": "def use[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:"
      }
     ],
     "use_void": [

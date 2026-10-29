@@ -316,10 +316,11 @@ struct IOResource[O: _OpenScope](_ResourceType):
         return self^.use(_ConstantFinalizer[P, Self.Value](program^))
 
 
+    # --- resource callback admission (generated) ---
+
     def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Used[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]:
         """Adapt an input-independent IO factory to the shared scoped runner."""
-        var adapted = _scoped_io(function^)
-        return self^.use(adapted^)
+        return self^.use(_scoped_io(function^))
 
     def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]:
         """Adapt a native borrowing IO factory without executing it."""
@@ -329,10 +330,41 @@ struct IOResource[O: _OpenScope](_ResourceType):
         """Adapt a native borrowing IO factory without executing it."""
         return self^.use(_NativeBorrow[P, V, X, F, True](function^))
 
+    def use[V: ReaderAction, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.use(_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V](_NativeBorrow[Self.Value, V, Never, type_of(function), False](function)))
+
+    def use[V: ReaderAction & RegisterPassable, //](deinit self, function: def(Self.Value) thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.use(_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V](_NativeBorrow[Self.Value, V, Never, type_of(function), False](function)))
+
+    def use[P: TrivialRegisterPassable, V: ReaderAction, //](deinit self, function: def(P) thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.use(_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V](_NativeBorrow[P, V, Never, type_of(function), False](function)))
+
+    def use[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, //](deinit self, function: def(P) thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.use(_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V](_NativeBorrow[P, V, Never, type_of(function), False](function)))
+
+    def use[V: ReaderAction, X: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) raises X thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.use(_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V](_NativeBorrow[Self.Value, V, X, type_of(function), True](function)))
+
+    def use[V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.Value) raises X thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.use(_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V](_NativeBorrow[Self.Value, V, X, type_of(function), True](function)))
+
+    def use[P: TrivialRegisterPassable, V: ReaderAction, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.use(_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V](_NativeBorrow[P, V, X, type_of(function), True](function)))
+
+    def use[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.use(_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V](_NativeBorrow[P, V, X, type_of(function), True](function)))
+
     def eval_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]:
         """Adapt an input-independent IO factory to the shared scoped runner."""
-        var adapted = _scoped_io(function^)
-        return self^.eval_map(adapted^)
+        return self^.eval_map(_scoped_io(function^))
 
     def eval_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]:
         """Adapt a native borrowing IO factory without executing it."""
@@ -342,10 +374,41 @@ struct IOResource[O: _OpenScope](_ResourceType):
         """Adapt a native borrowing IO factory without executing it."""
         return self^.eval_map(_NativeBorrow[P, V, X, F, True](function^))
 
+    def eval_map[V: ReaderAction, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_map(_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V](_NativeBorrow[Self.Value, V, Never, type_of(function), False](function)))
+
+    def eval_map[V: ReaderAction & RegisterPassable, //](deinit self, function: def(Self.Value) thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_map(_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V](_NativeBorrow[Self.Value, V, Never, type_of(function), False](function)))
+
+    def eval_map[P: TrivialRegisterPassable, V: ReaderAction, //](deinit self, function: def(P) thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_map(_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V](_NativeBorrow[P, V, Never, type_of(function), False](function)))
+
+    def eval_map[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, //](deinit self, function: def(P) thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_map(_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V](_NativeBorrow[P, V, Never, type_of(function), False](function)))
+
+    def eval_map[V: ReaderAction, X: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) raises X thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_map(_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V](_NativeBorrow[Self.Value, V, X, type_of(function), True](function)))
+
+    def eval_map[V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.Value) raises X thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_map(_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V](_NativeBorrow[Self.Value, V, X, type_of(function), True](function)))
+
+    def eval_map[P: TrivialRegisterPassable, V: ReaderAction, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_map(_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V](_NativeBorrow[P, V, X, type_of(function), True](function)))
+
+    def eval_map[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_map(_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V](_NativeBorrow[P, V, X, type_of(function), True](function)))
+
     def eval_tap[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]:
         """Adapt an input-independent IO factory to the shared scoped runner."""
-        var adapted = _scoped_io(function^)
-        return self^.eval_tap(adapted^)
+        return self^.eval_tap(_scoped_io(function^))
 
     def eval_tap[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]:
         """Adapt a native borrowing IO factory without executing it."""
@@ -354,6 +417,39 @@ struct IOResource[O: _OpenScope](_ResourceType):
     def eval_tap[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]:
         """Adapt a native borrowing IO factory without executing it."""
         return self^.eval_tap(_NativeBorrow[P, V, X, F, True](function^))
+
+    def eval_tap[V: ReaderAction, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_tap(_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V](_NativeBorrow[Self.Value, V, Never, type_of(function), False](function)))
+
+    def eval_tap[V: ReaderAction & RegisterPassable, //](deinit self, function: def(Self.Value) thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_tap(_ScopedFactory[_NativeBorrow[Self.Value, V, Never, type_of(function), False], V](_NativeBorrow[Self.Value, V, Never, type_of(function), False](function)))
+
+    def eval_tap[P: TrivialRegisterPassable, V: ReaderAction, //](deinit self, function: def(P) thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_tap(_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V](_NativeBorrow[P, V, Never, type_of(function), False](function)))
+
+    def eval_tap[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, //](deinit self, function: def(P) thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, type_of(function), False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_tap(_ScopedFactory[_NativeBorrow[P, V, Never, type_of(function), False], V](_NativeBorrow[P, V, Never, type_of(function), False](function)))
+
+    def eval_tap[V: ReaderAction, X: Movable & Deinitable, q: ImmOrigin, //](deinit self, ref[q] function: def(Self.Value) raises X thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_tap(_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V](_NativeBorrow[Self.Value, V, X, type_of(function), True](function)))
+
+    def eval_tap[V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.Value) raises X thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]] where not conforms_to(Self.Value, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[Self.Value, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_tap(_ScopedFactory[_NativeBorrow[Self.Value, V, X, type_of(function), True], V](_NativeBorrow[Self.Value, V, X, type_of(function), True](function)))
+
+    def eval_tap[P: TrivialRegisterPassable, V: ReaderAction, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and not conforms_to(V, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_tap(_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V](_NativeBorrow[P, V, X, type_of(function), True](function)))
+
+    def eval_tap[P: TrivialRegisterPassable, V: ReaderAction & RegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> V) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]] where P == Self.Value and _ScopedFactoryCompatible[_NativeBorrow[P, V, X, type_of(function), True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V]]:
+        """Copy a stored thin IO factory into the existing callback owner; execution stays deferred."""
+        return self^.eval_tap(_ScopedFactory[_NativeBorrow[P, V, X, type_of(function), True], V](_NativeBorrow[P, V, X, type_of(function), True](function)))
+    # --- end resource callback admission ---
 
     def map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_Join[Self.O, _MapScopeFactory[_NativeBorrow[P, V, Never, F, False], Self.Error], False]] where P == Self.Value and _ErrorCompatible[Self.Error, Never]:
         """Adapt a native borrowing callback to the shared resource derivation."""
