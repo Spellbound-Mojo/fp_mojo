@@ -117,7 +117,7 @@ def methods(mode, carrier=None, *, inferred=False):
                 family_parameter = 'G: Applicative'
                 if mode == 'iter' and sequence:
                     family_parameter += f' = _InferredApplicative[{elem}]'
-                elif mode == 'iter' and name == 'traverse_tap' and kind == 'library':
+                elif mode == 'iter' and name in ('traverse_tap', 'filter_effect') and kind == 'library':
                     family_parameter += ' = _InferredApplicative[C.Result]'
                 params += [family_parameter, *native_params, 'X: AnyType = _InferError']
             retained_error = discard and carrier and carrier.name == 'Result'
@@ -158,12 +158,9 @@ def methods(mode, carrier=None, *, inferred=False):
                 raised=f'_EntryError[X, {plan.error}]'
                 result=plan.result
                 call=plan.invoke(family, 'G', source, callback, raised, callback_value, value)
-                # Use the admitted callback error directly. Requiring the
-                # compiler to reduce TraverseError here would defeat X's role
-                # as exact evidence in generic native forwarding. Family-added
-                # errors are still checked by the shared invocation boundaries.
-                callback_error=error if native else 'Never' if sequence else metadata.error
-                condition += f' and _ErrorCompatible[{raised}, {callback_error}]'
+                # Admission follows construction errors. Deferred target families
+                # retain predicate errors in the produced computation.
+                condition += f' and _ErrorCompatible[{raised}, {plan.before}]'
                 payload=f'G.Element[{"R" if native and not filtering else callback + ".Out"}]'
                 if filtering: condition += f' and G.Element[{"R" if native else metadata.result}] == Bool'
                 if compact:

@@ -368,6 +368,28 @@ adapter supplies the same typed borrowing contract and can use inferred target
 selection. The [native boundary record](../architecture/native-boundaries.md#mojo-12-compatibility)
 explains the compiler limit on unselected native error inference.
 
+## Filter with effects
+
+For a borrowing callable, `iterated(values^).filter_effect(predicate)` infers
+its target from the complete `Result` metadata. The target's payload must be
+Bool. Successful True results retain their original elements; False results
+discard them and continue. An absent Optional or stored Result error is a
+failure of the target effect, following that family's failure policy.
+
+Native predicates can use `BorrowSignature[Input, EffectOfBool, Error].capture`
+and the same inferred entry, or keep explicit `.filter_effect[Family](function)`
+selection. Named mutable predicates can be reused with `mut_ref(predicate)`.
+Linear targets retain move-only inputs; branching targets keep their existing
+copy requirements. Explicit Validation and third-party families remain supported.
+
+Postprocessing stays inside the effect. Reader and State defer both filtering
+and callback errors until execution. The same distinction between construction
+and execution applies to `traverse_filter` and `flat_traverse`, through Iter,
+free functions and Piped. A construction-error selector does not change a
+stored deferred computation's execution error.
+
+<!-- example: docs/examples/traversal_composition.mojo -->
+
 ## Sequence existing effects
 
 Use `iterated(effects^).sequence()` when the elements are already effects.

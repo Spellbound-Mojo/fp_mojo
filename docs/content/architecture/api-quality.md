@@ -693,12 +693,37 @@ State execution; and independent value/error origins. The native inference
 limitation described above is unchanged: this contract describes admitted
 library callables and existing native adapters.
 
+## Effectful iterator filtering and construction errors
+
+Iter's borrowing-callable `filter_effect` now infers the target from complete
+Result metadata, just like `traverse_tap`. The existing G parameter gains a
+default. Native adapters and shared or mutable callable references use that
+entry; raw native functions keep explicit family selection. Bool payload
+admission, retained ownership and target failure policies are unchanged.
+
+The larger test matrix exposed a separate admission defect: postprocessed
+traversals compared the callback's error to the construction error even when a
+target such as Reader deferred that callback. The shared generator now compares
+the source traversal's actual construction error with the selected entry error.
+The existing traversal and target-map boundaries still own error propagation.
+This correction applies consistently to free, Piped and Iter filtering and
+flattening; it adds no runtime wrapper or overload. Mojo 1.2 accepts the actual
+TraverseError projection in the existing generic native forwarding tests,
+including their positional bindings and explicit error selectors.
+
+Tests distinguish False decisions from target failure, preserve mutable observer
+state, validate branching and accumulation, and check move-only cleanup and
+independent origins. Deferred tests exercise native and library callbacks through
+all three entry surfaces, with construction remaining non-raising and exact Int
+failures appearing only at execution. Ordinary incompatible calls remain
+rejections; native invalid-call inference limits remain separately documented.
+
 ## Next passes
 
-1. Review remaining iterator effect callbacks against complete-result inference
-   and ownership contracts before expanding overload sets.
-2. Extend the public contract pattern to effectful filtering, sharing retention
+1. Extend the public contract pattern to effectful filtering, sharing retention
    and postprocessing metadata with its existing execution owners.
+2. Use those contracts to simplify generic filtering helpers and review the
+   remaining explicit iterator traversal selections.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

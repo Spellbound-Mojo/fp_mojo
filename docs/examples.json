@@ -334,7 +334,7 @@
       "stdout": "StateT[Result]: recovered value = 0 ; state = 10\nResultT[State]: recovered value = 0 ; state = 15\n"
     },
     "docs/examples/traversal_composition.mojo": {
-      "stdout": "kept: [10, 2, 20, 30]\nselected: [20]\nsequenced: [1, 10, 2, 20]\neffects succeeded: True\n"
+      "stdout": "kept: [10, 2, 20, 30]\nselected: [20]\nsequenced: [1, 10, 2, 20]\neffects succeeded: True\niterated selection: [2, 4]\n"
     },
     "docs/examples/value_defaults.mojo": {
       "stdout": "count: 0\nhost: localhost\ndefaults computed: 1\n"
