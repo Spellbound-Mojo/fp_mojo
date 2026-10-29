@@ -693,11 +693,16 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             before = f"{family}.TraverseError[J, Self.V, {retained}]"
             result, error = traversed, before
             conditions = ["conforms_to(Self.I, Traversable)"] + cb["conditions"]
-            conditions += [
-                f"_TraverseCompatible[{family}, Self.V, {retained}]",
-                f"_CarrierCompatible[J, {cb['result']}]",
-                f"{family}.TargetCompatible[J, Self.V, {retained}]",
-            ]
+            if filtering:
+                conditions += [
+                    f"_TraverseCompatible[{family}, Self.V, {retained}]",
+                    f"_CarrierCompatible[J, {cb['result']}]",
+                    f"{family}.TargetCompatible[J, Self.V, {retained}]",
+                ]
+            else:
+                contract = f"TraverseTapContract[{family}, J, Self.V, {cb['adapter_type']}]"
+                result, error = contract + ".Out", contract + ".Error"
+                conditions += [contract + ".FamilyCompatible"]
             expr = f"_traverse_as[{family}, J, Self.V, {retained}, {error}]({built}, self.value^)"
             summary = "Traverse borrowed effects and retain each original payload on success."
             if filtering:

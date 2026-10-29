@@ -20,6 +20,7 @@ struct _MapRetained[T: Movable & Deinitable, G: Functor, V: Movable & Deinitable
     comptime _Operation = MapContract[Self.G, Self.V, Self.Keep]
     comptime Out = Self._Operation.Out
     comptime Error = Self._Operation.Error
+    comptime InvocationCompatible = Self._Operation.InvocationCompatible
     def call(self, var value: Self.T, var produced: Self.V) raises Self.Error -> Self.Out:
         return Self.G.map(Self.Keep(value^), produced^)
 

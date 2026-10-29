@@ -668,12 +668,37 @@ move-only cleanup, deferred errors and observation, generic element types, and
 independent payload/error origins. The reuse example shares an observer without
 transferring its owner.
 
+## Public borrowing traversal admission
+
+`TraverseTapContract[S, G, V, C]` lets generic helpers name one public admission
+predicate and project the result, construction error and continuation family.
+It composes the source traversal, target map and shared retention kernel. The
+kernel's existing input and native-error assertions now use the same metadata
+that the public contract exposes. No new callback storage, loop or invocation
+boundary is introduced.
+
+Selected `traverse_tap` signatures delegate their existing family requirements
+to the descriptor. `Compatible` preserves those requirements, including their
+separation from input equality; expanded generic proofs still forward in both
+directions. New helpers use `InvocationCompatible` to additionally check the
+original observer receiver and the retention map. This rejects metadata-only
+observers, copying a move-only original into multiple List branches and
+incompatible observer/map exceptions at the helper boundary. The operation
+contract example demonstrates forwarding without private adapter types.
+
+Tests cover shared, mutable and consuming observers; Optional, Result, List,
+Validation and an independent Applicative; empty and skipped sources; exact
+family-added errors; move-only inputs, captures and errors; deferred Reader and
+State execution; and independent value/error origins. The native inference
+limitation described above is unchanged: this contract describes admitted
+library callables and existing native adapters.
+
 ## Next passes
 
-1. Expose borrowing traversal admission through the public contract vocabulary
-   so generic wrappers can forward it without naming private retention adapters.
-2. Review remaining iterator effect callbacks against the same complete-result
-   inference and ownership contracts before expanding overload sets.
+1. Review remaining iterator effect callbacks against complete-result inference
+   and ownership contracts before expanding overload sets.
+2. Extend the public contract pattern to effectful filtering, sharing retention
+   and postprocessing metadata with its existing execution owners.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

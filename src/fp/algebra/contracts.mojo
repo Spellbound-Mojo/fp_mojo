@@ -10,7 +10,7 @@ from std.builtin.rebind import downcast
 from ._primitive_contracts import MapContract, BindContract, CombineContract, FilterMapContract, FilterContract
 from .protocols import Functor, Monad, Traversable, Applicative
 from fp.iteration._advance import _OwnedElement
-from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
+from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallContract, BorrowCallable, _ErrorProbe
 from fp.callables._transforms import _ValueThunk, _Pair, _KeepOperand, _Apply, _Fill, _TupleWith
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
@@ -56,6 +56,49 @@ struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable,
     """The exact traversal result, retaining source shape and target effect."""
     comptime Error = Self.S.TraverseError[Self.G, Self.V, Self.F]
     """The exact native error raised when constructing the traversal."""
+
+
+struct TraverseTapContract[S: Traversable, G: Applicative, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]:
+    """Admission and exact result of traversing effects while retaining inputs.
+
+    Generic helpers forward InvocationCompatible and project Out and Error.
+    Compatible preserves selected traversal admission; InvocationCompatible
+    additionally checks the observer receiver, retention map and native errors.
+    These predicates compose the existing traversal and retention owners;
+    this descriptor neither stores callbacks nor executes them.
+
+    Parameters:
+        S: The source Traversable family.
+        G: The target Applicative family, including branching and deferral.
+        V: The complete consumed source carrier, including origins.
+        C: The borrowing observer producing a carrier in G.
+    """
+    comptime _Retained = _EffectRetain[Self.S.Element[Self.V], Self.G, Self.C]
+    comptime _Traverse = TraverseContract[Self.S, Self.G, Self.V, Self._Retained]
+    comptime InputCompatible = Self._Retained.InputCompatible
+    """The observer borrows the exact source element, including origins."""
+    comptime CarrierCompatible = Self.G.CarrierCompatible[Self.C.Result]
+    """The original observer result belongs to the target family."""
+    comptime SourceCompatible = Self._Traverse.SourceCompatible
+    """The source admits traversal with the retaining continuation."""
+    comptime TargetCompatible = Self._Traverse.TargetCompatible
+    """The source's selected target operations admit the continuation."""
+    comptime FamilyCompatible = Self.CarrierCompatible and Self.SourceCompatible and Self.TargetCompatible
+    """Existing selected traversal admission without input equality."""
+    comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
+    """The complete existing selected traverse_tap entry predicate."""
+    comptime ReceiverCompatible = Self._Retained.ReceiverCompatible
+    """The original observer has a shared, mutable or consuming receiver."""
+    comptime RetentionCompatible = Self._Retained.InvocationCompatible and Self._Retained.Finish.InvocationCompatible
+    """The existing retention kernel and target map admit the retained value."""
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible and Self.RetentionCompatible
+    """Checked admission for new generic wrappers, including retention."""
+    comptime Family = Self.G
+    """The family selected for fluent continuation over Out."""
+    comptime Out = Self._Traverse.Out
+    """The exact retained source shape inside the target effect."""
+    comptime Error = Self._Traverse.Error
+    """The construction error; deferred execution retains its own errors."""
 
 
 comptime FillContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _Fill[I.Element[V], U]]

@@ -200,6 +200,18 @@ predicates replace `G.CollectCompatible[V, F]` with
 `S.TargetCompatible[G, V, F]`. Custom sources whose traversal does not collect
 can override `TargetCompatible` with the requirements of their actual operations.
 
+For borrowing observation, use `TraverseTapContract[S, G, V, C]` and forward
+`InvocationCompatible`. `Out`, `Error` and `Family` describe the retained source
+inside the target effect and its construction error. This is the contract for
+Cats-style `traverseTap`: successful observations retain the original payloads.
+The observer's complete result must belong to G; input and stored-error origins
+remain exact. `Compatible` exposes the existing selected entry requirements.
+`InvocationCompatible` also checks the observer receiver and the target map that
+retains each input, including native-error compatibility. A branching List target
+requires copyable originals; linear targets can retain move-only originals.
+Deferred families retain their existing construction and execution timing.
+These descriptors express admission; they do not adapt or invoke callbacks.
+
 <!-- example: docs/examples/single_value_traversal.mojo -->
 
 Single-value traversal also supports deferred targets such as Reader and State.

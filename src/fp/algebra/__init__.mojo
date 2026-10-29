@@ -60,7 +60,7 @@ from .filtering import filter, filter_not, filter_map, compact
 from .operations import map, pure, flat_map, map2_lazy, traverse, empty, combine
 from .instances import IdentityFamily, OptionalFamily, ResultFamily, ListFamily
 from .collections import ArrayFamily, DequeFamily, LinkedListFamily
-from .contracts import ApContract, ProductContract, Map2Contract, IfContract, AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract, MapContract, FilterMapContract, BindContract, TraverseContract, FilterContract, CombineContract
+from .contracts import ApContract, ProductContract, Map2Contract, IfContract, AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract, MapContract, FilterMapContract, BindContract, TraverseContract, TraverseTapContract, FilterContract, CombineContract
 from .contracts import FillContract, VoidContract
 from .contracts import TupleLeftContract, TupleRightContract
 from .contracts import ProductLeftContract, ProductRightContract

@@ -6961,6 +6961,96 @@
    "summary": "The joint source and target contract of traversal with a library callable.",
    "traits": []
   },
+  "algebra.TraverseTapContract": {
+   "aliases": [
+    {
+     "description": "The observer borrows the exact source element, including origins.",
+     "name": "InputCompatible"
+    },
+    {
+     "description": "The original observer result belongs to the target family.",
+     "name": "CarrierCompatible"
+    },
+    {
+     "description": "The source admits traversal with the retaining continuation.",
+     "name": "SourceCompatible"
+    },
+    {
+     "description": "The source's selected target operations admit the continuation.",
+     "name": "TargetCompatible"
+    },
+    {
+     "description": "Existing selected traversal admission without input equality.",
+     "name": "FamilyCompatible"
+    },
+    {
+     "description": "The complete existing selected traverse_tap entry predicate.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The original observer has a shared, mutable or consuming receiver.",
+     "name": "ReceiverCompatible"
+    },
+    {
+     "description": "The existing retention kernel and target map admit the retained value.",
+     "name": "RetentionCompatible"
+    },
+    {
+     "description": "Checked admission for new generic wrappers, including retention.",
+     "name": "InvocationCompatible"
+    },
+    {
+     "description": "The family selected for fluent continuation over Out.",
+     "name": "Family"
+    },
+    {
+     "description": "The exact retained source shape inside the target effect.",
+     "name": "Out"
+    },
+    {
+     "description": "The construction error; deferred execution retains its own errors.",
+     "name": "Error"
+    }
+   ],
+   "description": "Generic helpers forward InvocationCompatible and project Out and Error.\nCompatible preserves selected traversal admission; InvocationCompatible\nadditionally checks the observer receiver, retention map and native errors.\nThese predicates compose the existing traversal and retention owners;\nthis descriptor neither stores callbacks nor executes them.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The source Traversable family.",
+     "inferred": false,
+     "name": "S",
+     "type": "Traversable",
+     "variadic": false
+    },
+    {
+     "description": "The target Applicative family, including branching and deferral.",
+     "inferred": false,
+     "name": "G",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The borrowing observer producing a carrier in G.",
+     "inferred": false,
+     "name": "C",
+     "type": "BorrowCallContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "struct TraverseTapContract[S: Traversable, G: Applicative, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]",
+   "summary": "Admission and exact result of traversing effects while retaining inputs.",
+   "traits": []
+  },
   "algebra.TupleLeftContract": {
    "aliases": [],
    "description": "This specializes MapContract with the canonical tuple callback. Generic code\nforwards InvocationCompatible, returns Out and raises Error. Fluent wrappers\nalso project Family and retain their selected Pipeline error parameter. The\nfamily's map policy moves the attachment for a single invocation or requires\nCopyable for repetition. All origins remain exact. Error describes construction\nof Out; a deferred family's execution-time errors remain part of that family.",
@@ -239258,7 +239348,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -239279,9 +239369,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Result]](deinit self, var function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, False]], Self.E] where conforms_to(Self.I, Traversable) and C.Payload == Self.I.Element[Self.V] and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, False]] and _CarrierCompatible[J, C.Result] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C, False]]",
+      "signature": "def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Result]](deinit self, var function: C) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, C].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, C].Out, Self.E] where conforms_to(Self.I, Traversable) and C.Payload == Self.I.Element[Self.V] and TraverseTapContract[_Traversing[Self.I], J, Self.V, C].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239295,7 +239385,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, C._BorrowView[o]].Error",
       "parameters": [
        {
         "description": "",
@@ -239323,9 +239413,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, C._BorrowView[o]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[C: _BorrowViewable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[C._BorrowView[o].Result]](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]], Self.E] where conforms_to(Self.I, Traversable) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]] and _CarrierCompatible[J, C._BorrowView[o].Result] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, C._BorrowView[o], False]]",
+      "signature": "def traverse_tap[C: _BorrowViewable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[C._BorrowView[o].Result]](deinit self, ref[o] function: C) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, C._BorrowView[o]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, C._BorrowView[o]].Out, Self.E] where conforms_to(Self.I, Traversable) and C._BorrowView[o].Payload == Self.I.Element[Self.V] and TraverseTapContract[_Traversing[Self.I], J, Self.V, C._BorrowView[o]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239339,7 +239429,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -239374,9 +239464,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(Self.I.Element[Self.V]) -> R = def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o], False]]",
+      "signature": "def traverse_tap[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(Self.I.Element[Self.V]) -> R = def(Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239390,7 +239480,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -239425,9 +239515,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(Self.I.Element[Self.V]) raises Self.E -> R = def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o], False]]",
+      "signature": "def traverse_tap[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(Self.I.Element[Self.V]) raises Self.E -> R = def(Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239441,7 +239531,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -239476,9 +239566,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(Self.I.Element[Self.V]) raises Never -> R = def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False]], Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o], False]]",
+      "signature": "def traverse_tap[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(Self.I.Element[Self.V]) raises Never -> R = def(Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and Self.E != Never and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrowRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239492,7 +239582,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -239513,9 +239603,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(Self.I.Element[Self.V]) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]], Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]]",
+      "signature": "def traverse_tap[R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(Self.I.Element[Self.V]) thin -> R) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239529,7 +239619,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -239550,9 +239640,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(Self.I.Element[Self.V]) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]], Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False], False]]",
+      "signature": "def traverse_tap[R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(Self.I.Element[Self.V]) thin -> R) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, Never, def(Self.I.Element[Self.V]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239566,7 +239656,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -239594,9 +239684,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(P) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]], Self.E] where conforms_to(Self.I, Traversable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]]",
+      "signature": "def traverse_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(P) thin -> R) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239610,7 +239700,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -239638,9 +239728,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(P) thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]], Self.E] where conforms_to(Self.I, Traversable) and P == Self.I.Element[Self.V] and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, Never, def(P) thin -> R, False], False]]",
+      "signature": "def traverse_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(P) thin -> R) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and P == Self.I.Element[Self.V] and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, Never, def(P) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239654,7 +239744,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -239682,9 +239772,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]], Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]]",
+      "signature": "def traverse_tap[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(Self.I.Element[Self.V]) raises X thin -> R) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239698,7 +239788,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -239726,9 +239816,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(Self.I.Element[Self.V]) raises X thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]], Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True], False]]",
+      "signature": "def traverse_tap[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(Self.I.Element[Self.V]) raises X thin -> R) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and not conforms_to(Self.I.Element[Self.V], TrivialRegisterPassable) and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[Self.I.Element[Self.V], R, X, def(Self.I.Element[Self.V]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239742,7 +239832,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -239777,9 +239867,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(P) raises X thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]], Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]]",
+      "signature": "def traverse_tap[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(P) raises X thin -> R) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and not conforms_to(R, RegisterPassable) and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      },
      {
@@ -239793,7 +239883,7 @@
        }
       ],
       "description": "",
-      "error": "_Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]]",
+      "error": "TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -239828,9 +239918,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]], Self.E]"
+       "type": "Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(P) raises X thin -> R) raises _Traversing[Self.I].TraverseError[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]], Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and _TraverseCompatible[_Traversing[Self.I], Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]] and _CarrierCompatible[J, R] and _Traversing[Self.I].TargetCompatible[J, Self.V, _TraverseTap[Self.I.Element[Self.V], J, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True], False]]",
+      "signature": "def traverse_tap[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(P) raises X thin -> R) raises TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Error -> Pipeline[J, TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and _ErrorCompatible[Self.E, X] and P == Self.I.Element[Self.V] and TraverseTapContract[_Traversing[Self.I], J, Self.V, _NativeBorrow[P, R, X, def(P) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse borrowed effects and retain each original payload on success."
      }
     ],

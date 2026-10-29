@@ -1,6 +1,6 @@
 """Public contracts name generic operation admission, results and native errors."""
-from fp.algebra import Functor, MapContract, FillContract, VoidContract, TupleRightContract, Applicative, Traversable, TraverseContract, ListFamily, OptionalFamily
-from fp.callables import UnaryContract, Unary
+from fp.algebra import Functor, MapContract, FillContract, VoidContract, TupleRightContract, Applicative, Traversable, TraverseContract, TraverseTapContract, ListFamily, OptionalFamily
+from fp.callables import UnaryContract, Unary, BorrowCallContract, BorrowSignature
 from fp.functions import pipeline, Identity
 from std.testing import assert_equal
 
@@ -14,6 +14,12 @@ def gather[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryCont
     var values: V, var function: F
 ) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].Compatible:
     return pipeline[S](values^).traverse[G](function^).get()
+
+
+def observed[S: Traversable, G: Applicative, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](
+    var values: V, var callback: C
+) raises TraverseTapContract[S,G,V,C].Error -> TraverseTapContract[S,G,V,C].Out where TraverseTapContract[S,G,V,C].InvocationCompatible:
+    return pipeline[S](values^).traverse_tap[G](callback^).get()
 
 
 def filled[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable](
@@ -56,3 +62,6 @@ def main() raises:
     var paired = attached[OptionalFamily](Optional(3), attached_values^)
     ref pair = paired.value()
     print("attached:", pair[0], pair[1])
+    def check(value: Int) -> Optional[Int]: return Optional(value) if value > 0 else None
+    var kept = observed[ListFamily,OptionalFamily](List[Int]([3,7]),BorrowSignature[Int,Optional[Int]].capture(check))
+    print("observed:", kept.value())
