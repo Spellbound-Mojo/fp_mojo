@@ -2338,6 +2338,47 @@
    "summary": "Admission, output family and construction error of selected flat_tap_err.",
    "traits": []
   },
+  "algebra.FlatTraverseContract": {
+   "aliases": [],
+   "description": "Generic helpers forward InvocationCompatible and project Out, Error and Family.\nCompatible preserves the selected flat_traverse/flat_sequence requirements;\nInvocationCompatible additionally checks the callback receiver, finishing map\nand construction-error compatibility. The source's bind and target's map retain\ntheir existing ownership, branching and evaluation policies.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The source family, supporting traversal and binding.",
+     "inferred": false,
+     "name": "S",
+     "type": "Traversable & Monad",
+     "variadic": false
+    },
+    {
+     "description": "The target Applicative family.",
+     "inferred": false,
+     "name": "G",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The library callback returning source-family carriers inside G.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/_traversal",
+   "signature": "comptime FlatTraverseContract[S: Traversable & Monad, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _FinishedTraversalContract[S, G, V, F, _FlattenAfter[S, G.Element[S.Traversed[G, V, F]]], S.CarrierCompatible[G.Element[F.Out]] and S.BindCompatible[G.Element[S.Traversed[G, V, F]], Identity[S.Element[G.Element[S.Traversed[G, V, F]]]]]]",
+   "summary": "Admission and exact result of traversal flattening one source-family layer.",
+   "traits": []
+  },
   "algebra.FoldContract": {
    "aliases": [
     {
@@ -7084,6 +7125,47 @@
    "provider": "algebra/contracts",
    "signature": "struct TraverseContract[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]",
    "summary": "The joint source and target contract of traversal with a library callable.",
+   "traits": []
+  },
+  "algebra.TraverseFilterContract": {
+   "aliases": [],
+   "description": "Generic helpers forward InvocationCompatible and project Out, Error and Family.\nCompatible preserves the selected traverse_filter/sequence_filter requirements;\nInvocationCompatible additionally checks the callback receiver, finishing map\nand construction-error compatibility. Source and target families own execution,\nincluding source-specific callback timing and deferred errors.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The source family, supporting traversal and compaction.",
+     "inferred": false,
+     "name": "S",
+     "type": "Traversable & FunctorFilter",
+     "variadic": false
+    },
+    {
+     "description": "The target Applicative family.",
+     "inferred": false,
+     "name": "G",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The library callback returning Optional payloads inside G.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/_traversal",
+   "signature": "comptime TraverseFilterContract[S: Traversable & FunctorFilter, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _FinishedTraversalContract[S, G, V, F, _CompactAfter[S, G.Element[S.Traversed[G, V, F]]], G.Element[F.Out] == Optional[_OwnedElement[G.Element[F.Out]]]]",
+   "summary": "Admission and exact result of traversal collecting present Optional payloads.",
    "traits": []
   },
   "algebra.TraverseTapContract": {
@@ -142951,7 +143033,7 @@
      {
       "args": [],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].Error",
       "parameters": [
        {
         "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
@@ -142965,9 +143047,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].Out, Self.E]"
       },
-      "signature": "def flat_sequence[J: Applicative = _InferredApplicative[Self.I.Element[Self.V]]](deinit self) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, Identity[Self.I.Element[Self.V]]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[J, Self.I.Element[Self.V]] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[Self.I.Element[Self.V]]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]]",
+      "signature": "def flat_sequence[J: Applicative = _InferredApplicative[Self.I.Element[Self.V]]](deinit self) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      }
     ],
@@ -144472,7 +144554,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, C], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -144493,9 +144575,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def flat_traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Out]](deinit self, var function: C) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, C], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and C.Arg == Self.I.Element[Self.V] and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, C] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, C] and _CarrierCompatible[J, C.Out] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, C], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[C.Out]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C]]]]]",
+      "signature": "def flat_traverse[C: UnaryContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Out]](deinit self, var function: C) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and C.Arg == Self.I.Element[Self.V] and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -144509,7 +144591,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, C._View[o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C._View[o]].Error",
       "parameters": [
        {
         "description": "",
@@ -144537,9 +144619,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C._View[o]].Out, Self.E]"
       },
-      "signature": "def flat_traverse[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, C._View[o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and C._View[o].Arg == Self.I.Element[Self.V] and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, C._View[o]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, C._View[o]] and _CarrierCompatible[J, C._View[o].Out] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[C._View[o].Out]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]]",
+      "signature": "def flat_traverse[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C._View[o]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and C._View[o].Arg == Self.I.Element[Self.V] and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, C._View[o]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -144553,7 +144635,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -144588,9 +144670,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def flat_traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) -> R = def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _CarrierCompatible[J, R] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[R]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]]]",
+      "signature": "def flat_traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) -> R = def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -144604,7 +144686,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -144639,9 +144721,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def flat_traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Self.E -> R = def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _CarrierCompatible[J, R] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[R]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]]]",
+      "signature": "def flat_traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Self.E -> R = def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -144655,7 +144737,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -144690,9 +144772,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def flat_traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Never -> R = def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and Self.E != Never and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _CarrierCompatible[J, R] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[R]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]]]",
+      "signature": "def flat_traverse[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Never -> R = def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and Self.E != Never and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -144706,7 +144788,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -144727,9 +144809,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def flat_traverse[R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CarrierCompatible[J, R] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[R]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]]",
+      "signature": "def flat_traverse[R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and not conforms_to(R, RegisterPassable) and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -144743,7 +144825,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -144764,9 +144846,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def flat_traverse[R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CarrierCompatible[J, R] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[R]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]]",
+      "signature": "def flat_traverse[R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -144780,7 +144862,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -144808,9 +144890,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def flat_traverse[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CarrierCompatible[J, R] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[R]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]]",
+      "signature": "def flat_traverse[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -144824,7 +144906,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]]",
+      "error": "FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -144852,9 +144934,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]], Self.E]"
+       "type": "Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def flat_traverse[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _CommonError[_FlatteningTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], J.MapError[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]] -> Pipeline[J, J.Mapped[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and _TraverseCompatible[_FlatteningTraversal[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _FlatteningTraversal[Self.I].TargetCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CarrierCompatible[J, R] and _MapCompatible[J, _FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _FlattenAfter[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]] and _CarrierCompatible[_FlatteningTraversal[Self.I], J.Element[R]] and _BindCompatible[_FlatteningTraversal[Self.I], J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]], Identity[_FlatteningTraversal[Self.I].Element[J.Element[_FlatteningTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]]",
+      "signature": "def flat_traverse[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, Monad) and _ErrorCompatible[Self.E, X] and FlatTraverseContract[_FlatteningTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      }
     ],
@@ -233701,7 +233783,7 @@
      {
       "args": [],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].Error",
       "parameters": [
        {
         "description": "The target effect family; inferred for native Optional, Result and List effects and recipes with a declared family. Explicit bindings retain their policy.",
@@ -233715,9 +233797,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].Out, Self.E]"
       },
-      "signature": "def sequence_filter[J: Applicative = _InferredApplicative[Self.I.Element[Self.V]]](deinit self) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, Identity[Self.I.Element[Self.V]]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[J, Self.I.Element[Self.V]] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]]]]] and J.Element[Self.I.Element[Self.V]] == Optional[_ListElement[J.Element[Self.I.Element[Self.V]]]]",
+      "signature": "def sequence_filter[J: Applicative = _InferredApplicative[Self.I.Element[Self.V]]](deinit self) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, Identity[Self.I.Element[Self.V]]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      }
     ],
@@ -240076,7 +240158,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, C], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, C], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C].Error",
       "parameters": [
        {
         "description": "The first library callback type, retaining its receiver and origins.",
@@ -240097,9 +240179,9 @@
       "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
       "returns": {
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, C], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C].Out, Self.E]"
       },
-      "signature": "def traverse_filter[C: UnaryContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Out]](deinit self, var function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, C], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, C], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, C], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and C.Arg == Self.I.Element[Self.V] and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, C] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, C] and _CarrierCompatible[J, C.Out] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, C], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C]]]] and J.Element[C.Out] == Optional[_ListElement[J.Element[C.Out]]]",
+      "signature": "def traverse_filter[C: UnaryContract & Movable & Deinitable, //, J: Applicative = _InferredApplicative[C.Out]](deinit self, var function: C) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and C.Arg == Self.I.Element[Self.V] and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -240113,7 +240195,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, C._View[o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C._View[o]].Error",
       "parameters": [
        {
         "description": "",
@@ -240141,9 +240223,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C._View[o]].Out, Self.E]"
       },
-      "signature": "def traverse_filter[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, C._View[o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and C._View[o].Arg == Self.I.Element[Self.V] and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, C._View[o]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, C._View[o]] and _CarrierCompatible[J, C._View[o].Out] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, C._View[o]]]]] and J.Element[C._View[o].Out] == Optional[_ListElement[J.Element[C._View[o].Out]]]",
+      "signature": "def traverse_filter[C: _UnaryViewable, o: ImmOrigin, //, J: Applicative = _ViewTarget[C, o]](deinit self, ref[o] function: C) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C._View[o]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C._View[o]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and C._View[o].Arg == Self.I.Element[Self.V] and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, C._View[o]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -240157,7 +240239,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -240192,9 +240274,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def traverse_filter[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) -> R = def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]] and _CarrierCompatible[J, R] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]]]]] and J.Element[R] == Optional[_ListElement[J.Element[R]]]",
+      "signature": "def traverse_filter[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) -> R = def(var Self.I.Element[Self.V]) -> R](deinit self, ref[o] function: C) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, False, o]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -240208,7 +240290,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -240243,9 +240325,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def traverse_filter[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Self.E -> R = def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]] and _CarrierCompatible[J, R] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]]]]] and J.Element[R] == Optional[_ListElement[J.Element[R]]]",
+      "signature": "def traverse_filter[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Self.E -> R = def(var Self.I.Element[Self.V]) raises Self.E -> R](deinit self, ref[o] function: C) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Self.E, C, True, o]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -240259,7 +240341,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error",
       "parameters": [
        {
         "description": "",
@@ -240294,9 +240376,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def traverse_filter[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Never -> R = def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and Self.E != Never and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]] and _CarrierCompatible[J, R] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]]]]] and J.Element[R] == Optional[_ListElement[J.Element[R]]]",
+      "signature": "def traverse_filter[R: Movable & Deinitable, o: ImmOrigin, //, J: Applicative = _InferredApplicative[R], C: def(var Self.I.Element[Self.V]) raises Never -> R = def(var Self.I.Element[Self.V]) raises Never -> R](deinit self, ref[o] function: C) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and Self.E != Never and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, _NativeUnaryRef[Self.I.Element[Self.V], R, Never, C, True, o]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -240310,7 +240392,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -240331,9 +240413,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse_filter[R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CarrierCompatible[J, R] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]] and J.Element[R] == Optional[_ListElement[J.Element[R]]]",
+      "signature": "def traverse_filter[R: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and not conforms_to(R, RegisterPassable) and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -240347,7 +240429,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error",
       "parameters": [
        {
         "description": "",
@@ -240368,9 +240450,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def traverse_filter[R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]] and _CarrierCompatible[J, R] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]]]]] and J.Element[R] == Optional[_ListElement[J.Element[R]]]",
+      "signature": "def traverse_filter[R: RegisterPassable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, Never, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) thin -> R, False]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -240384,7 +240466,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -240412,9 +240494,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse_filter[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CarrierCompatible[J, R] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]] and J.Element[R] == Optional[_ListElement[J.Element[R]]]",
+      "signature": "def traverse_filter[R: Movable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      },
      {
@@ -240428,7 +240510,7 @@
        }
       ],
       "description": "",
-      "error": "_CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]]",
+      "error": "TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error",
       "parameters": [
        {
         "description": "",
@@ -240456,9 +240538,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]], Self.E]"
+       "type": "Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def traverse_filter[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises _CommonError[_SelectingTraversal[Self.I].TraverseError[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], J.MapError[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]]] -> Pipeline[J, J.Mapped[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]], Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and _ErrorCompatible[Self.E, X] and _TraverseCompatible[_SelectingTraversal[Self.I], Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _SelectingTraversal[Self.I].TargetCompatible[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]] and _CarrierCompatible[J, R] and _MapCompatible[J, _SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]], _CompactAfter[_SelectingTraversal[Self.I], J.Element[_SelectingTraversal[Self.I].Traversed[J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]]]]] and J.Element[R] == Optional[_ListElement[J.Element[R]]]",
+      "signature": "def traverse_filter[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //, J: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R) raises TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Error -> Pipeline[J, TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, Traversable) and conforms_to(Self.I, FunctorFilter) and _ErrorCompatible[Self.E, X] and TraverseFilterContract[_SelectingTraversal[Self.I], J, Self.V, NativeUnary[Self.I.Element[Self.V], R, X, def(var _NativeOwnedArg[Self.I.Element[Self.V]]) raises X thin -> R, True]].FamilyCompatible",
       "summary": "Traverse and finish inside the selected target effect."
      }
     ],

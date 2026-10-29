@@ -11,6 +11,8 @@ from ._sequencing import _EffectRetain
 from ._derived import flatten
 from .filtering import compact
 from fp.callables._identity import Identity
+from fp.callables.invoke import _OnceUnaryAvailable
+from fp.iteration._advance import _OwnedElement
 
 
 struct _Discard[T: Movable & Deinitable](_Accumulate):
@@ -84,6 +86,61 @@ struct _EffectVoid[G: Applicative, V: Movable & Deinitable](Unary, Copyable, Def
 comptime _TraverseTap[T: Movable & Deinitable, G: Applicative, C: BorrowCallContract & Movable & Deinitable, selected: Bool = False] = _EffectRetain[T, G, C, selected]
 
 
+struct _FinishedTraversalContract[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, H: Unary, shape: Bool = True]:
+    """Shared admission for traversal followed by a map inside its target."""
+    comptime _Traverse = TraverseContract[Self.S, Self.G, Self.V, Self.F]
+    comptime _Finish = MapContract[Self.G, Self._Traverse.Out, Self.H]
+    comptime InputCompatible = Self._Traverse.InputCompatible
+    comptime SourceCompatible = Self._Traverse.SourceCompatible
+    comptime TargetCompatible = Self._Traverse.TargetCompatible
+    comptime CarrierCompatible = Self._Traverse.CarrierCompatible
+    comptime ShapeCompatible = Self.shape
+    comptime FinishCompatible = Self._Finish.FamilyCompatible
+    comptime FamilyCompatible = Self._Traverse.FamilyCompatible and Self.ShapeCompatible and Self.FinishCompatible
+    comptime Compatible = Self.InputCompatible and Self.FamilyCompatible
+    comptime ReceiverCompatible = _OnceUnaryAvailable[Self.F]
+    comptime FinishInvocationCompatible = Self._Finish.InvocationCompatible
+    comptime ConstructionCompatible = _CommonErrorCompatible[Self._Traverse.Error, Self._Finish.Error]
+    comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible and Self.FinishInvocationCompatible and Self.ConstructionCompatible
+    comptime Family = Self.G
+    comptime Out = Self._Finish.Out
+    comptime Error = _CommonError[Self._Traverse.Error, Self._Finish.Error]
+
+
+comptime TraverseFilterContract[S: Traversable & FunctorFilter, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _FinishedTraversalContract[S, G, V, F, _CompactAfter[S, G.Element[S.Traversed[G, V, F]]], G.Element[F.Out] == Optional[_OwnedElement[G.Element[F.Out]]]]
+"""Admission and exact result of traversal collecting present Optional payloads.
+
+Generic helpers forward InvocationCompatible and project Out, Error and Family.
+Compatible preserves the selected traverse_filter/sequence_filter requirements;
+InvocationCompatible additionally checks the callback receiver, finishing map
+and construction-error compatibility. Source and target families own execution,
+including source-specific callback timing and deferred errors.
+
+Parameters:
+    S: The source family, supporting traversal and compaction.
+    G: The target Applicative family.
+    V: The complete consumed source carrier, including origins.
+    F: The library callback returning Optional payloads inside G.
+"""
+
+
+comptime FlatTraverseContract[S: Traversable & Monad, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _FinishedTraversalContract[S, G, V, F, _FlattenAfter[S, G.Element[S.Traversed[G, V, F]]], S.CarrierCompatible[G.Element[F.Out]] and S.BindCompatible[G.Element[S.Traversed[G, V, F]], Identity[S.Element[G.Element[S.Traversed[G, V, F]]]]]]
+"""Admission and exact result of traversal flattening one source-family layer.
+
+Generic helpers forward InvocationCompatible and project Out, Error and Family.
+Compatible preserves the selected flat_traverse/flat_sequence requirements;
+InvocationCompatible additionally checks the callback receiver, finishing map
+and construction-error compatibility. The source's bind and target's map retain
+their existing ownership, branching and evaluation policies.
+
+Parameters:
+    S: The source family, supporting traversal and binding.
+    G: The target Applicative family.
+    V: The complete consumed source carrier, including origins.
+    F: The library callback returning source-family carriers inside G.
+"""
+
+
 struct FilterEffectContract[S: Traversable & FunctorFilter, G: Applicative, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable]:
     """Admission and exact result of filtering through a borrowing effect.
 
@@ -102,7 +159,7 @@ struct FilterEffectContract[S: Traversable & FunctorFilter, G: Applicative, V: M
     comptime _Retained = _EffectRetain[Self.S.Element[Self.V], Self.G, Self.C, True]
     comptime _Traverse = TraverseContract[Self.S, Self.G, Self.V, Self._Retained]
     comptime _Finish = _CompactAfter[Self.S, Self.G.Element[Self._Traverse.Out]]
-    comptime _Compact = MapContract[Self.G, Self._Traverse.Out, Self._Finish]
+    comptime _Post = _FinishedTraversalContract[Self.S, Self.G, Self.V, Self._Retained, Self._Finish]
     comptime InputCompatible = Self._Retained.InputCompatible
     """The predicate borrows the exact source element, including origins."""
     comptime CarrierCompatible = Self.G.CarrierCompatible[Self.C.Result]
@@ -115,7 +172,7 @@ struct FilterEffectContract[S: Traversable & FunctorFilter, G: Applicative, V: M
     """The source's selected target operations admit that continuation."""
     comptime RetainedShapeCompatible = Self.G.Element[Self._Retained.Out] == Optional[Self.S.Element[Self.V]]
     """The retention map produces exact Optional source elements."""
-    comptime FinishCompatible = Self._Compact.FamilyCompatible
+    comptime FinishCompatible = Self._Post.FinishCompatible
     """The target admits mapping source compaction over the traversal."""
     comptime FamilyCompatible = Self.CarrierCompatible and Self.PredicateCompatible and Self.SourceCompatible and Self.TargetCompatible and Self.RetainedShapeCompatible and Self.FinishCompatible
     """Existing selected filtering admission without input equality."""
@@ -125,13 +182,13 @@ struct FilterEffectContract[S: Traversable & FunctorFilter, G: Applicative, V: M
     """The original predicate has an invocable receiver."""
     comptime RetentionCompatible = Self._Retained.InvocationCompatible and Self._Retained.Finish.InvocationCompatible
     """The shared retention kernel and target map admit the original value."""
-    comptime ConstructionCompatible = _CommonErrorCompatible[Self._Traverse.Error, Self._Compact.Error]
+    comptime ConstructionCompatible = Self._Post.ConstructionCompatible
     """Traversal and finishing construction errors have one native type."""
-    comptime InvocationCompatible = Self.Compatible and Self.RetentionCompatible and Self._Compact.InvocationCompatible and Self.ConstructionCompatible
+    comptime InvocationCompatible = Self.Compatible and Self.RetentionCompatible and Self._Post.FinishInvocationCompatible and Self.ConstructionCompatible
     """Checked admission for new generic helpers, including retention and finishing."""
     comptime Family = Self.G
     """The family selected for fluent continuation over Out."""
-    comptime Out = Self._Compact.Out
+    comptime Out = Self._Post.Out
     """The source shape containing accepted elements inside the target effect."""
-    comptime Error = _CommonError[Self._Traverse.Error, Self._Compact.Error]
+    comptime Error = Self._Post.Error
     """The exact construction error; deferred execution keeps its own errors."""

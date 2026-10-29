@@ -202,7 +202,7 @@
       "stdout": "errors: 2\n-1 must be positive\n-2 must be positive\nfirst: 2 count: 3\n"
     },
     "docs/examples/operation_contracts.mojo": {
-      "stdout": "gathered: 3 7\nfilled: 7 11\ndiscarded: True\nattached: 3 [7, 11]\nobserved: [3, 7]\nfiltered: [8]\n"
+      "stdout": "gathered: 3 7\nfilled: 7 11\ndiscarded: True\nattached: 3 [7, 11]\nobserved: [3, 7]\nfiltered: [8]\npresent: [8]\nexpanded: [3, 30]\n"
     },
     "docs/examples/optional.mojo": {
       "stdout": "optional total = 42\n"

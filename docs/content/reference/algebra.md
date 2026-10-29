@@ -227,6 +227,20 @@ traversal into Reader defers the predicate, retention and compaction until run.
 computation's execution error. Compaction errors and incompatible native error
 combinations are included in the checked helper contract.
 
+For callbacks returning Optional payloads inside the target effect, use
+`TraverseFilterContract[S, G, V, F]`. For callbacks returning source-family
+carriers inside the target, use `FlatTraverseContract[S, G, V, F]`. The former
+requires a Traversable/FunctorFilter source; the latter requires Traversable/Monad.
+They also describe `sequence_filter` and `flat_sequence` with an Identity callback.
+
+Both expose `Out`, the construction `Error`, and the continuation `Family`.
+Generic helpers forward `InvocationCompatible`: it checks the source and target
+admission, payload shape, callback receiver, finishing map and compatible
+construction errors. `Compatible` retains the existing selected entry predicate
+for wrappers already carrying those proofs. The descriptors share one traversal
+and finishing contract with effectful filtering; no operation executes through
+a new wrapper. Source-specific timing and deferred execution errors remain exact.
+
 <!-- example: docs/examples/single_value_traversal.mojo -->
 
 Single-value traversal also supports deferred targets such as Reader and State.

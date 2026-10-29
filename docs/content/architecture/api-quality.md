@@ -759,10 +759,28 @@ results, move-only cleanup and independent payload/error origins. Rejection test
 use ordinary calls for incompatible inputs, payloads, consuming receivers,
 explicit targets, errors, reuse and origins.
 
+## Shared traversal postprocessing contracts
+
+`TraverseFilterContract` and `FlatTraverseContract` expose the exact result,
+construction error and selected continuation family of traversal followed by
+compaction or flattening. Generic wrappers forward one `InvocationCompatible`
+predicate instead of naming private finishers. Both aliases share a single
+metadata implementation composed from TraverseContract and MapContract.
+FilterEffectContract reuses the same finishing and construction-error metadata.
+
+Selected Pipeline traversal and sequencing signatures project these contracts.
+Their existing expanded predicates, parameter positions and execution owners
+remain unchanged. The stronger predicate for new generic helpers additionally
+rejects unavailable receivers and incompatible construction errors. Tests verify
+expanded proofs in both directions, third-party targets, accumulation and
+branching, single-use Optional callbacks, exact native errors and independent
+origins. Reader tests distinguish deferred List traversal from eager callback
+construction on a single Optional.
+
 ## Next passes
 
-1. Review generic traversal postprocessing against the public contract pattern,
-   sharing the existing traversal and finishing requirements.
+1. Reuse the existing origin-aware callable views for direct Kleisli callbacks
+   in iterator postprocessing terminals, preserving deferred borrows.
 2. Qualify the accumulated changes across the complete library corpus.
 
 Each pass retains the commit/push boundary above and proceeds to the next

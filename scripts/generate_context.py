@@ -717,19 +717,14 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             params = inferred_target_parameters(cb)
             c, result = cb["adapter_type"], cb["result"]
             plan = operation.postprocess(family, "J", "Self.V", c)
-            traversed, finish, error = plan.traversed, plan.finish, plan.error
+            contract_name = "TraverseFilterContract" if compact else "FlatTraverseContract"
+            contract = f"{contract_name}[{family}, J, Self.V, {c}]"
+            error = contract + ".Error"
             conditions = ["conforms_to(Self.I, Traversable)",
                           f"conforms_to(Self.I, {operation.source_capability})"] + cb["conditions"]
-            conditions += [f"_TraverseCompatible[{family}, Self.V, {c}]",
-                           f"{family}.TargetCompatible[J, Self.V, {c}]", f"_CarrierCompatible[J, {result}]",
-                           f"_MapCompatible[J, {traversed}, {finish}]"]
-            if compact:
-                conditions += [f"J.Element[{result}] == Optional[_ListElement[J.Element[{result}]]]"]
-            else:
-                conditions += [f"_CarrierCompatible[{family}, J.Element[{result}]]",
-                               f"_BindCompatible[{family}, J.Element[{traversed}], Identity[{family}.Element[J.Element[{traversed}]]]]"]
+            conditions += [contract + ".FamilyCompatible"]
             expr = plan.invoke(family, "J", "Self.V", c, error, cb["build"], "self.value^")
-            emit(name, cb, params, cb["argument"], plan.result, error,
+            emit(name, cb, params, cb["argument"], contract + ".Out", error,
                  "J", conditions, expr, "Traverse and finish inside the selected target effect.")
 
     # Native sources discard successful output; Result traversal retains its

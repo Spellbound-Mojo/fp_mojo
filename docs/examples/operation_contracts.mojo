@@ -1,6 +1,6 @@
 """Public contracts name generic operation admission, results and native errors."""
-from fp.algebra import Functor, MapContract, FillContract, VoidContract, TupleRightContract, Applicative, Traversable, TraverseContract, TraverseTapContract, FunctorFilter, FilterEffectContract, ListFamily, OptionalFamily
-from fp.callables import UnaryContract, Unary, BorrowCallContract, BorrowSignature
+from fp.algebra import Functor, MapContract, FillContract, VoidContract, TupleRightContract, Applicative, Traversable, TraverseContract, TraverseTapContract, FunctorFilter, FilterEffectContract, Monad, TraverseFilterContract, FlatTraverseContract, ListFamily, OptionalFamily
+from fp.callables import UnaryContract, Unary, BorrowCallContract, BorrowSignature, as_unary
 from fp.functions import pipeline, Identity
 from std.testing import assert_equal
 
@@ -32,6 +32,18 @@ def filled[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable](
     var source: V, var replacement: U
 ) raises FillContract[I,V,U].Error -> FillContract[I,V,U].Out where FillContract[I,V,U].InvocationCompatible:
     return pipeline[I](source^).fill(replacement^).get()
+
+
+def present[S: Traversable & FunctorFilter, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
+    var values: V, var function: F
+) raises TraverseFilterContract[S,G,V,F].Error -> TraverseFilterContract[S,G,V,F].Out where TraverseFilterContract[S,G,V,F].InvocationCompatible:
+    return pipeline[S](values^).traverse_filter[G](function^).get()
+
+
+def expanded[S: Traversable & Monad, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
+    var values: V, var function: F
+) raises FlatTraverseContract[S,G,V,F].Error -> FlatTraverseContract[S,G,V,F].Out where FlatTraverseContract[S,G,V,F].InvocationCompatible:
+    return pipeline[S](values^).flat_traverse[G](function^).get()
 
 
 def discarded[I: Functor, V: Movable & Deinitable](
@@ -74,3 +86,10 @@ def main() raises:
     def even(value: Int) -> Optional[Bool]: return Optional(value % 2 == 0)
     var accepted = filtered[ListFamily,OptionalFamily](List[Int]([3,7,8]),BorrowSignature[Int,Optional[Bool]].capture(even))
     print("filtered:", accepted.value())
+    def choose(var value: Int) -> Optional[Optional[Int]]:
+        return Optional(Optional(value) if value % 2 == 0 else Optional[Int]())
+    var chosen = present[ListFamily,OptionalFamily](List[Int]([3,7,8]),as_unary(choose))
+    print("present:", chosen.value())
+    def group(var value: Int) -> Optional[List[Int]]: return Optional(List[Int]([value,value*10]))
+    var flat = expanded[ListFamily,OptionalFamily](List[Int]([3]),as_unary(group))
+    print("expanded:", flat.value())
