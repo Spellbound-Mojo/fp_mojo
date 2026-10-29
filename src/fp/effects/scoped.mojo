@@ -125,3 +125,47 @@ def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var 
 def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]]:
     """Adapt a native factory with a compatible exact construction error."""
     return scoped_io(_NativeBorrow[P, V, X, F, True](function^))
+
+
+# --- native scoped IO pointers (generated) ---
+def scoped_io[P: AnyType, R: ReaderAction, q: ImmOrigin, //](ref[q] function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R](_NativeBorrow[P, R, Never, type_of(function), False](function))
+
+
+def scoped_io[P: AnyType, R: ReaderAction & RegisterPassable, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where not conforms_to(P, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R](_NativeBorrow[P, R, Never, type_of(function), False](function))
+
+
+def scoped_io[P: TrivialRegisterPassable, R: ReaderAction, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R](_NativeBorrow[P, R, Never, type_of(function), False](function))
+
+
+def scoped_io[P: TrivialRegisterPassable, R: ReaderAction & RegisterPassable, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R](_NativeBorrow[P, R, Never, type_of(function), False](function))
+
+
+def scoped_io[P: AnyType, R: ReaderAction, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R](_NativeBorrow[P, R, E, type_of(function), True](function))
+
+
+def scoped_io[P: AnyType, R: ReaderAction & RegisterPassable, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where not conforms_to(P, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R](_NativeBorrow[P, R, E, type_of(function), True](function))
+
+
+def scoped_io[P: TrivialRegisterPassable, R: ReaderAction, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R](_NativeBorrow[P, R, E, type_of(function), True](function))
+
+
+def scoped_io[P: TrivialRegisterPassable, R: ReaderAction & RegisterPassable, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R](_NativeBorrow[P, R, E, type_of(function), True](function))
+
+
+# --- end native scoped IO pointers ---

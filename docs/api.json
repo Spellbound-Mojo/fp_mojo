@@ -55544,6 +55544,534 @@
      },
      "signature": "def asks[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project, F: _RaisingBorrowing[P, R, E]](var function: F) raises I.ProjectError[_NativeBorrow[P, R, E, F, True]] -> I.Projected[_NativeBorrow[P, R, E, F, True]] where I.ProjectCompatible[_NativeBorrow[P, R, E, F, True]] and P == I.Input",
      "summary": "Project with an owned native borrowing function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]]"
+     },
+     "signature": "def asks[R: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]]"
+     },
+     "signature": "def asks[R: RegisterPassable & Deinitable, //, I: Project](function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]]"
+     },
+     "signature": "def asks[P: TrivialRegisterPassable, R: Movable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]]"
+     },
+     "signature": "def asks[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def asks[q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def asks[P: TrivialRegisterPassable, //, I: Project](function: def(P) thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]]"
+     },
+     "signature": "def asks[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]]"
+     },
+     "signature": "def asks[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, E, type_of(function), True]]"
+     },
+     "signature": "def asks[P: TrivialRegisterPassable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, E, type_of(function), True]]"
+     },
+     "signature": "def asks[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def asks[E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, type_of(None), E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def asks[P: TrivialRegisterPassable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, type_of(None), E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
     }
    ],
    "provider": "effects/projections",
@@ -56274,6 +56802,534 @@
      },
      "signature": "def inspect[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project, F: _RaisingBorrowing[P, R, E]](var function: F) raises I.ProjectError[_NativeBorrow[P, R, E, F, True]] -> I.Projected[_NativeBorrow[P, R, E, F, True]] where I.ProjectCompatible[_NativeBorrow[P, R, E, F, True]] and P == I.Input",
      "summary": "Project with an owned native borrowing function or closure."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]]"
+     },
+     "signature": "def inspect[R: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]]"
+     },
+     "signature": "def inspect[R: RegisterPassable & Deinitable, //, I: Project](function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]]"
+     },
+     "signature": "def inspect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]]"
+     },
+     "signature": "def inspect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def inspect[q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]"
+     },
+     "signature": "def inspect[P: TrivialRegisterPassable, //, I: Project](function: def(P) thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]]"
+     },
+     "signature": "def inspect[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]]"
+     },
+     "signature": "def inspect[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, E, type_of(function), True]]"
+     },
+     "signature": "def inspect[P: TrivialRegisterPassable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, R, E, type_of(function), True]]"
+     },
+     "signature": "def inspect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(I.Input) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def inspect[E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "I.ProjectError[_NativeBorrow[P, type_of(None), E, type_of(function), True]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Project",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Projected[_NativeBorrow[P, type_of(None), E, type_of(function), True]]"
+     },
+     "signature": "def inspect[P: TrivialRegisterPassable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, type_of(None), E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing pointer into the selected projection; execution stays deferred."
     }
    ],
    "provider": "effects/projections",
@@ -59582,6 +60638,344 @@
      },
      "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]]",
      "summary": "Adapt a native factory with a compatible exact construction error."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R]"
+     },
+     "signature": "def scoped_io[P: AnyType, R: ReaderAction, q: ImmOrigin, //](ref[q] function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "ReaderAction & RegisterPassable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R]"
+     },
+     "signature": "def scoped_io[P: AnyType, R: ReaderAction & RegisterPassable, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where not conforms_to(P, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "ReaderAction",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R]"
+     },
+     "signature": "def scoped_io[P: TrivialRegisterPassable, R: ReaderAction, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "ReaderAction & RegisterPassable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R]"
+     },
+     "signature": "def scoped_io[P: TrivialRegisterPassable, R: ReaderAction & RegisterPassable, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]",
+     "summary": "Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."
+    },
+    {
+     "args": [
+      {
+       "convention": "ref[q]",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "q",
+       "type": "ImmOrigin",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R]"
+     },
+     "signature": "def scoped_io[P: AnyType, R: ReaderAction, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "ReaderAction & RegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R]"
+     },
+     "signature": "def scoped_io[P: AnyType, R: ReaderAction & RegisterPassable, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where not conforms_to(P, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "ReaderAction",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R]"
+     },
+     "signature": "def scoped_io[P: TrivialRegisterPassable, R: ReaderAction, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises E thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "TrivialRegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "ReaderAction & RegisterPassable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "_ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R]"
+     },
+     "signature": "def scoped_io[P: TrivialRegisterPassable, R: ReaderAction & RegisterPassable, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]",
+     "summary": "Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."
     }
    ],
    "provider": "effects/scoped",

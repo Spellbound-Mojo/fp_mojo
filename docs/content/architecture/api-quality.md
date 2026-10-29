@@ -435,16 +435,34 @@ check incompatible inputs, results, error families, conventions and escaping
 borrows. Generic helpers declaring native pointer types still need the native
 ABI bounds; concrete callers do not.
 
+## Consistent borrowing factory admission
+
+`asks[Reader[Config]](pointer)`, `inspect[State[S]](pointer)` and
+`scoped_io(pointer)` now accept stored native borrowing pointers directly.
+They copy the pointer into the existing callback owner and preserve deferred
+execution, typed errors and independent external value/error origins. Existing
+closure ownership and positional type arguments keep their meanings.
+
+One native factory descriptor now covers borrowed inputs as well as the
+existing owned inputs. A capability can fix the input type, or the pointer can
+supply it. Borrowed input admission requires no ownership trait; register and
+memory ABI evidence remains explicit at the compiler boundary. Native void is
+kept separate from an explicit `NoneType` result. Resource admission uses this
+same descriptor with byte-for-byte unchanged generated overloads.
+
+The projection overloads delegate to `Project`; scoped factories retain their
+inferred IO action witness in the existing `_ScopedFactory`. There is no new
+execution or lifetime owner. Coverage exercises all four ABI combinations,
+generic forwarding, move-only input cleanup, abandonment, typed failures and
+independent borrow origins. Invalid conventions, types, families and escaping
+borrows are checked using ordinary calls without explicit callback bindings.
+
 ## Next passes
 
-1. Extend shared native borrowing admission to `asks`, `inspect` and
-   `scoped_io`. Packaged probes currently reject stored pointers in these
-   helpers; the resource methods already accept them. Preserve positional
-   bindings, generic ABI evidence, exact errors and external borrow origins.
-2. Revisit Reader and State examples that copy an entire input just to project
+1. Revisit Reader and State examples that copy an entire input just to project
    one value. Prefer the existing borrowing capabilities where their callback
    ownership fits the client, and verify the copy/drop behavior explicitly.
-3. Evaluate result-only and state-only execution against Cats'
+2. Evaluate result-only and state-only execution against Cats'
    [runA and runS](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/data/IndexedStateT.scala)
    clients. Add a terminal only where it removes real tuple plumbing while
    preserving the base carrier and ownership.

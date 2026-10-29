@@ -6180,6 +6180,54 @@
     {
      "sha256": "9d6ffdf7e1c618d0894b03c2fb25613ac0d7f4542c9937b962418b3ec01c5e1b",
      "signature": "def asks[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project, F: _RaisingBorrowing[P, R, E]](var function: F ) raises I.ProjectError[_NativeBorrow[P, R, E, F, True]] -> I.Projected[_NativeBorrow[P, R, E, F, True]] where I.ProjectCompatible[_NativeBorrow[P, R, E, F, True]] and P == I.Input:"
+    },
+    {
+     "sha256": "3a8d4ff5a0c800fe32b6b4bd1776419a578761aeb4e67dac621a11394f3eec2d",
+     "signature": "def asks[R: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "48b59cf42aae6777730cf1ba8136a087281f46c9a525299c574ddd2cf9166c4a",
+     "signature": "def asks[R: RegisterPassable & Deinitable, //, I: Project](function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "f27cf060a3c8255d3ca3768ec9f61d9ec9703a653b76ee3758b00b56d655eb4f",
+     "signature": "def asks[P: TrivialRegisterPassable, R: Movable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "858f96785346591297b8bb2408291aef55a98468d5ca64b96544a39344ed9b12",
+     "signature": "def asks[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "c9f1975df9f837567e0585816ec0cede85d45cc703408096f359b75a35dc8d78",
+     "signature": "def asks[q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "b86e46a639dd8294a03174b22485d497fffa9907d36e0110abcf13ff1dffb542",
+     "signature": "def asks[P: TrivialRegisterPassable, //, I: Project](function: def(P) thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "07a951fd680788315827aa1ff6d395772d35a85ca2d966998b5b023d2e3687f3",
+     "signature": "def asks[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "4617a7394f0d894706971191c8e051c356d5280ed1529a0bbc4d274150a65552",
+     "signature": "def asks[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "e6b4dc5b64d71c3540ee18801a7c30730fd4fadfb8fda9c2630cec5a0ae94527",
+     "signature": "def asks[P: TrivialRegisterPassable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "7fd469d57820bc2280baf9be99cadcf79d0430bc19a327f585a60b39d4744910",
+     "signature": "def asks[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "83c5aa6ddd3731820b24bbf58a0f0f1e1e9984b637a8abdbfef5028738c1d65b",
+     "signature": "def asks[E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "054cbb51cc655ae82219f1456b292311b8a51d1822b22e1c566089e20b66965d",
+     "signature": "def asks[P: TrivialRegisterPassable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, type_of(None), E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), E, type_of(function), True]]:"
     }
    ],
    "provider": "effects/projections"
@@ -6294,6 +6342,54 @@
     {
      "sha256": "6a62dd8f7588c438d24dcc177ab52283bcf8c44bd1501cd4781675cf6b2c59d5",
      "signature": "def inspect[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project, F: _RaisingBorrowing[P, R, E]](var function: F ) raises I.ProjectError[_NativeBorrow[P, R, E, F, True]] -> I.Projected[_NativeBorrow[P, R, E, F, True]] where I.ProjectCompatible[_NativeBorrow[P, R, E, F, True]] and P == I.Input:"
+    },
+    {
+     "sha256": "d5571a53d6b8098a29130fad49aa94b65155b35da90beca12723bdc08075e96e",
+     "signature": "def inspect[R: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "c3755d7de463b1f161c355f6b8c0543ece6cd9693a257a7bc55cc73218db194f",
+     "signature": "def inspect[R: RegisterPassable & Deinitable, //, I: Project](function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "ff613de99b5191fbc3737619a3600e1439c84e29286abdc8270c48bc68d6e96f",
+     "signature": "def inspect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "a5233a2f976c50dfa35dbbf7ecfecdaffc7dc0859b909e05b51569b32941da2f",
+     "signature": "def inspect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "9757e31e514fddbf4a6c04753834b7ca8b67a2672e24b7c3d6ea3d2f7c55da59",
+     "signature": "def inspect[q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "fe835fe690bc4b26d8ae114df18bbc6dcd1be6388ba4d40525fe78b398e0a4b1",
+     "signature": "def inspect[P: TrivialRegisterPassable, //, I: Project](function: def(P) thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "26f4b4120006f19b7a166ee8cc57af037298410c05ed6e12d54f0a4b0e05f92c",
+     "signature": "def inspect[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "b00d31da9d50b92270d98754101e87fa1b377790fe0f66ebee6cc8b9431f1913",
+     "signature": "def inspect[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "ff3fe569cc1b3c96ec8236d5c27f4e237d841d9a377911feffefee26ceca8228",
+     "signature": "def inspect[P: TrivialRegisterPassable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "37b97ad9b83a699ec6ec77054047abcb220aaf58763c85a3db36a91aeae3392a",
+     "signature": "def inspect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "90292eed3670a7912a860b7b4e850d4122831c95175d33a470015082dd70cfe1",
+     "signature": "def inspect[E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "6030917563e019ff501780b1a17088af9ade479aa50bb75b8ecfba45d995d715",
+     "signature": "def inspect[P: TrivialRegisterPassable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, type_of(None), E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), E, type_of(function), True]]:"
     }
    ],
    "provider": "effects/projections"
@@ -6608,6 +6704,38 @@
     {
      "sha256": "41d1c9cb89db0fe103f15b7d1a07a81e88f7d8b5188b4b0075016144822e48a5",
      "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]]:"
+    },
+    {
+     "sha256": "e9bda90d0925ea11683d69e0ee7f3d21ed205eb1ffc1e62f32638c4408ab71b2",
+     "signature": "def scoped_io[P: AnyType, R: ReaderAction, q: ImmOrigin, //](ref[q] function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "061a3c46d2c931377b80e9343c6f0be1e43343e62efe214fa7a0050f42f01704",
+     "signature": "def scoped_io[P: AnyType, R: ReaderAction & RegisterPassable, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where not conforms_to(P, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "32fb9310d4a747652b43bd376f9e959ef3217aae6087be24243704a81d2db981",
+     "signature": "def scoped_io[P: TrivialRegisterPassable, R: ReaderAction, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "eea7aab4c21f960e2be29691b0652b2f07c9dec8c105f1f000abb1092369ab12",
+     "signature": "def scoped_io[P: TrivialRegisterPassable, R: ReaderAction & RegisterPassable, //](function: def(P) thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, Never, type_of(function), False], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "35b26c6cb5a68d8ecaba292ca2aade5165aca7508edb5a287bba1223066d0c6f",
+     "signature": "def scoped_io[P: AnyType, R: ReaderAction, E: Movable & Deinitable, q: ImmOrigin, //](ref[q] function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "bdac8cddd4be3fbbe4118992fdbe65c95bc1684c73df68d1caf74a645ff1d7f9",
+     "signature": "def scoped_io[P: AnyType, R: ReaderAction & RegisterPassable, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where not conforms_to(P, TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "27253ee4dc811865fc1a22ae74a01faffa9c82e26b9334c0ce9f4e7e7e1c414d",
+     "signature": "def scoped_io[P: TrivialRegisterPassable, R: ReaderAction, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "cffae48cf56e0ea5f5f2a8f2437fc5542247a8925d417a81612409acbea87a7c",
+     "signature": "def scoped_io[P: TrivialRegisterPassable, R: ReaderAction & RegisterPassable, E: Movable & Deinitable, //](function: def(P) raises E thin -> R) -> _ScopedFactory[_NativeBorrow[P, R, E, type_of(function), True], R] where _ScopedFactoryCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:"
     }
    ],
    "provider": "effects/scoped"

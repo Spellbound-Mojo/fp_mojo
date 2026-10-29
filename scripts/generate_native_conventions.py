@@ -4,7 +4,6 @@ from pathlib import Path
 
 from native_signatures import (
     MD,
-    factory_pointer,
     native_dispatch,
     NATIVE_INVOCATIONS,
     native_factories,
@@ -18,6 +17,12 @@ OUTPUT = ROOT / "src/fp/callables/native.mojo"
 RESOURCE_OUTPUT = ROOT / "src/fp/effects/effectful_resources.mojo"
 RESOURCE_START = "    # --- resource callback admission (generated) ---\n"
 RESOURCE_END = "    # --- end resource callback admission ---\n"
+PROJECTION_OUTPUT = ROOT / "src/fp/effects/projections.mojo"
+PROJECTION_START = "# --- native projection pointers (generated) ---\n"
+PROJECTION_END = "# --- end native projection pointers ---\n"
+SCOPED_OUTPUT = ROOT / "src/fp/effects/scoped.mojo"
+SCOPED_START = "# --- native scoped IO pointers (generated) ---\n"
+SCOPED_END = "# --- end native scoped IO pointers ---\n"
 ADAPTER_START = "# --- native unary admission (generated) ---\n"
 ADAPTER_END = "# --- end native unary admission ---\n"
 BINARY_START = "# --- native binary admission (generated) ---\n"
@@ -232,6 +237,12 @@ def borrow_capture_pointers():
     return ''.join(out)
 
 
+def reader_parameters(factory, result):
+    """Keep the inferred action witness and its native result ABI together."""
+    bounds = {MD: "ReaderAction", "RegisterPassable & Deinitable": "ReaderAction & RegisterPassable"}
+    return [f"{p}: {bounds[bound] if p == result else bound}" for p, bound in factory.parameters]
+
+
 def resource_callbacks():
     """Adapt owned callbacks and copied thin pointers to one scoped IO owner."""
     out = []
@@ -262,23 +273,63 @@ def resource_callbacks():
         # The resource fixes the input before native ABI inference. The shared
         # fallback borrows a symbolic pointer only for admission, then copies it;
         # no callback origin enters the resulting resource or IO program.
-        for raising in (False, True):
-            error = "X" if raising else "Never"
-            for abi in variants([Operand("Self.Value", "r", read_parameter="P")], "V"):
-                pointer = factory_pointer(abi)
-                parameters = [f"{p}: " + ("ReaderAction" + (" & RegisterPassable" if bound != MD else "")
-                                          if p == "V" else bound)
-                              for p, bound in abi.parameters]
-                parameters += ([f"X: {MD}"] if raising else [])
-                parameters += [f"{p}: {bound}" for p, bound in pointer.parameters] + ["//"]
-                signature = (f"def({abi.payloads[0]})" + (" raises X" if raising else "")
-                             + " thin -> V")
-                adapter = native_adapter("borrow", list(abi.payloads), "V", error,
-                                         "type_of(function)", raising)
-                emit(parameters, pointer.argument + ": " + signature, adapter,
-                     f"_ScopedFactory[{adapter}, V]({adapter}(function))", pointer.conditions,
-                     "Copy a stored thin IO factory into the existing callback owner; execution stays deferred.", program="V")
+        for factory in native_factories("borrow", [Operand("Self.Value", "r", read_parameter="P")],
+                                        result="V", error="X", include_void=False):
+            parameters = reader_parameters(factory, "V")
+            parameters += [f"{p}: {bound}" for p, bound in factory.pointer.parameters] + ["//"]
+            adapter = factory.adapter
+            emit(parameters, factory.argument, adapter,
+                 f"_ScopedFactory[{adapter}, V]({adapter}(function))", factory.pointer.conditions,
+                 "Copy a stored thin IO factory into the existing callback owner; execution stays deferred.", program="V")
     return "".join(out)
+
+
+def projection_pointers():
+    """Both public projection spellings delegate to the existing Project owner."""
+    out = []
+    for name in ("asks", "inspect"):
+        for factory in native_factories("borrow", [Operand("I.Input", "r", read_parameter="P")]):
+            parameters = [f"{p}: {bound}" for p, bound in [*factory.parameters, *factory.pointer.parameters]]
+            parameters += ["//", "I: Project"]
+            guards = [*factory.pointer.conditions, f"I.ProjectCompatible[{factory.adapter}]"]
+            out.append(f'''def {name}[{", ".join(parameters)}]({factory.argument}) raises I.ProjectError[{factory.adapter}] -> I.Projected[{factory.adapter}] where {" and ".join(guards)}:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I]({factory.adapter}(function))
+
+
+''')
+    return "".join(out)
+
+
+def scoped_pointers():
+    """Preserve the inferred IO action witness in the shared scoped adapter."""
+    out = []
+    for factory in native_factories("borrow", ["P"], include_void=False):
+        parameters = reader_parameters(factory, "R")
+        parameters += [f"{p}: {bound}" for p, bound in factory.pointer.parameters] + ["//"]
+        guards = [*factory.pointer.conditions, f"_ScopedFactoryCompatible[{factory.adapter}]"]
+        owner = f"_ScopedFactory[{factory.adapter}, R]"
+        out.append(f'''def scoped_io[{", ".join(parameters)}]({factory.argument}) -> {owner} where {" and ".join(guards)}:
+    """Copy a stored borrowing IO factory without invoking it or retaining its admission borrow."""
+    return {owner}({factory.adapter}(function))
+
+
+''')
+    return "".join(out)
+
+
+def projection_source(text=None):
+    text = PROJECTION_OUTPUT.read_text() if text is None else text
+    before, remaining = text.split(PROJECTION_START, 1)
+    _, after = remaining.split(PROJECTION_END, 1)
+    return before + PROJECTION_START + projection_pointers() + PROJECTION_END + after
+
+
+def scoped_source(text=None):
+    text = SCOPED_OUTPUT.read_text() if text is None else text
+    before, remaining = text.split(SCOPED_START, 1)
+    _, after = remaining.split(SCOPED_END, 1)
+    return before + SCOPED_START + scoped_pointers() + SCOPED_END + after
 
 
 def resource_source(text=None):
@@ -315,3 +366,7 @@ if __name__ == "__main__":
     print(f"wrote {OUTPUT.relative_to(ROOT)}")
     RESOURCE_OUTPUT.write_text(resource_source())
     print(f"wrote {RESOURCE_OUTPUT.relative_to(ROOT)}")
+    PROJECTION_OUTPUT.write_text(projection_source())
+    print(f"wrote {PROJECTION_OUTPUT.relative_to(ROOT)}")
+    SCOPED_OUTPUT.write_text(scoped_source())
+    print(f"wrote {SCOPED_OUTPUT.relative_to(ROOT)}")

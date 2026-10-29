@@ -280,7 +280,7 @@ def factory_pointer(abi, *, name="function", origin="q"):
     owner; the temporary borrow never becomes part of the stored callback.
     This policy is for thin pointers, never captured closures.
     """
-    fallback = all(bound == MD for _, bound in abi.parameters)
+    fallback = all(bound in (MD, "AnyType") for _, bound in abi.parameters)
     return FactoryPointer(
         ((origin, "ImmOrigin"),) if fallback else (),
         () if fallback else abi.conditions,
@@ -307,7 +307,14 @@ def variants(operands, result="R", *, result_register=None):
     for op in operands:
         if op.convention == "r":
             if not op.known:
-                raise ValueError("Unbound read types need a declared owner")
+                # A borrowing factory can infer its input from the pointer.
+                # Memory reads need no Movable/Deinitable payload witness.
+                choices.append((
+                    (op.type, ((op.type, "AnyType"),),
+                     (f"not conforms_to({op.type}, TrivialRegisterPassable)",)),
+                    (op.type, ((op.type, "TrivialRegisterPassable"),), ()),
+                ))
+                continue
             p = op.read_parameter
             if not p:
                 raise ValueError("Read operands need a fresh inference parameter")
@@ -364,26 +371,31 @@ class NativeFactory:
     adapter: str
 
 
-def native_factories(mode, payloads, *, name="function", result="R", error="E", owner=None, origin="q"):
+def native_factories(mode, payloads, *, name="function", result="R", error="E", owner=None, origin="q", include_void=True):
     """Spell native factory signatures with shared ABI and no-value evidence.
 
     Consumers place their own parameters around the native parameters and the
     fallback pointer origin. The pointer is copied into an existing owner;
     its admission borrow never becomes a stored callback origin. Independent
-    callback positions supply distinct origin names.
+    callback positions supply distinct origin names. Operand descriptors retain
+    inputs already selected by a capability; plain names infer fresh inputs.
     """
-    if mode not in ("thunk", "owned", "binary"):
-        raise ValueError("Native factories require zero, one or two owned operands")
+    if mode not in ("thunk", "owned", "binary", "borrow"):
+        raise ValueError("Unsupported native factory shape")
     if len(payloads) != len(CALLBACK_SHAPES[mode].inputs):
         raise ValueError("Native factory shape and operands must agree")
-    operands = [Operand(p, "o", known=False) for p in payloads]
+    convention = "r" if mode == "borrow" else "o"
+    operands = [p if isinstance(p, Operand) else Operand(p, convention, known=False)
+                for p in payloads]
+    if any(op.convention != convention for op in operands):
+        raise ValueError("Factory operands must match their callback convention")
     for raising in (False, True):
-        for void in (False, True):
+        for void in ((False, True) if include_void else (False,)):
             for abi in variants(operands, None if void else result):
                 pointer = factory_pointer(abi, name=name, origin=origin)
-                if void and not pointer.parameters:
+                if void and mode != "borrow" and not pointer.parameters:
                     continue
-                if void:
+                if void and mode != "borrow":
                     # A literal no-return signature fixes the result ABI. Its
                     # symbolic-input fallback must compete by value as well:
                     # borrowing it lets a typed-result alternative win before
@@ -391,13 +403,15 @@ def native_factories(mode, payloads, *, name="function", result="R", error="E", 
                     # The exact no-return signature also admits register inputs;
                     # additional register alternatives would be ambiguous.
                     pointer = FactoryPointer((), (), name)
+                # Read-only void inputs retain their register/memory evidence;
+                # the ordinary borrowed fallback still admits symbolic inputs.
                 parameters = abi.parameters + (((error, MD),) if raising else ())
-                signature = ("def(" + ", ".join(argument(p, "o", thin=True, known=False) for p in payloads) + ")"
+                signature = ("def(" + ", ".join(argument(p, op.convention, thin=True, known=op.known) for p, op in zip(abi.payloads, operands)) + ")"
                              + (" raises " + error if raising else "") + " thin"
                              + ("" if void else " -> " + result))
                 output = "type_of(None)" if void else result
                 failure = error if raising else "Never"
-                adapter = native_adapter(mode, payloads, output, failure, f"type_of({name})", raising, owner=owner)
+                adapter = native_adapter(mode, list(abi.payloads), output, failure, f"type_of({name})", raising, owner=owner)
                 yield NativeFactory(parameters, pointer, pointer.argument + ": " + signature,
                                     adapter)
 

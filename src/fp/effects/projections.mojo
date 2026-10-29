@@ -129,3 +129,127 @@ def inspect[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I:
 ) raises I.ProjectError[_NativeBorrow[P, R, E, F, True]] -> I.Projected[_NativeBorrow[P, R, E, F, True]] where I.ProjectCompatible[_NativeBorrow[P, R, E, F, True]] and P == I.Input:
     """Project with an owned native borrowing function or closure."""
     return inspect[I](_NativeBorrow[P, R, E, F, True](function^))
+
+
+# --- native projection pointers (generated) ---
+def asks[R: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, R, Never, type_of(function), False](function))
+
+
+def asks[R: RegisterPassable & Deinitable, //, I: Project](function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, R, Never, type_of(function), False](function))
+
+
+def asks[P: TrivialRegisterPassable, R: Movable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, R, Never, type_of(function), False](function))
+
+
+def asks[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, R, Never, type_of(function), False](function))
+
+
+def asks[q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False](function))
+
+
+def asks[P: TrivialRegisterPassable, //, I: Project](function: def(P) thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, type_of(None), Never, type_of(function), False](function))
+
+
+def asks[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, R, E, type_of(function), True](function))
+
+
+def asks[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, R, E, type_of(function), True](function))
+
+
+def asks[P: TrivialRegisterPassable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, R, E, type_of(function), True](function))
+
+
+def asks[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, R, E, type_of(function), True](function))
+
+
+def asks[E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, type_of(None), E, type_of(function), True](function))
+
+
+def asks[P: TrivialRegisterPassable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, type_of(None), E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, type_of(None), E, type_of(function), True](function))
+
+
+def inspect[R: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, R, Never, type_of(function), False](function))
+
+
+def inspect[R: RegisterPassable & Deinitable, //, I: Project](function: def(I.Input) thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, R, Never, type_of(function), False]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, R, Never, type_of(function), False](function))
+
+
+def inspect[P: TrivialRegisterPassable, R: Movable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, R, Never, type_of(function), False](function))
+
+
+def inspect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //, I: Project](function: def(P) thin -> R) raises I.ProjectError[_NativeBorrow[P, R, Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, R, Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, R, Never, type_of(function), False](function))
+
+
+def inspect[q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, type_of(None), Never, type_of(function), False](function))
+
+
+def inspect[P: TrivialRegisterPassable, //, I: Project](function: def(P) thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] -> I.Projected[_NativeBorrow[P, type_of(None), Never, type_of(function), False]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), Never, type_of(function), False]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, type_of(None), Never, type_of(function), False](function))
+
+
+def inspect[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, R, E, type_of(function), True](function))
+
+
+def inspect[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(I.Input) raises E thin -> R) raises I.ProjectError[_NativeBorrow[I.Input, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, R, E, type_of(function), True]] where not conforms_to(I.Input, TrivialRegisterPassable) and I.ProjectCompatible[_NativeBorrow[I.Input, R, E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, R, E, type_of(function), True](function))
+
+
+def inspect[P: TrivialRegisterPassable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and not conforms_to(R, RegisterPassable) and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, R, E, type_of(function), True](function))
+
+
+def inspect[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin -> R) raises I.ProjectError[_NativeBorrow[P, R, E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, R, E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, R, E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, R, E, type_of(function), True](function))
+
+
+def inspect[E: Movable & Deinitable, q: ImmOrigin, //, I: Project](ref[q] function: def(I.Input) raises E thin) raises I.ProjectError[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]] where I.ProjectCompatible[_NativeBorrow[I.Input, type_of(None), E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[I.Input, type_of(None), E, type_of(function), True](function))
+
+
+def inspect[P: TrivialRegisterPassable, E: Movable & Deinitable, //, I: Project](function: def(P) raises E thin) raises I.ProjectError[_NativeBorrow[P, type_of(None), E, type_of(function), True]] -> I.Projected[_NativeBorrow[P, type_of(None), E, type_of(function), True]] where P == I.Input and I.ProjectCompatible[_NativeBorrow[P, type_of(None), E, type_of(function), True]]:
+    """Copy a stored borrowing pointer into the selected projection; execution stays deferred."""
+    return asks[I](_NativeBorrow[P, type_of(None), E, type_of(function), True](function))
+
+
+# --- end native projection pointers ---

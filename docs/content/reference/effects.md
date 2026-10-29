@@ -75,8 +75,12 @@ The projection result must be independent of the borrowed run input.
 `Project` names the selected `Input` and `Family`. Use
 `LiftProject[Layer, Capability]` to target an immediate base, and nest selections
 for deeper stacks. Generic wrappers forward `ProjectCompatible[F]`, return
-`Projected[F]` and raise `ProjectError[F]`. Native borrowing functions and
-closures work directly; a consuming library callback uses BorrowOnceCallable.
+`Projected[F]` and raise `ProjectError[F]`. Native borrowing functions,
+closures and stored thin pointers work directly; a consuming library callback
+uses BorrowOnceCallable. A stored pointer is copied into the projection, so
+reassigning the pointer later does not change an already constructed recipe.
+The payload itself is borrowed at execution. Native void results remain native
+void; an explicitly declared `NoneType` result keeps that distinct type.
 
 <!-- example: docs/examples/borrowed_projections.mojo -->
 
@@ -405,7 +409,13 @@ finalizer, and one retained beyond its region is inert. The existing
 `uncancelable(program)` remains the simpler fully masked form.
 
 `scoped_io(callback)` adapts an ordinary borrowing IO factory for
-`guarantee_case`. Implement `ScopedIO` when the returned action needs to borrow
+`guarantee_case` or resource use. It also accepts a stored thin pointer directly:
+`scope.use(scoped_io(pointer))`. Admission copies the pointer and retains its
+exact IO action and native construction error; it does not invoke the callback
+or retain a borrow of the pointer variable. The construction error must be
+`Never` or the returned IO action's error type.
+
+Implement `ScopedIO` when the returned action needs to borrow
 the exit case itself: `Action[o]` retains the input origin until execution
 completes, while `Value`, `Error` and `BuildError` are independent of it.
 `DelayContract[F, E].Out` names delayed actions in such generic factories.
