@@ -5062,6 +5062,13 @@
    },
    "provider": "effects/fibers"
   },
+  "effects.GuaranteeCaseContract": {
+   "declarations": [
+    "struct GuaranteeCaseContract[P: ReaderAction, F: ScopedIO]:"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/finalization"
+  },
   "effects.IO": {
    "declarations": [
     "comptime IO[E: Movable & Deinitable = Error] = ReaderT[ResultT[OptionalFamily, EffectFailure[E]], IOContext[E]]"
@@ -6152,8 +6159,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "f6aad171c234eb0f25f4293396cfcefc801741c64925ea0573734de69482e15e",
-     "signature": "def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F ) -> _IOGuaranteeCase[P, F] where IOContract[P].Compatible and IOContract[P].Error == F.Error and F.Input == ExitCase[F.Error] and _ErrorCompatible[F.Error, F.BuildError]:"
+     "sha256": "3b55a0bae090d700729395ad566e115ee539205385cd30a2714aef67c7c296fb",
+     "signature": "def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F ) -> _IOGuaranteeCase[P, F] where _CaseFinalizerCompatible[P, F]:"
     }
    ],
    "provider": "effects/finalization"
@@ -6476,16 +6483,16 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "0c2c7114e1ec7858b78ad438369a13d6446756de45acad146c6a5b06dab801ab",
-     "signature": "def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> _ScopedFactory[F] where _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[F.Result, ReaderAction]].Error, F.Failure]:"
+     "sha256": "7e04828f3900b5a87a5036652746e68cb73563e743929adab8be99d8deea613b",
+     "signature": "def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> _ScopedFactory[F] where _ScopedFactoryCompatible[F]:"
     },
     {
-     "sha256": "a3900340050cff609754fdc3566a0b2b0158ed209387fb5de7c2f09c9799ad44",
-     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, Never, F, False]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible:"
+     "sha256": "91474d43940be7233898a160d4958911771988067e0f74c1be9b3d35d3ebc8a8",
+     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, Never, F, False]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]]:"
     },
     {
-     "sha256": "00772ef0f838413125a874f11ea0b427caf59e996af502de594d1d20f55073b3",
-     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[V, ReaderAction]].Error, X]:"
+     "sha256": "41d1c9cb89db0fe103f15b7d1a07a81e88f7d8b5188b4b0075016144822e48a5",
+     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]]:"
     }
    ],
    "provider": "effects/scoped"
@@ -14088,6 +14095,64 @@
      {
       "sha256": "c90ffdfbd49f90f3fbb0014ed5dece58af06bb2a849bac9507bb88a81a66b00d",
       "signature": "def guarantee[Q: ReaderAction](deinit self, var finalizer: Q) -> Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q], Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _FinalizerCompatible[_Reader[Self.V], Q]:"
+     }
+    ],
+    "guarantee_case": [
+     {
+      "sha256": "e6179e888044e158bebfd5ad0c42c1acb824fd7155be09cf86f5ba7fa31a8818",
+      "signature": "def guarantee_case[F: ScopedIO](deinit self, var finalizer: F) -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], F].Family, GuaranteeCaseContract[_Reader[Self.V], F].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and GuaranteeCaseContract[_Reader[Self.V], F].Compatible:"
+     },
+     {
+      "sha256": "82586a35e81e9431bf992d5580af1282481e6d75a61ed4e7aebab9385ae87b8d",
+      "signature": "def guarantee_case[C: BorrowCallContract & Movable & Deinitable](deinit self, var finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and C.Payload == ExitCase[IOContract[_Reader[Self.V]].Error] and _ScopedFactoryCompatible[C] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C]].Compatible:"
+     },
+     {
+      "sha256": "f31a3ccaaca81ebd376d11a746f124120a6d1c0a627495aa3a2e914313dd079b",
+      "signature": "def guarantee_case[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C._BorrowView[o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C._BorrowView[o]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and C._BorrowView[o].Payload == ExitCase[IOContract[_Reader[Self.V]].Error] and _ScopedFactoryCompatible[C._BorrowView[o]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C._BorrowView[o]]].Compatible:"
+     },
+     {
+      "sha256": "36e3425e5f49dd747b01de94c7281724816d40e8a9ff0a4b9192a4899b588d01",
+      "signature": "def guarantee_case[R: Movable & Deinitable, o: ImmOrigin, //, C: def(ExitCase[IOContract[_Reader[Self.V]].Error]) -> R](deinit self, ref[o] finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ScopedFactoryCompatible[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]]].Compatible:"
+     },
+     {
+      "sha256": "db4afa084f704533d86f64534a02864d17d2f6dfd15aa81fc89882ecb444a522",
+      "signature": "def guarantee_case[R: Movable & Deinitable, o: ImmOrigin, //, C: def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises Self.E -> R](deinit self, ref[o] finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ScopedFactoryCompatible[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]]].Compatible:"
+     },
+     {
+      "sha256": "ed1884c9e5103d90d2244a786defceaf0ebb93c66b90907173489f6f075d666b",
+      "signature": "def guarantee_case[R: Movable & Deinitable, o: ImmOrigin, //, C: def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises Never -> R](deinit self, ref[o] finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and Self.E != Never and _ScopedFactoryCompatible[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]]].Compatible:"
+     },
+     {
+      "sha256": "f28a5adb09a255b38a7570c75b9ffc6de11677163fab9297d69529fc75466c27",
+      "signature": "def guarantee_case[R: Movable & Deinitable, //](deinit self, finalizer: def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and not conforms_to(ExitCase[IOContract[_Reader[Self.V]].Error], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Compatible:"
+     },
+     {
+      "sha256": "245a02b1c2e9dfe6839ecfd6a467791ee9523bf7a133d4105a3d7a92b68a30c7",
+      "signature": "def guarantee_case[R: RegisterPassable & Deinitable, //](deinit self, finalizer: def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and not conforms_to(ExitCase[IOContract[_Reader[Self.V]].Error], TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Compatible:"
+     },
+     {
+      "sha256": "c9f9c7ec1631c7ec607ab58a8badf102efb18b5a765a1edf78c296b2918217ec",
+      "signature": "def guarantee_case[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, finalizer: def(P) thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and P == ExitCase[IOContract[_Reader[Self.V]].Error] and not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, def(P) thin -> R, False]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Compatible:"
+     },
+     {
+      "sha256": "618a37fc34add54f5ee27a8a14ab5058c6244500dd416d471c91340bdc3472ed",
+      "signature": "def guarantee_case[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, finalizer: def(P) thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and P == ExitCase[IOContract[_Reader[Self.V]].Error] and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, def(P) thin -> R, False]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Compatible:"
+     },
+     {
+      "sha256": "5b6145f526a55d75ac5bbe53b90cdfe0f57e54645a05edae50593626e78140d2",
+      "signature": "def guarantee_case[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, finalizer: def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ErrorCompatible[Self.E, X] and not conforms_to(ExitCase[IOContract[_Reader[Self.V]].Error], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Compatible:"
+     },
+     {
+      "sha256": "2e7053057975002d51054267ea027ea6ad47e98b3960ee79eaa3594848185290",
+      "signature": "def guarantee_case[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, finalizer: def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ErrorCompatible[Self.E, X] and not conforms_to(ExitCase[IOContract[_Reader[Self.V]].Error], TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Compatible:"
+     },
+     {
+      "sha256": "ae2f18edcb4b1db3d5e3877248142f74d0c30fb66facbb294bea176349b61499",
+      "signature": "def guarantee_case[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, finalizer: def(P) raises X thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ErrorCompatible[Self.E, X] and P == ExitCase[IOContract[_Reader[Self.V]].Error] and not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Compatible:"
+     },
+     {
+      "sha256": "794dfd78a2796db6a89bd4286cd095fe04b91e65868c185d770516312a67a5b6",
+      "signature": "def guarantee_case[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, finalizer: def(P) raises X thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ErrorCompatible[Self.E, X] and P == ExitCase[IOContract[_Reader[Self.V]].Error] and _ScopedFactoryCompatible[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Compatible:"
      }
     ],
     "if_effect": [

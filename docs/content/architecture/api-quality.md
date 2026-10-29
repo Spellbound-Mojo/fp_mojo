@@ -317,19 +317,38 @@ retains one selected value for each Cartesian pair. The selected payload keeps
 its exact origin and moves where the family permits it. Deferred execution,
 IO outcomes and cleanup remain with their existing owners.
 
+## Outcome-aware IO cleanup
+
+Cats Effect's [MonadCancel syntax](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel/shared/src/main/scala/cats/effect/kernel/syntax/MonadCancelSyntax.scala)
+exposes `guaranteeCase` by forwarding to its effect owner. Pipeline now exposes
+`guarantee_case` with the same composition pattern through the existing scoped
+factory and finalization owners. The IO finalization example passes
+`report_exit` directly and finishes with `run_io`, removing nested free calls
+and explicit `scoped_io` adapters.
+
+The body owns the resulting family, error channel and exit-case type. Shared
+admission requires cleanup to match those types. `GuaranteeCaseContract` lets
+generic wrappers forward that proof and name the resulting recipe and outcome.
+This avoids asking the compiler to transfer equalities through independently
+constructed exit-case and family types. The constant cleanup adapter also
+receives the body's exit-case type; execution stays in the existing finalizer.
+
+Native and library borrowing callbacks use the current signature descriptors.
+`ScopedIO` retains actions that borrow the fresh exit case during cleanup;
+ordinary callback results have an input-independent recipe type. External
+origins remain exact. Construction and execution of cleanup are masked and
+captured, unopened recipes do neither, and cleanup failures follow body failures.
+The library's exit case exposes success, error and cancellation state; this
+does not claim Cats Effect's complete Outcome or asynchronous runtime model.
+
 ## Next passes
 
-1. Bring outcome-aware IO finalization into the selected chain through the
-   existing `ScopedIO` and finalization owners. Use Cats Effect's
-   `guaranteeCase` syntax as the reference; retain exact success, failure and
-   cancellation outcomes. Qualify callback capture lifetimes and cleanup
-   failures before simplifying examples.
-2. Revisit remaining example-only factories and concrete recipe return
+1. Revisit remaining example-only factories and concrete recipe return
    annotations. Start from State, Writer and resource clients; replace a helper
    only when a compositional operation removes a concept without hiding its
    evaluation or ownership contract. Keep actual generic callers as acceptance
    tests instead of introducing aliases that erase concrete carriers.
-3. Consolidate repeated signature and contract descriptions exposed by those
+2. Consolidate repeated signature and contract descriptions exposed by those
    changes, then repeat the workflow and cost checkpoint. Prefer extending the
    current descriptor generators over introducing another generation system.
 

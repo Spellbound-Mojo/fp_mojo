@@ -48163,6 +48163,62 @@
    "summary": "A single owned worker, joined before its captured owners can be destroyed.",
    "traits": []
   },
+  "effects.GuaranteeCaseContract": {
+   "aliases": [
+    {
+     "description": "The body's unchanged family, for fluent continuation.",
+     "name": "Family"
+    },
+    {
+     "description": "The body's native error type, retained inside the execution outcome.",
+     "name": "NativeError"
+    },
+    {
+     "description": "The exit case borrowed while constructing and running cleanup.",
+     "name": "Input"
+    },
+    {
+     "description": "Body membership, exact cleanup input/error and compatible construction error.",
+     "name": "Compatible"
+    },
+    {
+     "description": "The unopened recipe with the body's value and finalization behavior.",
+     "name": "Out"
+    },
+    {
+     "description": "Construction itself cannot raise; deferred cleanup errors enter the outcome.",
+     "name": "Error"
+    },
+    {
+     "description": "The exact host result after execution, including failures or cancellation.",
+     "name": "Outcome"
+    }
+   ],
+   "description": "The body owns the family, success type and error channel. The finalizer\nborrows its exit case and returns IO with that same error type. Forward\nCompatible in generic wrappers and name Out without private recipe types.\nConstruction runs neither the body nor the cleanup factory.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The complete body recipe, including its captured origins.",
+     "inferred": false,
+     "name": "P",
+     "type": "ReaderAction",
+     "variadic": false
+    },
+    {
+     "description": "The scoped cleanup factory, including independent captured origins.",
+     "inferred": false,
+     "name": "F",
+     "type": "ScopedIO",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/finalization",
+   "signature": "struct GuaranteeCaseContract[P: ReaderAction, F: ScopedIO]",
+   "summary": "Admission and result metadata for outcome-aware IO finalization.",
+   "traits": []
+  },
   "effects.IO": {
    "aliases": [],
    "description": "Use delay, pure[IO[E]], map, flat_map and tail_rec_m to construct recipes;\nrun_io consumes one at the host boundary. Native callbacks run synchronously.\nCancellation uses the outer Optional and cannot be recovered as a stored error.",
@@ -55040,7 +55096,7 @@
       "doc": "A program retaining the body result and all body/cleanup errors.",
       "type": "_IOGuaranteeCase[P, F]"
      },
-     "signature": "def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F) -> _IOGuaranteeCase[P, F] where IOContract[P].Compatible and IOContract[P].Error == F.Error and F.Input == ExitCase[F.Error] and _ErrorCompatible[F.Error, F.BuildError]",
+     "signature": "def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F) -> _IOGuaranteeCase[P, F] where _CaseFinalizerCompatible[P, F]",
      "summary": "Finalize with an effect that borrows the body's exact exit case."
     }
    ],
@@ -58407,7 +58463,7 @@
       "doc": "A scoped factory with the returned IO action's value and error types.",
       "type": "_ScopedFactory[F]"
      },
-     "signature": "def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> _ScopedFactory[F] where _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[F.Result, ReaderAction]].Error, F.Failure]",
+     "signature": "def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> _ScopedFactory[F] where _ScopedFactoryCompatible[F]",
      "summary": "Adapt a borrowing factory returning IO to ScopedIO without executing it."
     },
     {
@@ -58451,7 +58507,7 @@
       "doc": "",
       "type": "_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]"
      },
-     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, Never, F, False]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible",
+     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, Never, F, False]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]]",
      "summary": "Adapt a native borrowing factory returning an IO program."
     },
     {
@@ -58502,7 +58558,7 @@
       "doc": "",
       "type": "_ScopedFactory[_NativeBorrow[P, V, X, F, True]]"
      },
-     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[V, ReaderAction]].Error, X]",
+     "signature": "def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]]",
      "summary": "Adapt a native factory with a compatible exact construction error."
     }
    ],
@@ -117493,7 +117549,7 @@
   },
   "functions.Pipeline": {
    "aliases": [],
-   "description": "Start with `pipeline(value)` for native carriers, declared effect recipes or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. `run(environment)`\nexecutes Reader, `run(state)` executes State, and `run()` unwraps Writer.\n`run_io()` executes IO with its exact outcome and cancellation boundary.\n`guarantee` and `on_cancel` attach deferred IO cleanup. These delegate to\nthe existing effect runners and finalization owner. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`local` scopes the selected environment. `listen` pairs a payload with its\nlog, and `censor` transforms that log. Each delegates to the selected\ncapability, preserving its output family and construction error.\n\n`elements()` selects native List, Array, Deque, LinkedList or NonEmptyList\nelement operations without naming a family. It only moves the carrier and\npreserves the selected native error. The chosen family's shape and\ncapabilities still apply: Array keeps its length; NonEmptyList filtering\nproduces List. Other whole-value pipelines keep their existing semantics.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. Observation preserves the selected family and native error context.\nMapping rebinds RebindingFunctor; filtering follows FilteredFamily or MapFilteredFamily; NonEmptyList filtering\ncontinues as List because it may discard every element.\n\n`flat_tap` and `flat_pair_with` sequence borrowing effects through the\nselected Monad, retaining originals or pairing them with each projection.\n`before` sequences a factory and keeps originals; `followed_by` keeps its\nproduced payloads. The family owns skipping, branching and deferred timing.\nRetained originals need Copyable only when successful effects duplicate them.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional, Result or declared effect family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nMapping conveniences retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\n`if_effect(on_true, on_false)` uses the selected Monad's Bool condition.\nA failed or absent condition skips both factories. Native closures remain\nborrowed; thin pointers and library factories are owned. Repeated sources\nrequire repeatable factories. Deferred families retain their invocation\ntiming and can join distinct carrier representations with one payload type.\n\n`par_map_n`, `par_product_n`, `par_traverse` and `par_sequence` use ordered\nValidation accumulation for stored Result errors. Native raises stop\nimmediately. List-valued errors infer concatenation; an explicit Semigroup\nselects another error policy. N-ary methods retain the selected source\nfamily; accumulating traversal continues in the resulting Result family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
+   "description": "Start with `pipeline(value)` for native carriers, declared effect recipes or a bare value, or\n`pipeline[Family](value)` for an explicit Functor. Select a native error\nonce with `raising[E]()`. Pure callbacks keep Never; library callbacks\nkeep their declared errors. `get()` extracts the value. `run(environment)`\nexecutes Reader, `run(state)` executes State, and `run()` unwraps Writer.\n`run_io()` executes IO with its exact outcome and cancellation boundary.\n`guarantee` and `on_cancel` attach deferred IO cleanup; `guarantee_case`\nconstructs cleanup from the exit case. These delegate to\nthe existing effect runners and finalization owner. Map, flat_map,\nfilter and filter_map delegate to the family's evaluation and ownership\nrules, including deferred execution and retained callback borrows.\n\n`local` scopes the selected environment. `listen` pairs a payload with its\nlog, and `censor` transforms that log. Each delegates to the selected\ncapability, preserving its output family and construction error.\n\n`elements()` selects native List, Array, Deque, LinkedList or NonEmptyList\nelement operations without naming a family. It only moves the carrier and\npreserves the selected native error. The chosen family's shape and\ncapabilities still apply: Array keeps its length; NonEmptyList filtering\nproduces List. Other whole-value pipelines keep their existing semantics.\n\n`tap` borrows the whole value once now, including empty carriers and Err.\n`tap_each` borrows each payload through the family's map; `pair_with`\nretains each original beside its projection. Observer results are\ndiscarded for both tap forms. `filter_not` retains payloads rejected by\na borrowing Bool predicate. These operations consume a library\nBorrowCallable or borrow a native closure; stored thin pointers are\ncopied. Observation preserves the selected family and native error context.\nMapping rebinds RebindingFunctor; filtering follows FilteredFamily or MapFilteredFamily; NonEmptyList filtering\ncontinues as List because it may discard every element.\n\n`flat_tap` and `flat_pair_with` sequence borrowing effects through the\nselected Monad, retaining originals or pairing them with each projection.\n`before` sequences a factory and keeps originals; `followed_by` keeps its\nproduced payloads. The family owns skipping, branching and deferred timing.\nRetained originals need Copyable only when successful effects duplicate them.\n\n`then` consumes the whole value once. It selects the returned List,\nOptional, Result or declared effect family, or Identity for other values; `then[Family]`\nselects an explicit output family. Folds consume a native source and\nselect the accumulator's family by the same rule. Traversal selects its\ntarget effect family. `traverse_tap[TargetFamily]` borrows each payload,\nruns its effect and retains the original. `filter_effect[TargetFamily]`\nretains originals whose borrowing effect returns True; the source must\nalso support FunctorFilter. Both preserve the target's short-circuiting,\naccumulation, branching and deferred timing. Single-use library callbacks\nwork where traversal calls them at most once. Branching targets may require\ncopyable payloads. Combinations retain the current Applicative family.\n\n`traverse_filter` and `sequence_filter` compact Optional payloads inside\nthe target effect using the source's FunctorFilter. `flat_traverse` and\n`flat_sequence` flatten one source layer using its Monad. `traverse_void`\nand `sequence_void` discard successful outputs from native sources;\nResult traversal retains its source error layer inside the target.\n\nEffectful queries consume a native source into a target Monad.\n`all_effect`, `any_effect` and `find_effect` borrow each item;\n`find_map_effect` and `fold_map_effect` consume it. Bind a fold accumulator\nbefore its callback with `fold_effect[TargetFamily](initial).run(step)`.\nThe target controls stopping, branching and deferral. Monoid identity\nconstruction happens immediately; callback and combination timing follows\nthe target. Array sources move through temporary List storage.\n\nPure reductions consume sources immediately. `find_map` stops at the\nfirst present projection. `fold_map[Monoid]` and `combine_all[Monoid]`\ncombine in source order; `sum` and `sum_by` infer numeric types and SIMD\nlanes. `min_by` and `max_by` borrow each item for its key, preserving the\nfirst item on ties. Reduction results select their native family.\n\nMapping conveniences retain the selected family. `fill`, `replace`, `void`\nand tuple pairing use its map; copied constants must be Copyable.\n`compact` requires FunctorFilter, `flatten` requires Monad, and `ap`\napplies stored library callables through Applicative combination.\n\n`if_effect(on_true, on_false)` uses the selected Monad's Bool condition.\nA failed or absent condition skips both factories. Native closures remain\nborrowed; thin pointers and library factories are owned. Repeated sources\nrequire repeatable factories. Deferred families retain their invocation\ntiming and can join distinct carrier representations with one payload type.\n\n`par_map_n`, `par_product_n`, `par_traverse` and `par_sequence` use ordered\nValidation accumulation for stored Result errors. Native raises stop\nimmediately. List-valued errors infer concatenation; an explicit Semigroup\nselects another error policy. N-ary methods retain the selected source\nfamily; accumulating traversal continues in the resulting Result family.\n\nResult-specific methods delegate to Result and update ResultFamily when\nthe stored error type changes. Native raised errors remain raised;\nuse Capture to store them. Existing Piped and piped remain available.",
    "fields": [
     {
      "description": "The carrier owned by this pipeline.",
@@ -158897,6 +158953,533 @@
       },
       "signature": "def guarantee[Q: ReaderAction](deinit self, var finalizer: Q) -> Pipeline[Self.I, _IOGuarantee[_Reader[Self.V], Q], Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _FinalizerCompatible[_Reader[Self.V], Q]",
       "summary": "Finalize an entered IO body after success, failure or cancellation."
+     }
+    ],
+    "guarantee_case": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The consumed factory; its action may borrow the exit case\n    until cleanup completes. Captured external origins remain exact.",
+        "name": "finalizer",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A scoped factory in the body's IO error family.",
+        "inferred": false,
+        "name": "F",
+        "type": "ScopedIO",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A deferred pipeline with masked cleanup construction and execution.\nBody and cleanup failures retain their order. Unopened recipes do\nnot invoke the factory. Cleanup results cannot escape its input borrow.",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], F].Family, GuaranteeCaseContract[_Reader[Self.V], F].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[F: ScopedIO](deinit self, var finalizer: F) -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], F].Family, GuaranteeCaseContract[_Reader[Self.V], F].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and GuaranteeCaseContract[_Reader[Self.V], F].Compatible",
+      "summary": "Finalize an entered IO body with access to its exact exit case."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The cleanup factory; native closures are borrowed, thin pointers owned, library callbacks consumed. It runs later with the exit case and returns IO in the body's error family.",
+        "name": "finalizer",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "The first library callback type, retaining its receiver and origins.",
+        "inferred": false,
+        "name": "C",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[C: BorrowCallContract & Movable & Deinitable](deinit self, var finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and C.Payload == ExitCase[IOContract[_Reader[Self.V]].Error] and _ScopedFactoryCompatible[C] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "finalizer",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "_BorrowViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C._BorrowView[o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C._BorrowView[o]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C._BorrowView[o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C._BorrowView[o]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and C._BorrowView[o].Payload == ExitCase[IOContract[_Reader[Self.V]].Error] and _ScopedFactoryCompatible[C._BorrowView[o]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[C._BorrowView[o]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "finalizer",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(ExitCase[IOContract[_Reader[Self.V]].Error]) -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[R: Movable & Deinitable, o: ImmOrigin, //, C: def(ExitCase[IOContract[_Reader[Self.V]].Error]) -> R](deinit self, ref[o] finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ScopedFactoryCompatible[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, False, o]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "finalizer",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises Self.E -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[R: Movable & Deinitable, o: ImmOrigin, //, C: def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises Self.E -> R](deinit self, ref[o] finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ScopedFactoryCompatible[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Self.E, C, True, o]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "finalizer",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "C",
+        "type": "def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises Never -> R",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[R: Movable & Deinitable, o: ImmOrigin, //, C: def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises Never -> R](deinit self, ref[o] finalizer: C) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and Self.E != Never and _ScopedFactoryCompatible[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrowRef[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, C, True, o]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "finalizer",
+        "type": "def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[R: Movable & Deinitable, //](deinit self, finalizer: def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and not conforms_to(ExitCase[IOContract[_Reader[Self.V]].Error], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "finalizer",
+        "type": "def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[R: RegisterPassable & Deinitable, //](deinit self, finalizer: def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and not conforms_to(ExitCase[IOContract[_Reader[Self.V]].Error], TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, Never, def(ExitCase[IOContract[_Reader[Self.V]].Error]) thin -> R, False]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "finalizer",
+        "type": "def(P) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[P: TrivialRegisterPassable, R: Movable & Deinitable, //](deinit self, finalizer: def(P) thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and P == ExitCase[IOContract[_Reader[Self.V]].Error] and not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, def(P) thin -> R, False]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "finalizer",
+        "type": "def(P) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, //](deinit self, finalizer: def(P) thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and P == ExitCase[IOContract[_Reader[Self.V]].Error] and _ScopedFactoryCompatible[_NativeBorrow[P, R, Never, def(P) thin -> R, False]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "finalizer",
+        "type": "def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, finalizer: def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ErrorCompatible[Self.E, X] and not conforms_to(ExitCase[IOContract[_Reader[Self.V]].Error], TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "finalizer",
+        "type": "def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, finalizer: def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ErrorCompatible[Self.E, X] and not conforms_to(ExitCase[IOContract[_Reader[Self.V]].Error], TrivialRegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[ExitCase[IOContract[_Reader[Self.V]].Error], R, X, def(ExitCase[IOContract[_Reader[Self.V]].Error]) raises X thin -> R, True]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "finalizer",
+        "type": "def(P) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, finalizer: def(P) raises X thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ErrorCompatible[Self.E, X] and P == ExitCase[IOContract[_Reader[Self.V]].Error] and not conforms_to(R, RegisterPassable) and _ScopedFactoryCompatible[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "finalizer",
+        "type": "def(P) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Never",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "TrivialRegisterPassable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Out, Self.E]"
+      },
+      "signature": "def guarantee_case[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, finalizer: def(P) raises X thin -> R) raises Never -> Pipeline[GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Family, GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Out, Self.E] where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible and _ErrorCompatible[Self.E, X] and P == ExitCase[IOContract[_Reader[Self.V]].Error] and _ScopedFactoryCompatible[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] and GuaranteeCaseContract[_Reader[Self.V], _ScopedFactory[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]].Compatible",
+      "summary": "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred."
      }
     ],
     "if_effect": [

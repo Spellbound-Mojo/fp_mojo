@@ -69,6 +69,17 @@ The [IO example](effects.md#io-cancellation-and-finalization) uses this
 chain without extracting and rewrapping intermediate recipes. The free
 `run_io`, `guarantee` and `on_cancel` functions remain available.
 
+`.guarantee_case(make_cleanup)` constructs cleanup from the body's `ExitCase`.
+Ordinary callbacks return an IO recipe in the body's error family; no explicit
+`scoped_io` adapter is required. Native closures remain borrowed until the
+pipeline runs. Thin pointers are owned, and library borrowing callbacks or
+`ScopedIO` factories are consumed. `ScopedIO` also supports an action borrowing
+the fresh exit case until cleanup completes. Both construction and execution
+are deferred and masked; their failures join the body outcome in order.
+A raising native factory selects its error with `raising[E]()` and must match
+the body's IO error family. Generic wrappers forward
+`GuaranteeCaseContract[Program, Factory].Compatible` for a scoped factory.
+
 Use `.local(change_environment)` when the selected family supplies `Local`.
 The callback borrows the environment and returns its replacement; the enclosing
 environment stays unchanged. Writer families supply `.listen()` to pair each

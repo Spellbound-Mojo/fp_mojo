@@ -223,6 +223,21 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
          f"_listen_effect[{selection}](self.value^)",
          "Pair the payload with a copy of this recipe's log, retaining the output log.")
 
+    # ScopedIO owns construction and its input borrow; finalization owns outcomes.
+    program = "_Reader[Self.V]"
+    exit_case = f"ExitCase[IOContract[{program}].Error]"
+    for cb in borrowing_callbacks(exit_case, "finalizer", repeatable=False):
+        adapter = cb["adapter_type"]
+        scoped = f"_ScopedFactory[{adapter}]"
+        contract = f"GuaranteeCaseContract[{program}, {scoped}]"
+        result = contract + ".Out"
+        conditions = ["conforms_to(Self.V, ReaderAction)", f"Self.I == {program}.Family",
+                      f"IOContract[{program}].Compatible", *cb["conditions"],
+                      f"_ScopedFactoryCompatible[{adapter}]", contract + ".Compatible"]
+        emit("guarantee_case", cb, cb["params"], cb["argument"], result, "Never", contract + ".Family", conditions,
+             f"_guarantee_case(rebind_var[{program}](self.value^), _scoped_io({cb['build']}))",
+             "Finalize an entered IO body with a callback producing cleanup; construction and execution are masked and deferred.")
+
     # Observation delegates receiver selection to its retention adapter. The
     # whole-value tap runs once now; payload observers belong to the family's
     # map, which may defer evaluation and retain the native callback borrow.
@@ -1307,6 +1322,7 @@ def documented(source):
         "step": "The fold step; closures are borrowed, thin pointers owned, repeatable library steps consumed.",
         "initial": "The initial accumulator, consumed.",
         "other": "The already evaluated second carrier, consumed.",
+        "finalizer": "The cleanup factory; native closures are borrowed, thin pointers owned, library callbacks consumed. It runs later with the exit case and returns IO in the body's error family.",
         "old": "The payload to compare against, consumed.",
         "new": "The replacement payload, copied into matching positions.",
         "values": "The already evaluated carrier of arguments, consumed.",

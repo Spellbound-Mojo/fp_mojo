@@ -70,7 +70,7 @@ from .fibers import Fiber, unsafe_start
 from .coordination import Ref, Deferred, Semaphore, Permit, Queue
 
 from .scoped import ScopedIO, scoped_io
-from .finalization import guarantee_case, on_cancel, Poll, uncancelable_with
+from .finalization import GuaranteeCaseContract, guarantee_case, on_cancel, Poll, uncancelable_with
 from ._io_core import DelayContract
 
 from .effectful_resources import IOResource, IOResourceContract, IOResourceCaseContract, IOResourceFullContract, resource_io, resource_io_case, resource_io_full, resource_io_case_full, eval_resource, lift_resource

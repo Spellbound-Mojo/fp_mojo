@@ -356,6 +356,20 @@ Dropping a program or running it with an already-canceled token does not enter
 its scopes or run their finalizers.
 
 `guarantee_case(body, finalizer)` builds cleanup from an `ExitCase[E]`.
+The selected form is `pipeline(body).guarantee_case(make_cleanup).run_io()`;
+it accepts ordinary borrowing callbacks directly, or a consumed `ScopedIO`
+factory. Native closures are borrowed until execution; owning a callback uses
+the existing library callable adapters. The body retains its family, success
+type and native error channel.
+
+`GuaranteeCaseContract[Program, Factory]` exposes `Compatible`, `Out`, `Family`,
+`Input`, `NativeError`, construction `Error` (Never) and execution `Outcome`.
+Generic scoped-factory wrappers should forward `Compatible` instead of
+restating equalities between body and finalizer aliases. `Input` is the exit
+case of the body's error type; this keeps Mojo 1.2's type proofs anchored to
+the selected program. No native factory error escapes construction of the
+pipeline: the factory runs inside deferred finalization.
+
 The case distinguishes success, error and cancellation; a failure can also be
 canceled. `failure()` borrows its exact `EffectFailure` without copying it.
 Both finalizer construction and execution are masked and captured. `on_cancel`

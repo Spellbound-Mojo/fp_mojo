@@ -805,17 +805,19 @@
       "methods": [
         "run_io",
         "guarantee",
-        "on_cancel"
+        "on_cancel",
+        "guarantee_case"
       ],
       "status": "selected",
       "families": "Selected IO[E]",
-      "callbacks": "Existing IO recipes; finalizers use the same exact IO error family.",
+      "callbacks": "Existing IO recipes; finalizers use the same exact IO error family. Outcome-aware cleanup accepts native borrowing callbacks, library borrowing callbacks or ScopedIO factories.",
       "ownership": "Consumes the pipeline and attached cleanup; native captures retain their ownership and origins.",
       "errors": "Exact Outcome[Value, E], including ordered body and cleanup errors and cancellation state. No native error escapes run_io.",
       "timing": "Composition is deferred. run_io executes synchronously; unopened scopes skip cleanup and tokens are never reset.",
       "owner": [
         "src/fp/effects/_io_core.mojo",
-        "src/fp/effects/finalization.mojo"
+        "src/fp/effects/finalization.mojo",
+        "src/fp/effects/scoped.mojo"
       ],
       "evidence": [
         "tests/runtime/test_pipeline_io.mojo",
@@ -831,7 +833,11 @@
         "tests/compile_fail/pipeline_io_guarantee_state.mojo",
         "tests/compile_fail/pipeline_io_plain.mojo",
         "tests/compile_fail/pipeline_io_reader.mojo",
-        "tests/compile_fail/pipeline_io_reuse.mojo"
+        "tests/compile_fail/pipeline_io_reuse.mojo",
+        "tests/runtime/test_pipeline_guarantee_case.mojo",
+        "tests/runtime/test_pipeline_guarantee_case_native.mojo",
+        "tests/runtime/test_pipeline_guarantee_case_origins.mojo",
+        "tests/ownership/test_pipeline_guarantee_case_owned.mojo"
       ]
     },
     {

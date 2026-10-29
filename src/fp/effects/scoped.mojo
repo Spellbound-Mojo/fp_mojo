@@ -83,7 +83,13 @@ struct _ScopedFactory[F: BorrowCallContract & Movable & Deinitable](ScopedIO):
         return rebind_var[Self.Program](_borrow_once_as[Self.BuildError](value, self.function^))
 
 
-def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> _ScopedFactory[F] where _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[F.Result, ReaderAction]].Error, F.Failure]:
+comptime _ScopedFactoryCompatible[F: BorrowCallContract & Movable & Deinitable] = (
+    _OnceBorrowAvailable[F] and IOContract[downcast[F.Result, ReaderAction]].Compatible
+    and _ErrorCompatible[IOContract[downcast[F.Result, ReaderAction]].Error, F.Failure]
+) if conforms_to(F.Result, ReaderAction) else False
+
+
+def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> _ScopedFactory[F] where _ScopedFactoryCompatible[F]:
     """Adapt a borrowing factory returning IO to ScopedIO without executing it.
 
     The returned program has a fixed type and cannot borrow the fresh input.
@@ -101,11 +107,11 @@ def scoped_io[F: BorrowCallContract & Movable & Deinitable](var function: F) -> 
     return _ScopedFactory(function^)
 
 
-def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, Never, F, False]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible:
+def scoped_io[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, Never, F, False]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]]:
     """Adapt a native borrowing factory returning an IO program."""
     return scoped_io(_NativeBorrow[P, V, Never, F, False](function^))
 
 
-def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and _ErrorCompatible[IOContract[downcast[V, ReaderAction]].Error, X]:
+def scoped_io[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](var function: F) -> _ScopedFactory[_NativeBorrow[P, V, X, F, True]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]]:
     """Adapt a native factory with a compatible exact construction error."""
     return scoped_io(_NativeBorrow[P, V, X, F, True](function^))

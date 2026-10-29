@@ -1,5 +1,6 @@
 """Select effectful cleanup from success, failure, or cancellation."""
-from fp.effects import IO, ExitCase, DelayContract, Poll, delay, run_io, canceled, guarantee_case, scoped_io, uncancelable_with
+from fp.effects import IO, ExitCase, DelayContract, Poll, delay, canceled, uncancelable_with
+from fp.functions import pipeline
 from fp.callables import OnceThunk, OnceUnary
 from fp.algebra import pure
 
@@ -31,9 +32,9 @@ struct CancelableRegion(OnceUnary):
 
 
 def main():
-    var success = run_io(guarantee_case(pure[IO[Int]](42), scoped_io(report_exit)))
+    var success = pipeline(pure[IO[Int]](42)).guarantee_case(report_exit).run_io()
     var result = success.take()
     print("result:", result^._take_ok())
     var body = uncancelable_with[Int](CancelableRegion())
-    var canceled_result = run_io(guarantee_case(body^, scoped_io(report_exit)))
+    var canceled_result = pipeline(body^).guarantee_case(report_exit).run_io()
     print("canceled:", not canceled_result)

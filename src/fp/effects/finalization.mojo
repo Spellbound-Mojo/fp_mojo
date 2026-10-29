@@ -14,11 +14,13 @@ from .scoped import ScopedIO, _run_scoped
 
 comptime _FinalizerCompatible[P: ReaderAction, Q: ReaderAction] = IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error
 
+comptime _CaseFinalizerCompatible[P: ReaderAction, F: ScopedIO] = GuaranteeCaseContract[P, F].Compatible
 
-def _finalize[P: ReaderAction, F: ScopedIO, o: ImmOrigin, only_cancel: Bool = False](var program: P, var finalizer: F, ref[o] env: IOContext[F.Error]
-) -> Outcome[P.Value, F.Error] where IOContract[P].Compatible and IOContract[P].Error == F.Error and F.Input == ExitCase[F.Error]:
-    var completed = _run_io(program^, rebind[IOContext[IOContract[P].Error]](env))
-    return _finalize_outcome[only_cancel=only_cancel](rebind_var[Outcome[P.Value, F.Error]](completed^), finalizer^, env)
+
+def _finalize[P: ReaderAction, F: ScopedIO, o: ImmOrigin, only_cancel: Bool = False](var program: P, var finalizer: F, ref[o] env: IOContext[IOContract[P].Error]
+) -> IOContract[P].Out where _CaseFinalizerCompatible[P, F]:
+    var completed = _run_io(program^, env)
+    return _finalize_outcome[only_cancel=only_cancel](completed^, finalizer^, env)
 
 
 def _finalize_outcome[T: Movable & Deinitable, E: Movable & Deinitable, F: ScopedIO, o: ImmOrigin, only_cancel: Bool = False](var completed: Outcome[T, E], var finalizer: F, ref[o] env: IOContext[E]
@@ -53,7 +55,7 @@ struct _IOGuarantee[P: ReaderAction, Q: ReaderAction, only_cancel: Bool = False]
     comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
         comptime assert _FinalizerCompatible[Self.P, Self.Q]
-        return rebind_var[Self.Out[o]](_finalize[only_cancel=Self.only_cancel](self.program^, _ConstantFinalizer(self.finalizer^), rebind[IOContext[IOContract[Self.Q].Error]](env)))
+        return _finalize[only_cancel=Self.only_cancel](self.program^, _ConstantFinalizer[Self.Q, ExitCase[Self.E]](self.finalizer^), env)
 
 
 def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q
@@ -102,19 +104,46 @@ def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q
 struct _IOGuaranteeCase[P: ReaderAction, F: ScopedIO](ReaderAction):
     var program: Self.P
     var finalizer: Self.F
-    comptime E = Self.F.Error
-    comptime Family = IO[Self.E]
+    comptime E = IOContract[Self.P].Error
+    comptime Family = Self.P.Family
     comptime Env = IOContext[Self.E]
     comptime Value = Self.P.Value
     comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
-        comptime assert IOContract[Self.P].Compatible and IOContract[Self.P].Error == Self.E
-        comptime assert Self.F.Input == ExitCase[Self.E]
+        comptime assert _CaseFinalizerCompatible[Self.P, Self.F]
         return _finalize(self.program^, self.finalizer^, env)
 
 
+struct GuaranteeCaseContract[P: ReaderAction, F: ScopedIO]:
+    """Admission and result metadata for outcome-aware IO finalization.
+
+    The body owns the family, success type and error channel. The finalizer
+    borrows its exit case and returns IO with that same error type. Forward
+    Compatible in generic wrappers and name Out without private recipe types.
+    Construction runs neither the body nor the cleanup factory.
+
+    Parameters:
+        P: The complete body recipe, including its captured origins.
+        F: The scoped cleanup factory, including independent captured origins.
+    """
+    comptime Family = Self.P.Family
+    """The body's unchanged family, for fluent continuation."""
+    comptime NativeError = IOContract[Self.P].Error
+    """The body's native error type, retained inside the execution outcome."""
+    comptime Input = ExitCase[Self.NativeError]
+    """The exit case borrowed while constructing and running cleanup."""
+    comptime Compatible = IOContract[Self.P].Compatible and Self.F.Error == Self.NativeError and Self.F.Input == Self.Input and _ErrorCompatible[Self.NativeError, Self.F.BuildError]
+    """Body membership, exact cleanup input/error and compatible construction error."""
+    comptime Out = _IOGuaranteeCase[Self.P, Self.F]
+    """The unopened recipe with the body's value and finalization behavior."""
+    comptime Error = Never
+    """Construction itself cannot raise; deferred cleanup errors enter the outcome."""
+    comptime Outcome = IOContract[Self.P].Out
+    """The exact host result after execution, including failures or cancellation."""
+
+
 def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F
-) -> _IOGuaranteeCase[P, F] where IOContract[P].Compatible and IOContract[P].Error == F.Error and F.Input == ExitCase[F.Error] and _ErrorCompatible[F.Error, F.BuildError]:
+) -> _IOGuaranteeCase[P, F] where _CaseFinalizerCompatible[P, F]:
     """Finalize with an effect that borrows the body's exact exit case.
 
     Construction and execution of the finalizer are masked and captured. The
