@@ -1,8 +1,11 @@
 """Typed failure accumulation shared by resource scopes and IO finalization."""
 from std.builtin.rebind import rebind_var
 from fp.data import Result, Ok, Err, NonEmptyList, attempt_once
-from fp.callables.protocols import OnceThunk
-from fp._internal.errors import _ErrorCompatible, _absurd
+from fp.callables.protocols import OnceThunk, ThunkContract, UnaryContract
+from fp.callables.invoke import _OnceUnaryAvailable, _OnceThunkAvailable
+from fp.callables._receiver import _thunk_once_as
+from fp.callables.native import NativeUnary, _NativeThunk, _Unary, _RaisingUnary, _Thunk, _RaisingThunk
+from fp._internal.errors import _ErrorCompatible, _absurd, _CommonError, _CommonErrorCompatible, _propagate_error
 
 
 @fieldwise_init
@@ -41,6 +44,134 @@ Parameters:
     T: The owned success type.
     E: The exact error payload type, collected by EffectFailure.
 """
+
+
+struct FoldOutcomeContract[T: Movable & Deinitable, E: Movable & Deinitable,
+                          F: UnaryContract & Movable & Deinitable,
+                          G: UnaryContract & Movable & Deinitable,
+                          H: ThunkContract & Movable & Deinitable]:
+    """Exact admission and callback result for consuming a completed outcome.
+
+    Parameters:
+        T: The owned successful payload type.
+        E: The native error type stored in the complete EffectFailure.
+        F: The once-callable success handler.
+        G: The once-callable failure handler.
+        H: The once-callable cancellation thunk.
+    """
+    comptime Out = Self.F.Out
+    """The common handler result, retaining its native origins."""
+    comptime Error = _CommonError[_CommonError[Self.F.Error, Self.G.Error], Self.H.Error]
+    """The exact compatible native callback error, or Never."""
+    comptime Compatible = (
+        Self.F.Arg == Self.T and Self.G.Arg == EffectFailure[Self.E] and
+        Self.F.Out == Self.G.Out and Self.F.Out == Self.H.Out and
+        _OnceUnaryAvailable[Self.F] and _OnceUnaryAvailable[Self.G] and _OnceThunkAvailable[Self.H] and
+        _CommonErrorCompatible[Self.F.Error, Self.G.Error] and
+        _CommonErrorCompatible[_CommonError[Self.F.Error, Self.G.Error], Self.H.Error]
+    )
+    """Exact inputs, common output and native errors, with available receivers."""
+
+
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable,
+                 F: UnaryContract & Movable & Deinitable,
+                 G: UnaryContract & Movable & Deinitable,
+                 H: ThunkContract & Movable & Deinitable](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) raises FoldOutcomeContract[T, E, F, G, H].Error -> FoldOutcomeContract[T, E, F, G, H].Out where FoldOutcomeContract[T, E, F, G, H].Compatible:
+    """Consume an outcome and invoke exactly its selected handler.
+
+    A failure transfers the complete EffectFailure, including cancellation and
+    all stored errors. The cancellation thunk runs only for an absent outcome.
+    Unselected callbacks and their captures are destroyed without invocation.
+
+    Parameters:
+        T: The owned successful payload type.
+        E: The stored native error type.
+        F: The consuming success handler's type.
+        G: The consuming failure handler's type.
+        H: The cancellation thunk's type.
+
+    Args:
+        outcome: The completed outcome, consumed once.
+        on_success: Receives the successful T.
+        on_failure: Receives the complete EffectFailure[E].
+        on_cancel: Produces the result for cancellation-only completion.
+
+    Returns:
+        The selected callback result, without copying values or errors.
+
+    Raises:
+        The exact compatible native error of the selected callback.
+    """
+    comptime C = FoldOutcomeContract[T, E, F, G, H]
+    comptime assert _ErrorCompatible[C.Error, H.Error]
+    comptime assert _ErrorCompatible[C.Error, _CommonError[F.Error, G.Error]]
+    if not outcome:
+        return rebind_var[C.Out](_thunk_once_as[C.Error](on_cancel^))
+    try:
+        return outcome.take().fold_owned_once(on_success^, on_failure^)
+    except error:
+        _propagate_error[C.Error](error^)
+
+
+# Infer native operand conventions before checking exact outcome inputs.
+# Fixing T in the function bound rejects ordinary register-passed arguments
+# on Mojo 1.2; the signature equality preserves origins after inference.
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R], G: _Unary[B, R], H: _Thunk[R]](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) -> R where A == T and B == EffectFailure[E]:
+    """Consume an outcome with owned native handlers and their exact shared error type."""
+    return fold_outcome(outcome^, NativeUnary[A, R, Never, F, False](on_success^), NativeUnary[B, R, Never, G, False](on_failure^), _NativeThunk[R, Never, H, False](on_cancel^))
+
+
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _Unary[B, R], H: _RaisingThunk[R, X]](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) raises X -> R where A == T and B == EffectFailure[E]:
+    """Consume an outcome with owned native handlers and their exact shared error type."""
+    return fold_outcome(outcome^, NativeUnary[A, R, Never, F, False](on_success^), NativeUnary[B, R, Never, G, False](on_failure^), _NativeThunk[R, X, H, True](on_cancel^))
+
+
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _RaisingUnary[B, R, X], H: _Thunk[R]](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) raises X -> R where A == T and B == EffectFailure[E]:
+    """Consume an outcome with owned native handlers and their exact shared error type."""
+    return fold_outcome(outcome^, NativeUnary[A, R, Never, F, False](on_success^), NativeUnary[B, R, X, G, True](on_failure^), _NativeThunk[R, Never, H, False](on_cancel^))
+
+
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _RaisingUnary[B, R, X], H: _RaisingThunk[R, X]](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) raises X -> R where A == T and B == EffectFailure[E]:
+    """Consume an outcome with owned native handlers and their exact shared error type."""
+    return fold_outcome(outcome^, NativeUnary[A, R, Never, F, False](on_success^), NativeUnary[B, R, X, G, True](on_failure^), _NativeThunk[R, X, H, True](on_cancel^))
+
+
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _Unary[B, R], H: _Thunk[R]](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) raises X -> R where A == T and B == EffectFailure[E]:
+    """Consume an outcome with owned native handlers and their exact shared error type."""
+    return fold_outcome(outcome^, NativeUnary[A, R, X, F, True](on_success^), NativeUnary[B, R, Never, G, False](on_failure^), _NativeThunk[R, Never, H, False](on_cancel^))
+
+
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _Unary[B, R], H: _RaisingThunk[R, X]](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) raises X -> R where A == T and B == EffectFailure[E]:
+    """Consume an outcome with owned native handlers and their exact shared error type."""
+    return fold_outcome(outcome^, NativeUnary[A, R, X, F, True](on_success^), NativeUnary[B, R, Never, G, False](on_failure^), _NativeThunk[R, X, H, True](on_cancel^))
+
+
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _RaisingUnary[B, R, X], H: _Thunk[R]](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) raises X -> R where A == T and B == EffectFailure[E]:
+    """Consume an outcome with owned native handlers and their exact shared error type."""
+    return fold_outcome(outcome^, NativeUnary[A, R, X, F, True](on_success^), NativeUnary[B, R, X, G, True](on_failure^), _NativeThunk[R, Never, H, False](on_cancel^))
+
+
+def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _RaisingUnary[B, R, X], H: _RaisingThunk[R, X]](
+    var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H
+) raises X -> R where A == T and B == EffectFailure[E]:
+    """Consume an outcome with owned native handlers and their exact shared error type."""
+    return fold_outcome(outcome^, NativeUnary[A, R, X, F, True](on_success^), NativeUnary[B, R, X, G, True](on_failure^), _NativeThunk[R, X, H, True](on_cancel^))
 
 
 @fieldwise_init

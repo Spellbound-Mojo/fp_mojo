@@ -408,6 +408,14 @@ consumes one at a host boundary. It returns `Outcome[A, E]`: None for
 cancellation, Some(Ok(value)) for success, or Some(Err(EffectFailure)) for errors.
 An errored outcome records cancellation too when cleanup fails after a request.
 
+`fold_outcome(outcome, on_success, on_failure, on_cancel)` consumes this result
+and invokes exactly one owned handler. The failure handler receives the complete
+`EffectFailure[E]`, including every error and its cancellation flag. Cancellation
+alone selects the thunk. Handlers must return the same native type and raise
+compatible exact errors; native functions and callable descriptors are supported.
+`FoldOutcomeContract` exposes admission, result, and callback error types to
+generic wrappers.
+
 The selected Pipeline form uses `.guarantee(finalizer)` or `.on_cancel(finalizer)`
 to attach cleanup, then `.run_io()` or `.run_io(token)` to execute. Cleanup
 recipes must belong to the same IO error family. Construction remains deferred,

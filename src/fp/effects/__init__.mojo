@@ -63,7 +63,7 @@ from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
 from .operations import run, run_value, run_state, run_log, RunValueContract, RunStateContract, WriterValueContract, WriterLogContract, action, lift
 from .projections import LiftProject, asks, inspect
-from .outcomes import EffectFailure, Outcome, ExitCase
+from .outcomes import EffectFailure, Outcome, ExitCase, FoldOutcomeContract, fold_outcome
 from .resources import Resource, ResourceContract, resource, pure_resource
 from .io import IO, IOContract, IOContext, CancellationToken, delay, run_io, capture_io, guarantee, uncancelable, canceled, sleep_io, use_resource
 from .fibers import Fiber, unsafe_start

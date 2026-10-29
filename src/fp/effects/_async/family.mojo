@@ -1,12 +1,13 @@
 """Concrete family metadata and adapters over the canonical async machines."""
 from std.builtin.rebind import downcast, rebind_var
-from fp.algebra.protocols import Functor, Monad, _FamilyCarrier, _Accumulate, _LiveAccumulator, _AccumulatePair
+from fp.algebra.protocols import Functor, Monad, ErrorRecovery, _FamilyCarrier, _Accumulate, _LiveAccumulator, _AccumulatePair
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, OnceUnary, Unary, MutableUnary, MutableBinary
 from fp.callables.invoke import RepeatableUnary, RepeatableBinary, _OnceUnaryAvailable, _OnceBinaryAvailable, _OnceThunkAvailable
 from fp.callables._receiver import _unary_repeated_as, _binary_repeated_as, _unary_once_as, _thunk_once_as
 from fp.callables._binding import _BindFirst
 from fp._internal.errors import _ErrorCompatible
 from fp.effects._io_core import IOContext
+from fp.effects.outcomes import EffectFailure
 from .kernel import Machine as _Machine, Step
 from .composition import Pure as _Pure, Bind, Loop, _LoopPolicy, pure as _pure
 
@@ -195,7 +196,18 @@ struct _Collected[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitab
         return rebind_var[Step[Self.Value, Self.Error]](self._program.poll(rebind[IOContext[type_of(self._program).Error]](context)))
 
 
-struct Async[E: Movable & Deinitable](Monad):
+@fieldwise_init
+struct _Handled[P: _Machine, H: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](Machine):
+    comptime Family = Async[Self.E]
+    comptime Value = Self.P.Value
+    comptime Error = Self.E
+    var _program: Bind[Self.P, Self.H, True]
+    def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
+        comptime assert type_of(self._program).Error == Self.Error and type_of(self._program).Value == Self.Value
+        return rebind_var[Step[Self.Value, Self.Error]](self._program.poll(rebind[IOContext[Self.P.Error]](context)))
+
+
+struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):
     comptime Element[V: Movable & Deinitable] = downcast[V, _Machine].Value
     comptime CarrierCompatible[V: Movable & Deinitable] = (downcast[V, _Machine].Error == Self.E) if conforms_to(V, _Machine) else False
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V] and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error]
@@ -257,3 +269,13 @@ struct Async[E: Movable & Deinitable](Monad):
         comptime assert Self._LoopCompatible[V, F, K]
         var unit: NoneType = None
         return Self._Looped[V, F, K](Bind(_pure[Self.E](unit), _StartCollect[V, F, K, Self.E](source^, f^)))
+
+    comptime Failure = EffectFailure[Self.E]
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime _Handles[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = (Self.Element[V] == Self.Element[H.Out] and H.Arg == Self.Failure and _OnceUnaryAvailable[H] and _ErrorCompatible[Self.E, H.Error]) if Self.CarrierCompatible[V] and Self.CarrierCompatible[H.Out] else False
+    comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = _Handled[downcast[V, _Machine], H, Self.E]
+    comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Never
+    @staticmethod
+    def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) -> Self.Handled[V, H]:
+        comptime assert Self._Handles[V, H]
+        return Self.Handled[V, H](Bind[downcast[V, _Machine], H, True](rebind_var[downcast[V, _Machine]](source^), handler^))

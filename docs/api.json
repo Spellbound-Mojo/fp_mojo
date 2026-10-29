@@ -889,27 +889,15 @@
   "algebra.ApplicativeError": {
    "aliases": [
     {
-     "description": "The selected stored error type, including its origins.",
-     "name": "Failure"
-    },
-    {
      "description": "The carrier of a stored failure with success payload type A.",
      "name": "Failed"
     },
     {
      "description": "The native error raised while constructing that failed carrier.",
      "name": "FailError"
-    },
-    {
-     "description": "The carrier returned by handling the selected stored error of V.",
-     "name": "Handled"
-    },
-    {
-     "description": "The exact native error raised while constructing the handled carrier.",
-     "name": "HandleError"
     }
    ],
-   "description": "Native raised errors remain separate. Recovery consumes a selected error,\nskips its handler on success, and preserves the success and stored-error\ntypes. Concrete carrier types may change for deferred effects.",
+   "description": "Raising a selected stored failure and handling it obeys the ordinary\nApplicativeError laws. Native exceptions remain separate from stored errors.",
    "fields": [],
    "kind": "trait",
    "methods": {
@@ -944,60 +932,15 @@
       "signature": "def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]",
       "summary": "Construct a stored failure without a success payload."
      }
-    ],
-    "or_else": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The handler, consumed; skipped on success.",
-        "name": "handler",
-        "type": "H",
-        "variadic": false
-       },
-       {
-        "convention": "var",
-        "description": "The carrier, consumed with its native origins.",
-        "name": "source",
-        "type": "V",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "Self.HandleError[V, H]",
-      "parameters": [
-       {
-        "description": "The consumed source carrier type.",
-        "inferred": false,
-        "name": "V",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "A handler consuming Failure and returning this family's carrier\n    of the original success type; repeatable for branching sources.",
-        "inferred": false,
-        "name": "H",
-        "type": "UnaryContract & Movable & Deinitable",
-        "variadic": false
-       }
-      ],
-      "raises": true,
-      "raises_doc": "The exact native construction error; native raises are never recovered.",
-      "returns": {
-       "doc": "Original successes or handler outputs in family order. A handler's\nfailure passes onward without invoking that handler again.",
-       "type": "Self.Handled[V, H]"
-      },
-      "signature": "def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) raises Self.HandleError[V, H] -> Self.Handled[V, H]",
-      "summary": "Recover the selected stored error with another effect of this family."
-     }
     ]
    },
    "parameters": [],
    "provider": "algebra/protocols",
-   "signature": "trait ApplicativeError(Applicative)",
-   "summary": "An Applicative with one selected stored-error channel.",
+   "signature": "trait ApplicativeError(ErrorRecovery)",
+   "summary": "An error-recovering Applicative with a lawful stored-failure constructor.",
    "traits": [
     "Applicative",
+    "ErrorRecovery",
     "Functor"
    ]
   },
@@ -1744,6 +1687,81 @@
    "signature": "trait ErrorMapping(Functor)",
    "summary": "Map the success and one selected stored-error channel in one operation.",
    "traits": [
+    "Functor"
+   ]
+  },
+  "algebra.ErrorRecovery": {
+   "aliases": [
+    {
+     "description": "The selected stored error type, including its origins.",
+     "name": "Failure"
+    },
+    {
+     "description": "The carrier returned by handling the selected stored error of V.",
+     "name": "Handled"
+    },
+    {
+     "description": "The exact native error raised while constructing the handled carrier.",
+     "name": "HandleError"
+    }
+   ],
+   "description": "Recovery consumes the selected error once and preserves the payload type.\nA family may leave terminal states outside this channel: async cancellation\nand failures marked canceled bypass recovery, retaining all their errors.\nThis capability supplies no failure constructor and makes no raise/handle\nlaw claim. Native exceptions raised during construction remain separate.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "or_else": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The handler, consumed; skipped on success.",
+        "name": "handler",
+        "type": "H",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The carrier, consumed with its native origins.",
+        "name": "source",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "Self.HandleError[V, H]",
+      "parameters": [
+       {
+        "description": "The consumed source carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A handler consuming Failure and returning this family's carrier\n    of the original success type; repeatable for branching sources.",
+        "inferred": false,
+        "name": "H",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact native construction error; native raises are never recovered.",
+      "returns": {
+       "doc": "Original successes or handler outputs in family order. A handler's\nfailure passes onward without invoking that handler again.",
+       "type": "Self.Handled[V, H]"
+      },
+      "signature": "def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) raises Self.HandleError[V, H] -> Self.Handled[V, H]",
+      "summary": "Recover the selected stored error with another effect of this family."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "algebra/protocols",
+   "signature": "trait ErrorRecovery(Applicative)",
+   "summary": "An Applicative that can recover its selected stored-error channel.",
+   "traits": [
+    "Applicative",
     "Functor"
    ]
   },
@@ -6547,6 +6565,7 @@
     "Applicative",
     "ApplicativeError",
     "ErrorMapping",
+    "ErrorRecovery",
     "Functor",
     "Monad",
     "Traversable",
@@ -7620,6 +7639,7 @@
     "Applicative",
     "ApplicativeError",
     "ErrorMapping",
+    "ErrorRecovery",
     "Functor",
     "_ValidationPolicy"
    ]
@@ -48359,6 +48379,67 @@
    "summary": "A single owned worker, joined before its captured owners can be destroyed.",
    "traits": []
   },
+  "effects.FoldOutcomeContract": {
+   "aliases": [
+    {
+     "description": "The common handler result, retaining its native origins.",
+     "name": "Out"
+    },
+    {
+     "description": "The exact compatible native callback error, or Never.",
+     "name": "Error"
+    },
+    {
+     "description": "Exact inputs, common output and native errors, with available receivers.",
+     "name": "Compatible"
+    }
+   ],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The owned successful payload type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The native error type stored in the complete EffectFailure.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The once-callable success handler.",
+     "inferred": false,
+     "name": "F",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The once-callable failure handler.",
+     "inferred": false,
+     "name": "G",
+     "type": "UnaryContract & Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The once-callable cancellation thunk.",
+     "inferred": false,
+     "name": "H",
+     "type": "ThunkContract & Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/outcomes",
+   "signature": "struct FoldOutcomeContract[T: Movable & Deinitable, E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable, H: ThunkContract & Movable & Deinitable]",
+   "summary": "Exact admission and callback result for consuming a completed outcome.",
+   "traits": []
+  },
   "effects.GuaranteeCaseContract": {
    "aliases": [
     {
@@ -52503,6 +52584,7 @@
     "ApplicativeError",
     "Ask",
     "ErrorMapping",
+    "ErrorRecovery",
     "Functor",
     "Local",
     "Monad",
@@ -54500,6 +54582,7 @@
     "Applicative",
     "ApplicativeError",
     "ErrorMapping",
+    "ErrorRecovery",
     "Functor",
     "Monad",
     "Project",
@@ -55504,6 +55587,7 @@
     "ApplicativeError",
     "Censor",
     "ErrorMapping",
+    "ErrorRecovery",
     "Functor",
     "Listen",
     "Monad",
@@ -56821,6 +56905,942 @@
     }
    ],
    "provider": "effects/effectful_resources",
+   "summary": ""
+  },
+  "effects.fold_outcome": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The completed outcome, consumed once.",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "Receives the successful T.",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "Receives the complete EffectFailure[E].",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "Produces the result for cancellation-only completion.",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "A failure transfers the complete EffectFailure, including cancellation and\nall stored errors. The cancellation thunk runs only for an absent outcome.\nUnselected callbacks and their captures are destroyed without invocation.",
+     "error": "FoldOutcomeContract[T, E, F, G, H].Error",
+     "parameters": [
+      {
+       "description": "The owned successful payload type.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The stored native error type.",
+       "inferred": false,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consuming success handler's type.",
+       "inferred": false,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The consuming failure handler's type.",
+       "inferred": false,
+       "name": "G",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The cancellation thunk's type.",
+       "inferred": false,
+       "name": "H",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The exact compatible native error of the selected callback.",
+     "returns": {
+      "doc": "The selected callback result, without copying values or errors.",
+      "type": "FoldOutcomeContract[T, E, F, G, H].Out"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable, H: ThunkContract & Movable & Deinitable](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) raises FoldOutcomeContract[T, E, F, G, H].Error -> FoldOutcomeContract[T, E, F, G, H].Out where FoldOutcomeContract[T, E, F, G, H].Compatible",
+     "summary": "Consume an outcome and invoke exactly its selected handler."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "_Unary[B, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "H",
+       "type": "_Thunk[R]",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "R"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R], G: _Unary[B, R], H: _Thunk[R]](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) -> R where A == T and B == EffectFailure[E]",
+     "summary": "Consume an outcome with owned native handlers and their exact shared error type."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "X",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "_Unary[B, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "H",
+       "type": "_RaisingThunk[R, X]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "R"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _Unary[B, R], H: _RaisingThunk[R, X]](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) raises X -> R where A == T and B == EffectFailure[E]",
+     "summary": "Consume an outcome with owned native handlers and their exact shared error type."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "X",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "_RaisingUnary[B, R, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "H",
+       "type": "_Thunk[R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "R"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _RaisingUnary[B, R, X], H: _Thunk[R]](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) raises X -> R where A == T and B == EffectFailure[E]",
+     "summary": "Consume an outcome with owned native handlers and their exact shared error type."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "X",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_Unary[A, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "_RaisingUnary[B, R, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "H",
+       "type": "_RaisingThunk[R, X]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "R"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _RaisingUnary[B, R, X], H: _RaisingThunk[R, X]](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) raises X -> R where A == T and B == EffectFailure[E]",
+     "summary": "Consume an outcome with owned native handlers and their exact shared error type."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "X",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "_Unary[B, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "H",
+       "type": "_Thunk[R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "R"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _Unary[B, R], H: _Thunk[R]](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) raises X -> R where A == T and B == EffectFailure[E]",
+     "summary": "Consume an outcome with owned native handlers and their exact shared error type."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "X",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "_Unary[B, R]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "H",
+       "type": "_RaisingThunk[R, X]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "R"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _Unary[B, R], H: _RaisingThunk[R, X]](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) raises X -> R where A == T and B == EffectFailure[E]",
+     "summary": "Consume an outcome with owned native handlers and their exact shared error type."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "X",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "_RaisingUnary[B, R, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "H",
+       "type": "_Thunk[R]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "R"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _RaisingUnary[B, R, X], H: _Thunk[R]](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) raises X -> R where A == T and B == EffectFailure[E]",
+     "summary": "Consume an outcome with owned native handlers and their exact shared error type."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "",
+       "name": "outcome",
+       "type": "Outcome[T, E]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_success",
+       "type": "F",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_failure",
+       "type": "G",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "on_cancel",
+       "type": "H",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "X",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "B",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "_RaisingUnary[B, R, X]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "H",
+       "type": "_RaisingThunk[R, X]",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "R"
+     },
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _RaisingUnary[B, R, X], H: _RaisingThunk[R, X]](var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H) raises X -> R where A == T and B == EffectFailure[E]",
+     "summary": "Consume an outcome with owned native handlers and their exact shared error type."
+    }
+   ],
+   "provider": "effects/outcomes",
    "summary": ""
   },
   "effects.get": {
@@ -65708,7 +66728,7 @@
      "name": "Error"
     }
    ],
-   "description": "Canonical Result pipelines may change their stored-error type. Other\nApplicativeError families retain their selected error layer and execution\nsemantics. Legacy intrinsic Result calls under non-error families preserve\ntheir Result behavior. Generic selected wrappers can forward Compatible\nand project Family, Out and Error without deciding which case applies.",
+   "description": "Canonical Result pipelines may change their stored-error type. Other\nErrorRecovery families retain their selected error layer and execution\nsemantics. Legacy intrinsic Result calls under non-error families preserve\ntheir Result behavior. Generic selected wrappers can forward Compatible\nand project Family, Out and Error without deciding which case applies.",
    "fields": [],
    "kind": "struct",
    "methods": {},
@@ -183840,7 +184860,7 @@
        "doc": "",
        "type": "Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E]"
       },
-      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Compatible",
+      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Compatible",
       "summary": "Recover through the selected family; intrinsic Result may change its stored error."
      },
      {
@@ -183884,7 +184904,7 @@
        "doc": "",
        "type": "Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Out, Self.E]"
       },
-      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Self.E -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Compatible",
+      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Self.E -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Compatible",
       "summary": "Recover through the selected family; intrinsic Result may change its stored error."
      },
      {
@@ -183928,7 +184948,7 @@
        "doc": "",
        "type": "Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Out, Self.E]"
       },
-      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Never -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and Self.E != Never and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Compatible",
+      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Never -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and Self.E != Never and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Compatible",
       "summary": "Recover through the selected family; intrinsic Result may change its stored error."
      },
      {
@@ -183958,7 +184978,7 @@
        "doc": "",
        "type": "Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def or_else[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible",
+      "signature": "def or_else[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible",
       "summary": "Recover through the selected family; intrinsic Result may change its stored error."
      },
      {
@@ -183988,7 +185008,7 @@
        "doc": "",
        "type": "Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E]"
       },
-      "signature": "def or_else[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible",
+      "signature": "def or_else[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible",
       "summary": "Recover through the selected family; intrinsic Result may change its stored error."
      },
      {
@@ -184025,7 +185045,7 @@
        "doc": "",
        "type": "Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def or_else[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible",
+      "signature": "def or_else[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible",
       "summary": "Recover through the selected family; intrinsic Result may change its stored error."
      },
      {
@@ -184062,7 +185082,7 @@
        "doc": "",
        "type": "Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E]"
       },
-      "signature": "def or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible",
+      "signature": "def or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and _ErrorCompatible[Self.E, X] and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible",
       "summary": "Recover through the selected family; intrinsic Result may change its stored error."
      },
      {
@@ -331069,8 +332089,8 @@
    "summary": "Algebraic data types declared from your own structs, and their values."
   },
   "algebra": {
-   "description": "| Interface | Primitive operations | Meaning |\n|---|---|---|\n| `Functor` | `map[I](f, value)` | Transform a payload without changing its context |\n| `Filterable` | `filter[I](predicate, value)` | Retain accepted payloads without changing their types |\n| `FunctorFilter` | `filter_map[I](transform, value)` | Transform payloads and retain present Optional results |\n| `Applicative` | `pure[I](value)`, `map2_lazy[I](f, left, right)` | Introduce a payload; combine independent computations |\n| `ApplicativeError` | `fail[I, A](error)`, `I.or_else(handler, value)` | Construct or recover the selected stored-error layer |\n| `ErrorMapping` | `I.bimap[Target](on_ok, on_err, source)` | Transform success and one selected stored-error channel with an admitted destination policy |\n| `Monad` | `flat_map[I](f, value)` | Choose the next computation from the current payload |\n| `Traversable` | `traverse[S, G](f, source)` | Visit a source shape `S` in an applicative context `G` |\n| `Semigroup` | `combine[S](left, right)` | An associative, ordered combination |\n| `Monoid` | `empty[M]()`, `combine[M](left, right)` | An identity and an associative, ordered combination |\n\nAn instance is a compile-time dictionary named at each call: there are no\nruntime interface objects and no global registry. The native instances are\n`IdentityFamily` (the bare value), `OptionalFamily`, `ResultFamily[E]` and\n`ListFamily`; `ValidationFamily[S]` uses Result storage with accumulating errors, with `StringMonoid` and `ListMonoid[A]`. `IorFamily[S]` sequences values with\nwarnings; `IorValidationFamily[S]` accumulates independent diagnostics. `fp.effects` adds\nReader, State, Writer and transformers. Each operation is a static method of\nthe instance and the functions here forward to it; its result and error types\nare associated aliases of the instance, such as `I.Mapped[V, F]` and\n`I.MapError[V, F]`, so generic code states them directly. The derived\noperations `map2`, `ap`, `flatten` and `sequence` add no execution path.\n\nCallbacks are fixed-arity values in any receiver mode: a `Unary` for `map`,\n`flat_map` and `traverse`, a `Binary` combiner and a `Thunk` right operand for\n`map2_lazy`. `map`, `flat_map` and `traverse` also take native functions and\nclosures directly. Operations consume carriers and callbacks. A callback that\nruns repeatedly, as over a `List`, must have a shared or exclusive receiver; a\nconsuming-only callback is rejected when the program compiles. Native errors\npropagate with their exact types; stored `Result` errors remain data.\n\n`Filterable` is independent of Functor. ListFamily and OptionalFamily support\n`filter` and its derived `filter_not`, with a repeatable borrowing predicate (`BorrowCallable` or `BorrowMutableCallable`) returning Bool. Owned predicates prefer their mutable receiver. Native\npredicates are borrowed; owned library predicates are consumed. Selection runs\nimmediately and preserves the original payloads, origins and carrier type.\n\nFunctorFilter extends Functor with filter_map. It may change payload types and\ndiscard absent results; compact derives from it with identity. ListFamily and\nOptionalFamily implement this capability. Custom Filterable families remain\nindependent and need no new methods.\n\nA third-party instance implements the associated types and static methods of\nthe interfaces it claims, receives callbacks through their contracts and calls\nthem with `call_once` or `call_repeated` from `fp.callables`; it needs no\nprivate library code. An Applicative-only target receives list traversal\nthrough the default `collect`.\n\nThe functor, monad and monoid laws hold under pure, terminating callbacks and\nequivalent native ownership behavior; callbacks with effects have a specified\ncall order and count instead.",
-   "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
+   "description": "| Interface | Primitive operations | Meaning |\n|---|---|---|\n| `Functor` | `map[I](f, value)` | Transform a payload without changing its context |\n| `Filterable` | `filter[I](predicate, value)` | Retain accepted payloads without changing their types |\n| `FunctorFilter` | `filter_map[I](transform, value)` | Transform payloads and retain present Optional results |\n| `Applicative` | `pure[I](value)`, `map2_lazy[I](f, left, right)` | Introduce a payload; combine independent computations |\n| `ErrorRecovery` | `I.or_else(handler, value)` | Recover the selected stored-error channel; terminal states may bypass it |\n| `ApplicativeError` | `fail[I, A](error)`, `I.or_else(handler, value)` | Construct or recover the selected stored-error layer |\n| `ErrorMapping` | `I.bimap[Target](on_ok, on_err, source)` | Transform success and one selected stored-error channel with an admitted destination policy |\n| `Monad` | `flat_map[I](f, value)` | Choose the next computation from the current payload |\n| `Traversable` | `traverse[S, G](f, source)` | Visit a source shape `S` in an applicative context `G` |\n| `Semigroup` | `combine[S](left, right)` | An associative, ordered combination |\n| `Monoid` | `empty[M]()`, `combine[M](left, right)` | An identity and an associative, ordered combination |\n\nAn instance is a compile-time dictionary named at each call: there are no\nruntime interface objects and no global registry. The native instances are\n`IdentityFamily` (the bare value), `OptionalFamily`, `ResultFamily[E]` and\n`ListFamily`; `ValidationFamily[S]` uses Result storage with accumulating errors, with `StringMonoid` and `ListMonoid[A]`. `IorFamily[S]` sequences values with\nwarnings; `IorValidationFamily[S]` accumulates independent diagnostics. `fp.effects` adds\nReader, State, Writer and transformers. Each operation is a static method of\nthe instance and the functions here forward to it; its result and error types\nare associated aliases of the instance, such as `I.Mapped[V, F]` and\n`I.MapError[V, F]`, so generic code states them directly. The derived\noperations `map2`, `ap`, `flatten` and `sequence` add no execution path.\n\nCallbacks are fixed-arity values in any receiver mode: a `Unary` for `map`,\n`flat_map` and `traverse`, a `Binary` combiner and a `Thunk` right operand for\n`map2_lazy`. `map`, `flat_map` and `traverse` also take native functions and\nclosures directly. Operations consume carriers and callbacks. A callback that\nruns repeatedly, as over a `List`, must have a shared or exclusive receiver; a\nconsuming-only callback is rejected when the program compiles. Native errors\npropagate with their exact types; stored `Result` errors remain data.\n\n`Filterable` is independent of Functor. ListFamily and OptionalFamily support\n`filter` and its derived `filter_not`, with a repeatable borrowing predicate (`BorrowCallable` or `BorrowMutableCallable`) returning Bool. Owned predicates prefer their mutable receiver. Native\npredicates are borrowed; owned library predicates are consumed. Selection runs\nimmediately and preserves the original payloads, origins and carrier type.\n\nFunctorFilter extends Functor with filter_map. It may change payload types and\ndiscard absent results; compact derives from it with identity. ListFamily and\nOptionalFamily implement this capability. Custom Filterable families remain\nindependent and need no new methods.\n\nA third-party instance implements the associated types and static methods of\nthe interfaces it claims, receives callbacks through their contracts and calls\nthem with `call_once` or `call_repeated` from `fp.callables`; it needs no\nprivate library code. An Applicative-only target receives list traversal\nthrough the default `collect`.\n\nThe functor, monad and monoid laws hold under pure, terminating callbacks and\nequivalent native ownership behavior; callbacks with effects have a specified\ncall order and count instead.",
+   "summary": "Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorRecovery, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances."
   },
   "callables": {
    "description": "Every higher-order operation calls user code through these protocols. A\ncallable fixes its argument, result and error types in a contract trait, and\nimplements each receiver mode it supports as its own trait:\n\n| Arity | Shared | Exclusive | Consuming |\n|---|---|---|---|\n| one owned argument | `Unary.call` | `MutableUnary.call_mut` | `OnceUnary.call_once` |\n| two owned arguments | `Binary.call` | `MutableBinary.call_mut` | `OnceBinary.call_once` |\n| no argument | `Thunk.call` | `MutableThunk.call_mut` | `OnceThunk.call_once` |\n| one borrowed argument | `BorrowCallable.invoke` | `BorrowMutableCallable.invoke_mut` | `BorrowOnceCallable.invoke_once` |\n\n`call_once` calls a callable of any mode once, preferring the consuming mode;\n`call_repeated` calls one that stays usable, and requires `RepeatableUnary`,\n`RepeatableBinary` or `RepeatableThunk`. `as_unary` moves a native function or\nclosure into a `NativeUnary`. Borrowing callables read their argument instead\nof taking it. `invoke_borrowed`, `invoke_borrowed_repeated` and\n`invoke_borrowed_once` provide shared, repeated exclusive and owned one-call\ninvocation. The latter accepts every receiver mode, preferring consuming,\nthen mutable, then shared.\n`shared_ref(callback)` selects the shared receiver explicitly and keeps every\nshared call shape. The copyable `SharedRef` lends a callback without copying\nits captures and supplies a public reference type for generic contracts.\n`mut_ref(callback)` lends a named library callback to an operation that owns\nits callback, retaining the original state for inspection or reuse afterward.\nThe movable `MutableRef` preserves every repeatable shape and its native origin.\n`CallContract` is the shared result/error metadata of owned-argument callables.\n`RepeatableBorrow` admits shared or mutable borrowing receivers. Errors keep their exact types. `Partial`,\n`Composition`, `Flipped`, `Tupled`, `MappedPair` and `Identity` from `fp.functions` implement these\nprotocols.\n\n`as_binary` stores a plain binary function or thin pointer in `NativeBinary`.\nIt preserves two owned argument types and the exact result and error types.\nNamed adapters can be reused by shared borrow in `zip_with`, `map_with_index`,\n`scan_map` and `scan_left`. The factory does not infer capturing closures.\n`BinarySignature[A, B, R, E].capture(closure)` selects the signature before\ncapturing a binary closure into the same adapter. Its error defaults to `Never`.\n`BorrowSignature[A, R, E].capture(callback)` stores a predicate, observer or\nprojection in `NativeBorrow`. Named uses share the adapter; each call reads\nits payload. Native closures and thin pointer aliases retain their exact types.\n\nWhere each consumer enters:\n\n| Consumer | Accepts |\n|---|---|\n| `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |\n| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |\n| `flip` | `Binary` values and plain functions with two or more parameters |\n| Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |\n| `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |\n| `fori_loop_mut` | A named shared or mutable library binary body, borrowed exclusively; updated receiver state remains in the caller. |\n| Iterator filter, prefix, partition, search and count predicates | Native predicates, `BorrowCallable` and owned `BorrowMutableCallable` |\n| Family `filter` and `filter_not` | Native predicates, shared views and owned `BorrowMutableCallable` or `BorrowCallable`; `mut_ref` preserves caller-owned state. |\n| `while_loop` predicates | Native predicates and `BorrowCallable` |\n| `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |\n| `attempt_once` | `Thunk`, `MutableThunk` or `OnceThunk`; consuming, then mutable, then shared receiver priority |\n| `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |\n| `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |\n\nLazy iteration callbacks are non-raising, because the native iterator protocol\nraises only `StopIteration`; terminal callbacks keep their own error channel.",

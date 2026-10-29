@@ -988,7 +988,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         contract = f"OrElseContract[Self.I, Self.V, {cb['adapter_type']}]"
         # The contract owns library input equality too; requiring the expanded
         # predicate again prevents abstract wrappers forwarding Compatible.
-        conditions = ["conforms_to(Self.I, ApplicativeError)"] + cb["conditions"] if cb["is_native"] else []
+        conditions = ["conforms_to(Self.I, ErrorRecovery)"] + cb["conditions"] if cb["is_native"] else []
         emit("or_else", cb, cb["params"], cb["argument"], contract + ".Out",
              contract + ".Error", contract + ".Family", conditions + [contract + ".Compatible"],
              f"_selected_or_else[Self.I]({cb['build']}, self.value^)",

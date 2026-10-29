@@ -33,11 +33,19 @@ REGRESSIONS = (
     "tests/ownership/test_coordination_owned.mojo",
     "tests/runtime/test_io_effects.mojo",
     "tests/runtime/test_fibers.mojo",
+    "tests/runtime/test_context_family_recovery_native.mojo",
+    "tests/runtime/test_applicative_error_lifting.mojo",
+    "tests/ownership/test_applicative_error_ownership.mojo",
 )
+REGRESSION_STDOUT = {
+    "test_applicative_error_lifting": "applicative error lifting: ok\n",
+    "test_applicative_error_ownership": "applicative error ownership: ok\n",
+}
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
 POSITIVE.update({"family_sequence", "family_iteration", "family_origins"})
+POSITIVE.update({"async_recovery", "async_attempt", "outcome_fold", "recovery_owned", "recovery_native"})
 
 
 def experiment_inputs():
@@ -66,6 +74,10 @@ def main():
         clients = [p for p in clients if p.stem in selected]
     run = RunContext.start(args.output, "state-machines")
     before = experiment_inputs()
+    # Preserve the immutable input evidence even if the execution service stops
+    # the launcher before its final aggregate report can be written.
+    write_json(run.folder / "started.json", dict(
+        **run.metadata(), experiment_inputs=before, selected_clients=selected))
     source = run.folder / "source"
     shutil.copytree(ROOT / "src/fp", source / "fp")
     shutil.copytree(EXPERIMENT / "state_machine", source / "state_machine")
@@ -89,13 +101,15 @@ def main():
         regression = str(client.relative_to(ROOT)) in REGRESSIONS
         if not regression and client.stem not in POSITIVE and not errors:
             raise SystemExit(f"Undeclared test kind: {client.name}")
-        expected = None if errors else "" if regression else client.with_suffix(".stdout").read_text()
+        expected = (None if errors else REGRESSION_STDOUT.get(client.stem, "")
+                    if regression else client.with_suffix(".stdout").read_text())
         for route, include in (("source", source), ("package", package)):
             for level in (0, 3):
                 case = CompileCase.from_source(
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
-                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "family_sequence": 360, "family_iteration": 240, "family_origins": 240, "workload": 360}.get(client.stem, 120),
+                    memory_limit_bytes=6 * 1024**3,
+                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 
@@ -114,9 +128,11 @@ def main():
             if not (accepted(bounded_stack) and audit_command(bounded_stack)
                     and hashlib.sha256(bounded_stack["stdout"].encode()).hexdigest() == case.stdout_sha256):
                 audit.append("execution with 1024 KiB stack failed")
+        record = dict(route=route, specification=asdict(case), **result, audit_failures=audit,
+                      bounded_stack=bounded_stack, stack_limit_kib=1024 if bounded_stack else None)
+        write_json(run.folder / "cases" / f"{name}.json", record)
         print("PASS" if result["passed"] and not audit else "FAIL", name, flush=True)
-        return dict(route=route, specification=asdict(case), **result, audit_failures=audit,
-                    bounded_stack=bounded_stack, stack_limit_kib=1024 if bounded_stack else None)
+        return record
 
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         records = list(pool.map(check, jobs))

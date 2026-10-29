@@ -6,7 +6,7 @@ This module depends on family protocols and lower callable/iterator metadata.
 from std.builtin.rebind import downcast
 from fp.callables._predicates import _FilterPredicate
 from fp.iteration._advance import _OwnedElement
-from .protocols import _MappedFamily, Functor, Monad, Applicative, ApplicativeError, Filterable, FunctorFilter
+from .protocols import _MappedFamily, Functor, Monad, Applicative, ApplicativeError, ErrorRecovery, Filterable, FunctorFilter
 from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryContract, ThunkContract
 from fp.callables.invoke import RepeatableBorrow, _OnceUnaryAvailable, _OnceBinaryAvailable, _OnceThunkAvailable
 
@@ -72,7 +72,7 @@ struct BindContract[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movabl
     """The exact native error raised when constructing the bound carrier."""
 
 
-struct _HandleContract[I: ApplicativeError, V: Movable & Deinitable,
+struct _HandleContract[I: ErrorRecovery, V: Movable & Deinitable,
                        H: UnaryContract & Movable & Deinitable]:
     """Primitive family recovery metadata, without derived entry constraints.
 

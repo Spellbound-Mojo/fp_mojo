@@ -1,4 +1,4 @@
-"""Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances.
+"""Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, ErrorRecovery, ErrorMapping, Monad, Traversable, Semigroup and Monoid over native values, with explicit instances.
 
 | Interface | Primitive operations | Meaning |
 |---|---|---|
@@ -6,6 +6,7 @@
 | `Filterable` | `filter[I](predicate, value)` | Retain accepted payloads without changing their types |
 | `FunctorFilter` | `filter_map[I](transform, value)` | Transform payloads and retain present Optional results |
 | `Applicative` | `pure[I](value)`, `map2_lazy[I](f, left, right)` | Introduce a payload; combine independent computations |
+| `ErrorRecovery` | `I.or_else(handler, value)` | Recover the selected stored-error channel; terminal states may bypass it |
 | `ApplicativeError` | `fail[I, A](error)`, `I.or_else(handler, value)` | Construct or recover the selected stored-error layer |
 | `ErrorMapping` | `I.bimap[Target](on_ok, on_err, source)` | Transform success and one selected stored-error channel with an admitted destination policy |
 | `Monad` | `flat_map[I](f, value)` | Choose the next computation from the current payload |
@@ -52,7 +53,7 @@ The functor, monad and monoid laws hold under pure, terminating callbacks and
 equivalent native ownership behavior; callbacks with effects have a specified
 call order and count instead.
 """
-from .protocols import Functor, RebindingFunctor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Monoid, Semigroup, Filterable, FunctorFilter
+from .protocols import Functor, RebindingFunctor, Applicative, ApplicativeError, ErrorRecovery, ErrorMapping, Monad, Traversable, Monoid, Semigroup, Filterable, FunctorFilter
 from .errors import fail, RecoverIfContract, OrElseIfContract, RecoverContract, TapErrContract, FlatTapErrContract
 from ._outcomes import EnsureContract, AttemptTapContract
 from .error_mapping import MapBothContract, MapErrContract

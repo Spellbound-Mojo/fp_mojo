@@ -2,7 +2,7 @@
 
 For a reusable generic wrapper, follow the [contract-forwarding guide](../guides/generic-wrappers.md).
 
-`fp.algebra` provides Functor, Filterable, FunctorFilter, Applicative, ApplicativeError, Monad, Traversable, Semigroup and Monoid
+`fp.algebra` provides Functor, Filterable, FunctorFilter, Applicative, ErrorRecovery, ApplicativeError, Monad, Traversable, Semigroup and Monoid
 interfaces. Their instances let you write generic operations over native values
 such as `Optional`, `Result` and `List`; select the instance at each call. When
 working with a single known type, you can also use its methods directly, such
@@ -502,7 +502,10 @@ is still `Result[A, ErrorCombiner.Value]`. See
 for fluent syntax and [the design](../architecture/algebra.md#accumulating-result-validation)
 for the shared execution rules.
 
-`ApplicativeError` adds a selected stored-error channel. Use
+`ErrorRecovery` supplies selected stored-error recovery without requiring a
+failure constructor. Families may keep terminal states outside that channel;
+async cancellation and canceled failures do so. `ApplicativeError` extends it
+with a lawful failure constructor. Use
 `fail[Family, A](error)` to construct a failure, and Piped's explicit-family
 `recover` or `or_else` to handle it. ResultFamily, ValidationFamily and ResultT
 provide instances; the remaining transformers lift the capability from their

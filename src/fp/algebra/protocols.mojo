@@ -411,19 +411,17 @@ comptime _RecoveryShape[I: Functor, E: Movable & Deinitable, V: Movable & Deinit
 )
 
 
-trait ApplicativeError(Applicative):
-    """An Applicative with one selected stored-error channel.
+trait ErrorRecovery(Applicative):
+    """An Applicative that can recover its selected stored-error channel.
 
-    Native raised errors remain separate. Recovery consumes a selected error,
-    skips its handler on success, and preserves the success and stored-error
-    types. Concrete carrier types may change for deferred effects.
+    Recovery consumes the selected error once and preserves the payload type.
+    A family may leave terminal states outside this channel: async cancellation
+    and failures marked canceled bypass recovery, retaining all their errors.
+    This capability supplies no failure constructor and makes no raise/handle
+    law claim. Native exceptions raised during construction remain separate.
     """
     comptime Failure: Movable & Deinitable
     """The selected stored error type, including its origins."""
-    comptime Failed[A: Movable & Deinitable]: Movable & Deinitable
-    """The carrier of a stored failure with success payload type A."""
-    comptime FailError[A: Movable & Deinitable]: Movable & Deinitable
-    """The native error raised while constructing that failed carrier."""
     comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Movable & Deinitable
     """The carrier returned by handling the selected stored error of V."""
     comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Movable & Deinitable
@@ -434,24 +432,6 @@ trait ApplicativeError(Applicative):
     # types need not equal Pure; each instance validates its own native shape.
     comptime _ErrorCarrier[V: Movable & Deinitable]: Bool = True
     comptime _Handles[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]: Bool = _RecoveryShape[Self,Self.Failure,V,H,Self._ErrorCarrier[V],Self._ErrorCarrier[H.Out]]
-
-    @staticmethod
-    def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:
-        """Construct a stored failure without a success payload.
-
-        Parameters:
-            A: The absent success payload's type.
-
-        Args:
-            error: The stored error, consumed without copying.
-
-        Returns:
-            The family's failed carrier.
-
-        Raises:
-            The family's native construction error; the stored error is not raised.
-        """
-        ...
 
     @staticmethod
     def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V
@@ -475,6 +455,36 @@ trait ApplicativeError(Applicative):
             The exact native construction error; native raises are never recovered.
         """
         ...
+
+
+trait ApplicativeError(ErrorRecovery):
+    """An error-recovering Applicative with a lawful stored-failure constructor.
+
+    Raising a selected stored failure and handling it obeys the ordinary
+    ApplicativeError laws. Native exceptions remain separate from stored errors.
+    """
+    comptime Failed[A: Movable & Deinitable]: Movable & Deinitable
+    """The carrier of a stored failure with success payload type A."""
+    comptime FailError[A: Movable & Deinitable]: Movable & Deinitable
+    """The native error raised while constructing that failed carrier."""
+    @staticmethod
+    def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:
+        """Construct a stored failure without a success payload.
+
+        Parameters:
+            A: The absent success payload's type.
+
+        Args:
+            error: The stored error, consumed without copying.
+
+        Returns:
+            The family's failed carrier.
+
+        Raises:
+            The family's native construction error; the stored error is not raised.
+        """
+        ...
+
 
 
 trait Monad(Applicative):

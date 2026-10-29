@@ -1,6 +1,6 @@
 """Selected recovery metadata; family and Result primitives own execution."""
 from std.builtin.rebind import downcast, rebind_var
-from fp.algebra.protocols import Functor, ApplicativeError, ErrorMapping
+from fp.algebra.protocols import Functor, ErrorRecovery, ErrorMapping
 from fp.algebra.instances import ResultFamily
 from fp.callables.protocols import UnaryContract
 from fp.callables.invoke import _OnceUnaryAvailable
@@ -34,7 +34,7 @@ struct _IntrinsicOrElse(_OrElsePolicy):
         return rebind_var[Result[_RecoveryValue[V],_RecoveryFailure[V]]](source^).or_else(handler^)
 
 
-struct _FamilyOrElse[I: ApplicativeError](_OrElsePolicy):
+struct _FamilyOrElse[I: ErrorRecovery](_OrElsePolicy):
     comptime CarrierCompatible[V: Movable & Deinitable] = Self.I._ErrorCarrier[V]
     comptime OperationCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.I._Handles[V,H]
     comptime OutputCompatible[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Self.I._ErrorCarrier[H.Out] and Self.I.Element[V] == Self.I.Element[H.Out]
@@ -50,18 +50,18 @@ struct _FamilyOrElse[I: ApplicativeError](_OrElsePolicy):
 struct _RecoverySelection[I: Functor, V: Movable & Deinitable]:
     # Canonical Result and legacy intrinsic Result methods can change the
     # stored-error type. A custom family that selects an error channel needs
-    # ApplicativeError for recovery; mapping alone does not permit fallback.
-    comptime Intrinsic = ((not conforms_to(Self.I, ApplicativeError) and not conforms_to(Self.I, ErrorMapping)) or Self.I == ResultFamily[_RecoveryFailure[Self.V]]) if conforms_to(Self.V, _ResultType) else False
-    comptime Supported = Self.Intrinsic or conforms_to(Self.I, ApplicativeError)
-    comptime Policy = downcast[_IntrinsicOrElse if Self.Intrinsic else _FamilyOrElse[downcast[Self.I,ApplicativeError]], _OrElsePolicy]
-    comptime Input = _RecoveryFailure[Self.V] if Self.Intrinsic else downcast[Self.I,ApplicativeError].Failure
+    # ErrorRecovery for recovery; mapping alone does not permit fallback.
+    comptime Intrinsic = ((not conforms_to(Self.I, ErrorRecovery) and not conforms_to(Self.I, ErrorMapping)) or Self.I == ResultFamily[_RecoveryFailure[Self.V]]) if conforms_to(Self.V, _ResultType) else False
+    comptime Supported = Self.Intrinsic or conforms_to(Self.I, ErrorRecovery)
+    comptime Policy = downcast[_IntrinsicOrElse if Self.Intrinsic else _FamilyOrElse[downcast[Self.I,ErrorRecovery]], _OrElsePolicy]
+    comptime Input = _RecoveryFailure[Self.V] if Self.Intrinsic else downcast[Self.I,ErrorRecovery].Failure
 
 
 struct OrElseContract[I: Functor, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]:
     """Admission, result family and exact error of selected Pipeline.or_else.
 
     Canonical Result pipelines may change their stored-error type. Other
-    ApplicativeError families retain their selected error layer and execution
+    ErrorRecovery families retain their selected error layer and execution
     semantics. Legacy intrinsic Result calls under non-error families preserve
     their Result behavior. Generic selected wrappers can forward Compatible
     and project Family, Out and Error without deciding which case applies.

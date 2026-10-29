@@ -8,7 +8,7 @@ from fp.callables._binding import _OwnedUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.adt.data import _ChoiceType
 from fp.data.control import _ControlShape
-from fp.data import Result, Ok, ControlFlow, Continue, Break, Left, Right
+from fp.data import Result, Ok, Err, ControlFlow, Continue, Break, Left, Right
 from fp.effects import IOContext, Outcome, EffectFailure
 from fp.effects.outcomes import _capture, _failure_as
 from .kernel import Machine, Step, Wait, _Slot, _tick
@@ -30,18 +30,19 @@ def pure[E: Movable & Deinitable, T: Movable & Deinitable](var value: T) -> Pure
     return Pure[T, E](Optional(value^))
 
 
-struct Bind[P: Machine, F: UnaryContract & Movable & Deinitable](Machine):
+struct Bind[P: Machine, F: UnaryContract & Movable & Deinitable, recover: Bool = False](Machine):
     comptime Next = downcast[Self.F.Out, Machine]
     comptime Value = Self.Next.Value
     comptime Error = Self.P.Error
+    comptime Input = EffectFailure[Self.P.Error] if Self.recover else Self.P.Value
     var source: _Slot[Self.P, Self.P.Value, Self.P.Error]
     var factory: Optional[Self.F]
-    var value: Optional[Self.P.Value]
+    var value: Optional[Self.Input]
     var next: Optional[_Slot[Self.Next, Self.Next.Value, Self.Next.Error]]
     var phase: Int
 
     def __init__(out self, var program: Self.P, var next: Self.F):
-        comptime assert Self.F.Arg == Self.P.Value and _OnceUnaryAvailable[Self.F]
+        comptime assert Self.F.Arg == Self.Input and _OnceUnaryAvailable[Self.F]
         comptime assert Self.Next.Error == Self.Error and _ErrorCompatible[Self.Error, Self.F.Error]
         self.source = _Slot[Self.P, Self.P.Value, Self.P.Error](program^)
         self.factory = Optional(next^)
@@ -50,24 +51,38 @@ struct Bind[P: Machine, F: UnaryContract & Movable & Deinitable](Machine):
         self.phase = 0
 
     def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
-        comptime assert Self.F.Arg == Self.P.Value and _OnceUnaryAvailable[Self.F]
+        comptime assert Self.F.Arg == Self.Input and _OnceUnaryAvailable[Self.F]
         comptime assert Self.Next.Error == Self.Error and _ErrorCompatible[Self.Error, Self.F.Error]
         match self.phase:
             case 0:
                 _ = _tick(self.source, context)
                 if not self.source.done():
                     return .pending(self.source.waiting())
-                var outcome = self.source.take_outcome()
-                if not outcome or outcome.value().is_err():
-                    self.phase = 3
-                    return .ready(_failure_as[Self.Value](outcome^))
-                self.value = Optional(outcome.take()._take_ok())
+                comptime if Self.recover:
+                    comptime assert Self.P.Value == Self.Value
+                    var step = self.source.take_step()
+                    if not step.completed.value() or step.completed.value().value().is_ok() or step.completed.value().value()._err().value.canceled:
+                        self.phase = 3
+                        return rebind_var[Step[Self.Value, Self.Error]](step^)
+                    var outcome = step^.outcome()
+                    self.value = Optional(rebind_var[Self.Input](outcome.take()._take_err()))
+                else:
+                    var outcome = self.source.take_outcome()
+                    if not outcome or outcome.value().is_err():
+                        self.phase = 3
+                        return .ready(_failure_as[Self.Value](outcome^))
+                    self.value = Optional(rebind_var[Self.Input](outcome.take()._take_ok()))
                 self.phase = 1
                 return .pending(Wait())
             case 1:
                 if context.canceled():
                     self.phase = 3
-                    return .ready(None)
+                    comptime if Self.recover:
+                        var failure = rebind_var[EffectFailure[Self.Error]](self.value.take())
+                        failure.canceled = True
+                        return .ready(Optional(Result[Self.Value, EffectFailure[Self.Error]](Err(failure^))))
+                    else:
+                        return .ready(None)
                 var built = _capture[Self.Error](_OwnedUnary(self.factory.take(), rebind_var[Self.F.Arg](self.value.take())))
                 if built.is_err():
                     self.phase = 3

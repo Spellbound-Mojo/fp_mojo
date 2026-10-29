@@ -639,6 +639,42 @@ during precompilation to correct a rejection diagnostic before running clients.
 the completed runs qualify all 36 selected routes, including eight bounded-stack
 executions; their input-stability checks passed.
 
+Recovery uses the `ErrorRecovery` capability extracted from the existing
+`ApplicativeError` contract. The latter still supplies lawful failure
+construction; `Async[E]` supplies only recovery of noncanceled failures. Pipeline
+`or_else` and the async `handle_error_with` adapter select that same capability.
+`attempt` delegates to the existing algebra outcome-materialization owner.
+Recovery continuations share `Bind`, including its slot and cancellation
+checkpoints. A cancellation request before handler entry returns the original
+failure marked canceled, preserving all errors; after handler entry, ownership
+and replacement follow the handler contract above.
+
+The canonical `fold_outcome` transfers success or the complete failure to exactly
+one owned callback, and invokes the cancellation thunk only for cancellation
+alone. It reuses Result folding and the native callback adapters. Public
+`FoldOutcomeContract` preserves exact callback results, errors and origins.
+
+`recovery-1` logged sixteen source/package O0/O3 passes for materialization,
+recovery, outcome folding and native Pipeline recovery before the execution
+service disconnected. Its aggregate report and final input audit are unavailable;
+it is retained as an interrupted run. `recovery-retained-2` verified that its
+saved program and test snapshots were unchanged and successfully re-executed all
+sixteen retained binaries. This artifact audit does not replace the lost compiler
+command metadata. `recovery-owned-2` passed all twelve move-only/origin and
+invalid-handler checks, both package builds, and both input-stability audits.
+The runner now checkpoints its initial input manifest and each case, and applies
+a 6 GiB compiler-process-tree memory limit. Smaller batches use two workers.
+
+After integrating the shared traversal-contract work from nightly,
+`recovery-integrated-3` passed eight of twenty checks. Four iteration compiles
+reached their 240-second limit; eight synchronous cases executed successfully
+but failed the runner's incorrectly empty output expectation. The focused
+`recovery-integrated-4` rerun passed all twelve affected checks with the exact
+expected output and a 600-second iteration compile budget, plus four bounded-stack
+executions. Runtime limits remained unchanged. Together, these complete the
+twenty selected integration routes. Documentation, generated overloads, module
+layers, and runner memory-accounting checks also passed.
+
 ## Implementation passes after agreement
 
 1. **Behavior and native-signature decisions.** Qualify race/timeout cancellation

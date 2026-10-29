@@ -173,7 +173,7 @@
   },
   "algebra.ApplicativeError": {
    "declarations": [
-    "trait ApplicativeError(Applicative):"
+    "trait ApplicativeError(ErrorRecovery):"
    ],
    "kind": "type or alias",
    "methods": {
@@ -181,12 +181,6 @@
      {
       "sha256": "6fed62ff6e48fd2b02fae68f5ae849e88c1f0b74b70e2903502a66b6e90aab58",
       "signature": "def fail[A: Movable & Deinitable](var error: Self.Failure) raises Self.FailError[A] -> Self.Failed[A]:"
-     }
-    ],
-    "or_else": [
-     {
-      "sha256": "f2370615fda3cf71d66374b06f66a8de5d082082718720c88b467d6634cd4614",
-      "signature": "def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V ) raises Self.HandleError[V, H] -> Self.Handled[V, H]:"
      }
     ]
    },
@@ -314,6 +308,21 @@
      {
       "sha256": "cbff903b24c0ff1271898262fbd6a6d408d7c2bcc471da7dc72694917fcb043c",
       "signature": "def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable]( var on_ok: F, var on_err: G, var source: V ) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:"
+     }
+    ]
+   },
+   "provider": "algebra/protocols"
+  },
+  "algebra.ErrorRecovery": {
+   "declarations": [
+    "trait ErrorRecovery(Applicative):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "or_else": [
+     {
+      "sha256": "f2370615fda3cf71d66374b06f66a8de5d082082718720c88b467d6634cd4614",
+      "signature": "def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V ) raises Self.HandleError[V, H] -> Self.Handled[V, H]:"
      }
     ]
    },
@@ -5076,6 +5085,13 @@
    },
    "provider": "effects/fibers"
   },
+  "effects.FoldOutcomeContract": {
+   "declarations": [
+    "struct FoldOutcomeContract[T: Movable & Deinitable, E: Movable & Deinitable,"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/outcomes"
+  },
   "effects.GuaranteeCaseContract": {
    "declarations": [
     "struct GuaranteeCaseContract[P: ReaderAction, F: ScopedIO]:"
@@ -6339,6 +6355,48 @@
     }
    ],
    "provider": "effects/effectful_resources"
+  },
+  "effects.fold_outcome": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "63420f71ba265d41ed61b1214431692be7b930c717bef00cc7e13414027b551b",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable, H: ThunkContract & Movable & Deinitable]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) raises FoldOutcomeContract[T, E, F, G, H].Error -> FoldOutcomeContract[T, E, F, G, H].Out where FoldOutcomeContract[T, E, F, G, H].Compatible:"
+    },
+    {
+     "sha256": "fb924a018cf6fb803c5c6143940d3355db9dde9a95c82cb748fb81a4da8d1187",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: _Unary[A, R], G: _Unary[B, R], H: _Thunk[R]]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) -> R where A == T and B == EffectFailure[E]:"
+    },
+    {
+     "sha256": "d63f556d3a2479f5dda659effd364806dfd0667ce3034d53187fa582a9d05587",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _Unary[B, R], H: _RaisingThunk[R, X]]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) raises X -> R where A == T and B == EffectFailure[E]:"
+    },
+    {
+     "sha256": "060d70ed513d48f9f1e90f2a24e13d8d310bdd2fe92ca17b4c3995e200c06e99",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _RaisingUnary[B, R, X], H: _Thunk[R]]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) raises X -> R where A == T and B == EffectFailure[E]:"
+    },
+    {
+     "sha256": "9a3dfbd5853002ef197361b8418daaebf315b745137386f7977fb71aac31d30b",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _Unary[A, R], G: _RaisingUnary[B, R, X], H: _RaisingThunk[R, X]]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) raises X -> R where A == T and B == EffectFailure[E]:"
+    },
+    {
+     "sha256": "b27bcd70657ebee49acb9c0304764aa293297eda1ed32062f3ad87480c281496",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _Unary[B, R], H: _Thunk[R]]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) raises X -> R where A == T and B == EffectFailure[E]:"
+    },
+    {
+     "sha256": "0302e25ebca389465e7a594832b86f9fe9aaee856b90716f1db36a0e965ee8b2",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _Unary[B, R], H: _RaisingThunk[R, X]]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) raises X -> R where A == T and B == EffectFailure[E]:"
+    },
+    {
+     "sha256": "614071c0fe5125bf759c54b7c730c58e8bada9afd2c60a2c0392c06a472c9a67",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _RaisingUnary[B, R, X], H: _Thunk[R]]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) raises X -> R where A == T and B == EffectFailure[E]:"
+    },
+    {
+     "sha256": "8be5f1c755af4389e15a7057520ce423fdb0b124866ca93e8899f3231b8bf988",
+     "signature": "def fold_outcome[T: Movable & Deinitable, E: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingUnary[A, R, X], G: _RaisingUnary[B, R, X], H: _RaisingThunk[R, X]]( var outcome: Outcome[T, E], var on_success: F, var on_failure: G, var on_cancel: H ) raises X -> R where A == T and B == EffectFailure[E]:"
+    }
+   ],
+   "provider": "effects/outcomes"
   },
   "effects.get": {
    "kind": "function",
@@ -15950,32 +16008,32 @@
       "signature": "def or_else[C: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, C._View[o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, C._View[o]].Family, OrElseContract[Self.I, Self.V, C._View[o]].Out, Self.E] where OrElseContract[Self.I, Self.V, C._View[o]].Compatible:"
      },
      {
-      "sha256": "9371c280c9ca356c9dea294467851b52823dc9aa31e2a8899801f2544089b9a0",
-      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Compatible:"
+      "sha256": "29169e2cafb6ad01241eb1707601a6366d059942bcdb97170fdd624d3a2b980f",
+      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, False, o]].Compatible:"
      },
      {
-      "sha256": "93bf0488c6ea633d0b0dcb43bbfc2e8e07a5429eaad1fe52ac53de69d39df70d",
-      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Self.E -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Compatible:"
+      "sha256": "3ff5d1e620c42220c890f5206aa58d3619015afdadaf99092b207528a27884a6",
+      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Self.E -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Self.E, C, True, o]].Compatible:"
      },
      {
-      "sha256": "1c0abf4d68255f6efadead6be048eabb4f39b4c2df2d6efe039e6e6dc1e77a84",
-      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Never -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and Self.E != Never and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Compatible:"
+      "sha256": "0698af67c12a5b368a408e009c40a1e0160e4fe7b255fb5a0e924232d113ac60",
+      "signature": "def or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def(var _RecoverySelection[Self.I, Self.V].Input) raises Never -> R](deinit self, ref[o] function: C) raises OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Error -> Pipeline[OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Family, OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and Self.E != Never and OrElseContract[Self.I, Self.V, _NativeUnaryRef[_RecoverySelection[Self.I, Self.V].Input, R, Never, C, True, o]].Compatible:"
      },
      {
-      "sha256": "c30770f67b00b5418d7f594942fd2403356cb75493df7bea344151882f722b52",
-      "signature": "def or_else[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible:"
+      "sha256": "92ac1e7517a20785eb5cc7b7bcf56350e8df4e87b4aa0a48e9b27901e5b87a50",
+      "signature": "def or_else[R: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible:"
      },
      {
-      "sha256": "1c4b29d6d5389f415498681c66425b49617d68399e5b4c011ee13f1cd408538b",
-      "signature": "def or_else[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible:"
+      "sha256": "2d3be10c092c8802c7dcd0613280150134bc65cd42e340cc5ccd0fe0d826e6a3",
+      "signature": "def or_else[R: RegisterPassable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, Never, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) thin -> R, False]].Compatible:"
      },
      {
-      "sha256": "a7fb7778aae10f965afda413c36de4590a99aea58ab8ecb54deafb6ee09e57a0",
-      "signature": "def or_else[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible:"
+      "sha256": "8984f6665754cfac079036caa08714704839a778c89550dcef8690b0c087b805",
+      "signature": "def or_else[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable) and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible:"
      },
      {
-      "sha256": "f093c1041b0b97a485eb87492910ffaf0016f1c559f200e9dfc65751c18f589e",
-      "signature": "def or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ApplicativeError) and _ErrorCompatible[Self.E, X] and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible:"
+      "sha256": "9ef7ba3fb9b28afc39ce2cbbb35180b9dff7fc0b2209938abf9d9ffeead4f58a",
+      "signature": "def or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R) raises OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Error -> Pipeline[OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Family, OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Out, Self.E] where conforms_to(Self.I, ErrorRecovery) and _ErrorCompatible[Self.E, X] and OrElseContract[Self.I, Self.V, NativeUnary[_RecoverySelection[Self.I, Self.V].Input, R, X, def(var _NativeOwnedArg[_RecoverySelection[Self.I, Self.V].Input]) raises X thin -> R, True]].Compatible:"
      },
      {
       "sha256": "7f982fd6068ca05eb4523593774a909b75c7a3dbb2c059ee9ab6d00c84cc4d2e",

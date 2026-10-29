@@ -7,7 +7,7 @@ from fp.callables.invoke import RepeatableUnary
 from fp.callables._receiver import _OnceBorrowAvailable, _RepeatableBorrow, _MutableBorrowRef, _MutableUnaryRef, _unary_once_as, _borrow_once_as
 from fp.callables._conditional import _guard_owned
 from fp.data._result import Result, _transformed, _fold_result_owned
-from .protocols import _pure, Applicative, ApplicativeError, Monad
+from .protocols import _pure, Applicative, ApplicativeError, ErrorRecovery, Monad
 from ._primitive_contracts import MapContract, BindContract, _HandleContract
 from ._adapt import _fail_as, _map_as, _or_else_as, _flat_map_as
 from .errors import _Recovered
@@ -99,7 +99,7 @@ struct _OutcomeCase[A: Movable & Deinitable, E: Movable & Deinitable, success: B
         return _transformed[Self.A, Self.E, Self.Arg, Self.success, True](arg^)
 
 
-struct _Materialize[I: ApplicativeError, V: Movable & Deinitable]:
+struct _Materialize[I: ErrorRecovery, V: Movable & Deinitable]:
     """Expose only the selected stored outcome as a successful native Result."""
     comptime A = Self.I.Element[Self.V]
     comptime Wrap = _OutcomeCase[Self.A, Self.I.Failure, True]
