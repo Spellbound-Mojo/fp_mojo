@@ -9,23 +9,30 @@ use the `nightly` source checkout.
 ## Qualification checkpoint
 
 The functional checkpoint is
-[`0d9350e`](https://github.com/Spellbound-Mojo/fp_mojo/commit/0d9350e41608d530b9c47e73483947e702acd86e),
+[`8c36f19`](https://github.com/Spellbound-Mojo/fp_mojo/commit/8c36f19b410c645ffd867ce77a983a860cd2562f),
 using Mojo 1.2.0 (2016d0cd) on Linux x86-64. Production sources, fixtures and
-runner inputs stayed unchanged throughout qualification. The source and
-precompiled package artifacts passed their retained-manifest audits; the
-documentation matrix's bytecode matches the original qualified package.
+runner inputs stayed unchanged throughout qualification. The precompiled
+package is bound to those sources by its retained manifest and artifact hashes.
+The checkpoint update itself changes documentation only.
 
 <!-- compatibility: current-qualification -->
 
-The complete positive suite and rejection fixtures ran at O3. Every executable
-documentation example ran through both import routes at O0 and O3; this does
-not claim a full-suite O0 run. Both benchmark programs executed, but their
-timings were collected alongside compiler jobs and are diagnostic observations.
+The complete positive suite and rejection fixtures ran through precompiled
+package imports at O3. The ten API-quality reference workflows ran through
+source and package imports at O0 and O3. This checkpoint does not rerun the
+entire source suite, the full standalone documentation matrix, or copied-source
+delivery. All 117 examples also ran inside the precompiled-package O3 suite.
+Both benchmark programs executed alongside compiler jobs; their timings are
+diagnostic observations. The rejection corpus retains explicit type hints in
+its documented legacy controls; it does not prove universal crash-free
+diagnostics for invalid calls.
 
 The [performance page](../architecture/performance.md#mojo-12-capture-qualification)
 retains earlier cold-build observations at their named commits. Prior functional,
 installation and measurement checkpoints remain in the downloadable catalog's
-qualification history. This checkpoint adds no new performance claim.
+qualification history. The [API-quality comparison](../architecture/api-quality.md#milestone-comparison)
+adds nine isolated cold builds of three clients under the same policy. Their
+costs remain close to the baseline; the sample does not establish a speedup.
 
 ## Historical baseline
 

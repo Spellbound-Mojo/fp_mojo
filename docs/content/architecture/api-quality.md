@@ -246,3 +246,73 @@ pixi run python scripts/measure_compilation.py \
 
 Later comparisons must use the same clients, compiler, target, limits and cache
 policy, and report runtime/ownership equivalence alongside compilation cost.
+
+## Milestone comparison
+
+The checkpoint at [8c36f19](https://github.com/Spellbound-Mojo/fp_mojo/tree/8c36f19b410c645ffd867ce77a983a860cd2562f)
+qualifies the first nine passes. The complete precompiled-package O3 suite
+passed 1,007 non-benchmark programs and two diagnostic benchmarks; all 2,670
+rejection fixtures produced their declared diagnostics without crashes. The
+ten reference workflows passed all 40 source/package O0/O3 builds with exact
+output checks. New ownership, generic-forwarding and invalid-call cases also
+have focused source/package O0/O3 evidence from their implementation passes.
+
+| Workflow | Change since the pinned baseline | Remaining distinction |
+|---|---|---|
+| Result values | Direct tuple attachment accepts move-only values; generic wrappers have public attachment contracts. | Repeating families still need copies. |
+| Collections and validation | Introductory examples use a clear eager/lazy choice and public Result inspection. | Validation remains an explicit policy choice. |
+| Capture | Stateful capture works as a mutable callback in mapping, traversal and lazy composition. | Mixed native argument conventions still need explicit binding; these examples retain that spelling. |
+| Reader, State and Writer | Declared recipes infer their family; selected chains support execution, environment scoping and log operations. | Erased transformer layers need explicit selection; deferred native callbacks retain their origins. |
+| IO | Finalization and execution stay in one chain through the existing IO owners. | Consumed recipes and cooperative cancellation retain this library's execution contract. |
+| Traversal, folds and resource composition | The reference behavior remains qualified; declared target recipes share family inference. | This checkpoint introduces no new resource runtime. |
+
+The selected Pipeline inventory now covers every legacy Piped method name.
+That is useful for discoverability, but does not make signatures, error
+selection or ownership contracts mechanically interchangeable. Legacy controls
+that need explicit callback-type hints remain documented limitations.
+
+Three serial cold-build rounds repeated the baseline policy on the same
+compiler, target and host class. All nine clients executed with their declared
+output; cache, input and artifact audits passed. These observations were taken
+before the concurrent full-suite qualification.
+
+| Client | Baseline median seconds | Current median seconds (range) | Baseline median RSS MiB | Current median RSS MiB (range) |
+|---|---|---|---|---|
+| `result_values` | 7.75 | 7.41 (7.38–8.57) | 268.4 | 276.1 (272.3–277.9) |
+| `inferred_traversal` | 7.15 | 6.87 (6.33–6.96) | 266.1 | 263.6 (261.4–275.4) |
+| `capture_arguments` | 5.26 | 5.09 (5.06–5.35) | 246.5 | 245.2 (244.9–254.1) |
+
+Costs remain close to the baseline. The Result client uses 7.7 MiB more median
+peak memory; three observations per client do not establish a speedup or a
+performance regression. The other seven workflows remain unmeasured.
+Reports are retained in `.cache/api-roadmap/pass10/`; the
+[qualification catalog](../guides/compatibility.md#qualification-checkpoint)
+names the source commit and report digests. The complete current source suite,
+the full standalone documentation matrix, copied-source delivery, macOS and
+device execution were not rerun in this checkpoint. All 117 examples did run
+inside the complete precompiled-package O3 suite.
+
+## Next passes
+
+1. Add `product_l` and `product_r` for combining already constructed effects
+   while keeping one payload. Cats' [Apply examples](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/Apply.scala)
+   explicitly accumulate both invalid inputs. Reuse the existing applicative
+   combination owner and public contract metadata. Check eager argument
+   construction, deferred execution, Cartesian order, skipped values and
+   move-only ownership; do not implement this through monadic bind.
+2. Bring outcome-aware IO finalization into the selected chain through the
+   existing `ScopedIO` and finalization owners. Use Cats Effect's
+   `guaranteeCase` syntax as the reference; retain exact success, failure and
+   cancellation outcomes. Qualify callback capture lifetimes and cleanup
+   failures before simplifying examples.
+3. Revisit remaining example-only factories and concrete recipe return
+   annotations. Start from State, Writer and resource clients; replace a helper
+   only when a compositional operation removes a concept without hiding its
+   evaluation or ownership contract. Keep actual generic callers as acceptance
+   tests instead of introducing aliases that erase concrete carriers.
+4. Consolidate repeated signature and contract descriptions exposed by those
+   changes, then repeat the workflow and cost checkpoint. Prefer extending the
+   current descriptor generators over introducing another generation system.
+
+Each pass retains the commit/push boundary above and proceeds to the next
+qualified dependency. Release, deprecation and CI work are outside these passes.

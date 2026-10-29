@@ -124,13 +124,14 @@ The same target inference applies to the other Pipeline traversal methods:
 
 See the [complete traversal example](../reference/combinators.md#flatten-and-filter-effects).
 Each method preserves its existing source-shape, ownership and error policy;
-an explicit target remains the way to select validation, deferred execution or
-a custom family.
+an explicit target selects validation, an erased transformer layer or a custom
+policy that the carrier does not declare.
 
 ## Search with effects
 
 `any_effect(predicate)`, `all_effect(predicate)`, `find_effect(predicate)` and
-`find_map_effect(transform)` also infer native Optional, Result and List targets.
+`find_map_effect(transform)` also infer native Optional, Result and List targets,
+as well as declared effect recipes.
 The first three borrow each item; `find_map_effect` consumes items to produce
 an effect containing an Optional answer:
 
@@ -142,8 +143,9 @@ Optional/Result queries. A successful search with no match keeps an empty
 Optional inside its effect; `.raise_on_err()` propagates a stored Result error
 and leaves that Optional answer intact.
 
-Explicit `[Target]` bindings select custom Monad policies, including deferred
-execution. Native callback errors still use the pipeline's selected error type.
+Explicit `[Target]` bindings select another Monad policy or an erased layer.
+Declared Reader, State, Writer and IO recipes supply their target family.
+Native callback errors still use the pipeline's selected error type.
 See [effectful queries and folds](../reference/functions.md#select-family-and-native-errors-before-callbacks)
 for source consumption, empty answers and the explicit fold interfaces.
 

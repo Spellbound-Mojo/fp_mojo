@@ -7,14 +7,14 @@ values that you can compose with the algebra operations from
 
 | Effect | What passes between steps | How to get the result |
 |---|---|---|
-| `Reader[R]` | A shared environment of type `R` | `run` borrows the environment and returns the payload |
-| `State[S]` | A state of type `S`, updated by each step | `run` consumes the initial state and returns `(payload, final_state)` |
-| `Writer[W]` | Output combined by the monoid `W` | `run_writer` returns `(log, payload)` |
+| `Reader[R]` | A shared environment of type `R` | Pipeline `.run(environment)` borrows the environment and returns the payload |
+| `State[S]` | A state of type `S`, updated by each step | Pipeline `.run(state)` consumes the initial state and returns `(payload, final_state)` |
+| `Writer[W]` | Output combined by the monoid `W` | Pipeline `.run()` returns the base carrier of `(log, payload)` |
 
 Reader and State are deferred: constructing a computation does not execute its
 steps. Writer over the default `IdentityFamily` combines its values eagerly;
-`run_writer` unwraps the result. Writer over a deferred base follows that base's
-evaluation rules.
+`.run()` unwraps the result. Writer over a deferred base follows that base's
+evaluation rules; unwrapping does not execute that base.
 
 ## Read configuration with Reader
 
@@ -39,7 +39,7 @@ exists only for that run; `local` rejects a base whose result would keep it.
 
 ### Keep borrowed callbacks alive until the run
 
-`map[PricingReader](quote, ...)` borrows the native closure. The computation
+`.map(quote)` borrows the native closure. The computation
 must run while `quote` is alive and unmoved. Its captured `calls` variable must
 also remain alive and stable. In the example, both runs finish in the scope
 that owns the closure and counter.
@@ -67,11 +67,10 @@ allocating the next number does.
 payload `"ticket 10"` and leaves the state at 10. `run` therefore returns
 `("ticket 10", 10)`.
 
-`modify(increment)` changes the state and returns `None`. `flat_map` then calls
-`read_counter`, whose `get` sees the updated value. Starting from 10, the
-computation returns `(11, 11)`. The helper's return annotation,
-`type_of(get[CounterState]())`, names the concrete deferred computation it
-returns, rather than the `Int` that a later run will produce.
+`modify(increment)` changes the state and returns `None`.
+`.followed_by(get[CounterState])` discards that payload and constructs the next
+state read. Starting from 10, `.run(10)` returns `(11, 11)`. Passing the `get`
+factory directly avoids a helper whose only purpose is to ignore `None`.
 
 `put(0)` replaces the state. Sequencing another `get` after it returns `(0, 0)`.
 Each call to `run` in this example starts a separate computation from state 10;
@@ -90,10 +89,10 @@ are appended in execution order.
 <!-- example: docs/examples/effects_writer.mojo -->
 
 `tell("ready")` records a log with a `None` payload. It does not print anything;
-the example unwraps the value with `run_writer` and prints the log itself.
+the example unwraps the value with `.run()` and prints the log itself.
 
 `writer` constructs a Writer value from `(log, payload)`. The initial value has
-log `"start; "` and payload 3. `flat_map(add_fee, ...)` passes 3 to `add_fee`,
+log `"start; "` and payload 3. `.flat_map(add_fee)` passes 3 to `add_fee`,
 which returns payload 5 and log `"fee +2"`. Writer combines the logs into
 `"start; fee +2"`.
 

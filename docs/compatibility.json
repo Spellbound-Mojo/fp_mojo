@@ -1014,7 +1014,7 @@
         "filter_effect"
       ],
       "status": "selected",
-      "families": "Traversable source; Applicative target; filtering also requires FunctorFilter; Native traversal methods infer native Optional, Result and List targets when J is omitted",
+      "families": "Traversable source; Applicative target; filtering also requires FunctorFilter; Native traversal methods infer native Optional, Result and List targets and declared effect recipes when J is omitted",
       "callbacks": "Consuming transform or borrowing retention callback; single-use where the source permits. Shared callable chains are borrowed directly by traverse, preserving their selected effect family.",
       "ownership": "Original move-only values retained when the target does not duplicate them.",
       "errors": "Source errors, target failures and raised errors stay distinct.",
@@ -1053,7 +1053,7 @@
         "flat_sequence"
       ],
       "status": "selected",
-      "families": "Traversable source with FunctorFilter for compaction or Monad for flattening; Applicative target; native Optional, Result and List targets are inferred when J is omitted",
+      "families": "Traversable source with FunctorFilter for compaction or Monad for flattening; Applicative target; native Optional, Result and List targets and declared effect recipes are inferred when J is omitted",
       "callbacks": "Consuming native or library callback; sequence uses Identity. Source and target determine repeatability. Shared chains are borrowed directly and supply their selected target family.",
       "ownership": "Move-only payloads survive compaction and flattening when the target does not duplicate them.",
       "errors": "Source errors remain inside target effects; nested Result errors preserve the source family and origins.",
@@ -1082,7 +1082,7 @@
         "sequence_void"
       ],
       "status": "selected",
-      "families": "Native iterator/owned iterable, or Result traversal; Applicative target; native Optional, Result and List targets are inferred when J is omitted",
+      "families": "Native iterator/owned iterable, or Result traversal; Applicative target; native Optional, Result and List targets and declared effect recipes are inferred when J is omitted",
       "callbacks": "Consuming repeated transform for native sources; Result traversal can consume a single-use callback. Shared chains are borrowed directly and supply their selected target family.",
       "ownership": "Discards successful payloads without an output collection. Array inputs use safe temporary storage.",
       "errors": "Source Result errors remain nested; target failures and native raised errors stay distinct.",
@@ -1810,65 +1810,65 @@
     "tests/compile_fail/traversal_tap_owned.mojo"
   ],
   "current": {
-    "commit": "0d9350e41608d530b9c47e73483947e702acd86e",
-    "production_commit": "0d9350e41608d530b9c47e73483947e702acd86e",
-    "production_tree": "975f463fd1120c30797d99136437c33d164b4dd5",
+    "commit": "8c36f19b410c645ffd867ce77a983a860cd2562f",
+    "production_commit": "8c36f19b410c645ffd867ce77a983a860cd2562f",
+    "production_tree": "55c82a2bfe7d58934237ee01cafcdf1662004716",
     "compiler": "Mojo 1.2.0 (2016d0cd)",
     "platform": "Linux x86-64",
     "checks": [
       {
         "check": "Precompiled package",
         "result": "pass",
-        "scope": "Whole-package precompilation and O3 core client",
-        "report": ".cache/quality-cycle86/package/report.json",
-        "sha256": "1e7eb26ac17b8a8654dd5462477fd023fc5d8eed4d074414a7ba1c0d42f8e3da"
-      },
-      {
-        "check": "Source package",
-        "result": "pass",
-        "scope": "Copied source delivery, whole-package precompilation and O3 core client",
-        "report": ".cache/quality-cycle86/source-package/report.json",
-        "sha256": "2357043a825b8b2ae231bdf0d5d831a0fbba6d0cdda86fee006358cf9bf810db"
+        "scope": "Whole-package precompilation; source and artifact hashes verified",
+        "report": ".cache/api-roadmap/pass9/qualified/examples/report.json",
+        "sha256": "2e1db15efa0ffdfbf86ef324f8fa44fa770dc65f075b42b166cffcf8eabeded7"
       },
       {
         "check": "Positive suite",
-        "result": "760 / 760",
-        "scope": "Precompiled package at O3; both benchmark programs also executed",
-        "report": ".cache/quality-cycle86/suite/report.json",
-        "sha256": "eb2b24f913e3bc8fa1016cc42d10c6350f8ff52fd8328dbc097dd520b51c987a"
+        "result": "1007 / 1007",
+        "scope": "Complete precompiled-package suite at O3; two additional diagnostic benchmarks executed",
+        "report": ".cache/api-roadmap/pass10/full-package/report.json",
+        "sha256": "7fcbef254024b8cd856b2c650637609ad228546d6786c17028f5a53df80b63df"
       },
       {
         "check": "Rejections",
-        "result": "1702 / 1702",
-        "scope": "Precompiled package at O3; declared diagnostics, no negative execution",
-        "report": ".cache/quality-cycle86/rejections/report.json",
-        "sha256": "5ea380aca2d6a7250d25bd05ba01c8760dd635199daa88d69d18ef027e9df51b"
+        "result": "2670 / 2670",
+        "scope": "Complete precompiled-package corpus at O3; declared diagnostics, no crashes or negative execution",
+        "report": ".cache/api-roadmap/pass10/reject-full-package/report.json",
+        "sha256": "f6f8fdfc4bd3ddc1605038cb4807fc205b8b0351f95437d826fccf53ea972c91"
       },
       {
-        "check": "Executable documentation",
-        "result": "360 / 360",
-        "scope": "All 90 examples through source/package imports at O0/O3",
-        "report": ".cache/quality-cycle86/examples/report.json",
-        "sha256": "c1638e4cdf0cab33aee6ed44efa399d98f005bbda24c50f5d7a542dc4ff932d4"
+        "check": "Reference workflows",
+        "result": "40 / 40",
+        "scope": "Ten API-quality examples through source/package imports at O0/O3; exact stdout",
+        "report": ".cache/api-roadmap/pass10/workflow-examples/report.json",
+        "sha256": "a7ddbed26bd9ce1a634fe399d875b90d52b29966c2720758037e8d7f2737358b"
       },
       {
-        "check": "Tooling",
-        "result": "49 / 49",
-        "scope": "Runner audits, ownership of modules and generator parity",
-        "report": ".cache/quality-cycle86/logs/tooling.log",
-        "sha256": "95a40c5cab189774ae91e5475f200a1f4d64c0299e41dfb331675a1b097f730f"
+        "check": "Cold compilation round 1",
+        "result": "3 / 3",
+        "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+        "report": ".cache/api-roadmap/pass10/measure-1/report.json",
+        "sha256": "23639dd0dbc802dbeae899c6d474fd3025a4580446630a08da5072977a40d010"
       },
       {
-        "check": "Documentation",
-        "result": "pass",
-        "scope": "Strict site, links, anchors, assets and inventories",
-        "report": ".cache/quality-cycle86/logs/documentation.log",
-        "sha256": "70575e15b8368770e0d49452d25c71ab690511d571c0222768c11f19026631a5"
+        "check": "Cold compilation round 2",
+        "result": "3 / 3",
+        "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+        "report": ".cache/api-roadmap/pass10/measure-2/report.json",
+        "sha256": "06f7e94a2d139770005d32e5c244baa98bf9d16cc1fa0a0d3930fa20aa39246b"
+      },
+      {
+        "check": "Cold compilation round 3",
+        "result": "3 / 3",
+        "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+        "report": ".cache/api-roadmap/pass10/measure-3/report.json",
+        "sha256": "2baf43f10a8ad944a394beca2f67bb4f7707a59e68d7de980c4505e5337eed4e"
       }
     ],
-    "audit_report": ".cache/quality-cycle86/checkpoint-audit.json",
-    "audit_sha256": "2434f5e12e6dd154b8c8533bcf9725d03c5bd935e324eda05f841430e1b02f7d",
-    "scope_note": "Production, fixture and runner inputs match the named source commit. The complete positive suite and rejections ran at O3; O0/O3 matrix coverage here is all 90 documentation examples. Benchmarks ran under concurrent compilation and are diagnostics, not a performance comparison. This checkpoint update changes documentation only."
+    "audit_report": ".cache/api-roadmap/pass10/compiler-audit.json",
+    "audit_sha256": "1f720bd1769ac8e96ae6fb15c16941a39cadcb81e77dbe3ca5685c2e30371ebe",
+    "scope_note": "Production, fixture, runner and compiler inputs match the named commit. Complete positive and rejection suites cover precompiled package imports at O3. The O0/O3 matrix covers ten reference workflows through both import routes. Three clients have three isolated cold-build observations each. Legacy hinted rejection controls remain scoped limitations. Benchmarks ran alongside compilation and are diagnostic only. All 117 documentation examples also ran inside the package suite. Copied-source delivery and the full standalone documentation matrix were not rerun. The checkpoint update changes documentation only."
   },
   "qualification_history": [
     {
@@ -1949,6 +1949,67 @@
         }
       ],
       "scope_note": "Production Mojo sources are identical at these two commits. Report post-run differences are documented prose or catalog key ordering; production and runner code remains bound by report hashes. Historical whole-documentation O0/O3 evidence remains in baseline."
+    },
+    {
+      "commit": "0d9350e41608d530b9c47e73483947e702acd86e",
+      "production_commit": "0d9350e41608d530b9c47e73483947e702acd86e",
+      "production_tree": "975f463fd1120c30797d99136437c33d164b4dd5",
+      "compiler": "Mojo 1.2.0 (2016d0cd)",
+      "platform": "Linux x86-64",
+      "checks": [
+        {
+          "check": "Precompiled package",
+          "result": "pass",
+          "scope": "Whole-package precompilation and O3 core client",
+          "report": ".cache/quality-cycle86/package/report.json",
+          "sha256": "1e7eb26ac17b8a8654dd5462477fd023fc5d8eed4d074414a7ba1c0d42f8e3da"
+        },
+        {
+          "check": "Source package",
+          "result": "pass",
+          "scope": "Copied source delivery, whole-package precompilation and O3 core client",
+          "report": ".cache/quality-cycle86/source-package/report.json",
+          "sha256": "2357043a825b8b2ae231bdf0d5d831a0fbba6d0cdda86fee006358cf9bf810db"
+        },
+        {
+          "check": "Positive suite",
+          "result": "760 / 760",
+          "scope": "Precompiled package at O3; both benchmark programs also executed",
+          "report": ".cache/quality-cycle86/suite/report.json",
+          "sha256": "eb2b24f913e3bc8fa1016cc42d10c6350f8ff52fd8328dbc097dd520b51c987a"
+        },
+        {
+          "check": "Rejections",
+          "result": "1702 / 1702",
+          "scope": "Precompiled package at O3; declared diagnostics, no negative execution",
+          "report": ".cache/quality-cycle86/rejections/report.json",
+          "sha256": "5ea380aca2d6a7250d25bd05ba01c8760dd635199daa88d69d18ef027e9df51b"
+        },
+        {
+          "check": "Executable documentation",
+          "result": "360 / 360",
+          "scope": "All 90 examples through source/package imports at O0/O3",
+          "report": ".cache/quality-cycle86/examples/report.json",
+          "sha256": "c1638e4cdf0cab33aee6ed44efa399d98f005bbda24c50f5d7a542dc4ff932d4"
+        },
+        {
+          "check": "Tooling",
+          "result": "49 / 49",
+          "scope": "Runner audits, ownership of modules and generator parity",
+          "report": ".cache/quality-cycle86/logs/tooling.log",
+          "sha256": "95a40c5cab189774ae91e5475f200a1f4d64c0299e41dfb331675a1b097f730f"
+        },
+        {
+          "check": "Documentation",
+          "result": "pass",
+          "scope": "Strict site, links, anchors, assets and inventories",
+          "report": ".cache/quality-cycle86/logs/documentation.log",
+          "sha256": "70575e15b8368770e0d49452d25c71ab690511d571c0222768c11f19026631a5"
+        }
+      ],
+      "audit_report": ".cache/quality-cycle86/checkpoint-audit.json",
+      "audit_sha256": "2434f5e12e6dd154b8c8533bcf9725d03c5bd935e324eda05f841430e1b02f7d",
+      "scope_note": "Production, fixture and runner inputs match the named source commit. The complete positive suite and rejections ran at O3; O0/O3 matrix coverage here is all 90 documentation examples. Benchmarks ran under concurrent compilation and are diagnostics, not a performance comparison. This checkpoint update changes documentation only."
     }
   ]
 }
