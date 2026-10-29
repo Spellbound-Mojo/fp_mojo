@@ -1,4 +1,5 @@
 """Canonical async imports, native delay, and inherited synchronous IO execution."""
+from foundation import at
 from std.memory import ArcPointer
 from fp.callables import OnceThunk
 from fp.effects import IO, IOContext, CancellationToken, Outcome, EffectFailure
@@ -37,7 +38,7 @@ struct Endpoint(ReaderAction):
 
     def run[o: ImmOrigin](deinit self, ref[o] context: Self.Env) -> Self.Out[o]:
         self.calls[] += 1
-        check(context._clock.now() == 123, "IO must inherit the driver clock")
+        check(context._clock.now() == at(123), "IO must inherit the driver clock")
         check(Bool(context._runtime) and Bool(context._parent), "IO must inherit scheduler ancestry")
         check(context._masked == self.masked, "IO must inherit masking")
         context.request_cancel()

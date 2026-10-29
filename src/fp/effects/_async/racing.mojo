@@ -16,6 +16,12 @@ struct _RaceCases[A: Movable & Deinitable, B: Movable & Deinitable](Data):
 
 
 comptime RaceResult[A: Movable & Deinitable, B: Movable & Deinitable] = Choice[_RaceCases[A, B]]
+"""The canonical Choice of Left[A] or Right[B] selected by a structured race.
+
+Parameters:
+    A: The exact left success value.
+    B: The exact right success value.
+"""
 
 
 def _winner[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, left: Bool](var outcome: Outcome[A if left else B, E]) -> Outcome[RaceResult[A, B], E]:

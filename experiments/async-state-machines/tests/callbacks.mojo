@@ -24,7 +24,7 @@ struct Register(OnceUnary):
         self.counts[][0] += 1
         self.saved[] = Optional(done.copy())
         if self.mode == 1:
-            check(done.complete(success[Int, Int](42).outcome()), "immediate success accepted")
+            check(done.complete(success[Int, Int](42)._outcome()), "immediate success accepted")
         elif self.mode == 2:
             check(done.complete(failed[Int](11)), "immediate failure accepted")
         elif self.mode == 3:
@@ -46,7 +46,7 @@ struct Withdraw(Machine):
         self.counts[][1] += 1
         if self.counts[][1] == 1:
             var wait = Wait.changed(self.gate, self.gate.revision())
-            wait.interruptible = False
+            wait._interruptible = False
             return .pending(wait^)
         if self.fail:
             return .ready(failed[NoneType](33))
@@ -67,10 +67,10 @@ def matrix_case(mode: Int, registration_failure: Bool, cleanup_failure: Bool, ca
     elif mode == 0 and not registration_failure:
         _ = task.tick()
         check(not task.tick(), "uncompleted callback parks")
-        check(saved[].value().complete(success[Int, Int](42).outcome()), "delayed completion accepted")
+        check(saved[].value().complete(success[Int, Int](42)._outcome()), "delayed completion accepted")
     while counts[][1] == 0:
         _ = task.tick()
-    check(not saved[].value().complete(success[Int, Int](999).outcome()), "duplicates rejected during cleanup")
+    check(not saved[].value().complete(success[Int, Int](999)._outcome()), "duplicates rejected during cleanup")
     if cancel:
         task.cancel()
     check(not task.tick() and counts[][1] == 1, "masked cleanup stays parked after duplicate and cancellation")
@@ -113,7 +113,7 @@ struct Producer(Machine):
     def poll(mut self, context: IOContext[Int]) -> Step[Int, Int]:
         if not self.saved[]:
             return .pending(Wait())
-        _ = self.saved[].value().complete(success[Int, Int](42).outcome())
+        _ = self.saved[].value().complete(success[Int, Int](42)._outcome())
         if self.counts[][1] == 0:
             return .pending(Wait())
         self.gate.notify()
@@ -126,14 +126,14 @@ struct Reenter(Movable):
     var dropped: ArcPointer[Int]
     def __deinit__(deinit self):
         self.dropped[] += 1
-        _ = self.done.complete(success[Int, Int](8).outcome())
+        _ = self.done.complete(success[Int, Int](8)._outcome())
 
 
 def ownership():
     var stats = ArcPointer(List[Int]([0, 0, 0, 0, 0, 0, 0]))
     var done = Completion[Resource, Failure]()
-    check(done.complete(success[Resource, Failure](Resource(String("owned"), stats.copy())).outcome()), "move-only accepted")
-    check(not done.complete(success[Resource, Failure](Resource(String("duplicate"), stats.copy())).outcome()), "move-only duplicate rejected")
+    check(done.complete(success[Resource, Failure](Resource(String("owned"), stats.copy()))._outcome()), "move-only accepted")
+    check(not done.complete(success[Resource, Failure](Resource(String("duplicate"), stats.copy()))._outcome()), "move-only duplicate rejected")
     check(stats[][3] == 1, "rejected value destroyed immediately")
     var selected = done._select(False)
     _ = selected^
@@ -142,7 +142,7 @@ def ownership():
     var inner = Completion[Int, Int]()
     var outer = Completion[Reenter, Int]()
     _ = outer.complete(None)
-    check(not outer.complete(success[Reenter, Int](Reenter(inner.copy(), dropped.copy())).outcome()), "reentrant destructor rejected")
+    check(not outer.complete(success[Reenter, Int](Reenter(inner.copy(), dropped.copy()))._outcome()), "reentrant destructor rejected")
     var completed = inner._select(False)
     var outcome = completed.take()
     check(dropped[] == 1 and outcome.take()._take_ok() == 8, "destructors may complete another callback")

@@ -72,9 +72,28 @@ def on_cancel[P: Machine, Q: Machine](var program: P, var finalizer: Q) -> Guara
 
 @fieldwise_init
 struct Poll[E: Movable & Deinitable](Copyable):
+    """A lexical cancellation-restoration handle supplied to uncancelable_with.
+
+    Applying a handle restores only the preceding state of its own region.
+    Escaped handles cannot pierce other regions or finalizer masks.
+
+    Parameters:
+        E: The exact error shared by the region and its body machines.
+    """
     var _source: _SyncPoll[Self.E]
     comptime Applied[P: Machine] = _Polled[P, Self.E]
+    """The concrete application recipe produced by apply."""
     def apply[P: Machine](self, var program: P) -> _Polled[P, Self.E]:
+        """Restore this region's preceding cancellation state for an owned recipe.
+
+        Parameters:
+            P: The body machine with exactly this handle's domain error.
+
+        Args:
+            program: The unopened body, consumed once.
+
+        Returns:
+            Applied[P], an application machine preserving all body ownership and origins."""
         comptime assert P.Error == Self.E, "poll requires the same exact error type"
         return _Polled[P, Self.E](_Slot[P, P.Value, P.Error](program^), self.copy())
 
@@ -130,7 +149,7 @@ struct Masked[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](
         _ = _tick(rebind[_Slot[Self.Program, Self.Program.Value, Self.Program.Error]](self.active.value()), rebind[IOContext[Self.Program.Error]](self.masked.value()))
         if self.active.value().done():
             self.completed = True
-            return Step(Optional(self.active.value().take_outcome()), Wait(), True)
+            return Step[Self.Value, Self.Error]._make(Optional(self.active.value().take_outcome()), Wait(), True)
         return .pending(self.active.value().waiting())
 
 

@@ -35,7 +35,7 @@ struct Masked[P: Machine](Machine):
     comptime Error = Self.P.Error
     def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
         var step = self.program.poll(context._mask())
-        step.wait.interruptible = False
+        step._wait._interruptible = False
         return step^
 
 

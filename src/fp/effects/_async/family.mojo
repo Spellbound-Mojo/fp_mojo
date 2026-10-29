@@ -20,6 +20,14 @@ from std.utils import Variant
 
 
 trait Machine(_Machine, _FamilyCarrier):
+    """A concretely typed cooperative leaf with native family metadata.
+
+    Declare Value and Error, Family = Async[Error], and a mutating poll accepting
+    IOContext[Error] and returning Step[Value, Error]. Poll must return promptly;
+    terminal steps discharge entered external work and cleanup. Driver and the
+    library's combinators own polling. Implementations retain independent
+    external origins, never a temporary per-poll context loan.
+    """
     # Extension carriers declare Family = Async[E] explicitly. The pinned
     # compiler cannot reliably resolve this associated type as a trait default.
     pass
@@ -208,6 +216,16 @@ struct _Handled[P: _Machine, H: UnaryContract & Movable & Deinitable, E: Movable
 
 
 struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):
+    """The native sequencing and recovery family for cooperative async recipes.
+
+    Construction owns unopened work; execution captures compatible callback
+    errors in the canonical outcome. Dependent composition stays sequential.
+    Use explicit both for child concurrency. This dictionary does not claim the
+    complete Cats Effect Async capability set or erase concrete recipe types.
+
+    Parameters:
+        E: The exact domain error shared by every recipe in this family.
+    """
     comptime Element[V: Movable & Deinitable] = downcast[V, _Machine].Value
     comptime CarrierCompatible[V: Movable & Deinitable] = (downcast[V, _Machine].Error == Self.E) if conforms_to(V, _Machine) else False
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V] and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error]
@@ -223,20 +241,73 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):
 
     @staticmethod
     def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:
+        """Own an already evaluated value in an unopened recipe.
+
+        Parameters:
+            A: The exact owned value type, retaining native origins.
+
+        Args:
+            value: The value, consumed once.
+
+        Returns:
+            A concrete recipe in this family.
+        """
         return Self.Pure[A](_pure[Self.E](value^))
 
     @staticmethod
     def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Mapped[V, F]:
+        """Defer one callback after a successful source outcome.
+
+        Parameters:
+            V: The source carrier admitted by this family.
+            F: A once-admitted callback with a compatible native error.
+
+        Args:
+            f: The owned callback, receiving the success value.
+            value: The unopened source, consumed once.
+
+        Returns:
+            A recipe capturing callback failure during execution. Error and
+            cancellation outcomes bypass the callback.
+        """
         comptime assert Self.MapCompatible[V, F]
         return Self.Mapped[V, F](Bind(rebind_var[downcast[V, _Machine]](value^), _Map[F, Self.E](f^)))
 
     @staticmethod
     def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Bound[V, F]:
+        """Sequence a dependent recipe through the canonical bind owner.
+
+        Parameters:
+            V: The source carrier admitted by this family.
+            F: A once-admitted continuation returning the same exact error family.
+
+        Args:
+            f: The owned continuation, deferred until success and an entry checkpoint.
+            value: The unopened source, consumed once.
+
+        Returns:
+            A concrete recipe owning both execution lifetimes in sequence.
+        """
         comptime assert Self.BindCompatible[V, F]
         return Self.Bound[V, F](Bind(rebind_var[downcast[V, _Machine]](value^), f^))
 
     @staticmethod
     def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) -> Self.Combined[V, F, R]:
+        """Run the left recipe, build and run the right, then combine their values.
+
+        Parameters:
+            V: The left carrier admitted by this family.
+            F: The once-admitted combiner of the exact left and right values.
+            R: The once-admitted factory returning a recipe in this error family.
+
+        Args:
+            f: The owned combining callback.
+            left: The owned left recipe.
+            right: The owned right factory, deferred until left succeeds.
+
+        Returns:
+            Sequential dependent composition; use both for concurrent children.
+        """
         comptime assert Self.CombineCompatible[V, F, R]
         return Self.Combined[V, F, R](Bind(rebind_var[downcast[V, _Machine]](left^), _Combine[F, R, Self.E](f^, right^)))
 
@@ -277,5 +348,18 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):
     comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Never
     @staticmethod
     def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) -> Self.Handled[V, H]:
+        """Recover an ordinary failure through the canonical bind continuation.
+
+        Parameters:
+            V: The source carrier in this family.
+            H: A once-admitted handler of EffectFailure[E], preserving value and error types.
+
+        Args:
+            handler: The owned recovery callback; cancellation bypasses it.
+            source: The unopened source, consumed once.
+
+        Returns:
+            A recipe retaining full ordered errors and the cancellation flag.
+        """
         comptime assert Self._Handles[V, H]
         return Self.Handled[V, H](Bind[downcast[V, _Machine], H, True](rebind_var[downcast[V, _Machine]](source^), handler^))

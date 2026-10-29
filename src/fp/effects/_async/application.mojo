@@ -7,13 +7,14 @@ from fp.callables import UnaryContract, ThunkContract
 from fp.callables.invoke import _OnceUnaryAvailable
 from fp.callables.native import _NativeThunk, _Thunk, _RaisingThunk, NativeUnary, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible
-from .kernel import Machine as _CoreMachine
+from .kernel import Machine as _CoreMachine, Sleep as _Sleep
+from .time import Duration, Instant
 from .family import Async, Machine, _Recipe
 from fp.algebra import TailRecContract
 from .composition import Pure as _Pure, Bind as _Bind, Loop as _Loop, pure as _pure
 from .children import Both as _Both, both as _both, ScopedBoth, scoped_both
 from .scopes import Scope as _Scope, ScopedMachine, CleanupMachine, _ProgramUse
-from .racing import Race as _Race, RaceResult, race as _race, race_first as _race_first
+from .racing import Timeout as _Timeout, timeout_after as _timeout_after, timeout_to as _timeout_to, Race as _Race, RaceResult, race as _race, race_first as _race_first
 from .io import EvalIO as _EvalIO, eval_io as _eval_io, delay as _delay
 from .finalization import Guarantee as _Guarantee, Masked as _Masked, Poll, _ConstantMask
 from .finalization import guarantee as _guarantee, guarantee_case as _guarantee_case, on_cancel as _on_cancel, uncancelable as _uncancelable, uncancelable_with as _uncancelable_with
@@ -444,3 +445,76 @@ def callback[A: Movable & Deinitable, C: Machine, //, F: _Unary[A, NoneType]](va
 def callback[A: Movable & Deinitable, X: Movable & Deinitable, C: Machine, //, F: _RaisingUnary[A, NoneType, X]](var register: F, var withdrawal: C) -> Callback[NativeUnary[A, NoneType, X, F, True], C] where conforms_to(A, _CompletionType) and A == Completion[downcast[A, _CompletionType].Value, C.Error] and _CallbackUnit[C.Value] and _ErrorCompatible[C.Error, X]:
     """Adapt an owned native callback through the canonical callable boundary."""
     return callback(NativeUnary[A, NoneType, X, F, True](register^), withdrawal^)
+
+
+comptime Sleep[E: Movable & Deinitable] = _Recipe[_Sleep[E]]
+"""An unopened timer recipe using checked relative time.
+
+Parameters:
+    E: The exact domain error; timer setup introduces no domain failure.
+"""
+comptime TimeoutAfter[P: Machine, Q: Machine] = _Recipe[_Timeout[P, Q]]
+"""A timeout retaining the preserved first-terminal selection policy.
+
+Parameters:
+    P: The source machine.
+    Q: The fallback machine with the same value and error types.
+"""
+comptime TimeoutTo[P: Machine, Q: Machine] = _Recipe[_Timeout[P, Q, True]]
+"""A timeout preferring a source result after required draining.
+
+Parameters:
+    P: The source machine.
+    Q: The fallback machine with the same value and error types.
+"""
+
+
+def sleep[E: Movable & Deinitable](duration: Duration) -> Sleep[E]:
+    """Wait cooperatively from entry using a checked relative duration.
+
+    Parameters:
+        E: The exact selected domain error.
+
+    Args:
+        duration: A nonnegative checked duration, copied into the unopened timer.
+
+    Returns:
+        A cancelable unit recipe whose absolute deadline uses opaque Instant.
+    """
+    return _Recipe(_Sleep[E](duration._nanoseconds))
+
+
+def timeout_after[P: Machine, Q: Machine](var program: P, duration: Duration, var fallback: Q) -> TimeoutAfter[P, Q] where P.Error == Q.Error and P.Value == Q.Value:
+    """Choose by first terminal outcome, draining the source before fallback entry.
+
+    Parameters:
+        P: The source machine.
+        Q: The fallback with exactly the same value and error types.
+
+    Args:
+        program: The unopened source, consumed once.
+        duration: The checked relative duration anchored when the timeout enters.
+        fallback: Owned fallback, entered only after the selected timeout and draining.
+
+    Returns:
+        A structured timeout retaining all source and cleanup errors.
+    """
+    return _Recipe(_timeout_after(program^, duration._nanoseconds, fallback^))
+
+
+def timeout_to[P: Machine, Q: Machine](var program: P, duration: Duration, var fallback: Q) -> TimeoutTo[P, Q] where P.Error == Q.Error and P.Value == Q.Value:
+    """After the timer wins, prefer the drained source outcome when available.
+
+    Parameters:
+        P: The source machine.
+        Q: The fallback with exactly the same value and error types.
+
+    Args:
+        program: The unopened source, consumed once.
+        duration: The checked relative duration anchored on entry.
+        fallback: Owned fallback for timeout or cancellation-only source selection.
+
+    Returns:
+        A structured timeout preserving all subtree errors and cleanup ownership.
+    """
+    return _Recipe(_timeout_to(program^, duration._nanoseconds, fallback^))

@@ -4,12 +4,18 @@ from std.time import monotonic, sleep
 from std.os import abort
 from fp.data import Result, Ok, Err, NonEmptyList
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure, ExitCase
+from fp._internal.time import Instant
+from fp._internal.waking import _Clock
 from state_machine import Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Task, Sleep, Scope, run, run_pair
 
 
 def check(condition: Bool, message: String):
     if not condition:
         abort(message)
+
+
+def at(nanoseconds: Int) -> Instant:
+    return _Clock.manual(nanoseconds).now()
 
 
 def success[T: Movable & Deinitable, E: Movable & Deinitable](var value: T) -> Step[T, E]:
@@ -53,7 +59,7 @@ struct Acquire(Machine):
         if self.stats[][0] == 1:
             if self.cancel:
                 context.request_cancel()
-            return Step[Resource, Failure].pending(Wait.until(monotonic() + 1000000))
+            return Step[Resource, Failure].pending(Wait.until(at(monotonic() + 1000000)))
         if self.fail:
             return failure[Resource](11, self.stats)
         return success[Resource, Failure](Resource(String("scope owner"), self.stats.copy()))
@@ -106,7 +112,7 @@ struct Cleanup(CleanupMachine):
             if self.cancel:
                 context.request_cancel()
             self.deadline = monotonic() + 1000000
-            return Step[NoneType, Failure].pending(Wait.until(self.deadline))
+            return Step[NoneType, Failure].pending(Wait.until(at(self.deadline)))
         check(monotonic() >= self.deadline, "cancellation cannot prematurely resume masked timer")
         if self.fail:
             return failure[NoneType](33, self.stats)

@@ -86,7 +86,7 @@ struct Controlled(Machine):
                 check(context.canceled(), "parent cancellation delivered to entered child")
                 self.phase = 2
                 var wait = Wait.changed(self.cleanup, self.cleanup.revision())
-                wait.interruptible = False
+                wait._interruptible = False
                 return .pending(wait^)
             case 2:
                 self.phase = 3

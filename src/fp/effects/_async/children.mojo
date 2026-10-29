@@ -4,6 +4,7 @@ from fp.effects import CancellationToken, IOContext
 from fp.effects.outcomes import _zip_outcomes
 from .kernel import Machine, Step, Wait, _Slot, _tick
 from .scopes import ScopedMachine
+from .time import Instant
 
 
 struct _Child[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable](Movable):
@@ -22,12 +23,12 @@ struct _Child[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dei
         if not self.slot.done():
             self.context.request_cancel()
 
-    def ready(self, now: Int) -> Bool:
+    def ready(self, now: Instant) -> Bool:
         return self.slot.ready(now, self.context)
 
     def include(self, mut wait: Wait):
         if not self.slot.done() and not self.slot._scheduled:
-            wait.include(self.slot._wait, self.context)
+            wait._include(self.slot._wait, self.context)
 
 
 struct _Drain(Copyable):
@@ -45,7 +46,7 @@ struct _Drain(Copyable):
     def waiting(self) -> Wait:
         var wait = Wait.never()
         # A delivered parent request must not spin while masked children park.
-        wait.interruptible = not self.requested
+        wait._interruptible = not self.requested
         return wait^
 
 

@@ -763,6 +763,39 @@ evidence; the interrupted run is not counted as qualification. Native error
 identity, native unit signatures, external origins, and coordination family
 selection are covered. API freshness, module DAG checks, and rendered docs pass.
 
+The host boundary now uses checked `Duration` and opaque `Instant`. Absolute
+clock readings, waits, heap entries, and reported deadlines retain the same wide
+counter throughout scheduling. Relative timers establish their deadline on
+entry and can complete beyond `Int.MAX`, including masked withdrawal. Manual
+clock copies share synchronized time; backward updates and system-clock updates
+raise setup `Error` without changing state. Negative budgets preserve the linear
+root for further polling; zero budgets only observe. Negative nursery limits
+raise before allocation. The raw experimental owners delegate to the same
+validation predicates.
+
+Extension steps and waits expose construction operations while keeping scheduler
+storage and cancellation markers private. `Signal` remains the canonical
+readiness source; this host protocol does not add a device execution engine or
+cross-thread callback guarantee. Public namespace registration and
+`IOContext.now()` are the following publication pass.
+
+The time and host boundary is qualified by `time-boundary-1` (36/64) and
+`time-boundary-3` (32/32), covering 68 distinct successful source/package O0/O3
+routes with stable input audits. The first report retained 20 test-fixture parse
+failures and eight correct numeric-timestamp rejections whose expected diagnostic
+wording was too narrow. The corrected run also covers the race/timeout policy
+regression. `time-boundary-2` was stopped after the masking compilation exceeded
+its inherited two-minute budget; that interrupted run is not counted. The
+affected clients now have explicit bounded compile budgets.
+
+Coverage includes checked unit conversion and host inputs, shared clock advance,
+carry and total ordering, timer completion beyond `Int.MAX`, heap ordering across
+the low-word boundary, masked callback withdrawal with retained captures and
+exact errors, scope and nursery draining, inherited IO clocks, and rejection of
+numeric timestamps and scheduler storage access. Runtime checks remain short and
+deterministic; sustained stress and performance qualification are still deferred.
+The module DAG, reviewed API inventory, and rendered documentation pass.
+
 ## Implementation passes after agreement
 
 1. **Behavior and native-signature decisions.** Qualify race/timeout cancellation

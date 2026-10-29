@@ -1,4 +1,5 @@
 """A bounded callback worker pipeline driven by explicit host events and time."""
+from foundation import at
 from std.memory import ArcPointer
 from fp.callables import OnceUnary
 from fp.data import Result, Err, NonEmptyList
@@ -83,7 +84,7 @@ struct Withdraw(Machine):
         if self.host[].withdrawal[self.id] == 0:
             self.host[].withdrawal[self.id] = 1
             var wait = Wait.changed(self.host[].gates[self.id], self.host[].gates[self.id].revision())
-            wait.interruptible = False
+            wait._interruptible = False
             return .pending(wait^)
         check(self.host[].withdrawal[self.id] == 1, "withdrawal resumes once")
         self.host[].withdrawal[self.id] = 2
@@ -161,9 +162,9 @@ struct Producer(Machine):
                 return success[NoneType, Int](unit)
             self.pending = Optional(self.queue.offer[Int](Request(self.next, self.host)))
         var step = self.pending.value().poll(context)
-        if not step.completed:
+        if not step._completed:
             return step^
-        var outcome = step^.outcome()
+        var outcome = step^._outcome()
         self.pending = None
         if not outcome or outcome.value().is_err():
             return .ready(outcome^)
@@ -201,10 +202,10 @@ def cycle(mode: Int) raises:
                         if other != 1 and host[].dropped[other] != 1:
                             others_drained = False
                     if not timed and others_drained:
-                        clock.advance_to(10)
+                        clock.advance_to(at(10))
                         timed = True
                 else:
-                    _ = host[].completions[id].value().complete(success[Int, Int](id + 100).outcome())
+                    _ = host[].completions[id].value().complete(success[Int, Int](id + 100)._outcome())
                     host[].delivered[id] = True
             if host[].withdrawal[id] == 1:
                 check(host[].dropped[id] == 0 and host[].fallbacks[id] == 0, "suspending withdrawal retains request and defers fallback")
@@ -233,7 +234,7 @@ def cycle(mode: Int) raises:
     for id in range(6):
         check(host[].created[id] == host[].dropped[id], "every created request destroyed exactly once")
         if host[].completions[id]:
-            check(not host[].completions[id].value().complete(success[Int, Int](999).outcome()), "late callbacks rejected")
+            check(not host[].completions[id].value().complete(success[Int, Int](999)._outcome()), "late callbacks rejected")
             var subscription = _lock_metadata(host[].completions[id].value().signal._cell)
             check(subscription.cell[].slot.value().active == 0, "callback subscription retired")
         var gate = _lock_metadata(host[].gates[id]._cell)

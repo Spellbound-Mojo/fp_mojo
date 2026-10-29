@@ -31,12 +31,29 @@ struct _Incoming[P: Machine](Movable):
 
 @fieldwise_init
 struct Spawner[P: Machine](Copyable):
-    """Submission capability; accepted work remains owned by its nursery."""
+    """Submission capability; accepted work remains owned by its nursery.
+
+    The admission limit counts lifetime accepted children, not simultaneous
+    activity. Copies share closure and capacity. Host-thread cooperation is
+    required; copyability alone does not promise cross-thread submission.
+
+    Parameters:
+        P: The exact homogeneous child recipe type, including native origins.
+    """
     var _cell: ArcPointer[_Cell[_Admission[Self.P]]]
     var _signal: Signal
     var _mask: IOContext[Self.P.Error]
 
     def try_spawn(self, var program: Self.P) -> Optional[Self.P]:
+        """Submit one unopened child without transferring rejection ownership.
+
+        Args:
+            program: The child to offer, consumed into the admission attempt.
+
+        Returns:
+            None when accepted, or the original unopened recipe if closed or
+            at the lifetime admission limit. Accepted children cannot detach.
+        """
         var pending = Optional(program^)
         var locked = _lock(self._cell, self._mask)
         var guard = locked.take()
@@ -49,6 +66,7 @@ struct Spawner[P: Machine](Copyable):
         return pending^
 
     def close(self):
+        """Close future admission; the nursery still drains every accepted child."""
         var locked = _lock(self._cell, self._mask)
         var guard = locked.take()
         var changed = not guard.cell[].slot.value().closed
@@ -91,8 +109,12 @@ struct Nursery[P: Machine](Machine):
     var _active: Int
     var _result: Optional[Outcome[Self.Value, Self.Error]]
 
+    @staticmethod
+    def _valid_limit(limit: Int) -> Bool:
+        return limit >= 0
+
     def __init__(out self, limit: Int):
-        if limit < 0:
+        if not Self._valid_limit(limit):
             abort("nursery admission limit must be nonnegative")
         self._admission = Spawner(
             ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_Admission[Self.P](False, 0, limit, Deque[Self.P]())))),
@@ -175,9 +197,9 @@ struct Nursery[P: Machine](Machine):
             self._stop(context, self._children[index].slot.failed())
         var complete = closed and not more and self._active == 0
         var wait = self._drain.waiting()
-        wait.signal = Optional(self._admission._signal.copy())
-        wait.revision = revision
-        wait.runnable = more
+        wait._signal = Optional(self._admission._signal.copy())
+        wait._revision = revision
+        wait._runnable = more
         if not context._runtime:
             for index in range(count):
                 self._children[index].include(wait)

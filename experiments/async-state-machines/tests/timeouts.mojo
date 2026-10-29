@@ -1,4 +1,5 @@
 """Deadline entry, fallback ownership, and suspended withdrawal."""
+from foundation import at
 from std.memory import ArcPointer
 from fp.data import Left
 from fp.effects import IOContext, CancellationToken
@@ -33,7 +34,7 @@ def timeouts():
     var clock = Clock.manual(100)
     var anchored = Driver(timeout_to(Count(primary_calls.copy(), True), 10, Count(fallback_calls.copy(), False)), CancellationToken(), clock)
     _ = anchored.poll(1)
-    clock.advance_to(110)
+    clock.advance_to(at(110))
     check(anchored.poll(100).completed, "deadline starts at entry despite delayed timer polling")
     var timed = anchored^.finish()
     check(timed.take()._take_ok() == 42 and fallback_calls[] == 1, "fallback runs once after timeout")
@@ -45,8 +46,8 @@ def timeouts():
             var manual = Clock.manual()
             var calls = ArcPointer(0)
             var driver = Driver(timeout_to(callback(Register(saved.copy(), counts.copy(), 0, False), Withdraw(counts.copy(), gate.copy(), Bool(fail_cleanup))), 10, Count(calls.copy(), False)), CancellationToken(), manual)
-            check(driver.poll(100).deadline.value() == 10, "callback parks with a live deadline")
-            manual.advance_to(10)
+            check(driver.poll(100).deadline.value() == at(10), "callback parks with a live deadline")
+            manual.advance_to(at(10))
             check(not driver.poll(100).runnable and counts[][1] == 1 and calls[] == 0, "timeout drains callback withdrawal before fallback")
             if parent_cancel:
                 driver.cancel()
@@ -63,7 +64,7 @@ def timeouts():
             else:
                 check(outcome.take()._take_ok() == 42, "fallback result preserved")
             check(calls[] == Int(not parent_cancel and not fail_cleanup), "fallback entry policy")
-            check(not saved[].value().complete(success[Int, Int](9).outcome()), "late callback rejected")
+            check(not saved[].value().complete(success[Int, Int](9)._outcome()), "late callback rejected")
             var guard = _lock_metadata(runtime._cell)
             check(guard.cell[].slot.value().active == 0 and guard.cell[].slot.value().live_timers == 0, "timeout retires children and timer")
 

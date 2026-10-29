@@ -1,4 +1,5 @@
 """Cancellation-aware selection shares the first-terminal draining engine."""
+from foundation import at
 from std.memory import ArcPointer
 from std.builtin.rebind import rebind_var
 from fp.data import Left, Right, Result, Err, NonEmptyList
@@ -110,8 +111,8 @@ def deadline[prefer_source: Bool](mode: Int, cancel_parent: Bool):
     else:
         program = rebind_var[type_of(program)](timeout_after(source^, 10, Fallback(calls.copy())))
     var driver = Driver(program^, CancellationToken(), clock)
-    check(driver.poll(100).deadline.value() == 10, "deadline is armed")
-    clock.advance_to(10)
+    check(driver.poll(100).deadline.value() == at(10), "deadline is armed")
+    clock.advance_to(at(10))
     check(not driver.poll(100).completed and calls[] == 0, "timer cannot abandon masked source")
     if cancel_parent:
         driver.cancel()

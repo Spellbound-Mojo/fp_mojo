@@ -5,6 +5,7 @@ from std.memory import ArcPointer
 from std.os import abort
 from std.time import monotonic
 from .cells import _Cell, _lock_metadata
+from .time import Instant
 
 
 def _next_generation(value: UInt64) -> UInt64:
@@ -14,33 +15,41 @@ def _next_generation(value: UInt64) -> UInt64:
 
 
 struct _Clock(Copyable):
-    var _manual: Optional[ArcPointer[Atomic[Int]]]
+    var _manual: Optional[ArcPointer[_Cell[Instant]]]
 
     def __init__(out self):
         self._manual = None
 
     @staticmethod
+    def _valid_manual(now: Int) -> Bool:
+        return now >= 0
+
+    @staticmethod
     def manual(now: Int = 0) -> Self:
-        if now < 0:
+        if not Self._valid_manual(now):
             abort("manual clock must be nonnegative")
         var clock = Self()
-        clock._manual = Optional(ArcPointer(Atomic(now)))
+        clock._manual = Optional(ArcPointer(_Cell(Atomic(UInt8(0)), Optional(Instant._from_ticks(UInt64(now))))))
         return clock^
 
-    def now(self) -> Int:
+    def now(self) -> Instant:
         if self._manual:
-            return self._manual.value()[].load()
-        return monotonic()
+            var guard = _lock_metadata(self._manual.value())
+            return guard.cell[].slot.value().copy()
+        return Instant._from_ticks(UInt64(monotonic()))
 
-    def advance_to(self, now: Int):
+    def _try_advance_to(self, now: Instant) -> Bool:
         if not self._manual:
-            abort("only a manual clock can be advanced")
-        var previous = self._manual.value()[].load()
-        while True:
-            if now < previous:
-                abort("clock cannot move backwards")
-            if self._manual.value()[].compare_exchange(previous, now):
-                return
+            return False
+        var guard = _lock_metadata(self._manual.value())
+        if now < guard.cell[].slot.value():
+            return False
+        guard.cell[].slot = Optional(now.copy())
+        return True
+
+    def advance_to(self, now: Instant):
+        if not self._try_advance_to(now):
+            abort("only a manual clock can advance monotonically")
 
 
 @fieldwise_init
@@ -62,7 +71,7 @@ struct _Node(Copyable):
     var first: Int
     var last: Int
     var children: Int
-    var deadline: Optional[Int]
+    var deadline: Optional[Instant]
 
     def __init__(out self, generation: UInt64, parent: Int, tag: Int):
         self.generation = generation
@@ -82,7 +91,7 @@ struct _Node(Copyable):
 
 @fieldwise_init
 struct _Timer(Copyable, Comparable):
-    var deadline: Int
+    var deadline: Instant
     var sequence: UInt64
     var ticket: _Ticket
     var epoch: UInt64
@@ -258,7 +267,7 @@ struct _Runtime(Copyable):
             return None
         return Optional(state.nodes[first].tag)
 
-    def arm(self, ticket: _Ticket, runnable: Bool, deadline: Optional[Int]):
+    def arm(self, ticket: _Ticket, runnable: Bool, deadline: Optional[Instant]):
         var guard = _lock_metadata(self._cell)
         ref state = guard.cell[].slot.value()
         var index = ticket.index
@@ -268,13 +277,13 @@ struct _Runtime(Copyable):
             state.nodes[index].deadline = deadline.copy()
             state.live_timers += 1
             state.sequence = _next_generation(state.sequence)
-            state.timers.push(_Timer(deadline.value(), state.sequence,
+            state.timers.push(_Timer(deadline.value().copy(), state.sequence,
                                                        ticket.copy(), state.nodes[index].epoch))
         if runnable:
             state.nodes[index].own_ready = True
         state.reconcile(index)
 
-    def fire_due(self, now: Int) -> Bool:
+    def fire_due(self, now: Instant) -> Bool:
         var guard = _lock_metadata(self._cell)
         ref state = guard.cell[].slot.value()
         state.trim()
@@ -286,13 +295,13 @@ struct _Runtime(Copyable):
         state.wake(timer.ticket.index)
         return True
 
-    def next_deadline(self) -> Optional[Int]:
+    def next_deadline(self) -> Optional[Instant]:
         var guard = _lock_metadata(self._cell)
         ref state = guard.cell[].slot.value()
         state.trim()
         if not len(state.timers):
             return None
-        return Optional(state.timers.peek().deadline)
+        return Optional(state.timers.peek().deadline.copy())
 
     def waker(self, ticket: _Ticket) -> _Waker:
         var guard = _lock_metadata(self._cell)
@@ -335,18 +344,31 @@ struct _EventState(Movable):
         self.active = 0
 
 
-struct _Event(Copyable):
+struct Signal(Copyable):
+    """Shared readiness notification for cooperative host-thread integration.
+
+    Copies share a revision. A signal does not establish cross-thread callback
+    safety, device completion, or memory visibility for external work. External
+    adapters retain those obligations until they report a terminal outcome.
+    """
     var _cell: ArcPointer[_Cell[_EventState]]
 
     def __init__(out self):
+        """Create a fresh shared readiness source."""
         self._cell = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_EventState())))
 
     def revision(self) -> UInt64:
+        """Read a revision before inspecting the associated readiness state.
+
+        Returns:
+            A generation token to pass to Wait.changed if still pending.
+        """
         var guard = _lock_metadata(self._cell)
         ref state = guard.cell[].slot.value()
         return state.revision
 
     def notify(self):
+        """Advance the shared revision and notify every live subscription."""
         var targets = List[_Waker]()
         var guard = _lock_metadata(self._cell)
         ref state = guard.cell[].slot.value()
@@ -358,7 +380,7 @@ struct _Event(Copyable):
         for target in targets:
             _ = target.wake()
 
-    def subscribe(self, revision: UInt64, target: _Waker) -> _Subscription:
+    def _subscribe(self, revision: UInt64, target: _Waker) -> _Subscription:
         var guard = _lock_metadata(self._cell)
         ref state = guard.cell[].slot.value()
         var index = len(state.entries)
@@ -375,6 +397,10 @@ struct _Event(Copyable):
         if changed:
             _ = target.wake()
         return _Subscription(self.copy(), index, generation)
+
+
+# Canonical compatibility name for existing internal consumers.
+comptime _Event = Signal
 
 
 @fieldwise_init

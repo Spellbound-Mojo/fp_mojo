@@ -36,7 +36,12 @@ trait _CompletionType:
 
 
 struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _CompletionType):
-    """Copies share one terminal decision; the cell survives late callbacks."""
+    """Copies share one terminal decision; the cell survives late callbacks.
+
+    Parameters:
+        T: The exact owned completion value, including external origins.
+        E: The exact domain error of the registration and withdrawal scope.
+    """
     comptime Value = Self.T
     comptime Error = Self.E
     var _cell: ArcPointer[_Cell[_CompletionState[Self.T, Self.E]]]
@@ -49,6 +54,14 @@ struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _C
         self._mask = IOContext[Self.E](CancellationToken(), True)
 
     def complete(self, var outcome: Outcome[Self.T, Self.E]) -> Bool:
+        """Offer an owned terminal outcome once through the cooperative host boundary.
+
+        Args:
+            outcome: The success, complete ordered failure, or cancellation-only value.
+
+        Returns:
+            True if accepted. False after completion or withdrawal has closed admission;
+            rejected payloads are destroyed outside the metadata lock."""
         var locked = _lock(self._cell, self._mask)
         var guard = locked.take()
         var accepted = not guard.cell[].slot.value().closed
@@ -128,13 +141,13 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
                     self.begin_cleanup(selected.take(), context)
                     return .pending(Wait())
                 var wait = Wait.changed(self.completion._signal, revision)
-                wait.interruptible = not context._masked
+                wait._interruptible = not context._masked
                 return .pending(wait^)
             case 2:
                 _ = _tick(self.cleanup, rebind[IOContext[Self.C.Error]](self.masked.value()))
                 if not self.cleanup.done():
                     var wait = self.cleanup.waiting()
-                    wait.interruptible = False
+                    wait._interruptible = False
                     return .pending(wait^)
                 var cleanup = rebind_var[Outcome[Self.C.Value, Self.Error]](self.cleanup.take_outcome())
                 var outcome = _finish(self.completed.take().outcome(), cleanup^)

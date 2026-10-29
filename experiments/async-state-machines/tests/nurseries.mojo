@@ -184,7 +184,7 @@ def failure_drains_entered_callback():
     while b[][1] == 0:
         check(task.tick(), "first failure cancels sibling and enters withdrawal")
     check(not task.tick() and not task.done(), "entered sibling cleanup remains owned and parked")
-    check(not right[].value().complete(success[Int, Int](42).outcome()), "canceled sibling rejects late producer")
+    check(not right[].value().complete(success[Int, Int](42)._outcome()), "canceled sibling rejects late producer")
     check(Bool(spawn.try_spawn(callback(Register(left.copy(), a.copy(), 1, False), Withdraw(a.copy(), release_a.copy(), False)))), "failure closes callback nursery")
     _ = task.tick()
     check(not task.tick(), "admission wake does not poll masked withdrawal")

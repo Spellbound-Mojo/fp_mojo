@@ -61,10 +61,10 @@ struct Bind[P: Machine, F: UnaryContract & Movable & Deinitable, recover: Bool =
                 comptime if Self.recover:
                     comptime assert Self.P.Value == Self.Value
                     var step = self.source.take_step()
-                    if not step.completed.value() or step.completed.value().value().is_ok() or step.completed.value().value()._err().value.canceled:
+                    if not step._completed.value() or step._completed.value().value().is_ok() or step._completed.value().value()._err().value.canceled:
                         self.phase = 3
                         return rebind_var[Step[Self.Value, Self.Error]](step^)
-                    var outcome = step^.outcome()
+                    var outcome = step^._outcome()
                     self.value = Optional(rebind_var[Self.Input](outcome.take()._take_err()))
                 else:
                     var outcome = self.source.take_outcome()

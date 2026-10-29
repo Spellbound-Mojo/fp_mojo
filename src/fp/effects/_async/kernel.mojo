@@ -2,6 +2,7 @@
 from std.memory import OwnedPointer
 from std.time import sleep
 from std.os import abort
+from .time import Duration, Instant
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
 from fp.effects._io_core import _settle
 from fp.data import Result, Ok
@@ -12,71 +13,101 @@ from fp._internal.waking import _Event as Signal, _Runtime, _Ticket, _Subscripti
 struct _Wake(Copyable):
     var signal: Optional[Signal]
     var revision: UInt64
-    var deadline: Optional[Int]
+    var deadline: Optional[Instant]
     var token: Optional[CancellationToken]
 
-    def ready(self, now: Int) -> Bool:
+    def ready(self, now: Instant) -> Bool:
         return (Bool(self.signal) and self.signal.value().revision() != self.revision
             or Bool(self.deadline) and now >= self.deadline.value()
             or Bool(self.token) and self.token.value().requested())
 
 
 struct Wait(Copyable):
-    var signal: Optional[Signal]
-    var revision: UInt64
-    var deadline: Optional[Int]
-    var interruptible: Bool
-    var runnable: Bool
+    """An opaque cooperative wait descriptor consumed by the runtime.
+
+    Read a signal revision before inspecting its associated state. If still
+    pending, return changed with that captured revision; registration rechecks
+    it. Notification is a readiness hint, not synchronization for external work.
+    Cancellation remains a wake source when the execution context allows it.
+    """
+    var _signal: Optional[Signal]
+    var _revision: UInt64
+    var _deadline: Optional[Instant]
+    var _interruptible: Bool
+    var _runnable: Bool
     var _wakes: List[_Wake]
 
     def __init__(out self):
-        self.signal = None
-        self.revision = 0
-        self.deadline = None
-        self.interruptible = True
-        self.runnable = True
+        """Yield scheduling while remaining immediately runnable."""
+        self._signal = None
+        self._revision = 0
+        self._deadline = None
+        self._interruptible = True
+        self._runnable = True
         self._wakes = List[_Wake]()
 
     @staticmethod
     def never() -> Self:
+        """Wait without an ordinary wake source; cancellation can still wake.
+
+        Returns:
+            An opaque pending descriptor.
+        """
         var wait = Self()
-        wait.runnable = False
+        wait._runnable = False
         return wait^
 
-    def include[E: Movable & Deinitable](mut self, other: Self, context: IOContext[E]):
+    def _include[E: Movable & Deinitable](mut self, other: Self, context: IOContext[E]):
         """Flatten owned descriptors, binding cancellation to its actual token."""
-        self.runnable = self.runnable or other.runnable
-        if other.signal or other.deadline:
-            self._wakes.append(_Wake(other.signal.copy(), other.revision, other.deadline.copy(), None))
-        if other.interruptible and not context._masked:
+        self._runnable = self._runnable or other._runnable
+        if other._signal or other._deadline:
+            self._wakes.append(_Wake(other._signal.copy(), other._revision, other._deadline.copy(), None))
+        if other._interruptible and not context._masked:
             self._wakes.append(_Wake(None, 0, None, Optional(context._token.copy())))
         for wake in other._wakes:
             self._wakes.append(wake.copy())
 
     @staticmethod
     def changed(signal: Signal, revision: UInt64) -> Self:
+        """Wait until the shared signal differs from a captured revision.
+
+        Args:
+            signal: The shared readiness source, copied into the descriptor.
+            revision: The revision captured before inspecting associated state.
+
+        Returns:
+            A wait that preserves a notification arriving before registration.
+        """
         var wait = Self.never()
-        wait.signal = Optional(signal.copy())
-        wait.revision = revision
+        wait._signal = Optional(signal.copy())
+        wait._revision = revision
         return wait^
 
     @staticmethod
-    def until(deadline: Int) -> Self:
+    def until(deadline: Instant) -> Self:
+        """Wait until an absolute deadline in the inherited clock's origin.
+
+        Args:
+            deadline: An opaque point in the inherited clock origin.
+
+        Returns:
+            A timer wait; the host remains responsible for making progress.
+        """
         var wait = Self.never()
-        wait.deadline = Optional(deadline)
+        wait._deadline = Optional(deadline.copy())
         return wait^
 
-    def ready[E: Movable & Deinitable](self, now: Int, context: IOContext[E]) -> Bool:
-        if self.interruptible and context.canceled():
+    def _ready[E: Movable & Deinitable](self, now: Instant, context: IOContext[E]) -> Bool:
+        if self._interruptible and context.canceled():
             return True
-        if self.signal and self.signal.value().revision() != self.revision:
+        if self._signal and self._signal.value().revision() != self._revision:
             return True
-        if self.deadline and now >= self.deadline.value():
+        if self._deadline and now >= self._deadline.value():
             return True
         for wake in self._wakes:
             if wake.ready(now):
                 return True
-        return self.runnable
+        return self._runnable
 
 
 struct _Scheduled(Movable):
@@ -99,57 +130,93 @@ struct _Scheduled(Movable):
 
     def cancel_subscription(mut self, token: CancellationToken, target: _Waker):
         var revision = token._event.revision()
-        self.subscriptions.append(token._event.subscribe(revision, target))
+        self.subscriptions.append(token._event._subscribe(revision, target))
         if token.requested():
             _ = target.wake()
 
     def arm[E: Movable & Deinitable](mut self, wait: Wait, context: IOContext[E]):
-        if wait.runnable:
+        if wait._runnable:
             self.runtime.arm(self.ticket, True, None)
             return
-        if not wait.signal and not len(wait._wakes) and (not wait.interruptible or context._masked):
-            self.runtime.arm(self.ticket, False, wait.deadline)
+        if not wait._signal and not len(wait._wakes) and (not wait._interruptible or context._masked):
+            self.runtime.arm(self.ticket, False, wait._deadline)
             return
         var target = self.runtime.waker(self.ticket)
-        var deadline = wait.deadline.copy()
-        if wait.signal:
-            self.subscriptions.append(wait.signal.value().subscribe(wait.revision, target))
-        if wait.interruptible and not context._masked:
+        var deadline = wait._deadline.copy()
+        if wait._signal:
+            self.subscriptions.append(wait._signal.value()._subscribe(wait._revision, target))
+        if wait._interruptible and not context._masked:
             self.cancel_subscription(context._token, target)
         for wake in wait._wakes:
             if wake.signal:
-                self.subscriptions.append(wake.signal.value().subscribe(wake.revision, target))
+                self.subscriptions.append(wake.signal.value()._subscribe(wake.revision, target))
             if wake.token:
                 self.cancel_subscription(wake.token.value(), target)
             if wake.deadline and (not deadline or wake.deadline.value() < deadline.value()):
                 deadline = wake.deadline.copy()
-        self.runtime.arm(self.ticket, wait.runnable, deadline)
+        self.runtime.arm(self.ticket, wait._runnable, deadline)
 
 
 struct Step[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    """An opaque pending descriptor or terminal owned outcome from one poll.
+
+    A terminal outcome certifies that entered work and cleanup are finished or
+    that their ownership was transferred into the result. A machine is never
+    polled after its terminal step. Runtime settlement and mask markers are
+    internal; extensions construct ready or pending without manipulating them.
+
+    Parameters:
+        T: The exact owned success value, including external origins.
+        E: The exact domain error stored in the canonical outcome.
+    """
     # Outer absence means pending; inner absence is a completed cancellation.
-    var completed: Optional[Outcome[Self.T, Self.E]]
-    var wait: Wait
+    var _completed: Optional[Outcome[Self.T, Self.E]]
+    var _wait: Wait
     var _protected_success: Bool
 
     @staticmethod
     def ready(var outcome: Outcome[Self.T, Self.E]) -> Self:
-        return Self(Optional(outcome^), Wait())
+        """Transfer a terminal outcome to the runtime after discharging owned work.
+
+        Args:
+            outcome: Success, full ordered failure, or cancellation-only.
+
+        Returns:
+            A terminal step, consumed by its execution owner.
+        """
+        return Self._make(Optional(outcome^), Wait())
 
     @staticmethod
     def pending(var wait: Wait) -> Self:
-        return Self(None, wait^)
+        """Suspend cooperatively while retaining entered ownership in the machine.
 
-    def outcome(deinit self) -> Outcome[Self.T, Self.E]:
-        return self.completed.take()
+        Args:
+            wait: The owned readiness descriptor.
 
-    def waiting(deinit self) -> Wait:
-        return self.wait^
+        Returns:
+            A pending step; its machine may be polled again when runnable.
+        """
+        return Self._make(None, wait^)
 
-    def __init__(out self, var completed: Optional[Outcome[Self.T, Self.E]], var wait: Wait, protected_success: Bool = False):
-        self.completed = completed^
-        self.wait = wait^
-        self._protected_success = protected_success
+    def _outcome(deinit self) -> Outcome[Self.T, Self.E]:
+        return self._completed.take()
+
+    def _waiting(deinit self) -> Wait:
+        return self._wait^
+
+    def __init__(out self):
+        """Create a pending scheduling yield; ready and pending select explicit states."""
+        self._completed = None
+        self._wait = Wait()
+        self._protected_success = False
+
+    @staticmethod
+    def _make(var completed: Optional[Outcome[Self.T, Self.E]], var wait: Wait, protected_success: Bool = False) -> Self:
+        var step = Self()
+        step._completed = completed^
+        step._wait = wait^
+        step._protected_success = protected_success
+        return step^
 
 
 trait Machine(Movable, Deinitable):
@@ -188,10 +255,10 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
     def done(self) -> Bool:
         return not self._program
 
-    def ready(self, now: Int, context: IOContext[Self.E]) -> Bool:
+    def ready(self, now: Instant, context: IOContext[Self.E]) -> Bool:
         if self._scheduled:
             return self._scheduled.value().runtime.ready(self._scheduled.value().ticket)
-        return not self.done() and self._wait.ready(now, context)
+        return not self.done() and self._wait._ready(now, context)
 
     def prepare(mut self, context: IOContext[Self.E]):
         if not self.done() and not self._scheduled and context._runtime:
@@ -206,7 +273,7 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
     def waiting(self) -> Wait:
         if self._scheduled:
             var wait = Wait.never()
-            wait.interruptible = False
+            wait._interruptible = False
             return wait^
         return self._wait.copy()
 
@@ -221,13 +288,13 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
         return True
 
     def accept(mut self, var step: Step[Self.T, Self.E], context: IOContext[Self.E]):
-        if step.completed:
+        if step._completed:
             self._protected_success = step._protected_success
-            self._result = Optional(_settle(step^.outcome(), context, self._protected_success))
+            self._result = Optional(_settle(step^._outcome(), context, self._protected_success))
             self._program = None
             self._scheduled = None
         else:
-            self._wait = step^.waiting()
+            self._wait = step^._waiting()
             if self._scheduled:
                 self._scheduled.value().arm(self._wait, context)
 
@@ -242,7 +309,7 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
     def take_step(mut self) -> Step[Self.T, Self.E]:
         # Structural forwarding preserves a masked completion; entering another
         # operation still observes cancellation at its ordinary checkpoint.
-        return Step(Optional(self.take_outcome()), Wait(), self._protected_success)
+        return Step[Self.T, Self.E]._make(Optional(self.take_outcome()), Wait(), self._protected_success)
 
 
 def _tick[P: Machine](mut slot: _Slot[P, P.Value, P.Error], context: IOContext[P.Error]) -> Bool:
@@ -269,7 +336,7 @@ struct Task[P: Machine](Movable, not Deinitable):
     def done(self) -> Bool:
         return self._slot.done()
 
-    def ready(self, now: Int) -> Bool:
+    def ready(self, now: Instant) -> Bool:
         return self._slot.ready(now, self.context)
 
     def cancel(self):
@@ -291,7 +358,7 @@ struct Task[P: Machine](Movable, not Deinitable):
 struct Progress(Copyable):
     var completed: Bool
     var runnable: Bool
-    var deadline: Optional[Int]
+    var deadline: Optional[Instant]
     var polls: Int
     var timers: Int
 
@@ -312,8 +379,12 @@ struct Driver[P: Machine](Movable, not Deinitable):
     def cancel(self):
         self.task.cancel()
 
+    @staticmethod
+    def _valid_budget(budget: Int) -> Bool:
+        return budget >= 0
+
     def poll(mut self, budget: Int) -> Progress:
-        if budget < 0:
+        if not Self._valid_budget(budget):
             abort("driver budget must be nonnegative")
         var polls = 0
         var timers = 0
@@ -374,21 +445,19 @@ def run_pair[P: Machine, Q: Machine](var first: P, var second: Q,
 
 struct Sleep[E: Movable & Deinitable](Machine):
     var _duration: Int
-    var _deadline: Optional[Int]
+    var _deadline: Optional[Instant]
     comptime Value = NoneType
     comptime Error = Self.E
 
     def __init__(out self, nanoseconds: Int):
-        if nanoseconds < 0 or nanoseconds > 1000000000000000000:
+        if not Duration._valid_scaled[1](nanoseconds):
             abort("sleep duration outside supported range")
         self._duration = nanoseconds
         self._deadline = None
 
-    def _start(mut self, now: Int):
+    def _start(mut self, now: Instant):
         if not self._deadline:
-            if now > Int.MAX - self._duration:
-                abort("monotonic deadline overflow")
-            self._deadline = Optional(now + self._duration)
+            self._deadline = Optional(now._after_nanoseconds(self._duration))
 
     def poll(mut self, context: IOContext[Self.E]) -> Step[NoneType, Self.E]:
         if context.canceled():
@@ -399,5 +468,5 @@ struct Sleep[E: Movable & Deinitable](Machine):
             var unit: NoneType = None
             return Step[NoneType, Self.E].ready(Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit))))
         var wait = Wait.until(self._deadline.value())
-        wait.interruptible = not context._masked
+        wait._interruptible = not context._masked
         return Step[NoneType, Self.E].pending(wait^)

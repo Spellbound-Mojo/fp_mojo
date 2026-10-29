@@ -15,7 +15,7 @@ struct BorrowRegister[o: ImmOrigin](OnceUnary):
     def call_once(deinit self, var done: Self.Arg) raises Self.View -> NoneType:
         if self.fail:
             raise Span(self.owner[])
-        check(done.complete(success[Self.View, Self.View](Span(self.owner[])).outcome()), "borrowed value accepted")
+        check(done.complete(success[Self.View, Self.View](Span(self.owner[]))._outcome()), "borrowed value accepted")
         return None
 
 

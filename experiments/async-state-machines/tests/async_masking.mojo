@@ -1,4 +1,5 @@
 """Lexical restoration across suspension, nested masks, children and cleanup."""
+from foundation import at
 from std.memory import ArcPointer
 from fp.callables import OnceUnary
 from fp.effects import CancellationToken, IOContext, ExitCase
@@ -73,10 +74,10 @@ struct FailFactory(OnceUnary):
 def masked_timer[P: Machine](var program: P) where P.Error == Int:
     var clock = Clock.manual()
     var driver = Driver(program^, CancellationToken(), clock)
-    check(driver.poll(100).deadline.value() == 50, "mask propagates manual clock")
+    check(driver.poll(100).deadline.value() == at(50), "mask propagates manual clock")
     driver.cancel()
     check(driver.poll(100).polls == 0, "cancellation cannot unmask a parked timer")
-    clock.advance_to(50)
+    clock.advance_to(at(50))
     check(driver.poll(100).completed, "masked timer finishes normally")
     var outcome = driver^.finish()
     check(outcome.take().is_ok(), "terminal masked success survives the pending request")
@@ -106,11 +107,11 @@ def cleanup_region():
     check(not driver.poll(100).runnable and calls[] == 1, "body is cancelable inside mask")
     driver.cancel()
     var cleanup = driver.poll(100)
-    check(not cleanup.runnable and cleanup.deadline.value() == 50 and calls[] == 2, "same Poll cannot pierce finalizer's new region")
+    check(not cleanup.runnable and cleanup.deadline.value() == at(50) and calls[] == 2, "same Poll cannot pierce finalizer's new region")
     driver.cancel()
     check(driver.poll(100).polls == 0, "repeated cancellation cannot repoll masked cleanup")
     var moved = driver^
-    clock.advance_to(50)
+    clock.advance_to(at(50))
     check(moved.poll(100).completed, "moved mask drains cleanup")
     check(not moved^.finish(), "cancellation preserved across cleanup")
 
