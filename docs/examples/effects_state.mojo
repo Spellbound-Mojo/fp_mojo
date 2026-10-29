@@ -1,6 +1,6 @@
 """Read, update and reset a counter through State computations."""
 from fp.functions import pipeline
-from fp.effects import State, get, modify, put
+from fp.effects import State, inspect, get, modify, put
 from std.testing import assert_equal
 
 
@@ -16,7 +16,7 @@ def increment(counter: Int) -> Int:
 
 
 def main() raises:
-    var described = pipeline(get[CounterState]()).map(ticket).run(10)
+    var described = pipeline(inspect[CounterState](ticket)).run(10)
     assert_equal(described[0], "ticket 10")
     assert_equal(described[1], 10)
     print("read:", described[0], "; state =", described[1])

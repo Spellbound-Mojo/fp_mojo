@@ -457,12 +457,18 @@ generic forwarding, move-only input cleanup, abandonment, typed failures and
 independent borrow origins. Invalid conventions, types, families and escaping
 borrows are checked using ordinary calls without explicit callback bindings.
 
+## Borrowing projections in introductory clients
+
+The Reader tutorial now uses `asks` to compute a quote from move-only pricing
+configuration. The State tutorial uses `inspect` to format a ticket directly.
+Both remove a copy-producing read followed by a map, while retaining the same
+outputs and deferred timing. `ask` and `get` remain appropriate when the whole
+input is the requested payload. The tutorial distinguishes projection callback
+ownership from the borrowed native callbacks used by mapping and binding.
+
 ## Next passes
 
-1. Revisit Reader and State examples that copy an entire input just to project
-   one value. Prefer the existing borrowing capabilities where their callback
-   ownership fits the client, and verify the copy/drop behavior explicitly.
-2. Evaluate result-only and state-only execution against Cats'
+1. Evaluate result-only and state-only execution against Cats'
    [runA and runS](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/data/IndexedStateT.scala)
    clients. Add a terminal only where it removes real tuple plumbing while
    preserving the base carrier and ownership.

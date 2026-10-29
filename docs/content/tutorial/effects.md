@@ -24,10 +24,11 @@ charge.
 
 <!-- example: docs/examples/effects_reader.mojo -->
 
-`PricingReader` is an alias for `Reader[TutorialPricing]`. `ask` produces a
-computation that copies the environment into its payload, and `map` transforms
-that payload with `quote`. Because `ask` copies, the configuration implements
-`Copyable`. Reader's `run` itself only borrows the environment.
+`PricingReader` is an alias for `Reader[TutorialPricing]`.
+`asks[PricingReader](quote)` projects a price directly from the borrowed
+configuration. The configuration only needs `Movable`; neither the projection
+nor Reader's `run` copies it. Use `ask` when the payload should be a copy of
+the whole environment.
 
 Building `standard` leaves `calls` at zero. Running it with a unit price of 12
 and shipping of 5 calls `quote` once and returns `12 * 3 + 5 = 41`.
@@ -37,23 +38,21 @@ the unit price and changes shipping to zero, so the promotional quote is 36.
 The original configuration still has shipping of 5. The temporary environment
 exists only for that run; `local` rejects a base whose result would keep it.
 
-### Keep borrowed callbacks alive until the run
+### Keep captured references alive until the run
 
-`.map(quote)` borrows the native closure. The computation
-must run while `quote` is alive and unmoved. Its captured `calls` variable must
-also remain alive and stable. In the example, both runs finish in the scope
-that owns the closure and counter.
+`asks` owns its callback value, including the callback's concrete captures.
+Here `quote` captures a reference to `calls`, so both runs finish while that
+counter is alive and stable. Owning a callback does not extend the life of
+anything it borrows. Transfer a callback with owned captures using `^`.
 
-To store a native callback by value, adapt it with `as_unary`; use
-`as_unary(f^)` when transferring a callback with owned captures. The computation
-then owns that callable value. Any references the callable captures still keep
-their own origin restrictions. Owning the callable does not extend the life of
-the values it borrows. These are caller obligations; the pinned compiler does
-not reject every invalid owner reassignment.
+Native callbacks passed to `.map`, `flat_map` and `traverse` over deferred
+Reader or State instances are borrowed until execution. Keep the callback
+alive and unmoved, or store it by value with `as_unary`; `as_unary(f^)` transfers
+owned captures. Captured references retain their origin restrictions in either
+case. These are caller obligations; the pinned compiler does not reject every
+invalid owner reassignment.
 
-The same rules apply to native callbacks passed to `flat_map` and `traverse`
-over deferred Reader or State instances. See
-[ownership and errors](../start/ownership.md) for the shared conventions.
+See [ownership and errors](../start/ownership.md) for the shared conventions.
 
 ## Pass an evolving counter through State
 
@@ -63,9 +62,10 @@ allocating the next number does.
 
 <!-- example: docs/examples/effects_state.mojo -->
 
-`get` reads a copy of the current state. Mapping `ticket` over it returns the
-payload `"ticket 10"` and leaves the state at 10. `run` therefore returns
-`("ticket 10", 10)`.
+`inspect[CounterState](ticket)` borrows the current state to format a ticket.
+It returns the payload `"ticket 10"` and moves the unchanged state onward, so
+`run` returns `("ticket 10", 10)`. This projection also works for move-only
+state. Use `get` when the payload should be a copy of the whole state.
 
 `modify(increment)` changes the state and returns `None`.
 `.product_r(get[CounterState]())` combines that transition with a state read
