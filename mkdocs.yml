@@ -63,6 +63,7 @@ nav:
   - Architecture:
       - Overview: architecture/overview.md
       - Design principles: architecture/principles.md
+      - API quality roadmap: architecture/api-quality.md
       - Callables and invocation: architecture/callables.md
       - Functions and partial application: architecture/functions.md
       - Iteration: architecture/iteration.md

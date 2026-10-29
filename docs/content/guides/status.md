@@ -18,6 +18,10 @@ and pending APIs and records the agreed development sequence.
 
 ## Combinator roadmap
 
+The [API quality roadmap](../architecture/api-quality.md) defines the next
+development cycle, its Cats/Cats Effect reference workflows and acceptance
+criteria. The table below records the implemented combinator passes.
+
 These combinators remove wrapper lambdas from container and Result chains.
 Capability operations own execution; fluent methods delegate to them. Native
 origins, callback receiver modes and the distinction between stored and raised

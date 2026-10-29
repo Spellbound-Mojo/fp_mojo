@@ -85,12 +85,15 @@ incompatible native argument convention together. Legacy `Piped` calls keep
 their existing order. Array sources use temporary List storage to preserve
 move-only ownership across native iterator moves.
 
-`Capture[E]` currently binds zero to two positional operands with read, mutable
-or consuming conventions, followed by an optional homogeneous native keyword
-pack. Empty packs need a type; larger packs, fixed named parameters and defaults
-use an explicit native closure or OnceThunk. Stateful repeated calls use an
-owned state value and a plain mutable-state function. These restrictions are
-tracked for ergonomic review; they are not claims of arbitrary native-call parity.
+`Capture[E].args(...)` binds zero to eight consumed positional operands; an
+all-owned bundle can also grow with `take`. Mixed read, mutable and consuming
+conventions support up to three positional operands. A homogeneous native
+keyword pack can follow at most three positional operands; an empty pack needs
+its type or a typed dictionary. Fixed named parameters, defaults and larger
+mixed calls use an explicit native closure or OnceThunk. Stateful repeated
+calls use an owned state value and a plain mutable-state function. See the
+[argument-binding tutorial](../tutorial/results.md#bind-arguments-before-the-callback)
+for executable examples and ownership rules.
 
 ## Pipeline migration coverage
 
@@ -111,14 +114,11 @@ Capture pointer support, compilation measurements and clean-install passes are
 complete for the scope above. Current ownership and execution contracts are
 consolidated in the [architecture guide](../architecture/mojo12-redesign.md).
 
-1. Prototype Resource scopes against the documented acquisition/use/release
-   outcomes, exact error preservation and lifetime rejection cases.
-2. Prototype fallible source advancement separately from stored Result elements,
-   with terminal-state, no-read-ahead and cleanup checks.
-3. Promote each complete contract through the existing invocation and execution
-   owners; retain legacy APIs while replacement coverage grows.
-4. Qualify every additional advertised platform and prepare a migration guide
-   and explicit major-version decision before a stable release.
+The [API quality roadmap](../architecture/api-quality.md) now orders work around
+ten maintained workflows and concrete Cats/Cats Effect reference examples:
+preferred entry points, consistent ownership, simpler callback binding, generic
+contracts, generator consolidation and milestone qualification. Resource
+composition and IO finalization are existing baseline workflows in that plan.
 
 Each implementation pass includes focused verification, appropriate regression
 gates, documentation, a commit and a push to `nightly`. Verification is run
