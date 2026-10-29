@@ -608,12 +608,15 @@ the numeric description and moves the existing error String unchanged. The
 selected-layer mapping example uses borrowing folds to inspect either Int case.
 The shared-outcome chain also selects its family once through Pipeline.
 
-The two sequenced collections declare their public `List[Result[...]]` type at
-the boundary. Mojo 1.2 accepts those declarations but can reject the same terminal
-with an inferred projection-rich element type, reporting an associated stored
-error as incompatible with the caller's native Error. Simple inferred Result
-collections compile directly. This is a remaining inference limitation, not a
-new conversion or a change to the library's error contract.
+Mojo 1.2 can reject a sequenced collection's inferred associated error in a
+caller that declares native Error, even when that stored error resolves to
+String. A concrete collection declaration admits the operation; a typed workflow
+boundary also preserves inference without that local declaration. The examples
+now use the latter: the workflow declares `raises String`, and `main` converts
+an escaping String to Error explicitly. Public Result operations retain the
+stored error exactly. Simple inferred collections still compile in either
+context; the unresolved case concerns the implicit conversion at a caller whose
+error type differs.
 
 ## Inferred iterator sequencing
 
@@ -631,12 +634,27 @@ sequencing forms; their execution bodies and parameter order are unchanged.
 Tests cover deferred and abandoned recipes, generic and explicit bindings,
 empty inputs, branching, early stopping, move-only cleanup and borrowed origins.
 
+## Typed workflow boundaries
+
+The recovery and shared-outcome examples now expose their native stored-error
+contract on the workflow function. Their collection locals are inferred, and the
+shared-outcome function returns its public `List[String]` directly. The application
+entry is responsible for constructing Error if the workflow raises its String.
+This makes the ownership and error boundary explicit without adding library
+specializations for particular container shapes. It also keeps internal type
+projections out of the application's return contract.
+
+The ordinary inferred sequence/extraction expression compiles inside both typed
+workflows. The earlier failure to implicitly convert a projection-rich String
+error to Error remains a Mojo 1.2 limitation; this change demonstrates a supported
+function boundary rather than changing the terminal's exact-error semantics.
+
 ## Next passes
 
-1. Investigate concrete native type admission for the collection error-inference
-   limitation above, using these real workflows as regression examples.
-2. Review remaining iterator effect callbacks for consistent admission, sharing
-   descriptors before expanding overload sets.
+1. Infer targets for remaining iterator traversal callbacks, starting with
+   borrowing `traverse_tap` and sharing the existing admission descriptors.
+2. Review the remaining iterator effect callbacks against the same complete-result
+   inference and ownership contracts before expanding overload sets.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

@@ -188,7 +188,8 @@ stays empty. Native raised errors remain separate from stored outcomes.
 The example finishes by selecting the outer List and calling `sequence()`.
 This consumes a List of Results into a Result containing a List; `raise_on_err()`
 then returns the rendered strings or raises the stored error. Both operations
-move payloads. When outcomes remain mixed, use `fold_owned` to format each
+move payloads. The workflow declares `raises String`; `main` handles that error
+at its application boundary. When outcomes remain mixed, use `fold_owned` to format each
 selected branch, as in the recovery example, or borrowing `fold` to inspect it.
 
 ResultFamily and ResultT support all four methods. ReaderT, StateT, WriterT

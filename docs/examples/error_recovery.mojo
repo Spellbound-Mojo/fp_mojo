@@ -32,7 +32,7 @@ def describe_outcome(var outcome: Result[Int, String]) -> String:
     return outcome^.fold_owned(describe_value, identity[String])
 
 
-def main() raises:
+def workflow() raises String:
     comptime Errors = ResultFamily[String]
     var restore = kleisli[IdentityFamily](fallback)
     var retrying = kleisli[Errors](retry)
@@ -44,7 +44,7 @@ def main() raises:
         Result[Int, String](Err(String("missing"))),
         Result[Int, String](Ok(5)),
     ]
-    var recovered_entries: List[Result[Int, String]] = pipeline[ResultT[ListFamily, String]](entries^).recover(restore).get()
+    var recovered_entries = pipeline[ResultT[ListFamily, String]](entries^).recover(restore).get()
     var values = pipeline(recovered_entries^).sequence().raise_on_err()
     print("entries:", values[0], values[1], values[2])
 
@@ -71,3 +71,7 @@ def main() raises:
     comptime Validation = ValidationFamily[ListMonoid[String]]
     var accumulated = pipeline[Validation](fail[Validation, Int](List[String](["original"]))).flat_tap_err(recovery_validation_observer).get()
     print("Validation observer:", accumulated^.swap().to_optional().value())
+
+def main() raises:
+    try: workflow()
+    except error: raise Error(error^)

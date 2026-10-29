@@ -24,9 +24,9 @@ def recover_entry(var error: String) -> List[Entry]:
 def render_entry(var value: Int) -> String: return "value=" + String(value)
 def explain_entry(var error: String) -> String: return "failed: " + error
 
-def main() raises:
+def render_all() raises String -> List[String]:
     var source: List[Entry] = [Entry(Ok(4)), Entry(Ok(-1)), Entry(Err(String("missing")))]
-    var rendered: List[Result[String, String]] = (
+    var rendered = (
         pipeline[Entries](source^)
         .ensure(positive_entry, reject_entry)
         .attempt_tap(inspect_entry)
@@ -34,7 +34,12 @@ def main() raises:
         .redeem(render_entry, explain_entry)
         .get()
     )
-    var results = pipeline(rendered^).sequence().raise_on_err()
+    return pipeline(rendered^).sequence().raise_on_err()
+
+def main() raises:
+    var results: List[String]
+    try: results = render_all()
+    except error: raise Error(error^)
     assert_equal(len(results), 3)
     assert_equal(results[0], "value=8")
     assert_equal(results[1], "failed: nonpositive")
