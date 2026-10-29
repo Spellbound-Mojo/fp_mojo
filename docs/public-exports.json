@@ -18742,6 +18742,20 @@
       "signature": "def replace[T: Copyable & Equatable & Deinitable, //](deinit self, var old: T, var new: T) raises Self.I.MapError[Self.V, _Replace[T]] -> Pipeline[_MappedFamily[Self.I, _Replace[T].Out], Self.I.Mapped[Self.V, _Replace[T]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _Replace[T]]:"
      }
     ],
+    "run": [
+     {
+      "sha256": "3b1b104cb8c9a75fb5a25eeb2a686ad62db7bf25374fc455c88f459c7da011ef",
+      "signature": "def run[o: ImmOrigin](deinit self, ref[o] environment: _ReaderFamily[Self.I].Environment) raises _Reader[Self.V].Error[o] -> _Reader[Self.V].Out[o] where conforms_to(Self.I, ReaderFamily) and _ReaderFamily[Self.I].RunCompatible[Self.V, o]:"
+     },
+     {
+      "sha256": "b7a7100b396b89dace233ae80940b0f8865ebb4df10a10acd1e5f3257d3d8bc5",
+      "signature": "def run(deinit self, var state: _StateFamily[Self.I].StateType) raises _State[Self.V].Error -> _State[Self.V].Out where conforms_to(Self.I, StateFamily) and _StateFamily[Self.I].RunCompatible[Self.V]:"
+     },
+     {
+      "sha256": "7175172b3b189f65038006f87728721a08e4e1852a20de101283c2a711b17b75",
+      "signature": "def run(deinit self) -> _WriterFamily[Self.I].Unwrapped[Self.V] where conforms_to(Self.I, WriterFamily) and _WriterFamily[Self.I].CarrierCompatible[Self.V]:"
+     }
+    ],
     "sequence": [
      {
       "sha256": "49ec22788dd75892fe598ced2b755791911d64c644f5e3a110a52044d918f1b3",

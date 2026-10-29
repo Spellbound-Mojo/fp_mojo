@@ -43,6 +43,17 @@ call's preconditions, which may be unresolved until that condition is chosen.
 Ordinary `action[Family, T](callback)` and `run[Family](value, context)` calls
 retain their existing syntax.
 
+Pipelines already select the family, so they can finish with
+`pipeline(recipe).run(environment)` for Reader, `.run(initial_state)` for
+State, or `.run()` for Writer. These entries delegate to the same free runners
+and require the same admission predicates in generic wrappers. Reader borrows
+its environment with its exact origin; State consumes its initial state.
+Plain State returns `(value, final_state)`. Writer returns its base carrier of
+`(log, value)`, leaving a deferred base unexecuted. `raising[E]()` selects
+callback admission and does not change the recipe's execution error.
+Extract with `.get()` to keep a recipe unexecuted; use `run_io` for IO's
+outcome and cancellation boundary.
+
 <!-- api: effects -->
 
 ## Project without copying an environment or state

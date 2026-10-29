@@ -52,6 +52,15 @@ owned values and borrowed origins follow the selected family's existing rules.
 The [Reader example](effects.md) demonstrates this without repeating the family
 on every map.
 
+Finish a Reader chain with `.run(environment)` or a State chain with
+`.run(initial_state)`. A Writer chain ends with `.run()`, returning its base
+carrier of `(log, value)`; a deferred base remains unexecuted. These methods
+consume the pipeline and delegate to the existing effect runners. Reader
+borrows its environment, State consumes its state, and both retain the
+recipe's exact execution error independently of `raising[E]()`. Use `.get()`
+when the next caller should receive the unexecuted carrier. IO retains its
+explicit `run_io` boundary.
+
 This changes the default for declared effect recipes from Identity to their
 own family. To transform the whole recipe as a value, use `.then(function)`
 or explicitly choose `pipeline[IdentityFamily](recipe)`. Existing explicit

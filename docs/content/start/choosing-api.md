@@ -23,6 +23,10 @@ Reader, State, Writer and IO values already identify their family, so
 `pipeline(recipe).map(callback)` uses that family automatically. The chain
 retains deferred execution. Choose an explicit family for a different policy
 or an erased transformer layer; see [effect-family inference](../reference/functions.md#inference-for-effect-recipes).
+Finish a Reader chain with `.run(environment)`, a State chain with
+`.run(initial_state)`, or unwrap a Writer chain with `.run()`. Writer returns
+its base carrier without executing a deferred base. Use `.get()` to extract
+an unexecuted recipe and `run_io` at IO's execution boundary.
 
 ## Work directly with a Result
 

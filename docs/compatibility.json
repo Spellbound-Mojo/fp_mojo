@@ -116,7 +116,7 @@
     },
     "functions": {
       "scope": "Selected Pipeline, legacy Piped, composition, partial application and Kleisli.",
-      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands. Declared Reader, State, Writer and IO carriers select their family; erased transformer layers and alternative policies still need explicit selection. Whole-recipe mapping uses then or explicit Identity.",
+      "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands. Declared Reader, State, Writer and IO carriers select their family; erased transformer layers and alternative policies still need explicit selection. Whole-recipe mapping uses then or explicit Identity. Pipeline.run delegates to selected Reader, State or Writer runners; IO retains run_io.",
       "evidence": [
         "docs/examples/selected_pipeline.mojo",
         "docs/examples/selected_workflow.mojo",
@@ -277,7 +277,19 @@
         "tests/compile_fail/inferred_family_no_functor.mojo",
         "tests/compile_fail/inferred_family_origin.mojo",
         "tests/compile_fail/inferred_family_source_reuse.mojo",
-        "tests/compile_fail/inferred_family_wrong_run.mojo"
+        "tests/compile_fail/inferred_family_wrong_run.mojo",
+        "tests/runtime/test_pipeline_run.mojo",
+        "tests/ownership/test_pipeline_run.mojo",
+        "tests/compile_fail/pipeline_run_escape.mojo",
+        "tests/compile_fail/pipeline_run_family.mojo",
+        "tests/compile_fail/pipeline_run_once.mojo",
+        "tests/compile_fail/pipeline_run_origin.mojo",
+        "tests/compile_fail/pipeline_run_plain.mojo",
+        "tests/compile_fail/pipeline_run_reader_argument.mojo",
+        "tests/compile_fail/pipeline_run_reuse.mojo",
+        "tests/compile_fail/pipeline_run_shape.mojo",
+        "tests/compile_fail/pipeline_run_state_argument.mojo",
+        "tests/compile_fail/pipeline_run_writer_family.mojo"
       ]
     },
     "adt": {
@@ -639,7 +651,7 @@
     },
     "effects": {
       "scope": "Reader, State, Writer and transformer capabilities.",
-      "restrictions": "Deferred computations retain callback borrows and alternative representations. Public carrier predicates validate each layer; Reader result admission uses the actual run origin. Carrier stability and Writer identity restrictions remain documented. ReaderAction and StateAction family metadata requires Functor; inference preserves each recipe's declared family.",
+      "restrictions": "Deferred computations retain callback borrows and alternative representations. Public carrier predicates validate each layer; Reader result admission uses the actual run origin. Carrier stability and Writer identity restrictions remain documented. ReaderAction and StateAction family metadata requires Functor; inference preserves each recipe's declared family. Selected Pipeline.run retains family admission, exact execution errors and origins; Writer unwraps without executing a deferred base.",
       "evidence": [
         "docs/examples/environment_capabilities.mojo",
         "docs/examples/stateful_capabilities.mojo",
@@ -657,7 +669,19 @@
         "tests/compile_fail/inferred_family_no_functor.mojo",
         "tests/compile_fail/inferred_family_origin.mojo",
         "tests/compile_fail/inferred_family_source_reuse.mojo",
-        "tests/compile_fail/inferred_family_wrong_run.mojo"
+        "tests/compile_fail/inferred_family_wrong_run.mojo",
+        "tests/runtime/test_pipeline_run.mojo",
+        "tests/ownership/test_pipeline_run.mojo",
+        "tests/compile_fail/pipeline_run_escape.mojo",
+        "tests/compile_fail/pipeline_run_family.mojo",
+        "tests/compile_fail/pipeline_run_once.mojo",
+        "tests/compile_fail/pipeline_run_origin.mojo",
+        "tests/compile_fail/pipeline_run_plain.mojo",
+        "tests/compile_fail/pipeline_run_reader_argument.mojo",
+        "tests/compile_fail/pipeline_run_reuse.mojo",
+        "tests/compile_fail/pipeline_run_shape.mojo",
+        "tests/compile_fail/pipeline_run_state_argument.mojo",
+        "tests/compile_fail/pipeline_run_writer_family.mojo"
       ]
     },
     "matching": {
@@ -688,6 +712,36 @@
       ],
       "evidence": [
         "tests/runtime/test_context_stages_transitions.mojo"
+      ]
+    },
+    {
+      "name": "Effect execution",
+      "methods": [
+        "run"
+      ],
+      "status": "selected",
+      "families": "ReaderFamily, StateFamily or WriterFamily",
+      "callbacks": "The callbacks already owned or borrowed by the selected recipe.",
+      "ownership": "Consumes the recipe; borrows a Reader environment, consumes State state, and moves the Writer base carrier.",
+      "errors": "The exact recipe execution error, independent of raising selection; Writer unwrapping raises Never.",
+      "timing": "Reader and State execute now; Writer unwraps and leaves a deferred base unexecuted.",
+      "owner": [
+        "src/fp/effects/operations.mojo",
+        "src/fp/effects/writer.mojo"
+      ],
+      "evidence": [
+        "tests/runtime/test_pipeline_run.mojo",
+        "tests/ownership/test_pipeline_run.mojo",
+        "tests/compile_fail/pipeline_run_escape.mojo",
+        "tests/compile_fail/pipeline_run_family.mojo",
+        "tests/compile_fail/pipeline_run_once.mojo",
+        "tests/compile_fail/pipeline_run_origin.mojo",
+        "tests/compile_fail/pipeline_run_plain.mojo",
+        "tests/compile_fail/pipeline_run_reader_argument.mojo",
+        "tests/compile_fail/pipeline_run_reuse.mojo",
+        "tests/compile_fail/pipeline_run_shape.mojo",
+        "tests/compile_fail/pipeline_run_state_argument.mojo",
+        "tests/compile_fail/pipeline_run_writer_family.mojo"
       ]
     },
     {

@@ -1,6 +1,7 @@
 """Accumulate a pricing log with Writer, then inspect and format it."""
-from fp.algebra import flat_map, StringMonoid
-from fp.effects import Writer, writer, tell, listen, censor, run_writer
+from fp.algebra import StringMonoid
+from fp.functions import pipeline
+from fp.effects import Writer, writer, tell, listen, censor
 from std.testing import assert_equal
 
 
@@ -16,16 +17,16 @@ def bracket(var log: String) -> String:
 
 
 def main() raises:
-    var notice = run_writer[PricingWriter](tell[PricingWriter]("ready"))
+    var notice = pipeline(tell[PricingWriter]("ready")).run()
     assert_equal(notice[0], "ready")
     comptime assert type_of(notice[1]) == NoneType
     print("notice:", notice[0])
 
     var initial = writer[PricingWriter, Int](Tuple(String("start; "), 3))
-    var charged = flat_map[PricingWriter](add_fee, initial^)
+    var charged = pipeline(initial^).flat_map(add_fee).get()
     var observed = listen[PricingWriter](charged^)
     var formatted = censor[PricingWriter](bracket, observed^)
-    var output = run_writer[PricingWriter](formatted^)
+    var output = pipeline(formatted^).run()
     assert_equal(output[0], "[start; fee +2]")
     assert_equal(output[1][0], 5)
     assert_equal(output[1][1], "start; fee +2")

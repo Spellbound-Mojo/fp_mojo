@@ -140,6 +140,14 @@ preserving deferred execution and their output. Whole-recipe transformations
 use `then` or explicit Identity. Erased transformer layers retain explicit
 selection: a Reader containing Result does not identify ResultT's policy.
 
+Selected Reader, State and Writer pipelines now finish with `.run(...)`,
+delegating to their existing execution or unwrapping owner. This removes
+carrier extraction and a repeated family binding at the boundary. Reader
+retains borrowed origins, State consumes its initial state, and Writer leaves
+a deferred base unexecuted. Generic callers forward the existing family
+admission predicates. The State example also uses `followed_by(get[State])`
+to remove a callback whose only purpose was to ignore the previous result.
+
 ## Milestones and pass boundaries
 
 | Order | Milestone | Completion criterion |
