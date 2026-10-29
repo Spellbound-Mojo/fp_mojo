@@ -31,8 +31,17 @@ only after cleanup drains. Cleanup is masked across waits and task movement.
 `uncancelable_with[E](factory)` invokes a consuming typed factory under a new
 mask and gives it a copyable `Poll[E]`. Factory errors are captured with their
 exact compatible error type. `uncancelable(program)` uses the same implementation
-with a constant factory. Pending cancellation is observed when the mask returns
-to an unmasked enclosing context.
+with a constant factory. A successful terminal result produced inside that mask
+survives structural forwarding to its owner. Starting another unmasked operation
+(for example a bind continuation) observes a pending cancellation request. Entry
+into an entirely unopened masked recipe remains a cancellation checkpoint.
+
+The async execution step records protected success privately; execution slots
+pass that fact to the canonical settlement helper. Bind's terminal forwarding
+and Poll restoration preserve it, without changing the public Outcome shape.
+Errors still retain an independent cancellation flag. A resource scope observes
+the body's protected exit, then its own post-cleanup settlement remains a
+checkpoint. Synchronous IO keeps its existing settlement behavior.
 
 `poll.apply(program)` restores the cancellation state preceding its own region.
 The canonical synchronous Poll now owns a shared private restoration helper,
@@ -51,6 +60,13 @@ to a finished stack frame; retained handles may extend metadata ownership.
 
 ## Validation
 
+The protected-success refinement passed 32 source/package checks at O0/O3 in
+`.cache/async-public/checkpoints-2/report.json`, including both package
+precompilations, checkpoint behavior, lexical masking, finalization, scope
+ownership, external origins, origin-escape rejection, and synchronous IO
+regressions. Its earlier launcher attempt failed before compilation because
+`pixi` was absent from PATH; the completed run supplies the tool path explicitly.
+
 Tests cover all 16 body/parent-cancellation/cleanup-error combinations, scoped
 borrowing of move-only body errors across cleanup suspension, on_cancel selection,
 unopened recipes, retained body owners, nested error order, and movement during
@@ -60,7 +76,8 @@ Native-origin clients cover body values/errors, finalizer captures, factories,
 and restored results. Negative clients reject escaping exit borrows, incompatible
 error families, and escaped masked results.
 
-The complete `qualification-control-final-1` run passed all 228 checks: 22 positive
+Before the protected-success refinement, the complete
+`qualification-control-final-1` run passed all 228 checks: 22 positive
 clients, 26 rejection clients, and nine synchronous regression clients, each
 through source and separate-package imports at O0/O3 with warnings as errors.
 Both package precompilations and all 12 bounded-stack executions passed. Command

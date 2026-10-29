@@ -81,7 +81,7 @@ struct _Polled[P: Machine, E: Movable & Deinitable](Machine):
         var restored = self.handle.source._restore(context)
         _ = _tick(self.slot, rebind[IOContext[Self.P.Error]](restored))
         if self.slot.done():
-            return .ready(rebind_var[Outcome[Self.Value, Self.E]](self.slot.take_outcome()))
+            return rebind_var[Step[Self.Value, Self.E]](self.slot.take_step())
         return .pending(self.slot.waiting())
 
 
@@ -120,7 +120,7 @@ struct Masked[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](
         _ = _tick(rebind[_Slot[Self.Program, Self.Program.Value, Self.Program.Error]](self.active.value()), rebind[IOContext[Self.Program.Error]](self.masked.value()))
         if self.active.value().done():
             self.completed = True
-            return .ready(_settle(self.active.value().take_outcome(), context))
+            return Step(Optional(self.active.value().take_outcome()), Wait(), True)
         return .pending(self.active.value().waiting())
 
 

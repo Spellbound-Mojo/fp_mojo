@@ -79,7 +79,7 @@ struct Bind[P: Machine, F: UnaryContract & Movable & Deinitable](Machine):
                 if not self.next.value().done():
                     return .pending(self.next.value().waiting())
                 self.phase = 3
-                return .ready(rebind_var[Outcome[Self.Value, Self.Error]](self.next.value().take_outcome()))
+                return rebind_var[Step[Self.Value, Self.Error]](self.next.value().take_step())
             case _:
                 abort("bind polled after completion")
 

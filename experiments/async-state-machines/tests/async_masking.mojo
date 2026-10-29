@@ -78,7 +78,8 @@ def masked_timer[P: Machine](var program: P) where P.Error == Int:
     check(driver.poll(100).polls == 0, "cancellation cannot unmask a parked timer")
     clock.advance_to(50)
     check(driver.poll(100).completed, "masked timer finishes normally")
-    check(not driver^.finish(), "leaving outer mask observes pending cancellation")
+    var outcome = driver^.finish()
+    check(outcome.take().is_ok(), "terminal masked success survives the pending request")
 
 
 def active_and_stale():

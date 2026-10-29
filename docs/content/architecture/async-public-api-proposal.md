@@ -2,9 +2,10 @@
 
 This proposal defines a first public surface for the pure-Mojo runtime already
 implemented under `experiments/async-state-machines/`. It follows the
-[readiness review](async-public-api-review.md). **Status: proposed for review;
-the imports and additions below are not available public APIs yet.** This page
-changes no runtime behavior or exports.
+[readiness review](async-public-api-review.md). **Status: accepted for staged
+implementation; the imports and additions below are not available public APIs
+yet.** Implemented portions are recorded below; the remaining surface is the
+agreed target rather than a claim of availability.
 
 The recommended contract is cooperative execution on one host thread, concrete
 owned machine types, exact typed outcomes, and structured cleanup. Cats and Cats
@@ -256,11 +257,11 @@ take a checked `Duration`; cleanup failure prevents fallback and parent
 cancellation skips it. Neither imposes a hard deadline on return: masked work
 and finalizers can delay completion indefinitely.
 
-These are publication gates, not changes made by this document. Today, canonical
-cancellation settlement can discard a success before the race or timeout wrapper
-sees it. Merely renaming the wrapper or changing its final branch cannot establish
-the proposed result-selection contract. Review cancellation checkpoints and child
-outcome ownership first, preserving one canonical settlement mechanism. Qualify
+These are publication gates. The first implementation pass preserves a masked
+terminal success through structural forwarding using canonical settlement;
+starting another unmasked operation still observes pending cancellation. See
+[masking](async-finalization.md#masks-and-poll) for the precise boundary. This
+addresses success being discarded before race or timeout can inspect it. Qualify
 late success, first-child cancellation, masked work, simultaneous readiness,
 losing cleanup failure, and parent cancellation with short deterministic tests.
 Also specify masked cancellation-only composition: Cats Effect can remain
@@ -615,8 +616,8 @@ performance evidence.
    separately. Agree the run window and budgets when scheduling this work.
 
 All implementation passes stay in pure Mojo and integrate through shared
-`nightly`. This proposal pass runs only documentation validation. Acceptance of
-the proposal precedes public exports or runtime implementation changes.
+`nightly`, with a tested commit and push after each pass. GPU support and the
+deferred overnight qualification remain outside the current implementation work.
 
 [cats-flat-map]: https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/FlatMap.scala
 [cats-errors]: https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/ApplicativeError.scala

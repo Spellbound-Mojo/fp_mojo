@@ -130,6 +130,7 @@ struct Step[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
     # Outer absence means pending; inner absence is a completed cancellation.
     var completed: Optional[Outcome[Self.T, Self.E]]
     var wait: Wait
+    var _protected_success: Bool
 
     @staticmethod
     def ready(var outcome: Outcome[Self.T, Self.E]) -> Self:
@@ -145,9 +146,10 @@ struct Step[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
     def waiting(deinit self) -> Wait:
         return self.wait^
 
-    def __init__(out self, var completed: Optional[Outcome[Self.T, Self.E]], var wait: Wait):
+    def __init__(out self, var completed: Optional[Outcome[Self.T, Self.E]], var wait: Wait, protected_success: Bool = False):
         self.completed = completed^
         self.wait = wait^
+        self._protected_success = protected_success
 
 
 trait Machine(Movable, Deinitable):
@@ -167,6 +169,7 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
     var polls: Int
     var _scheduled: Optional[_Scheduled]
     var _tag: Int
+    var _protected_success: Bool
 
     def __init__(out self, var program: Self.P, tag: Int = 0):
         self._program = Optional(OwnedPointer(program^))
@@ -176,6 +179,7 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
         self.polls = 0
         self._scheduled = None
         self._tag = tag
+        self._protected_success = False
 
     def __deinit__(deinit self):
         if self.entered and not self.done():
@@ -218,7 +222,8 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
 
     def accept(mut self, var step: Step[Self.T, Self.E], context: IOContext[Self.E]):
         if step.completed:
-            self._result = Optional(_settle(step^.outcome(), context))
+            self._protected_success = step._protected_success
+            self._result = Optional(_settle(step^.outcome(), context, self._protected_success))
             self._program = None
             self._scheduled = None
         else:
@@ -233,6 +238,11 @@ struct _Slot[P: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Dein
         if not self.done():
             abort("unfinished task cannot be consumed")
         return self._result.take()
+
+    def take_step(mut self) -> Step[Self.T, Self.E]:
+        # Structural forwarding preserves a masked completion; entering another
+        # operation still observes cancellation at its ordinary checkpoint.
+        return Step(Optional(self.take_outcome()), Wait(), self._protected_success)
 
 
 def _tick[P: Machine](mut slot: _Slot[P, P.Value, P.Error], context: IOContext[P.Error]) -> Bool:

@@ -137,7 +137,7 @@ struct _RunIO[P: ReaderAction, o: ImmOrigin](OnceThunk):
         return self.program^.run(self.context[])
 
 
-def _settle[T: Movable & Deinitable, E: Movable & Deinitable](var value: Outcome[T, E], context: IOContext[E]) -> Outcome[T, E]:
+def _settle[T: Movable & Deinitable, E: Movable & Deinitable](var value: Outcome[T, E], context: IOContext[E], preserve_success: Bool = False) -> Outcome[T, E]:
     if not value:
         return None
     var result = value.take()
@@ -145,7 +145,7 @@ def _settle[T: Movable & Deinitable, E: Movable & Deinitable](var value: Outcome
         var failure = result^._take_err()
         failure.canceled = failure.canceled or context.canceled()
         return Optional(Result[T, EffectFailure[E]](Err(failure^)))
-    if context.canceled():
+    if not preserve_success and context.canceled():
         return None
     return Optional(result^)
 

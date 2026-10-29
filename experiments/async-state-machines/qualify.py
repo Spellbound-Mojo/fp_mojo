@@ -34,6 +34,7 @@ REGRESSIONS = (
     "tests/runtime/test_io_effects.mojo",
     "tests/runtime/test_fibers.mojo",
 )
+POSITIVE.add("checkpoints")
 
 
 def experiment_inputs():

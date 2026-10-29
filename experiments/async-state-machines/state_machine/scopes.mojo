@@ -93,7 +93,8 @@ struct Scope[A: Machine, U: ScopedMachine, C: CleanupMachine](Machine):
                 step = rebind_var[Step[Self.Value, Self.Error]](self.use.poll(rebind[Self.U.Input](self.resource.value()), rebind[IOContext[Self.U.Error]](context)))
             if not step.completed:
                 return step^
-            self.completed = Optional(_ExitState(_settle(step^.outcome(), context)))
+            var protected_success = step._protected_success
+            self.completed = Optional(_ExitState(_settle(step^.outcome(), context, protected_success)))
             self.masked = Optional(context._mask())
             self.phase = 3
             return Step[Self.Value, Self.Error].pending(Wait())
