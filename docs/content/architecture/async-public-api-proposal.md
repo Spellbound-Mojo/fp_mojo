@@ -81,6 +81,49 @@ OS readiness registration, and custom child schedulers are outside this first
 surface. `Driver` is the single application root owner. Library combinators own
 child execution; custom leaf machines do not manually poll nested recipes.
 
+## Room for heterogeneous execution
+
+The explicit state-machine model has no identified fundamental conflict with
+host-side orchestration of GPU or other accelerator work. The current runtime
+executes on the host; running its scheduler inside device kernels is a separate
+problem. This is an architectural assessment, not qualified GPU support.
+
+Preserve the following general contracts while developing the application API:
+
+- **Keep scheduling independent of the work's execution location.** A leaf can
+  represent externally executing work. Device identity, streams, dependencies,
+  and address-space-specific values belong to concrete adapters and their owned
+  resources. They do not require device fields in `Context` or vendor-specific
+  variants in `Wait`. `both` schedules children without choosing their devices
+  or promising parallel execution on a particular stream.
+- **Distinguish submission from completion.** Returning from a submission call
+  does not establish that external work has finished. An operation promising
+  completed work must observe that completion and discharge its cleanup before
+  becoming terminal. Retain buffers, access rights, and required handles until
+  outstanding uses finish; a fresh per-poll loan alone cannot authorize access
+  after the poll returns. Readiness notifications do not replace device memory
+  synchronization or establish that host access is safe.
+- **Treat cancellation as a request with draining obligations.** Do not require
+  every operation to be immediately interruptible. Stop further submissions
+  where possible and drain already submitted work before releasing its resources.
+  Cancellation and timeouts do not imply that external execution has stopped.
+  Completion and cleanup failures still use the canonical typed outcome policy.
+- **Keep external completion behind the host boundary.** Future adapters should
+  feed the existing signal/completion mechanisms through an appropriate host
+  integration. The first preview's one-host-thread restriction remains in force;
+  copyable handles and movable recipes do not establish cross-thread safety or
+  permission to migrate execution. A future foreign-thread notification bridge
+  needs its own contract. Ordinary polls must continue returning cooperatively
+  instead of blocking the scheduler while external work runs.
+- **Allow batching within an owned operation.** The API must not require one
+  runtime task or a host round trip for every kernel or transfer. A future leaf
+  may own a batch and its dependencies while exposing one completion boundary.
+
+These are clarifications of the existing ownership, host, and cleanup boundaries.
+GPU APIs, backend traits, completion bridges, kernel execution, and GPU tests
+remain outside the present work and are not prerequisites for the application
+preview. No speculative device abstraction or custom C backend is added.
+
 ## Recipe and callable contract
 
 In the tables, `M[T, E]` means any concrete `Machine` with `Value == T` and
@@ -325,6 +368,11 @@ Withdrawal runs after every entered registration, including partial registration
 failure and immediate completion, and can suspend under a mask. Calls to completion
 and submission handles belong to the same host thread in this initial contract.
 
+Selecting a completion outcome does not finish the enclosing callback recipe:
+withdrawal must still drain any external use that it owns before the recipe can
+become terminal. This preserves the external-work contract above without adding
+a device-specific callback API.
+
 This is a registration scope, not a spelling of [Cats Effect `async`][ce-async].
 That API has effectful masked registration which returns an optional finalizer
 for cancellation only; absence of that finalizer makes its wait uncancelable.
@@ -373,7 +421,7 @@ and context fields are not public extension points.
 
 | `Progress` field | Meaning |
 |---|---|
-| `completed: Bool` | The entire subtree, including cleanup, is terminal |
+| `completed: Bool` | The entire subtree, including owned external work and cleanup, is terminal |
 | `runnable: Bool` | More work can be attempted immediately, including a due timer |
 | `deadline: Optional[Int]` | Earliest live deadline in the supplied clock's nanoseconds |
 | `polls: Int` | Root polls performed by this call |
@@ -457,8 +505,10 @@ The extension protocol keeps `Machine.Value`, `Machine.Error`, and
 `poll(mut self, Context[Error]) -> Step[Value, Error]`. A custom machine returns
 `Step.pending(wait)` to suspend or `Step.ready(outcome)` exactly once to finish.
 It is never polled after completion and must release its own entered resources
-before reporting terminal state. Direct application polling is outside the
-supported execution contract; Driver and the library's child owners perform it.
+or transfer their ownership as part of its result. Outstanding external uses
+and cleanup obligations must be discharged before reporting terminal state.
+Direct application polling is outside the supported execution contract; Driver
+and the library's child owners perform it.
 
 Supported waits are `Wait()` for a scheduling yield, `Wait.never()` for no ordinary
 wake source, `Wait.changed(signal, revision)`, and `Wait.until(deadline)`.

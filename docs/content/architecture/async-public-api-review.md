@@ -12,6 +12,11 @@ resource composition, and recovery, uses snake_case operations, and identifies
 the cancellation and result-selection differences requiring agreement. It remains
 a proposal; no async exports have been promoted.
 
+The proposal also records [room for heterogeneous execution](async-public-api-proposal.md#room-for-heterogeneous-execution):
+host scheduling stays independent of execution location, and external work keeps
+its ownership and draining obligations. GPU development and qualification remain
+outside the current work and do not gate the application preview.
+
 ## What the implementation establishes
 
 - Typed sequencing, iterative loops, fixed child pairs, and bounded dynamic
