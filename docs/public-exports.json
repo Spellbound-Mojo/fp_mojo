@@ -5833,6 +5833,20 @@
    "kind": "type or alias",
    "provider": "effects/layers"
   },
+  "effects.RunStateContract": {
+   "declarations": [
+    "comptime RunStateContract[I: StateFamily, V: Movable & Deinitable] = _StateRunSelection[I, V, False]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/operations"
+  },
+  "effects.RunValueContract": {
+   "declarations": [
+    "comptime RunValueContract[I: StateFamily, V: Movable & Deinitable] = _StateRunSelection[I, V, True]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/operations"
+  },
   "effects.ScopedIO": {
    "declarations": [
     "trait ScopedIO(Movable, Deinitable):"
@@ -6679,6 +6693,26 @@
     }
    ],
    "provider": "effects/_io_core"
+  },
+  "effects.run_state": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "3583becca233427d16184bd2b1dcf25dc32c5ed0b6fa2dab680d0c41cdec2fb2",
+     "signature": "def run_state[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType ) raises RunStateContract[I, V].Error -> RunStateContract[I, V].Out where RunStateContract[I, V].Compatible:"
+    }
+   ],
+   "provider": "effects/operations"
+  },
+  "effects.run_value": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "7cf08b3f1a051e9564faed6e0798bf31d2e2a65fccbb5168b17f6750f0f68afe",
+     "signature": "def run_value[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType ) raises RunValueContract[I, V].Error -> RunValueContract[I, V].Out where RunValueContract[I, V].Compatible:"
+    }
+   ],
+   "provider": "effects/operations"
   },
   "effects.run_writer": {
    "kind": "function",
@@ -19232,6 +19266,18 @@
      {
       "sha256": "6c78896bfe81d17711d74a11b69f214e74841097327516bc8b5b5b1e0b39e963",
       "signature": "def run_io(deinit self, token: CancellationToken) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible:"
+     }
+    ],
+    "run_state": [
+     {
+      "sha256": "080d0e1dc00b71291ceb1cc10e3ccd4acadc4668195b1a69c27181bce677a69a",
+      "signature": "def run_state(deinit self, var state: _StateFamily[Self.I].StateType) raises RunStateContract[_StateFamily[Self.I], Self.V].Error -> RunStateContract[_StateFamily[Self.I], Self.V].Out where conforms_to(Self.I, StateFamily) and RunStateContract[_StateFamily[Self.I], Self.V].Compatible:"
+     }
+    ],
+    "run_value": [
+     {
+      "sha256": "e8e0516ec4f8c24839dbb9058cacb8ade036c67ef543c4cf09a524ab59bbd4d4",
+      "signature": "def run_value(deinit self, var state: _StateFamily[Self.I].StateType) raises RunValueContract[_StateFamily[Self.I], Self.V].Error -> RunValueContract[_StateFamily[Self.I], Self.V].Out where conforms_to(Self.I, StateFamily) and RunValueContract[_StateFamily[Self.I], Self.V].Compatible:"
      }
     ],
     "sequence": [

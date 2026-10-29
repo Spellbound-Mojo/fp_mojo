@@ -466,12 +466,34 @@ outputs and deferred timing. `ask` and `get` remain appropriate when the whole
 input is the requested payload. The tutorial distinguishes projection callback
 ownership from the borrowed native callbacks used by mapping and binding.
 
+## State execution with a selected output
+
+`run_value` and `run_state` follow Cats'
+[runA and runS](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/data/IndexedStateT.scala): run the State
+computation normally, then map a projection over its base carrier. The pipeline
+terminals infer the selected family; free functions and public contracts serve
+generic callers. The stateful-capability example now uses `run_state` directly
+when it needs only the updated counter.
+
+Both terminals share one contract and executor. The existing operand selector
+also accepts a pair through the canonical pair-transfer helper, so selection
+does not duplicate tuple ownership logic. State's `(value, state)` order stays
+unchanged. Neither element requires copying. Optional absence, stored Result
+failure and deferred base execution keep their existing meanings. Native
+execution and map-construction errors retain their exact compatible type.
+
+Coverage includes generic wrappers, independent borrow origins, native void,
+third-party base-map failures, move-only cleanup, abandoned deferred results
+and repeated List mapping. Invalid families, state types, output shapes,
+incompatible native errors, reuse and escaping borrows use ordinary calls.
+
 ## Next passes
 
-1. Evaluate result-only and state-only execution against Cats'
-   [runA and runS](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/data/IndexedStateT.scala)
-   clients. Add a terminal only where it removes real tuple plumbing while
-   preserving the base carrier and ownership.
+1. Review Writer clients against Cats' value/log projections. Reuse the pair
+   selection policy where callers need only the payload or written log, keeping
+   the base effect and move-only disposal behavior explicit.
+2. Run the next source/package compatibility and compile-cost checkpoint after
+   these terminal changes, including the new examples and ordinary diagnostics.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

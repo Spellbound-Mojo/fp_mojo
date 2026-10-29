@@ -28,6 +28,9 @@ Finish a Reader chain with `.run(environment)`, a State chain with
 its base carrier without executing a deferred base. Use `.get()` to extract
 an unexecuted recipe. IO pipelines use `.run_io()` at their execution boundary;
 the free `run_io(program^)` entry also remains available.
+State chains can use `.run_value(initial_state)` or `.run_state(initial_state)`
+when only one output is needed; both preserve the base effect without copying
+the unused tuple element.
 Reader chains can scope configuration with `.local(callback)`. Writer chains
 can observe their log with `.listen()` and transform it with `.censor(callback)`
 before `.run()`. These use the current family's capabilities; explicit lifted

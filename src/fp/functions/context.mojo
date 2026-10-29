@@ -47,7 +47,7 @@ from fp.iteration.folds import fold_left as _context_fold_left, reduce_optional 
 from fp.data.control import ControlFlow
 from fp.data._result import Result
 from fp.effects.protocols import ReaderFamily, StateFamily, WriterFamily, ReaderAction, Local, Listen, Censor
-from fp.effects.operations import run as _run_effect, _Reader, _State
+from fp.effects.operations import run as _run_effect, run_value as _run_value, run_state as _run_state, RunValueContract, RunStateContract, _Reader, _State
 from fp.effects.writer import run_writer as _run_writer
 from fp.effects.capabilities import local as _local_effect, listen as _listen_effect, censor as _censor_effect, tell as _tell_effect, TellContract
 from fp.effects._io_core import IOContract, CancellationToken, run_io as _run_pipeline_io
@@ -359,6 +359,36 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The recipe's exact native execution error.
         """
         return _run_effect[_StateFamily[Self.I]](self.value^, state^)
+
+    def run_value(deinit self, var state: _StateFamily[Self.I].StateType) raises RunValueContract[_StateFamily[Self.I], Self.V].Error -> RunValueContract[_StateFamily[Self.I], Self.V].Out where conforms_to(Self.I, StateFamily) and RunValueContract[_StateFamily[Self.I], Self.V].Compatible:
+        """Run the selected State recipe for its value, retaining the base effect.
+
+        Args:
+            state: The initial state, consumed once along with the recipe.
+
+        Returns:
+            The exact base carrier of the value; final state is discarded.
+
+        Raises:
+            The compatible native execution and base-map error, independent
+            of the pipeline's raising selection.
+        """
+        return _run_value[_StateFamily[Self.I]](self.value^, state^)
+
+    def run_state(deinit self, var state: _StateFamily[Self.I].StateType) raises RunStateContract[_StateFamily[Self.I], Self.V].Error -> RunStateContract[_StateFamily[Self.I], Self.V].Out where conforms_to(Self.I, StateFamily) and RunStateContract[_StateFamily[Self.I], Self.V].Compatible:
+        """Run the selected State recipe for its final state, retaining the base effect.
+
+        Args:
+            state: The initial state, consumed once along with the recipe.
+
+        Returns:
+            The exact base carrier of the final state; the value is discarded.
+
+        Raises:
+            The compatible native execution and base-map error, independent
+            of the pipeline's raising selection.
+        """
+        return _run_state[_StateFamily[Self.I]](self.value^, state^)
 
     def run(deinit self) -> _WriterFamily[Self.I].Unwrapped[Self.V] where conforms_to(Self.I, WriterFamily) and _WriterFamily[Self.I].CarrierCompatible[Self.V]:
         """Remove a Writer layer, returning its base carrier of `(log, value)`.

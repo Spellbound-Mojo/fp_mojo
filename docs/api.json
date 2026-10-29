@@ -53307,6 +53307,60 @@
    "summary": "Result over the base Monad `M`: a value is `M`'s carrier of `Result[A, E]`; over Identity, `ResultFamily[E]`.",
    "traits": []
   },
+  "effects.RunStateContract": {
+   "aliases": [],
+   "description": "This shares RunValueContract's execution and mapping policy, selecting the\nother element of the normal run result. Forward Compatible, Out and Error\nin generic wrappers. Input names the consumed initial state and Family the\nresulting base family. The unused value is disposed of without copying it.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected State family, including its base Monad.",
+     "inferred": false,
+     "name": "I",
+     "type": "StateFamily",
+     "variadic": false
+    },
+    {
+     "description": "The complete recipe type, including captures and origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/operations",
+   "signature": "comptime RunStateContract[I: StateFamily, V: Movable & Deinitable] = _StateRunSelection[I, V, False]",
+   "summary": "Admission, result and exact native error of running State for its final state.",
+   "traits": []
+  },
+  "effects.RunValueContract": {
+   "aliases": [],
+   "description": "Generic wrappers forward Compatible, return Out and raise Error. Input names\nthe consumed state; Family is the resulting base family. RunError is the\nrecipe's execution error and MapError is base-map construction's error; they\nmust agree unless one is Never. A deferred base remains deferred, retaining\nits own execution errors and origins. Neither tuple element requires copying.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected State family, including its base Monad.",
+     "inferred": false,
+     "name": "I",
+     "type": "StateFamily",
+     "variadic": false
+    },
+    {
+     "description": "The complete recipe type, including captures and origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/operations",
+   "signature": "comptime RunValueContract[I: StateFamily, V: Movable & Deinitable] = _StateRunSelection[I, V, True]",
+   "summary": "Admission, result and exact native error of running State for its value.",
+   "traits": []
+  },
   "effects.ScopedIO": {
    "aliases": [
     {
@@ -60463,6 +60517,110 @@
     }
    ],
    "provider": "effects/_io_core",
+   "summary": ""
+  },
+  "effects.run_state": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The computation, consumed once.",
+       "name": "action",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial state, consumed once.",
+       "name": "state",
+       "type": "I.StateType",
+       "variadic": false
+      }
+     ],
+     "description": "Like Cats' runS, this maps over the ordinary run result. A deferred base is\nreturned without executing it; absent or failed base results stay intact.",
+     "error": "RunStateContract[I, V].Error",
+     "parameters": [
+      {
+       "description": "The computation type, including its ownership and origins.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The selected State family.",
+       "inferred": false,
+       "name": "I",
+       "type": "StateFamily",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The compatible native error of State execution and base mapping.",
+     "returns": {
+      "doc": "The base carrier of the final state, without copying either tuple element.",
+      "type": "RunStateContract[I, V].Out"
+     },
+     "signature": "def run_state[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType) raises RunStateContract[I, V].Error -> RunStateContract[I, V].Out where RunStateContract[I, V].Compatible",
+     "summary": "Run State for its final state, preserving the base effect and discarding the value."
+    }
+   ],
+   "provider": "effects/operations",
+   "summary": ""
+  },
+  "effects.run_value": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The computation, consumed once.",
+       "name": "action",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The initial state, consumed once.",
+       "name": "state",
+       "type": "I.StateType",
+       "variadic": false
+      }
+     ],
+     "description": "Like Cats' runA, this maps over the ordinary run result. A deferred base is\nreturned without executing it; absent or failed base results stay intact.",
+     "error": "RunValueContract[I, V].Error",
+     "parameters": [
+      {
+       "description": "The computation type, including its ownership and origins.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The selected State family.",
+       "inferred": false,
+       "name": "I",
+       "type": "StateFamily",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The compatible native error of State execution and base mapping.",
+     "returns": {
+      "doc": "The base carrier of the value, without copying either tuple element.",
+      "type": "RunValueContract[I, V].Out"
+     },
+     "signature": "def run_value[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType) raises RunValueContract[I, V].Error -> RunValueContract[I, V].Out where RunValueContract[I, V].Compatible",
+     "summary": "Run State for its value, preserving the base effect and discarding final state."
+    }
+   ],
+   "provider": "effects/operations",
    "summary": ""
   },
   "effects.run_writer": {
@@ -232046,6 +232204,54 @@
       },
       "signature": "def run_io(deinit self, token: CancellationToken) -> IOContract[_Reader[Self.V]].Out where conforms_to(Self.V, ReaderAction) and Self.I == _Reader[Self.V].Family and IOContract[_Reader[Self.V]].Compatible",
       "summary": "Execute with a shared cancellation token, preserving its current state."
+     }
+    ],
+    "run_state": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The initial state, consumed once along with the recipe.",
+        "name": "state",
+        "type": "_StateFamily[Self.I].StateType",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "RunStateContract[_StateFamily[Self.I], Self.V].Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The compatible native execution and base-map error, independent\nof the pipeline's raising selection.",
+      "returns": {
+       "doc": "The exact base carrier of the final state; the value is discarded.",
+       "type": "RunStateContract[_StateFamily[Self.I], Self.V].Out"
+      },
+      "signature": "def run_state(deinit self, var state: _StateFamily[Self.I].StateType) raises RunStateContract[_StateFamily[Self.I], Self.V].Error -> RunStateContract[_StateFamily[Self.I], Self.V].Out where conforms_to(Self.I, StateFamily) and RunStateContract[_StateFamily[Self.I], Self.V].Compatible",
+      "summary": "Run the selected State recipe for its final state, retaining the base effect."
+     }
+    ],
+    "run_value": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The initial state, consumed once along with the recipe.",
+        "name": "state",
+        "type": "_StateFamily[Self.I].StateType",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "RunValueContract[_StateFamily[Self.I], Self.V].Error",
+      "parameters": [],
+      "raises": true,
+      "raises_doc": "The compatible native execution and base-map error, independent\nof the pipeline's raising selection.",
+      "returns": {
+       "doc": "The exact base carrier of the value; final state is discarded.",
+       "type": "RunValueContract[_StateFamily[Self.I], Self.V].Out"
+      },
+      "signature": "def run_value(deinit self, var state: _StateFamily[Self.I].StateType) raises RunValueContract[_StateFamily[Self.I], Self.V].Error -> RunValueContract[_StateFamily[Self.I], Self.V].Out where conforms_to(Self.I, StateFamily) and RunValueContract[_StateFamily[Self.I], Self.V].Compatible",
+      "summary": "Run the selected State recipe for its value, retaining the base effect."
      }
     ],
     "sequence": [

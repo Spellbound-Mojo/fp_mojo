@@ -350,6 +350,9 @@
     },
     "docs/examples/io_resources.mojo": {
       "stdout": "open session\nclose session after use\ncompleted: True\nopen session\nclose session after cancellation\ncanceled: True\n"
+    },
+    "docs/examples/state_outputs.mojo": {
+      "stdout": "value: ticket 10\nfinal state: 11\noptional value: ticket 12\nstate present: False\n"
     }
   },
   "version": 1

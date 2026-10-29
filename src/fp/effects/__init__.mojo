@@ -61,7 +61,7 @@ from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen
 from .state import StateT, State
 from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
-from .operations import run, action, lift
+from .operations import run, run_value, run_state, RunValueContract, RunStateContract, action, lift
 from .projections import LiftProject, asks, inspect
 from .outcomes import EffectFailure, Outcome, ExitCase
 from .resources import Resource, ResourceContract, resource, pure_resource

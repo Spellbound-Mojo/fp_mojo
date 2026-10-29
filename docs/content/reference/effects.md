@@ -64,6 +64,29 @@ operations for inner transformer layers.
 
 <!-- api: effects -->
 
+## Choose a State execution output
+
+Use `.run_value(initial_state)` when only the payload is needed, and
+`.run_state(initial_state)` when only the final state is needed. The free
+functions are `run_value[Family](recipe, state)` and
+`run_state[Family](recipe, state)`. Ordinary `.run(state)` still returns both.
+
+<!-- example: docs/examples/state_outputs.mojo -->
+
+These follow Cats' `runA` and `runS`: they map over the ordinary run result.
+They preserve the base carrier, including an Optional absence or a Result
+failure. A deferred base is returned without running it. The computation and
+initial state are consumed once; selecting an element moves it and disposes
+of the other without copying either. For a deferred base, that selection and
+disposal follow the base's execution timing.
+
+Generic wrappers forward `RunValueContract[I, V].Compatible` or
+`RunStateContract[I, V].Compatible`, return `Out` and raise `Error`. Each
+contract exposes `Input`, the result `Family`, `RunError` and `MapError`.
+Execution and base-map construction errors must agree unless one is `Never`;
+their common error is preserved exactly. Pipeline `.raising[E]()` does not
+change it. Embedded value, state and error origins remain intact.
+
 ## Project without copying an environment or state
 
 `asks[Reader[Config]](projection)` borrows Config and returns only the requested

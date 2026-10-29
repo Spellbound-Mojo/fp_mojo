@@ -81,6 +81,12 @@ state as the next run's initial state.
 State's `run` consumes both the computation and the initial state. An `Int`
 can be copied implicitly; move a state with owned resources using `^`.
 
+When only one output matters, finish with `.run_value(initial_state)` for the
+payload or `.run_state(initial_state)` for the final state. These keep the
+base effect and consume the unused output without copying it. See
+[State execution outputs](../reference/effects.md#choose-a-state-execution-output)
+for a complete example, including Optional state computations.
+
 ## Accumulate output with Writer
 
 Writer pairs a payload with output that can be combined. `StringMonoid` uses

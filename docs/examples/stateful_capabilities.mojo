@@ -1,5 +1,5 @@
 """Select state once, then reuse a generic update through different stacks."""
-from fp.effects import Stateful, LiftStateful, State, StateT, ReaderT, ResultT, modify, put, get, run
+from fp.effects import Stateful, LiftStateful, State, StateT, ReaderT, ResultT, modify, put, get, run, run_state
 from fp.callables import Unary
 
 
@@ -17,7 +17,7 @@ def add_count[C: Stateful](amount: Int) raises C.ModifyError[AddCount] -> C.Modi
 
 def main():
     comptime S = State[Int]
-    print("state:", run[S](add_count[S](3), 10)[1])
+    print("state:", run_state[S](add_count[S](3), 10))
 
     comptime R = ReaderT[S, String]
     comptime RC = LiftStateful[R, S]

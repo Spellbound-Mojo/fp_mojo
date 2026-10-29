@@ -4,7 +4,7 @@ from .protocols import UnaryContract, Unary, MutableUnary, OnceUnary, BorrowCall
 from .invoke import invoke_borrowed, call_once, call_repeated, RepeatableThunk
 from ._receiver import _borrow_once_as, _borrow_repeated_as, _RepeatableBorrow, _MutableBorrow
 from .native import _Borrowing, _call_lazy_borrow
-from .products import _OptionalCell
+from .products import _OptionalCell, _call_pair_as
 
 
 @fieldwise_init
@@ -27,10 +27,11 @@ struct _Pair[A: Movable & Deinitable, B: Movable & Deinitable](Binary, Copyable,
 
 
 @fieldwise_init
-struct _KeepOperand[A: Movable & Deinitable, B: Movable & Deinitable, left: Bool](Binary, Copyable, Defaultable):
+struct _KeepOperand[A: Movable & Deinitable, B: Movable & Deinitable, left: Bool](Binary, Unary, Copyable, Defaultable):
     """Move the selected payload; the family owns combination and repetition."""
     comptime First = Self.A
     comptime Second = Self.B
+    comptime Arg = Tuple[Self.A, Self.B]
     comptime Out = Self.A if Self.left else Self.B
     def call(self, var first: Self.A, var second: Self.B) -> Self.Out:
         # Mojo 1.2 needs the branch-proven conditional type identity spelled out.
@@ -38,6 +39,10 @@ struct _KeepOperand[A: Movable & Deinitable, B: Movable & Deinitable, left: Bool
             return rebind_var[Self.Out](first^)
         else:
             return rebind_var[Self.Out](second^)
+
+    def call(self, var pair: Self.Arg) -> Self.Out:
+        # Pair projection uses the same transfer and selection as two operands.
+        return _call_pair_as[Never](Self(), pair^)
 
 
 @fieldwise_init
