@@ -85,6 +85,8 @@ nav:
       - Structured async control plan: architecture/async-control-plan.md
       - Structured races and timeouts: architecture/async-racing.md
       - Async integration workload: architecture/async-workload.md
+      - Async finalization and masking: architecture/async-finalization.md
+      - Async public API readiness: architecture/async-public-api-review.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md

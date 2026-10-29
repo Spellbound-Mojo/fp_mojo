@@ -11,7 +11,7 @@ from fp._internal.cells import _try_lock
 from fp.callables import OnceUnary
 from .kernel import Machine, Step, Wait
 from .composition import Bind, Pure, pure, bind
-from .scopes import Scope, ScopedMachine, CleanupMachine
+from .scopes import Scope, CleanupMachine, _ProgramUse
 
 
 def _attempt[P: _RefAction](mut action: Optional[P], context: IOContext[P.SelectedError], notify: Bool) -> Step[P.Value, P.SelectedError]:
@@ -165,14 +165,7 @@ struct Queue[T: Movable & Deinitable](Copyable):
         return _Await[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]](self._source.take[E]()._into_attempt(), True)
 
 
-@fieldwise_init
-struct _PermitUse[P: Machine](ScopedMachine):
-    var program: Self.P
-    comptime Input = Permit
-    comptime Value = Self.P.Value
-    comptime Error = Self.P.Error
-    def poll[o: ImmOrigin](mut self, ref[o] permit: Permit, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
-        return self.program.poll(context)
+comptime _PermitUse[P: Machine] = _ProgramUse[P, Permit]
 
 
 @fieldwise_init

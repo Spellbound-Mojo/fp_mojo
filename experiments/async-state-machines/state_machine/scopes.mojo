@@ -25,6 +25,17 @@ trait CleanupMachine(Movable, Deinitable):
         ...
 
 
+@fieldwise_init
+struct _ProgramUse[P: Machine, T: Movable & Deinitable](ScopedMachine):
+    """Adapt an owned program at the scoped native invocation boundary."""
+    var program: Self.P
+    comptime Input = Self.T
+    comptime Value = Self.P.Value
+    comptime Error = Self.P.Error
+    def poll[o: ImmOrigin](mut self, ref[o] value: Self.T, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
+        return self.program.poll(context)
+
+
 struct Scope[A: Machine, U: ScopedMachine, C: CleanupMachine](Machine):
     var acquire: Optional[Self.A]
     var use: Self.U

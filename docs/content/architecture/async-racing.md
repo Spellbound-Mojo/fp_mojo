@@ -65,6 +65,7 @@ builds. No executed client failed. After simplifying the private branch storage
 and recording the larger compile budgets, `qualification-racing-focused-1`
 passed all eight source/package O0/O3 checks for those two clients. Both runs
 passed input-stability checks; original timeout diagnostics remain in the first
-report. Documentation checks pass. The planned complete control-pass qualification
-will also cover this implementation together with the integration workload and
-finalization adapters.
+report. Documentation checks pass. The subsequent
+[complete control-pass qualification](async-finalization.md#validation) passed all
+228 checks, both package builds, and 12 bounded-stack executions, covering this
+implementation together with the integration workload and finalization adapters.
