@@ -3,6 +3,15 @@ import re
 
 PUBLIC_PACKAGES = ('callables', 'combinators', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'effects', 'matching')
 
+
+def split_public_name(name, packages=PUBLIC_PACKAGES):
+    """Separate a reviewed namespace from its declaration or type method."""
+    matches = [p for p in packages if name.startswith(p + '.')]
+    if not matches:
+        raise ValueError('Unknown public namespace: ' + name)
+    package = max(matches, key=len)
+    return package, name[len(package) + 1:]
+
 # Public operations declared as compile-time callable values rather than `def`.
 # The algebra entries are ordinary functions since the core simplification (CS-2).
 CALLABLE_ENTRIES = frozenset()

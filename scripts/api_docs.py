@@ -15,7 +15,7 @@ import tempfile
 from pathlib import Path
 
 from fp_tools.runtime import ROOT
-from module_layout import PUBLIC_PACKAGES, declaration_providers
+from module_layout import PUBLIC_PACKAGES, declaration_providers, split_public_name
 
 OUTPUT = 'docs/api.json'
 
@@ -32,10 +32,14 @@ def _modules(root):
     with tempfile.TemporaryDirectory() as folder:
         package = _mojo_doc(root / 'src/fp', folder)
         nodes = {}
-        for sub in package['packages']:
-            nodes[sub['name']] = sub
-            for module in sub['modules']:
-                nodes[sub['name'] + '/' + module['name']] = module
+        def visit(parent, prefix=''):
+            for sub in parent.get('packages', []):
+                path = prefix + sub['name']
+                nodes[path] = sub
+                visit(sub, path + '/')
+            for module in parent.get('modules', []):
+                nodes[prefix + module['name']] = module
+        visit(package)
         for _, provider, _ in declaration_providers():
             if provider not in nodes:
                 nodes[provider] = _mojo_doc(root / f'src/fp/{provider}.mojo', folder)
@@ -215,14 +219,14 @@ def _find(module, name):
 def extract(root=ROOT):
     exports = json.loads((root / 'docs/public-exports.json').read_text())['exports']
     nodes = _modules(root)
-    packages = {name: dict(summary=nodes[name].get('summary', '').strip(),
-                           description=nodes[name].get('description', '').strip())
+    packages = {name: dict(summary=nodes[name.replace('.', '/')].get('summary', '').strip(),
+                           description=nodes[name.replace('.', '/')].get('description', '').strip())
                 for name in PUBLIC_PACKAGES}
     entries = {}
     for full, item in exports.items():
         provider = item['provider']
         path = root / f'src/fp/{provider}.mojo'
-        kind, node = _find(nodes[provider], full.split('.', 1)[1])
+        kind, node = _find(nodes[provider], split_public_name(full, PUBLIC_PACKAGES)[1])
         entry = dict(provider=provider, summary=node.get('summary', '').strip(),
                      description=node.get('description', '').strip())
         if kind == 'functions':

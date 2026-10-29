@@ -6,7 +6,7 @@ from pathlib import Path
 
 from export_contract import audit_exports
 from fp_tools.runtime import ROOT
-from module_layout import PUBLIC_PACKAGES
+from module_layout import PUBLIC_PACKAGES, split_public_name
 from api_reference import package_markdown, documentation_owners
 from compatibility_contract import audit_compatibility, compatibility_markdown
 
@@ -90,7 +90,7 @@ def api_problems(package, api):
             if o['raises'] and not o['raises_doc']:
                 problems.append(f'{label}: raised error')
     for full, entry in api['entries'].items():
-        owner, name = full.split('.', 1)
+        owner, name = split_public_name(full, api['packages'])
         if owner != package or owners[full] != package:
             continue
         if entry['kind'] == 'function':

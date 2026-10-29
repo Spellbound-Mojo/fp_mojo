@@ -602,6 +602,13 @@ builds, and input-stability checks. The selected clients also cover existing
 coordination, callbacks, scopes, nurseries, external origins, and wake registration.
 The import-DAG tests and documentation checks pass.
 
+Export and reference tooling now resolves the longest reviewed namespace prefix,
+walks nested Mojo package documentation, and audits nested public directories.
+This prepares `fp.effects.async_runtime` and its protocols module without adding
+unqualified application exports. Focused tooling tests cover function/method
+classification, re-export ownership, missing documentation, and unreviewed
+nested modules.
+
 ## Implementation passes after agreement
 
 1. **Behavior and native-signature decisions.** Qualify race/timeout cancellation

@@ -10,6 +10,7 @@ import re
 import textwrap
 
 from api_docs import balanced_end, split_items
+from module_layout import split_public_name
 
 KINDS = (('function', 'Functions'), ('struct', 'Structs'), ('trait', 'Traits'), ('alias', 'Aliases'))
 _BOUND = re.compile(r'\s*:\s*(?:Movable & Deinitable|Deinitable & Movable)(?=\s*[,\]])')
@@ -193,11 +194,11 @@ def documentation_owners(api):
     """
     groups = {}
     for full, entry in api['entries'].items():
-        package, name = full.split('.', 1)
+        package, name = split_public_name(full, api['packages'])
         groups.setdefault((entry['provider'], name), []).append(package)
     owners = {}
     for (provider, name), packages in groups.items():
-        physical = provider.split('/')[0]
+        physical = provider.rsplit('/', 1)[0].replace('/', '.')
         owner = physical if physical in packages else min(packages)
         for package in packages:
             owners[package + '.' + name] = owner
@@ -211,8 +212,8 @@ def package_markdown(package, api, page_of, source_of=None):
     and `source_of(provider)`, when given, the link to a provider's source file.
     """
     info = api['packages'][package]
-    entries = {full.split('.', 1)[1]: entry for full, entry in api['entries'].items()
-               if full.split('.', 1)[0] == package}
+    entries = {split_public_name(full, api['packages'])[1]: entry for full, entry in api['entries'].items()
+               if split_public_name(full, api['packages'])[0] == package}
     out = [info['summary'], '', info['description'], '', '## Summary', '', '| Name | Kind | Summary |', '|---|---|---|']
     owners = documentation_owners(api)
     own = {name: e for name, e in entries.items() if owners[package + '.' + name] == package}
