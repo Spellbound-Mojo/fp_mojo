@@ -65,14 +65,20 @@ struct _Pair[P: Movable & Deinitable, Q: Movable & Deinitable,
         self.completed = False
 
     def stop_if_needed(mut self, context: IOContext[Self.E]):
-        if self.drain.observe(context, self.left.slot.failed() or self.right.slot.failed()):
+        self.request_stop(context, self.left.slot.failed() or self.right.slot.failed())
+
+    def request_stop(mut self, context: IOContext[Self.E], trigger: Bool):
+        if self.drain.observe(context, trigger):
             self.left.cancel()
             self.right.cancel()
 
-    def select(mut self, context: IOContext[Self.E]) -> Int:
+    def select(mut self, context: IOContext[Self.E], stop_on_failure: Bool = True) -> Int:
         if self.completed:
             abort("child group polled after completion")
-        self.stop_if_needed(context)
+        if stop_on_failure:
+            self.stop_if_needed(context)
+        else:
+            self.request_stop(context, False)
         self.left.attach(context)
         self.right.attach(context)
         if context._runtime and context._parent:
@@ -94,10 +100,13 @@ struct _Pair[P: Movable & Deinitable, Q: Movable & Deinitable,
         if self.left.slot.done() and self.right.slot.done():
             self.completed = True
             return .ready(_zip_outcomes(self.left.slot.take_outcome(), self.right.slot.take_outcome()))
+        return .pending(self.waiting())
+
+    def waiting(self) -> Wait:
         var wait = self.drain.waiting()
         self.left.include(wait)
         self.right.include(wait)
-        return .pending(wait^)
+        return wait^
 
 
 struct Both[P: Machine, Q: Machine](Machine):

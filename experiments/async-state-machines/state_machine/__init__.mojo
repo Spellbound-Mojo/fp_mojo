@@ -7,3 +7,4 @@ from .callbacks import Completion, Callback, callback
 from .nurseries import Nursery, Spawner
 from .kernel import Clock, Driver, Progress
 from .coordination import Deferred, Queue, Semaphore
+from .racing import RaceResult, Race, Timeout, race, timeout_to

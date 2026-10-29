@@ -82,6 +82,8 @@ nav:
       - Async scheduler and coordination plan: architecture/async-scheduler-plan.md
       - Wake-driven async execution: architecture/async-scheduler.md
       - Resumable async coordination: architecture/async-coordination.md
+      - Structured async control plan: architecture/async-control-plan.md
+      - Structured races and timeouts: architecture/async-racing.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md

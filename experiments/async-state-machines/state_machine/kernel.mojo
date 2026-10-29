@@ -374,14 +374,17 @@ struct Sleep[E: Movable & Deinitable](Machine):
         self._duration = nanoseconds
         self._deadline = None
 
-    def poll(mut self, context: IOContext[Self.E]) -> Step[NoneType, Self.E]:
-        if context.canceled():
-            return Step[NoneType, Self.E].ready(None)
-        var now = context._clock.now()
+    def _start(mut self, now: Int):
         if not self._deadline:
             if now > Int.MAX - self._duration:
                 abort("monotonic deadline overflow")
             self._deadline = Optional(now + self._duration)
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[NoneType, Self.E]:
+        if context.canceled():
+            return Step[NoneType, Self.E].ready(None)
+        var now = context._clock.now()
+        self._start(now)
         if now >= self._deadline.value():
             var unit: NoneType = None
             return Step[NoneType, Self.E].ready(Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit))))

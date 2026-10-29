@@ -22,7 +22,7 @@ from fp_tools.library import precompile
 from fp_tools.runs import RunContext
 from fp_tools.runtime import accepted, audit_command, command, positive_int, sha, write_json
 
-POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins", "nurseries", "nursery_origins", "scheduler", "async_coordination", "coordination_owned", "coordination_origins"}
+POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins", "nurseries", "nursery_origins", "scheduler", "async_coordination", "coordination_owned", "coordination_origins", "racing", "racing_origins", "timeouts"}
 REGRESSIONS = (
     "tests/runtime/test_io_finalization.mojo",
     "tests/runtime/test_resource_scopes.mojo",
@@ -46,9 +46,20 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True)
     parser.add_argument("--jobs", type=positive_int, default=2)
+    parser.add_argument("--client", action="append", default=[], help="Qualify only the named client stem; repeat to select several")
     args = parser.parse_args()
     if Path.cwd().resolve() != ROOT:
         parser.error("Run from the repository root")
+    clients = sorted((EXPERIMENT / "tests").glob("*.mojo"))
+    clients += [ROOT / path for path in REGRESSIONS]
+    known = {p.stem for p in clients}
+    if set(args.client) - known:
+        parser.error("Unknown clients: " + ", ".join(sorted(set(args.client) - known)))
+    if {p.stem for p in clients if p.stem in POSITIVE} != POSITIVE:
+        raise SystemExit("Missing declared positive client")
+    selected = sorted(set(args.client)) or None
+    if selected:
+        clients = [p for p in clients if p.stem in selected]
     run = RunContext.start(args.output, "state-machines")
     before = experiment_inputs()
     source = run.folder / "source"
@@ -64,15 +75,11 @@ def main():
         builds.append(built)
         if not accepted(built):
             write_json(run.folder / "report.json", dict(
-                **run.metadata(), experiment_inputs=before, package_compilations=builds,
+                **run.metadata(), experiment_inputs=before, selected_clients=selected, package_compilations=builds,
                 passed=False))
             raise SystemExit(f"Precompilation failed: inspect {name}.log")
 
     jobs = []
-    clients = sorted((EXPERIMENT / "tests").glob("*.mojo"))
-    clients += [ROOT / path for path in REGRESSIONS]
-    if {p.stem for p in clients if p.stem in POSITIVE} != POSITIVE:
-        raise SystemExit("Missing declared positive client")
     for client in clients:
         errors = tuple(re.findall(r"^# error: (.+)$", client.read_text(), re.M))
         regression = str(client.relative_to(ROOT)) in REGRESSIONS
@@ -84,7 +91,7 @@ def main():
                 case = CompileCase.from_source(
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
-                    werror=True, compiler_threads=1, compile_timeout=360 if client.stem == "depth" else 120,
+                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 
@@ -114,7 +121,7 @@ def main():
     passed = (metadata["inputs_unchanged"] and unchanged
               and all(r["passed"] and not r["audit_failures"] for r in records))
     write_json(run.folder / "report.json", dict(
-        **metadata, experiment_inputs=before, experiment_unchanged=unchanged,
+        **metadata, experiment_inputs=before, experiment_unchanged=unchanged, selected_clients=selected,
         package_compilations=builds, records=records, passed=passed,
         artifact_sha256=manifest(run.folder)))
     print(f"{sum(r['passed'] and not r['audit_failures'] for r in records)}/{len(records)} checks; passed={passed}")
