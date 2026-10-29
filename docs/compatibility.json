@@ -248,7 +248,27 @@
         "tests/compile_fail/owned_fill_source_reuse.mojo",
         "tests/compile_fail/owned_fill_string_dict.mojo",
         "tests/compile_fail/owned_fill_non_empty.mojo",
-        "tests/runtime/test_owned_fill_forwarding.mojo"
+        "tests/runtime/test_owned_fill_forwarding.mojo",
+        "tests/runtime/test_owned_tuple.mojo",
+        "tests/ownership/test_owned_tuple.mojo",
+        "tests/compile_fail/owned_tuple_array.mojo",
+        "tests/compile_fail/owned_tuple_attachment_origin.mojo",
+        "tests/compile_fail/owned_tuple_attachment_reuse.mojo",
+        "tests/compile_fail/owned_tuple_deque.mojo",
+        "tests/compile_fail/owned_tuple_dict.mojo",
+        "tests/compile_fail/owned_tuple_error_origin.mojo",
+        "tests/compile_fail/owned_tuple_explicit_list.mojo",
+        "tests/compile_fail/owned_tuple_free.mojo",
+        "tests/compile_fail/owned_tuple_iterator.mojo",
+        "tests/compile_fail/owned_tuple_legacy_list.mojo",
+        "tests/compile_fail/owned_tuple_linked_list.mojo",
+        "tests/compile_fail/owned_tuple_list.mojo",
+        "tests/compile_fail/owned_tuple_list_empty.mojo",
+        "tests/compile_fail/owned_tuple_non_empty.mojo",
+        "tests/compile_fail/owned_tuple_right_repeated.mojo",
+        "tests/compile_fail/owned_tuple_source_origin.mojo",
+        "tests/compile_fail/owned_tuple_source_reuse.mojo",
+        "tests/compile_fail/owned_tuple_string_dict.mojo"
       ]
     },
     "adt": {

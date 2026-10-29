@@ -368,12 +368,17 @@ and copies once per emitted payload. Deferred families retain the replacement
 until execution or disposal; their existing map policy determines invocation.
 Empty or failed inputs still consume and discard the unused replacement.
 
-`replace(old, new)` copies `new` into positions
-equal to `old` and moves other payloads unchanged. `tuple_left(value)` and
-`tuple_right(value)` pair each payload with a copy of the constant. `void()`
-discards payloads while retaining the carrier shape and stored errors.
-Constants must be Copyable; pairing and discarding still support move-only
-source payloads. Deferred families perform these transformations when run.
+`tuple_left(value)` and `tuple_right(value)` attach the value beside each
+original payload using the same single-call/repeated-call policy as `fill`.
+Optional, Result and Identity move it without copying; repeated collections
+require Copyable and copy once per emitted pair, including when admission is
+checked for an empty collection. Both tuple positions retain their exact types
+and origins. Deferred families keep the value until execution or disposal.
+
+`replace(old, new)` copies `new` into positions equal to `old` and moves other
+payloads unchanged. `void()` discards payloads while retaining the carrier
+shape and stored errors. Pairing and discarding support move-only source
+payloads. Deferred families perform these transformations when run.
 
 `compact()` removes absent inner Optional payloads through FunctorFilter.
 `flatten()` removes one layer of the same Monad family, preserving the

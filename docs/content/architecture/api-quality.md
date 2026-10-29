@@ -101,6 +101,13 @@ its pair through public Result folding. The pinned baseline above retains the
 earlier examples so these reductions in required concepts and private access
 can be reviewed.
 
+Tuple attachment now follows the same receiver policy as replacement:
+single-call mappings move the attachment, repeated mappings copy it. This
+accepts move-only attachments in Optional, Result, Identity and compatible
+deferred families without changing collection or iterator repetition. The
+shared tuple callback owns pairing; its shared receiver copies the attachment
+and delegates to its consuming receiver.
+
 ## Milestones and pass boundaries
 
 | Order | Milestone | Completion criterion |

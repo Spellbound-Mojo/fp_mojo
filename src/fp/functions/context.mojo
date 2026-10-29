@@ -1810,7 +1810,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
         Parameters:
             T: The carrier payload type.
-            U: The replacement type, including origins; repeated calls require Copyable.
+            U: The supplied value type, including origins; repeated calls require Copyable.
 
         Args:
             value: The replacement, consumed; a single call moves it, while repeated calls require Copyable and copy it.
@@ -1858,15 +1858,15 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_MappedFamily[Self.I, _Fill[T, NoneType].Out], Self.I.Mapped[Self.V, _Fill[T, NoneType]], Self.E](Self.I.map(_Fill[T, NoneType](None), self.value^))
 
     @always_inline
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, True].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]:
-        """Pair each payload with a copy of value on the left.
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, True].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls.
 
         Parameters:
             T: The carrier payload type.
-            U: The copied value type, including its origins.
+            U: The supplied value type, including origins; repeated calls require Copyable.
 
         Args:
-            value: The value consumed here and copied into each payload position.
+            value: The attached value, consumed; a single call moves it, while repeated calls require Copyable and copy it.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.
@@ -1877,15 +1877,15 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
         return Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, True].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E](Self.I.map(_TupleWith[T, U, True](value^), self.value^))
 
     @always_inline
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, False].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]:
-        """Pair each payload with a copy of value on the right.
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, False].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls.
 
         Parameters:
             T: The carrier payload type.
-            U: The copied value type, including its origins.
+            U: The supplied value type, including origins; repeated calls require Copyable.
 
         Args:
-            value: The value consumed here and copied into each payload position.
+            value: The attached value, consumed; a single call moves it, while repeated calls require Copyable and copy it.
 
         Returns:
             The pipeline containing the operation result, retaining its selected native error.

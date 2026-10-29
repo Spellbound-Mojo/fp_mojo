@@ -10665,78 +10665,78 @@
     ],
     "tuple_left": [
      {
-      "sha256": "6170655a537e34e54a6a91b44ae4a5ac88dd428a16ee438e68f6ca7d0b503e0d",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, True]]:"
+      "sha256": "4f8765703ca2557c92de6350c41546fec7b699acbb01d64a3a23b4ab44c9b405",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, True]]:"
      },
      {
-      "sha256": "83aa7ce1084504e6a5a83ee113a0fe57086a7bc4ff5d0c3d6a535bc04689c256",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[U, T]]] where Self.Value == List[T]:"
+      "sha256": "974f7bc7f98039496ee11789a828185420e79c6ed45953730d161b37e5514a9c",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[U, T]]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _TupleWith[T, U, True]]:"
      },
      {
-      "sha256": "db15399293fd2c8bda04829ce6359012a22fb65999efd9d21f6c00b6a62ec263",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[U, T], N]] where Self.Value == Array[T, N]:"
+      "sha256": "97e7bb08b473cccf4f47ccad9e6f980080d4dc86e04b02f574a8c6f1a06ba77b",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[U, T], N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _TupleWith[T, U, True]]:"
      },
      {
-      "sha256": "3ff6f639afca047a656892d298709c5db87c490bfc03fe8276de165ba257b2d6",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[U, T]]] where Self.Value == Deque[T]:"
+      "sha256": "5015990013c9de6d5477fd7fe9d30577934b0c5562342e0a12a63dd97f253474",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[U, T]]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _TupleWith[T, U, True]]:"
      },
      {
-      "sha256": "530c2decce828eb900161e501f28c65640597c9ada2628b1d4b7744929480469",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[U, T]]] where Self.Value == LinkedList[T]:"
+      "sha256": "6f992f8c74fbb17c99d98657a8b749d0783e86fb4eaceb49b963095462a03add",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[U, T]]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _TupleWith[T, U, True]]:"
      },
      {
-      "sha256": "635199b2b8e42df9d651ab105934ddb09bd9764a020ecb5117c22a6532a04399",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]:"
+      "sha256": "c8de81e16197dd9b5a498b031f8745fa9a9a801d8ceeb6798e29b9c97a6c6c0d",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _TupleWith[T, U, True]]:"
      },
      {
-      "sha256": "f029df48ef6ac4d3e7c10bfcffa029dfec2e11768cb9f5d15d18527939f17fe2",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[U, T]]] where Self.Value == StringDict[T]:"
+      "sha256": "6a0ab6921129f93943fe472989eda6903a9108d84aeab83738f556610d289585",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[U, T]]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _TupleWith[T, U, True]]:"
      },
      {
-      "sha256": "9cc184a8e396e7d95ff2f54aff7d2e96d592824363e33f3e005e0a9aff9bdde9",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[U, T]]] where Self.Value == Optional[T]:"
+      "sha256": "24716a5fd40095e3c615be69913dfe2a968dc6f0b7b01d60ae52eae4f742324c",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[U, T]]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _TupleWith[T, U, True]]:"
      },
      {
-      "sha256": "f30e8e724c4e1600e86d3fb54f13542c2fcc76a34499bb3fd6132534f5b3dba1",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[U, T], Failure]] where Self.Value == Result[T, Failure]:"
+      "sha256": "803283598175f2f7a7cfa0ce4474f3dc1f18b6bbaba8872986ff2ffef1de6b1b",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[U, T], Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _TupleWith[T, U, True]]:"
      }
     ],
     "tuple_right": [
      {
-      "sha256": "fc3ccef6eba50b9bf8dea23b947b685d4a8713e2e9b7b5ac1718e047f018ab92",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, False]]:"
+      "sha256": "b024f6974ee166f9ca877fc7dde0d9d21638749119d8044791ca7d839f4aa191",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, False]]:"
      },
      {
-      "sha256": "e4184412561f1177e9e2b7fa7a332dae502ea5a9b008d2edce3f4c743d097e22",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T]:"
+      "sha256": "152959d48186abd35b16c03b14228064c0966aad0519ffc4ca8d6772536a9a58",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _TupleWith[T, U, False]]:"
      },
      {
-      "sha256": "e8ee95cbe9c0cb0e5e3a39878a5f992a3099e3880b21b241fee975d58125f93e",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[T, U], N]] where Self.Value == Array[T, N]:"
+      "sha256": "b2996e37d90d14ebf1723014f36168e49e3e148bb8669ef20d7f8d25fd001a55",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[T, U], N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _TupleWith[T, U, False]]:"
      },
      {
-      "sha256": "5d5af4edce75d5b773c8e811210e30606c94075c627f5c97a747dfdde817d495",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[T, U]]] where Self.Value == Deque[T]:"
+      "sha256": "4cb13e1fe20c09d2dc0a360b76d8564da39bad9647f2d2b0f5cd709630806da9",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[T, U]]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _TupleWith[T, U, False]]:"
      },
      {
-      "sha256": "f5df323c2ddd426fde966bcb6e14251aa731e7edc1e797ab07fa41ca4421542b",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[T, U]]] where Self.Value == LinkedList[T]:"
+      "sha256": "e89b05f2ce238f0a66c10926e5c34b00b904acdc0438e768f752d219bd8f6e7b",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[T, U]]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _TupleWith[T, U, False]]:"
      },
      {
-      "sha256": "8a235f68749f023d3eb2d8e64ac841514a8fb53331dc464d4b471a74eea9054c",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]:"
+      "sha256": "d63d4405ff689dcdae3b4011a93104c63d5f541065070e6ce385f0f9adb2974b",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _TupleWith[T, U, False]]:"
      },
      {
-      "sha256": "6c113aa18455032a29dbd262a5d881cf347f3abb2c068326b38e5d00d235b7e9",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[T, U]]] where Self.Value == StringDict[T]:"
+      "sha256": "ad593f8abbe5990792bff3ec633bd3a61ed366743d611f5d137a7df0b5e7886f",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[T, U]]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _TupleWith[T, U, False]]:"
      },
      {
-      "sha256": "144d3ae075b40c6899822bf7cac66ae496b79f14850131ec0838ec219bef8744",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T]:"
+      "sha256": "66c8f25dd29d24e4ad5dfe6710fdddefd23bcdcca80458b3d2c6c90db031adb2",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _TupleWith[T, U, False]]:"
      },
      {
-      "sha256": "0f01048df33b5d50030cf8113871af8c3662d713ca6191a603ed558d14eafd7a",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[T, U], Failure]] where Self.Value == Result[T, Failure]:"
+      "sha256": "43e27be63dad11fd59a3937c5b1a586226bda6e192bb4cd0da4cd180dd378b2b",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[T, U], Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _TupleWith[T, U, False]]:"
      }
     ],
     "void": [
@@ -19522,14 +19522,14 @@
     ],
     "tuple_left": [
      {
-      "sha256": "4a2747df613a52432e958e0d664cd83d70f0167c0071ed0a17f50ef0b180b7fe",
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, True].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]:"
+      "sha256": "9464d5d88e6b6e6db0859f4c6d34759a3df06286f22349acf58785e07df2813f",
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, True].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]:"
      }
     ],
     "tuple_right": [
      {
-      "sha256": "2301ce93475e047226374bbb80b679e0c5a8099135ef969281ca7cd61159d76a",
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, False].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]:"
+      "sha256": "7c27ea7dc24f6d22b338a583144303701475ee00254fc2c41f72f2b60b4bfaf3",
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, False].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]:"
      }
     ],
     "value_or": [

@@ -178,10 +178,10 @@ TRANSFORMS = (
      'var old: T, var new: T', 'T', '_Replace[T]', 'old^, new^', 'Replace equal payloads, moving unmatched values unchanged.'),
     ('void', 'T: Movable & Deinitable', (),
      '', 'NoneType', '_Fill[T, NoneType]', 'None', 'Discard payloads while preserving their container shape.'),
-    ('tuple_left', 'T: Movable & Deinitable', ('U: Copyable & Deinitable',),
-     'var value: U', 'Tuple[U, T]', '_TupleWith[T, U, True]', 'value^', 'Pair each payload with a copy of value on the left.'),
-    ('tuple_right', 'T: Movable & Deinitable', ('U: Copyable & Deinitable',),
-     'var value: U', 'Tuple[T, U]', '_TupleWith[T, U, False]', 'value^', 'Pair each payload with a copy of value on the right.'),
+    ('tuple_left', 'T: Movable & Deinitable', ('U: Movable & Deinitable',),
+     'var value: U', 'Tuple[U, T]', '_TupleWith[T, U, True]', 'value^', 'Attach value on the left, moving it for a single call or copying for repeated calls.'),
+    ('tuple_right', 'T: Movable & Deinitable', ('U: Movable & Deinitable',),
+     'var value: U', 'Tuple[T, U]', '_TupleWith[T, U, False]', 'value^', 'Attach value on the right, moving it for a single call or copying for repeated calls.'),
 )
 
 
@@ -194,7 +194,7 @@ def transform_methods(carrier=None):
         result = carrier.value(element) if carrier else f'I.Mapped[Self.Value, {callback}]'
         condition = f'Self.Value == {source}' if carrier else 'I.Element[Self.Value] == T'
         if not carrier: condition += f' and _MapCompatible[I, Self.Value, {callback}]'
-        elif name == 'fill':
+        elif name in ('fill', 'tuple_left', 'tuple_right'):
             # The callback's shared receiver exists only for Copyable constants.
             # Let each native family's existing map policy admit repetition.
             condition += f' and _MapCompatible[{family}, {source}, {callback}]'

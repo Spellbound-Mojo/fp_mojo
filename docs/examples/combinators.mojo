@@ -48,3 +48,7 @@ def main() raises:
     var replacement: List[Int] = [7, 11]
     var filled = pipeline(Optional(1)).fill(replacement^).get()
     print("owned replacement:", filled.value())
+    var attachment: List[Int] = [2, 3]
+    var paired = pipeline(Optional(7)).tuple_right(attachment^).get()
+    ref payload = paired.value()
+    print("owned attachment:", payload[0], payload[1])

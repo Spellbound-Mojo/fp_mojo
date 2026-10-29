@@ -1,7 +1,7 @@
 # fp.combinators
 
 Named methods remove wrapper lambdas and intermediate type aliases from
-collection pipelines. `Piped` keeps eager results in the chain; `Iter` keeps
+collection pipelines. `Pipeline` keeps eager results in the chain; `Iter` keeps
 transformations lazy and returns terminal results directly. The direct functions
 in `fp.combinators` re-export their canonical operations from `fp.iteration`
 and, for conditional composition, `fp.algebra`.
@@ -12,8 +12,8 @@ and, for conditional composition, `fp.algebra`.
 | `.fill(value)` | Replace payloads with `value`; single-call families move it, repeated mappings copy it |
 | `.replace(old, new)` | Replace equal payloads; keep unmatched values |
 | `.void()` | Replace each payload with `NoneType`, preserving shape |
-| `.tuple_left(value)` | Produce `(value.copy(), element)` |
-| `.tuple_right(value)` | Produce `(element, value.copy())` |
+| `.tuple_left(value)` | Attach value on the left; move it once or copy for repeated mappings |
+| `.tuple_right(value)` | Attach value on the right; move it once or copy for repeated mappings |
 | `.pair_with(project)` | Produce `(element, project(element))` |
 | `.tap_each(inspect)` | Inspect each element and retain it unchanged |
 | `.tap(inspect)` | Inspect the whole `Piped` value, including ordinary structs |
@@ -440,7 +440,14 @@ map receiver policy and retain the replacement until execution or disposal.
 Empty inputs remain empty, and stored errors pass through. Both still consume
 and destroy unused replacements.
 
-Tuple constants require `Copyable` and make one copy per emitted payload.
+`tuple_left` and `tuple_right` use the same receiver policy for attached values.
+Single-call families accept move-only attachments and avoid the former extra
+copy even when the attachment is Copyable. Empty or failed carriers dispose of
+unused attachments. Collections, lazy Iter methods and free iterator functions
+require Copyable and make one copy per emitted pair; an empty source keeps that
+requirement. The original payload is moved into the other tuple position, and
+both positions keep their origins. Deferred families retain attachments until
+execution or disposal.
 `replace` compares whole payloads, requires
 the same element type for `old` and `new`, copies `new` only on matches, and
 moves unmatched elements unchanged. It does not perform substring replacement.

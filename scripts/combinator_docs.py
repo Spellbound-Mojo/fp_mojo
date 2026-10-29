@@ -163,11 +163,15 @@ def document_first_methods(source, names=NAMES):
                 elif arg == 'new': description = 'The replacement, consumed and copied only for matching payloads.'
                 elif arg == 'value' and name == 'fill' and owner == 'Piped':
                     description = 'The replacement, consumed; a single call moves it, while repeated calls require Copyable and copy it.'
+                elif arg == 'value' and name in ('tuple_left', 'tuple_right') and owner == 'Piped':
+                    description = 'The attached value, consumed; a single call moves it, while repeated calls require Copyable and copy it.'
                 else: description = 'The constant, consumed and copied once per emitted payload.'
                 sections.append(f'    {arg}: {description}')
             sections.append('')
         returns = ('The source shape with replacement payloads; empty input stays empty and stored errors pass through.'
-                   if name == 'fill' and owner == 'Piped' else RETURNS[name])
+                   if name == 'fill' and owner == 'Piped' else
+                   'The source shape containing each original payload paired with the supplied value; empty input stays empty and stored errors pass through.'
+                   if name in ('tuple_left', 'tuple_right') and owner == 'Piped' else RETURNS[name])
         sections += ['Returns:', '    '+returns]
         if parsed['error']:
             sections += ['', 'Raises:', '    The exact callback, monoid or family error; Never for a non-raising operation.']

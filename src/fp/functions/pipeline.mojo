@@ -3444,8 +3444,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.map(_Fill[T, NoneType](None), self.value^))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, True]]:
-        """Pair each payload with a copy of value on the left.
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls.
 
         Parameters:
             T: The element type, including its native origins.
@@ -3463,8 +3463,8 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.map(_TupleWith[T, U, True](value^), self.value^))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, False]]:
-        """Pair each payload with a copy of value on the right.
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls.
 
         Parameters:
             T: The element type, including its native origins.
@@ -4304,13 +4304,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == List[T]
         return Piped(ListFamily.map(_Fill[T, NoneType](None), rebind_var[List[T]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[U, T]]] where Self.Value == List[T]:
-        """Pair each payload with a copy of value on the left."""
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[U, T]]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == List[T]
         return Piped(ListFamily.map(_TupleWith[T, U, True](value^), rebind_var[List[T]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T]:
-        """Pair each payload with a copy of value on the right."""
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == List[T]
         return Piped(ListFamily.map(_TupleWith[T, U, False](value^), rebind_var[List[T]](self.value^)))
 
@@ -4487,13 +4487,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Array[T, N]
         return Piped(_ArrayFamily[N].map(_Fill[T, NoneType](None), rebind_var[Array[T, N]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[U, T], N]] where Self.Value == Array[T, N]:
-        """Pair each payload with a copy of value on the left."""
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[U, T], N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Array[T, N]
         return Piped(_ArrayFamily[N].map(_TupleWith[T, U, True](value^), rebind_var[Array[T, N]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[T, U], N]] where Self.Value == Array[T, N]:
-        """Pair each payload with a copy of value on the right."""
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[T, U], N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Array[T, N]
         return Piped(_ArrayFamily[N].map(_TupleWith[T, U, False](value^), rebind_var[Array[T, N]](self.value^)))
 
@@ -4542,13 +4542,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Deque[T]
         return Piped(_DequeFamily.map(_Fill[T, NoneType](None), rebind_var[Deque[T]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[U, T]]] where Self.Value == Deque[T]:
-        """Pair each payload with a copy of value on the left."""
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[U, T]]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Deque[T]
         return Piped(_DequeFamily.map(_TupleWith[T, U, True](value^), rebind_var[Deque[T]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[T, U]]] where Self.Value == Deque[T]:
-        """Pair each payload with a copy of value on the right."""
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[T, U]]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Deque[T]
         return Piped(_DequeFamily.map(_TupleWith[T, U, False](value^), rebind_var[Deque[T]](self.value^)))
 
@@ -4622,13 +4622,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == LinkedList[T]
         return Piped(_LinkedListFamily.map(_Fill[T, NoneType](None), rebind_var[LinkedList[T]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[U, T]]] where Self.Value == LinkedList[T]:
-        """Pair each payload with a copy of value on the left."""
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[U, T]]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_LinkedListFamily.map(_TupleWith[T, U, True](value^), rebind_var[LinkedList[T]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[T, U]]] where Self.Value == LinkedList[T]:
-        """Pair each payload with a copy of value on the right."""
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[T, U]]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == LinkedList[T]
         return Piped(_LinkedListFamily.map(_TupleWith[T, U, False](value^), rebind_var[LinkedList[T]](self.value^)))
 
@@ -4702,13 +4702,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_Fill[T, NoneType](None), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]:
-        """Pair each payload with a copy of value on the left."""
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_TupleWith[T, U, True](value^), rebind_var[Dict[K, T, H]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]:
-        """Pair each payload with a copy of value on the right."""
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Dict[K, T, H]
         return Piped(_DictFamily[K, T, H].map(_TupleWith[T, U, False](value^), rebind_var[Dict[K, T, H]](self.value^)))
 
@@ -4782,13 +4782,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[T]
         return Piped(_StringDictFamily[T].map(_Fill[T, NoneType](None), rebind_var[StringDict[T]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[U, T]]] where Self.Value == StringDict[T]:
-        """Pair each payload with a copy of value on the left."""
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[U, T]]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_StringDictFamily[T].map(_TupleWith[T, U, True](value^), rebind_var[StringDict[T]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[T, U]]] where Self.Value == StringDict[T]:
-        """Pair each payload with a copy of value on the right."""
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[T, U]]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == StringDict[T]
         return Piped(_StringDictFamily[T].map(_TupleWith[T, U, False](value^), rebind_var[StringDict[T]](self.value^)))
 
@@ -4862,13 +4862,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[T]
         return Piped(OptionalFamily.map(_Fill[T, NoneType](None), rebind_var[Optional[T]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[U, T]]] where Self.Value == Optional[T]:
-        """Pair each payload with a copy of value on the left."""
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[U, T]]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Optional[T]
         return Piped(OptionalFamily.map(_TupleWith[T, U, True](value^), rebind_var[Optional[T]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T]:
-        """Pair each payload with a copy of value on the right."""
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Optional[T]
         return Piped(OptionalFamily.map(_TupleWith[T, U, False](value^), rebind_var[Optional[T]](self.value^)))
 
@@ -5017,13 +5017,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Result[T, Failure]
         return Piped(ResultFamily[Failure].map(_Fill[T, NoneType](None), rebind_var[Result[T, Failure]](self.value^)))
 
-    def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[U, T], Failure]] where Self.Value == Result[T, Failure]:
-        """Pair each payload with a copy of value on the left."""
+    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[U, T], Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _TupleWith[T, U, True]]:
+        """Attach value on the left, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Result[T, Failure]
         return Piped(ResultFamily[Failure].map(_TupleWith[T, U, True](value^), rebind_var[Result[T, Failure]](self.value^)))
 
-    def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[T, U], Failure]] where Self.Value == Result[T, Failure]:
-        """Pair each payload with a copy of value on the right."""
+    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[T, U], Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _TupleWith[T, U, False]]:
+        """Attach value on the right, moving it for a single call or copying for repeated calls."""
         comptime assert Self.Value == Result[T, Failure]
         return Piped(ResultFamily[Failure].map(_TupleWith[T, U, False](value^), rebind_var[Result[T, Failure]](self.value^)))
 

@@ -116205,7 +116205,7 @@
         "description": "The constant or result payload type; repeated constants must be Copyable.",
         "inferred": true,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -116222,8 +116222,8 @@
        "doc": "The source shape containing a copied constant followed by each original element.",
        "type": "Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, True]]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116249,7 +116249,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116259,8 +116259,8 @@
        "doc": "",
        "type": "Piped[List[Tuple[U, T]]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[U, T]]] where Self.Value == List[T]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[U, T]]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116286,7 +116286,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -116303,8 +116303,8 @@
        "doc": "",
        "type": "Piped[Array[Tuple[U, T], N]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[U, T], N]] where Self.Value == Array[T, N]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[U, T], N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116330,7 +116330,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116340,8 +116340,8 @@
        "doc": "",
        "type": "Piped[Deque[Tuple[U, T]]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[U, T]]] where Self.Value == Deque[T]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[U, T]]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116367,7 +116367,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116377,8 +116377,8 @@
        "doc": "",
        "type": "Piped[LinkedList[Tuple[U, T]]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[U, T]]] where Self.Value == LinkedList[T]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[U, T]]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116404,7 +116404,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -116428,8 +116428,8 @@
        "doc": "",
        "type": "Piped[Dict[K, Tuple[U, T], H]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[U, T], H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116455,7 +116455,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116465,8 +116465,8 @@
        "doc": "",
        "type": "Piped[StringDict[Tuple[U, T]]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[U, T]]] where Self.Value == StringDict[T]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[U, T]]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116492,7 +116492,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116502,8 +116502,8 @@
        "doc": "",
        "type": "Piped[Optional[Tuple[U, T]]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[U, T]]] where Self.Value == Optional[T]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[U, T]]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116529,7 +116529,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -116546,8 +116546,8 @@
        "doc": "",
        "type": "Piped[Result[Tuple[U, T], Failure]]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[U, T], Failure]] where Self.Value == Result[T, Failure]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[U, T], Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      }
     ],
     "tuple_right": [
@@ -116575,7 +116575,7 @@
         "description": "The constant or result payload type; repeated constants must be Copyable.",
         "inferred": true,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -116592,8 +116592,8 @@
        "doc": "The source shape containing each original element followed by a copied constant.",
        "type": "Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, False]]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116619,7 +116619,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116629,8 +116629,8 @@
        "doc": "",
        "type": "Piped[List[Tuple[T, U]]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116656,7 +116656,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -116673,8 +116673,8 @@
        "doc": "",
        "type": "Piped[Array[Tuple[T, U], N]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[T, U], N]] where Self.Value == Array[T, N]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, N: Int](deinit self, var value: U) -> Piped[Array[Tuple[T, U], N]] where Self.Value == Array[T, N] and _MapCompatible[_ArrayFamily[N], Array[T, N], _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116700,7 +116700,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116710,8 +116710,8 @@
        "doc": "",
        "type": "Piped[Deque[Tuple[T, U]]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[T, U]]] where Self.Value == Deque[T]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[T, U]]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116737,7 +116737,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116747,8 +116747,8 @@
        "doc": "",
        "type": "Piped[LinkedList[Tuple[T, U]]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[T, U]]] where Self.Value == LinkedList[T]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[T, U]]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116774,7 +116774,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -116798,8 +116798,8 @@
        "doc": "",
        "type": "Piped[Dict[K, Tuple[T, U], H]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, Tuple[T, U], H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116825,7 +116825,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116835,8 +116835,8 @@
        "doc": "",
        "type": "Piped[StringDict[Tuple[T, U]]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[T, U]]] where Self.Value == StringDict[T]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[StringDict[Tuple[T, U]]] where Self.Value == StringDict[T] and _MapCompatible[_StringDictFamily[T], StringDict[T], _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116862,7 +116862,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -116872,8 +116872,8 @@
        "doc": "",
        "type": "Piped[Optional[Tuple[T, U]]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      },
      {
       "args": [
@@ -116899,7 +116899,7 @@
         "description": "",
         "inferred": false,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        },
        {
@@ -116916,8 +116916,8 @@
        "doc": "",
        "type": "Piped[Result[Tuple[T, U], Failure]]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[T, U], Failure]] where Self.Value == Result[T, Failure]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[T, U], Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      }
     ],
     "void": [
@@ -134141,7 +134141,7 @@
         "variadic": false
        },
        {
-        "description": "The replacement type, including origins; repeated calls require Copyable.",
+        "description": "The supplied value type, including origins; repeated calls require Copyable.",
         "inferred": true,
         "name": "U",
         "type": "Movable & Deinitable",
@@ -235754,7 +235754,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The value consumed here and copied into each payload position.",
+        "description": "The attached value, consumed; a single call moves it, while repeated calls require Copyable and copy it.",
         "name": "value",
         "type": "U",
         "variadic": false
@@ -235771,10 +235771,10 @@
         "variadic": false
        },
        {
-        "description": "The copied value type, including its origins.",
+        "description": "The supplied value type, including origins; repeated calls require Copyable.",
         "inferred": true,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -235784,8 +235784,8 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, True].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E]"
       },
-      "signature": "def tuple_left[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, True].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]",
-      "summary": "Pair each payload with a copy of value on the left."
+      "signature": "def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, True]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, True].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, True]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, True]]",
+      "summary": "Attach value on the left, moving it for a single call or copying for repeated calls."
      }
     ],
     "tuple_right": [
@@ -235793,7 +235793,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "The value consumed here and copied into each payload position.",
+        "description": "The attached value, consumed; a single call moves it, while repeated calls require Copyable and copy it.",
         "name": "value",
         "type": "U",
         "variadic": false
@@ -235810,10 +235810,10 @@
         "variadic": false
        },
        {
-        "description": "The copied value type, including its origins.",
+        "description": "The supplied value type, including origins; repeated calls require Copyable.",
         "inferred": true,
         "name": "U",
-        "type": "Copyable & Deinitable",
+        "type": "Movable & Deinitable",
         "variadic": false
        }
       ],
@@ -235823,8 +235823,8 @@
        "doc": "The pipeline containing the operation result, retaining its selected native error.",
        "type": "Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, False].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E]"
       },
-      "signature": "def tuple_right[T: Movable & Deinitable, U: Copyable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, False].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]",
-      "summary": "Pair each payload with a copy of value on the right."
+      "signature": "def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, //](deinit self, var value: U) raises Self.I.MapError[Self.V, _TupleWith[T, U, False]] -> Pipeline[_MappedFamily[Self.I, _TupleWith[T, U, False].Out], Self.I.Mapped[Self.V, _TupleWith[T, U, False]], Self.E] where T == Self.I.Element[Self.V] and _MapCompatible[Self.I, Self.V, _TupleWith[T, U, False]]",
+      "summary": "Attach value on the right, moving it for a single call or copying for repeated calls."
      }
     ],
     "value_or": [

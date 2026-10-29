@@ -1328,8 +1328,8 @@ def documented(source):
             doc += ["\n" + indent + "Parameters:\n"]
             doc += [
                 indent + "    " + p["name"] + ": " + (
-                    "The replacement type, including origins; repeated calls require Copyable."
-                    if p["name"] == "U" and name == "fill" else
+                    "The supplied value type, including origins; repeated calls require Copyable."
+                    if p["name"] == "U" and name in ("fill", "tuple_left", "tuple_right") else
                     "The error Semigroup; inferred list errors concatenate in order."
                     if p["name"] == "S" and name.startswith("par_") else
                     "The target effect family; inferred for native Optional, Result and List effects. Explicit bindings retain their policy."
@@ -1345,7 +1345,7 @@ def documented(source):
                     if name == "fold" and a["name"] in ("on_ok", "on_err") else
                     "The replacement, consumed; a single call moves it, while repeated calls require Copyable and copy it."
                     if a["name"] == "value" and name == "fill" else
-                    "The value consumed here and copied into each payload position."
+                    "The attached value, consumed; a single call moves it, while repeated calls require Copyable and copy it."
                     if a["name"] == "value" and name in ("tuple_left", "tuple_right")
                     else args[a["name"]]
                 ) + "\n"

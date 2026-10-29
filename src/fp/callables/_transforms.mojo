@@ -78,15 +78,20 @@ struct _Replace[T: Copyable & Equatable & Deinitable](Unary):
 
 
 @fieldwise_init
-struct _TupleWith[T: Movable & Deinitable, U: Copyable & Deinitable, left: Bool](Unary):
+struct _TupleWith[T: Movable & Deinitable, U: Movable & Deinitable, left: Bool](
+    OnceUnary, Unary where conforms_to(U, Copyable)
+):
+    """Move an attached value once, or copy it through a repeated shared call."""
     var value: Self.U
     comptime Arg = Self.T
     comptime Out = Tuple[Self.U, Self.T] if Self.left else Tuple[Self.T, Self.U]
-    def call(self, var arg: Self.T) -> Self.Out:
+    def call_once(deinit self, var arg: Self.T) -> Self.Out:
         comptime if Self.left:
-            return rebind_var[Self.Out]((self.value.copy(), arg^))
+            return rebind_var[Self.Out]((self.value^, arg^))
         else:
-            return rebind_var[Self.Out]((arg^, self.value.copy()))
+            return rebind_var[Self.Out]((arg^, self.value^))
+    def call(self, var arg: Self.T) -> Self.Out where conforms_to(Self.U, Copyable):
+        return Self(self.value.copy()).call_once(arg^)
 
 
 def _selected[T: Movable & Deinitable](var value: T, accepted: Bool) -> Optional[T]:
