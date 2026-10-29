@@ -596,7 +596,8 @@ payloads without display-only copies or private storage access.
 The transport example uses the common `run` entry for Writer and retains its
 native `Int` error inside the workflow. Its application entry converts an
 unexpected code to `Error`, as Mojo requires for `main`. Expected output,
-deferred observation counts and state/log ordering stay unchanged. Collection examples use the consuming and borrowing patterns below.
+deferred observation counts and state/log ordering stay unchanged. Collection
+examples use the consuming and borrowing patterns below.
 
 ## Public collection outcomes
 
@@ -614,13 +615,27 @@ error as incompatible with the caller's native Error. Simple inferred Result
 collections compile directly. This is a remaining inference limitation, not a
 new conversion or a change to the library's error contract.
 
+## Inferred iterator sequencing
+
+Iter's `sequence`, `sequence_void`, `flat_sequence` and `sequence_filter` now
+infer their target from the complete element type through the same recognition
+used by Pipeline and iterator traversal. The traversal composition example uses
+these iterator terminals without a target annotation. Validation and external
+families remain explicit choices; native Result inference retains fail-fast
+behavior.
+
+Sequencing has no callback parameters to infer after the target, so the existing
+family slot can have a default. No new overload, adapter, loop or runtime storage
+is needed. The shared traversal generator emits the defaults for its three
+sequencing forms; their execution bodies and parameter order are unchanged.
+Tests cover deferred and abandoned recipes, generic and explicit bindings,
+empty inputs, branching, early stopping, move-only cleanup and borrowed origins.
+
 ## Next passes
 
-1. Review iterator sequencing terminals for inferred targets consistent with
-   Pipeline, retaining explicit Validation and external-family selection.
-2. Investigate concrete native type admission for the collection error-inference
+1. Investigate concrete native type admission for the collection error-inference
    limitation above, using these real workflows as regression examples.
-3. Review remaining iterator effect callbacks for consistent admission, sharing
+2. Review remaining iterator effect callbacks for consistent admission, sharing
    descriptors before expanding overload sets.
 
 Each pass retains the commit/push boundary above and proceeds to the next

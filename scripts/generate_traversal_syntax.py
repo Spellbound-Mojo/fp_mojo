@@ -112,7 +112,12 @@ def methods(mode, carrier=None, *, inferred=False):
             if mode=='piped' and not carrier:
                 params += ['S: Traversable' + (' & ' + operation.source_capability if post else '')]
             if not inferred:
-                params += ['G: Applicative', *native_params, 'X: AnyType = _InferError']
+                # Sequence has no callback parameters after G, so its existing
+                # slot can infer from the complete element without a new overload.
+                family_parameter = 'G: Applicative'
+                if mode == 'iter' and sequence:
+                    family_parameter += f' = _InferredApplicative[{elem}]'
+                params += [family_parameter, *native_params, 'X: AnyType = _InferError']
             retained_error = discard and carrier and carrier.name == 'Result'
             callback=operation.retained(elem, 'G', cb) if borrowing else cb
             if retained_error: callback=f'Composition[False, 1, {cb}, _EffectVoid[G, {cb}.Out]]'

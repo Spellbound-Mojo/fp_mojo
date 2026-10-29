@@ -2,6 +2,7 @@
 from fp.data import Result, Ok, Err
 from fp.functions import pipeline, kleisli
 from fp.algebra import ResultFamily
+from fp.iteration import iterated
 from std.testing import assert_equal, assert_true
 
 
@@ -36,11 +37,11 @@ def main() raises:
     assert_true(pipeline(List[Int]([4, 5])).traverse_void(expander).get().is_ok())
 
     var groups: List[Result[List[Int], String]] = [expand(1), expand(2)]
-    var flattened = pipeline(groups^).flat_sequence().raise_on_err()
+    var flattened = iterated(groups^).flat_sequence().raise_on_err()
     assert_equal(flattened, [1, 10, 2, 20])
     print("sequenced:", flattened)
 
     var checks: List[Result[Bool, String]] = [keep_even(1), keep_even(2)]
-    var done = pipeline(checks^).sequence_void().get()
+    var done = iterated(checks^).sequence_void()
     assert_true(done.is_ok())
     print("effects succeeded:", done.is_ok())

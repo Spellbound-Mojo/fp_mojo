@@ -347,6 +347,22 @@ once and supplies the library callable contract. Ordinary concrete pointer calls
 need no adapter; explicit type bindings on existing closure and callable
 overloads retain their meaning.
 
+## Sequence existing effects
+
+Use `iterated(effects^).sequence()` when the elements are already effects.
+The complete element type selects the target, just as the callback result does
+for `traverse`. `sequence_void()` discards successful payloads; `flat_sequence()`
+flattens List payloads; `sequence_filter()` collects present Optional payloads.
+An absent outer Optional or a stored Result failure remains an effect failure.
+Empty input lifts the corresponding empty output into the inferred family.
+
+<!-- example: docs/examples/traversal_composition.mojo -->
+
+All four consume the iterator from its current position. Reader and State still
+wait until `run` to pull it. Validation, external families and erased transformer
+layers remain explicit: for example, `.sequence[ValidationFamily[Errors]]()`.
+Existing positional and named family/error arguments keep their meaning.
+
 ## Effectful search and reduction
 
 <!-- example: docs/examples/iteration_effect_search.mojo -->
