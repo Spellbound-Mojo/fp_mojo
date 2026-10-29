@@ -23,7 +23,8 @@ The [effects reference](../reference/effects.md) covers resources and IO.
 Use direct methods when the task is about one Result. `map` transforms an Ok,
 `flat_map` continues with another Result, and `recover` computes a replacement
 success from an Err. `fill(value)` replaces a success with an already computed
-value; `void()` discards it while keeping success or failure.
+value; `void()` discards it while keeping success or failure. `tuple_left(value)`
+or `tuple_right(value)` keeps the success and attaches another value beside it.
 
 Choose `pipeline(result^)` when the task needs container capabilities such as
 `map_n`, accumulation with `par_map_n`, or traversal. A chain can continue

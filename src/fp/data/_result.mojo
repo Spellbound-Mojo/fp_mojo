@@ -4,7 +4,7 @@ from fp.callables.native import _NativeOwnedArg, NativeUnary, NativeBorrow, _Nat
 from fp.callables._conditional import _guard_owned
 from fp.callables._views import _UnaryViewable, _BorrowViewable
 from fp.callables._retention import _Retain
-from fp.callables._transforms import _Retained, _ObserveOnce, _Fill
+from fp.callables._transforms import _Retained, _ObserveOnce, _Fill, _TupleWith
 from fp.callables.protocols import Binary
 from fp.callables._identity import Identity
 from fp.callables.protocols import Unary, OnceUnary, UnaryContract, BorrowCallable
@@ -749,6 +749,44 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `Ok(None)`, or the original `Err`.
         """
         return self^.fill[NoneType](None)
+
+    def tuple_left[U: Movable & Deinitable](deinit self, var value: U) -> Result[Tuple[U, Self.T], Self.E]:
+        """Attach an already evaluated value before a success payload.
+
+        Consumes both values without copying. On Ok, both move into the pair;
+        on Err, the attachment is destroyed and the stored error moves through.
+        Payload, attachment and error retain their exact origins. This follows
+        Cats `Functor.tupleLeft`; no stored error is raised.
+
+        Parameters:
+            U: The attachment type, inferred from the value.
+
+        Args:
+            value: The attachment, consumed even when the Result is Err.
+
+        Returns:
+            `Ok((value, payload))`, or the original `Err`.
+        """
+        return self^.map(_TupleWith[Self.T, U, True](value^))
+
+    def tuple_right[U: Movable & Deinitable](deinit self, var value: U) -> Result[Tuple[Self.T, U], Self.E]:
+        """Attach an already evaluated value after a success payload.
+
+        Consumes both values without copying. On Ok, both move into the pair;
+        on Err, the attachment is destroyed and the stored error moves through.
+        Payload, attachment and error retain their exact origins. This follows
+        Cats `Functor.tupleRight`; no stored error is raised.
+
+        Parameters:
+            U: The attachment type, inferred from the value.
+
+        Args:
+            value: The attachment, consumed even when the Result is Err.
+
+        Returns:
+            `Ok((payload, value))`, or the original `Err`.
+        """
+        return self^.map(_TupleWith[Self.T, U, False](value^))
 
     def flatten(deinit self) -> Self.T where conforms_to(Self.T, _ResultType) and Self.T == Result[downcast[Self.T, _ResultType].Value, Self.E]:
         """Remove one nested Result layer, preserving success or either stored error.

@@ -29,6 +29,14 @@ requires copying. Dictionary continuation follows the replacement's type.
 For deferred effects, `Error` describes construction; execution keeps its
 separate run requirements and native error type.
 
+`TupleLeftContract[I, V, U]` and `TupleRightContract[I, V, U]` provide the same
+projections for attaching a value before or after each payload. They specialize
+the existing map contract with the shared tuple callback, so a generic wrapper
+needs no private adapter type. Forward `InvocationCompatible`, `Out`, `Error`
+and, for a fluent continuation, `Family`. Single-call families move the
+attachment; repeated families require `Copyable`, including for empty sources.
+The source, attachment and stored errors retain their independent origins.
+
 For new map or bind wrappers, `InvocationCompatible` adds callback receiver
 availability to the historical `Compatible` proof. `ReceiverCompatible` exposes
 that check alone. This catches metadata-only callbacks at the wrapper boundary,

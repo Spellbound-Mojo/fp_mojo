@@ -68,6 +68,19 @@ discarding. `fill` is the library's spelling of Cats `Functor.as`; `void` is
 replacement with None. See [replacing or discarding a successful value](../tutorial/results.md#replace-or-discard-a-successful-value)
 for the executable example and eager evaluation rules.
 
+## Attach a value to a success
+
+`result^.tuple_left(value)` returns `Result[Tuple[U, T], E]` and
+`result^.tuple_right(value)` returns `Result[Tuple[T, U], E]`. The attachment
+type is inferred. Both consume the source and attachment without copying;
+move-only payloads and attachments are supported. An Err stays stored and
+destroys the eagerly evaluated attachment. All three types retain their
+original origins.
+
+These methods follow Cats `Functor.tupleLeft` and `tupleRight`, delegating to
+the same mapping callback as Pipeline attachment. Use `product` to combine
+two carriers; tuple attachment adds an ordinary value to one carrier.
+
 ## Flatten a nested Result
 
 `nested^.flatten()` removes one layer from `Result[Result[T, E], E]`, returning

@@ -108,6 +108,12 @@ deferred families without changing collection or iterator repetition. The
 shared tuple callback owns pairing; its shared receiver copies the attachment
 and delegates to its consuming receiver.
 
+Direct Result attachment now needs neither a Pipeline wrapper nor a callback.
+Generic attachment helpers can use `TupleLeftContract` and `TupleRightContract`
+to forward admission, result, construction error and continuation family without
+naming private adapters. Both additions use the same tuple callback and map
+policy; they introduce no new execution mechanism.
+
 ## Milestones and pass boundaries
 
 | Order | Milestone | Completion criterion |

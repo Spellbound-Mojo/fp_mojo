@@ -57,3 +57,7 @@ def main() raises:
     print("filled:", checked(5).fill(String("accepted")).get_or(String()))
     print("void:", checked(5).void().is_ok())
     print("void error:", checked(-1).void().swap().get_or(String()))
+
+    var named = checked(5).tuple_left(String("items")).to_optional()
+    ref pair = named.value()
+    print("attached:", pair[0], pair[1])

@@ -6893,6 +6893,74 @@
    "summary": "The joint source and target contract of traversal with a library callable.",
    "traits": []
   },
+  "algebra.TupleLeftContract": {
+   "aliases": [],
+   "description": "This specializes MapContract with the canonical tuple callback. Generic code\nforwards InvocationCompatible, returns Out and raises Error. Fluent wrappers\nalso project Family and retain their selected Pipeline error parameter. The\nfamily's map policy moves the attachment for a single invocation or requires\nCopyable for repetition. All origins remain exact. Error describes construction\nof Out; a deferred family's execution-time errors remain part of that family.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Functor family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Functor",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The attachment type, including origins and ownership requirements.",
+     "inferred": false,
+     "name": "U",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime TupleLeftContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _TupleWith[I.Element[V], U, True]]",
+   "summary": "The admission, family, result and construction error of a left attachment.",
+   "traits": []
+  },
+  "algebra.TupleRightContract": {
+   "aliases": [],
+   "description": "This has the same ownership, error and forwarding contract as TupleLeftContract,\nwith the source element first in the resulting pair. It names the existing map\noperation and introduces no additional execution or callback boundary.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Functor family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Functor",
+     "variadic": false
+    },
+    {
+     "description": "The complete consumed source carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The attachment type, including origins and ownership requirements.",
+     "inferred": false,
+     "name": "U",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime TupleRightContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _TupleWith[I.Element[V], U, False]]",
+   "summary": "The admission, family, result and construction error of a right attachment.",
+   "traits": []
+  },
   "algebra.ValidationFamily": {
    "aliases": [
     {
@@ -41611,6 +41679,70 @@
       },
       "signature": "def to_optional(deinit self) -> Optional[Self.T]",
       "summary": "Consume the Result, keeping its success in a native Optional."
+     }
+    ],
+    "tuple_left": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The attachment, consumed even when the Result is Err.",
+        "name": "value",
+        "type": "U",
+        "variadic": false
+       }
+      ],
+      "description": "Consumes both values without copying. On Ok, both move into the pair;\non Err, the attachment is destroyed and the stored error moves through.\nPayload, attachment and error retain their exact origins. This follows\nCats `Functor.tupleLeft`; no stored error is raised.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The attachment type, inferred from the value.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "`Ok((value, payload))`, or the original `Err`.",
+       "type": "Result[Tuple[U, Self.T], Self.E]"
+      },
+      "signature": "def tuple_left[U: Movable & Deinitable](deinit self, var value: U) -> Result[Tuple[U, Self.T], Self.E]",
+      "summary": "Attach an already evaluated value before a success payload."
+     }
+    ],
+    "tuple_right": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The attachment, consumed even when the Result is Err.",
+        "name": "value",
+        "type": "U",
+        "variadic": false
+       }
+      ],
+      "description": "Consumes both values without copying. On Ok, both move into the pair;\non Err, the attachment is destroyed and the stored error moves through.\nPayload, attachment and error retain their exact origins. This follows\nCats `Functor.tupleRight`; no stored error is raised.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The attachment type, inferred from the value.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "`Ok((payload, value))`, or the original `Err`.",
+       "type": "Result[Tuple[Self.T, U], Self.E]"
+      },
+      "signature": "def tuple_right[U: Movable & Deinitable](deinit self, var value: U) -> Result[Tuple[Self.T, U], Self.E]",
+      "summary": "Attach an already evaluated value after a success payload."
      }
     ],
     "value_or": [

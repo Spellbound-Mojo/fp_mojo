@@ -391,7 +391,16 @@
         "tests/compile_fail/result_fill_output_origin.mojo",
         "tests/compile_fail/result_fill_replacement_reuse.mojo",
         "tests/compile_fail/result_fill_void_consumed.mojo",
-        "tests/compile_fail/result_fill_void_error_origin.mojo"
+        "tests/compile_fail/result_fill_void_error_origin.mojo",
+        "tests/runtime/test_tuple_api.mojo",
+        "tests/ownership/test_owned_tuple.mojo",
+        "tests/compile_fail/tuple_api_direct_attachment_origin.mojo",
+        "tests/compile_fail/tuple_api_direct_borrowed.mojo",
+        "tests/compile_fail/tuple_api_direct_error_origin.mojo",
+        "tests/compile_fail/tuple_api_direct_error_type.mojo",
+        "tests/compile_fail/tuple_api_direct_source_origin.mojo",
+        "tests/compile_fail/tuple_api_direct_source_reuse.mojo",
+        "tests/compile_fail/tuple_api_direct_value_reuse.mojo"
       ]
     },
     "iteration": {
@@ -592,7 +601,21 @@
         "tests/compile_fail/fill_contract_replacement_reuse.mojo",
         "tests/compile_fail/fill_contract_source_reuse.mojo",
         "tests/compile_fail/fill_contract_stored_error_origin.mojo",
-        "tests/compile_fail/fill_contract_void_source.mojo"
+        "tests/compile_fail/fill_contract_void_source.mojo",
+        "tests/runtime/test_tuple_api.mojo",
+        "tests/ownership/test_owned_tuple.mojo",
+        "tests/compile_fail/tuple_api_deferred_error.mojo",
+        "tests/compile_fail/tuple_api_generic_attachment_origin.mojo",
+        "tests/compile_fail/tuple_api_generic_error_origin.mojo",
+        "tests/compile_fail/tuple_api_generic_source_origin.mojo",
+        "tests/compile_fail/tuple_api_generic_source_reuse.mojo",
+        "tests/compile_fail/tuple_api_generic_value_reuse.mojo",
+        "tests/compile_fail/tuple_api_left_construction_error.mojo",
+        "tests/compile_fail/tuple_api_left_repeated.mojo",
+        "tests/compile_fail/tuple_api_left_source.mojo",
+        "tests/compile_fail/tuple_api_right_construction_error.mojo",
+        "tests/compile_fail/tuple_api_right_repeated.mojo",
+        "tests/compile_fail/tuple_api_right_source.mojo"
       ]
     },
     "effects": {

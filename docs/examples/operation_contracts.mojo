@@ -1,5 +1,5 @@
 """Public contracts name generic operation admission, results and native errors."""
-from fp.algebra import Functor, MapContract, FillContract, VoidContract, Applicative, Traversable, TraverseContract, ListFamily, OptionalFamily
+from fp.algebra import Functor, MapContract, FillContract, VoidContract, TupleRightContract, Applicative, Traversable, TraverseContract, ListFamily, OptionalFamily
 from fp.callables import UnaryContract, Unary
 from fp.functions import pipeline, Identity
 from std.testing import assert_equal
@@ -34,6 +34,12 @@ struct Positive(Unary):
     def call(self, var value: Int) -> Self.Out:
         return Optional(value) if value > 0 else None
 
+
+def attached[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable](
+    var source: V, var value: U
+) raises TupleRightContract[I, V, U].Error -> TupleRightContract[I, V, U].Out where TupleRightContract[I, V, U].InvocationCompatible:
+    return pipeline[I](source^).tuple_right(value^).get()
+
 def main() raises:
     assert_equal(mapped[OptionalFamily](Optional(3), Identity[Int]()).value(), 3)
     var result = gather[ListFamily, OptionalFamily](List[Int]([3, 7]), Positive())
@@ -46,3 +52,7 @@ def main() raises:
     print("filled:", filled_values[0], filled_values[1])
     var done = discarded[OptionalFamily](output^)
     print("discarded:", Bool(done))
+    var attached_values: List[Int] = [7, 11]
+    var paired = attached[OptionalFamily](Optional(3), attached_values^)
+    ref pair = paired.value()
+    print("attached:", pair[0], pair[1])

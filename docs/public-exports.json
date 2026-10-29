@@ -1064,6 +1064,20 @@
    "kind": "type or alias",
    "provider": "algebra/contracts"
   },
+  "algebra.TupleLeftContract": {
+   "declarations": [
+    "comptime TupleLeftContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _TupleWith[I.Element[V], U, True]]"
+   ],
+   "kind": "type or alias",
+   "provider": "algebra/contracts"
+  },
+  "algebra.TupleRightContract": {
+   "declarations": [
+    "comptime TupleRightContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _TupleWith[I.Element[V], U, False]]"
+   ],
+   "kind": "type or alias",
+   "provider": "algebra/contracts"
+  },
   "algebra.ValidationFamily": {
    "declarations": [
     "struct ValidationFamily[S: Semigroup](ApplicativeError, ErrorMapping, _ValidationPolicy):"
@@ -4432,6 +4446,18 @@
      {
       "sha256": "6a4b9b61364a6f3496ef4127fc022b5fd27a90da556871ea5c702ef214089c27",
       "signature": "def to_optional(deinit self) -> Optional[Self.T]:"
+     }
+    ],
+    "tuple_left": [
+     {
+      "sha256": "82fa0bc3a5ff8293748033a0045ede59467d7c4d28b8e79dd30b19c31c42c947",
+      "signature": "def tuple_left[U: Movable & Deinitable](deinit self, var value: U) -> Result[Tuple[U, Self.T], Self.E]:"
+     }
+    ],
+    "tuple_right": [
+     {
+      "sha256": "3c58fc1dd8836318c9b835047639c0aec2a8d39b26140a10abce2de73b49b08d",
+      "signature": "def tuple_right[U: Movable & Deinitable](deinit self, var value: U) -> Result[Tuple[Self.T, U], Self.E]:"
      }
     ],
     "value_or": [

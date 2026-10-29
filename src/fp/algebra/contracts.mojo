@@ -11,7 +11,7 @@ from ._primitive_contracts import MapContract, BindContract, CombineContract, Fi
 from .protocols import Functor, Monad, Traversable, Applicative
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
-from fp.callables._transforms import _ValueThunk, _Pair, _Apply, _Fill
+from fp.callables._transforms import _ValueThunk, _Pair, _Apply, _Fill, _TupleWith
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
@@ -90,6 +90,37 @@ that family and retains its own run requirements.
 Parameters:
     I: The selected Functor family.
     V: The complete source carrier type, including origins.
+"""
+
+
+comptime TupleLeftContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _TupleWith[I.Element[V], U, True]]
+"""The admission, family, result and construction error of a left attachment.
+
+This specializes MapContract with the canonical tuple callback. Generic code
+forwards InvocationCompatible, returns Out and raises Error. Fluent wrappers
+also project Family and retain their selected Pipeline error parameter. The
+family's map policy moves the attachment for a single invocation or requires
+Copyable for repetition. All origins remain exact. Error describes construction
+of Out; a deferred family's execution-time errors remain part of that family.
+
+Parameters:
+    I: The selected Functor family.
+    V: The complete consumed source carrier type, including origins.
+    U: The attachment type, including origins and ownership requirements.
+"""
+
+
+comptime TupleRightContract[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable] = MapContract[I, V, _TupleWith[I.Element[V], U, False]]
+"""The admission, family, result and construction error of a right attachment.
+
+This has the same ownership, error and forwarding contract as TupleLeftContract,
+with the source element first in the resulting pair. It names the existing map
+operation and introduces no additional execution or callback boundary.
+
+Parameters:
+    I: The selected Functor family.
+    V: The complete consumed source carrier type, including origins.
+    U: The attachment type, including origins and ownership requirements.
 """
 
 

@@ -6,6 +6,7 @@ from fp.effects import Reader, run
 from fp.iteration import iterated
 from algebra_support.result_ownership import Token, trace
 from algebra_support.fill_contracts import Failing
+from algebra_support.tuple_contracts import attached_left, attached_right
 from test_owned_fill import Counted
 from std.testing import assert_equal
 
@@ -24,11 +25,21 @@ def result_attachment[left: Bool, route: Int](ok: Bool) raises:
             output = piped(source^).tuple_left(Token(3, state)).get()
         else:
             output = piped(source^).tuple_right(Token(3, state)).get()
-    else:
+    elif route == 2:
         comptime if left:
             output = piped(source^).tuple_left[ResultFamily[Token]](Token(3, state)).get()
         else:
             output = piped(source^).tuple_right[ResultFamily[Token]](Token(3, state)).get()
+    elif route == 3:
+        comptime if left:
+            output = source^.tuple_left(Token(3, state))
+        else:
+            output = source^.tuple_right(Token(3, state))
+    else:
+        comptime if left:
+            output = attached_left[ResultFamily[Token]](source^, Token(3, state))
+        else:
+            output = attached_right[ResultFamily[Token]](source^, Token(3, state))
     assert_equal(output.is_ok(), ok)
     assert_equal(state[].drops[1], 0)
     assert_equal(state[].drops[2], 0)
@@ -113,19 +124,30 @@ def construction_error() raises:
     assert_equal(state[].drops[3], 1)
 
 
-def views(left: List[Int], right: List[Int], errors: List[Int], ok: Bool) -> Result[Tuple[Span[Int, origin_of(left)], Span[Int, origin_of(right)]], Span[Int, origin_of(errors)]]:
+def views[route: Int](left: List[Int], right: List[Int], errors: List[Int], ok: Bool) -> Result[Tuple[Span[Int, origin_of(left)], Span[Int, origin_of(right)]], Span[Int, origin_of(errors)]]:
     comptime L = Span[Int, origin_of(left)]
     comptime E = Span[Int, origin_of(errors)]
     var source = Result[L, E](Ok(Span(left))) if ok else Result[L, E](Err(Span(errors)))
-    return pipeline(source^).tuple_right(Span(right)).get()
+    comptime if route == 0:
+        return pipeline(source^).tuple_right(Span(right)).get()
+    elif route == 1:
+        return source^.tuple_right(Span(right))
+    else:
+        return attached_right[ResultFamily[E]](source^, Span(right))
 
 
 def main() raises:
     comptime for side in range(2):
         comptime left = side == 0
-        comptime for route in range(3):
+        comptime for route in range(5):
             for ok in [False, True]:
                 result_attachment[left, route](ok)
+    var state = trace()
+    var direct = Result[Int, String](Ok(1)).tuple_left(Counted(state))
+    assert_equal(state[].factories, 0)
+    assert_equal(state[].drops[3], 0)
+    _ = direct^
+    assert_equal(state[].drops[3], 1)
     copy_policy()
     construction_error()
     deferred[False, False]()
@@ -134,14 +156,15 @@ def main() raises:
     var left: List[Int] = [7]
     var right: List[Int] = [11]
     var errors: List[Int] = [13]
-    for ok in [False, True]:
-        var output = views(left, right, errors, ok)
-        assert_equal(output.is_ok(), ok)
-        if ok:
-            var present = output^.to_optional()
-            var pair = present.take()
-            assert_equal(Pointer(to=pair[0][0]) == Pointer(to=left[0]), True)
-            assert_equal(Pointer(to=pair[1][0]) == Pointer(to=right[0]), True)
-        else:
-            var error = output^.swap().get_or(Span(errors))
-            assert_equal(Pointer(to=error[0]) == Pointer(to=errors[0]), True)
+    comptime for route in range(3):
+        for ok in [False, True]:
+            var output = views[route](left, right, errors, ok)
+            assert_equal(output.is_ok(), ok)
+            if ok:
+                var present = output^.to_optional()
+                var pair = present.take()
+                assert_equal(Pointer(to=pair[0][0]) == Pointer(to=left[0]), True)
+                assert_equal(Pointer(to=pair[1][0]) == Pointer(to=right[0]), True)
+            else:
+                var error = output^.swap().get_or(Span(errors))
+                assert_equal(Pointer(to=error[0]) == Pointer(to=errors[0]), True)
