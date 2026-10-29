@@ -1,5 +1,5 @@
 # error: constraint failed
-# error: comptime assert Self.Next.Value == ControlFlow[Self.Value, Self.F.Arg]
+# error: comptime assert Self.Item == ControlFlow[Self.Value, Self.F.Arg]
 from fp.callables import MutableUnary
 from fp.data import ControlFlow, Break
 from state_machine import Pure, pure, loop, run

@@ -1,13 +1,14 @@
 """Owned sequencing and fixed-type iteration over the shared execution slots."""
 from std.builtin.rebind import downcast, rebind_var
 from std.os import abort
+from std.utils import Variant
 from fp.callables.protocols import UnaryContract, OnceThunk
 from fp.callables.invoke import call_repeated, RepeatableUnary, _OnceUnaryAvailable
 from fp.callables._binding import _OwnedUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.adt.data import _ChoiceType
 from fp.data.control import _ControlShape
-from fp.data import Result, Ok, ControlFlow, Continue, Break
+from fp.data import Result, Ok, ControlFlow, Continue, Break, Left, Right
 from fp.effects import IOContext, Outcome, EffectFailure
 from fp.effects.outcomes import _capture, _failure_as
 from .kernel import Machine, Step, Wait, _Slot, _tick
@@ -101,10 +102,46 @@ struct _RepeatFactory[F: UnaryContract & Movable & Deinitable, o: MutOrigin](Onc
         return call_repeated(self.factory[], self.value^)
 
 
-struct Loop[F: UnaryContract & Movable & Deinitable](Machine):
-    comptime Next = downcast[Self.F.Out, Machine]
-    comptime Shape = downcast[downcast[Self.Next.Value, _ChoiceType].Of, _ControlShape]
+trait _LoopPolicy:
+    """Interpret one completed step without changing the shared loop lifecycle."""
+    comptime Factory: UnaryContract & Movable & Deinitable
+    comptime Compatible: Bool = True
+    comptime Item: Movable & Deinitable
+    comptime Value: Movable & Deinitable
+    @staticmethod
+    def done(factory: Self.Factory, item: Self.Item) -> Bool:
+        ...
+    @staticmethod
+    def result(var item: Self.Item) -> Self.Value:
+        ...
+    @staticmethod
+    def next(var item: Self.Item) -> Self.Factory.Arg:
+        ...
+
+
+struct _ControlLoop[F: UnaryContract & Movable & Deinitable](_LoopPolicy):
+    comptime Factory = Self.F
+    comptime Item = downcast[Self.F.Out, Machine].Value
+    comptime Shape = downcast[downcast[Self.Item, _ChoiceType].Of, _ControlShape]
     comptime Value = Self.Shape.BreakValue
+    comptime Compatible = Self.Item == ControlFlow[Self.Value, Self.F.Arg]
+    @staticmethod
+    def done(factory: Self.F, item: Self.Item) -> Bool:
+        comptime assert Self.Item == ControlFlow[Self.Value, Self.F.Arg]
+        return rebind[ControlFlow[Self.Value, Self.F.Arg]](item).isa[Break[Self.Value]]()
+    @staticmethod
+    def result(var item: Self.Item) -> Self.Value:
+        comptime assert Self.Item == ControlFlow[Self.Value, Self.F.Arg]
+        return rebind_var[ControlFlow[Self.Value, Self.F.Arg]](item^).unwrap[Break[Self.Value]]().into_payload()
+    @staticmethod
+    def next(var item: Self.Item) -> Self.F.Arg:
+        comptime assert Self.Item == ControlFlow[Self.Value, Self.F.Arg]
+        return rebind_var[ControlFlow[Self.Value, Self.F.Arg]](item^).unwrap[Continue[Self.F.Arg]]().into_payload()
+
+
+struct Loop[F: UnaryContract & Movable & Deinitable, C: _LoopPolicy = _ControlLoop[F]](Machine):
+    comptime Next = downcast[Self.F.Out, Machine]
+    comptime Value = Self.C.Value
     comptime Error = Self.Next.Error
     var factory: Self.F
     var state: Optional[Self.F.Arg]
@@ -113,7 +150,8 @@ struct Loop[F: UnaryContract & Movable & Deinitable](Machine):
 
     def __init__(out self, var initial: Self.F.Arg, var step: Self.F):
         comptime assert RepeatableUnary[Self.F], "loop requires a repeatable factory"
-        comptime assert Self.Next.Value == ControlFlow[Self.Value, Self.F.Arg], "loop state must match Continue payload"
+        comptime assert Self.C.Factory == Self.F and Self.C.Item == Self.Next.Value, "loop policy must match its factory and result"
+        comptime assert Self.C.Compatible, "loop state must match Continue payload"
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error]
         self.factory = step^
         self.state = Optional(initial^)
@@ -122,7 +160,7 @@ struct Loop[F: UnaryContract & Movable & Deinitable](Machine):
 
     def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
         comptime assert RepeatableUnary[Self.F]
-        comptime assert Self.Next.Value == ControlFlow[Self.Value, Self.F.Arg]
+        comptime assert Self.C.Factory == Self.F and Self.C.Item == Self.Next.Value
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error]
         if self.completed:
             abort("loop polled after completion")
@@ -144,13 +182,25 @@ struct Loop[F: UnaryContract & Movable & Deinitable](Machine):
         if not outcome or outcome.value().is_err():
             self.completed = True
             return .ready(_failure_as[Self.Value](outcome^))
-        var control = rebind_var[ControlFlow[Self.Value, Self.F.Arg]](outcome.take()._take_ok())
-        if control.isa[Break[Self.Value]]():
+        var item = rebind_var[Self.C.Item](outcome.take()._take_ok())
+        if Self.C.done(rebind[Self.C.Factory](self.factory), item):
             self.completed = True
-            return .ready(Optional(Result[Self.Value, EffectFailure[Self.Error]](Ok(control^.unwrap[Break[Self.Value]]().into_payload()))))
-        self.state = Optional(control^.unwrap[Continue[Self.F.Arg]]().into_payload())
+            return .ready(Optional(Result[Self.Value, EffectFailure[Self.Error]](Ok(Self.C.result(item^)))))
+        self.state = Optional(rebind_var[Self.F.Arg](Self.C.next(item^)))
         return .pending(Wait())
 
 
 def loop[S: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var initial: S, var step: F) -> Loop[F] where S == F.Arg:
     return Loop(rebind_var[F.Arg](initial^), step^)
+
+
+@fieldwise_init
+struct _Selected[P: Machine, Q: Machine](Machine):
+    var branch: Variant[Left[Self.P], Right[Self.Q]]
+    comptime Value = Self.P.Value
+    comptime Error = Self.P.Error
+    def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
+        comptime assert Self.P.Value == Self.Q.Value and Self.P.Error == Self.Q.Error
+        if self.branch.isa[Left[Self.P]]():
+            return self.branch[Left[Self.P]].value.poll(context)
+        return rebind_var[Step[Self.Value, Self.Error]](self.branch[Right[Self.Q]].value.poll(rebind[IOContext[Self.Q.Error]](context)))

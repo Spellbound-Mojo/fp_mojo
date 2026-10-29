@@ -37,6 +37,7 @@ REGRESSIONS = (
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
+POSITIVE.update({"family_sequence", "family_iteration", "family_origins"})
 
 
 def experiment_inputs():
@@ -94,7 +95,7 @@ def main():
                 case = CompileCase.from_source(
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
-                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "workload": 360}.get(client.stem, 120),
+                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "family_sequence": 360, "family_iteration": 240, "family_origins": 240, "workload": 360}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 
@@ -105,7 +106,7 @@ def main():
         result = execute_case(case, binary, run.folder / "cases" / name)
         audit = audit_case(case, result, binary, folder=run.folder)
         bounded_stack = None
-        if result["passed"] and not audit and Path(case.source).stem in {"composition", "loop_lifecycle", "depth"}:
+        if result["passed"] and not audit and Path(case.source).stem in {"composition", "loop_lifecycle", "depth", "family_iteration"}:
             # Apply the stack limit to execution only, never to the compiler.
             bounded_stack = command(
                 ["bash", "-c", 'ulimit -s 1024\nexec "$1"', "bounded-stack", str(binary)],

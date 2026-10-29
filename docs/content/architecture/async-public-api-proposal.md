@@ -504,7 +504,12 @@ invalid configuration should not abort a host process. Duplicate callback
 completion retains the documented `False` result and is not a protocol violation.
 
 The extension protocol keeps `Machine.Value`, `Machine.Error`, and
-`poll(mut self, Context[Error]) -> Step[Value, Error]`. A custom machine returns
+`poll(mut self, Context[Error]) -> Step[Value, Error]`. Application-compatible
+extensions also explicitly declare `Family = Async[E]` for the existing Pipeline
+dispatch. This is native compile-time metadata, not another execution wrapper.
+The pinned compiler crashes while inferring this associated type from an inherited
+trait default; explicit declarations retain exact value and error origins.
+A custom machine returns
 `Step.pending(wait)` to suspend or `Step.ready(outcome)` exactly once to finish.
 It is never polled after completion and must release its own entered resources
 or transfer their ownership as part of its result. Outstanding external uses
@@ -608,6 +613,31 @@ This prepares `fp.effects.async_runtime` and its protocols module without adding
 unqualified application exports. Focused tooling tests cover function/method
 classification, re-export ownership, missing documentation, and unreviewed
 nested modules.
+
+The private `Async[E]` family delegates map and bind to `Bind`, and generic
+folds and traversal to `Loop`. Its recipe metadata names direct parameters so
+inferred Pipeline operations do not expand an entire execution tree. A private
+loop completion policy interprets an existing fold accumulator directly; the
+original `ControlFlow` policy remains the default for machine-level `loop`.
+Iterator conversion, pulls, callbacks, and accumulator initialization stay
+deferred until execution. Neither path has a second scheduler or pull loop.
+
+The first generic-fold prototype wrapped its accumulator in another
+`ControlFlow`; its tail-recursion compilation exhausted resources. Simplifying
+metadata alone did not resolve that probe. The shared completion-policy form
+compiled and executed the 1,000-step tail-recursion probe. This is a correctness
+qualification result, not a runtime or compiler-performance benchmark.
+
+`family-2` passed 30 of 36 source/package O0/O3 checks. Both optimized
+sequencing builds reached the 240-second compile limit; its O0 executions
+passed. The four wrong-loop-state checks rejected the invalid program, but
+their expected source-line diagnostic still named the former assertion. The
+focused rerun uses that assertion's new owner and a 360-second sequencing compile
+budget. Runtime limits are unchanged. The earlier `family-1` launcher was stopped
+during precompilation to correct a rejection diagnostic before running clients.
+`family-3` passed all eight focused checks and both package builds. Together
+the completed runs qualify all 36 selected routes, including eight bounded-stack
+executions; their input-stability checks passed.
 
 ## Implementation passes after agreement
 
