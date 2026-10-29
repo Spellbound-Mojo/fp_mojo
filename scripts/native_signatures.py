@@ -364,11 +364,16 @@ def variants(operands, result="R", *, result_register=None):
 
 @dataclass(frozen=True)
 class NativeFactory:
-    """One owned thin-pointer admission, independent of its public consumer."""
+    """Native pointer shape, ABI evidence and optional factory admission borrow."""
     parameters: tuple
     pointer: FactoryPointer
-    argument: str
+    signature: str
     adapter: str
+    abi: ThinABI
+
+    @property
+    def argument(self):
+        return self.pointer.argument + ": " + self.signature
 
 
 def native_factories(mode, payloads, *, name="function", result="R", error="E", owner=None, origin="q", include_void=True):
@@ -412,8 +417,7 @@ def native_factories(mode, payloads, *, name="function", result="R", error="E", 
                 output = "type_of(None)" if void else result
                 failure = error if raising else "Never"
                 adapter = native_adapter(mode, list(abi.payloads), output, failure, f"type_of({name})", raising, owner=owner)
-                yield NativeFactory(parameters, pointer, pointer.argument + ": " + signature,
-                                    adapter)
+                yield NativeFactory(parameters, pointer, signature, adapter, abi)
 
 
 # Dispatch is separate from admission: the complete native F is already known.

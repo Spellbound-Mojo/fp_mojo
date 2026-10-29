@@ -287143,6 +287143,386 @@
      {
       "args": [
        {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "G.CollectError[Self.I, NativeUnary[A, R, Never, type_of(function), False]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Collected[Self.I, NativeUnary[A, R, Never, type_of(function), False]]"
+      },
+      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var A) thin -> R) raises G.CollectError[Self.I, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[Self.I, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.I.Element == A and G.CollectCompatible[Self.I, NativeUnary[A, R, Never, type_of(function), False]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "G.CollectError[Self.I, NativeUnary[A, R, Never, type_of(function), False]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Collected[Self.I, NativeUnary[A, R, Never, type_of(function), False]]"
+      },
+      "signature": "def traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var A) thin -> R) raises G.CollectError[Self.I, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[Self.I, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and Self.I.Element == A and G.CollectCompatible[Self.I, NativeUnary[A, R, Never, type_of(function), False]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "G.CollectError[Self.I, NativeUnary[A, R, Never, type_of(function), False]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Collected[Self.I, NativeUnary[A, R, Never, type_of(function), False]]"
+      },
+      "signature": "def traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var A) thin -> R) raises G.CollectError[Self.I, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[Self.I, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and Self.I.Element == A and G.CollectCompatible[Self.I, NativeUnary[A, R, Never, type_of(function), False]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "G.CollectError[Self.I, NativeUnary[A, R, Never, type_of(function), False]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Collected[Self.I, NativeUnary[A, R, Never, type_of(function), False]]"
+      },
+      "signature": "def traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var A) thin -> R) raises G.CollectError[Self.I, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[Self.I, NativeUnary[A, R, Never, type_of(function), False]] where Self.I.Element == A and G.CollectCompatible[Self.I, NativeUnary[A, R, Never, type_of(function), False]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "G.CollectError[Self.I, NativeUnary[A, R, E, type_of(function), True]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Collected[Self.I, NativeUnary[A, R, E, type_of(function), True]]"
+      },
+      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var A) raises E thin -> R) raises G.CollectError[Self.I, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[Self.I, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.I.Element == A and G.CollectCompatible[Self.I, NativeUnary[A, R, E, type_of(function), True]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "G.CollectError[Self.I, NativeUnary[A, R, E, type_of(function), True]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Collected[Self.I, NativeUnary[A, R, E, type_of(function), True]]"
+      },
+      "signature": "def traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var A) raises E thin -> R) raises G.CollectError[Self.I, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[Self.I, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and Self.I.Element == A and G.CollectCompatible[Self.I, NativeUnary[A, R, E, type_of(function), True]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "G.CollectError[Self.I, NativeUnary[A, R, E, type_of(function), True]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Collected[Self.I, NativeUnary[A, R, E, type_of(function), True]]"
+      },
+      "signature": "def traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var A) raises E thin -> R) raises G.CollectError[Self.I, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[Self.I, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and Self.I.Element == A and G.CollectCompatible[Self.I, NativeUnary[A, R, E, type_of(function), True]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "G.CollectError[Self.I, NativeUnary[A, R, E, type_of(function), True]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Collected[Self.I, NativeUnary[A, R, E, type_of(function), True]]"
+      },
+      "signature": "def traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var A) raises E thin -> R) raises G.CollectError[Self.I, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[Self.I, NativeUnary[A, R, E, type_of(function), True]] where Self.I.Element == A and G.CollectCompatible[Self.I, NativeUnary[A, R, E, type_of(function), True]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
         "convention": "ref[o]",
         "description": "The callback, borrowed in place; calls follow the operation's evaluation order.",
         "name": "function",
@@ -288052,6 +288432,442 @@
       },
       "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError, //](deinit self, ref[o] function: F) raises _EntryError[X, _InferredApplicative[R]._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]] -> _InferredApplicative[R]._Looped[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]] where _Source[Self.I].Element == A and _CarrierCompatible[_InferredApplicative[R], R] and _InferredApplicative[R]._LoopCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[_InferredApplicative[R].Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]",
       "summary": "Traverse effects without retaining successful outputs."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G._Looped[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
+      },
+      "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], X: AnyType = _InferError](deinit self, function: def(var A) thin -> R) raises _EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.I.Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G._Looped[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
+      },
+      "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R], X: AnyType = _InferError](deinit self, function: def(var A) thin -> R) raises _EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and Self.I.Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G._Looped[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
+      },
+      "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], X: AnyType = _InferError](deinit self, function: def(var A) thin -> R) raises _EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(R, RegisterPassable) and Self.I.Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G._Looped[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
+      },
+      "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R], X: AnyType = _InferError](deinit self, function: def(var A) thin -> R) raises _EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where Self.I.Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G._Looped[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
+      },
+      "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], X: AnyType = _InferError](deinit self, function: def(var A) raises E thin -> R) raises _EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and Self.I.Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G._Looped[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
+      },
+      "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], X: AnyType = _InferError](deinit self, function: def(var A) raises E thin -> R) raises _EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and Self.I.Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G._Looped[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
+      },
+      "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], X: AnyType = _InferError](deinit self, function: def(var A) raises E thin -> R) raises _EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(R, RegisterPassable) and Self.I.Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var A) raises E thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G._Looped[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
+      },
+      "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], X: AnyType = _InferError](deinit self, function: def(var A) raises E thin -> R) raises _EntryError[X, G._LoopError[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where Self.I.Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[Self.I, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+      "summary": "Copy a stored thin callback into the existing traversal owner."
      }
     ],
     "tuple_left": [

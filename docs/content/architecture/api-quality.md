@@ -566,18 +566,32 @@ existing owners. No additional runtime wrapper or error conversion is introduced
 
 Focused tests cover deferred execution and abandonment, state and Writer output,
 external targets, generic forwarding, shared/mutable callbacks, move-only values
-and errors, borrowed origins and ordinary invalid calls. Stored thin callback
-admission remains a separate existing limitation to address through the native
-signature owner.
+and errors, borrowed origins and ordinary invalid calls.
+
+## Stored iterator callbacks
+
+Stored thin pointers now enter Iter's `traverse` and `traverse_void` directly.
+The existing native signature descriptor supplies the pointer type, register or
+memory evidence, and NativeUnary owner. Traversal copies the pointer into that
+owner and delegates to its ordinary library-callback entry. Deferred recipes can
+therefore outlive or ignore reassignment of the caller's pointer variable.
+
+The descriptor exposes native ABI evidence separately from a factory's temporary
+admission borrow. Operation overloads use disjoint by-value signatures, as
+Pipeline does: a borrowed pointer fallback ties with closure admission for some
+function names, while omitting ABI evidence makes register pointers ambiguous or
+requires unsupported native conversions. Existing factory output is unchanged.
+Generic wrappers with opaque ABI evidence can use the existing `as_unary`
+factory before traversal. No new storage, invocation or error mechanism is added.
 
 ## Next passes
 
-1. Reuse the shared native-signature machinery for stored thin callback admission
-   on iterator traversal terminals, preserving existing explicit bindings and
-   exact callback errors rather than requiring user-written wrapper lambdas.
-2. Remove remaining private Result inspections from user-facing examples using
+1. Remove remaining private Result inspections from user-facing examples using
    public consuming or borrowing operations, without adding payload copies
    merely for display.
+2. Review related iterator effect terminals for the same inferred target and
+   callback consistency, prioritizing common workflows and sharing admission
+   descriptors before expanding overload sets.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

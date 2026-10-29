@@ -336,8 +336,16 @@ move-only payloads need no copy unless the target family's branching requires it
 Shared and mutable library callbacks can be moved into either terminal. A named
 shared callable view can be reused by `traverse`; callbacks must support repeated
 invocation. Native function names and captured callbacks retain their existing
-admission rules. Stored thin function pointers retain their existing admission
-limitation; use a native function name or an explicit library callable.
+admission rules. Stored `def(...) thin -> Effect` pointers also work directly,
+with inferred or explicit targets. Traversal copies the pointer into its owned
+callback, so a deferred recipe does not borrow the caller's pointer variable.
+Input values, outputs and errors retain their native ownership and origins.
+
+A generic wrapper whose thin pointer has an opaque calling convention can pass
+`as_unary(function)` to either terminal. That existing factory admits the pointer
+once and supplies the library callable contract. Ordinary concrete pointer calls
+need no adapter; explicit type bindings on existing closure and callable
+overloads retain their meaning.
 
 ## Effectful search and reduction
 
