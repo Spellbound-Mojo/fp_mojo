@@ -19,44 +19,56 @@ from fp.callables.invoke import _OnceUnaryAvailable
 from fp.callables.products import _take_pair
 from fp.callables.native import NativeUnary, _Unary, _NativeBorrow, _Borrowing, _RaisingBorrowing
 from fp._internal.errors import _ErrorCompatible
+from fp._internal.cells import _Cell, _Guard, _try_lock
+from fp._internal.waking import _Event
 
 
-@fieldwise_init
-struct _Cell[T: Movable & Deinitable](Movable):
-    var lock: Atomic[UInt8]
-    var slot: Optional[Self.T]
-
-
-@fieldwise_init
-struct _Guard[T: Movable & Deinitable](Movable):
-    var cell: ArcPointer[_Cell[Self.T]]
-    def __deinit__(deinit self):
-        self.cell[].lock.store(0)
+trait _RefAction(ReaderAction):
+    # Shared execution boundary for blocking and single-attempt adapters.
+    # _locked consumes a guard from _guard_cell; it unlocks before settlement.
+    # A caller suppressing notification must publish any relevant mutation.
+    comptime State: Movable & Deinitable
+    comptime SelectedError: Movable & Deinitable
+    def _guard_cell(self) -> ArcPointer[_Cell[Self.State]]:
+        ...
+    def _changes(self) -> _Event:
+        ...
+    def _locked(deinit self, var guard: _Guard[Self.State], context: IOContext[Self.SelectedError], notify: Bool) -> Outcome[Self.Value, Self.SelectedError]:
+        ...
 
 
 def _lock[T: Movable & Deinitable, E: Movable & Deinitable](cell: ArcPointer[_Cell[T]], context: IOContext[E]) -> Optional[_Guard[T]]:
     while not context.canceled():
-        var expected = UInt8(0)
-        if cell[].lock.compare_exchange(expected, UInt8(1)):
-            return Optional(_Guard(cell.copy()))
+        var guard = _try_lock(cell)
+        if guard:
+            return guard^
         sleep(0.001)
     return None
 
 
 @fieldwise_init
-struct _RefModify[T: Movable & Deinitable, A: Movable & Deinitable, E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](ReaderAction, Copyable where conforms_to(F, Copyable)):
+struct _RefModify[T: Movable & Deinitable, A: Movable & Deinitable, E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](_RefAction, Copyable where conforms_to(F, Copyable)):
     var cell: ArcPointer[_Cell[Self.T]]
+    var changed: _Event
     var function: Self.F
+    comptime State = Self.T
+    comptime SelectedError = Self.E
     comptime Family = IO[Self.E]
     comptime Env = IOContext[Self.E]
     comptime Value = Self.A
     comptime Out[o: ImmOrigin] = Outcome[Self.A, Self.E]
+    def _guard_cell(self) -> ArcPointer[_Cell[Self.T]]:
+        return self.cell.copy()
+    def _changes(self) -> _Event:
+        return self.changed.copy()
     def run[o: ImmOrigin](deinit self, ref[o] context: Self.Env) -> Self.Out[o]:
-        comptime assert Self.F.Arg == Self.T and Self.F.Out == Tuple[Self.T, Self.A] and Self.F.Error == Never
         var locked = _lock(self.cell, context)
         if not locked:
             return None
-        var guard = locked.take()
+        return self^._locked(locked.take(), context, True)
+
+    def _locked(deinit self, var guard: _Guard[Self.T], context: IOContext[Self.E], notify: Bool) -> Outcome[Self.A, Self.E]:
+        comptime assert Self.F.Arg == Self.T and Self.F.Out == Tuple[Self.T, Self.A] and Self.F.Error == Never
         var old = guard.cell[].slot.take()
         var changed = _unary_once_as[Never](self.function^, rebind_var[Self.F.Arg](old^))
         var state = MaybeUninit[Self.T]()
@@ -68,23 +80,34 @@ struct _RefModify[T: Movable & Deinitable, A: Movable & Deinitable, E: Movable &
         # A canceled result's destructor may access this Ref (e.g. Permit).
         # Unlock before settling and possibly destroying that result.
         _ = guard^
+        if notify:
+            self.changed.notify()
         return _settle(Optional(Result[Self.A, EffectFailure[Self.E]](Ok(value^))), context)
 
 
 @fieldwise_init
-struct _RefInspect[T: Movable & Deinitable, E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](ReaderAction, Copyable where conforms_to(F, Copyable)):
+struct _RefInspect[T: Movable & Deinitable, E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](_RefAction, Copyable where conforms_to(F, Copyable)):
     var cell: ArcPointer[_Cell[Self.T]]
+    var changed: _Event
     var function: Self.F
+    comptime State = Self.T
+    comptime SelectedError = Self.E
     comptime Family = IO[Self.E]
     comptime Env = IOContext[Self.E]
     comptime Value = Self.F.Result
     comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
+    def _guard_cell(self) -> ArcPointer[_Cell[Self.T]]:
+        return self.cell.copy()
+    def _changes(self) -> _Event:
+        return self.changed.copy()
     def run[o: ImmOrigin](deinit self, ref[o] context: Self.Env) -> Self.Out[o]:
-        comptime assert Self.F.Payload == Self.T and _ErrorCompatible[Self.E, Self.F.Failure]
         var locked = _lock(self.cell, context)
         if not locked:
             return None
-        var guard = locked.take()
+        return self^._locked(locked.take(), context, False)
+
+    def _locked(deinit self, var guard: _Guard[Self.T], context: IOContext[Self.E], notify: Bool) -> Outcome[Self.Value, Self.E]:
+        comptime assert Self.F.Payload == Self.T and _ErrorCompatible[Self.E, Self.F.Failure]
         var result = _capture[Self.E](_BorrowThunk(self.function^, Pointer(to=rebind[Self.F.Payload](guard.cell[].slot.value()))))
         _ = guard^
         return _settle(Optional(result^), context)
@@ -122,10 +145,12 @@ struct Ref[T: Movable & Deinitable](Copyable):
         T: The exact owned state type; callbacks cannot borrow it out of the cell.
     """
     var _cell: ArcPointer[_Cell[Self.T]]
+    var _changed: _Event
 
     def __init__(out self, var value: Self.T):
         """Allocate a shared cell containing the transferred initial value."""
         self._cell = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(value^)))
+        self._changed = _Event()
 
     def modify[E: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, A, E, F] where F.Arg == Self.T and F.Out == Tuple[Self.T, A] and F.Error == Never and _OnceUnaryAvailable[F]:
         """Atomically consume state and return (new state, result), without raising.
@@ -144,7 +169,7 @@ struct Ref[T: Movable & Deinitable](Copyable):
         Returns:
             An IO[E] recipe yielding A after replacing the state.
         """
-        return _RefModify[Self.T, A, E, F](self._cell.copy(), function^)
+        return _RefModify[Self.T, A, E, F](self._cell.copy(), self._changed.copy(), function^)
 
     def modify[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, A: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, A, E, NativeUnary[P, R, Never, F, False]] where P == Self.T and R == Tuple[P, A]:
         """Adapt a non-raising native state update; spell modify[E, A]."""
@@ -166,7 +191,7 @@ struct Ref[T: Movable & Deinitable](Copyable):
         Returns:
             An IO[E] observation preserving native errors as EffectFailure.
         """
-        return _RefInspect[Self.T, E, F](self._cell.copy(), function^)
+        return _RefInspect[Self.T, E, F](self._cell.copy(), self._changed.copy(), function^)
 
     def inspect[P: AnyType, A: Movable & Deinitable, //, E: Movable & Deinitable, F: _Borrowing[P, A]](self, var function: F) -> _RefInspect[Self.T, E, _NativeBorrow[P, A, Never, F, False]] where P == Self.T:
         """Adapt a non-raising native borrowing observation."""
@@ -200,7 +225,7 @@ struct Ref[T: Movable & Deinitable](Copyable):
         Returns:
             An IO[E] recipe yielding NoneType after the update.
         """
-        return _RefModify[Self.T, NoneType, E, _Update[F]](self._cell.copy(), _Update(function^))
+        return _RefModify[Self.T, NoneType, E, _Update[F]](self._cell.copy(), self._changed.copy(), _Update(function^))
 
     def update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, NoneType, E, _Update[NativeUnary[P, R, Never, F, False]]] where P == Self.T and R == Self.T:
         """Adapt a non-raising native state transformation."""
@@ -243,6 +268,8 @@ struct _AwaitSome[A: Movable & Deinitable, P: ReaderAction & Copyable](ReaderAct
     comptime Env = IOContext[Self.E]
     comptime Value = Self.A
     comptime Out[o: ImmOrigin] = Outcome[Self.A, Self.E]
+    def _into_attempt(deinit self) -> Self.P:
+        return self.attempt^
     def run[o: ImmOrigin](deinit self, ref[o] context: Self.Env) -> Self.Out[o]:
         comptime assert Self.P.Value == Optional[Self.A] and IOContract[Self.P].Compatible
         while not context.canceled():
@@ -432,13 +459,17 @@ struct _TryTake[T: Movable & Deinitable](OnceUnary, Copyable):
     comptime Arg = Deque[Self.T]
     comptime Out = Tuple[Self.Arg, Optional[Self.T]]
     def call_once(deinit self, var values: Self.Arg) -> Self.Out:
-        if len(values) == 0:
-            return (values^, Optional[Self.T]())
-        try:
-            var value = values.popleft()
-            return (values^, Optional(value^))
-        except:
-            abort("fp.effects: nonempty queue failed to remove its head")
+        var value = _try_pop(values)
+        return (values^, value^)
+
+
+def _try_pop[T: Movable & Deinitable](mut values: Deque[T]) -> Optional[T]:
+    if len(values) == 0:
+        return None
+    try:
+        return Optional(values.popleft())
+    except:
+        abort("fp.effects: nonempty queue failed to remove its head")
 
 
 @fieldwise_init

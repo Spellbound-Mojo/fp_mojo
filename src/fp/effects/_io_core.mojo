@@ -16,6 +16,7 @@ from .protocols import ReaderAction
 from .reader import ReaderT, _LocalIndependent
 from .layers import ResultT
 from .outcomes import EffectFailure, Outcome, _capture, _finish
+from fp._internal.waking import _Event, _Clock, _Runtime, _Ticket
 
 
 struct CancellationToken(Copyable):
@@ -25,12 +26,16 @@ struct CancellationToken(Copyable):
     interrupts native code. IO observes it at its documented checkpoints.
     """
     var _flag: ArcPointer[Atomic[UInt8]]
+    var _event: _Event
     def __init__(out self):
         self._flag = ArcPointer(Atomic(UInt8(0)))
+        self._event = _Event()
 
     def cancel(self):
         """Request cancellation for every computation using this token."""
-        self._flag[].store(1)
+        var expected = UInt8(0)
+        if self._flag[].compare_exchange(expected, UInt8(1)):
+            self._event.notify()
 
     def requested(self) -> Bool:
         """Read whether cancellation was requested, without resetting it.
@@ -61,11 +66,17 @@ struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):
     var _masked: Bool
 
     var _region: Optional[ArcPointer[Int]]
+    var _clock: _Clock
+    var _runtime: Optional[_Runtime]
+    var _parent: Optional[_Ticket]
 
     def __init__(out self, var _token: CancellationToken, _masked: Bool):
         self._token = _token^
         self._masked = _masked
         self._region = Optional(ArcPointer(0)) if _masked else None
+        self._clock = _Clock()
+        self._runtime = None
+        self._parent = None
 
     def canceled(self) -> Bool:
         """Check cancellation at this context's current masking level.
@@ -80,7 +91,14 @@ struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):
         self._token.cancel()
 
     def _mask(self) -> Self:
-        return Self(self._token.copy(), True)
+        var masked = Self(self._token.copy(), True)
+        masked._inherit(self)
+        return masked^
+
+    def _inherit(mut self, parent: Self):
+        self._clock = parent._clock.copy()
+        self._runtime = parent._runtime.copy()
+        self._parent = parent._parent.copy()
 
 
 comptime IO[E: Movable & Deinitable = Error] = ReaderT[ResultT[OptionalFamily, EffectFailure[E]], IOContext[E]]

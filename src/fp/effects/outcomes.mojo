@@ -166,6 +166,23 @@ def _finish[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deini
     return None
 
 
+def _failure_as[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](var failure: Outcome[U, E]) -> Outcome[T, E]:
+    """Retype an already-checked unsuccessful outcome without losing errors."""
+    if not failure:
+        return None
+    var result = failure.take()
+    return Optional(Result[T, EffectFailure[E]](Err(result^._take_err())))
+
+
+def _zip_outcomes[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](
+    var left: Outcome[T, E], var right: Outcome[U, E]
+) -> Outcome[Tuple[T, U], E]:
+    """Keep both successes; delegate all unsuccessful merging to _finish."""
+    if left and right and left.value().is_ok() and right.value().is_ok():
+        return Optional(Result[Tuple[T, U], EffectFailure[E]](Ok((left.take()._take_ok(), right.take()._take_ok()))))
+    return _failure_as[Tuple[T, U]](_finish(left^, right^))
+
+
 def _finish_native[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](
     var body: Result[T, EffectFailure[E]], var cleanup: Result[U, EffectFailure[E]]
 ) -> Result[T, EffectFailure[E]]:

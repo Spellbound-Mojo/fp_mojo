@@ -178,6 +178,14 @@ struct Poll[E: Movable & Deinitable](Copyable):
     """
     var _previous: IOContext[Self.E]
     var _region: ArcPointer[Int]
+    def _restore(self, env: IOContext[Self.E]) -> IOContext[Self.E]:
+        # Restore lexical cancellation state while keeping the current task's
+        # scheduler parent, clock and token. Child contexts own their regions.
+        var restored = env.copy()
+        if env._region and env._region.value().ptr() == self._region.ptr():
+            restored._masked = self._previous._masked
+            restored._region = self._previous._region.copy()
+        return restored^
     comptime Applied[P: ReaderAction] = _IOPolled[P, Self.E]
     """The concrete recipe returned by apply, for generic factories."""
 
@@ -206,9 +214,8 @@ struct _IOPolled[P: ReaderAction, E: Movable & Deinitable](ReaderAction):
     comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
         comptime assert IOContract[Self.P].Compatible and IOContract[Self.P].Error == Self.E
-        if env._region and env._region.value().ptr() == self.poll._region.ptr():
-            return rebind_var[Self.Out[o]](_run_io(self.program^, rebind[IOContext[IOContract[Self.P].Error]](self.poll._previous)))
-        return rebind_var[Self.Out[o]](_run_io(self.program^, rebind[IOContext[IOContract[Self.P].Error]](env)))
+        var restored = self.poll._restore(env)
+        return rebind_var[Self.Out[o]](_run_io(self.program^, rebind[IOContext[IOContract[Self.P].Error]](restored)))
 
 
 @fieldwise_init
