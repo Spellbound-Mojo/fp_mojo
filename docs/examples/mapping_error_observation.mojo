@@ -19,4 +19,4 @@ def main() raises:
     var pending = pipeline[SessionState](request^).tap_err(record).get()
     print("before run")
     var outcome = run[SessionState](pending^, Session(1))
-    print("retained:", outcome._err().value)
+    print("retained:", outcome^.swap().to_optional().value())

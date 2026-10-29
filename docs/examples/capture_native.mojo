@@ -20,14 +20,14 @@ def main() raises:
     var balance = 10
     var paid = Capture[CaptureDeclined].mutable(balance).take(6).kwargs(fee=1).run(debit)
     comptime assert type_of(paid) == Result[Int, CaptureDeclined]
-    assert_equal(paid._ok().value, 3)
+    assert_equal(paid^.to_optional().value(), 3)
     var declined = Capture[CaptureDeclined].mutable(balance).take(5).kwargs[K=Int]().run(debit)
-    assert_equal(declined._err().value.balance, -2)
+    assert_equal(declined^.swap().to_optional().value().balance, -2)
     assert_equal(balance, -2)
     print("payment: 3; declined: -2; balance:", balance)
 
     # Explicit owned state survives repeated calls without a callable struct.
     var counter = Capture().stateful(count, 0)
-    assert_equal(counter.run(String("abc"))._ok().value, 3)
-    assert_equal(counter.run(String("de"))._ok().value, 5)
+    assert_equal(counter.run(String("abc")).raise_on_err(), 3)
+    assert_equal(counter.run(String("de")).raise_on_err(), 5)
     print("count:", counter^.into_state())

@@ -584,9 +584,25 @@ requires unsupported native conversions. Existing factory output is unchanged.
 Generic wrappers with opaque ABI evidence can use the existing `as_unary`
 factory before traversal. No new storage, invocation or error mechanism is added.
 
+## Public Result operations in selected-effect examples
+
+Recovery and observation examples now consume successful Results with
+`raise_on_err`, and use `swap` and `to_optional` to inspect known failure cases.
+A borrowed observer uses `fold` to test the active branch without moving its
+payload. The accumulating Validation example keeps one borrow of the projected
+error list while displaying both messages. These operations preserve move-only
+payloads without display-only copies or private storage access.
+
+The transport example uses the common `run` entry for Writer and retains its
+native `Int` error inside the workflow. Its application entry converts an
+unexpected code to `Error`, as Mojo requires for `main`. Expected output,
+deferred observation counts and state/log ordering stay unchanged. Remaining
+collection examples need a separate pass because their Results are borrowed
+from List entries.
+
 ## Next passes
 
-1. Remove remaining private Result inspections from user-facing examples using
+1. Remove remaining private Result inspections from collection examples using
    public consuming or borrowing operations, without adding payload copies
    merely for display.
 2. Review related iterator effect terminals for the same inferred target and

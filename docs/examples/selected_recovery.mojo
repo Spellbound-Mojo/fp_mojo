@@ -35,12 +35,12 @@ def double(var value: Int) -> Int:
 def main() raises:
     var immediate = pipeline(Result[Int,String](Err(String("retry")))).or_else(changed).get()
     comptime assert type_of(immediate) == Result[Int,Int]
-    print("changed error:", immediate._ok().value)
+    print("changed error:", immediate^.to_optional().value())
 
     comptime Environment = Reader[Int]
     comptime Deferred = ResultT[Environment,String]
     var pending = pipeline[Deferred](Deferred.fail[Int](String("offline"))).recover(length).map(double).get()
-    print("deferred:", run[Environment](pending^,0)._ok().value)
+    print("deferred:", run[Environment](pending^,0).raise_on_err())
 
     var generic = handled[Deferred](Deferred.fail[Int](String("retry")),Fallback[Deferred]()).get()
-    print("generic effect:", run[Environment](generic^,0)._ok().value)
+    print("generic effect:", run[Environment](generic^,0).raise_on_err())

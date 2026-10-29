@@ -23,13 +23,13 @@ def main() raises:
 
     var pending = pipeline[Deferred](Deferred.fail[Int](String("missing"))).recover_if(missing,restore).map(double).get()
     print("before run:", handled)
-    print("recovered:", run[Environment](pending^,0)._ok().value)
+    print("recovered:", run[Environment](pending^,0).raise_on_err())
 
     var untouched = pipeline[Deferred](Deferred.fail[Int](String("denied"))).recover_if(missing,restore).get()
-    print("preserved:", run[Environment](untouched^,0)._err().value, "; handled:", handled)
+    print("preserved:", run[Environment](untouched^,0).swap().to_optional().value(), "; handled:", handled)
 
     def retry(var error: String) -> Deferred.Pure[Int]:
         return Deferred.pure(9)
     var retrying = kleisli[Deferred](retry)
     var retried = pipeline[Deferred](Deferred.fail[Int](String("missing"))).or_else_if(missing,retrying).get()
-    print("retried:", run[Environment](retried^,0)._ok().value)
+    print("retried:", run[Environment](retried^,0).raise_on_err())

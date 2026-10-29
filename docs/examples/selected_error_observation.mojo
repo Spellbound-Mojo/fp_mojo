@@ -27,14 +27,15 @@ def main() raises:
     var pending = pipeline[Deferred](Deferred.fail[Int](String("missing"))).tap_err(record).recover(fallback).map(double).get()
     print("before run:", len(observations))
     var recovered = run[Environment](pending^,0)
-    print("deferred:", recovered._ok().value, "; observed:", len(observations))
+    print("deferred:", recovered^.raise_on_err(), "; observed:", len(observations))
 
     def audit(error: String) -> Deferred.Failed[NoneType]:
         return Deferred.fail[NoneType](String("audit"))
     var audited = pipeline[Deferred](Deferred.fail[Int](String("original"))).flat_tap_err(audit).get()
-    print("Result observer:", run[Environment](audited^,0)._err().value)
+    print("Result observer:", run[Environment](audited^,0).swap().to_optional().value())
 
     comptime Validation = ValidationFamily[ListMonoid[String]]
     var accumulated = pipeline[Validation](Validation.fail[Int](List[String](["original"]))).flat_tap_err(validation_audit).get()
-    ref errors = accumulated._err().value
-    print("Validation observer:", errors[0], errors[1])
+    var errors = accumulated^.swap().to_optional()
+    ref messages = errors.value()
+    print("Validation observer:", messages[0], messages[1])

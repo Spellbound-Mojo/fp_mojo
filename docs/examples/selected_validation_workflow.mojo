@@ -32,7 +32,7 @@ def main() raises:
 
     var pending = pipeline[Deferred](Deferred.pure(-2)).ensure(positive, invalid).tap_err(record).recover_if(recoverable, fallback).map(double).get()
     print("before run:", observed)
-    print("recovered:", run[Environment](pending^, 0)._ok().value, "; observed:", observed)
+    print("recovered:", run[Environment](pending^, 0).raise_on_err(), "; observed:", observed)
 
     var accepted = pipeline[Deferred](Deferred.pure(3)).ensure(positive, invalid).tap_err(record).recover_if(recoverable, fallback).map(double).get()
-    print("accepted:", run[Environment](accepted^, 0)._ok().value, "; observed:", observed)
+    print("accepted:", run[Environment](accepted^, 0).raise_on_err(), "; observed:", observed)

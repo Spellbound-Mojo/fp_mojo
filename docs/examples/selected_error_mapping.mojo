@@ -26,7 +26,7 @@ def format_errors(var errors: List[String]) -> String:
 def main():
     var changed = pipeline(Result[Int,String](Err(String("missing")))).map_both(display,error_code)
     comptime assert type_of(changed).I == ResultFamily[Int]
-    print("error code:", changed^.get()._err().value)
+    print("error code:", changed^.get().swap().to_optional().value())
 
     comptime Source = ValidationFamily[ListMonoid[String]]
     comptime Target = ValidationFamily[Messages]
@@ -34,4 +34,4 @@ def main():
     var mapped = pipeline[Source](original^).map_err[Target=Target](format_errors)
     comptime assert type_of(mapped).I == Target
     var combined = mapped^.map_n((Result[Int,String](Err(String("age invalid"))),), add).get()
-    print("validation:", combined._err().value)
+    print("validation:", combined^.swap().to_optional().value())

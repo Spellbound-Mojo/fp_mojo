@@ -28,7 +28,7 @@ def main() raises:
     var scale = kleisli[IdentityFamily](double)
     var pending = pipeline[Deferred](Deferred.fail[Int](String("missing"))).redeem(scale, fallback).map(scale).get()
     print("before run:", recovered)
-    print("recovered:", run[Environment](pending^, 0)._ok().value, "; handled:", recovered)
+    print("recovered:", run[Environment](pending^, 0).raise_on_err(), "; handled:", recovered)
 
     var error_calls = 0
     def reject(var value: Int) -> Deferred.Pure[Int]:
@@ -37,7 +37,7 @@ def main() raises:
         error_calls += 1
         return Deferred.pure(9)
     var original = pipeline[Deferred](Deferred.pure(3)).redeem_with(reject, retry).get()
-    print("preserved:", run[Environment](original^, 0)._err().value, "; opposite calls:", error_calls)
+    print("preserved:", run[Environment](original^, 0).swap().to_optional().value(), "; opposite calls:", error_calls)
 
     var changed = pipeline(Result[Int, String](Err(String("missing")))).redeem_with(text, code).get()
-    print("changed error:", changed._err().value)
+    print("changed error:", changed^.swap().to_optional().value())

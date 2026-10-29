@@ -22,9 +22,9 @@ struct Length(Unary):
 
 def main() raises:
     var immediate = recovered[ResultFamily[String]](Result[Int, String](Err(String("lost"))), Length())
-    print("recovered:", immediate._ok().value)
+    print("recovered:", immediate^.raise_on_err())
 
     comptime Environment = Reader[Int]
     comptime Deferred = ResultT[Environment, String]
     var pending = recovered[Deferred](Deferred.fail[Int](String("offline")), Length())
-    print("deferred:", run[Environment](pending^, 0)._ok().value)
+    print("deferred:", run[Environment](pending^, 0).raise_on_err())
