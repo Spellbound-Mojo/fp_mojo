@@ -9,7 +9,7 @@ use the `nightly` source checkout.
 ## Qualification checkpoint
 
 The functional checkpoint is
-[`a89e752`](https://github.com/Spellbound-Mojo/fp_mojo/commit/a89e7525dc0d8da7ed615bc853251c00ec134381),
+[`710e52b`](https://github.com/Spellbound-Mojo/fp_mojo/commit/710e52b3a09bed233e2a5080a80f6b31b5c05adb),
 using Mojo 1.2.0 (2016d0cd) on Linux x86-64. Production sources, fixtures and
 runner inputs stayed unchanged throughout qualification. The precompiled
 package is bound to those sources by its retained manifest and artifact hashes.
@@ -18,11 +18,13 @@ The checkpoint update itself changes documentation only.
 <!-- compatibility: current-qualification -->
 
 The complete positive suite and rejection fixtures ran through both source
-and precompiled-package imports at O3. Each import route passed 1,029 programs
-and two diagnostic benchmarks, plus 2,716 rejection fixtures. The ten API-quality
-reference workflows passed all 40 source/package O0/O3 builds. All 117 examples
-also ran inside both complete O3 suites. The full standalone documentation
-matrix and copied-source delivery were not rerun.
+and precompiled-package imports at O3. Each import route passed 1,041 programs
+and two diagnostic benchmarks, plus 2,750 rejection fixtures. Twelve API-quality
+reference workflows passed all 48 source/package O0/O3 builds. All 119 examples
+also ran inside both complete O3 suites. Five clients have three isolated cold
+builds each. A further 18 paired cold builds compare three unchanged clients
+against the preceding source checkpoint on the same host. The full standalone
+documentation matrix and copied-source delivery were not rerun.
 Both benchmark programs executed alongside compiler jobs; their timings are
 diagnostic observations. The rejection corpus retains explicit type hints in
 its documented legacy controls; it does not prove universal crash-free

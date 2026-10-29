@@ -249,52 +249,68 @@ policy, and report runtime/ownership equivalence alongside compilation cost.
 
 ## Milestone comparison
 
-The checkpoint at [a89e752](https://github.com/Spellbound-Mojo/fp_mojo/tree/a89e7525dc0d8da7ed615bc853251c00ec134381)
-qualifies the first sixteen passes. The complete source and precompiled-package
-O3 suites each passed 1,029 non-benchmark programs and two diagnostic benchmarks.
-All 2,716 rejection fixtures produced their declared diagnostics without crashes
-through both import routes. The ten reference workflows passed all 40
-source/package O0/O3 builds with exact
-output checks. New ownership, generic-forwarding and invalid-call cases also
-have focused source/package O0/O3 evidence from their implementation passes.
+The checkpoint at [710e52b](https://github.com/Spellbound-Mojo/fp_mojo/tree/710e52b3a09bed233e2a5080a80f6b31b5c05adb)
+qualifies the first twenty-one passes. The complete source and precompiled-package
+O3 suites each passed 1,041 non-benchmark programs and two diagnostic benchmarks.
+All 2,750 rejection fixtures produced their declared diagnostics without crashes
+through both import routes. Twelve reference workflows passed all 48
+source/package O0/O3 builds with exact output checks. Focused implementation
+passes also cover ownership, generic forwarding and ordinary invalid calls.
 
 | Workflow | Change since the pinned baseline | Remaining distinction |
 |---|---|---|
 | Result values | Direct tuple attachment accepts move-only values; generic wrappers have public attachment contracts. | Repeating families still need copies. |
 | Collections and validation | Introductory examples use a clear eager/lazy choice and public Result inspection. | Validation remains an explicit policy choice. |
 | Capture | Stateful capture works as a mutable callback in mapping, traversal and lazy composition. | Mixed native argument conventions still need explicit binding; these examples retain that spelling. |
-| Reader, State and Writer | Declared recipes infer their family; chains support execution, environment scoping and log operations. State sequences independent recipes with `product_r`; Writer appends logs with `tell` after an ordinary value callback. | Erased transformer layers need explicit selection; deferred native callbacks retain their origins. |
+| Reader, State and Writer | Declared recipes infer their family; `asks` and `inspect` project borrowed inputs directly. State and Writer can select one execution output without copying the unused one. Stored borrowing pointers work with projections and scoped IO. | Erased transformer layers need explicit selection; deferred native callbacks retain their origins. |
 | IO | Finalization, outcome-aware cleanup and execution stay in one chain through the existing IO owners. | Consumed recipes and cooperative cancellation retain this library's execution contract. |
 | Traversal, folds and resource composition | Declared target recipes share family inference. Resources support `use_void`, public generic scope metadata, and direct stored-pointer IO factories. | Lifecycle execution remains with the existing resource and scoped IO owners. |
 
-The selected Pipeline inventory now covers every legacy Piped method name.
-That is useful for discoverability, but does not make signatures, error
-selection or ownership contracts mechanically interchangeable. Legacy controls
-that need explicit callback-type hints remain documented limitations.
+The selected Pipeline inventory covers every legacy Piped method name. That
+helps discoverability; signatures, error selection and ownership contracts
+still differ. Legacy controls that need explicit callback-type hints remain
+scoped limitations.
 
-Three serial cold-build rounds repeated the baseline policy on the same
-compiler, target and host class. All nine clients executed with their declared
-output; cache, input and artifact audits passed. These observations were taken
-before the concurrent full-suite qualification.
+Three serial cold-build rounds used the baseline compiler, target, limits and
+cache policy. The three original clients permit comparison with the earlier
+profile; the two output-selection clients establish new reference observations.
+All 15 builds ran before the concurrent full suites began. Their exact output,
+inputs, cache state and retained artifacts passed the checkpoint audits.
 
-| Client | Baseline median seconds | Current median seconds (range) | Baseline median RSS MiB | Current median RSS MiB (range) |
+| Client | Original baseline median seconds | Current median seconds (range) | Original baseline median RSS MiB | Current median RSS MiB (range) |
 |---|---|---|---|---|
-| `result_values` | 7.75 | 7.43 (7.38–7.47) | 268.4 | 274.4 (274.1–277.7) |
-| `inferred_traversal` | 7.15 | 6.69 (6.15–6.80) | 266.1 | 268.4 (268.2–269.2) |
-| `capture_arguments` | 5.26 | 5.08 (4.99–5.29) | 246.5 | 243.4 (243.3–245.4) |
+| `result_values` | 7.75 | 8.10 (7.86–10.39) | 268.4 | 270.2 (269.1–280.1) |
+| `inferred_traversal` | 7.15 | 7.79 (7.14–8.35) | 266.1 | 267.4 (262.3–270.6) |
+| `capture_arguments` | 5.26 | 5.99 (4.91–6.02) | 246.5 | 249.8 (242.8–250.9) |
+| `state_outputs` | — | 7.35 (6.61–7.63) | — | 258.9 (256.4–266.9) |
+| `writer_outputs` | — | 6.66 (6.08–7.24) | — | 256.8 (254.3–259.7) |
 
-Costs remain close to the baseline. The Result client uses 6.0 MiB more median
-peak memory; three observations per client do not establish a speedup or a
-performance regression. The other seven workflows remain unmeasured.
-Reports are retained in `.cache/api-roadmap/pass17/`; the
+The earlier checkpoint's medians for the first three clients were 7.43, 6.69
+and 5.08 seconds at [a89e752](https://github.com/Spellbound-Mojo/fp_mojo/tree/a89e7525dc0d8da7ed615bc853251c00ec134381).
+Because the current profile was slower, an additional paired comparison against
+that source version ran after full-suite compilation finished. It alternated old and
+current source builds on the same host, using byte-identical client files and
+a fresh cache for every build. Each version has three observations per client.
+
+| Client | Previous-source median seconds | Current-source median seconds | Median paired time change | Previous/current median RSS MiB |
+|---|---|---|---|---|
+| `result_values` | 8.52 | 8.51 | +4.9% | 274.3 / 274.3 |
+| `inferred_traversal` | 7.60 | 7.55 | -0.6% | 269.7 / 264.6 |
+| `capture_arguments` | 5.71 | 5.78 | +0.1% | 249.0 / 243.6 |
+
+The change column takes the median of each round's current/previous time ratio;
+the two time columns independently summarize each version. The table reports
+observed source-version differences without assigning them to an individual
+implementation change. Three pairs per client
+remain a small sample; this does not establish performance across all workflows.
+Runtime output equivalence and artifact audits passed for all 18 paired builds.
+
+Reports are retained in `.cache/api-roadmap/pass22/`; the
 [qualification catalog](../guides/compatibility.md#qualification-checkpoint)
-names the source commit and report digests. Completed workflow and measurement
-reports survived an environment interruption and passed fresh artifact/log
-audits. The unfinished full suites restarted in new output directories against
-the same frozen inputs. Incomplete attempts do not count toward qualification.
-The full standalone documentation matrix, copied-source delivery, macOS and
-device execution were not rerun. All 117 examples ran inside both complete O3
-suites. Earlier checkpoints remain in the catalog's qualification history.
+names the production commit and report digests. The full standalone documentation
+matrix, copied-source delivery, macOS and device execution were not rerun.
+All 119 examples ran inside both complete O3 suites. Prior checkpoints remain
+in the catalog's qualification history.
 
 ## Keeping one result from two effects
 
@@ -504,8 +520,10 @@ the existing State calls; invalid calls retain ordinary compiler diagnostics.
 
 ## Next passes
 
-1. Run the next source/package compatibility and compile-cost checkpoint after
-   these terminal changes, including the new examples and ordinary diagnostics.
+1. Give free Writer execution the same `run[Family](value)` spelling as Reader
+   and State, while retaining `run_writer` as a compatible entry. Keep unwrapping
+   with the existing Writer owner and verify generic callers, origins and
+   ordinary invalid-call diagnostics.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

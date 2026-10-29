@@ -1882,9 +1882,9 @@
     "tests/compile_fail/traversal_tap_owned.mojo"
   ],
   "current": {
-    "commit": "a89e7525dc0d8da7ed615bc853251c00ec134381",
-    "production_commit": "a89e7525dc0d8da7ed615bc853251c00ec134381",
-    "production_tree": "5378c9f2f133e21d5ef70281aee5f2a2b49f5781",
+    "commit": "710e52b3a09bed233e2a5080a80f6b31b5c05adb",
+    "production_commit": "710e52b3a09bed233e2a5080a80f6b31b5c05adb",
+    "production_tree": "03996c80b4aa3964246b96482ad471f97bfad9ca",
     "compiler": "Mojo 1.2.0 (2016d0cd)",
     "platform": "Linux x86-64",
     "checks": [
@@ -1892,69 +1892,76 @@
         "check": "Precompiled package",
         "result": "pass",
         "scope": "Whole-package precompilation; source and artifact hashes verified",
-        "report": ".cache/api-roadmap/pass16/qualified/examples/report.json",
-        "sha256": "105de7bf71a55fb35df4d97824bba43663365434f8b6c91f9bb550612da17753"
+        "report": ".cache/api-roadmap/pass21/qualified/examples/report.json",
+        "sha256": "7e0a4b78e199b0321f6cdf439fa0bd1cb4d27feef4e37fc0d36cc47f8fbea7d9"
       },
       {
         "check": "Positive suite (source)",
-        "result": "1029 / 1029",
+        "result": "1041 / 1041",
         "scope": "Complete source O3 suite; two additional diagnostic benchmarks executed",
-        "report": ".cache/api-roadmap/pass17/recovery/full-source/report.json",
-        "sha256": "f0945d63fabea62116e2a21a95aecaa6290efe8466a3230efa639191c29fd293"
+        "report": ".cache/api-roadmap/pass22/full-source/report.json",
+        "sha256": "6081daf3bcfbe7b4715a4367df9350688456232953f2d1dbc3a650522ffdac8d"
       },
       {
         "check": "Rejections (source)",
-        "result": "2716 / 2716",
+        "result": "2750 / 2750",
         "scope": "Complete source O3 corpus; declared diagnostics, no crashes or negative execution",
-        "report": ".cache/api-roadmap/pass17/recovery/reject-full-source/report.json",
-        "sha256": "8816c45a06f2247e7e2d18e8ee65c127647458049541acc945243390672ab04c"
+        "report": ".cache/api-roadmap/pass22/reject-full-source/report.json",
+        "sha256": "4b0121b9733e224a2f861d87fbc31e65c93586ca9386f5fc97c751e62f8e07d4"
       },
       {
         "check": "Positive suite (package)",
-        "result": "1029 / 1029",
+        "result": "1041 / 1041",
         "scope": "Complete package O3 suite; two additional diagnostic benchmarks executed",
-        "report": ".cache/api-roadmap/pass17/recovery/full-package/report.json",
-        "sha256": "ede27150264aea7181eeb83a3f8ccd682aef7407112d988c29823fa626d10cc7"
+        "report": ".cache/api-roadmap/pass22/full-package/report.json",
+        "sha256": "97ba77fd3eae5fa31c950d87dda4ee8e86c5e53a18e2080aa463eecffda90f8d"
       },
       {
         "check": "Rejections (package)",
-        "result": "2716 / 2716",
+        "result": "2750 / 2750",
         "scope": "Complete package O3 corpus; declared diagnostics, no crashes or negative execution",
-        "report": ".cache/api-roadmap/pass17/recovery/reject-full-package/report.json",
-        "sha256": "e202d4be6b7e72f60792b66d1b3c63aa201d72da10bb59f66b4e2e3313d616f8"
+        "report": ".cache/api-roadmap/pass22/reject-full-package/report.json",
+        "sha256": "50de63db64119cce7bdac14406f35b0724eeea32cdfc59c3e91d6d587b4be1fc"
       },
       {
         "check": "Reference workflows",
-        "result": "40 / 40",
-        "scope": "Ten API-quality examples through source/package imports at O0/O3; exact stdout",
-        "report": ".cache/api-roadmap/pass17/workflow-examples/report.json",
-        "sha256": "46d0979df491d7d48ba80d2a721741fa759a4f06fdc7e1130ca1ae1ccc71ce76"
+        "result": "48 / 48",
+        "scope": "Twelve API-quality examples through source/package imports at O0/O3; exact stdout",
+        "report": ".cache/api-roadmap/pass22/workflow-examples/report.json",
+        "sha256": "45d14368fda3cfa4a20548a2648d0310f522424a31e01509f4dc244cdf2047f2"
       },
       {
         "check": "Cold compilation round 1",
-        "result": "3 / 3",
-        "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
-        "report": ".cache/api-roadmap/pass17/measure-1/report.json",
-        "sha256": "bf18f1b2e3db0f4816a4ef43dec65dc0a233d0536622c628fe922f166ef8d197"
+        "result": "5 / 5",
+        "scope": "Five current-source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+        "report": ".cache/api-roadmap/pass22/measure-1/report.json",
+        "sha256": "5a853b1298bb046bd795b3900b3c558d6da507ba2d06fb5fd8eeb1da7f4a43d2"
       },
       {
         "check": "Cold compilation round 2",
-        "result": "3 / 3",
-        "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
-        "report": ".cache/api-roadmap/pass17/measure-2/report.json",
-        "sha256": "62e93fd33218aa0919904001772f8d3eb64ec8ce95888b56740ddf20efd8b4b7"
+        "result": "5 / 5",
+        "scope": "Five current-source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+        "report": ".cache/api-roadmap/pass22/measure-2/report.json",
+        "sha256": "4625fae215d600000bd95138aac211683d76bfae47bd45f8cc0cddeac4b3024d"
       },
       {
         "check": "Cold compilation round 3",
-        "result": "3 / 3",
-        "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
-        "report": ".cache/api-roadmap/pass17/measure-3/report.json",
-        "sha256": "ff914adcaf93b0d47a15fb8062dce94093510e6c875a91e9710e9d0182ea62a7"
+        "result": "5 / 5",
+        "scope": "Five current-source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+        "report": ".cache/api-roadmap/pass22/measure-3/report.json",
+        "sha256": "8f551e02fb6fd53be65c6dc8902f45047ae417210b62e3ea0c55c6ffce01a195"
+      },
+      {
+        "check": "Paired source compilation",
+        "result": "18 / 18",
+        "scope": "Three unchanged clients, three pairs each; alternating baseline/current source order after full suites, same host/compiler and fresh caches",
+        "report": ".cache/api-roadmap/pass22/paired/audit.json",
+        "sha256": "f940899d05950eb62bd24e18676fea874f24ad7efdec4600ab03589245096c87"
       }
     ],
-    "audit_report": ".cache/api-roadmap/pass17/compiler-audit.json",
-    "audit_sha256": "f59b7959e28e60bcb8423e10392963b2a70d2659213824b60d5b0f3cb9b18ad5",
-    "scope_note": "Production, fixture, runner and compiler inputs match the named commit. Complete positive and rejection suites cover source and precompiled-package imports at O3. All 117 documentation examples also ran inside both complete suites. The O0/O3 matrix covers ten reference workflows through both import routes. Three clients have three isolated cold-build observations each. Retained completed reports were re-audited after an environment interruption; unfinished full suites restarted in fresh output directories. Legacy hinted rejection controls remain scoped limitations. Benchmarks ran alongside compilation and are diagnostic only. Copied-source delivery and the full standalone documentation matrix were not rerun. The checkpoint update changes documentation only."
+    "audit_report": ".cache/api-roadmap/pass22/compiler-audit.json",
+    "audit_sha256": "186cb3a9c85090efb028e490b4049127c787698d874e8da5f747ff83de93119d",
+    "scope_note": "Production, fixture, runner and compiler inputs match the named commit. Complete positive and rejection suites cover source and precompiled-package imports at O3. All 119 documentation examples ran inside both complete suites. The O0/O3 matrix covers twelve reference workflows through both import routes. Five current-source clients have three isolated cold-build observations each. Eighteen additional alternating cold builds compare three unchanged clients against the preceding source checkpoint after full qualification. Legacy hinted rejection controls remain scoped limitations. Concurrent benchmark timings are diagnostic only. Copied-source delivery and the full standalone documentation matrix were not rerun. The checkpoint update changes documentation only."
   },
   "qualification_history": [
     {
@@ -2157,6 +2164,81 @@
       "audit_report": ".cache/api-roadmap/pass10/compiler-audit.json",
       "audit_sha256": "1f720bd1769ac8e96ae6fb15c16941a39cadcb81e77dbe3ca5685c2e30371ebe",
       "scope_note": "Production, fixture, runner and compiler inputs match the named commit. Complete positive and rejection suites cover precompiled package imports at O3. The O0/O3 matrix covers ten reference workflows through both import routes. Three clients have three isolated cold-build observations each. Legacy hinted rejection controls remain scoped limitations. Benchmarks ran alongside compilation and are diagnostic only. All 117 documentation examples also ran inside the package suite. Copied-source delivery and the full standalone documentation matrix were not rerun. The checkpoint update changes documentation only."
+    },
+    {
+      "commit": "a89e7525dc0d8da7ed615bc853251c00ec134381",
+      "production_commit": "a89e7525dc0d8da7ed615bc853251c00ec134381",
+      "production_tree": "5378c9f2f133e21d5ef70281aee5f2a2b49f5781",
+      "compiler": "Mojo 1.2.0 (2016d0cd)",
+      "platform": "Linux x86-64",
+      "checks": [
+        {
+          "check": "Precompiled package",
+          "result": "pass",
+          "scope": "Whole-package precompilation; source and artifact hashes verified",
+          "report": ".cache/api-roadmap/pass16/qualified/examples/report.json",
+          "sha256": "105de7bf71a55fb35df4d97824bba43663365434f8b6c91f9bb550612da17753"
+        },
+        {
+          "check": "Positive suite (source)",
+          "result": "1029 / 1029",
+          "scope": "Complete source O3 suite; two additional diagnostic benchmarks executed",
+          "report": ".cache/api-roadmap/pass17/recovery/full-source/report.json",
+          "sha256": "f0945d63fabea62116e2a21a95aecaa6290efe8466a3230efa639191c29fd293"
+        },
+        {
+          "check": "Rejections (source)",
+          "result": "2716 / 2716",
+          "scope": "Complete source O3 corpus; declared diagnostics, no crashes or negative execution",
+          "report": ".cache/api-roadmap/pass17/recovery/reject-full-source/report.json",
+          "sha256": "8816c45a06f2247e7e2d18e8ee65c127647458049541acc945243390672ab04c"
+        },
+        {
+          "check": "Positive suite (package)",
+          "result": "1029 / 1029",
+          "scope": "Complete package O3 suite; two additional diagnostic benchmarks executed",
+          "report": ".cache/api-roadmap/pass17/recovery/full-package/report.json",
+          "sha256": "ede27150264aea7181eeb83a3f8ccd682aef7407112d988c29823fa626d10cc7"
+        },
+        {
+          "check": "Rejections (package)",
+          "result": "2716 / 2716",
+          "scope": "Complete package O3 corpus; declared diagnostics, no crashes or negative execution",
+          "report": ".cache/api-roadmap/pass17/recovery/reject-full-package/report.json",
+          "sha256": "e202d4be6b7e72f60792b66d1b3c63aa201d72da10bb59f66b4e2e3313d616f8"
+        },
+        {
+          "check": "Reference workflows",
+          "result": "40 / 40",
+          "scope": "Ten API-quality examples through source/package imports at O0/O3; exact stdout",
+          "report": ".cache/api-roadmap/pass17/workflow-examples/report.json",
+          "sha256": "46d0979df491d7d48ba80d2a721741fa759a4f06fdc7e1130ca1ae1ccc71ce76"
+        },
+        {
+          "check": "Cold compilation round 1",
+          "result": "3 / 3",
+          "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+          "report": ".cache/api-roadmap/pass17/measure-1/report.json",
+          "sha256": "bf18f1b2e3db0f4816a4ef43dec65dc0a233d0536622c628fe922f166ef8d197"
+        },
+        {
+          "check": "Cold compilation round 2",
+          "result": "3 / 3",
+          "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+          "report": ".cache/api-roadmap/pass17/measure-2/report.json",
+          "sha256": "62e93fd33218aa0919904001772f8d3eb64ec8ce95888b56740ddf20efd8b4b7"
+        },
+        {
+          "check": "Cold compilation round 3",
+          "result": "3 / 3",
+          "scope": "Three source clients at O3; fresh cache per build, one compiler thread, serial isolated measurement",
+          "report": ".cache/api-roadmap/pass17/measure-3/report.json",
+          "sha256": "ff914adcaf93b0d47a15fb8062dce94093510e6c875a91e9710e9d0182ea62a7"
+        }
+      ],
+      "audit_report": ".cache/api-roadmap/pass17/compiler-audit.json",
+      "audit_sha256": "f59b7959e28e60bcb8423e10392963b2a70d2659213824b60d5b0f3cb9b18ad5",
+      "scope_note": "Production, fixture, runner and compiler inputs match the named commit. Complete positive and rejection suites cover source and precompiled-package imports at O3. All 117 documentation examples also ran inside both complete suites. The O0/O3 matrix covers ten reference workflows through both import routes. Three clients have three isolated cold-build observations each. Retained completed reports were re-audited after an environment interruption; unfinished full suites restarted in fresh output directories. Legacy hinted rejection controls remain scoped limitations. Benchmarks ran alongside compilation and are diagnostic only. Copied-source delivery and the full standalone documentation matrix were not rerun. The checkpoint update changes documentation only."
     }
   ]
 }
