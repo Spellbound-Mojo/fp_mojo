@@ -81,6 +81,7 @@ nav:
       - Dynamic async nurseries: architecture/async-nurseries.md
       - Async scheduler and coordination plan: architecture/async-scheduler-plan.md
       - Wake-driven async execution: architecture/async-scheduler.md
+      - Resumable async coordination: architecture/async-coordination.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md

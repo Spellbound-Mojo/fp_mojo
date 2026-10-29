@@ -4,6 +4,10 @@ This pass extends the private [callback and state-machine runtime](async-callbac
 with runtime admission of children. It retains native Mojo types and origins,
 cooperative polling, and complete draining of entered work.
 
+The later [scheduler pass](async-scheduler.md) replaces the readiness scans
+described at this milestone, and [resumable coordination](async-coordination.md)
+adds notification-based Deferred, Queue, and Semaphore operations.
+
 ## Contract
 
 `Nursery[P](limit)` owns a runtime-sized group of one exact machine type `P`.
@@ -37,10 +41,11 @@ completion order. Cancellation remains independent of failure.
 ## Scheduling and ownership
 
 Each poll admits at most one queued recipe and polls at most one ready child.
-Selection rotates among ready children. After admission closes and all children
-finish, each poll collects one terminal outcome. Readiness scans and wait unions
-cost O(accepted children); this is a correctness baseline, not an efficient
-reactor. The driver retains its 1 ms idle scan.
+After admission closes and all children finish, each poll collects one terminal
+outcome. At this milestone, selection rotated through children, and readiness
+scans and wait unions cost O(accepted children). The current scheduled path uses
+FIFO ready-child metadata and does not scan parked children. Blocking convenience
+runners still use a 1 ms idle-sleep fallback.
 
 The admission signal revision is read before the queue snapshot. Every accepted
 submission and closure wakes the owner; waiting also includes each active child's
@@ -87,5 +92,6 @@ pixi run python experiments/async-state-machines/qualify.py \
   --output .cache/async-nursery-check --jobs 4
 ```
 
-Use a fresh output directory. Event-driven wakeups and OS I/O integration remain
-subsequent work; this pass establishes dynamic ownership and joining semantics.
+Use a fresh output directory. The scheduler pass now supplies event-driven
+wakeups; OS I/O integration remains future work. This milestone establishes
+dynamic ownership and joining semantics.
