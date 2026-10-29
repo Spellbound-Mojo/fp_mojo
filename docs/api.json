@@ -287950,7 +287950,7 @@
        "doc": "The target effect containing the original payloads; Piped preserves source shape and Iter/direct calls gather a List.",
        "type": "G.Collected[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]"
       },
-      "signature": "def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, G.CollectError[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> G.Collected[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]] where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]",
+      "signature": "def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[C.Result], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, G.CollectError[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> G.Collected[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]] where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]",
       "summary": "Traverse effects and retain the original payloads on success."
      },
      {

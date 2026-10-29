@@ -8,6 +8,18 @@ API without a separate review.
 
 ## Mojo 1.2 compatibility
 
+- An invalid consuming native callback can crash an unbounded borrowing-function
+  signature while Mojo infers its native error type. Minimal `def(P) raises E -> R`
+  admission reproduces the crash for an owned argument; non-raising signatures
+  and signatures with a fixed Error or Never reject the same callback normally.
+  This also reproduces on the committed iterator `traverse_tap` boundary before
+  target inference changes. Fixing the input type, tightening its movable bound,
+  adding a rejecting overload, or defaulting E does not resolve it. Raw native
+  inferred-target overloads were therefore not adopted. Library callable metadata
+  supports inferred targets; BorrowSignature selects its input, output and error
+  before capturing a native callback. The raw crashes remain unsupported probes,
+  separate from the supported adapter and library-callable rejection fixtures.
+
 - Direct Result sequencing checks its callback's complete Result type at
   admission, including the stored error's origins. Before this check, a
   factory returning a view of one owner could compile through `before` as a

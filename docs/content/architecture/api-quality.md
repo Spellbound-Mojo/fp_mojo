@@ -649,11 +649,30 @@ workflows. The earlier failure to implicitly convert a projection-rich String
 error to Error remains a Mojo 1.2 limitation; this change demonstrates a supported
 function boundary rather than changing the terminal's exact-error semantics.
 
+## Borrowing traversal target metadata
+
+Iter's library-callable `traverse_tap` entry now defaults its target from the
+callable's complete Result metadata. NativeBorrow adapters, shared and mutable
+callable references, and custom borrowing callables use that same entry. Its
+existing family slot gains a default; no overload or execution body is added.
+The shared traversal generator owns the change, and `_TraverseTap` continues
+owning effectful retention.
+
+Native target-inference prototypes admitted valid callbacks but retained a
+compiler crash for an invalid consuming callback. Minimal probes isolate the
+failure to unbounded native-error inference; it also occurs on the prior source.
+Those prototypes are not part of the library. Raw native calls retain explicit
+target selection, while the existing BorrowSignature boundary selects all native
+signature types before adaptation. Tests cover ordinary library/adapter rejection,
+move-only cleanup, deferred errors and observation, generic element types, and
+independent payload/error origins. The reuse example shares an observer without
+transferring its owner.
+
 ## Next passes
 
-1. Infer targets for remaining iterator traversal callbacks, starting with
-   borrowing `traverse_tap` and sharing the existing admission descriptors.
-2. Review the remaining iterator effect callbacks against the same complete-result
+1. Expose borrowing traversal admission through the public contract vocabulary
+   so generic wrappers can forward it without naming private retention adapters.
+2. Review remaining iterator effect callbacks against the same complete-result
    inference and ownership contracts before expanding overload sets.
 
 Each pass retains the commit/push boundary above and proceeds to the next

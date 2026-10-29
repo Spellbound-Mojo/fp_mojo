@@ -347,6 +347,27 @@ once and supplies the library callable contract. Ordinary concrete pointer calls
 need no adapter; explicit type bindings on existing closure and callable
 overloads retain their meaning.
 
+## Observe effects and retain the elements
+
+For a library borrowing callable, `.traverse_tap(observer)` infers its target
+from the callable's complete `Result` metadata. Each invocation borrows an
+element; successful observation retains that original element in the collected
+List. Failure, branching and deferred execution follow the selected family.
+Move-only elements need no copy unless that family's branching requires one.
+
+An owned observer is consumed. Pass `shared_ref(observer)` or
+`mut_ref(observer)` to retain a named callable, keeping it alive until a deferred
+result finishes. The native callback example uses the existing BorrowSignature
+adapter and shares it for the traversal:
+
+<!-- example: docs/examples/native_callback_reuse.mojo -->
+
+Raw native callbacks retain `.traverse_tap[Family](callback)` and their existing
+explicit bindings. A `BorrowSignature[Input, Output, Error].capture(callback)`
+adapter supplies the same typed borrowing contract and can use inferred target
+selection. The [native boundary record](../architecture/native-boundaries.md#mojo-12-compatibility)
+explains the compiler limit on unselected native error inference.
+
 ## Sequence existing effects
 
 Use `iterated(effects^).sequence()` when the elements are already effects.

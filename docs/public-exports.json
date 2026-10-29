@@ -23600,8 +23600,8 @@
     ],
     "traverse_tap": [
      {
-      "sha256": "3548313bde1ed95bacc0e4772c00d52c9640ee63e3087f7e39c5dd8912e7bacc",
-      "signature": "def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, G.CollectError[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> G.Collected[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]] where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:"
+      "sha256": "14ee879c388ba1577c04048f35c2da38a39095bc274930e1c0ba8703ad4ee70d",
+      "signature": "def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[C.Result], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, G.CollectError[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> G.Collected[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]] where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:"
      },
      {
       "sha256": "fee6b6182431a2e7dbaedda3814c59a86e4b668904c01d10ee68d95898259b2b",

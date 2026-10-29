@@ -1,7 +1,7 @@
 """Keep an owned native closure reusable as a library callable."""
 from fp.functions import pipeline, as_unary, as_binary
 from fp.iteration import iterated
-from fp.callables import BinarySignature, BorrowSignature, BorrowMutableCallable, mut_ref
+from fp.callables import BinarySignature, BorrowSignature, BorrowMutableCallable, mut_ref, shared_ref
 
 
 def add(var first: Int, var second: Int) -> Int: return first + second
@@ -59,3 +59,11 @@ def main():
     print("family mutable filter:", pipeline[Int]([0, 1, 2, 3]).filter(mut_ref(predicate)).get())
     print("family mutable filter_not:", pipeline[Int]([0, 1, 2, 3]).filter_not(mut_ref(predicate)).get())
     print("family retained calls:", predicate.calls)
+    var observations = 0
+    def observe(value: Int) {mut observations} -> Optional[NoneType]:
+        observations += 1
+        return Optional(NoneType())
+    var observer = BorrowSignature[Int, Optional[NoneType]].capture(observe)
+    var retained = iterated(range(3)).traverse_tap(shared_ref(observer))
+    print("audited values:", retained.value())
+    print("observations:", observations)

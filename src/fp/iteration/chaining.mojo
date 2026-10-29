@@ -1528,7 +1528,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Traverse effects without retaining successful outputs."""
         return _traverse_void[Self.I, _NativeUnaryRef[A, R, E, F, True, o], G, _EntryError[X, G._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self._iterator^)
 
-    def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, G.CollectError[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> G.Collected[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]] where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:
+    def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[C.Result], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, G.CollectError[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> G.Collected[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]] where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:
         """Traverse effects and retain the original payloads on success.
 
         Parameters:
