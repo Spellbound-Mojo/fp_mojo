@@ -65,6 +65,7 @@ from .contracts import FillContract, VoidContract
 from .contracts import TupleLeftContract, TupleRightContract
 from .contracts import ProductLeftContract, ProductRightContract
 from .sequencing import FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
+from ._traversal import FilterEffectContract
 
 from ._derived import map2, product, product_l, product_r, ap, flatten, sequence
 from .monoids import StringMonoid, ListMonoid, IntSumMonoid, IntProductMonoid, SIMDSumMonoid, BoolAllMonoid, BoolAnyMonoid, ProductMonoid, OptionalMonoid, DictMonoid

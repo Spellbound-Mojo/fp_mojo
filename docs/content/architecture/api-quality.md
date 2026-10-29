@@ -718,12 +718,34 @@ all three entry surfaces, with construction remaining non-raising and exact Int
 failures appearing only at execution. Ordinary incompatible calls remain
 rejections; native invalid-call inference limits remain separately documented.
 
+## Public effectful-filter admission
+
+`FilterEffectContract[S, G, V, C]` names the checked requirements and exact output,
+construction error and continuation family of effectful filtering. Generic
+helpers forward one public `InvocationCompatible` predicate. The contract lives
+with the existing traversal policies and composes TraverseContract, MapContract,
+the retention kernel and the source compaction callback; it introduces no
+execution path or callback wrapper.
+
+Selected filter_effect overloads now project this descriptor's existing family
+requirements. The shared generator also uses the same contract-selection path
+for observation and filtering. Existing expanded generic proofs remain valid in
+both directions, and public parameter positions remain unchanged.
+
+Tests cover linear and branching targets, consuming predicates on a single
+Optional, repeated mutable predicates, independent value/error origins and
+move-only cleanup. A separate source dictionary adds an Int compaction error,
+checking immediate propagation through Optional and deferred propagation through
+Reader. Rejections cover receiver, payload, retained ownership and incompatible
+native errors at both retention and finishing boundaries. Source-specific
+construction timing remains observable through the public Error projection.
+
 ## Next passes
 
-1. Extend the public contract pattern to effectful filtering, sharing retention
-   and postprocessing metadata with its existing execution owners.
-2. Use those contracts to simplify generic filtering helpers and review the
-   remaining explicit iterator traversal selections.
+1. Simplify the remaining explicit iterator traversal selections for typed
+   library callables, using their complete output metadata.
+2. Review generic traversal postprocessing against the public contract pattern,
+   then qualify the accumulated changes across the complete library corpus.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

@@ -689,31 +689,17 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             params = inferred_target_parameters(cb)
             retained = operation.retained("Self.I.Element[Self.V]", "J", cb["adapter_type"], explicit=True)
             built = f"{retained}({cb['build']})"
-            traversed = f"{family}.Traversed[J, Self.V, {retained}]"
-            before = f"{family}.TraverseError[J, Self.V, {retained}]"
-            result, error = traversed, before
+            contract_name = "FilterEffectContract" if filtering else "TraverseTapContract"
+            contract = f"{contract_name}[{family}, J, Self.V, {cb['adapter_type']}]"
+            result, error = contract + ".Out", contract + ".Error"
             conditions = ["conforms_to(Self.I, Traversable)"] + cb["conditions"]
             if filtering:
-                conditions += [
-                    f"_TraverseCompatible[{family}, Self.V, {retained}]",
-                    f"_CarrierCompatible[J, {cb['result']}]",
-                    f"{family}.TargetCompatible[J, Self.V, {retained}]",
-                ]
-            else:
-                contract = f"TraverseTapContract[{family}, J, Self.V, {cb['adapter_type']}]"
-                result, error = contract + ".Out", contract + ".Error"
-                conditions += [contract + ".FamilyCompatible"]
+                conditions += ["conforms_to(Self.I, FunctorFilter)"]
+            conditions += [contract + ".FamilyCompatible"]
             expr = f"_traverse_as[{family}, J, Self.V, {retained}, {error}]({built}, self.value^)"
             summary = "Traverse borrowed effects and retain each original payload on success."
             if filtering:
                 plan = operation.postprocess(family, "J", "Self.V", retained)
-                finish, error, result = plan.finish, plan.error, plan.result
-                conditions += [
-                    "conforms_to(Self.I, FunctorFilter)",
-                    f"J.Element[{cb['result']}] == Bool",
-                    f"J.Element[{retained}.Out] == Optional[Self.I.Element[Self.V]]",
-                    f"_MapCompatible[J, {traversed}, {finish}]",
-                ]
                 expr = plan.invoke(family, "J", "Self.V", retained, error, built, "self.value^")
                 summary = "Traverse borrowing Bool effects and retain accepted original payloads."
             emit(name, cb, params, cb["argument"], result, error, "J", conditions, expr, summary)

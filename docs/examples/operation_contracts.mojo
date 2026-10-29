@@ -1,5 +1,5 @@
 """Public contracts name generic operation admission, results and native errors."""
-from fp.algebra import Functor, MapContract, FillContract, VoidContract, TupleRightContract, Applicative, Traversable, TraverseContract, TraverseTapContract, ListFamily, OptionalFamily
+from fp.algebra import Functor, MapContract, FillContract, VoidContract, TupleRightContract, Applicative, Traversable, TraverseContract, TraverseTapContract, FunctorFilter, FilterEffectContract, ListFamily, OptionalFamily
 from fp.callables import UnaryContract, Unary, BorrowCallContract, BorrowSignature
 from fp.functions import pipeline, Identity
 from std.testing import assert_equal
@@ -20,6 +20,12 @@ def observed[S: Traversable, G: Applicative, V: Movable & Deinitable, C: BorrowC
     var values: V, var callback: C
 ) raises TraverseTapContract[S,G,V,C].Error -> TraverseTapContract[S,G,V,C].Out where TraverseTapContract[S,G,V,C].InvocationCompatible:
     return pipeline[S](values^).traverse_tap[G](callback^).get()
+
+
+def filtered[S: Traversable & FunctorFilter, G: Applicative, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](
+    var values: V, var predicate: C
+) raises FilterEffectContract[S,G,V,C].Error -> FilterEffectContract[S,G,V,C].Out where FilterEffectContract[S,G,V,C].InvocationCompatible:
+    return pipeline[S](values^).filter_effect[G](predicate^).get()
 
 
 def filled[I: Functor, V: Movable & Deinitable, U: Movable & Deinitable](
@@ -65,3 +71,6 @@ def main() raises:
     def check(value: Int) -> Optional[Int]: return Optional(value) if value > 0 else None
     var kept = observed[ListFamily,OptionalFamily](List[Int]([3,7]),BorrowSignature[Int,Optional[Int]].capture(check))
     print("observed:", kept.value())
+    def even(value: Int) -> Optional[Bool]: return Optional(value % 2 == 0)
+    var accepted = filtered[ListFamily,OptionalFamily](List[Int]([3,7,8]),BorrowSignature[Int,Optional[Bool]].capture(even))
+    print("filtered:", accepted.value())

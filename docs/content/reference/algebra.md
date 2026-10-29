@@ -212,6 +212,21 @@ requires copyable originals; linear targets can retain move-only originals.
 Deferred families retain their existing construction and execution timing.
 These descriptors express admission; they do not adapt or invoke callbacks.
 
+`FilterEffectContract[S, G, V, C]` is the corresponding generic contract for
+`filter_effect`; S must support both Traversable and FunctorFilter. Forward
+`InvocationCompatible` and project `Out`, `Error` and `Family`. The predicate
+produces Bool inside G: True retains the borrowed original and False discards
+it. The descriptor composes the existing retention, traversal and compaction
+contracts, including their exact origins, receiver requirements and native
+construction errors. `Compatible` preserves the selected entry's admission.
+
+The source and target families determine timing. Optional calls a present
+predicate during construction even when it returns a Reader computation. A List
+traversal into Reader defers the predicate, retention and compaction until run.
+`Error` describes construction in each case; it does not replace the deferred
+computation's execution error. Compaction errors and incompatible native error
+combinations are included in the checked helper contract.
+
 <!-- example: docs/examples/single_value_traversal.mojo -->
 
 Single-value traversal also supports deferred targets such as Reader and State.
