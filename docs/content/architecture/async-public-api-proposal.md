@@ -148,8 +148,12 @@ caller-selected native sum type shared by the computation.
 Ordinary native functions, stored thin functions, closures, and library callables
 should be admitted through the existing callable adapters and invocation owners.
 One-shot continuations can consume captures. Loop factories must be repeatable
-and cannot consume their captures once per iteration. Admission borrows end at
-construction; independently borrowed captures must outlive execution. This native
+and cannot consume their captures once per iteration. The new owned async constructors end admission borrows at construction;
+independently borrowed captures must outlive execution. Existing Pipeline native
+closure overloads retain their callback borrow through deferred execution. Move
+`as_unary(callback^)` into a Pipeline operation when transferring callback
+ownership; select `.raising[E]()` for a raising native callback using the existing
+Pipeline convention. This native
 callback convenience is an addition to the experiment's protocol-callable entry
 points and needs focused qualification before publication.
 
@@ -701,6 +705,27 @@ types or origins. Existing synchronous resources, async finalization, and maskin
 also pass. Generated overload checks, API inventory freshness, and the docs build
 pass. The application namespace and generic public-resource admission remain
 part of the publication gate; this pass establishes the private shared owners.
+
+
+Pipeline now supplies `attempt()` through canonical outcome materialization and
+`handle_error_with()` through the existing selected `or_else` policy. Public
+`AttemptContract` retains exact native construction errors and value/error
+origins for generic wrappers. Intrinsic native Result fallbacks now require a
+family declaring neither `ErrorRecovery` nor `ErrorMapping`; proving only the
+absence of `ApplicativeError` does not exclude a recovery-only family. Operations
+that need failure construction still require `ApplicativeError`.
+
+
+The Pipeline pass is qualified through `pipeline-admission-1` (40/44),
+`pipeline-generic-2` (32/32), and `pipeline-async-3` (8/8), with stable inputs in
+all reports. The first report's four failures correctly rejected Optional
+materialization; its diagnostic matcher expected a different wording. The second
+report corrected that matcher and qualified the remaining generic regressions.
+Together the reports cover 80 successful source/package O0/O3 routes, including
+native and deferred materialization, move-only successes and failures, external
+origins, recovery-only custom families, missing-capability rejections, async
+cancellation bypass, and selected native recovery. Generated overloads, the
+module DAG, reviewed exports, API documentation, and the rendered docs also pass.
 
 ## Implementation passes after agreement
 

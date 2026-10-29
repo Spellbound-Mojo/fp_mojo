@@ -1,15 +1,15 @@
 """Selected and intrinsic native observation forwards preserve exact signatures."""
 from fp.functions import pipeline
-from fp.algebra import Functor, ApplicativeError, ErrorMapping, IdentityFamily
+from fp.algebra import ErrorRecovery, Functor, ApplicativeError, ErrorMapping, IdentityFamily
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
 
 
-def intrinsic_tap[A: Movable & Deinitable, E: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: def(E) raises X -> R](var source: Result[A,E], ref[o] callback: F) raises X -> Result[A,E] where not conforms_to(I, ApplicativeError) and not conforms_to(I, ErrorMapping):
+def intrinsic_tap[A: Movable & Deinitable, E: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: def(E) raises X -> R](var source: Result[A,E], ref[o] callback: F) raises X -> Result[A,E] where not conforms_to(I, ErrorRecovery) and not conforms_to(I, ErrorMapping):
     return pipeline[I](source^).raising[X]().tap_err(callback).get()
 
 
-def intrinsic_flat[A: Movable & Deinitable, E: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: def(E) raises X -> Result[R,E]](var source: Result[A,E], ref[o] callback: F) raises X -> Result[A,E] where not conforms_to(I, ApplicativeError) and not conforms_to(I, ErrorMapping):
+def intrinsic_flat[A: Movable & Deinitable, E: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: def(E) raises X -> Result[R,E]](var source: Result[A,E], ref[o] callback: F) raises X -> Result[A,E] where not conforms_to(I, ErrorRecovery) and not conforms_to(I, ErrorMapping):
     return pipeline[I](source^).raising[X]().flat_tap_err(callback).get()
 
 

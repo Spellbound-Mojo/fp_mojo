@@ -58,7 +58,9 @@ struct _RecoverySelection[I: Functor, V: Movable & Deinitable]:
 
 
 struct OrElseContract[I: Functor, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable]:
-    """Admission, result family and exact error of selected Pipeline.or_else.
+    """Admission, result family and exact error of selected Pipeline recovery.
+
+    Pipeline.or_else and Pipeline.handle_error_with share this complete contract.
 
     Canonical Result pipelines may change their stored-error type. Other
     ErrorRecovery families retain their selected error layer and execution

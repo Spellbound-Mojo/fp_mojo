@@ -1,5 +1,5 @@
 """Error mapping preserves the selected policy and validates explicit targets."""
-from fp.algebra import ApplicativeError, ErrorMapping, ResultFamily, ValidationFamily, StringMonoid, ListMonoid, Semigroup, MapErrContract
+from fp.algebra import ErrorRecovery, ApplicativeError, ErrorMapping, ResultFamily, ValidationFamily, StringMonoid, ListMonoid, Semigroup, MapErrContract
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
@@ -44,7 +44,7 @@ def custom() raises:
     assert_equal(fixed^.get()._err().value,"fixed:old")
     comptime I = MappingOnly[String]
     comptime assert conforms_to(I, ErrorMapping)
-    comptime assert not conforms_to(I, ApplicativeError)
+    comptime assert not conforms_to(I, ErrorRecovery)
     def size(var error: String) -> Int: return error.byte_length()
     var selected = pipeline[I](Result[Int,String](Err(String("custom")))).map_err(size)
     comptime assert type_of(selected).I == MappingOnly[Int]

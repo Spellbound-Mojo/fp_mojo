@@ -182,14 +182,14 @@ Custom families implement `ErrorMapping` to admit their own target policies and
 exact construction errors. A custom `ApplicativeError` family without this
 capability cannot use Result storage to bypass its policy. Intrinsic Result
 calls under a family with neither error capability remain supported; generic
-intrinsic wrappers must prove both `not conforms_to(I, ApplicativeError)` and
+intrinsic wrappers must prove both `not conforms_to(I, ErrorRecovery)` and
 `not conforms_to(I, ErrorMapping)`. Existing positional callback bindings retain
 their meaning; use the trailing `Target` binding by name when needed.
 
-This fallback boundary also applies to `recover`, `or_else`, `tap_err`,
+This fallback boundary also applies to `recover`, `or_else`, `handle_error_with`, `tap_err`,
 `flat_tap_err`, `recover_if`, `or_else_if`, `ensure`, `redeem`, `redeem_with` and
 `attempt_tap`. An `ErrorMapping`-only family supports `map`, `map_err`,
-`map_both` and `tap_err` when mapping back into itself is admitted. The other
+`map_both` and `tap_err` when mapping back into itself is admitted. `or_else` and `handle_error_with` require `ErrorRecovery`; the other
 operations require `ApplicativeError`, plus Monad where
 specified below. Native Result storage never silently reselects `ResultFamily`
 for a family missing that capability. To deliberately use the carrier's Result
@@ -201,8 +201,9 @@ proofs for these operations too. Generic wrappers using public contracts keep
 their existing `Compatible` proof; `OrElseContract`, `RedeemContract` and
 `RedeemWithContract` report `False` for an unsupported mapping-only selection.
 
-`recover(handler)` replaces a stored failure with a payload; `or_else(handler)`
-replaces it with another effect. Both honor the selected `ApplicativeError`
+`recover(handler)` replaces a stored failure with a payload using
+`ApplicativeError`. `or_else(handler)` and its alias `handle_error_with(handler)`
+replace it with another effect using `ErrorRecovery`. They honor the selected
 family, including deferred transformers and custom families whose storage is a
 native Result. Recovery preserves that family's construction errors, timing and
 callback ownership, so the chain can continue with `.map(...)` immediately.
@@ -217,12 +218,12 @@ until execution or disposal, so keep that handler alive and unmoved.
 Canonical Result pipelines also preserve their existing `or_else` behavior:
 the replacement Result may change the stored-error type, selecting the matching
 output `ResultFamily`. Intrinsic Result calls under a family with neither
-`ApplicativeError` nor `ErrorMapping`, such as an explicit Identity selection,
+`ErrorRecovery` nor `ErrorMapping`, such as an explicit Identity selection,
 retain this behavior. Other error-capable families retain their selected
 stored-error layer.
 
 Generic value-returning recovery can use `fp.algebra.RecoverContract` with an
-`ApplicativeError` family. For selected `or_else`, use
+`ApplicativeError` family. For selected `or_else` or `handle_error_with`, use
 `fp.functions.OrElseContract[I,V,H]`: its `Compatible` predicate and
 `Family`/`Out`/`Error` projections describe both family recovery and Result's
 type-changing case. This lets a generic wrapper retain fluent continuation
@@ -230,6 +231,14 @@ without importing a private adapter or assuming the result has native storage.
 Its `Compatible` also requires an invocable handler and the selected family's
 `OperationCompatible` proof. A rejected family operation is excluded before
 its result metadata is needed; native Result storage never overrides that policy.
+
+`attempt()` consumes the selected carrier and materializes its recoverable
+outcome as a successful `Result[Value, Failure]`. It uses `ErrorRecovery` without
+requiring a failure constructor. Deferred families keep evaluation deferred;
+async cancellation and canceled failures stay terminal. `AttemptContract[I,V]`
+from `fp.algebra` exposes `Compatible`, `Family`, `Out`, `Outcome`, and the exact
+native construction `Error` for generic wrappers. Families without recovery
+cannot infer this operation from a native Result-shaped carrier.
 
 <!-- example: docs/examples/selected_recovery.mojo -->
 

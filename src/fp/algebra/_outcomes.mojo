@@ -120,6 +120,26 @@ struct _Materialize[I: ErrorRecovery, V: Movable & Deinitable]:
         return _or_else_as[X, Self.I](Self.Recover(_OutcomeCase[Self.A, Self.I.Failure, False]()), wrapped^)
 
 
+struct AttemptContract[I: ErrorRecovery, V: Movable & Deinitable]:
+    """Admission and exact types for materializing a selected stored outcome.
+
+    Parameters:
+        I: The selected error-recovery family, owning timing and cancellation.
+        V: Its concrete source carrier, including native origins.
+    """
+    comptime Family = Self.I
+    """The selected family retained by the resulting Pipeline."""
+    comptime _Capture = _Materialize[Self.I, Self.V]
+    comptime Outcome = Result[Self.I.Element[Self.V], Self.I.Failure]
+    """The successful value after materialization of this stored layer."""
+    comptime Out = Self._Capture.Out
+    """The exact resulting family carrier."""
+    comptime Error = Self._Capture.Error
+    """The native construction error, distinct from the stored failure."""
+    comptime Compatible = Self._Capture.MapCompatible and Self._Capture.HandleCompatible and _ErrorCompatible[Self.Error, Self._Capture._Map.Error] and _ErrorCompatible[Self.Error, Self._Capture._Handle.Error]
+    """Whether the selected map and recovery operations compose natively."""
+
+
 def _outcome_arm[I: ApplicativeError, L: Movable & Deinitable, R: Movable & Deinitable,
                  effect: Bool, left: Bool, H: UnaryContract & Movable & Deinitable,
                  P: Movable & Deinitable, O: Movable & Deinitable](

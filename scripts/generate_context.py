@@ -196,6 +196,17 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             f'        """{summary}"""\n{prelude}        return {returned}\n'
         )
 
+        if name == "or_else":
+            # One admission policy and execution owner serve both spellings.
+            emit("handle_error_with", cb, params, arguments, result, error,
+                 family, conditions, expr, summary, wrap=wrap)
+
+    contract = "AttemptContract[_Recovery[Self.I], Self.V]"
+    emit("attempt", {}, [], "", contract + ".Out", contract + ".Error", "Self.I",
+         ["conforms_to(Self.I, ErrorRecovery)", contract + ".Compatible"],
+         f"_Materialize[_Recovery[Self.I], Self.V].apply[{contract}.Error](self.value^)",
+         "Materialize recoverable stored outcomes; the selected family retains timing and cancellation.")
+
     # Capability scopes use the ordinary callback descriptors and their existing
     # effect operations. The capability owns timing, admission and output family.
     for name, trait, mode, selection, payload, output, error in (
@@ -1223,7 +1234,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             # A selected error channel owns its policy even when it supports
             # mapping without recovery. Intrinsic Result fallback is reserved
             # for families that declare neither stored-error capability.
-            conditions += ["not conforms_to(Self.I, ApplicativeError)", "not conforms_to(Self.I, ErrorMapping)"]
+            conditions += ["not conforms_to(Self.I, ErrorRecovery)", "not conforms_to(Self.I, ErrorMapping)"]
             R = a["result"]
             result = operation.result(T, Err, R, b["result"] if two else "", value=lambda r: f"_Success[{r}]")
             conditions += operation.first_constraints(T, Err, R,
@@ -1265,6 +1276,8 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 + " and ".join(conditions)
                 + f':\n        """{summary}"""\n{prelude}        return {target}({expr})\n'
             ]
+            if name == "or_else":
+                body.append(body[-1].replace("def or_else[", "def handle_error_with[", 1))
     return "".join(inferred_fold_body if inferred_fold_stage else fold_body if fold_stage else body)
 
 

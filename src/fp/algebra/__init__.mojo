@@ -55,7 +55,7 @@ call order and count instead.
 """
 from .protocols import Functor, RebindingFunctor, Applicative, ApplicativeError, ErrorRecovery, ErrorMapping, Monad, Traversable, Monoid, Semigroup, Filterable, FunctorFilter
 from .errors import fail, RecoverIfContract, OrElseIfContract, RecoverContract, TapErrContract, FlatTapErrContract
-from ._outcomes import EnsureContract, AttemptTapContract
+from ._outcomes import EnsureContract, AttemptContract, AttemptTapContract
 from .error_mapping import MapBothContract, MapErrContract
 from .filtering import filter, filter_not, filter_map, compact
 from .operations import map, pure, flat_map, map2_lazy, traverse, empty, combine

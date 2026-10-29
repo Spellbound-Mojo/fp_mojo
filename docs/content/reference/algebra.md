@@ -527,6 +527,12 @@ base Monad, with copyable state required for StateT recovery. Native raised
 errors stay separate. See
 [selected-layer recovery](combinators.md#recover-a-selected-error-layer).
 
+Pipeline `.or_else` and `.handle_error_with` use `ErrorRecovery` directly.
+`.attempt()` uses the same capability to materialize the selected recoverable
+outcome; `AttemptContract[I,V]` supplies its generic admission and exact types.
+This does not make terminal states recoverable or assert a failure-construction
+law for a family that does not declare `ApplicativeError`.
+
 `ErrorMapping` is an optional Functor capability independent of
 `ApplicativeError`. Its `bimap` primitive transforms success and the selected
 stored error in one traversal. The source family admits an exact destination

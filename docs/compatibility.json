@@ -1226,13 +1226,14 @@
       "name": "Family recovery",
       "methods": [
         "recover",
-        "or_else"
+        "or_else",
+        "handle_error_with"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError, including native, custom and deferred families; intrinsic Result recovery remains available under families with neither ApplicativeError nor ErrorMapping",
+      "families": "or_else and handle_error_with select ErrorRecovery; recover requires ApplicativeError. Native, custom and deferred families retain their policy. Intrinsic Result fallback requires neither ErrorRecovery nor ErrorMapping.",
       "callbacks": "Handlers consume stored errors; native closures borrowed, stored thin pointers owned, library receivers preserved. Named shared callable chains are borrowed without copying captures; explicit moves retain consuming admission.",
       "ownership": "Success skips the handler; single-use carriers move owned captures, branching families require repeatable handlers",
-      "errors": "Exact family construction errors; deferred handler errors remain deferred. Canonical Result or_else may change the stored-error type and output family",
+      "errors": "Exact family construction errors; deferred handler errors remain deferred. Canonical Result or_else and handle_error_with may change the stored-error type and output family.",
       "timing": "Selected family owns recovery, even when its storage is a native Result",
       "owner": [
         "src/fp/functions/_recovery.mojo",
@@ -1255,7 +1256,13 @@
         "tests/runtime/test_context_recovery_callable_views.mojo",
         "tests/ownership/test_context_recovery_callable_views_ownership.mojo",
         "tests/compile_fail/recovery_callable_view_move.mojo",
-        "tests/compile_fail/recovery_callable_view_output.mojo"
+        "tests/compile_fail/recovery_callable_view_output.mojo",
+        "tests/runtime/test_context_recovery_only.mojo",
+        "tests/compile_fail/context_recovery_only_error.mojo",
+        "tests/compile_fail/context_recovery_only_recover.mojo",
+        "tests/compile_fail/context_recovery_only_map_err.mojo",
+        "tests/compile_fail/context_recovery_only_attempt_tap.mojo",
+        "experiments/async-state-machines/tests/pipeline_recovery_native.mojo"
       ]
     },
     {
@@ -1265,7 +1272,7 @@
         "flat_tap_err"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under families with neither ApplicativeError nor ErrorMapping",
+      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under families with neither ErrorRecovery nor ErrorMapping",
       "callbacks": "Borrowing observers; native closures borrowed, stored thin pointers owned, library receiver modes preserved",
       "ownership": "Success skips the observer; branching retains errors under the existing family copy rules; ordinary observation discards callback output",
       "errors": "Exact construction and deferred native errors; Result observer failures replace the original, Validation accumulates observer-before-original",
@@ -1294,7 +1301,7 @@
         "or_else_if"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under families with neither ApplicativeError nor ErrorMapping",
+      "families": "Selected ApplicativeError, including Validation, custom and deferred families; intrinsic Result calls remain available under families with neither ErrorRecovery nor ErrorMapping",
       "callbacks": "Borrowing Bool predicate and consuming value or effect handler; native closures borrowed, stored thin pointers owned, library receivers preserved; named shared handler chains are borrowed and explicit moves retain consuming admission",
       "ownership": "Success skips both callbacks; only matching failures invoke the handler; family repeatability and move rules apply",
       "errors": "Exact family construction errors; deferred predicate, handler and failure-constructor errors remain deferred; callback native errors agree unless one never raises",
@@ -1327,7 +1334,7 @@
         "ensure"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError and Monad, including custom and deferred families; Validation has no Monad; intrinsic Result calls remain available under families with neither ApplicativeError nor ErrorMapping",
+      "families": "Selected ApplicativeError and Monad, including custom and deferred families; Validation has no Monad; intrinsic Result calls remain available under families with neither ErrorRecovery nor ErrorMapping",
       "callbacks": "Borrowing Bool predicate and borrowing stored-error factory; native closures borrowed, stored thin pointers owned, library receivers preserved",
       "ownership": "Existing failures skip both callbacks; accepted successes skip the factory; family bind admission and receiver rules apply",
       "errors": "Exact family bind construction errors; deferred predicate, factory and failure-constructor errors remain deferred",
@@ -1356,7 +1363,7 @@
         "redeem_with"
       ],
       "status": "selected",
-      "families": "ApplicativeError for values, plus Monad for effects; canonical Result and intrinsic Result under families with neither ApplicativeError nor ErrorMapping preserve type-changing effect handlers",
+      "families": "ApplicativeError for values, plus Monad for effects; canonical Result and intrinsic Result under families with neither ErrorRecovery nor ErrorMapping preserve type-changing effect handlers",
       "callbacks": "Both handlers consume their original payload; native closures borrowed, stored thin pointers owned, library receivers preserved; named shared chains are borrowed in either callback position, including mixed native/chain calls",
       "ownership": "Only the original branch selects a handler; inactive callbacks are disposed; branching requires repeatable handlers; borrowed chains keep their captures and explicit moves transfer ownership",
       "errors": "Exact family construction and deferred run errors; returned stored failures and native raises never invoke the opposite arm",
@@ -1392,7 +1399,7 @@
         "attempt_tap"
       ],
       "status": "selected",
-      "families": "Selected ApplicativeError and Monad, including custom and deferred families; intrinsic Result behavior remains under families with neither ApplicativeError nor ErrorMapping",
+      "families": "Selected ApplicativeError and Monad, including custom and deferred families; intrinsic Result behavior remains under families with neither ErrorRecovery nor ErrorMapping",
       "callbacks": "Observer borrows the exact selected Result and returns an effect in that family; native closures borrowed, stored thin pointers owned, library receivers preserved",
       "ownership": "Successful observer branches retain the original outcome; empty effects remain empty; branching requires repeatable observers and copyable retained outcomes; single-use paths admit move-only values",
       "errors": "Exact family construction and deferred observer/restoration errors; observer stored failures replace the original outcome",
@@ -1784,6 +1791,30 @@
         "tests/compile_fail/writer_outputs_state.mojo",
         "tests/compile_fail/writer_outputs_state_only.mojo",
         "tests/compile_fail/writer_outputs_value_escape.mojo"
+      ]
+    },
+    {
+      "name": "Selected outcome materialization",
+      "methods": [
+        "attempt"
+      ],
+      "status": "selected",
+      "families": "Selected ErrorRecovery, including native, custom, deferred and asynchronous families; no intrinsic fallback under a non-error family.",
+      "callbacks": "No callback argument; delegates to the selected family map and recovery operations.",
+      "ownership": "Materializes move-only successes or recoverable failures into an owned Result, preserving exact external origins.",
+      "errors": "Exact native family construction errors. The selected family retains terminal states outside its recoverable error channel, including async cancellation and canceled failures.",
+      "timing": "Materializes only the selected stored layer; deferred work stays deferred.",
+      "owner": [
+        "src/fp/algebra/_outcomes.mojo",
+        "src/fp/functions/context.mojo",
+        "scripts/generate_context.py"
+      ],
+      "evidence": [
+        "tests/runtime/test_context_attempt.mojo",
+        "tests/ownership/test_context_attempt_owned.mojo",
+        "tests/runtime/test_context_recovery_only.mojo",
+        "tests/compile_fail/context_attempt_capability.mojo",
+        "experiments/async-state-machines/tests/pipeline_attempt.mojo"
       ]
     }
   ],

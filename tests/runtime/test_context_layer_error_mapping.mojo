@@ -1,5 +1,5 @@
 """Stored-error mapping respects the selected ResultT or OptionalT layer."""
-from fp.algebra import ListFamily, ResultFamily, ErrorMapping, ApplicativeError
+from fp.algebra import ErrorRecovery, ListFamily, ResultFamily, ErrorMapping, ApplicativeError
 from fp.effects import ResultT, OptionalT, Reader, run
 from fp.functions import pipeline
 from fp.callables import MutableUnary
@@ -131,7 +131,7 @@ def mapping_only() raises:
     comptime Base = MappingMonad[String]
     comptime I = OptionalT[Base]
     comptime assert not conforms_to(Base,ApplicativeError)
-    comptime assert not conforms_to(I,ApplicativeError)
+    comptime assert not conforms_to(I,ErrorRecovery)
     def size(var error:String)->Int:return error.byte_length()
     var direct = pipeline[Base](Result[Int,String](Err(String("guarded")))).map_err[Target=MappingMonad[Int]](size)
     assert_equal(direct^.get()._err().value,7)

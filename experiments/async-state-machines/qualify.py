@@ -24,6 +24,23 @@ from fp_tools.runtime import accepted, audit_command, command, positive_int, sha
 
 POSITIVE = {"foundation", "composition", "loop_lifecycle", "children", "origins", "wakes", "depth", "callbacks", "callback_origins", "nurseries", "nursery_origins", "scheduler", "async_coordination", "coordination_owned", "coordination_origins", "racing", "racing_origins", "timeouts", "workload", "async_finalization", "async_masking", "finalization_origins"}
 REGRESSIONS = (
+    "tests/runtime/test_context_error_capability.mojo",
+    "tests/runtime/test_context_error_mapping_policy.mojo",
+    "tests/runtime/test_context_family_attempt_tap_generic.mojo",
+    "tests/runtime/test_context_family_conditional_generic.mojo",
+    "tests/runtime/test_context_family_ensure_native.mojo",
+    "tests/runtime/test_context_family_observation_native.mojo",
+    "tests/runtime/test_context_layer_error_mapping.mojo",
+    "tests/compile_fail/context_recovery_only_recover.mojo",
+    "tests/compile_fail/context_recovery_only_map_err.mojo",
+    "tests/compile_fail/context_recovery_only_attempt_tap.mojo",
+    "tests/runtime/test_context_error_mapping_native.mojo",
+    "tests/runtime/test_context_family_outcome_generic.mojo",
+    "tests/runtime/test_context_attempt.mojo",
+    "tests/runtime/test_context_recovery_only.mojo",
+    "tests/ownership/test_context_attempt_owned.mojo",
+    "tests/compile_fail/context_attempt_capability.mojo",
+    "tests/compile_fail/context_recovery_only_error.mojo",
     "tests/runtime/test_io_finalization.mojo",
     "tests/runtime/test_resource_scopes.mojo",
     "tests/runtime/test_io_resources.mojo",
@@ -38,10 +55,14 @@ REGRESSIONS = (
     "tests/ownership/test_applicative_error_ownership.mojo",
 )
 REGRESSION_STDOUT = {
+    "test_context_attempt": "Pipeline recovery: generic materialization, deferred layer, native selected and intrinsic handlers\n",
+    "test_context_attempt_owned": "Pipeline attempt: move-only successes and failures, exact external origins, one destruction\n",
+    "test_context_recovery_only": "Pipeline recovery: selected family owns native construction errors without ApplicativeError\n",
     "test_applicative_error_lifting": "applicative error lifting: ok\n",
     "test_applicative_error_ownership": "applicative error ownership: ok\n",
 }
 POSITIVE.update({"resource_composition", "resource_lifecycle", "resource_owned", "resource_release_factory"})
+POSITIVE.update({"pipeline_attempt", "pipeline_recovery_native"})
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
@@ -111,7 +132,7 @@ def main():
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
                     memory_limit_bytes=6 * 1024**3,
-                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
+                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 

@@ -1,5 +1,5 @@
 """Mapping capability owns its selected layer without granting error recovery."""
-from fp.algebra import ErrorMapping, ApplicativeError, ResultFamily, IdentityFamily
+from fp.algebra import ErrorRecovery, ErrorMapping, ApplicativeError, ResultFamily, IdentityFamily
 from fp.data import Result, Ok, Err
 from fp.functions import pipeline, OrElseContract, RedeemContract, RedeemWithContract
 from error_mapping_support import Probe
@@ -11,7 +11,7 @@ def metadata():
     comptime I = Probe[String]
     comptime R = Result[Int,String]
     comptime assert conforms_to(I, ErrorMapping)
-    comptime assert not conforms_to(I, ApplicativeError)
+    comptime assert not conforms_to(I, ErrorRecovery)
     comptime assert not OrElseContract[I,R,Effect[String,String]].Compatible
     comptime assert not OrElseContract[I,R,Effect[String,Int]].Compatible
     comptime assert not RedeemContract[I,R,Value[Int],Value[String]].Compatible

@@ -1,6 +1,6 @@
 """Result inference keeps positional arguments, exact origins and native errors."""
 from fp.functions import pipeline
-from fp.algebra import Functor, ApplicativeError, ErrorMapping, ResultFamily, IdentityFamily
+from fp.algebra import ErrorRecovery, Functor, ApplicativeError, ErrorMapping, ResultFamily, IdentityFamily
 from fp.data import Result, Ok, Err
 from fp.callables import Unary
 from std.testing import assert_equal
@@ -19,7 +19,7 @@ def mixed_reverse[A: Movable & Deinitable, E: Movable & Deinitable, B: Movable &
 def generic_error[A: Movable & Deinitable, E: Movable & Deinitable, G: Movable & Deinitable, X: Movable & Deinitable, //, H: def(var E) raises X -> G](var source: Result[A,E], h: H) raises X -> Result[A,G]:
     return pipeline(source^).raising[X]().map_err(h).get()
 
-def intrinsic[A: Movable & Deinitable, E: Movable & Deinitable, G: Movable & Deinitable, X: Movable & Deinitable, //, I: Functor, H: def(var E) raises X -> G](var source: Result[A,E], h: H) raises X -> Result[A,G] where not conforms_to(I,ApplicativeError) and not conforms_to(I,ErrorMapping):
+def intrinsic[A: Movable & Deinitable, E: Movable & Deinitable, G: Movable & Deinitable, X: Movable & Deinitable, //, I: Functor, H: def(var E) raises X -> G](var source: Result[A,E], h: H) raises X -> Result[A,G] where not conforms_to(I,ErrorRecovery) and not conforms_to(I,ErrorMapping):
     return pipeline[I](source^).raising[X]().map_err(h).get()
 
 def origins(left: List[Int], right: List[Int]) raises:
