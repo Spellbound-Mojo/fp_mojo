@@ -17,6 +17,8 @@ from fp.callables._receiver import _unary_repeated_as
 from ._branches import _OptionalGuard, _ResultGuard, _TraverseBranch
 from ._result_accumulation import _result_map2, _result_loop, _ResultLoopCompatible, _FirstError
 from .filtering import _Select, _Keep
+from .protocols import _FamilyCallable
+from fp.callables._views import _UnaryViewable
 from .protocols import (_FamilyCarrier, _NativeFoldCompatible, _LiveAccumulator, _pure, Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,
                         _next_item, _start_as, _combine_as, _map_accumulate, _Append, _LinearLoopCompatible, _LinearProducerCompatible)
 
@@ -47,6 +49,15 @@ comptime _OptionalElement[V: Movable & Deinitable] = _ListElement[V] if _NativeF
 comptime _InferredApplicative[V: Movable & Deinitable]: Applicative = (
     downcast[_NativeFamily[V, OptionalFamily], Applicative]
 )
+
+
+# Callable views preserve an explicitly selected policy before recognizing
+# their output carrier. Pipeline and iterator entry points share this rule.
+comptime _ViewFamily[C: _UnaryViewable, o: ImmOrigin, Fallback: Functor = IdentityFamily]: Functor = (
+    downcast[C, _FamilyCallable]._Family if conforms_to(C, _FamilyCallable)
+    else _NativeFamily[C._View[o].Out, Fallback]
+)
+comptime _ViewTarget[C: _UnaryViewable, o: ImmOrigin]: Applicative = downcast[_ViewFamily[C, o, OptionalFamily], Applicative]
 
 
 struct IdentityFamily(Monad, Traversable):

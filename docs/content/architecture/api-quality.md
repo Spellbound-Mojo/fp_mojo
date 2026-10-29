@@ -777,11 +777,29 @@ branching, single-use Optional callbacks, exact native errors and independent
 origins. Reader tests distinguish deferred List traversal from eager callback
 construction on a single Optional.
 
+## Direct reusable iterator callbacks
+
+Iterator `flat_traverse` and `traverse_filter` accept shared Kleisli chains and
+function compositions directly. The shared traversal generator obtains their
+existing origin-aware unary views, then calls the same traversal and finishing
+owners as the other overloads. Native callbacks and explicit parameter bindings
+keep their existing admission paths.
+
+Declared callable-family metadata and view target selection now live below both
+Pipeline and Iter. The existing Kleisli marker is a private alias of that common
+declaration. Its selected policy takes precedence over recognizing the view's
+output carrier; a custom Monad using Optional storage therefore keeps its own
+map and error behavior. Ordinary compositions still infer from their output.
+
+The traversal example reuses the same chains in Pipeline and Iter without
+adapters. Tests cover repeated use, empty input, source stopping, custom family
+errors, move-only payloads, independent origins, Reader/State deferral and exact
+execution errors. Rejections include moving a chain while a deferred result
+still borrows it, incompatible carriers and single-use callback programs.
+
 ## Next passes
 
-1. Reuse the existing origin-aware callable views for direct Kleisli callbacks
-   in iterator postprocessing terminals, preserving deferred borrows.
-2. Qualify the accumulated changes across the complete library corpus.
+1. Qualify the accumulated changes across the complete library corpus.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

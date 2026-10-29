@@ -66578,7 +66578,7 @@
     "Copyable",
     "OnceUnary",
     "UnaryContract",
-    "_KleisliValue",
+    "_FamilyCallable",
     "_UnaryViewable"
    ]
   },
@@ -282138,6 +282138,57 @@
       },
       "signature": "def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]]]] where _Source[Self.I].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]]]]]], ListFamily.TraverseError[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == List[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]",
       "summary": "Traverse effects and flatten one source-family layer inside the effect."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F._View[o]], G.MapError[ListFamily.Traversed[G, Self.I, F._View[o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Mapped[ListFamily.Traversed[G, Self.I, F._View[o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]]"
+      },
+      "signature": "def flat_traverse[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F._View[o]], G.MapError[ListFamily.Traversed[G, Self.I, F._View[o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, F._View[o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]] where _Source[Self.I].Element == F._View[o].Arg and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F._View[o]], G.MapError[ListFamily.Traversed[G, Self.I, F._View[o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]]]], ListFamily.TraverseError[G, Self.I, F._View[o]]] and G.Element[F._View[o].Out] == List[_ListElement[G.Element[F._View[o].Out]]] and _CarrierCompatible[G, F._View[o].Out] and ListFamily.TargetCompatible[G, Self.I, F._View[o]]",
+      "summary": "Traverse effects and flatten one source-family layer inside the effect."
      }
     ],
     "flatten": [
@@ -289203,6 +289254,57 @@
        "type": "G.Mapped[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]]]]"
       },
       "signature": "def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]]]] where _Source[Self.I].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]]]]]], ListFamily.TraverseError[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]]",
+      "summary": "Traverse effects and retain present Optional payloads inside the effect."
+     },
+     {
+      "args": [
+       {
+        "convention": "ref[o]",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F._View[o]], G.MapError[ListFamily.Traversed[G, Self.I, F._View[o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]]]]",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "F",
+        "type": "_UnaryViewable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "o",
+        "type": "ImmOrigin",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "G",
+        "type": "Applicative",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "X",
+        "type": "AnyType",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "G.Mapped[ListFamily.Traversed[G, Self.I, F._View[o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]]"
+      },
+      "signature": "def traverse_filter[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F._View[o]], G.MapError[ListFamily.Traversed[G, Self.I, F._View[o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]]]] -> G.Mapped[ListFamily.Traversed[G, Self.I, F._View[o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]] where _Source[Self.I].Element == F._View[o].Arg and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, Self.I, F._View[o]], G.MapError[ListFamily.Traversed[G, Self.I, F._View[o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, Self.I, F._View[o]]]]]]], ListFamily.TraverseError[G, Self.I, F._View[o]]] and G.Element[F._View[o].Out] == Optional[_ListElement[G.Element[F._View[o].Out]]] and _CarrierCompatible[G, F._View[o].Out] and ListFamily.TargetCompatible[G, Self.I, F._View[o]]",
       "summary": "Traverse effects and retain present Optional payloads inside the effect."
      }
     ],

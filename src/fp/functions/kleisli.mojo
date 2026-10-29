@@ -1,6 +1,6 @@
 """Effectful function composition, lowered to the ordinary composition engine."""
 from std.builtin.rebind import downcast, rebind_var
-from fp.algebra.protocols import Monad
+from fp.algebra.protocols import Monad, _FamilyCallable as _KleisliValue
 from fp.algebra._primitive_contracts import MapContract, BindContract
 from fp.algebra._admission import _CarrierCompatible
 from fp.callables._views import _UnaryViewable
@@ -119,10 +119,6 @@ struct _Join[I: Monad, L: _Program, R: _Program, mode: Int](_Program, Copyable w
         return _compose_steps[Self.I, Self.mode](left.shared[o](), right.shared[o]())
     def exclusive[o: MutOrigin](ref[o] self) -> Self.Exclusive[o]:
         return _compose_steps[Self.I, Self.mode](self.left.exclusive(), self.right.exclusive())
-
-
-trait _KleisliValue:
-    comptime _Family: Monad
 
 
 @fieldwise_init

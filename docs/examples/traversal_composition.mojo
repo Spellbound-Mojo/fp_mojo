@@ -3,7 +3,7 @@ from fp.data import Result, Ok, Err
 from fp.functions import pipeline, kleisli
 from fp.algebra import ResultFamily
 from fp.iteration import iterated
-from fp.callables import BorrowSignature, as_unary
+from fp.callables import BorrowSignature
 from std.testing import assert_equal, assert_true
 
 
@@ -25,12 +25,13 @@ def select_even(value: Int) -> Result[Optional[Int], String]:
 def main() raises:
     var values: List[Int] = [1, 2, 3]
     var expander = kleisli[ResultFamily[String]](expand)
+    var selector = kleisli[ResultFamily[String]](select_even)
     var expanded = pipeline(values.copy()).flat_traverse(expander).raise_on_err()
     var kept = pipeline(expanded^).filter_effect(keep_even).raise_on_err()
     assert_equal(kept, [10, 2, 20, 30])
     print("kept:", kept)
 
-    var selected = pipeline(values^).traverse_filter(select_even).raise_on_err()
+    var selected = pipeline(values^).traverse_filter(selector).raise_on_err()
     assert_equal(selected, [20])
     print("selected:", selected)
 
@@ -51,10 +52,10 @@ def main() raises:
     var filtered = iterated(range(1,5)).filter_effect(predicate^).raise_on_err()
     print("iterated selection:", filtered)
 
-    var iter_expanded = iterated(range(1, 3)).flat_traverse(as_unary(expand)).raise_on_err()
+    var iter_expanded = iterated(range(1, 3)).flat_traverse(expander).raise_on_err()
     assert_equal(iter_expanded, [1, 10, 2, 20])
     print("iterated expansion:", iter_expanded)
 
-    var iter_selected = iterated(range(1, 5)).traverse_filter(as_unary(select_even)).raise_on_err()
+    var iter_selected = iterated(range(1, 5)).traverse_filter(selector).raise_on_err()
     assert_equal(iter_selected, [20, 40])
     print("iterated present values:", iter_selected)

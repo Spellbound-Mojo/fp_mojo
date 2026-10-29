@@ -38,7 +38,7 @@ from fp.callables._nary import _OwnedNativeNary1, _OwnedNativeNary2, _OwnedNativ
 from fp.callables._transforms import _Apply, _Replace, _TupleWith, _Fill, _ValueThunk, _Pair, _KeepOperand, _Observe, _BorrowedUnary, _IgnoreInput
 from fp.callables._predicates import _FilterPredicate
 from fp.callables._views import _UnaryViewable, _BorrowViewable
-from .kleisli import _KleisliValue
+from fp.algebra.instances import _ViewFamily, _ViewTarget
 from fp.callables._identity import Identity
 from fp.functions.composition import Composition
 from fp.iteration._advance import _Source
@@ -190,14 +190,6 @@ struct _InferredEffectFoldStage[V: Movable & Deinitable, A: Movable & Deinitable
         """Infer the target family from the step and execute through the selected fold stage."""
         return _EffectFoldStage[J, Self.V, Self.A, Self.E](self.value^, self.initial^).run(_NativeBinary[Self.A, _FoldElement[Self.V], R, X, def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[_FoldElement[Self.V]]) raises X thin -> R, True](function))
     # --- end inferred effect fold admission ---
-
-
-# Effectful programs already selected their policy; preserve that evidence.
-comptime _ViewFamily[C: _UnaryViewable, o: ImmOrigin, Fallback: Functor = IdentityFamily]: Functor = (
-    downcast[C, _KleisliValue]._Family if conforms_to(C, _KleisliValue)
-    else _NativeFamily[C._View[o].Out, Fallback]
-)
-comptime _ViewTarget[C: _UnaryViewable, o: ImmOrigin]: Applicative = downcast[_ViewFamily[C, o, OptionalFamily], Applicative]
 
 
 @fieldwise_init

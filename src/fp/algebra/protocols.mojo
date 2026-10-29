@@ -28,6 +28,11 @@ from fp.callables._binding import _BindFirst
 # Shared wording for family admission that includes receiver requirements.
 comptime _CALLBACK_ADMISSION = "family operation requires compatible carriers and callback receivers; branching callbacks must be repeatable"
 
+trait _FamilyCallable:
+    """A callable program whose selected effect policy is authoritative."""
+    comptime _Family: Monad
+
+
 trait _FamilyCarrier(Movable, Deinitable):
     """Declared carrier metadata, shared by algebra selection and effect recipes.
 

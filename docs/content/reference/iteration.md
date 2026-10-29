@@ -404,6 +404,14 @@ retain explicit `.flat_traverse[Family](function)` and
 `shared_ref(function)` and `mut_ref(function)` retain its owner for reuse. Keep
 that owner alive until a deferred computation finishes.
 
+Reusable Kleisli chains and shared function compositions can be passed directly:
+`.flat_traverse(chain)` and `.traverse_filter(chain)`. These calls borrow the
+chain through its existing callable view. The same chain can be reused after
+the traversal, and deferred results keep the borrow until execution finishes.
+A Kleisli chain's selected family remains authoritative, including custom
+policies whose carriers also look like native Optional or Result values.
+An explicit family argument still overrides target inference.
+
 Both terminals consume the iterator from its current position. Empty input
 lifts an empty List. Reader and State defer traversal and postprocessing until
 execution, preserving exact callback errors. Validation and third-party families
