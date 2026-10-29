@@ -5,6 +5,10 @@ work in pure Mojo. The review recommends defining a supported namespace and
 user contract before promoting exports. This pass performs that review; it does
 not silently make experimental interfaces public.
 
+The [concrete public API proposal](async-public-api-proposal.md) now specifies
+the recommended namespaces, supported operations, host protocol, type aliases,
+and promotion work. It remains a proposal; no async exports have been promoted.
+
 ## What the implementation establishes
 
 - Typed sequencing, iterative loops, fixed child pairs, and bounded dynamic

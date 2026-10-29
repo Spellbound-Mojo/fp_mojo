@@ -89,6 +89,7 @@ nav:
       - Async integration workload: architecture/async-workload.md
       - Async finalization and masking: architecture/async-finalization.md
       - Async public API readiness: architecture/async-public-api-review.md
+      - Async public API proposal: architecture/async-public-api-proposal.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md
