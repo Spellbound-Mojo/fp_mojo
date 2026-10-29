@@ -35,7 +35,7 @@ from composition and behavior, without emulating Scala syntax or implicits.
 | `tailRecM` | Existing `tail_rec_m[Async[E]](step, initial)` | Iterative execution; native `ControlFlow` replaces the iteration `Either` |
 | `Resource.make(...).flatMap(...).use(...)` | `resource(...).flat_map(...).use(...)` | Same lifecycle intent; fresh scoped loans preserve native ownership |
 | `attempt`, `handleErrorWith` | `attempt`, `handle_error_with` | Handle the complete typed failure; cancellation remains terminal |
-| `race`, `timeoutTo` | `race`, `timeout_to`, subject to the policy gates below | Current experimental result selection is different and must not silently take these names |
+| `race`, `timeoutTo` | `race`, `timeout_to`, subject to the policy gates below | Experimental policies now have distinct names; public promotion still requires qualification |
 | `Fiber.cancel` | Host `Driver.request_cancel()` followed by polling and `finish()` | Requesting cancellation alone does not join |
 | `Async.async` | `callback(register, withdrawal)` | Withdrawal always runs after entered registration, including success |
 | `Outcome` | Canonical `Outcome[T, E]` | Owns success directly and preserves all errors plus a cancellation flag |
@@ -223,15 +223,14 @@ separate recovery interpreter is proposed.
 |---|---|---|
 | `both(left: M[A, E], right: M[B, E])` | `Tuple[A, B]` | Both succeed, or failure/cancellation requests sibling cancellation and drains both |
 | `race_first(left: M[A, E], right: M[B, E])` | `RaceResult[A, B]` | Preserve the experimental first-terminal policy; cancel and drain the loser before returning |
-| `race(left: M[A, E], right: M[B, E])` | `RaceResult[A, B]` | Proposed cancellation-aware selection described below; requires a behavior change |
+| `race(left: M[A, E], right: M[B, E])` | `RaceResult[A, B]` | Cancellation-aware selection described below, implemented experimentally |
 | `timeout_after(program: M[T, E], duration, fallback: M[T, E])` | `T` | Preserve the experimental timer-selection policy; after timer victory and clean draining, select fallback |
 | `timeout_to(program: M[T, E], duration, fallback: M[T, E])` | `T` | Proposed source-outcome preference after cancellation and draining; requires a behavior change |
 | `Nursery[P](limit)` | Its recipe yields `List[P.Value]` | Own at most `limit` total accepted children of one exact machine type |
 
 `RaceResult[A, B]` remains the canonical `Choice` with `Left[A]` and `Right[B]`.
-Equal arm types remain distinguishable. The proposed names `race_first` and
-`timeout_after` make the existing policies explicit; neither is an existing
-export under that spelling. `race_first` selects the first observed terminal
+Equal arm types remain distinguishable. The experimental names `race_first` and
+`timeout_after` now preserve the original policies. `race_first` selects the first observed terminal
 outcome, including cancellation. It discards losing success, normalizes losing
 cancellation, and retains losing errors. It is not Cats Effect `raceOutcome`,
 which returns the selected outcome as data.
@@ -264,9 +263,11 @@ starting another unmasked operation still observes pending cancellation. See
 addresses success being discarded before race or timeout can inspect it. Qualify
 late success, first-child cancellation, masked work, simultaneous readiness,
 losing cleanup failure, and parent cancellation with short deterministic tests.
-Also specify masked cancellation-only composition: Cats Effect can remain
-suspended when both raced fibers cancel under a mask; this proposal does not
-claim that behavior from the current Mojo settlement rules.
+The experimental selection pass keeps explicit cancellation terminal when both
+raced children cancel, even under a mask. Cats Effect can remain suspended in
+that case; the Mojo API deliberately retains its existing explicit-outcome rule.
+Both selection policies share one race implementation and drain mechanism;
+checked duration admission is still separate pending work.
 
 Observation order remains deterministic: initial ties favor the left child
 (the source for a timeout), and later selection follows scheduler readiness
@@ -481,7 +482,7 @@ examples one fold without introducing a second ADT.
 | Both | Left subtree, then right subtree |
 | Nursery | Admission order, retaining each child's internal order |
 | `race_first` | Selected subtree, then losing subtree; normalize losing cancellation only |
-| Proposed `race` / `timeout_to` | Preserve all subtree errors; qualify selection and cancellation settlement before export |
+| Experimental `race` / `timeout_to` | Preserve all subtree errors; qualify selection and cancellation settlement before export |
 | Callback | Completion error, registration error, withdrawal error |
 
 The application surface should accept checked configuration. Propose

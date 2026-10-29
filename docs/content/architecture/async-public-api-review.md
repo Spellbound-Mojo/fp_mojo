@@ -9,8 +9,7 @@ The [concrete public API proposal](async-public-api-proposal.md) now specifies
 the recommended namespaces, supported operations, host protocol, type aliases,
 and promotion work. Its Cats alignment revision prioritizes Pipeline sequencing,
 resource composition, and recovery, uses snake_case operations, and identifies
-the cancellation and result-selection differences requiring agreement. It remains
-a proposal; no async exports have been promoted.
+the cancellation and result-selection differences requiring agreement. It is accepted for staged implementation; no async exports have been promoted.
 
 The proposal also records [room for heterogeneous execution](async-public-api-proposal.md#room-for-heterogeneous-execution):
 host scheduling stays independent of execution location, and external work keeps
@@ -40,7 +39,7 @@ choose its supported high-level constructors and deliberately identify the lower
 level extension protocol. Private slots, child metadata, guarded cells, and
 scheduler registrations should remain implementation details.
 
-Race is explicitly first-terminal, including cancellation, with scheduler-order
+`race_first` preserves first-terminal selection, including cancellation, with scheduler-order
 ties. It is not a claim of complete Cats Effect compatibility. A losing child's
 cancellation is normalized while its errors remain observable. Timeout denotes
 a cancellation deadline, not a hard deadline for return. These semantics and

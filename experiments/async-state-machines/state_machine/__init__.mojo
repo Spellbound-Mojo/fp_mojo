@@ -7,5 +7,5 @@ from .callbacks import Completion, Callback, callback
 from .nurseries import Nursery, Spawner
 from .kernel import Clock, Driver, Progress
 from .coordination import Deferred, Queue, Semaphore
-from .racing import RaceResult, Race, Timeout, race, timeout_to
+from .racing import RaceResult, Race, Timeout, race, race_first, timeout_to, timeout_after
 from .finalization import Guarantee, Poll, Masked, guarantee, guarantee_case, on_cancel, uncancelable, uncancelable_with

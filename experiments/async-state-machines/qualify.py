@@ -35,6 +35,7 @@ REGRESSIONS = (
     "tests/runtime/test_fibers.mojo",
 )
 POSITIVE.add("checkpoints")
+POSITIVE.add("selection_policies")
 
 
 def experiment_inputs():
@@ -92,7 +93,7 @@ def main():
                 case = CompileCase.from_source(
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
-                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "workload": 360}.get(client.stem, 120),
+                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "workload": 360}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 

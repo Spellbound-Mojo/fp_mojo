@@ -40,7 +40,7 @@ def _loser[T: Movable & Deinitable, E: Movable & Deinitable](var outcome: Outcom
     return Optional(Result[NoneType, EffectFailure[E]](Ok(unit)))
 
 
-struct Race[P: Machine, Q: Machine](Machine):
+struct Race[P: Machine, Q: Machine, policy: Int = 0](Machine):
     comptime Value = RaceResult[Self.P.Value, Self.Q.Value]
     comptime Error = Self.P.Error
     var pair: _Pair[Self.P, Self.Q, Self.P.Value, Self.Q.Value, Self.Error]
@@ -48,6 +48,7 @@ struct Race[P: Machine, Q: Machine](Machine):
 
     def __init__(out self, var left: Self.P, var right: Self.Q):
         comptime assert Self.P.Error == Self.Q.Error, "race requires the same exact error type"
+        comptime assert 0 <= Self.policy <= 2, "unknown race selection policy"
         self.pair = _Pair[Self.P, Self.Q, Self.P.Value, Self.Q.Value, Self.Error](left^, right^)
         self.winner = None
 
@@ -71,14 +72,27 @@ struct Race[P: Machine, Q: Machine](Machine):
             self.pair.completed = True
             var left = self.pair.left.slot.take_outcome()
             var right = self.pair.right.slot.take_outcome()
-            if self.winner.value() == 0:
+            var selected = self.winner.value()
+            comptime if Self.policy == 1:
+                if selected == 0 and not left:
+                    selected = 1
+                elif selected == 1 and not right:
+                    selected = 0
+            elif Self.policy == 2:
+                if selected == 1 and left:
+                    selected = 0
+            if selected == 0:
                 return .ready(_finish(_winner[Self.P.Value, Self.Q.Value, Self.Error, True](left^), _loser(right^)))
             return .ready(_finish(_winner[Self.P.Value, Self.Q.Value, Self.Error, False](right^), _loser(left^)))
         return .pending(self.pair.waiting())
 
 
-def race[P: Machine, Q: Machine](var left: P, var right: Q) -> Race[P, Q]:
+def race_first[P: Machine, Q: Machine](var left: P, var right: Q) -> Race[P, Q]:
     return Race(left^, right^)
+
+
+def race[P: Machine, Q: Machine](var left: P, var right: Q) -> Race[P, Q, 1]:
+    return Race[P, Q, 1](left^, right^)
 
 
 @fieldwise_init
@@ -106,10 +120,11 @@ struct _TimeoutBranch[T: Movable & Deinitable, Q: Machine](OnceUnary):
         return Self.Out(Branch(Right(self.fallback^)))
 
 
-struct Timeout[P: Machine, Q: Machine](Machine):
+struct Timeout[P: Machine, Q: Machine, prefer_source: Bool = False](Machine):
     comptime Value = Self.P.Value
     comptime Error = Self.P.Error
-    comptime Pipeline = Bind[Race[Self.P, Sleep[Self.Error]], _TimeoutBranch[Self.Value, Self.Q]]
+    comptime RaceType = Race[Self.P, Sleep[Self.Error], 2 if Self.prefer_source else 0]
+    comptime Pipeline = Bind[Self.RaceType, _TimeoutBranch[Self.Value, Self.Q]]
     var program: Optional[Self.P]
     var fallback: Optional[Self.Q]
     var timer: Optional[Sleep[Self.Error]]
@@ -125,7 +140,7 @@ struct Timeout[P: Machine, Q: Machine](Machine):
     def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
         if not self.active:
             self.timer.value()._start(context._clock.now())
-            var pipeline = bind(race(self.program.take(), self.timer.take()), _TimeoutBranch[Self.Value, Self.Q](self.fallback.take()))
+            var pipeline = bind(Self.RaceType(self.program.take(), self.timer.take()), _TimeoutBranch[Self.Value, Self.Q](self.fallback.take()))
             self.active = Optional(_Slot[Self.Pipeline, Self.Value, Self.Error](pipeline^))
         _ = _tick(self.active.value(), context)
         if self.active.value().done():
@@ -133,5 +148,9 @@ struct Timeout[P: Machine, Q: Machine](Machine):
         return .pending(self.active.value().waiting())
 
 
-def timeout_to[P: Machine, Q: Machine](var program: P, duration: Int, var fallback: Q) -> Timeout[P, Q]:
+def timeout_after[P: Machine, Q: Machine](var program: P, duration: Int, var fallback: Q) -> Timeout[P, Q]:
     return Timeout(program^, duration, fallback^)
+
+
+def timeout_to[P: Machine, Q: Machine](var program: P, duration: Int, var fallback: Q) -> Timeout[P, Q, True]:
+    return Timeout[P, Q, True](program^, duration, fallback^)

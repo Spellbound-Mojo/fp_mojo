@@ -4,7 +4,7 @@ from fp.callables import OnceUnary
 from fp.data import Result, Err, NonEmptyList
 from fp.effects import CancellationToken, IOContext, EffectFailure, ExitCase
 from fp._internal.cells import _lock_metadata
-from state_machine import Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Completion, Callback, Scope, Pure, Timeout, Nursery, Queue, Semaphore, Clock, Driver, callback, pure, bind, both, timeout_to
+from state_machine import Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Completion, Callback, Scope, Pure, Timeout, Nursery, Queue, Semaphore, Clock, Driver, callback, pure, bind, both, timeout_after as timeout_to
 from state_machine.coordination import _Offer
 from foundation import check, success
 from async_coordination import value
