@@ -325,17 +325,22 @@ payloads without building an output list.
 
 Result inference selects ordinary fail-fast Result behavior. Choose
 `.traverse[ValidationFamily[YourSemigroup]](callback)` explicitly to accumulate
-stored errors. Explicit targets also select external families and transformer
-layers whose native representation does not identify that layer. Existing
-positional family, callback-type and native-error bindings keep their order.
+stored errors. A Kleisli chain's declared family takes precedence over its output
+carrier for both terminals, including external families and transformer layers.
+For example, a `ResultT[Reader[Environment], Failure]` chain keeps its stored-error
+short-circuiting even though its underlying carrier is a Reader recipe. Explicit
+targets override inference and remain available when the callback has no family
+declaration. Existing positional family, callback-type and native-error bindings
+keep their order.
 
 Both terminals consume the source from its current position. Callback calls,
 short-circuiting and deferred execution follow the selected family: Reader and
 State pull nothing until `run`. Native errors and borrowed origins are retained;
 move-only payloads need no copy unless the target family's branching requires it.
 Shared and mutable library callbacks can be moved into either terminal. A named
-shared callable view can be reused by `traverse`; callbacks must support repeated
-invocation. Native function names and captured callbacks retain their existing
+Kleisli chain or function composition can be reused by both `traverse` and
+`traverse_void`; each borrows its shared callable view. Callbacks must support
+repeated invocation. Native function names and captured callbacks retain their existing
 admission rules. Stored `def(...) thin -> Effect` pointers also work directly,
 with inferred or explicit targets. Traversal copies the pointer into its owned
 callback, so a deferred recipe does not borrow the caller's pointer variable.

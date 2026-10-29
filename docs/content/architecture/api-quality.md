@@ -821,11 +821,31 @@ limits on legacy hinted rejection controls and does not establish compile-cost
 or benchmark improvements. Other platforms, copied-source delivery and private
 experimental suites remain outside this checkpoint.
 
+## Consistent iterator traversal family selection
+
+Iterator `traverse` now uses the shared callable-family selector for borrowed
+views. A Kleisli chain's declaration takes precedence over recognizing its output
+carrier, matching Pipeline and iterator postprocessing. This corrects calls that
+previously selected the underlying family of an erased transformer layer:
+`ResultT[Reader[Environment], Failure]` retains fail-fast Result semantics inside
+Reader and collects a Result of List, rather than a List of individual Results.
+Explicit family selection continues to override inference.
+
+`traverse_void` accepts the same reusable Kleisli and composition views directly.
+The generator projects their existing origin-aware unary contract and delegates
+to the canonical discard traversal. No callback storage, execution loop or error
+conversion is added. Native and owned callable admission and existing explicit
+parameter positions remain unchanged.
+
+Tests cover empty and branching effects, source stopping, custom sequencing
+errors, erased transformer layers, deferred Reader/State execution, unique
+payload and capture cleanup, and independent value/error origins. Ordinary
+invalid calls check incompatible inputs and targets, consuming receivers,
+native errors, source reuse and a chain moved before its deferred result runs.
+
 ## Next passes
 
-1. Review remaining iterator traversal and discard forms for consistent
-   callable-family selection, using the now-shared view metadata.
-2. Continue removing redundant callback adaptation in maintained collection
+1. Continue removing redundant callback adaptation in maintained collection
    workflows where an existing callable view already supplies the contract.
 
 Each pass retains the commit/push boundary above and proceeds to the next

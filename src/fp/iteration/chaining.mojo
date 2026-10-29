@@ -1528,6 +1528,10 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Traverse effects without retaining successful outputs."""
         return _traverse_void[Self.I, _NativeUnaryRef[A, R, E, F, True, o], G, _EntryError[X, G._LoopError[Self.I, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self._iterator^)
 
+    def traverse_void[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o], X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, G._LoopError[Self.I, F._View[o], _Discard[G.Element[F._View[o].Out]]]] -> G._Looped[Self.I, F._View[o], _Discard[G.Element[F._View[o].Out]]] where _Source[Self.I].Element == F._View[o].Arg and _CarrierCompatible[G, F._View[o].Out] and G._LoopCompatible[Self.I, F._View[o], _Discard[G.Element[F._View[o].Out]]]:
+        """Traverse effects without retaining successful outputs."""
+        return _traverse_void[Self.I, F._View[o], G, _EntryError[X, G._LoopError[Self.I, F._View[o], _Discard[G.Element[F._View[o].Out]]]]](function._unary_view(), self._iterator^)
+
     def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[C.Result], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, G.CollectError[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> G.Collected[Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]] where _Source[Self.I].Element == downcast[C.Payload, Movable & Deinitable] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, Self.I, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:
         """Traverse effects and retain the original payloads on success.
 
@@ -1739,9 +1743,9 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Infer the target effect from the callback result and collect a List."""
         return self^.traverse[_InferredApplicative[R]](function)
 
-    def traverse[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises _InferredApplicative[F._View[o].Out].CollectError[Self.I, F._View[o]] -> _InferredApplicative[F._View[o].Out].Collected[Self.I, F._View[o]] where Self.I.Element == F._View[o].Arg and _InferredApplicative[F._View[o].Out].CollectCompatible[Self.I, F._View[o]]:
+    def traverse[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises _ViewTarget[F, o].CollectError[Self.I, F._View[o]] -> _ViewTarget[F, o].Collected[Self.I, F._View[o]] where Self.I.Element == F._View[o].Arg and _ViewTarget[F, o].CollectCompatible[Self.I, F._View[o]]:
         """Infer the target effect from the callback result and collect a List."""
-        return self^.traverse[_InferredApplicative[F._View[o].Out]](function)
+        return self^.traverse[_ViewTarget[F, o]](function)
 
     def traverse[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises _InferredApplicative[F.Out].CollectError[Self.I, F] -> _InferredApplicative[F.Out].Collected[Self.I, F] where Self.I.Element == F.Arg and _InferredApplicative[F.Out].CollectCompatible[Self.I, F]:
         """Infer the target effect from the callback result and collect a List."""
