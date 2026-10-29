@@ -1,39 +1,40 @@
 """Transformer order determines which state recovery receives."""
 from fp.algebra import ResultFamily, fail
 from fp.effects import State, StateT, ResultT, put, lift, run
-from fp.functions import piped
+from fp.functions import pipeline, pipe, tupled
+from fp.data import Result
+from std.testing import assert_equal
 
 comptime Restart = StateT[ResultFamily[String], Int]
 comptime Keep = ResultT[State[Int], String]
-
-
-def failure_restarting_state() -> Restart.Failed[Int]:
-    return fail[Restart, Int](String("rejected"))
-
-
-def failure_preserving_state() -> Keep.Failed[Int]:
-    return fail[Keep, Int](String("rejected"))
 
 
 def fallback(var message: String) -> Int:
     return 0
 
 
-def main():
+def show_kept(var outcome: Result[Int, String], state: Int) raises:
+    var value = outcome^.raise_on_err()
+    assert_equal(value, 0)
+    assert_equal(state, 15)
+    print("ResultT[State]: recovered value =", value, "; state =", state)
+
+
+def main() raises:
     var restarted = (
-        piped(put[Restart](15))
-        .followed_by[Restart](failure_restarting_state)
-        .recover[Restart](fallback)
-        .get()
+        pipeline(put[Restart](15))
+        .product_r(fail[Restart, Int](String("rejected")))
+        .recover(fallback)
+        .run(10)
     )
-    var first = run[Restart](restarted^, 10)
-    print("StateT[Result]: recovered value =", first._ok().value[0], "; state =", first._ok().value[1])
+    var first = restarted^.raise_on_err()
+    assert_equal(first, (0, 10))
+    print("StateT[Result]: recovered value =", first[0], "; state =", first[1])
 
     var kept = (
-        piped(lift[Keep](put[State[Int]](15)))
-        .followed_by[Keep](failure_preserving_state)
-        .recover[Keep](fallback)
+        pipeline[Keep](lift[Keep](put[State[Int]](15)))
+        .product_r(fail[Keep, Int](String("rejected")))
+        .recover(fallback)
         .get()
     )
-    var second = run[State[Int]](kept^, 10)
-    print("ResultT[State]: recovered value =", second[0]._ok().value, "; state =", second[1])
+    pipe(run[State[Int]](kept^, 10), tupled(show_kept))

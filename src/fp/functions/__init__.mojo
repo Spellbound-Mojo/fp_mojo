@@ -1,38 +1,37 @@
 """Pipelines, compositions, argument flipping and partial application.
 
-Use `pipe(value, f, g)` to apply stages now, `flow(f, g)` or `compose(g, f)` to
-build a reusable composition, and `piped(value).then(f).get()` to chain any
-number of stages one call at a time. `flip` swaps two arguments and `partial`
-binds leading arguments. `tupled(function)` adapts a binary callback to one
-native pair without copying either element; `untupled(function)` adapts a pair
-consumer to two arguments with their types inferred. `first[Other]` and `second[Other]`
-transform one pair element and move the other through unchanged.
-`split(left, right)` transforms both pair elements with their types inferred.
-`merge(left, right)` computes two results from one copyable input.
+Start with `pipeline(value)`, chain payload operations such as `.map(function)`
+or whole-value stages with `.then(function)`, and finish with `.get()`. Native
+containers and declared effect recipes infer their family. Select another
+family once with `pipeline[Family](value)` and select native callback errors
+with `.raising[ErrorType]()`. Plain functions, closures and library callables
+can be passed directly to these operations.
+
+Use `pipe(value, f, g)` to apply a fixed sequence now, or `flow(f, g)` and
+`compose(g, f)` to build a reusable composition. `flip` swaps two arguments;
+`partial` binds leading arguments. `tupled(function)` adapts a binary callback
+to one native pair without copying either element, while `untupled(function)`
+adapts a pair consumer to two arguments. `first[Other]`, `second[Other]` and
+`split(left, right)` transform pair elements; `merge(left, right)` computes
+two results from one copyable input.
 
 Two-stage `flow` and `compose` can mix a plain function or stored thin pointer
 with a library callable directly, in either position. Compositions own their
 stages and preserve their shared, mutable or consuming receiver capabilities.
 Inferred two-stage `pipe` also accepts a native/library pair, borrowing its
-shared library stage for immediate execution.
+shared library stage for immediate execution. Extend a saved composition with
+`.then(next)` or adapt its input with `.compose(before)`.
 
-Extend saved compositions with `.then(next)` or adapt a unary chain's inputs
-with `.compose(before)`. `as_binary(function)` stores a plain binary function
-or thin pointer as a reusable library callback when an adapter is needed.
+`Pipeline.map` follows the selected family's payload and timing rules. Native
+collections are eager; Reader, State and Writer retain their base's deferred
+execution. `.get()` extracts the carrier; `.run(...)` executes or unwraps a
+selected effect. Use `iterated` for lazy collection stages. Native callback
+borrows retained by a deferred computation must outlive it.
 
-`Piped.map(transform)` preserves supported native containers, mapping their
-payloads immediately through `fp.algebra`. Use `.map[Family](transform)` for an
-explicit Functor instance, including third-party containers. `filter(predicate)`
-also runs immediately, preserving containers that can represent rejection; `fold_left(step, initial)` consumes an iterable
-immediately and keeps the accumulator in the chain. `get()` extracts the stored
-value. Use `then(function)` to transform the whole value and `iterated` for lazy
-element mapping and filtering.
-
-A stage is a plain function, a closure promoted with `as_unary`, or a library
-value that implements `Unary`, such as a `Partial` or a `Composition`. Each
-stage's input must equal the previous stage's result. Values move from stage to
-stage without copies, stages are borrowed, and a raised error stops the chain
-with its own type; a returned `Result` is ordinary data.
+`as_unary` and `as_binary` provide callable values when a native function must
+be stored, such as inside an effect passed to `ap`. Existing `piped(value)`
+and its per-method family selections remain compatibility entry points; their
+signatures and native-error inference follow the compatibility guide.
 
 `kleisli[Family](f).then(g)` composes effectful functions through the family's
 monadic bind. Its `map` transforms successful payloads; ordinary container

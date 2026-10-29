@@ -55,8 +55,8 @@ proof incidentally.
 
 ## Choose the descriptor
 
-Most descriptors are exported from `fp.algebra`. The two redemption descriptors
-are exported from `fp.functions`.
+Most descriptors are exported from `fp.algebra`. `OrElseContract`,
+`RedeemContract` and `RedeemWithContract` are exported from `fp.functions`.
 
 | Operation | Public descriptor |
 |---|---|
@@ -72,6 +72,7 @@ are exported from `fp.functions`.
 | Handle either original outcome | `RedeemContract`, `RedeemWithContract` |
 | Map stored errors or both payloads | `MapErrContract`, `MapBothContract` |
 | Recover a stored error to a value | `RecoverContract` |
+| Recover a stored error to another carrier | `OrElseContract` |
 | Recover matching errors to a value or another carrier | `RecoverIfContract`, `OrElseIfContract` |
 | Observe a stored error directly or through an effect | `TapErrContract`, `FlatTapErrContract` |
 | Fold, accumulate mapped values or search | `FoldContract`, `FoldMapContract`, `FindContract`, `FindMapContract`, `AnyContract`, `AllContract` |

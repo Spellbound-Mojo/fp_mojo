@@ -1,34 +1,32 @@
 """Transformer order decides whether a stored failure returns the updated state."""
-from fp.algebra import pure, flat_map
+from fp.algebra import ResultFamily, fail
 from fp.effects import State, StateT, ResultT, run, lift, put
-from fp.algebra import ResultFamily
-from fp.data import Result, Err
+from fp.functions import pipeline
+from fp.data import Result
 from std.testing import assert_equal
 
-comptime DomainResult=Result[Int,String]
-comptime Keep=ResultT[State[Int],String]
-comptime Discard=StateT[ResultFamily[String],Int]
+comptime DomainResult = Result[Int, String]
+comptime Keep = ResultT[State[Int], String]
+comptime Discard = StateT[ResultFamily[String], Int]
 
-def failure()->DomainResult:
-    return Err(String("rejected"))
-
-# Each adapter places the same domain failure at its stack's base boundary.
-def fail_keep(var unused:NoneType)->type_of(pure[State[Int]](failure())):
-    return pure[State[Int]](failure())
-
-def fail_discard(var unused:NoneType)->type_of(lift[Discard](failure())):
-    return lift[Discard](failure())
 
 def main() raises:
-    var kept=run[State[Int]](flat_map[Keep](fail_keep,lift[Keep](put[State[Int]](15))),10)
-    comptime assert type_of(kept)==Tuple[DomainResult,Int]
-    ref result=kept[0]
-    var state=kept[1]
-    assert_equal(result.is_err(),True)
-    assert_equal(state,15)
-    print("ResultT[State]: failed, returned state =",state)
+    var preserving = (
+        pipeline[Keep](lift[Keep](put[State[Int]](15)))
+        .product_r(fail[Keep, Int](String("rejected")))
+        .get()
+    )
+    var kept = run[State[Int]](preserving^, 10)
+    comptime assert type_of(kept) == Tuple[DomainResult, Int]
+    assert_equal(kept[0].is_err(), True)
+    assert_equal(kept[1], 15)
+    print("ResultT[State]: failed, returned state =", kept[1])
 
-    var discarded=run[Discard](flat_map[Discard](fail_discard,put[Discard](15)),10)
-    comptime assert type_of(discarded)==Result[Tuple[Int,Int],String]
-    assert_equal(discarded.is_err(),True)
+    var discarded = (
+        pipeline(put[Discard](15))
+        .product_r(fail[Discard, Int](String("rejected")))
+        .run(10)
+    )
+    comptime assert type_of(discarded) == Result[Tuple[Int, Int], String]
+    assert_equal(discarded.is_err(), True)
     print("StateT[Result]: failed, no state payload")

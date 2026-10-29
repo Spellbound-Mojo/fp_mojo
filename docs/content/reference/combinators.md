@@ -6,6 +6,10 @@ transformations lazy and returns terminal results directly. The direct functions
 in `fp.combinators` re-export their canonical operations from `fp.iteration`
 and, for conditional composition, `fp.algebra`.
 
+The table uses `Pipeline` spellings. Select a family with `pipeline[Family](value)`
+when it cannot be inferred; each following operation uses that selection.
+For lazy signatures, see the [iteration reference](iteration.md).
+
 | Method | Meaning |
 |---|---|
 | `.map(transform)` | Transform each payload |
@@ -16,7 +20,7 @@ and, for conditional composition, `fp.algebra`.
 | `.tuple_right(value)` | Attach value on the right; move it once or copy for repeated mappings |
 | `.pair_with(project)` | Produce `(element, project(element))` |
 | `.tap_each(inspect)` | Inspect each element and retain it unchanged |
-| `.tap(inspect)` | Inspect the whole `Piped` value, including ordinary structs |
+| `.tap(inspect)` | Inspect the whole `Pipeline` value, including ordinary structs |
 | `.filter(predicate)` | Retain accepted payloads |
 | `.filter_not(predicate)` | Retain rejected payloads |
 | `.filter_map(transform)` | Transform to `Optional` and retain present results |
@@ -35,39 +39,43 @@ and, for conditional composition, `fp.algebra`.
 | `.flat_pair_with(project)` | Sequence an effect on a borrowed payload; emit `(original, projected)` per successful branch |
 | `.followed_by(make_next)` | Sequence a zero-argument factory and keep its produced values |
 | `.before(make_next)` | Sequence a zero-argument factory; retain the original per successful branch |
-| `.map2(other, combine)` | Combine two already evaluated operands in their Applicative family |
+| `.map2(other, combine)` | Combine two already constructed operands in their Applicative family |
 | `.product(other)` | Combine them into tuples |
+| `.product_r(other)` | Sequence both already constructed effects and keep the right payload |
+| `.product_l(other)` | Sequence both already constructed effects and keep the left payload |
 | `.ap(values)` | Apply callbacks stored in this carrier to another carrier's values |
-| `.traverse[EffectFamily](transform)` | Collect effectful results inside the target effect |
-| `.traverse_void[EffectFamily](transform)` | Run effects and discard successful payloads without collecting them |
-| `.traverse_tap[EffectFamily](inspect)` | Run effects on borrowed payloads and retain the original values on success |
-| `.sequence[EffectFamily]()` | Turn a container of effects into an effect of a container |
-| `.sequence_void[EffectFamily]()` | Sequence existing effects and discard successful payloads |
-| `.flat_traverse[EffectFamily](transform)` | Traverse effects and flatten one source-container level inside the effect |
-| `.flat_sequence[EffectFamily]()` | Sequence existing effects and flatten one source-container level |
-| `.traverse_filter[EffectFamily](transform)` | Traverse effects containing Optional payloads and retain present results |
-| `.filter_effect[EffectFamily](predicate)` | Retain originals accepted by a borrowing, effectful Bool predicate |
-| `.fold_effect[EffectFamily](step, initial)` | Pass the accumulator and next element to an effectful step |
-| `.any_effect[EffectFamily](predicate)` | Test until an effectful predicate succeeds with `True` |
-| `.all_effect[EffectFamily](predicate)` | Test until an effectful predicate succeeds with `False` |
-| `.recover[Family](handler)` | Replace the selected stored error with a success value |
-| `.or_else[Family](handler)` | Replace the selected stored error with another effect |
+| `.traverse(transform)` | Collect effectful results inside the target effect |
+| `.traverse_void(transform)` | Run effects and discard successful payloads without collecting them |
+| `.traverse_tap(inspect)` | Run effects on borrowed payloads and retain the original values on success |
+| `.sequence()` | Turn a container of effects into an effect of a container |
+| `.sequence_void()` | Sequence existing effects and discard successful payloads |
+| `.flat_traverse(transform)` | Traverse effects and flatten one source-container level inside the effect |
+| `.flat_sequence()` | Sequence existing effects and flatten one source-container level |
+| `.traverse_filter(transform)` | Traverse effects containing Optional payloads and retain present results |
+| `.filter_effect(predicate)` | Retain originals accepted by a borrowing, effectful Bool predicate |
+| `.fold_effect(initial).run(step)` | Pass the accumulator and next element to an effectful step |
+| `.any_effect(predicate)` | Test until an effectful predicate succeeds with `True` |
+| `.all_effect(predicate)` | Test until an effectful predicate succeeds with `False` |
+| `.recover(handler)` | Replace the selected stored error with a success value |
+| `.or_else(handler)` | Replace the selected stored error with another effect |
 | `.if_effect(on_true, on_false)` | Select a zero-argument effect factory from an effectful Bool |
 
 For direct calls, put the source last: `fill(value, source^)`,
 `replace(old, new, source^)`, `sum_by(project, source^)` or
 `fold_map[Monoid](project, source^)`. Operations without a runtime argument take
 only the source, such as `compact(source^)` and `sum(source^)`. `tap` is a
-whole-value `Piped` method. Direct traversal, like `Iter.traverse`, gathers a
+whole-value `Pipeline` method. Direct traversal, like `Iter.traverse`, gathers a
 `List` inside the chosen effect.
 
 ## Recover a selected error layer
 
-`piped(value^).recover[Family](handler)` consumes a stored error and replaces
-it with a success value. `.or_else[Family](handler)` instead takes a handler
-returning another effect of that family. Both keep the success type and the
-selected stored-error type. Success skips the handler, and a failure returned
-by the handler passes onward without calling it again.
+`pipeline[Family](value^).recover(handler)` consumes a stored error and replaces
+it with a success value. `.or_else(handler)` continues with the handler's effect.
+Canonical Result pipelines can change the stored-error type through `or_else`;
+other error-capable families retain their selected error layer. Success skips
+the handler, and a failure returned by the handler passes onward without calling
+it again. See [selected recovery](functions.md#select-family-and-native-errors-before-callbacks)
+for the public generic contracts.
 
 `ResultFamily[E]`, `ValidationFamily[S]` and `ResultT[Base, E]` support these
 methods through `ApplicativeError`. Construct a stored failure with
@@ -76,16 +84,16 @@ A list of Results selects `ResultT[ListFamily, E]` to recover its failed entries
 ReaderT, WriterT, OptionalT and StateT lift the same methods from an error-capable
 base Monad. StateT recovery requires copyable state.
 
-Use `.recover_if[Family](predicate, handler)` or
-`.or_else_if[Family](predicate, handler)` to handle only matching errors.
+Use `.recover_if(predicate, handler)` or
+`.or_else_if(predicate, handler)` to handle only matching errors.
 The predicate borrows the selected error and returns Bool. A match transfers
 that error to the handler; a non-match preserves it through the family's
 `fail`. Success skips both callbacks. The same methods work with Validation,
 ResultT and the lifted transformers, with their usual timing and branching.
 
-Use `.tap_err[Family](inspect)` to borrow the selected error for inspection
+Use `.tap_err(inspect)` to borrow the selected error for inspection
 and retain it. The observer's return value is discarded, even if it is a
-stored failure. `.flat_tap_err[Family](inspect)` instead sequences the
+stored failure. `.flat_tap_err(inspect)` instead sequences the
 observer's returned effect before the original failure. Observer success
 restores the original error; observer failure follows the family's combination
 policy. Result keeps the observer error, and Validation accumulates observer
@@ -126,11 +134,21 @@ keeps the updated state instead and does not require copying it.
 
 <!-- example: docs/examples/transformer_recovery.mojo -->
 
+`product_r` sequences an already constructed failure recipe after the state
+update. StateT's declared recipe identifies its family; `pipeline[Keep]` selects
+the erased ResultT layer explicitly. Extracting that chain with `.get()` leaves
+a State recipe for `run[State[Int]]`. The final `tupled(show_kept)` passes both
+tuple elements by move to a normal two-argument function.
+
 Native handlers are borrowed in place. Owned library handlers move into the
 computation; single-use paths admit consuming handlers and move-only values.
 A branching base requires a repeatable handler. Deferred computations retain
 callback borrows until execution, so keep those callbacks alive and unmoved.
-Generic native forwarding may supply the complete callback result and raised
+For new generic wrappers, forward the public contracts in the
+[generic-wrapper guide](../guides/generic-wrappers.md).
+
+The compatibility `Piped` methods retain per-method `[Family]` selection.
+Their native forwarding may supply the complete callback result and raised
 error as `.or_else[Family, R=R, X=E](handler)` or
 `.recover[Family, R=R, X=E](handler)`. Conditional methods use `R` for the
 handler result, `X` for the predicate's native error, `E` for the handler's
@@ -138,7 +156,7 @@ native error and `Z` for an explicit common construction error when generic
 forwarding needs it. Native raises from a non-match's `fail` also propagate;
 Reader and State may defer that construction until `run`.
 
-Explicit-family observers accept `R` for the complete native callback result,
+Compatibility `Piped` observers accept `R` for the complete native callback result,
 `X` for its native error and `Z` for an explicit common construction error.
 Inferred Result `flat_tap_err` accepts `U` for the observer's success payload,
 with its return structurally fixed to `Result[U, E]` to retain error origins.
@@ -492,9 +510,10 @@ the shared implementations and the
 Use `.map_n((second, third), combine)` to combine three effectful values without
 an intermediate lambda. The receiver supplies the first argument to `combine`.
 `.product_n((second, third))` produces a flat `Tuple[A, B, C]` in the same
-family. Both are available through Piped, which infers
-List, Optional and Result; `.map_n[Family]` and `.product_n[Family]` select
-another Applicative.
+family. Start with `pipeline(value)` for native carriers or declared effect
+recipes, or `pipeline[Family](value)` for another Applicative or an erased layer.
+The following operations retain that selection. Compatibility Piped calls keep
+per-method `.map_n[Family]` and `.product_n[Family]` selections.
 
 Operands are consumed and already constructed. Combination follows receiver-first
 order, with the last operand varying fastest in List's Cartesian product.
@@ -507,11 +526,10 @@ exactly. Reader and State defer execution until `run` and preserve their order.
 Native functions and closures take one argument per operand, from one to eight.
 They are borrowed until the family finishes using them. Library `Unary`,
 `MutableUnary` and `OnceUnary` callbacks instead receive the whole flat tuple;
-the family selects the supported receiver mode. Inferred List, Optional and
-Result support arbitrarily long products and tuple-taking library callbacks.
-Explicit family inference supports at most eight total operands. An empty
-additional tuple produces a one-element product; `.map_n((), native_function)`
-behaves as unary mapping.
+the family selects the supported receiver mode. Pipeline products and library
+callbacks use variadic operand packs; native callback overloads cover one to
+eight operands. An empty additional tuple produces a one-element product;
+`.map_n((), native_function)` behaves as unary mapping.
 
 Combination builds successive tuple prefixes through `map2_lazy`, then `map_n`
 maps its callback over the final product. List therefore allocates intermediate
@@ -522,9 +540,8 @@ Use `map2` for binary combination when the extra tuple pass is unnecessary.
 
 
 Use `functions.ap(values)` when the callback is itself inside an effect.
-Piped infers List, Optional and Result, or accepts `.ap[Family](values)` for
-another Applicative. Wrap a Result with `piped(result^)`. The receiver
-contains library unary callbacks; promote a native function or closure with
+A Pipeline infers native carriers or uses the family selected at its start.
+The receiver contains library unary callbacks; promote a native function or closure with
 `as_unary` before storing it. Unlike a callback passed to `map2`, this callback
 is an owned payload of its carrier.
 
@@ -539,8 +556,10 @@ execution and sequencing order. Native errors and borrowed origins are preserved
 The operation adds no collection beyond the carrier produced by combination.
 
 The callback below returns a transformed number, but `traverse_tap` keeps the
-input numbers. `traverse_void` checks the whole iterator without collecting
-those numbers.
+input numbers. Its Result target is inferred from `check`. Finish a Result
+pipeline with `.raise_on_err()` to extract success and propagate a stored error.
+The iterator's `traverse_void[ResultFamily[String]]` checks the whole iterator
+without collecting those numbers; its target selection remains explicit.
 
 <!-- example: docs/examples/fluent_effects.mojo -->
 

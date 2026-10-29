@@ -532,12 +532,31 @@ error conversion or invocation policy is introduced. Generic wrappers retain
 when the base's mapping operation can raise. Tests cover deferred errors,
 independent origins, move-only cleanup and ordinary invalid calls.
 
+## Preferred entry points in transformer and combination examples
+
+The State/Result ordering and recovery examples now compose already constructed
+recipes with `product_r`, using the same sequencing owner as other Pipeline
+operations. Declared StateT recipes infer their family; erased ResultT layers
+select their family once. The examples retain their output and state ordering,
+remove callback factories and per-method family arguments, and use public Result
+operations. The recovery display uses `tupled` to consume both outputs through
+the existing pair-transfer owner.
+
+The combination example also uses Pipeline. The module overview and combinator
+reference now describe the same entry points, target inference and staged fold
+syntax. Compatibility Piped bindings remain documented under their own name.
+The generic-wrapper table includes the existing OrElseContract and its export
+owner. These changes add no library execution or ownership mechanism.
+
 ## Next passes
 
-1. Update older transformer and combination examples to use the preferred
-   Pipeline API and public Result operations. Preserve their exact output,
-   transformer ordering and ownership rules; explain explicit selection for
-   erased transformer layers.
+1. Give Iter traversal terminals the same target inference as Pipeline, starting
+   with `traverse` and `traverse_void`. Reuse the canonical family inference and
+   execution owners, preserving explicit family/error bindings and ordinary
+   invalid-call diagnostics.
+2. Remove remaining private Result inspections from user-facing examples using
+   public consuming or borrowing operations, without adding payload copies
+   merely for display.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

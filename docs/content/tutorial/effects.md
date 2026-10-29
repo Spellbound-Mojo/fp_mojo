@@ -130,6 +130,9 @@ failure:
 <!-- example: docs/examples/state_result.mojo -->
 
 Both computations set the state to 15 and then fail with `Err("rejected")`.
+`product_r` sequences the two recipes and retains the failure's result. StateT
+recipes infer their family; `pipeline[Keep]` explicitly selects the erased
+ResultT layer before combining it with another computation of that layer.
 `ResultT[State[Int], String]` returns `(Err("rejected"), 15)`, so the caller can
 inspect the state reached before failure. Its outer Result is a value inside
 State's computation; run it with `run[State[Int]]`.
