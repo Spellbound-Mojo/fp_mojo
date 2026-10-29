@@ -14,7 +14,7 @@ and read [ownership and errors](../start/ownership.md) first.
 A List pipeline already selects its elements. Use `.filter(predicate)` to keep
 matching values, `.map(transform)` to change them, and `.sum_by(project)` to
 project and sum in one pass. The same operations have lazy counterparts on
-`iterated` and direct forms in `fp.combinators`:
+`iterated`:
 
 <!-- example: docs/examples/combinators.mojo -->
 
@@ -22,6 +22,11 @@ The eager chain keeps `3`, `4` and `5`, computes their squared sum as `50`, and
 formats the result with `.then(report)`. Each eager stage completes before the
 next starts. The lazy chain retains an iterator until `.sum_by(square)` consumes
 it. `filter_not(positive)` keeps the two negative values instead.
+
+The [API guide](../start/choosing-api.md) compares eager collection work, lazy
+iteration, direct Result operations and native capture. Free functions in
+[`fp.combinators`](../reference/combinators.md) remain available when a direct
+function call fits the surrounding algorithm.
 
 For a list literal, put its element type on the pipeline:
 `pipeline[Int]([1, 2, 3]).map(square).get()`. Empty lists use the same form:

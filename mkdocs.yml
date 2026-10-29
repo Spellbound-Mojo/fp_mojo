@@ -47,6 +47,7 @@ nav:
   - Welcome: index.md
   - Get started:
       - Installation: start/installation.md
+      - Choose an API: start/choosing-api.md
       - Ownership and errors: start/ownership.md
   - Tutorial:
       - 1. Eager pipelines: tutorial/pipelines.md

@@ -94,6 +94,13 @@ origin fixtures reject escaping views. An output-only example cannot establish
 those properties. Existing rejection tests with explicit callback-type bindings
 remain controls, not evidence of ordinary-call diagnostics.
 
+The current [API selection guide](../start/choosing-api.md) gives a task-based
+starting path. The introductory collection example now compares eager and lazy
+chains, with free functions linked separately. The validation example formats
+its pair through public Result folding. The pinned baseline above retains the
+earlier examples so these reductions in required concepts and private access
+can be reviewed.
+
 ## Milestones and pass boundaries
 
 | Order | Milestone | Completion criterion |

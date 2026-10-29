@@ -18,6 +18,9 @@ def total(a: Int, b: Int, c: Int) -> Int: return a + b + c
 def squared(value: Int) -> Int: return value * value
 
 def show_total(value: Int) -> String: return "total: " + String(value)
+def show_pair(var values: Tuple[Int, Int]) -> String:
+    return "pair: " + String(values[0]) + " " + String(values[1])
+
 def show_values(var values: List[Int]) -> String:
     var text = String("values:")
     for value in values:
@@ -44,7 +47,7 @@ def main():
     print(collected^.fold_owned(show_values, show_errors))
 
     var pair = pipeline(positive(2)).par_product_n((positive(3),)).get()
-    print("pair:", pair._ok().value[0], pair._ok().value[1])
+    print(pair^.fold_owned(show_pair, show_errors))
     var checks: List[Checked] = [positive(2), positive(-3), positive(-4)]
     var sequenced = pipeline(checks^).par_sequence().get()
     print(sequenced^.fold_owned(show_values, show_errors))

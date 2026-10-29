@@ -64,6 +64,7 @@ how a failing stage stops it.
 
 | Your task | Start here |
 |---|---|
+| Choose Result methods, pipelines, lazy iteration or native capture | [Choose an API](start/choosing-api.md) |
 | Learn through runnable programs | [Tutorial](tutorial/pipelines.md) |
 | Choose between mapping, combination and bind | [Functors, applicatives and monads](tutorial/algebra.md) |
 | Compose configuration, state and logging | [Reader, State and Writer](tutorial/effects.md) |
