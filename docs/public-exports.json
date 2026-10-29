@@ -5203,6 +5203,12 @@
       "sha256": "33954ed54ab525930551148cc8aebab0ded2904266d70272519447a5c2218edc",
       "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]:"
      }
+    ],
+    "use_void": [
+     {
+      "sha256": "5fd413034110060be25ea864c0c1ce630ec864ff37f147a19dea4eccd8edd07d",
+      "signature": "def use_void(deinit self) -> _UseEffectResource[Self.O, _ConstantFinalizer[IO[Self.Error].Pure[NoneType], Self.Value]]:"
+     }
     ]
    },
    "provider": "effects/effectful_resources"
@@ -5706,6 +5712,12 @@
      {
       "sha256": "8bd6cf89c78eacea2ea0020af3606e208ee87239dc504f6143e6e49e280c7697",
       "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F ) -> Result[V, EffectFailure[Self.Error]] where Self.O.Native and P == Self.Value and _ErrorCompatible[Self.Error, X]:"
+     }
+    ],
+    "use_void": [
+     {
+      "sha256": "e1f66d7e67b4e51b9a0a2694298aca61e7e9d572d112168d41433fb374afccc4",
+      "signature": "def use_void(deinit self) -> Result[NoneType, EffectFailure[Self.Error]] where Self.O.Native:"
      }
     ]
    },

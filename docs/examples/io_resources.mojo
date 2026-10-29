@@ -1,7 +1,6 @@
 """Compose effectful scopes and observe the outcome during release."""
-from fp.effects import IO, ExitCase, ScopedIO, DelayContract, resource_io, resource_io_case, delay, run_io, canceled
+from fp.effects import ExitCase, ScopedIO, DelayContract, resource_io, resource_io_case, delay, run_io, canceled
 from fp.callables import OnceThunk
-from fp.algebra import pure
 
 
 def open_session() -> String:
@@ -21,10 +20,6 @@ struct CloseSession(OnceThunk):
 
 def close_session(var name: String) -> DelayContract[CloseSession, Int].Out:
     return delay[Int](CloseSession(name^, "after use"))
-
-
-def read_session(name: String) -> IO[Int].Pure[Int]:
-    return pure[IO[Int]](name.byte_length())
 
 
 @fieldwise_init
@@ -50,9 +45,9 @@ def close_with_case(var name: String) -> CloseWithCase:
 def main():
     var scope = resource_io(delay[Int](open_session), close_session)
     # Acquisition and cleanup remain deferred until this IO program is run.
-    var result = run_io(scope^.eval_map(read_session).surround(pure[IO[Int]](42)))
+    var result = run_io(scope^.use_void())
     var success = result.take()
-    print("result:", success^._take_ok())
+    print("completed:", success.is_ok())
     var observed = resource_io_case(delay[Int](open_session), close_with_case)
     var outcome = run_io(observed^.surround(canceled[Int]()))
     print("canceled:", not outcome)

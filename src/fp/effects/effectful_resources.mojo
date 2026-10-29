@@ -275,6 +275,19 @@ struct IOResource[O: _OpenScope](_ResourceType):
         """
         return IOResource(_EvalMapResource[Self.O, F, True](self._recipe^, function^))
 
+    def use_void(deinit self) -> _UseEffectResource[Self.O, _ConstantFinalizer[IO[Self.Error].Pure[NoneType], Self.Value]]:
+        """Build IO that acquires and releases this resource without a body.
+
+        Construction remains deferred. Running follows the existing acquisition,
+        cancellation masking and cleanup rules. Unopened programs only destroy
+        their stored owners; acquired values are never copied.
+
+        Returns:
+            IO with NoneType payload in this resource's exact error family.
+        """
+        var nothing: NoneType = None
+        return self^.surround(IO[Self.Error].pure(nothing))
+
     def surround[P: ReaderAction](deinit self, var program: P) -> _UseEffectResource[Self.O, _ConstantFinalizer[P, Self.Value]] where IOContract[P].Compatible and IOContract[P].Error == Self.Error:
         """Run an independent program inside this resource's lifetime.
 

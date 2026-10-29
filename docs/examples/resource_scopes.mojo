@@ -22,3 +22,5 @@ def main():
         print("value:", result^.raise_on_err())
     except failure:
         print("errors:", len(failure.errors))
+    var completed = resource[Error](open_left, close_name).use_void()
+    print("released without a body:", completed.is_ok())

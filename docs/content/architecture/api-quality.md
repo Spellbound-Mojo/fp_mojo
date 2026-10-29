@@ -363,6 +363,26 @@ value movement, repeated copies and invocation. A one-shot base moves its log;
 a branching base copies only the appended log. Neither route copies payloads.
 This also preserves nested-log selection, stored failures and deferred errors.
 
+## Running resources without a body callback
+
+Cats Effect's [Resource implementation](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel/shared/src/main/scala/cats/effect/kernel/Resource.scala)
+provides a terminal for programs expressed entirely in resource composition:
+
+```scala
+def use_(implicit F: MonadCancel[F, Throwable]): F[Unit] = use(_ => F.unit)
+```
+
+Native Resource and IOResource expose this as `use_void()`, following the
+library's existing `traverse_void` naming. Native execution delegates to `use`
+with the shared ignored-input and constant-value adapters. IO execution
+delegates to `surround` with a unit recipe. Both preserve acquisition and
+release order, move-only owners and exact error types. Native execution occurs
+immediately; IO execution stays deferred, including cancellation and masking.
+
+The IO resource example now opens and closes a session with `use_void()`.
+It no longer needs an unrelated body value, a projection callback or a pure
+IO type annotation just to run the resource's lifecycle.
+
 ## Next passes
 
 1. Revisit remaining example-only factories and concrete recipe return

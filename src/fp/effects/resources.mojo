@@ -5,6 +5,7 @@ from fp.callables.protocols import ThunkContract, UnaryContract, BorrowCallContr
 from fp.callables.invoke import _OnceThunkAvailable, _OnceUnaryAvailable
 from fp.callables._receiver import _OnceBorrowAvailable, _borrow_once_as
 from fp.callables._binding import _OwnedThunk, _OwnedUnary, _BorrowThunk
+from fp.callables._transforms import _IgnoreInput, _ValueThunk
 from fp.callables.products import _take_pair
 from fp.callables.native import _NativeThunk, NativeUnary, _NativeBorrow, _Thunk, _RaisingThunk, _Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing
 from fp.data import Result, Ok, Err
@@ -287,6 +288,19 @@ struct Resource[O: _OpenScope](_ResourceType):
         var used = _capture[Self.Error](_BorrowThunk(function^, Pointer(to=rebind[F.Payload](lease.value))))
         var finalized = lease^.close(Optional(used^), context)
         return finalized.take()
+
+    def use_void(deinit self) -> Result[NoneType, EffectFailure[Self.Error]] where Self.O.Native:
+        """Acquire and release immediately, without a user-supplied body.
+
+        Composed acquisitions and projections still run in order. Every
+        registered release runs in reverse order, including after partial
+        acquisition failure. The acquired values are never copied.
+
+        Returns:
+            Ok of None, or the existing ordered lifecycle failures.
+        """
+        var nothing: NoneType = None
+        return self^.use(_IgnoreInput[Self.Value, _ValueThunk[NoneType]](_ValueThunk(nothing)))
 
     def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F
     ) -> Resource[_Join[Self.O, _MapScopeFactory[F, Self.Error], False]] where Self.O.Native and F.Payload == Self.Value and _ErrorCompatible[Self.Error, F.Failure] and _OnceBorrowAvailable[F]:

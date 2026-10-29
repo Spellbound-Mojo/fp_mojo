@@ -49137,6 +49137,22 @@
       "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]",
       "summary": "Adapt a native borrowing IO factory without executing it."
      }
+    ],
+    "use_void": [
+     {
+      "args": [],
+      "description": "Construction remains deferred. Running follows the existing acquisition,\ncancellation masking and cleanup rules. Unopened programs only destroy\ntheir stored owners; acquired values are never copied.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "IO with NoneType payload in this resource's exact error family.",
+       "type": "_UseEffectResource[Self.O, _ConstantFinalizer[IO[Self.Error].Pure[NoneType], Self.Value]]"
+      },
+      "signature": "def use_void(deinit self) -> _UseEffectResource[Self.O, _ConstantFinalizer[IO[Self.Error].Pure[NoneType], Self.Value]]",
+      "summary": "Build IO that acquires and releases this resource without a body."
+     }
     ]
    },
    "parameters": [
@@ -52240,6 +52256,22 @@
       },
       "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Result[V, EffectFailure[Self.Error]] where Self.O.Native and P == Self.Value and _ErrorCompatible[Self.Error, X]",
       "summary": "Adapt an owned native borrowing callback to the shared scope runner."
+     }
+    ],
+    "use_void": [
+     {
+      "args": [],
+      "description": "Composed acquisitions and projections still run in order. Every\nregistered release runs in reverse order, including after partial\nacquisition failure. The acquired values are never copied.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Ok of None, or the existing ordered lifecycle failures.",
+       "type": "Result[NoneType, EffectFailure[Self.Error]]"
+      },
+      "signature": "def use_void(deinit self) -> Result[NoneType, EffectFailure[Self.Error]] where Self.O.Native",
+      "summary": "Acquire and release immediately, without a user-supplied body."
      }
     ]
    },

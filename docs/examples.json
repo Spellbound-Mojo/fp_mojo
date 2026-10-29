@@ -235,7 +235,7 @@
       "stdout": "recovered: 4\ndeferred: 7\n"
     },
     "docs/examples/resource_scopes.mojo": {
-      "stdout": "recipe ready\nopen: left\nopen: right\nclose: right\nclose: left\nvalue: left+right\n"
+      "stdout": "recipe ready\nopen: left\nopen: right\nclose: right\nclose: left\nvalue: left+right\nopen: left\nclose: left\nreleased without a body: True\n"
     },
     "docs/examples/result_combinators.mojo": {
       "stdout": "checked: 8\n8\nrejected -2\n0\n"
@@ -349,7 +349,7 @@
       "stdout": "released after success\nresult: 42\nreleased after cancellation\ncanceled: True\n"
     },
     "docs/examples/io_resources.mojo": {
-      "stdout": "open session\nclose session after use\nresult: 42\nopen session\nclose session after cancellation\ncanceled: True\n"
+      "stdout": "open session\nclose session after use\ncompleted: True\nopen session\nclose session after cancellation\ncanceled: True\n"
     }
   },
   "version": 1

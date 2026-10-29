@@ -336,6 +336,11 @@ and failed release are both retained in `EffectFailure[E].errors`.
 
 <!-- example: docs/examples/resource_scopes.mojo -->
 
+Use `.use_void()` when acquisition and release are the whole operation. It
+executes a native scope immediately and returns `Result[NoneType,
+EffectFailure[E]]`; it needs no callback and does not copy the acquired value.
+Composed scopes retain their acquisition order and reverse release order.
+
 A use result or error cannot borrow the resource being released. Flat-map's
 inner recipe must also be independent of that fresh outer borrow; independent
 captured owners remain supported. `ResourceContract[A, R, E].Out` names a
@@ -444,6 +449,7 @@ and errors may be move-only.
 | `eval_map(factory)` | Project through IO, keeping the original resource alive while that IO borrows it. |
 | `eval_tap(factory)` | Run IO over the borrowed resource and retain the original value. |
 | `surround(program)` | Run an independent IO program inside the scope. |
+| `use_void()` | Build IO that acquires and releases the scope with no body callback and a NoneType success payload. |
 | `eval_resource(program)` | Lift cancellable IO into a resource with ordinary value destruction and no custom release. |
 | `lift_resource(scope)` | Lift a native Resource into the effectful lifecycle. |
 
@@ -454,6 +460,11 @@ recipe retain the temporary borrow of its outer value; use `eval_map` or
 `eval_tap` for an IO action that needs that borrow. Native Resource composition
 admits native recipes only; call `lift_resource` before binding an effectful
 inner resource.
+
+Unlike native Resource, IOResource `.use_void()` remains deferred until
+`run_io`. It uses the same lifecycle as `surround`: a canceled token can skip
+an unopened scope; a successful acquisition registers release before honoring
+cancellation. Cleanup failures remain in the exact typed outcome.
 
 `resource_io_case(acquire, release)` adds outcome-aware cleanup. Its release
 callback consumes the resource and returns a `ScopedIO` factory whose input is
