@@ -661,6 +661,16 @@ resulting tuple, and existing positional family bindings still work.
 
 <!-- example: docs/examples/product_contracts.mojo -->
 
+`ProductLeftContract[I, V, W]` and `ProductRightContract[I, V, W]` specialize
+the same combination contract with a payload-selection callback. Generic
+wrappers forward `Compatible`, return `Out` and raise `Error`; `Family` supplies
+the fluent continuation. Free `product_l[I](left, right)` and
+`product_r[I](left, right)` require the complete contract, and selected
+Pipeline methods check the same carrier and family admission. Move-only
+payloads remain valid for single-use families. Cartesian families retain their
+copying requirements, including discarded operands. No additional combination
+or error-handling implementation is introduced.
+
 ### Contracts for stored callbacks
 
 `ApContract[I, V, W]` describes applying the library callbacks in carrier `V`

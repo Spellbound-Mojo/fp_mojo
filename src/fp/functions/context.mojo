@@ -1,5 +1,5 @@
 """Select family and native errors before callback inference; reuse algebra execution."""
-from fp.algebra.contracts import ApContract, ProductContract, Map2Contract, IfContract
+from fp.algebra.contracts import ApContract, ProductContract, ProductLeftContract, ProductRightContract, Map2Contract, IfContract
 from std.builtin.rebind import downcast, rebind_var
 from std.collections import Array, Deque, LinkedList, StringDict, KeyElement
 from std.hash import Hasher
@@ -35,7 +35,7 @@ from fp.callables._transforms import _ObserveOnce
 from fp.callables.protocols import UnaryContract, BorrowCallable, BorrowCallContract, ThunkContract, Thunk, BinaryContract, Binary
 from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
 from fp.callables._nary import _OwnedNativeNary1, _OwnedNativeNary2, _OwnedNativeNary3, _OwnedNativeNary4, _OwnedNativeNary5, _OwnedNativeNary6, _OwnedNativeNary7, _OwnedNativeNary8, _NativeNary1, _NativeNary2, _NativeNary3, _NativeNary4, _NativeNary5, _NativeNary6, _NativeNary7, _NativeNary8
-from fp.callables._transforms import _Apply, _Replace, _TupleWith, _Fill, _ValueThunk, _Pair, _Observe, _BorrowedUnary, _IgnoreInput
+from fp.callables._transforms import _Apply, _Replace, _TupleWith, _Fill, _ValueThunk, _Pair, _KeepOperand, _Observe, _BorrowedUnary, _IgnoreInput
 from fp.callables._predicates import _FilterPredicate
 from fp.callables._views import _UnaryViewable, _BorrowViewable
 from .kleisli import _KleisliValue
@@ -3828,6 +3828,42 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
             The exact callback or family error; it never becomes a stored Result error.
         """
         return Pipeline[Self.I, ProductContract[_Combining[Self.I], Self.V, W].Out, Self.E](_map2_as[_Combining[Self.I], X=ProductContract[_Combining[Self.I], Self.V, W].Error](_Pair[_Combining[Self.I].Element[Self.V], _Combining[Self.I].Element[W]](), self.value^, other^))
+
+    @always_inline
+    def product_l[W: Movable & Deinitable](deinit self, var other: W) raises ProductLeftContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductLeftContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductLeftContract[_Combining[Self.I], Self.V, W].FamilyCompatible:
+        """Combine existing effects and keep the left payload; the family retains evaluation and failure policy.
+
+        Parameters:
+            W: The second carrier type, including its origins.
+
+        Args:
+            other: The already evaluated second carrier, consumed.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, ProductLeftContract[_Combining[Self.I], Self.V, W].Out, Self.E](_map2_as[_Combining[Self.I], X=ProductLeftContract[_Combining[Self.I], Self.V, W].Error](_KeepOperand[_Combining[Self.I].Element[Self.V], _Combining[Self.I].Element[W], True](), self.value^, other^))
+
+    @always_inline
+    def product_r[W: Movable & Deinitable](deinit self, var other: W) raises ProductRightContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductRightContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductRightContract[_Combining[Self.I], Self.V, W].FamilyCompatible:
+        """Combine existing effects and keep the right payload; the family retains evaluation and failure policy.
+
+        Parameters:
+            W: The second carrier type, including its origins.
+
+        Args:
+            other: The already evaluated second carrier, consumed.
+
+        Returns:
+            The pipeline containing the operation result, retaining its selected native error.
+
+        Raises:
+            The exact callback or family error; it never becomes a stored Result error.
+        """
+        return Pipeline[Self.I, ProductRightContract[_Combining[Self.I], Self.V, W].Out, Self.E](_map2_as[_Combining[Self.I], X=ProductRightContract[_Combining[Self.I], Self.V, W].Error](_KeepOperand[_Combining[Self.I].Element[Self.V], _Combining[Self.I].Element[W], False](), self.value^, other^))
 
     def sequence[J: Applicative = _InferredApplicative[Self.I.Element[Self.V]]](deinit self) raises _Traversing[Self.I].TraverseError[J, Self.V, Identity[Self.I.Element[Self.V]]] -> Pipeline[J, _Traversing[Self.I].Traversed[J, Self.V, Identity[Self.I.Element[Self.V]]], Self.E] where conforms_to(Self.I, Traversable) and _TraverseCompatible[_Traversing[Self.I], Self.V, Identity[Self.I.Element[Self.V]]] and _Traversing[Self.I].TargetCompatible[J, Self.V, Identity[Self.I.Element[Self.V]]] and _CarrierCompatible[J, Self.I.Element[Self.V]]:
         """Sequence existing effects and continue in the target family.

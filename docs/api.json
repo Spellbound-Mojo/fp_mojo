@@ -5528,6 +5528,40 @@
    "summary": "The exact contract of pairing two already evaluated carriers.",
    "traits": []
   },
+  "algebra.ProductLeftContract": {
+   "aliases": [],
+   "description": "Forward Compatible, Out and Error in generic wrappers; Family identifies the\nfluent continuation. Both carriers are consumed. The existing combination\npolicy owns ordering, repetition, stored failures and deferred execution.\nError describes construction; deferred recipes keep their execution errors.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Applicative family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete left carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The complete right carrier type, including origins.",
+     "inferred": false,
+     "name": "W",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime ProductLeftContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _KeepOperand[I.Element[V], I.Element[W], True]]",
+   "summary": "The contract of combining two carriers while keeping the left payload.",
+   "traits": []
+  },
   "algebra.ProductMonoid": {
    "aliases": [
     {
@@ -5614,6 +5648,40 @@
     "Monoid",
     "Semigroup"
    ]
+  },
+  "algebra.ProductRightContract": {
+   "aliases": [],
+   "description": "This has ProductLeftContract's forwarding and ownership rules with the right\npayload retained. Keeping a value does not skip the other effect: the selected\nApplicative still defines evaluation, failure and accumulation.",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The selected Applicative family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Applicative",
+     "variadic": false
+    },
+    {
+     "description": "The complete left carrier type, including origins.",
+     "inferred": false,
+     "name": "V",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The complete right carrier type, including origins.",
+     "inferred": false,
+     "name": "W",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "algebra/contracts",
+   "signature": "comptime ProductRightContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _KeepOperand[I.Element[V], I.Element[W], False]]",
+   "summary": "The contract of combining two carriers while keeping the right payload.",
+   "traits": []
   },
   "algebra.RebindingFunctor": {
    "aliases": [
@@ -10382,6 +10450,124 @@
      },
      "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible",
      "summary": "Combine already computed operands into pairs through map2."
+    }
+   ],
+   "provider": "algebra/_derived",
+   "summary": ""
+  },
+  "algebra.product_l": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The first carrier, consumed.",
+       "name": "left",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The second carrier, consumed; its successful payload is discarded.",
+       "name": "right",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "Arguments are constructed before this call. Deferred recipes still run\nlater. Validation accumulates errors; List forms a left-major Cartesian\nproduct and retains one left payload for every successful pair.",
+     "error": "ProductLeftContract[I, V, W].Error",
+     "parameters": [
+      {
+       "description": "The complete left carrier type, including origins.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The complete right carrier type, including origins.",
+       "inferred": true,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The Applicative family owning combination and errors.",
+       "inferred": false,
+       "name": "I",
+       "type": "Applicative",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The family's construction error; deferred execution retains its own error.",
+     "returns": {
+      "doc": "The carrier of retained left payloads.",
+      "type": "ProductLeftContract[I, V, W].Out"
+     },
+     "signature": "def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W) raises ProductLeftContract[I, V, W].Error -> ProductLeftContract[I, V, W].Out where ProductLeftContract[I, V, W].Compatible",
+     "summary": "Combine existing effects and keep the left payload on success."
+    }
+   ],
+   "provider": "algebra/_derived",
+   "summary": ""
+  },
+  "algebra.product_r": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The first carrier, consumed; its successful payload is discarded.",
+       "name": "left",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The second carrier, consumed.",
+       "name": "right",
+       "type": "W",
+       "variadic": false
+      }
+     ],
+     "description": "This has product_l's evaluation and ownership contract. Discarding the left\npayload does not discard its effect or its stored errors.",
+     "error": "ProductRightContract[I, V, W].Error",
+     "parameters": [
+      {
+       "description": "The complete left carrier type, including origins.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The complete right carrier type, including origins.",
+       "inferred": true,
+       "name": "W",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The Applicative family owning combination and errors.",
+       "inferred": false,
+       "name": "I",
+       "type": "Applicative",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "The family's construction error; deferred execution retains its own error.",
+     "returns": {
+      "doc": "The carrier of retained right payloads.",
+      "type": "ProductRightContract[I, V, W].Out"
+     },
+     "signature": "def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W) raises ProductRightContract[I, V, W].Error -> ProductRightContract[I, V, W].Out where ProductRightContract[I, V, W].Compatible",
+     "summary": "Combine existing effects and keep the right payload on success."
     }
    ],
    "provider": "algebra/_derived",
@@ -199519,6 +199705,38 @@
       "summary": "Combine two evaluated carriers into pairs using the selected family."
      }
     ],
+    "product_l": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The already evaluated second carrier, consumed.",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "ProductLeftContract[_Combining[Self.I], Self.V, W].Error",
+      "parameters": [
+       {
+        "description": "The second carrier type, including its origins.",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, ProductLeftContract[_Combining[Self.I], Self.V, W].Out, Self.E]"
+      },
+      "signature": "def product_l[W: Movable & Deinitable](deinit self, var other: W) raises ProductLeftContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductLeftContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductLeftContract[_Combining[Self.I], Self.V, W].FamilyCompatible",
+      "summary": "Combine existing effects and keep the left payload; the family retains evaluation and failure policy."
+     }
+    ],
     "product_n": [
      {
       "args": [
@@ -199549,6 +199767,38 @@
       },
       "signature": "def product_n[*Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws]) raises _ProductTypes[_Combining[Self.I], Self.V, *Ws].Error -> Pipeline[Self.I, _ProductTypes[_Combining[Self.I], Self.V, *Ws].Out, Self.E] where conforms_to(Self.I, Applicative) and Ws.length < 8 and _ProductRun[_Combining[Self.I], Self.V, *Ws].AdmittedInputs",
       "summary": "Combine up to eight evaluated carriers into flat tuples."
+     }
+    ],
+    "product_r": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The already evaluated second carrier, consumed.",
+        "name": "other",
+        "type": "W",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "ProductRightContract[_Combining[Self.I], Self.V, W].Error",
+      "parameters": [
+       {
+        "description": "The second carrier type, including its origins.",
+        "inferred": false,
+        "name": "W",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": true,
+      "raises_doc": "The exact callback or family error; it never becomes a stored Result error.",
+      "returns": {
+       "doc": "The pipeline containing the operation result, retaining its selected native error.",
+       "type": "Pipeline[Self.I, ProductRightContract[_Combining[Self.I], Self.V, W].Out, Self.E]"
+      },
+      "signature": "def product_r[W: Movable & Deinitable](deinit self, var other: W) raises ProductRightContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductRightContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductRightContract[_Combining[Self.I], Self.V, W].FamilyCompatible",
+      "summary": "Combine existing effects and keep the right payload; the family retains evaluation and failure policy."
      }
     ],
     "raise_on_err": [

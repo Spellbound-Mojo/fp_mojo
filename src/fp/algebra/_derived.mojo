@@ -2,8 +2,8 @@
 from fp.algebra._admission import _BindCompatible, _CombineCompatible, _CollectCompatible
 from fp.callables.protocols import BinaryContract
 from fp.callables._identity import Identity
-from fp.callables._transforms import _ValueThunk as _Value, _Pair, _Apply
-from .contracts import ApContract, ProductContract, Map2Contract, _Function
+from fp.callables._transforms import _ValueThunk as _Value, _Pair, _KeepOperand, _Apply
+from .contracts import ApContract, ProductContract, ProductLeftContract, ProductRightContract, Map2Contract, _Function
 from .protocols import Applicative, Monad, Traversable, _map2_lazy_as
 from fp._internal.errors import _ErrorCompatible
 
@@ -134,3 +134,54 @@ def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative
         The family's combination error, unchanged.
     """
     return map2[I](_Pair[I.Element[V], I.Element[W]](), left^, right^)
+
+
+def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W
+) raises ProductLeftContract[I, V, W].Error -> ProductLeftContract[I, V, W].Out where ProductLeftContract[I, V, W].Compatible:
+    """Combine existing effects and keep the left payload on success.
+
+    Arguments are constructed before this call. Deferred recipes still run
+    later. Validation accumulates errors; List forms a left-major Cartesian
+    product and retains one left payload for every successful pair.
+
+    Parameters:
+        V: The complete left carrier type, including origins.
+        W: The complete right carrier type, including origins.
+        I: The Applicative family owning combination and errors.
+
+    Args:
+        left: The first carrier, consumed.
+        right: The second carrier, consumed; its successful payload is discarded.
+
+    Returns:
+        The carrier of retained left payloads.
+
+    Raises:
+        The family's construction error; deferred execution retains its own error.
+    """
+    return map2[I](_KeepOperand[I.Element[V], I.Element[W], True](), left^, right^)
+
+
+def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W
+) raises ProductRightContract[I, V, W].Error -> ProductRightContract[I, V, W].Out where ProductRightContract[I, V, W].Compatible:
+    """Combine existing effects and keep the right payload on success.
+
+    This has product_l's evaluation and ownership contract. Discarding the left
+    payload does not discard its effect or its stored errors.
+
+    Parameters:
+        V: The complete left carrier type, including origins.
+        W: The complete right carrier type, including origins.
+        I: The Applicative family owning combination and errors.
+
+    Args:
+        left: The first carrier, consumed; its successful payload is discarded.
+        right: The second carrier, consumed.
+
+    Returns:
+        The carrier of retained right payloads.
+
+    Raises:
+        The family's construction error; deferred execution retains its own error.
+    """
+    return map2[I](_KeepOperand[I.Element[V], I.Element[W], False](), left^, right^)

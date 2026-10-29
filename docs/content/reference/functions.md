@@ -586,7 +586,7 @@ them and deferred targets postpone them. Source-family traversal retains its
 own callback-construction timing. Raised callback and postprocessing errors
 keep their exact types; none becomes a stored target error automatically.
 
-`map2(other, combine)`, `product(other)`,
+`map2(other, combine)`, `product(other)`, `product_l(other)`, `product_r(other)`,
 `map_n((other, ...), combine)` and `product_n((other, ...))` retain the current
 Applicative family. The n-ary forms accept one to eight total operands; native
 functions take separate payload arguments, while library Unary callables take
@@ -594,6 +594,14 @@ one tuple. Operands are already evaluated and are consumed once. Result keeps
 its first stored error, Optional skips absent inputs, and List produces
 Cartesian combinations. Selecting `ValidationFamily[Semigroup]` explicitly
 accumulates stored errors through the same operations.
+
+`product_l` retains the left payload and `product_r` retains the right one,
+without an ignored-argument callback or a temporary tuple. Both operands are
+constructed before the call; deferred effects still execute later. Discarding
+a payload keeps its effect and any stored failure. List selection produces
+one retained value per Cartesian pair. Use `before(factory)` or
+`followed_by(factory)` when constructing the next effect must be conditional
+on a successful previous step; those operations require Monad.
 
 <!-- example: docs/examples/selected_workflow.mojo -->
 

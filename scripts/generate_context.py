@@ -779,24 +779,20 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         )
 
     family = "_Combining[Self.I]"
-    pair = f"_Pair[{family}.Element[Self.V], {family}.Element[W]]"
-    contract = f"ProductContract[{family}, Self.V, W]"
-    error, result = contract + ".Error", contract + ".Out"
-    emit(
-        "product",
-        {},
-        [f"W: {MD}"],
-        "var other: W",
-        result,
-        error,
-        "Self.I",
-        [
-            "conforms_to(Self.I, Applicative)",
-            contract + ".FamilyCompatible",
-        ],
-        f"_map2_as[{family}, X={error}]({pair}(), self.value^, other^)",
-        "Combine two evaluated carriers into pairs using the selected family.",
-    )
+    operands = f"{family}.Element[Self.V], {family}.Element[W]"
+    for name, descriptor, callback_type, summary in (
+        ("product", "ProductContract", f"_Pair[{operands}]",
+         "Combine two evaluated carriers into pairs using the selected family."),
+        ("product_l", "ProductLeftContract", f"_KeepOperand[{operands}, True]",
+         "Combine existing effects and keep the left payload; the family retains evaluation and failure policy."),
+        ("product_r", "ProductRightContract", f"_KeepOperand[{operands}, False]",
+         "Combine existing effects and keep the right payload; the family retains evaluation and failure policy."),
+    ):
+        contract = f"{descriptor}[{family}, Self.V, W]"
+        error, result = contract + ".Error", contract + ".Out"
+        emit(name, {}, [f"W: {MD}"], "var other: W", result, error, "Self.I",
+             ["conforms_to(Self.I, Applicative)", contract + ".FamilyCompatible"],
+             f"_map2_as[{family}, X={error}]({callback_type}(), self.value^, other^)", summary)
 
     family = "_Traversing[Self.I]"
     identity = "Identity[Self.I.Element[Self.V]]"

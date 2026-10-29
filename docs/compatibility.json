@@ -987,12 +987,14 @@
         "map2",
         "product",
         "map_n",
-        "product_n"
+        "product_n",
+        "product_l",
+        "product_r"
       ],
       "status": "selected",
       "families": "Selected Applicative",
       "callbacks": "Native separate operands; library tuple/binary contracts. Stored n-ary thin pointers are owned and retain exact argument/result conventions.",
-      "ownership": "Consumes evaluated carriers; Cartesian output may require copies.",
+      "ownership": "Consumes evaluated carriers; product_l/product_r retain one payload per successful pair. Cartesian output may require copies of both operands.",
       "errors": "Family policy keeps or accumulates stored errors; native errors stay raised.",
       "timing": "Family-controlled; target selection is unchanged.",
       "owner": [
@@ -1002,7 +1004,10 @@
       "evidence": [
         "tests/runtime/test_context_stages_combinations.mojo",
         "tests/runtime/test_context_native_nary_abi.mojo",
-        "tests/ownership/test_context_native_nary_ownership.mojo"
+        "tests/ownership/test_context_native_nary_ownership.mojo",
+        "tests/runtime/test_product_selection.mojo",
+        "tests/runtime/test_product_selection_effects.mojo",
+        "tests/runtime/test_product_selection_ownership.mojo"
       ]
     },
     {

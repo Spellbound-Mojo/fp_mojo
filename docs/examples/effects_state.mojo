@@ -22,12 +22,12 @@ def main() raises:
     print("read:", described[0], "; state =", described[1])
 
     var advance = modify[CounterState](increment)
-    var advanced = pipeline(advance^).followed_by(get[CounterState]).run(10)
+    var advanced = pipeline(advance^).product_r(get[CounterState]()).run(10)
     assert_equal(advanced[0], 11)
     assert_equal(advanced[1], 11)
     print("update: value =", advanced[0], "; state =", advanced[1])
 
-    var cleared = pipeline(put[CounterState](0)).followed_by(get[CounterState]).run(10)
+    var cleared = pipeline(put[CounterState](0)).product_r(get[CounterState]()).run(10)
     assert_equal(cleared[0], 0)
     assert_equal(cleared[1], 0)
     print("reset: value =", cleared[0], "; state =", cleared[1])

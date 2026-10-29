@@ -27,6 +27,20 @@ struct _Pair[A: Movable & Deinitable, B: Movable & Deinitable](Binary, Copyable,
 
 
 @fieldwise_init
+struct _KeepOperand[A: Movable & Deinitable, B: Movable & Deinitable, left: Bool](Binary, Copyable, Defaultable):
+    """Move the selected payload; the family owns combination and repetition."""
+    comptime First = Self.A
+    comptime Second = Self.B
+    comptime Out = Self.A if Self.left else Self.B
+    def call(self, var first: Self.A, var second: Self.B) -> Self.Out:
+        # Mojo 1.2 needs the branch-proven conditional type identity spelled out.
+        comptime if Self.left:
+            return rebind_var[Self.Out](first^)
+        else:
+            return rebind_var[Self.Out](second^)
+
+
+@fieldwise_init
 struct _Duplicate[A: Copyable & Deinitable](Unary, Copyable, Defaultable):
     """Give the left branch one explicit copy and the right branch the original."""
     comptime Arg = Self.A

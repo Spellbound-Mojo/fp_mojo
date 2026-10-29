@@ -866,6 +866,13 @@
    "kind": "type or alias",
    "provider": "algebra/contracts"
   },
+  "algebra.ProductLeftContract": {
+   "declarations": [
+    "comptime ProductLeftContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _KeepOperand[I.Element[V], I.Element[W], True]]"
+   ],
+   "kind": "type or alias",
+   "provider": "algebra/contracts"
+  },
   "algebra.ProductMonoid": {
    "declarations": [
     "struct ProductMonoid[L: Monoid, R: Monoid](Monoid):"
@@ -886,6 +893,13 @@
     ]
    },
    "provider": "algebra/monoids"
+  },
+  "algebra.ProductRightContract": {
+   "declarations": [
+    "comptime ProductRightContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _KeepOperand[I.Element[V], I.Element[W], False]]"
+   ],
+   "kind": "type or alias",
+   "provider": "algebra/contracts"
   },
   "algebra.RebindingFunctor": {
    "declarations": [
@@ -1400,6 +1414,26 @@
     {
      "sha256": "26b7622c4e79337dd1789c2eadb3bbd178d83674b7918710652d9049861d2f79",
      "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W ) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible:"
+    }
+   ],
+   "provider": "algebra/_derived"
+  },
+  "algebra.product_l": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "1117f5ceee593750e8209121539e2a2bc87ec7d97bb56345549d5dbf36ee9732",
+     "signature": "def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W ) raises ProductLeftContract[I, V, W].Error -> ProductLeftContract[I, V, W].Out where ProductLeftContract[I, V, W].Compatible:"
+    }
+   ],
+   "provider": "algebra/_derived"
+  },
+  "algebra.product_r": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "7941827143101609646732941684c2408bed335e6141dde7de888b6a2913c4f6",
+     "signature": "def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W ) raises ProductRightContract[I, V, W].Error -> ProductRightContract[I, V, W].Out where ProductRightContract[I, V, W].Compatible:"
     }
    ],
    "provider": "algebra/_derived"
@@ -16802,10 +16836,22 @@
       "signature": "def product[W: Movable & Deinitable](deinit self, var other: W) raises ProductContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductContract[_Combining[Self.I], Self.V, W].FamilyCompatible:"
      }
     ],
+    "product_l": [
+     {
+      "sha256": "9ba6b05d5215aa89554c37717545672110093d6f60f0ea4727ce9ffccfb9c1c1",
+      "signature": "def product_l[W: Movable & Deinitable](deinit self, var other: W) raises ProductLeftContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductLeftContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductLeftContract[_Combining[Self.I], Self.V, W].FamilyCompatible:"
+     }
+    ],
     "product_n": [
      {
       "sha256": "7ccbc247a45af15855089b375ba51a1cc41201a477c475cfe126a099d7a6bdea",
       "signature": "def product_n[*Ws: Movable & Deinitable](deinit self, var others: Tuple[*Ws]) raises _ProductTypes[_Combining[Self.I], Self.V, *Ws].Error -> Pipeline[Self.I, _ProductTypes[_Combining[Self.I], Self.V, *Ws].Out, Self.E] where conforms_to(Self.I, Applicative) and Ws.length < 8 and _ProductRun[_Combining[Self.I], Self.V, *Ws].AdmittedInputs:"
+     }
+    ],
+    "product_r": [
+     {
+      "sha256": "bc22a827c6f0e312c192ab5b7440d39102bec6280560933e0f3ecb0fa6ec08dc",
+      "signature": "def product_r[W: Movable & Deinitable](deinit self, var other: W) raises ProductRightContract[_Combining[Self.I], Self.V, W].Error -> Pipeline[Self.I, ProductRightContract[_Combining[Self.I], Self.V, W].Out, Self.E] where conforms_to(Self.I, Applicative) and ProductRightContract[_Combining[Self.I], Self.V, W].FamilyCompatible:"
      }
     ],
     "raise_on_err": [

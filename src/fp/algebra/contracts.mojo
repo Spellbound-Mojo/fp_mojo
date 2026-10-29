@@ -11,7 +11,7 @@ from ._primitive_contracts import MapContract, BindContract, CombineContract, Fi
 from .protocols import Functor, Monad, Traversable, Applicative
 from fp.iteration._advance import _OwnedElement
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallable, _ErrorProbe
-from fp.callables._transforms import _ValueThunk, _Pair, _Apply, _Fill, _TupleWith
+from fp.callables._transforms import _ValueThunk, _Pair, _KeepOperand, _Apply, _Fill, _TupleWith
 from .protocols import Monoid, _AllLive, _LiveAccumulator
 from ._accumulation import _FoldMappedStep, _SearchStep, _FirstPresent, _BoolLive, _PredicateStep
 from ._sequencing import _EffectRetain, _IfEffect
@@ -155,6 +155,35 @@ Parameters:
     I: The selected Applicative family.
     V: The complete left carrier type, including origins.
     W: The complete already evaluated right carrier type, including origins.
+"""
+
+
+comptime ProductLeftContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _KeepOperand[I.Element[V], I.Element[W], True]]
+"""The contract of combining two carriers while keeping the left payload.
+
+Forward Compatible, Out and Error in generic wrappers; Family identifies the
+fluent continuation. Both carriers are consumed. The existing combination
+policy owns ordering, repetition, stored failures and deferred execution.
+Error describes construction; deferred recipes keep their execution errors.
+
+Parameters:
+    I: The selected Applicative family.
+    V: The complete left carrier type, including origins.
+    W: The complete right carrier type, including origins.
+"""
+
+
+comptime ProductRightContract[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable] = Map2Contract[I, V, W, _KeepOperand[I.Element[V], I.Element[W], False]]
+"""The contract of combining two carriers while keeping the right payload.
+
+This has ProductLeftContract's forwarding and ownership rules with the right
+payload retained. Keeping a value does not skip the other effect: the selected
+Applicative still defines evaluation, failure and accumulation.
+
+Parameters:
+    I: The selected Applicative family.
+    V: The complete left carrier type, including origins.
+    W: The complete right carrier type, including origins.
 """
 
 

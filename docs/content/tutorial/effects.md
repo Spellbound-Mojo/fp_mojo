@@ -68,9 +68,10 @@ payload `"ticket 10"` and leaves the state at 10. `run` therefore returns
 `("ticket 10", 10)`.
 
 `modify(increment)` changes the state and returns `None`.
-`.followed_by(get[CounterState])` discards that payload and constructs the next
-state read. Starting from 10, `.run(10)` returns `(11, 11)`. Passing the `get`
-factory directly avoids a helper whose only purpose is to ignore `None`.
+`.product_r(get[CounterState]())` combines that transition with a state read
+and keeps the read's payload. Both recipes exist before combination, but their
+execution remains deferred until `.run(10)`, which returns `(11, 11)`.
+Use `.followed_by(factory)` when constructing the next recipe must also wait.
 
 `put(0)` replaces the state. Sequencing another `get` after it returns `(0, 0)`.
 Each call to `run` in this example starts a separate computation from state 10;

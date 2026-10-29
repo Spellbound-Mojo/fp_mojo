@@ -292,25 +292,44 @@ the full standalone documentation matrix, copied-source delivery, macOS and
 device execution were not rerun in this checkpoint. All 117 examples did run
 inside the complete precompiled-package O3 suite.
 
+## Keeping one result from two effects
+
+Cats' [Apply implementation](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/Apply.scala)
+defines left selection through applicative combination:
+
+```scala
+def productL[A, B](fa: F[A])(fb: F[B]): F[A] =
+  map2(fa, fb)((a, _) => a)
+```
+
+Its examples accumulate both invalid inputs for `productL` and `productR`.
+FP Mojo's `product_l` and `product_r` now delegate to the existing `map2`
+owner with one stateless selection callback. Public left/right contracts
+specialize the existing combination metadata. The context generator shares
+one descriptor loop across pairing and both selections.
+
+The State tutorial now uses `.product_r(get[State]())` to retain the updated
+state without a callback or factory. Both recipe values are constructed before
+the call; State transitions still execute in order at `.run(initial)`.
+`followed_by(factory)` retains its separate conditional-construction contract.
+Validation accumulates both failures, Result keeps its first failure, and List
+retains one selected value for each Cartesian pair. The selected payload keeps
+its exact origin and moves where the family permits it. Deferred execution,
+IO outcomes and cleanup remain with their existing owners.
+
 ## Next passes
 
-1. Add `product_l` and `product_r` for combining already constructed effects
-   while keeping one payload. Cats' [Apply examples](https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/Apply.scala)
-   explicitly accumulate both invalid inputs. Reuse the existing applicative
-   combination owner and public contract metadata. Check eager argument
-   construction, deferred execution, Cartesian order, skipped values and
-   move-only ownership; do not implement this through monadic bind.
-2. Bring outcome-aware IO finalization into the selected chain through the
+1. Bring outcome-aware IO finalization into the selected chain through the
    existing `ScopedIO` and finalization owners. Use Cats Effect's
    `guaranteeCase` syntax as the reference; retain exact success, failure and
    cancellation outcomes. Qualify callback capture lifetimes and cleanup
    failures before simplifying examples.
-3. Revisit remaining example-only factories and concrete recipe return
+2. Revisit remaining example-only factories and concrete recipe return
    annotations. Start from State, Writer and resource clients; replace a helper
    only when a compositional operation removes a concept without hiding its
    evaluation or ownership contract. Keep actual generic callers as acceptance
    tests instead of introducing aliases that erase concrete carriers.
-4. Consolidate repeated signature and contract descriptions exposed by those
+3. Consolidate repeated signature and contract descriptions exposed by those
    changes, then repeat the workflow and cost checkpoint. Prefer extending the
    current descriptor generators over introducing another generation system.
 
