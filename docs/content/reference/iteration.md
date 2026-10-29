@@ -252,9 +252,9 @@ identify the input sides; they do not mean failure or success here.
 at least one present field. Fluent calls are `.align(other)`,
 `.align_with(other, function)` and `.pad_zip(other)`.
 
-`align_with` can reuse a named unary `partial`, `as_unary` adapter or shared
-composition. The example uses `describe_pair` twice, then transfers it with
-`describe_pair^`. Each callback receives an owned Ior and may return any
+Pass native callbacks directly, as the example does with `describe`.
+`align_with` can also reuse a named unary `partial`, `as_unary` adapter or shared
+composition. Each callback receives an owned Ior and may return any
 movable value, including Optional or Result
 without removing their outer layer.
 
@@ -381,9 +381,10 @@ Bool. Successful True results retain their original elements; False results
 discard them and continue. An absent Optional or stored Result error is a
 failure of the target effect, following that family's failure policy.
 
-Native predicates can use `BorrowSignature[Input, EffectOfBool, Error].capture`
-and the same inferred entry, or keep explicit `.filter_effect[Family](function)`
-selection. Named mutable predicates can be reused with `mut_ref(predicate)`.
+Pass native predicates directly with `.filter_effect[Family](function)`, as in
+the example below. `BorrowSignature[Input, EffectOfBool, Error].capture` supplies
+a borrowing callable contract when inferred target selection is useful.
+Named mutable predicates can be reused with `mut_ref(predicate)`.
 Linear targets retain move-only inputs; branching targets keep their existing
 copy requirements. Explicit Validation and third-party families remain supported.
 

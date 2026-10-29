@@ -35,6 +35,6 @@ def main() raises:
     for var result in lazy^:
         print(result^.raise_on_err())
     var all_values: List[String] = ["10", "11"]
-    var gathered = pipeline(all_values^).traverse(chain).get()
+    var gathered = iterated(all_values^).traverse(chain)
     assert_equal(gathered^.raise_on_err(), ["accepted: 10", "accepted: 11"])
     print(pipeline(String("12")).then(chain).raise_on_err())

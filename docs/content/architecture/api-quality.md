@@ -843,10 +843,25 @@ payload and capture cleanup, and independent value/error origins. Ordinary
 invalid calls check incompatible inputs and targets, consuming receivers,
 native errors, source reuse and a chain moved before its deferred result runs.
 
+## Direct callbacks in collection examples
+
+The alignment example passes its native callback directly, avoiding a separate
+`as_unary` binding. The effectful-filter example uses one explicit family on
+the native call instead of repeating its input, output and error metadata in a
+`BorrowSignature` adapter. Kleisli collection and discard examples reuse their
+chains directly through iterator terminals, without a Pipeline wrapper or
+`.get()` step. All three retain their declared output.
+
+These are documentation changes using existing admission paths. Adapters remain
+available for generic callable contracts and explicit shared/mutable borrowing;
+the simpler examples no longer introduce them before they are needed.
+
 ## Next passes
 
-1. Continue removing redundant callback adaptation in maintained collection
-   workflows where an existing callable view already supplies the contract.
+1. Review effectful predicate entry points for inferred native callback targets,
+   preserving borrowed payloads, mutable captures and exact construction errors.
+2. Compare remaining generic collection helpers with their public contracts to
+   identify repeated constraints that deserve one shared descriptor.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

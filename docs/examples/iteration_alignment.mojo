@@ -1,6 +1,5 @@
 """Align unequal inputs without truncating either side."""
 from fp.iteration import iterated
-from fp.functions import as_unary
 from fp.data import Ior, Left, Right, Both
 
 
@@ -12,9 +11,9 @@ def describe(var value: Ior[Int,Int]) -> String:
 
 
 def main():
-    var describe_pair = as_unary(describe)
-    print(iterated(range(2)).align_with(range(10,11),describe_pair).to_list())
-    print(iterated(range(1)).align_with(range(10,13),describe_pair).to_list())
+    print(iterated(range(2)).align_with(range(10,11),describe).to_list())
+    print(iterated(range(1)).align_with(range(10,13),describe).to_list())
     for pair in iterated(range(2)).pad_zip(range(10,11)):
         print("present:",Bool(pair[0]),Bool(pair[1]))
-    print("moved:", iterated(range(1)).align_with(range(10,11),describe_pair^).to_list())
+    var remaining = iterated(range(1))
+    print("moved:", remaining^.align_with(range(10,11),describe).to_list())

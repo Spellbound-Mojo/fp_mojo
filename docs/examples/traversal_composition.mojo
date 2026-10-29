@@ -3,7 +3,6 @@ from fp.data import Result, Ok, Err
 from fp.functions import pipeline, kleisli
 from fp.algebra import ResultFamily
 from fp.iteration import iterated
-from fp.callables import BorrowSignature
 from std.testing import assert_equal, assert_true
 
 
@@ -36,7 +35,7 @@ def main() raises:
     print("selected:", selected)
 
     # Reuse the same chain when only success or failure matters.
-    assert_true(pipeline(List[Int]([4, 5])).traverse_void(expander).get().is_ok())
+    assert_true(iterated(range(4, 6)).traverse_void(expander).is_ok())
 
     var groups: List[Result[List[Int], String]] = [expand(1), expand(2)]
     var flattened = iterated(groups^).flat_sequence().raise_on_err()
@@ -48,8 +47,7 @@ def main() raises:
     assert_true(done.is_ok())
     print("effects succeeded:", done.is_ok())
 
-    var predicate = BorrowSignature[Int,Result[Bool,String]].capture(keep_even)
-    var filtered = iterated(range(1,5)).filter_effect(predicate^).raise_on_err()
+    var filtered = iterated(range(1,5)).filter_effect[ResultFamily[String]](keep_even).raise_on_err()
     print("iterated selection:", filtered)
 
     var iter_expanded = iterated(range(1, 3)).flat_traverse(expander).raise_on_err()
