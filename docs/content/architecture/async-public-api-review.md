@@ -7,7 +7,10 @@ not silently make experimental interfaces public.
 
 The [concrete public API proposal](async-public-api-proposal.md) now specifies
 the recommended namespaces, supported operations, host protocol, type aliases,
-and promotion work. It remains a proposal; no async exports have been promoted.
+and promotion work. Its Cats alignment revision prioritizes Pipeline sequencing,
+resource composition, and recovery, uses snake_case operations, and identifies
+the cancellation and result-selection differences requiring agreement. It remains
+a proposal; no async exports have been promoted.
 
 ## What the implementation establishes
 
