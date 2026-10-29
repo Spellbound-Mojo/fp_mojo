@@ -41,6 +41,7 @@ REGRESSION_STDOUT = {
     "test_applicative_error_lifting": "applicative error lifting: ok\n",
     "test_applicative_error_ownership": "applicative error ownership: ok\n",
 }
+POSITIVE.update({"resource_composition", "resource_lifecycle", "resource_owned", "resource_release_factory"})
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
@@ -89,6 +90,7 @@ def main():
         built = precompile(package / f"{name}.mojoc", run.folder / f"{name}.log",
                            source=str(source / name), include=str(include), timeout=120)
         builds.append(built)
+        write_json(run.folder / "package-compilations.json", builds)
         if not accepted(built):
             write_json(run.folder / "report.json", dict(
                 **run.metadata(), experiment_inputs=before, selected_clients=selected, package_compilations=builds,
@@ -109,7 +111,7 @@ def main():
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
                     memory_limit_bytes=6 * 1024**3,
-                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
+                    werror=True, compiler_threads=1, compile_timeout={"depth": 360, "racing_origins": 240, "timeouts": 240, "selection_policies": 240, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 

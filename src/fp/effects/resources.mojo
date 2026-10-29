@@ -1,9 +1,9 @@
 """Consumed native resource recipes with explicit, composable finalization."""
 from std.builtin.rebind import downcast, rebind_var
 from std.memory import MaybeUninit
-from fp.callables.protocols import ThunkContract, UnaryContract, BorrowCallContract, BorrowOnceCallable
+from fp.callables.protocols import ThunkContract, UnaryContract, Unary, BorrowCallContract, BorrowOnceCallable
 from fp.callables.invoke import _OnceThunkAvailable, _OnceUnaryAvailable
-from fp.callables._receiver import _OnceBorrowAvailable, _borrow_once_as
+from fp.callables._receiver import _OnceBorrowAvailable, _borrow_once_as, _unary_once_as
 from fp.callables._binding import _OwnedThunk, _OwnedUnary, _BorrowThunk
 from fp.callables._transforms import _IgnoreInput, _ValueThunk
 from fp.callables.products import _take_pair
@@ -72,13 +72,25 @@ struct _PureResource[T: Movable & Deinitable, E: Movable & Deinitable](_OpenScop
 
 
 @fieldwise_init
-struct _MapScopeFactory[F: BorrowCallContract & Movable & Deinitable, E: Movable & Deinitable](BorrowOnceCallable):
+struct _PureResourceFactory[T: Movable & Deinitable, E: Movable & Deinitable](Unary, Defaultable):
+    comptime Arg = Self.T
+    comptime Out = Resource[_PureResource[Self.T, Self.E]]
+    def call(self, var value: Self.Arg) -> Self.Out:
+        return pure_resource[Self.E](value^)
+
+
+@fieldwise_init
+struct _MapScopeFactory[F: BorrowCallContract & Movable & Deinitable, E: Movable & Deinitable,
+                       K: Unary & Defaultable = _PureResourceFactory[F.Result, E]](BorrowOnceCallable):
+    # Projection and owned transfer are shared by native and async resources.
+    # K selects only the pure resource constructor, never its release lifecycle.
     var function: Self.F
     comptime Payload = Self.F.Payload
-    comptime Result = Resource[_PureResource[Self.F.Result, Self.E]]
+    comptime Result = Self.K.Out
     comptime Failure = Self.F.Failure
     def invoke_once(deinit self, ref value: Self.Payload) raises Self.Failure -> Self.Result:
-        return pure_resource[Self.E](_borrow_once_as[Self.Failure](value, self.function^))
+        comptime assert Self.K.Arg == Self.F.Result and Self.K.Error == Never
+        return _unary_once_as[Never](Self.K(), rebind_var[Self.K.Arg](_borrow_once_as[Self.Failure](value, self.function^)))
 
 
 trait _ResourceType(Movable, Deinitable):

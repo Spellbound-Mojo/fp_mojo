@@ -675,6 +675,33 @@ executions. Runtime limits remained unchanged. Together, these complete the
 twenty selected integration routes. Documentation, generated overloads, module
 layers, and runner memory-accounting checks also passed.
 
+The private compositional `AsyncResource` now builds nested uses of the existing
+`Scope` interpreter. `map` shares the native resource projection factory with a
+selected pure constructor; `flat_map` retains the outer owner until the complete
+inner scope has drained. Cleanup input selection and result discarding share the
+same scoped cleanup adapter as finalization. There is no second release engine.
+
+`use` accepts a `ScopedMachine` or an owned borrowing factory returning an
+independent machine. The factory adapter invokes within one fresh loan, captures
+compatible native errors, then delegates pending work to the existing execution
+slot. Native functions and captured closures are admitted through the canonical
+borrowing adapters. Resource release factories use this same adapter under the
+cleanup mask. `Resource`, `ResourceCase`, `ResourceFactory`, and the builder's
+`Used`, `Use`, `Mapped`, and `Bound` aliases name these concrete results.
+
+
+The resource foundation is qualified through `resources-admission-1` (24/24),
+`resources-composition-1` (8/8), and `resources-ownership-1` (8/8), with stable
+input audits and both package builds in each report. These cover source/package
+O0/O3 routes for native composition, suspended reverse release, factory and
+acquisition failures, cancellation before body entry, ordered body/cleanup
+errors, move-only owners and results, external origins, and unopened recipe
+destruction. Negative clients reject escaped fresh loans and incompatible error
+types or origins. Existing synchronous resources, async finalization, and masking
+also pass. Generated overload checks, API inventory freshness, and the docs build
+pass. The application namespace and generic public-resource admission remain
+part of the publication gate; this pass establishes the private shared owners.
+
 ## Implementation passes after agreement
 
 1. **Behavior and native-signature decisions.** Qualify race/timeout cancellation

@@ -15,20 +15,24 @@ from .children import _tick_scoped
 from .composition import Pure, pure
 
 
-struct _ExitCleanup[F: ScopedMachine, only_cancel: Bool = False](CleanupMachine):
-    comptime Input = NoneType
+struct _ScopedCleanup[F: ScopedMachine, only_cancel: Bool = False, resource: Bool = False](CleanupMachine):
+    """Adapt an exit or resource loan through one cleanup polling owner."""
+    comptime Input = Self.F.Input if Self.resource else NoneType
     comptime Error = Self.F.Error
     var slot: _Slot[Self.F, Self.F.Value, Self.Error]
     def __init__(out self, var finalizer: Self.F):
-        comptime assert Self.F.Input == ExitCase[Self.Error], "finalizer must borrow the exact ExitCase"
+        comptime assert Self.resource or Self.F.Input == ExitCase[Self.Error], "finalizer must borrow the exact ExitCase"
         self.slot = _Slot[Self.F, Self.F.Value, Self.Error](finalizer^)
-    def poll[o: ImmOrigin](mut self, ref[o] unit: NoneType, exit: ExitCase[Self.Error], context: IOContext[Self.Error]) -> Step[NoneType, Self.Error]:
-        comptime assert Self.F.Input == ExitCase[Self.Error]
+    def poll[o: ImmOrigin](mut self, ref[o] value: Self.Input, exit: ExitCase[Self.Error], context: IOContext[Self.Error]) -> Step[NoneType, Self.Error]:
+        comptime assert Self.resource or Self.F.Input == ExitCase[Self.Error]
         if Self.only_cancel and not exit.is_canceled():
             var ignored: NoneType = None
             var completed = pure[Self.Error](ignored)
             return completed.poll(context)
-        _ = _tick_scoped(self.slot, rebind[Self.F.Input](exit), context)
+        comptime if Self.resource:
+            _ = _tick_scoped(self.slot, rebind[Self.F.Input](value), context)
+        else:
+            _ = _tick_scoped(self.slot, rebind[Self.F.Input](exit), context)
         if not self.slot.done():
             return .pending(self.slot.waiting())
         var outcome = self.slot.take_outcome()
@@ -37,20 +41,24 @@ struct _ExitCleanup[F: ScopedMachine, only_cancel: Bool = False](CleanupMachine)
         return .ready(Optional(_discard(outcome.take())))
 
 
-comptime Guarantee[P: Machine, F: ScopedMachine, only_cancel: Bool = False] = Scope[Pure[NoneType, P.Error], _ProgramUse[P, NoneType], _ExitCleanup[F, only_cancel]]
+# Compatibility spelling for the original exit-only adapter.
+comptime _ExitCleanup[F: ScopedMachine, only_cancel: Bool = False] = _ScopedCleanup[F, only_cancel]
+
+
+comptime Guarantee[P: Machine, F: ScopedMachine, only_cancel: Bool = False] = Scope[Pure[NoneType, P.Error], _ProgramUse[P, NoneType], _ScopedCleanup[F, only_cancel]]
 
 
 def guarantee_case[P: Machine, F: ScopedMachine](var program: P, var finalizer: F) -> Guarantee[P, F]:
     comptime assert P.Error == F.Error, "finalizer requires the same exact error type"
     var unit: NoneType = None
-    return Guarantee[P, F](pure[P.Error](unit), _ProgramUse[P, NoneType](program^), _ExitCleanup(finalizer^))
+    return Guarantee[P, F](pure[P.Error](unit), _ProgramUse[P, NoneType](program^), _ScopedCleanup(finalizer^))
 
 
 def _guarantee[P: Machine, Q: Machine, only_cancel: Bool](var program: P, var finalizer: Q) -> Guarantee[P, _ProgramUse[Q, ExitCase[P.Error]], only_cancel]:
     comptime assert P.Error == Q.Error, "finalizer requires the same exact error type"
     var unit: NoneType = None
     comptime Finalizer = _ProgramUse[Q, ExitCase[P.Error]]
-    return Guarantee[P, Finalizer, only_cancel](pure[P.Error](unit), _ProgramUse[P, NoneType](program^), _ExitCleanup[Finalizer, only_cancel](Finalizer(finalizer^)))
+    return Guarantee[P, Finalizer, only_cancel](pure[P.Error](unit), _ProgramUse[P, NoneType](program^), _ScopedCleanup[Finalizer, only_cancel](Finalizer(finalizer^)))
 
 
 def guarantee[P: Machine, Q: Machine](var program: P, var finalizer: Q) -> Guarantee[P, _ProgramUse[Q, ExitCase[P.Error]]]:
