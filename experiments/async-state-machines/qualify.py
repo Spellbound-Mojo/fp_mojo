@@ -36,6 +36,7 @@ REGRESSIONS = (
 )
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
+POSITIVE.add("io_bridge")
 
 
 def experiment_inputs():

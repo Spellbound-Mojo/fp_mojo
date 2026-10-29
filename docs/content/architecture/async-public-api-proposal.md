@@ -584,6 +584,24 @@ The supported-release decision follows the deferred long-running qualification;
 this proposal does not turn the previous correctness matrix into stress or
 performance evidence.
 
+## Implementation status
+
+The canonical execution owner is now the private `fp.effects._async` package.
+The experimental `state_machine` modules forward to it; they contain no second
+scheduler, slot, child, scope, or finalization implementation. Public export
+promotion remains gated on the application-family and configuration work below.
+
+The IO bridge delegates to canonical `_run_io` with the inherited context.
+`delay` admits existing callable protocols and owned native functions/closures
+through the IO adapters. It performs synchronous work in one poll and does not
+provide thread offload. The bridge client checks exact typed errors, move-only
+capture transfer/destruction, cancellation at entry and after execution, and
+inheritance of the driver clock, token, mask, and scheduler ancestry.
+`owner-bridge-1` passed all 32 source/package O0/O3 checks, both package
+builds, and input-stability checks. The selected clients also cover existing
+coordination, callbacks, scopes, nurseries, external origins, and wake registration.
+The import-DAG tests and documentation checks pass.
+
 ## Implementation passes after agreement
 
 1. **Behavior and native-signature decisions.** Qualify race/timeout cancellation
