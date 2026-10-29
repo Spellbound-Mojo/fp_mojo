@@ -54716,7 +54716,7 @@
      "name": "Element"
     },
     {
-     "description": "The exact base carrier returned by run_writer, including its origins.",
+     "description": "The exact base carrier returned by run and run_writer, including its origins.",
      "name": "Unwrapped"
     },
     {
@@ -60416,7 +60416,7 @@
        "variadic": false
       }
      ],
-     "description": "Another overload runs a State computation with an initial state.",
+     "description": "Other overloads run State with an initial state or unwrap Writer without\nan execution input.",
      "error": "_Reader[V].Error[o]",
      "parameters": [
       {
@@ -60493,6 +60493,43 @@
      },
      "signature": "def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType) raises _State[V].Error -> _State[V].Out where I.RunCompatible[V]",
      "summary": "Run a State computation of family `I`, consuming the initial state."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The Writer value, consumed once.",
+       "name": "value",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "A deferred base is returned without executing it. This shares the `run`\nspelling with Reader and State; Writer needs no execution input.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The Writer value's complete type, including ownership and origins.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The selected Writer family.",
+       "inferred": false,
+       "name": "I",
+       "type": "WriterFamily",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The exact base carrier, preserving ownership and origins.",
+      "type": "I.Unwrapped[V]"
+     },
+     "signature": "def run[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.Unwrapped[V] where I.CarrierCompatible[V]",
+     "summary": "Remove a Writer layer and return its base carrier of `(log, value)`."
     }
    ],
    "provider": "effects/operations",
@@ -60773,7 +60810,7 @@
        "variadic": false
       }
      ],
-     "description": "",
+     "description": "Return the exact base carrier of `(log, value)`; a deferred base stays unrun.",
      "error": "",
      "parameters": [
       {
@@ -60798,7 +60835,7 @@
       "type": "I.Unwrapped[V]"
      },
      "signature": "def run_writer[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.Unwrapped[V] where I.CarrierCompatible[V]",
-     "summary": "Remove the Writer layer and return the base carrier of `(log, value)`; a deferred base is returned unrun."
+     "summary": "Compatible spelling of `run[I](value)` for removing a Writer layer."
     }
    ],
    "provider": "effects/writer",
@@ -329704,7 +329741,7 @@
    "summary": "Typed results, early termination and bridges between raised and stored errors."
   },
   "effects": {
-   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `run_value`, `run_state`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `run_value`, `run_log`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |\n| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.\n\nResource owns native scopes; IOResource composes effectful acquisition, use\nand outcome-aware release through the same lifecycle. IO uses the existing\nReader, Result and Optional families for typed outcomes and cooperative\ncancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over\nshared state. The optional Fiber backend requires explicit unsafe_start and\nits documented thread-safety obligations.",
+   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `run_value`, `run_state`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run`, `run_value`, `run_log`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | Writer `run`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then Writer `run` | `(log, value)` |\n| `WriterT[State[S], W]` | Writer `run`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then Writer `run` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.\n\nResource owns native scopes; IOResource composes effectful acquisition, use\nand outcome-aware release through the same lifecycle. IO uses the existing\nReader, Result and Optional families for typed outcomes and cooperative\ncancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over\nshared state. The optional Fiber backend requires explicit unsafe_start and\nits documented thread-safety obligations.",
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "functions": {

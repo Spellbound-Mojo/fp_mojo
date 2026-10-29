@@ -1,5 +1,5 @@
-"""Select a Writer payload or log without unpacking its base carrier."""
-from fp.effects import Writer, WriterT, writer, tell
+"""Run Writer for both outputs, or select its payload or log."""
+from fp.effects import Writer, WriterT, writer, tell, run
 from fp.algebra import StringMonoid, OptionalFamily
 from fp.functions import pipeline
 from std.testing import assert_equal
@@ -10,6 +10,10 @@ def add_fee(amount: Int) -> Int: return amount + 2
 
 def main() raises:
     comptime W = Writer[StringMonoid]
+    var both = run[W](writer[W,Int]((String("quoted"),3)))
+    assert_equal(both,(String("quoted"),3))
+    print("both:",both[0],both[1])
+
     var price = pipeline(writer[W,Int]((String("quoted; "),3))).map(add_fee).run_value()
     assert_equal(price,5)
     print("price:",price)

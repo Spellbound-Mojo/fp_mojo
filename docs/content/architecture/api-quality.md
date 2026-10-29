@@ -518,12 +518,26 @@ origins. Writer's public generic contracts remain separate from State's initial
 state and run-error requirements. The additional `run_value` overload preserves
 the existing State calls; invalid calls retain ordinary compiler diagnostics.
 
+## One free execution name for Reader, State and Writer
+
+A selected Writer family `W` now uses `run[W](value)`. Reader and State keep
+`run[Family](value, input)`. Like Cats' WriterT.run, the Writer call removes its
+layer and returns the base carrier of `(log, value)` without executing that base.
+`run_writer` keeps its existing signature and import path as a compatible entry.
+
+The free runner, Pipeline terminal and selected Writer outputs delegate through
+one public execution entry to `WriterFamily.unwrap`. No additional storage,
+error conversion or invocation policy is introduced. Generic wrappers retain
+`CarrierCompatible[V]` and `Unwrapped[V]`; unwrapping remains non-raising even
+when the base's mapping operation can raise. Tests cover deferred errors,
+independent origins, move-only cleanup and ordinary invalid calls.
+
 ## Next passes
 
-1. Give free Writer execution the same `run[Family](value)` spelling as Reader
-   and State, while retaining `run_writer` as a compatible entry. Keep unwrapping
-   with the existing Writer owner and verify generic callers, origins and
-   ordinary invalid-call diagnostics.
+1. Update older transformer and combination examples to use the preferred
+   Pipeline API and public Result operations. Preserve their exact output,
+   transformer ordering and ownership rules; explain explicit selection for
+   erased transformer layers.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

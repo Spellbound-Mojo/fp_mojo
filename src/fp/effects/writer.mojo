@@ -2,7 +2,7 @@
 
 A `WriterT[M, W]` value wraps M's carrier of Tuple[W.Value, A] in WriterValue.
 Operations use M's own map, flat_map and map2_lazy, so over a deferred base the
-result stays deferred; `run_writer` unwraps the base carrier without running
+result stays deferred; `run[Family]` unwraps the base carrier without running
 it. Logs combine in execution order.
 """
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
@@ -19,6 +19,7 @@ from fp.callables.products import _take_pair, _MapPair
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible, _propagate_error
 from .protocols import Local, Listen, Censor, _CarrierOp, _LocalLifting, WriterFamily, _WriterType
 from ._adapt import _map_as
+from .operations import run as _run_effect
 from ._transport import _BimapOp, _LocalOp, _ListenMapped, _ListenPair
 
 
@@ -459,7 +460,7 @@ struct WriterT[M: Monad, W: Monoid](WriterFamily, Censor, _LocalLifting, Applica
     comptime Log = Self.W
     comptime Element[V: Movable & Deinitable] = _Value[V].Value
     comptime Unwrapped[V: Movable & Deinitable] = _Value[V].Storage
-    """The exact base carrier returned by run_writer, including its origins."""
+    """The exact base carrier returned by run and run_writer, including its origins."""
     @staticmethod
     def unwrap[V: Movable & Deinitable](var value: V) -> Self.Unwrapped[V]:
         """Remove an admitted Writer layer, preserving the base carrier.
@@ -668,7 +669,9 @@ def writer[C: Movable & Deinitable, //, I: WriterFamily, T: Movable & Deinitable
 # Like `run`, these entries admit a value named through a family's aliases in
 # generic code, which is only known to be Movable & Deinitable.
 def run_writer[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.Unwrapped[V] where I.CarrierCompatible[V]:
-    """Remove the Writer layer and return the base carrier of `(log, value)`; a deferred base is returned unrun.
+    """Compatible spelling of `run[I](value)` for removing a Writer layer.
+
+    Return the exact base carrier of `(log, value)`; a deferred base stays unrun.
 
     Parameters:
         V: The Writer value's type.
@@ -680,7 +683,7 @@ def run_writer[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.
     Returns:
         The base carrier.
     """
-    return I.unwrap(value^)
+    return _run_effect[I](value^)
 
 
 # Preserve the original import paths; capabilities owns the checked entries.

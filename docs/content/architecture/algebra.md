@@ -372,7 +372,7 @@ branch-selection implementation.
 |---|---|---|
 | `ReaderT[M, R]` | A `ReaderAction`: borrows `R` and returns `M`'s carrier | `run[I](computation, env)` |
 | `StateT[M, S]` | A `StateAction`: consumes `S` and returns `M`'s carrier of `(A, S)` | `run[I](computation, state)` |
-| `WriterT[M, W]` | `WriterValue`, wrapping `M`'s carrier of `(W.Value, A)` | `run_writer[I](value)` |
+| `WriterT[M, W]` | `WriterValue`, wrapping `M`'s carrier of `(W.Value, A)` | `run[I](value)` (`run_writer` remains compatible) |
 | `OptionalT[M]` | `M`'s carrier of `Optional[A]` | The base's run |
 | `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | The base's run |
 
@@ -391,7 +391,7 @@ branch-selection implementation.
   after a failure. Nested sums keep absence and stored errors distinct. Neither
   order rolls back external mutation.
 - Writer operations use the base's own operations, so over a deferred base a
-  Writer value stays deferred; `run_writer` unwraps it without running it.
+  Writer value stays deferred; `run[I]` unwraps it without running it; `run_writer[I]` delegates to the same entry.
   `pure` over WriterT requires a monoid whose `empty` does not raise.
 
 ### Map one stored-error channel

@@ -32,7 +32,9 @@ Generic execution wrappers use `I: ReaderFamily`, `I: StateFamily`, or
 `I: WriterFamily`. Reader wrappers forward `I.RunCompatible[V, o]` with the
 actual borrowed environment origin. State wrappers forward
 `I.RunCompatible[V]`; Writer wrappers forward `I.CarrierCompatible[V]`. Writer's `I.Unwrapped[V]` names the exact base type
-returned by `run_writer`. Endpoint wrappers forward
+returned by `run[I](value)`. The one-argument Writer overload consumes the
+wrapper without executing its base. `run_writer[I](value)` remains a compatible
+spelling, including its existing import path. Endpoint wrappers forward
 `I.EndpointCompatible[T, F]`. Keep `I` as a type parameter: substituting a
 concrete ReaderT expression inside a generic origin constraint can expand its
 projections before Mojo has selected the family's complete contract.
@@ -198,7 +200,7 @@ target aliases use the public capability witnesses described in the
 
 Reader and State mapping construction raises Never; their exact native errors
 belong to running the resulting action. Writer mapping exposes its base's
-construction error, while a deferred base stays deferred after `run_writer`.
+construction error, while a deferred base stays deferred after `run[Family]`.
 The source always executes under its original family; the transformed carrier
 belongs to the admitted destination. `ResultT[Reader[...], E]` instead maps its
 selected inner Result over the Reader base, leaving other error layers intact.

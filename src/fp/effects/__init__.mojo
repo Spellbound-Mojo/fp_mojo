@@ -4,7 +4,7 @@
 |---|---|---|
 | `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |
 | `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `run_value`, `run_state`, `lift`, `get`, `inspect`, `put`, `modify` |
-| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `run_value`, `run_log`, `lift`, `tell`, `listen`, `censor` |
+| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run`, `run_value`, `run_log`, `lift`, `tell`, `listen`, `censor` |
 | `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |
 | `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |
 
@@ -31,10 +31,10 @@ run with that StateT, whose result is `Result[Tuple[A, S], E]`.
 
 | Stack | Evaluation order | Final shape |
 |---|---|---|
-| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |
-| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |
-| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |
-| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |
+| `WriterT[Reader[R], W]` | Writer `run`, then Reader `run` | `(log, value)` |
+| `ReaderT[Writer[W], R]` | Reader `run`, then Writer `run` | `(log, value)` |
+| `WriterT[State[S], W]` | Writer `run`, then State `run` | `((log, value), state)` |
+| `StateT[Writer[W], S]` | State `run`, then Writer `run` | `(log, (value, state))` |
 
 `OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and
 `ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an

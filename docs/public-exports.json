@@ -6690,6 +6690,10 @@
     {
      "sha256": "58445b667c512e663aef2d546715053d874c5149ea3b01c1aed799f9ca350acd",
      "signature": "def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I.StateType ) raises _State[V].Error -> _State[V].Out where I.RunCompatible[V]:"
+    },
+    {
+     "sha256": "4efefe1e2973b484d855da6711ddb268c562b414ee0225dfa77cdce6d0679702",
+     "signature": "def run[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.Unwrapped[V] where I.CarrierCompatible[V]:"
     }
    ],
    "provider": "effects/operations"

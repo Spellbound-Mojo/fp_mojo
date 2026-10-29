@@ -355,7 +355,7 @@
       "stdout": "value: ticket 10\nfinal state: 11\noptional value: ticket 12\nstate present: False\n"
     },
     "docs/examples/writer_outputs.mojo": {
-      "stdout": "price: 5\nlog: ready\noptional price: 7\nlog present: False\n"
+      "stdout": "both: quoted 3\nprice: 5\nlog: ready\noptional price: 7\nlog present: False\n"
     }
   },
   "version": 1

@@ -19,7 +19,8 @@ def run[V: Movable & Deinitable, o: ImmOrigin, //, I: ReaderFamily](var action: 
 ) raises _Reader[V].Error[o] -> _Reader[V].Out[o] where I.RunCompatible[V, o]:
     """Run a Reader computation of family `I` with a borrowed environment.
 
-    Another overload runs a State computation with an initial state.
+    Other overloads run State with an initial state or unwrap Writer without
+    an execution input.
 
     Parameters:
         V: The computation's type.
@@ -47,6 +48,25 @@ def run[V: Movable & Deinitable, //, I: StateFamily](var action: V, var state: I
     comptime assert I.RunCompatible[V], _FAMILY_MISMATCH
     comptime assert _State[V]._RunCompatible
     return rebind_var[_State[V]](action^).run(rebind_var[_State[V].State](state^))
+
+
+def run[V: Movable & Deinitable, //, I: WriterFamily](var value: V) -> I.Unwrapped[V] where I.CarrierCompatible[V]:
+    """Remove a Writer layer and return its base carrier of `(log, value)`.
+
+    A deferred base is returned without executing it. This shares the `run`
+    spelling with Reader and State; Writer needs no execution input.
+
+    Parameters:
+        V: The Writer value's complete type, including ownership and origins.
+        I: The selected Writer family.
+
+    Args:
+        value: The Writer value, consumed once.
+
+    Returns:
+        The exact base carrier, preserving ownership and origins.
+    """
+    return I.unwrap(value^)
 
 
 struct _StateRunSelection[I: StateFamily, V: Movable & Deinitable, value: Bool]:
@@ -194,7 +214,7 @@ Parameters:
 def _run_selected_writer[V: Movable & Deinitable, //, I: WriterFamily, log: Bool](var value: V
 ) raises _WriterRunSelection[I, V, log].Error -> _WriterRunSelection[I, V, log].Out where _WriterRunSelection[I, V, log].Compatible:
     comptime C = _WriterRunSelection[I, V, log]
-    return _map_as[C.Error, I.Base](C.Projector(), I.unwrap(value^))
+    return _map_as[C.Error, I.Base](C.Projector(), run[I](value^))
 
 
 def run_value[V: Movable & Deinitable, //, I: WriterFamily](var value: V
