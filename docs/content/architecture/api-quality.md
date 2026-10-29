@@ -383,16 +383,35 @@ The IO resource example now opens and closes a session with `use_void()`.
 It no longer needs an unrelated body value, a projection callback or a pure
 IO type annotation just to run the resource's lifecycle.
 
+## One scoped IO admission rule
+
+Resource use and effectful projection now share their declared input/error
+admission with outcome-aware finalization. Native resource factories delegate
+to the existing `scoped_io` admission owner. No second callback invocation or
+scope-lifetime mechanism is introduced.
+
+An IO resource exposes `ScopedCompatible`, `Used`, `EvalMapped` and
+`EvalTapped`. Generic helpers can forward the public proof and name results
+through the constructor contract's resource type. Existing callers spelling
+the equivalent input/error equalities still compile. The execution context
+supplies the exact error type to the shared scoped runner; resource metadata
+also derives it from the resource. This avoids requiring the compiler to
+transport associated-type equality through an independently inferred IOContext,
+and removes two casts from finalization.
+
+The compatibility probes found an existing limitation: resource methods reject
+stored thin native function pointers, including against the preceding packaged
+commit. This is separate from ordinary function and closure calls. The next
+signature pass will use the existing native ABI descriptors to address it.
+
 ## Next passes
 
-1. Revisit remaining example-only factories and concrete recipe return
-   annotations. Start from State, Writer and resource clients; replace a helper
-   only when a compositional operation removes a concept without hiding its
-   evaluation or ownership contract. Keep actual generic callers as acceptance
-   tests instead of introducing aliases that erase concrete carriers.
-2. Consolidate repeated signature and contract descriptions exposed by those
-   changes, then repeat the workflow and cost checkpoint. Prefer extending the
-   current descriptor generators over introducing another generation system.
+1. Support stored thin callbacks at the resource use/projection boundary through
+   the existing native-signature descriptors. Preserve current positional
+   bindings and distinguish native ABI evidence from shared scope admission.
+2. Repeat the complete qualification and workflow/cost checkpoint after the
+   Writer, resource and scope changes. Revisit remaining example-only factories
+   using actual clients, ownership ledgers and generic callers as evidence.
 
 Each pass retains the commit/push boundary above and proceeds to the next
 qualified dependency. Release, deprecation and CI work are outside these passes.

@@ -487,6 +487,20 @@ lifecycle effects select the same exact error family; native construction errors
 must be that type or `Never`. Dropping an unopened scope destroys captures
 without running acquisition or release.
 
+For a concrete IO resource type `S` and a `ScopedIO` factory `F`, generic
+helpers forward `S.ScopedCompatible[F]`. `S.Used[F]`, `S.EvalMapped[F]` and
+`S.EvalTapped[F]` name the exact results of `use`, `eval_map` and `eval_tap`.
+For example, `IOResourceContract[P, R].Out.Used[F]` names a use program without
+importing private lifecycle types. The resource owns the error family; the
+factory must match it and the acquired input type. The scoped runner checks
+`Action[o]` against the declared value and error at the fresh execution origin.
+
+Ordinary native callbacks continue to be adapted by the resource methods.
+Generic helpers can accept `ScopedIO` and callers can use `scoped_io(callback)`
+for an input-independent action. A stored thin function pointer is currently
+not accepted directly by these methods; named functions and closures remain
+supported.
+
 These operations currently run through the synchronous cooperative IO backend.
 They establish effectful lifecycle semantics; suspending asynchronous execution
 and an async scheduler remain future runtime work.

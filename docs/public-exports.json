@@ -5112,38 +5112,38 @@
    "methods": {
     "eval_map": [
      {
-      "sha256": "eebd7a9c2e6ef3e6025cac516af5f729b5eea7d0f3e9505e1de50932a5086698",
-      "signature": "def eval_map[F: ScopedIO](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, F, False]] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]:"
+      "sha256": "e9cdc0d077d712799cb25ba165b9de6821d1d1dfcca2235a71bb3588e9699c03",
+      "signature": "def eval_map[F: ScopedIO](deinit self, var function: F) -> Self.EvalMapped[F] where Self.ScopedCompatible[F]:"
      },
      {
-      "sha256": "ffba8e2e43c30ca559260f542e9f9ec1994f3fad5cf6e4a58fd00dc09a7ad040",
-      "signature": "def eval_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], False]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]:"
+      "sha256": "ebb1dbd24aef167b348ac90f4465e0dc92372e1e4ea60e2b6317fcc738c1fdc0",
+      "signature": "def eval_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]:"
      },
      {
-      "sha256": "ae48e350c24880458ae94c1ca6388c2c12a6c969c84a24fa21235a9517dc5503",
-      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], False]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]:"
+      "sha256": "edd34932d83129ee455b419b3e459860e64a66b6a581eb996951a6f32a0881af",
+      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]:"
      },
      {
-      "sha256": "9cf6ecd6cc0d0e1da8c7f7109241e81124956c88e2ca8a0a5bcfcc220c8f25be",
-      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], False]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]:"
+      "sha256": "76a4b61a6cb2bd28c6282435ba9b4b12e26146cdc216372b72786c979b0bb7b3",
+      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]:"
      }
     ],
     "eval_tap": [
      {
-      "sha256": "4ab2ac88a2e8524919ccf5c19c3fe02f7b2e3df10b0f2c6012d77346aa5f434d",
-      "signature": "def eval_tap[F: ScopedIO](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, F, True]] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]:"
+      "sha256": "90f26ad1287f0dc85f4b783c68c0000520ea628fe54b0e2985b43ab4709f607f",
+      "signature": "def eval_tap[F: ScopedIO](deinit self, var function: F) -> Self.EvalTapped[F] where Self.ScopedCompatible[F]:"
      },
      {
-      "sha256": "938cdbc6fef904712c895a83dea3b64d7e68d169d6b570f0cc8211f8c50add99",
-      "signature": "def eval_tap[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], True]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]:"
+      "sha256": "1b84ff2bb36b216d2dc7ae95dd04962286f9b85ec42028c3385d89d3d7b40eff",
+      "signature": "def eval_tap[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]:"
      },
      {
-      "sha256": "3d94b1763784e10f1b54c179b7254d4c68b5c7f9221a80f132309810c55edb17",
-      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], True]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]:"
+      "sha256": "918658f9497d7aa467b28d56dc7dd5c1741c7b03bc80c84dba4f3049e5913321",
+      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]:"
      },
      {
-      "sha256": "835d42996f239afd44a24de7747ae7325fe8c2dcc5154de3dbee988e6955a63f",
-      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], True]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]:"
+      "sha256": "a4d5589b67e8524582aeadc70fda8e5894b9d3879b8ec5af0559190a7be04626",
+      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]:"
      }
     ],
     "flat_map": [
@@ -5188,20 +5188,20 @@
     ],
     "use": [
      {
-      "sha256": "549d0ec5864ac557e482180850dbc5a38810cb05dc5af621755c6549342a818c",
-      "signature": "def use[F: ScopedIO](deinit self, var function: F) -> _UseEffectResource[Self.O, F] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]:"
+      "sha256": "3fe7ffe4a30659eb5538bd73bb6ec009d83d961c5bc80a5920282a319045e265",
+      "signature": "def use[F: ScopedIO](deinit self, var function: F) -> Self.Used[F] where Self.ScopedCompatible[F]:"
      },
      {
-      "sha256": "2323ea34fdef2dc48256e9127d5992e7bfe250a0e6a3c7dfcd0e5e8eaa05300b",
-      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[F]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]:"
+      "sha256": "4f89bfc9dce0ecc395b816f8637239faa827256a96b0d5b8ecf9efe00df15120",
+      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Used[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]:"
      },
      {
-      "sha256": "5d95614a66ccaf76a782b8d8361dcd7a61db25f20a8b6efaa4772d39deb24c86",
-      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]:"
+      "sha256": "0099b92d56e881d21490c5493fb73fa6a24b244b5ecbf4b12e08c5485fb1ab06",
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]:"
      },
      {
-      "sha256": "33954ed54ab525930551148cc8aebab0ded2904266d70272519447a5c2218edc",
-      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]:"
+      "sha256": "d0a0140e7184e2e17749d385935da6da21cbdaa30f3a98009973433ff4b53395",
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]:"
      }
     ],
     "use_void": [

@@ -48343,6 +48343,22 @@
     {
      "description": "The exact error family shared by every lifecycle effect.",
      "name": "Error"
+    },
+    {
+     "description": "Exact resource input and error family, with a compatible factory construction error. Forward this predicate for generic use, eval_map and eval_tap. The existing\nscoped runner validates Action[o] against the factory's declared Value and\nError for the fresh input origin. Native callbacks adapt through scoped_io.",
+     "name": "ScopedCompatible"
+    },
+    {
+     "description": "The IO action returned by use, preserving the resource's error family.",
+     "name": "Used"
+    },
+    {
+     "description": "The resource returned by eval_map, retaining the original release.",
+     "name": "EvalMapped"
+    },
+    {
+     "description": "The resource returned by eval_tap, retaining its original acquired value.",
+     "name": "EvalTapped"
     }
    ],
    "description": "Default acquisition is masked until release is registered. Use is run in\nthe enclosing cancellation state, and release is masked. Product and bind\nacquire left to right and finalize inside out, preserving every exact error.\nDropping an unopened recipe destroys captures without executing effects.",
@@ -48375,9 +48391,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "A resource of F.Value, retaining outer release after native result destruction.",
-       "type": "IOResource[_EvalMapResource[Self.O, F, False]]"
+       "type": "Self.EvalMapped[F]"
       },
-      "signature": "def eval_map[F: ScopedIO](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, F, False]] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]",
+      "signature": "def eval_map[F: ScopedIO](deinit self, var function: F) -> Self.EvalMapped[F] where Self.ScopedCompatible[F]",
       "summary": "Project through a cancellable effect while the original resource lives."
      },
      {
@@ -48405,9 +48421,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], False]]"
+       "type": "Self.EvalMapped[_ScopedFactory[F]]"
       },
-      "signature": "def eval_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], False]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]",
+      "signature": "def eval_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]",
       "summary": "Adapt an input-independent IO factory to the shared scoped runner."
      },
      {
@@ -48449,9 +48465,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], False]]"
+       "type": "Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]"
       },
-      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], False]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]",
+      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]",
       "summary": "Adapt a native borrowing IO factory without executing it."
      },
      {
@@ -48500,9 +48516,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], False]]"
+       "type": "Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]"
       },
-      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], False]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]",
+      "signature": "def eval_map[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.EvalMapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]",
       "summary": "Adapt a native borrowing IO factory without executing it."
      }
     ],
@@ -48532,9 +48548,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "The original resource after the effect; failure or cancellation releases it.",
-       "type": "IOResource[_EvalMapResource[Self.O, F, True]]"
+       "type": "Self.EvalTapped[F]"
       },
-      "signature": "def eval_tap[F: ScopedIO](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, F, True]] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]",
+      "signature": "def eval_tap[F: ScopedIO](deinit self, var function: F) -> Self.EvalTapped[F] where Self.ScopedCompatible[F]",
       "summary": "Run a cancellable effect and retain the original acquired value."
      },
      {
@@ -48562,9 +48578,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], True]]"
+       "type": "Self.EvalTapped[_ScopedFactory[F]]"
       },
-      "signature": "def eval_tap[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[F], True]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]",
+      "signature": "def eval_tap[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]",
       "summary": "Adapt an input-independent IO factory to the shared scoped runner."
      },
      {
@@ -48606,9 +48622,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], True]]"
+       "type": "Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]"
       },
-      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]], True]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]",
+      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]",
       "summary": "Adapt a native borrowing IO factory without executing it."
      },
      {
@@ -48657,9 +48673,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], True]]"
+       "type": "Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]"
       },
-      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> IOResource[_EvalMapResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]], True]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]",
+      "signature": "def eval_tap[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.EvalTapped[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]",
       "summary": "Adapt a native borrowing IO factory without executing it."
      }
     ],
@@ -49007,9 +49023,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "An IO program yielding F.Value, with all lifecycle errors retained.",
-       "type": "_UseEffectResource[Self.O, F]"
+       "type": "Self.Used[F]"
       },
-      "signature": "def use[F: ScopedIO](deinit self, var function: F) -> _UseEffectResource[Self.O, F] where F.Input == Self.Value and F.Error == Self.Error and _ErrorCompatible[Self.Error, F.BuildError]",
+      "signature": "def use[F: ScopedIO](deinit self, var function: F) -> Self.Used[F] where Self.ScopedCompatible[F]",
       "summary": "Build a bracketed IO action, retaining the resource through use."
      },
      {
@@ -49037,9 +49053,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_UseEffectResource[Self.O, _ScopedFactory[F]]"
+       "type": "Self.Used[_ScopedFactory[F]]"
       },
-      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[F]] where F.Payload == Self.Value and _OnceBorrowAvailable[F] and conforms_to(F.Result, ReaderAction) and IOContract[downcast[F.Result, ReaderAction]].Compatible and IOContract[downcast[F.Result, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, F.Failure]",
+      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Used[_ScopedFactory[F]] where _ScopedFactoryCompatible[F] and Self.ScopedCompatible[_ScopedFactory[F]]",
       "summary": "Adapt an input-independent IO factory to the shared scoped runner."
      },
      {
@@ -49081,9 +49097,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]"
+       "type": "Self.Used[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]"
       },
-      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, Never]",
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, //, F: _Borrowing[P, V]](deinit self, var function: F) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, Never, F, False]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, Never, F, False]]]",
       "summary": "Adapt a native borrowing IO factory without executing it."
      },
      {
@@ -49132,9 +49148,9 @@
       "raises_doc": "",
       "returns": {
        "doc": "",
-       "type": "_UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]]]"
+       "type": "Self.Used[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]"
       },
-      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> _UseEffectResource[Self.O, _ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where P == Self.Value and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.Error and _ErrorCompatible[Self.Error, X]",
+      "signature": "def use[P: AnyType, V: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[P, V, X]](deinit self, var function: F) -> Self.Used[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]] where _ScopedFactoryCompatible[_NativeBorrow[P, V, X, F, True]] and Self.ScopedCompatible[_ScopedFactory[_NativeBorrow[P, V, X, F, True]]]",
       "summary": "Adapt a native borrowing IO factory without executing it."
      }
     ],

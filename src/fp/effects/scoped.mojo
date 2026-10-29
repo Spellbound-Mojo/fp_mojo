@@ -47,6 +47,11 @@ trait ScopedIO(Movable, Deinitable):
         ...
 
 
+comptime _ScopedInputCompatible[T: AnyType, E: Movable & Deinitable, F: ScopedIO] = (
+    F.Input == T and F.Error == E and _ErrorCompatible[E, F.BuildError]
+)
+
+
 @fieldwise_init
 struct _ScopedBuild[F: ScopedIO, o: ImmOrigin](OnceThunk):
     var function: Self.F
@@ -57,17 +62,19 @@ struct _ScopedBuild[F: ScopedIO, o: ImmOrigin](OnceThunk):
         return self.function^.build(self.input[])
 
 
-def _run_scoped[F: ScopedIO, o: ImmOrigin, c: ImmOrigin](var function: F, ref[o] value: F.Input, ref[c] context: IOContext[F.Error]
-) -> Outcome[F.Value, F.Error]:
-    comptime assert _ErrorCompatible[F.Error, F.BuildError]
+def _run_scoped[F: ScopedIO, o: ImmOrigin, c: ImmOrigin, E: Movable & Deinitable](var function: F, ref[o] value: F.Input, ref[c] context: IOContext[E]
+) -> Outcome[F.Value, E] where F.Error == E:
+    # The enclosing context owns E. An explicit parameter preserves that witness
+    # across generic resource/factory projections without casting each caller.
+    comptime assert _ErrorCompatible[E, F.BuildError]
     comptime assert IOContract[F.Action[o]].Compatible
-    comptime assert F.Action[o].Value == F.Value and IOContract[F.Action[o]].Error == F.Error, "ScopedIO action must preserve the declared value and error"
+    comptime assert F.Action[o].Value == F.Value and IOContract[F.Action[o]].Error == E, "ScopedIO action must preserve the declared value and error"
     if context.canceled():
         return None
-    var built = _capture[F.Error](_ScopedBuild(function^, Pointer(to=value)))
+    var built = _capture[E](_ScopedBuild(function^, Pointer(to=value)))
     if built.is_err():
-        return _settle(Optional(Result[F.Value, EffectFailure[F.Error]](Err(built^._take_err()))), context)
-    return rebind_var[Outcome[F.Value, F.Error]](_run_io(built^._take_ok(), rebind[IOContext[IOContract[F.Action[o]].Error]](context)))
+        return _settle(Optional(Result[F.Value, EffectFailure[E]](Err(built^._take_err()))), context)
+    return rebind_var[Outcome[F.Value, E]](_run_io(built^._take_ok(), rebind[IOContext[IOContract[F.Action[o]].Error]](context)))
 
 
 @fieldwise_init

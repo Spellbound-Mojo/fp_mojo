@@ -10,7 +10,7 @@ from fp.data import Result, Err
 from .protocols import ReaderAction
 from .outcomes import Outcome, EffectFailure, ExitCase, _ExitState, _capture, _finish
 from ._io_core import IO, IOContext, IOContract, _run_io, _settle
-from .scoped import ScopedIO, _run_scoped
+from .scoped import _ScopedInputCompatible, ScopedIO, _run_scoped
 
 comptime _FinalizerCompatible[P: ReaderAction, Q: ReaderAction] = IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error
 
@@ -29,8 +29,8 @@ def _finalize_outcome[T: Movable & Deinitable, E: Movable & Deinitable, F: Scope
     if only_cancel and not state.exit.is_canceled():
         return _settle(state^.outcome(), env)
     var masked = env._mask()
-    var cleanup = _run_scoped(finalizer^, rebind[F.Input](state.exit), rebind[IOContext[F.Error]](masked))
-    return _settle(_finish(state^.outcome(), rebind_var[Outcome[F.Value, E]](cleanup^)), env)
+    var cleanup = _run_scoped(finalizer^, rebind[F.Input](state.exit), masked)
+    return _settle(_finish(state^.outcome(), cleanup^), env)
 
 
 @fieldwise_init
@@ -132,7 +132,7 @@ struct GuaranteeCaseContract[P: ReaderAction, F: ScopedIO]:
     """The body's native error type, retained inside the execution outcome."""
     comptime Input = ExitCase[Self.NativeError]
     """The exit case borrowed while constructing and running cleanup."""
-    comptime Compatible = IOContract[Self.P].Compatible and Self.F.Error == Self.NativeError and Self.F.Input == Self.Input and _ErrorCompatible[Self.NativeError, Self.F.BuildError]
+    comptime Compatible = IOContract[Self.P].Compatible and _ScopedInputCompatible[Self.Input, Self.NativeError, Self.F]
     """Body membership, exact cleanup input/error and compatible construction error."""
     comptime Out = _IOGuaranteeCase[Self.P, Self.F]
     """The unopened recipe with the body's value and finalization behavior."""
