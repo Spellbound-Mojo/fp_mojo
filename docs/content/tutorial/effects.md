@@ -45,9 +45,9 @@ Here `quote` captures a reference to `calls`, so both runs finish while that
 counter is alive and stable. Owning a callback does not extend the life of
 anything it borrows. Transfer a callback with owned captures using `^`.
 
-Native callbacks passed to `.map`, `flat_map` and `traverse` over deferred
-Reader or State instances are borrowed until execution. Keep the callback
-alive and unmoved, or store it by value with `as_unary`; `as_unary(f^)` transfers
+Native closures passed to `.map`, `flat_map` and `traverse` over deferred
+Reader or State instances are borrowed until execution; plain functions are
+copied. Keep a closure alive and unmoved, or store it by value with `as_unary`; `as_unary(f^)` transfers
 owned captures. Captured references retain their origin restrictions in either
 case. These are caller obligations; the pinned compiler does not reject every
 invalid owner reassignment.

@@ -52,6 +52,7 @@ class GeneratedOverloadTests(unittest.TestCase):
         self.assertEqual(native.RESOURCE_OUTPUT.read_text(), native.resource_source())
         self.assertEqual(native.PROJECTION_OUTPUT.read_text(), native.projection_source())
         self.assertEqual(native.SCOPED_OUTPUT.read_text(), native.scoped_source())
+        self.assertEqual(native.ALGEBRA_OUTPUT.read_text(), native.algebra_source())
 
     def test_sources_match_the_generator(self):
         folder = ROOT/'src/fp/functions'

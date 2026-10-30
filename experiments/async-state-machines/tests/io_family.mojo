@@ -1,9 +1,9 @@
 """IO selects its Async family: Pipeline, tail recursion, traversal, collection, products and attempt."""
 from std.iter import Iterator
 from std.memory import ArcPointer
-from fp.algebra import pure, product, tail_rec_m, traverse, ListFamily
+from fp.algebra import pure, product, tail_rec_m, map, flat_map, traverse, ListFamily
 from fp.iteration import traverse as collect
-from fp.callables import MutableUnary, as_unary
+from fp.callables import MutableUnary
 from fp.functions import pipeline
 from fp.data import ControlFlow, Continue, Break
 from fp.effects import EffectFailure
@@ -67,7 +67,9 @@ struct StopAtTwo(MutableUnary):
 def selection():
     var result = run(pipeline(pure[Async[Int]](20)).flat_map(twice).map(increment).get())
     check(result.take()._take_ok() == 41, "Pipeline selects the IO family from the carrier")
-    var raised = run(pipeline(IO[Int, Int].pure(7).map(as_unary(halve))).handle_error_with(recover).get())
+    var mapped = run(flat_map[Async[Int]](twice, map[Async[Int]](increment, IO[Int, Int].pure(4))))
+    check(mapped.take()._take_ok() == 10, "free map and flat_map own plain functions for IO")
+    var raised = run(pipeline(map[Async[Int]](halve, IO[Int, Int].pure(7))).handle_error_with(recover).get())
     check(raised.take()._take_ok() == 700, "a native callback error becomes the IO failure and recovers")
     var pair = run(product[Async[Int]](IO[Int, Int].pure(3), IO[Int, Int].pure(4)))
     var values = pair.take()._take_ok()
@@ -88,7 +90,7 @@ def iteration():
     var values = List[Int]()
     for index in range(DEPTH):
         values.append(index)
-    var mapped = run(traverse[ListFamily, Async[Int]](as_unary(twice), values^))
+    var mapped = run(traverse[ListFamily, Async[Int]](twice, values^))
     var list = mapped.take()._take_ok()
     check(len(list) == DEPTH and list[0] == 0 and list[DEPTH - 1] == 2 * (DEPTH - 1), "traversal keeps source order")
     var pulls = ArcPointer(0)
@@ -104,4 +106,4 @@ def main():
     selection()
     attempt_materializes()
     iteration()
-    print("io family: Pipeline selection, native errors and recovery, product, attempt, constant-stack tail_rec_m and traversal, deferred collection")
+    print("io family: Pipeline selection, free operations on plain functions, native errors and recovery, product, attempt, constant-stack tail_rec_m and traversal, deferred collection")

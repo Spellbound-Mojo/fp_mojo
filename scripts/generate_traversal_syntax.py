@@ -31,34 +31,45 @@ def inferred_collect_methods():
     return ''.join(out)
 
 
-def pointer_methods():
+def pointer_methods(mode='iter'):
     """Copy thin callbacks into the ordinary owned traversal callback.
 
     These operation overloads compete with closure borrows, so pointers enter
     by value with disjoint ABI evidence, as on Pipeline. The factory's borrowed
     fallback would tie with a native function name for memory arguments. Opaque
     generic pointers can use as_unary's existing factory boundary instead.
+    Owned pointers also let deferred target families such as IO keep them.
     """
+    free = mode == 'free'
+    source = 'V' if free else 'Self.I'
     out = []
     for name in ('traverse', 'traverse_void'):
         for factory in native_factories('owned', ['A'], include_void=False):
             params = [f'{p}: {bound}' for p, bound in factory.parameters]
-            params += ['//', 'G: Applicative = _InferredApplicative[R]']
+            params += [f'V: {MD}'] if free else []
+            params += ['//', 'G: Applicative' if free else 'G: Applicative = _InferredApplicative[R]']
             cb = factory.adapter
-            conditions = [*factory.abi.conditions, 'Self.I.Element == A']
+            conditions = [*factory.abi.conditions, f'{"_Source[V].Element" if free else "Self.I.Element"} == A']
             if name == 'traverse':
-                result = f'G.Collected[Self.I, {cb}]'
-                raised = f'G.CollectError[Self.I, {cb}]'
-                conditions += [f'G.CollectCompatible[Self.I, {cb}]']
+                result = f'G.Collected[{source}, {cb}]'
+                raised = f'G.CollectError[{source}, {cb}]'
+                conditions += [f'G.CollectCompatible[{source}, {cb}]']
                 binding = 'G'
             else:
                 params += ['X: AnyType = _InferError']
                 rule = f'_Discard[G.Element[{cb}.Out]]'
-                result = f'G._Looped[Self.I, {cb}, {rule}]'
-                raised = f'_EntryError[X, G._LoopError[Self.I, {cb}, {rule}]]'
-                conditions += ['_CarrierCompatible[G, R]', f'G._LoopCompatible[Self.I, {cb}, {rule}]']
+                result = f'G._Looped[{source}, {cb}, {rule}]'
+                raised = f'_EntryError[X, G._LoopError[{source}, {cb}, {rule}]]'
+                conditions += ['_CarrierCompatible[G, R]', f'G._LoopCompatible[{source}, {cb}, {rule}]']
                 binding = 'G, X=X'
-            out.append(f'''
+            if free:
+                out.append(f'''
+def {name}[{', '.join(params)}](function: {factory.signature}, var source: V) raises {raised} -> {result} where {' and '.join(conditions)}:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return {name}[{binding}]({cb}(function), source^)
+''')
+            else:
+                out.append(f'''
     def {name}[{', '.join(params)}](deinit self, function: {factory.signature}) raises {raised} -> {result} where {' and '.join(conditions)}:
         """Copy a stored thin callback into the existing traversal owner."""
         return self^.{name}[{binding}]({cb}(function))
@@ -210,6 +221,8 @@ def methods(mode, carrier=None, *, inferred=False):
 {indent}    """{summary}"""
 {indent}    return {call}
 ''')
+    if mode == 'free':
+        out.append(pointer_methods('free'))
     if mode == 'iter' and not inferred:
         out.append(methods('iter', inferred=True))
         out.append(inferred_collect_methods())

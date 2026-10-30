@@ -829,7 +829,8 @@ defined beside `IO` in `engine.mojo`, with `IO` as its carrier, so `Pipeline`,
   predicates, so rejection follows the adapter. `Pipeline` stores plain
   functions as owned callables, which are admitted, and borrows closures, which
   are rejected. Free `map`, `flat_map`, and `traverse` borrow every native
-  callback, so with `IO` they take `as_unary(f)` or a library callable.
+  callback, so with `IO` they take `as_unary(f)` or a library callable
+  (until Pass 8c).
 - `io_family` checks family selection, recovery of a native callback error,
   `product`, `attempt`, and deferred collection that stops at the first failure.
   It also runs a 100,000-step `tail_rec_m` and a 100,000-element `traverse`
@@ -1052,8 +1053,8 @@ Decided on 2026-10-30:
 
 ## Pass 8c proposal
 
-Status: **approved, in progress in a parallel session**. The free operations
-take plain functions for `IO`.
+Status: **built**; see [Pass 8c progress](#pass-8c-progress). The free
+operations take plain functions for `IO`.
 
 ### Problem
 
@@ -1089,6 +1090,65 @@ take plain functions for `IO`.
 - `io_family` uses the free `map`, `flat_map`, and `traverse` with plain
   functions.
 - `reject_io_borrowed` passes a capturing closure, which stays rejected.
+
+### Pass 8c progress
+
+**Audit.** Free entry points whose native callback a deferred family can keep,
+by whether `IO` accepted them through `as_unary` before this pass:
+
+| Entry point | Callback shape | Pass 8c |
+|---|---|---|
+| `fp.algebra` `map`, `flat_map`, `traverse` | Owned unary | Plain functions owned |
+| `fp.iteration` `traverse`, `traverse_void` | Owned unary | Plain functions owned |
+| `fp.iteration` `flat_traverse`, `find_map_effect`, `fold_map_effect` | Owned unary | Still borrowed; `as_unary(f)` with `IO` |
+| `fp.iteration` `traverse_filter` | Owned unary | Still borrowed; the audit's `IO` call did not compile even with `as_unary` |
+| `fp.iteration` `fold_effect` | Binary | Still borrowed; not checked with `IO` |
+| `fp.iteration` `traverse_tap`, `filter_effect`, `any_effect`, `all_effect`, `find_effect` | Borrowing | Still borrowed; not checked with `IO` |
+| `fp.algebra` `if_effect` | Thunks | Still borrowed; not checked with `IO` |
+| `fp.algebra` `tail_rec_m` | Owned unary | Already owned |
+
+The built rows are the ones the approved gate names, and `traverse_void`,
+which `Iter` already gives the same owned overloads. The remaining unary rows
+can take the same generated overloads in a later pass; each adds eight
+overloads per entry point.
+
+**Probe.**
+
+- The `Pipeline` spelling, `def(var _NativeOwnedArg[I.Element[V]]) thin -> R`,
+  does not resolve for free functions: the function comes first, so `V` is
+  unresolved when the function argument is converted.
+- The `as_unary` factory spelling works: a fresh `A` inferred from the
+  function, `where I.Element[V] == A`, with the factory's by-value ABI
+  variants (register and memory argument and result, pure and raising, no
+  borrowed fallback and no no-value signatures, as on `Iter`).
+- Optional, Result, and List calls select the owned overloads for plain
+  functions without ambiguity and with the same results. Capturing closures
+  still select the borrowed overloads.
+- Naming the error as `MapContract[I, V, NativeUnary[...]].Error` does not
+  reduce in a raises clause for a raising function. The overloads name it
+  through `_ErrorProbe`, as the borrowed overloads do.
+
+**Built.**
+
+- `generate_native_conventions.py` emits the 24 `fp.algebra` overloads into a
+  generated block of `operations.mojo`. Each copies the pointer into a
+  `NativeUnary` and calls the shared `_map_as`, `_flat_map_as`, or
+  `_traverse_as` entry, as the borrowed overloads do.
+- `generate_traversal_syntax.py`'s pointer overloads for `Iter` now also emit
+  the free `fp.iteration` `traverse` and `traverse_void` overloads, which
+  delegate to the library-callable overloads.
+- Plain functions passed to the free operations are now copied, not borrowed.
+  Eager results are unchanged. For deferred Reader and State results the
+  callback type is now `NativeUnary` and no longer carries the call-site
+  origin. Generic code that names `X=` still selects the borrowed overloads.
+- `io_family` calls the free `map`, `flat_map`, and `traverse` with plain
+  functions, including a raising one. `reject_io_borrowed` passes a capturing
+  closure to the free `traverse`, which is still rejected.
+- Targeted runs: 51 runtime tests and examples that pass native callbacks to
+  these operations, 128 compile-fail fixtures that import them, the generator
+  tooling test, and the `io_family`, `reject_io_borrowed`, `family_sequence`,
+  `reject_family_error`, and `reject_family_origin` qualifications (20/20).
+  The full suite and gates were not run.
 
 ## Pass 9 proposal
 

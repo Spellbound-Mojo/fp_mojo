@@ -1318,6 +1318,38 @@
     {
      "sha256": "50c480f7f9768e35788999f4a14af471020259d61a4854af9b0c6f1b47ea1915",
      "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V ) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where ( I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)):"
+    },
+    {
+     "sha256": "6f02233b2494fdf8cc1a93755a1dab2c1473a675e25dc0758924acda9e18db1c",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad](function: def(var A) thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "aff3acecb4e20252a20f8d450f2fdf3480b13bf0c890f0d7e559047831f26474",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad](function: def(var A) thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "78a1b9966cf1add6699c743fd11bf3d6157056245ba994b2fc799997698d56a1",
+     "signature": "def flat_map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, I: Monad](function: def(var A) thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "dc9e9d11cadf35a22779d85c2869152f357957ce8b98d3d25e2156e20db795a5",
+     "signature": "def flat_map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad](function: def(var A) thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, NativeUnary[A, R, Never, type_of(function), False]] where I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "ce0583ff9e8681ec8924fa8191491e50414e9b6a637d2582b77efcea6a498d85",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad](function: def(var A) raises E thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, E]] -> I.Bound[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "54442d957d06c5f6c01cc481e8b7ad9b34d05592356a947be65b109e8f5e73c5",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Monad](function: def(var A) raises E thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, E]] -> I.Bound[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "f44f53bce27100b7c1114dea6b2de2539049fd135964d4b376d71bf761646232",
+     "signature": "def flat_map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad](function: def(var A) raises E thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, E]] -> I.Bound[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "e3ac48900ade20f9031d47efdb63dcd4aacc4c1c316ff4d201da50596b7d4454",
+     "signature": "def flat_map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Monad](function: def(var A) raises E thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, E]] -> I.Bound[V, NativeUnary[A, R, E, type_of(function), True]] where I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:"
     }
    ],
    "provider": "algebra/operations"
@@ -1410,6 +1442,38 @@
     {
      "sha256": "3fc8072bde62044c0832422685ad0db4daafef256b4fed62987ce103306a5b0e",
      "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] f: F, var value: V ) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where ( I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)):"
+    },
+    {
+     "sha256": "b332b0bc39a52859e50541c4fe9b4e8c73b7c2424c2a42e8bb2bac68d00dba7e",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor](function: def(var A) thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "156d5756cbf466cd0f05293691c2601d087f83d18bf47aded689072f4487c8d8",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor](function: def(var A) thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "8d69f978b68def618316fd123dd137e93c8a85501b4610f42f41282be6821520",
+     "signature": "def map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, I: Functor](function: def(var A) thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "7df92b7034cb1df69c177d93f3f8a8dbc70d9625e9900f61333ce0fc8f05a939",
+     "signature": "def map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor](function: def(var A) thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, NativeUnary[A, R, Never, type_of(function), False]] where I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "32e9b79e71ba316a682b1405477f811b6394b90b81d5e09a730714ad1fa87257",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor](function: def(var A) raises E thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, E]] -> I.Mapped[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "34c60e97c20498e254e48353f18889c487c68cee0497aeeb73e099e10da95730",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Functor](function: def(var A) raises E thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, E]] -> I.Mapped[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "4b14f3ae43e504301199dae7db2f686e90fbca991d697160f106b4b983209c9b",
+     "signature": "def map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor](function: def(var A) raises E thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, E]] -> I.Mapped[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "b3e94c0802fa6f358444ef2caee92e5e65e10350b205b90af3b32f4c7902a6d7",
+     "signature": "def map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Functor](function: def(var A) raises E thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, E]] -> I.Mapped[V, NativeUnary[A, R, E, type_of(function), True]] where I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:"
     }
    ],
    "provider": "algebra/operations"
@@ -1538,6 +1602,38 @@
     {
      "sha256": "2639beec712fc4a5a50482de6c761243ddab60d5f09b17c56f9a530686b0b0d6",
      "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, o: ImmOrigin, //, S: Traversable, G: Applicative, F: _RaisingUnary[A, R, E]](ref[o] f: F, var source: V ) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]]:"
+    },
+    {
+     "sha256": "3fbe3121c26201ed755bfa36b838196ff52d5bb322e0f79b6b09ac4295bce3c6",
+     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "1f71c796b083781ec8dc01a16e1f63660e09ff8db50331271d451025a09dc435",
+     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "e7e5bb5946af70b1879d655f2c6fece00146883a4f9783ee187d1ea0977e8c89",
+     "signature": "def traverse[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "1efc8c8e2e1c6623ac44468fd8219ec6449e289941c4e01ea85335f05bdcd2a7",
+     "signature": "def traverse[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]] where S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "d6b9add38f74f9694160e64cc43e52d0e7ff27b1c9a0207b8f212719c7e826c8",
+     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "df45fdd0a66a5de1a7d09ae8539ca9ab68240c9164b8de8759593da3dd56ac0e",
+     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "4087a6bdcfd24472462b64901114b681eb8847f8cd2c33923c0c55dce80aeadc",
+     "signature": "def traverse[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "acb2a6a175265579783d076861d3544b1d44ea3aeccb75ed87b8ba960ab63e10",
+     "signature": "def traverse[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]] where S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]:"
     }
    ],
    "provider": "algebra/operations"
@@ -2909,6 +3005,38 @@
     {
      "sha256": "08d75e2d58d3d29c162f7b461e24957932c77e6fcc23e445ac3bd29df76bbbf1",
      "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](ref[o] function: F, var source: V ) raises G.CollectError[V, _NativeUnaryRef[A, R, E, F, True, o]] -> G.Collected[V, _NativeUnaryRef[A, R, E, F, True, o]] where _Source[V].Element == A and G.CollectCompatible[V, _NativeUnaryRef[A, R, E, F, True, o]]:"
+    },
+    {
+     "sha256": "448a249feb961dfa35019d64deabbede318056c012175e818fd28e2c84d7553d",
+     "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "ac3d87708d037b361f8a3d7a385cc825d6f3fa2571f79eba110db91e88ef2ac1",
+     "signature": "def traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "64ee3f757a100a42c69c2bf91c7aee2fdfee389e4f13af56a30bf7abe7551371",
+     "signature": "def traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "1d93d0f6f03100e6186ca7dd95517cc7f23beef80822ecebadbe192eb40bd735",
+     "signature": "def traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "c556d108629aaaf6a349eab844e32e59e9b6d0f32f1d956e21cc8cfeb42e9cfc",
+     "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "d601247cacaa375408245f8a1840c6d1ee71f57b0821e7d49ee64a14e6e769f3",
+     "signature": "def traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "1b19dbd8a798897f75273f9813069b941909a437e3141ba48228a967eb619b8c",
+     "signature": "def traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "aac8c48d37d3684a7d84cc42034254cf0358bb7ee40f1a8613b91fd4a9a1effa",
+     "signature": "def traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:"
     }
    ],
    "provider": "iteration/derived"
@@ -2963,6 +3091,38 @@
     {
      "sha256": "a4a496777eb5bf1b552e93d97824e47bce39f8d1e917dbe3518830cbce9be414",
      "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, G._LoopError[V, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]] -> G._Looped[V, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]:"
+    },
+    {
+     "sha256": "a4bbd3c7fadff1f8564b64f693be35cf415b82ffea390650b75d2a2ff3c0e779",
+     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:"
+    },
+    {
+     "sha256": "6dd1e5518268c89d7c37019fbfe9d9ac92c6664113eda6395624778a7433ef5c",
+     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:"
+    },
+    {
+     "sha256": "7b452cfb4c20fbbca1afe5c7bc26d6c54092ce2565f6e1d87b155b1aeb5de085",
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:"
+    },
+    {
+     "sha256": "ac9224ca99655151b8423d7e85bfa50060ed6a190f0df11268a8dafbe9b5c747",
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:"
+    },
+    {
+     "sha256": "e52690fa286edea64ec129719b9ae56f0e52c298fa50df2185404caa7ca4cb9b",
+     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:"
+    },
+    {
+     "sha256": "69308bbcd8a29dd389d07387f90b5e8e19895fe61d9911ce00f7a7dabd22e3c8",
+     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:"
+    },
+    {
+     "sha256": "e7e8bee454cc4743b0a6bf0933b27cb71ac22aa06f61051de03741f1124875e2",
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:"
+    },
+    {
+     "sha256": "90c590cf32e011fa8bf7fc285bb1c6e5b0802b3d4dda797fbb8c5ac186b4ff26",
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:"
     }
    ],
    "provider": "iteration/derived"
@@ -25965,6 +26125,38 @@
     {
      "sha256": "08d75e2d58d3d29c162f7b461e24957932c77e6fcc23e445ac3bd29df76bbbf1",
      "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](ref[o] function: F, var source: V ) raises G.CollectError[V, _NativeUnaryRef[A, R, E, F, True, o]] -> G.Collected[V, _NativeUnaryRef[A, R, E, F, True, o]] where _Source[V].Element == A and G.CollectCompatible[V, _NativeUnaryRef[A, R, E, F, True, o]]:"
+    },
+    {
+     "sha256": "448a249feb961dfa35019d64deabbede318056c012175e818fd28e2c84d7553d",
+     "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "ac3d87708d037b361f8a3d7a385cc825d6f3fa2571f79eba110db91e88ef2ac1",
+     "signature": "def traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "64ee3f757a100a42c69c2bf91c7aee2fdfee389e4f13af56a30bf7abe7551371",
+     "signature": "def traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "1d93d0f6f03100e6186ca7dd95517cc7f23beef80822ecebadbe192eb40bd735",
+     "signature": "def traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:"
+    },
+    {
+     "sha256": "c556d108629aaaf6a349eab844e32e59e9b6d0f32f1d956e21cc8cfeb42e9cfc",
+     "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "d601247cacaa375408245f8a1840c6d1ee71f57b0821e7d49ee64a14e6e769f3",
+     "signature": "def traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "1b19dbd8a798897f75273f9813069b941909a437e3141ba48228a967eb619b8c",
+     "signature": "def traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:"
+    },
+    {
+     "sha256": "aac8c48d37d3684a7d84cc42034254cf0358bb7ee40f1a8613b91fd4a9a1effa",
+     "signature": "def traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:"
     }
    ],
    "provider": "iteration/derived"
@@ -26019,6 +26211,38 @@
     {
      "sha256": "a4a496777eb5bf1b552e93d97824e47bce39f8d1e917dbe3518830cbce9be414",
      "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, G._LoopError[V, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]] -> G._Looped[V, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]:"
+    },
+    {
+     "sha256": "a4bbd3c7fadff1f8564b64f693be35cf415b82ffea390650b75d2a2ff3c0e779",
+     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:"
+    },
+    {
+     "sha256": "6dd1e5518268c89d7c37019fbfe9d9ac92c6664113eda6395624778a7433ef5c",
+     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:"
+    },
+    {
+     "sha256": "7b452cfb4c20fbbca1afe5c7bc26d6c54092ce2565f6e1d87b155b1aeb5de085",
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:"
+    },
+    {
+     "sha256": "ac9224ca99655151b8423d7e85bfa50060ed6a190f0df11268a8dafbe9b5c747",
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:"
+    },
+    {
+     "sha256": "e52690fa286edea64ec129719b9ae56f0e52c298fa50df2185404caa7ca4cb9b",
+     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:"
+    },
+    {
+     "sha256": "69308bbcd8a29dd389d07387f90b5e8e19895fe61d9911ce00f7a7dabd22e3c8",
+     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:"
+    },
+    {
+     "sha256": "e7e8bee454cc4743b0a6bf0933b27cb71ac22aa06f61051de03741f1124875e2",
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:"
+    },
+    {
+     "sha256": "90c590cf32e011fa8bf7fc285bb1c6e5b0802b3d4dda797fbb8c5ac186b4ff26",
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:"
     }
    ],
    "provider": "iteration/derived"

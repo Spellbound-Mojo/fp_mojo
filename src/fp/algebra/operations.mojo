@@ -2,14 +2,14 @@
 
 Entries use the instance's primitive or its associated pure constructor. `map`, `flat_map` and
 `traverse` also accept native functions and closures directly, for every
-instance; generic code that forwards a raising native callback names its error
-type with `X=`.
+instance: plain functions are copied, closures borrowed. Generic code that
+forwards a raising native callback names its error type with `X=`.
 """
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible
 from std.builtin.rebind import rebind_var, downcast
 from fp.callables._views import _UnaryViewable
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, _ErrorProbe
-from fp.callables.native import _NativeUnaryRef, _Unary, _RaisingUnary
+from fp.callables.native import NativeUnary, _NativeUnaryRef, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible
 from .protocols import _SemigroupBinary
 from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure, _map_as, _flat_map_as, _traverse_as
@@ -27,11 +27,12 @@ def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I:
 ) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible:
     """Apply `f` to the payload of `value`, keeping the carrier's context: the `Functor` operation.
 
-    Another overload takes a native function or closure directly, for every
-    instance: `map[OptionalFamily](twice, value^)`. It is borrowed, not moved:
-    an eager instance calls it before returning, and a deferred computation
-    keeps the borrow until it runs, so keep the callback alive and unmoved
-    until then, or move it in with `as_unary(f^)`. Its parameter type must
+    Other overloads take a native function or closure directly, for every
+    instance: `map[OptionalFamily](twice, value^)`. A plain function is
+    copied, so a deferred computation such as `IO` can keep it. A closure is
+    borrowed, not moved: an eager instance calls it before returning, and a
+    deferred computation keeps the borrow until it runs, so keep the closure
+    alive and unmoved until then, or move it in with `as_unary(f^)`. Its parameter type must
     equal the carrier's element type, origins included. Generic code that
     forwards a raising native callback names its error with `X=`.
 
@@ -111,11 +112,12 @@ def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, /
     An absent `Optional`, a failed `Result` or an empty `List` skips the
     callback.
 
-    Another overload takes a native function or closure directly, for every
-    instance: `flat_map[OptionalFamily](halve, value^)`. It is borrowed, not moved:
-    an eager instance calls it before returning, and a deferred computation
-    keeps the borrow until it runs, so keep the callback alive and unmoved
-    until then, or move it in with `as_unary(f^)`. Its parameter type must
+    Other overloads take a native function or closure directly, for every
+    instance: `flat_map[OptionalFamily](halve, value^)`. A plain function is
+    copied, so a deferred computation such as `IO` can keep it. A closure is
+    borrowed, not moved: an eager instance calls it before returning, and a
+    deferred computation keeps the borrow until it runs, so keep the closure
+    alive and unmoved until then, or move it in with `as_unary(f^)`. Its parameter type must
     equal the carrier's element type, origins included. Generic code that
     forwards a raising native callback names its error with `X=`.
 
@@ -152,8 +154,8 @@ def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, /
     The source keeps its shape. Once `G` has failed (an absent `Optional`, a
     failed `Result`), no further element is pulled and the callback is not
     called again. A `List` source is gathered by `G.collect`; any owned
-    iterable or iterator can be the source. Another overload takes a native
-    function or closure directly.
+    iterable or iterator can be the source. Other overloads take a native
+    function (copied) or closure (borrowed) directly.
 
     Parameters:
         V: The source's type.
@@ -208,8 +210,9 @@ def combine[M: Semigroup](var left: M.Value, var right: M.Value) raises M.Error 
     return _SemigroupBinary[M]().call(left^, right^)
 
 
-# Native functions and closures for every instance. The callback is borrowed
-# through a _NativeUnaryRef, never copied. Generic code that forwards a raising
+# Native closures for every instance. The callback is borrowed through a
+# _NativeUnaryRef, never copied; plain functions use the generated owned
+# overloads at the end of this module. Generic code that forwards a raising
 # native callback names its error with X=, which must equal the callback's error.
 struct _InferError(Movable where False):
     pass
@@ -304,3 +307,178 @@ def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, E]]
     comptime assert S.TraverseError[G, V, D] == Raised
     return _traverse_as[S, G, V, D, Raised](D(Pointer(to=f)), source^)
+
+
+# Plain functions enter by value and are stored as an owned NativeUnary, as on
+# Pipeline, so deferred families such as IO can keep them. Closures keep the
+# borrowed overloads above.
+# --- native algebra pointers (generated) ---
+def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor](function: def(var A) thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.MapError[V, _ErrorProbe[A, R, Never]]
+    comptime assert I.MapError[V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _map_as[Raised, I](NativeUnary[A, R, Never, type_of(function), False](function), value^)
+
+
+def map[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor](function: def(var A) thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.MapError[V, _ErrorProbe[A, R, Never]]
+    comptime assert I.MapError[V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _map_as[Raised, I](NativeUnary[A, R, Never, type_of(function), False](function), value^)
+
+
+def map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, I: Functor](function: def(var A) thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.MapError[V, _ErrorProbe[A, R, Never]]
+    comptime assert I.MapError[V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _map_as[Raised, I](NativeUnary[A, R, Never, type_of(function), False](function), value^)
+
+
+def map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor](function: def(var A) thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, NativeUnary[A, R, Never, type_of(function), False]] where I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.MapError[V, _ErrorProbe[A, R, Never]]
+    comptime assert I.MapError[V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _map_as[Raised, I](NativeUnary[A, R, Never, type_of(function), False](function), value^)
+
+
+def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor](function: def(var A) raises E thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, E]] -> I.Mapped[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.MapError[V, _ErrorProbe[A, R, E]]
+    comptime assert I.MapError[V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _map_as[Raised, I](NativeUnary[A, R, E, type_of(function), True](function), value^)
+
+
+def map[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Functor](function: def(var A) raises E thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, E]] -> I.Mapped[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.MapError[V, _ErrorProbe[A, R, E]]
+    comptime assert I.MapError[V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _map_as[Raised, I](NativeUnary[A, R, E, type_of(function), True](function), value^)
+
+
+def map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor](function: def(var A) raises E thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, E]] -> I.Mapped[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.MapError[V, _ErrorProbe[A, R, E]]
+    comptime assert I.MapError[V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _map_as[Raised, I](NativeUnary[A, R, E, type_of(function), True](function), value^)
+
+
+def map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Functor](function: def(var A) raises E thin -> R, var value: V) raises I.MapError[V, _ErrorProbe[A, R, E]] -> I.Mapped[V, NativeUnary[A, R, E, type_of(function), True]] where I.Element[V] == A and _MapCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.MapError[V, _ErrorProbe[A, R, E]]
+    comptime assert I.MapError[V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _map_as[Raised, I](NativeUnary[A, R, E, type_of(function), True](function), value^)
+
+
+def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad](function: def(var A) thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.BindError[V, _ErrorProbe[A, R, Never]]
+    comptime assert I.BindError[V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _flat_map_as[Raised, I](NativeUnary[A, R, Never, type_of(function), False](function), value^)
+
+
+def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad](function: def(var A) thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.BindError[V, _ErrorProbe[A, R, Never]]
+    comptime assert I.BindError[V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _flat_map_as[Raised, I](NativeUnary[A, R, Never, type_of(function), False](function), value^)
+
+
+def flat_map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, I: Monad](function: def(var A) thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.BindError[V, _ErrorProbe[A, R, Never]]
+    comptime assert I.BindError[V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _flat_map_as[Raised, I](NativeUnary[A, R, Never, type_of(function), False](function), value^)
+
+
+def flat_map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad](function: def(var A) thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, NativeUnary[A, R, Never, type_of(function), False]] where I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.BindError[V, _ErrorProbe[A, R, Never]]
+    comptime assert I.BindError[V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _flat_map_as[Raised, I](NativeUnary[A, R, Never, type_of(function), False](function), value^)
+
+
+def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad](function: def(var A) raises E thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, E]] -> I.Bound[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.BindError[V, _ErrorProbe[A, R, E]]
+    comptime assert I.BindError[V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _flat_map_as[Raised, I](NativeUnary[A, R, E, type_of(function), True](function), value^)
+
+
+def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Monad](function: def(var A) raises E thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, E]] -> I.Bound[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.BindError[V, _ErrorProbe[A, R, E]]
+    comptime assert I.BindError[V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _flat_map_as[Raised, I](NativeUnary[A, R, E, type_of(function), True](function), value^)
+
+
+def flat_map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad](function: def(var A) raises E thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, E]] -> I.Bound[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.BindError[V, _ErrorProbe[A, R, E]]
+    comptime assert I.BindError[V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _flat_map_as[Raised, I](NativeUnary[A, R, E, type_of(function), True](function), value^)
+
+
+def flat_map[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, I: Monad](function: def(var A) raises E thin -> R, var value: V) raises I.BindError[V, _ErrorProbe[A, R, E]] -> I.Bound[V, NativeUnary[A, R, E, type_of(function), True]] where I.Element[V] == A and _BindCompatible[I, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = I.BindError[V, _ErrorProbe[A, R, E]]
+    comptime assert I.BindError[V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _flat_map_as[Raised, I](NativeUnary[A, R, E, type_of(function), True](function), value^)
+
+
+def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, Never]]
+    comptime assert S.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _traverse_as[S, G, V, NativeUnary[A, R, Never, type_of(function), False], Raised](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+
+def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, Never]]
+    comptime assert S.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _traverse_as[S, G, V, NativeUnary[A, R, Never, type_of(function), False], Raised](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+
+def traverse[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, Never]]
+    comptime assert S.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _traverse_as[S, G, V, NativeUnary[A, R, Never, type_of(function), False], Raised](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+
+def traverse[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]] where S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, Never]]
+    comptime assert S.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]] == Raised
+    return _traverse_as[S, G, V, NativeUnary[A, R, Never, type_of(function), False], Raised](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+
+def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, E]]
+    comptime assert S.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _traverse_as[S, G, V, NativeUnary[A, R, E, type_of(function), True], Raised](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+
+def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, E]]
+    comptime assert S.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _traverse_as[S, G, V, NativeUnary[A, R, E, type_of(function), True], Raised](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+
+def traverse[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, E]]
+    comptime assert S.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _traverse_as[S, G, V, NativeUnary[A, R, E, type_of(function), True], Raised](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+
+def traverse[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises S.TraverseError[G, V, _ErrorProbe[A, R, E]] -> S.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]] where S.Element[V] == A and S.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, E]]
+    comptime assert S.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]] == Raised
+    return _traverse_as[S, G, V, NativeUnary[A, R, E, type_of(function), True], Raised](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+
+# --- end native algebra pointers ---

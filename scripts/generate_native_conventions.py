@@ -23,6 +23,9 @@ PROJECTION_END = "# --- end native projection pointers ---\n"
 SCOPED_OUTPUT = ROOT / "src/fp/effects/scoped.mojo"
 SCOPED_START = "# --- native scoped IO pointers (generated) ---\n"
 SCOPED_END = "# --- end native scoped IO pointers ---\n"
+ALGEBRA_OUTPUT = ROOT / "src/fp/algebra/operations.mojo"
+ALGEBRA_START = "# --- native algebra pointers (generated) ---\n"
+ALGEBRA_END = "# --- end native algebra pointers ---\n"
 ADAPTER_START = "# --- native unary admission (generated) ---\n"
 ADAPTER_END = "# --- end native unary admission ---\n"
 BINARY_START = "# --- native binary admission (generated) ---\n"
@@ -318,6 +321,53 @@ def scoped_pointers():
     return "".join(out)
 
 
+# Each operation: instance parameters, carrier argument, error and result
+# families, element owner, admission and shared execution entry; the borrowed
+# native overloads in operations.mojo use the same spelling.
+ALGEBRA_OPERATIONS = (
+    ("map", "I: Functor", "value", "I.MapError[V, {D}]", "I.Mapped[V, {D}]", "I",
+     "_MapCompatible[I, V, {D}]", "_map_as[Raised, I]"),
+    ("flat_map", "I: Monad", "value", "I.BindError[V, {D}]", "I.Bound[V, {D}]", "I",
+     "_BindCompatible[I, V, {D}]", "_flat_map_as[Raised, I]"),
+    ("traverse", "S: Traversable, G: Applicative", "source", "S.TraverseError[G, V, {D}]",
+     "S.Traversed[G, V, {D}]", "S", "S.TargetCompatible[G, V, {D}]", "_traverse_as[S, G, V, {D}, Raised]"),
+)
+
+
+def algebra_pointers():
+    """Copy plain functions into owned callbacks for the shared execution entries.
+
+    Closures stay borrowed. Owned pointers let deferred families keep their
+    callback; by-value ABI evidence keeps them disjoint from closure borrows.
+    The error is named through the callback-type probe, as for borrowed
+    callbacks, so it reduces in the raises clause.
+    """
+    out = []
+    for name, family, carrier, error, result, owner, admission, entry in ALGEBRA_OPERATIONS:
+        for factory in native_factories("owned", ["A"], include_void=False):
+            D = factory.adapter
+            E = "E" if any(p == "E" for p, _ in factory.parameters) else "Never"
+            parameters = [f"V: {MD}", *(f"{p}: {bound}" for p, bound in factory.parameters), "//", family]
+            raised = error.format(D=f"_ErrorProbe[A, R, {E}]")
+            guards = [*factory.abi.conditions, f"{owner}.Element[V] == A", admission.format(D=D)]
+            out.append(f'''def {name}[{", ".join(parameters)}](function: {factory.signature}, var {carrier}: V) raises {raised} -> {result.format(D=D)} where {" and ".join(guards)}:
+    """Copy a plain function into an owned callback; closures stay borrowed."""
+    comptime Raised = {raised}
+    comptime assert {error.format(D=D)} == Raised
+    return {entry.format(D=D)}({D}(function), {carrier}^)
+
+
+''')
+    return "".join(out)
+
+
+def algebra_source(text=None):
+    text = ALGEBRA_OUTPUT.read_text() if text is None else text
+    before, remaining = text.split(ALGEBRA_START, 1)
+    _, after = remaining.split(ALGEBRA_END, 1)
+    return before + ALGEBRA_START + algebra_pointers() + ALGEBRA_END + after
+
+
 def projection_source(text=None):
     text = PROJECTION_OUTPUT.read_text() if text is None else text
     before, remaining = text.split(PROJECTION_START, 1)
@@ -370,3 +420,5 @@ if __name__ == "__main__":
     print(f"wrote {PROJECTION_OUTPUT.relative_to(ROOT)}")
     SCOPED_OUTPUT.write_text(scoped_source())
     print(f"wrote {SCOPED_OUTPUT.relative_to(ROOT)}")
+    ALGEBRA_OUTPUT.write_text(algebra_source())
+    print(f"wrote {ALGEBRA_OUTPUT.relative_to(ROOT)}")

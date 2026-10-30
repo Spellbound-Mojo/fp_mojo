@@ -12,7 +12,7 @@ from fp.callables.invoke import RepeatableBorrow
 
 from std.builtin.rebind import downcast
 from fp.callables.protocols import BorrowCallable, UnaryContract
-from fp.callables.native import _Borrowing, _RaisingBorrowing, _NativeBorrowRef, _Unary, _RaisingUnary, _NativeUnaryRef
+from fp.callables.native import _Borrowing, _RaisingBorrowing, _NativeBorrowRef, _Unary, _RaisingUnary, _NativeUnaryRef, NativeUnary
 from fp.algebra.protocols import Applicative
 from fp.callables._transforms import _Fill, _Replace, _TupleWith, _ObserveOnce, _ObserveNative
 from ._advance import _Source, _source
@@ -462,4 +462,85 @@ def sequence_filter[V: Movable & Deinitable, //, G: Applicative, X: AnyType = _I
         The exact callback, monoid or family error; Never for a non-raising operation.
     """
     return _traverse_then[ListFamily, G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], G.MapError[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]]]]](_Same[downcast[_Source[V].Element, Movable & Deinitable]](), source^, _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _Same[downcast[_Source[V].Element, Movable & Deinitable]]]]]())
+
+def traverse[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed.
+
+    Parameters:
+        A: The callback input type, including its native origins.
+        R: The native callback result type.
+        V: The consumed source or carrier type.
+        G: The target Applicative family; it determines effect sequencing and failure.
+
+    Args:
+        function: The callback, borrowed in place; calls follow the operation's evaluation order.
+        source: The source, consumed with its native origins; iterator sources are not restarted.
+
+    Returns:
+        The target effect containing transformed payloads; Iter and direct calls gather a List.
+
+    Raises:
+        The exact callback, monoid or family error; Never for a non-raising operation.
+    """
+    return traverse[G](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+def traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse[G](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+def traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse[G](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+def traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, Never, type_of(function), False]] -> G.Collected[V, NativeUnary[A, R, Never, type_of(function), False]] where _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, Never, type_of(function), False]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse[G](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+def traverse[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse[G](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+def traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse[G](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+def traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse[G](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+def traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative](function: def(var A) raises E thin -> R, var source: V) raises G.CollectError[V, NativeUnary[A, R, E, type_of(function), True]] -> G.Collected[V, NativeUnary[A, R, E, type_of(function), True]] where _Source[V].Element == A and G.CollectCompatible[V, NativeUnary[A, R, E, type_of(function), True]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse[G](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse_void[G, X=X](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse_void[G, X=X](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse_void[G, X=X](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse_void[G, X=X](NativeUnary[A, R, Never, type_of(function), False](function), source^)
+
+def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse_void[G, X=X](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse_void[G, X=X](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse_void[G, X=X](NativeUnary[A, R, E, type_of(function), True](function), source^)
+
+def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]:
+    """Copy a plain function into the owned traversal callback; closures stay borrowed."""
+    return traverse_void[G, X=X](NativeUnary[A, R, E, type_of(function), True](function), source^)
 # --- end traversal conveniences ---
