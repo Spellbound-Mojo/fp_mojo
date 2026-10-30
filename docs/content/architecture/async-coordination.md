@@ -1,7 +1,8 @@
 # Resumable coordination
 
-`fp.effects.async_runtime` provides `Deferred`, bounded `Queue`, and `Semaphore`
-machines over the [wake-driven scheduler](async-scheduler.md). Their pure-Mojo
+`fp.effects.async_runtime` provides `Deferred`, bounded `Queue`, and `Semaphore`.
+Their operations return `IO` values that lift private leaves over the
+[wake-driven scheduler](async-scheduler.md). Their pure-Mojo
 implementation reuses the canonical synchronous coordination state transitions.
 
 ## Shared execution
@@ -35,7 +36,7 @@ Canonical Permit destruction also notifies through its existing Ref update.
 | `Semaphore(permits)` | `available[E]`, `acquire[E]`, `with_permit(program)` | Nonnegative initial count; acquisition yields the canonical move-only `Permit`. |
 
 Queue and Semaphore construction delegate validation to the synchronous types.
-Methods construct unentered recipes, which may be dropped normally. Entered
+Methods build unentered `IO` values, which may be dropped normally. Entered
 work belongs to a linear `Task` or `Driver` and must drain. All values, captures,
 and errors retain their native types and origins. The async names are part of
 the opt-in public preview; synchronous operations keep their existing contracts.
@@ -47,7 +48,7 @@ is destroyed only after unlocking, so restoring its count can safely reenter the
 same Ref. Unopened or canceled waiting offers destroy their retained input once.
 
 `with_permit` acquires **outside** the resource scope, where the wait remains
-cancelable. Typed bind transfers the acquired owner into a scope before entering
+cancelable. An `IO` bind transfers the acquired owner into a scope before entering
 the body. Cancellation at the handoff drops the unentered permit owner. Once
 the body is entered, the scope retains its permit through every body suspension
 and through the body's cancellation cleanup. Scope completion releases the

@@ -1,8 +1,10 @@
 # Explicit async state machines
 
 The async runtime uses ordinary typed Mojo structs to represent suspended work.
-It is implemented in `src/fp/effects/_async`; the public application surface is
-`fp.effects.async_runtime`, with extension contracts in its `protocols` module.
+Applications compose `IO[T, E]` values; `IO`'s run loop sequences them and runs
+typed machines as leaves. It is implemented in `src/fp/effects/_async`; the
+public application surface is `fp.effects.async_runtime`, with extension
+contracts in its `protocols` module.
 The modules under `experiments/async-state-machines/state_machine/` forward to
 those canonical owners for the maintained qualification clients.
 
@@ -14,10 +16,12 @@ supported operations and the Cats mapping.
 
 ## Execution and outcomes
 
-A public `Machine` declares concrete `Value`, `Error`, and `Family = Async[Error]`
-metadata. Its mutating `poll` receives the canonical context and returns either
-`Step.pending(wait)` or `Step.ready(outcome)`. A poll must return cooperatively;
-it cannot block while waiting for external work or rely on preemption.
+A public `Machine` declares concrete `Value` and `Error` types, and
+`IO[T, E].lift` runs one as a leaf. Its mutating `poll` receives the canonical
+context and returns either `Step.pending(wait)` or `Step.ready(outcome)`. A poll
+must return cooperatively; it cannot block while waiting for external work or
+rely on preemption. A lifted machine must own its state, or borrow only what `T`
+or `E` already names.
 
 Pending work and completed cancellation are distinct. A terminal outcome uses
 the existing `Outcome[T, E]`: absence means cancellation-only, success owns `T`,
@@ -26,7 +30,7 @@ cancellation flag. Errors can coexist with cancellation and retain their exact
 native types and origins. Resumable nodes use the canonical settlement and
 error-combination helpers rather than a separate outcome policy.
 
-Constructing a recipe invokes no user callback. Unopened recipes may be dropped;
+Building an `IO` invokes no user callback. An unopened `IO` may be dropped;
 entered work belongs to the linear, non-Deinitable `Driver`. Request cancellation,
 continue polling until `Progress.completed`, then consume `finish()` exactly
 once. There is no detach or asynchronous destructor. Internal task and slot
@@ -51,7 +55,7 @@ prevent shutdown.
 | Completed | Combine outcomes and destroy the resource only after cleanup finishes. |
 
 `ScopedMachine` and `CleanupMachine` receive a fresh immutable resource borrow
-for each poll. Stored state and returned values/errors cannot depend on that
+for each poll; `Resource.use_scoped` and `Resource.make_case` take them. Stored state and returned values/errors cannot depend on that
 fresh loan. A parser can retain its offset and reborrow a buffer on its next poll;
 it cannot retain a pointer into the movable scoped owner between polls.
 Independent external captures and results retain their native origins.
@@ -81,12 +85,12 @@ There is no OS I/O readiness backend or foreign-thread completion bridge. The
 qualified runtime executes cooperatively on one host thread. See the
 [scheduler](async-scheduler.md) for registration and parking details.
 
-Typed sequencing, iterative loops, fixed pairs, dynamic nurseries, callback
-withdrawal, coordination, races, timeouts, resources, and lexical masks are
-implemented. [Nursery](async-nurseries.md) capacity bounds lifetime admissions;
-[queue and semaphore](async-coordination.md) handles provide reusable coordination.
-Dynamic heterogeneous admission requires an explicit native representation.
-Concrete type depth and retained payload sizes remain caller-visible costs.
+`IO` sequencing, iteration, recovery, finalization, and masks run on the run
+loop. Fixed pairs, callback withdrawal, coordination, races, timeouts, and
+resources are leaves. The private [nursery](async-nurseries.md) bounds lifetime
+admissions until fibers replace it; [queue and semaphore](async-coordination.md)
+handles provide reusable coordination. Leaf type depth and retained payload sizes
+remain caller-visible costs.
 
 ## External and heterogeneous work
 
@@ -125,4 +129,4 @@ Use a fresh output directory. The [overnight qualification](async-qualification.
 records completed sustained reuse, ownership, retained-storage and performance
 checks. The supported surface remains an opt-in preview on pinned Mojo 1.2.0
 Linux x86-64; qualification does not extend to arbitrary platforms, parallel
-payload execution, GPU adapters, or unlimited concrete type depth.
+payload execution, GPU adapters, or unlimited leaf type depth.

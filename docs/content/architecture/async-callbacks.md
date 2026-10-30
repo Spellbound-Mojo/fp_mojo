@@ -1,13 +1,14 @@
 # Typed callback registration
 
-`fp.effects.async_runtime.callback(register, cleanup)` owns a one-shot
-registration callable accepting `Completion[T, E]` and returning unit. Its native
-error is `E` or `Never`; cleanup is a unit-returning `Machine` with the same `E`.
-Native functions and library callables use the canonical invocation adapters.
-The [composition engine](async-composition.md) owns execution in pure Mojo.
+`IO[T, E].async(register, withdrawal)` runs the private `Callback` leaf, which owns
+a one-shot registration callable accepting `Completion[T, E]` and returning unit.
+Its native error is `E` or `Never`; the withdrawal is a unit `IO` with the same
+`E`, and `IO.async_` has none. Native functions and library callables use the
+canonical invocation adapters. The [composition engine](async-composition.md)
+owns execution in pure Mojo.
 
-[Nurseries](async-nurseries.md) admit callback machines dynamically and join them
-through their complete withdrawal.
+The private [nursery](async-nurseries.md) admits callback machines dynamically and
+joins them through their complete withdrawal.
 
 ## Ownership and terminal decisions
 

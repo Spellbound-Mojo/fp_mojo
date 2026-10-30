@@ -1,68 +1,69 @@
 # Async composition
 
-The canonical `fp.effects._async` owners implement typed sequencing, fixed-state
-iteration, and structured child groups in pure Mojo. Application recipes select
-`Async[E]` through the public family and Pipeline interfaces. The
-[state-machine contract](async-state-machines.md) defines entered ownership;
+`IO[T, E]` sequences work through one iterative run loop in
+`src/fp/effects/_async/engine.mojo`. Fixed child groups, races, timers, scopes,
+callbacks, and coordination waits are typed machines that `IO` runs as leaves.
+The [state-machine contract](async-state-machines.md) defines entered ownership;
 [callbacks](async-callbacks.md) add external completion with owned withdrawal.
+The [advanced plan](async-advanced-plan.md#pass-8a-progress) records how the run
+loop was built and measured.
 
 ## Interfaces and ownership
 
 | Interface | Behavior |
 |---|---|
-| `pure[E](value)` | Own a value in a deferred machine with the selected exact error type |
-| Pipeline `flat_map(next)` | Move a successful value into a one-shot continuation that constructs the next machine |
-| `tail_rec_m[Async[E]](step, initial)` | Repeatedly move state through a fixed machine type returning `ControlFlow[Result, State]` |
-| `both(left, right)` | Run a typed child pair and return its ordered success tuple after both finish |
-| `scoped_both(left, right)` | Run scoped children with a fresh resource borrow for every child poll |
+| `IO[T, E].pure(value)`, `.delay(f)`, `.defer(f)` | Own a value, evaluate a function, or build an `IO` when the program reaches it |
+| `io.flat_map(f)`, `.map(f)`, `.handle_error_with(h)` | Append a frame; the callback runs once, when the run loop reaches it |
+| `tail_rec_m[Async[E]](step, initial)`, `traverse`, `collect` | Fold on the run loop: each step binds after the previous step's `IO` |
+| `io.both(other)` | Run a typed child pair as a leaf and return its ordered success tuple after both finish |
+| `IO[T, E].lift(machine)` | Run a custom machine as one leaf |
 
 The public surface is `fp.effects.async_runtime`; the implementation layout
 under `src/fp/effects/_async` is:
 
+- `engine.mojo`: `IO`, its `Async[E]` family, and the run loop.
 - `kernel.mojo`: waits, shared private execution slots, linear roots and drivers.
-- `composition.mojo`: sequencing, iteration and their callable adapters.
+- `composition.mojo`: typed sequencing and iteration machines used inside leaves.
 - `children.mojo`: shared pair lifecycle, ordinary and scoped invocation boundaries.
-- `scopes.mojo`: the existing resumable acquisition/use/cleanup coordinator.
+- `scopes.mojo` and `resources.mojo`: the resumable acquisition/use/cleanup
+  coordinator and the resource plans `Resource` erases.
 
 The public `Driver` and internal `Task` are non-Deinitable. They own the complete
 entered computation tree and can finish only after that tree completes. Internal
-`_Slot` storage is shared by roots, bind nodes, loops, and child groups. An entered
-slot aborts if destroyed before completion; unopened recipes can be discarded. This guard
-detects interpreter misuse but cannot asynchronously finalize an abandoned slot.
-Raw machine polling still requires compliance with the protocol.
+`_Slot` storage is shared by roots, leaves, and child groups. An entered slot
+aborts if destroyed before completion; an unopened `IO` can be discarded. This
+guard detects interpreter misuse but cannot asynchronously finalize an abandoned
+slot. Raw machine polling still requires compliance with the protocol.
 
-Each slot owns its machine through the native `OwnedPointer[P]`. The exact `P`,
-including captured origins, remains in the type. There is no erased pointer,
-unsafe origin conversion, or reference to a movable parent frame. This adds an
-allocation per slot, including each constructed loop iteration; only one
-iteration's running storage is retained at a time. It is a correctness-oriented
-representation, not an allocation-free performance claim.
+An `IO` is a flat program: one head (a value, a failure, a leaf, a deferred
+factory, a mask, or a restore region) and the frames applied after it. Values
+and callbacks cross the run loop in private erased boxes. A box is opened only by
+a function specialized at the typed call that created it, so `IO` keeps origins
+only through `T` and `E`, and the callbacks it stores must own their state.
+Typed leaves keep their exact machine type, including captured origins, inside
+the leaf and its slot.
 
 ## Sequencing and loops
 
-Continuation and loop factory invocation delegate to the existing callable
-receiver dispatch and error capture. Factories are bounded synchronous
-constructors of deferred work. Acquisition requiring asynchronous cleanup belongs
-in an entered resource scope, not in a factory that may return an unopened
-machine. Source failure or cancellation skips the continuation. A separate
-handoff step checks cancellation before moving the source value into it. A
-successfully constructed next machine is installed before its next entry
-checkpoint; cancellation discards it only if it has not entered.
+Entering a program pushes its frames onto one run-loop stack, so evaluation,
+unwinding, and disposal never recurse natively. A bind runs only after success,
+past a handoff checkpoint that observes cancellation; a recovery runs only on a
+failure whose `canceled` flag is false; finalizers run masked with the exact
+exit. Callbacks install the program they build directly into the run loop. Small
+values and callbacks live inline in their boxes, so a common bind allocates
+nothing.
 
-Loop factories must support repeated invocation. `Continue` transfers the next
-state, `Break` transfers the final result, and failure or cancellation prevents
-another iteration. The current step completes its entered cleanup before the
-loop finishes. Iteration does not grow a recursive continuation chain.
+Each poll runs up to a fixed budget of 1,024 transitions, then returns a runnable
+wait. A pending leaf suspends the run loop until its own wake conditions hold.
+Folds, `tail_rec_m`, and recursion through `defer` keep a bounded frame stack:
+million-step chains, nested `defer` levels, and tail-recursive loops run under a
+1 MiB native stack.
 
-Each node performs at most one factory invocation or one active-child poll per
-outer poll. Explicit runnable transitions separate stages. Nested groups rotate
-among ready children; this is hierarchical cooperative progress, not preemption
-or equal scheduling weight for every leaf in an arbitrarily shaped tree.
-
-Static bind type depth and runtime iteration count remain distinct limits. The
-qualification includes a 64-bind type tree and one million loop iterations,
-with separate execution under a 1024 KiB stack limit. These fixtures do not
-establish arbitrary-depth heterogeneous sequencing or bounded user payload size.
+The typed `Bind` and `Loop` machines in `composition.mojo` remain for leaves
+built from typed parts. Each of their nodes performs at most one factory
+invocation or one active-child poll per outer poll, and their static type depth
+is a caller-visible cost. Child groups nest statically: `IO` values inside a pair
+each run their own run loop, so a pair's native depth follows its type.
 
 ## Child lifecycle and wake conditions
 
@@ -95,7 +96,10 @@ through any suspension of that release.
 
 ## Qualification and limits
 
-The maintained composition, loop lifecycle, child and origin clients cover
+The `io_engine`, `io_depth`, `io_family`, and `io_laws` clients cover the run
+loop: sequencing, recovery, deferred construction, leaves resuming a chain,
+cancellation, iterative disposal, the stack bound, and the monad and recovery
+laws. The maintained composition, loop lifecycle, child and origin clients cover
 move-only state/errors, construction failure, cancellation checkpoints, child
 terminal-state combinations, independent external origins, unopened siblings,
 parent masking, wake-before-park races, mixed waits, and nested resource cleanup.
@@ -105,6 +109,7 @@ Long-loop and static-depth clients also execute under a recorded stack limit.
 ```sh
 pixi run python experiments/async-state-machines/qualify.py \
   --output .cache/async-composition-check --jobs 2 \
+  --client io_engine --client io_depth --client io_family \
   --client composition --client loop_lifecycle --client children --client depth
 ```
 
@@ -113,7 +118,7 @@ results, raw diagnostics, executable hashes and independent audits. Sustained
 loop storage and local sequencing costs are recorded in the
 [overnight results](async-qualification.md#overnight-results).
 
-This representation supports finite statically typed task trees and runtime
-iteration. It does not promise arbitrary concrete bind depth, allocation-free
-steps, or bounded user payload sizes. A noncooperating poll blocks its host;
-nonterminating masked cleanup prevents completion.
+`IO` sequencing has no static depth limit; typed leaves and child groups remain
+finite statically typed trees. Neither promises bounded user payload sizes. A
+noncooperating poll blocks its host; nonterminating masked cleanup prevents
+completion.

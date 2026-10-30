@@ -1,49 +1,52 @@
 # Async finalization and lexical masking
 
-`fp.effects.async_runtime` provides `guarantee`, `guarantee_case`, `on_cancel`,
-`uncancelable`, and `uncancelable_with`/`Poll` for resumable machines. These public
-preview operations use the canonical pure-Mojo execution and outcome owners.
+`IO` provides `guarantee`, `guarantee_case`, and `on_cancel`, and
+`IO.uncancelable` with `Poll` and `io.restore(poll)`. The run loop implements
+them as frames over the canonical execution and outcome owners. The typed
+scope-based machines described below remain private leaves for typed parts.
 
 ## Finalization
 
-All three finalization constructors adapt to the existing Scope. A unit resource
-marks entry into the protected operation. The body delegates through the same
-scoped-program adapter shared with Semaphore's permit scope. Cleanup uses
-canonical ExitCase, `_ExitState`, `_discard`, `_finish`, and cancellation
-settlement; there is no second finalization state machine or error policy.
+A finalize frame settles the body's outcome, then runs the cleanup program masked
+with the exact exit. A finish frame restores the context and merges body and
+cleanup errors through canonical `_finish`, then settles. The exit is held in
+`_ExitState`, so `ExitCase`, `_finish`, `_settle`, and cancellation settlement
+remain the only finalization and error policies.
 
-`guarantee_case` takes a ScopedMachine whose Input is the exact ExitCase type.
-It borrows that exit only for each poll, including after suspension; neither
-its result nor its stored fields may escape that borrow. `guarantee` runs an
-ordinary cleanup machine and discards its successful value. `on_cancel` runs
+`guarantee` runs an ordinary cleanup `IO` and discards its successful value.
+`guarantee_case` takes a factory that borrows the exact `ExitCase` and builds the
+cleanup `IO`; the factory's error becomes a cleanup failure. `on_cancel` runs
 cleanup only when the body exit records cancellation, including failure plus
-cancellation. Body and finalizer errors retain their exact types and origins,
-ordered body first and then inner-to-outer finalizers.
+cancellation, and otherwise drops it unopened. Body and finalizer errors retain
+their exact types and origins, ordered body first and then inner-to-outer
+finalizers. Cleanup is masked across waits.
 
-Entering the guarantee installs the scope before body execution. Cancellation
-between that entry and the body's first poll still finalizes the entered scope.
-An entirely unopened recipe runs neither body nor finalizer. A completed body
-value remains owned until cleanup finishes; late cancellation can suppress it
-only after cleanup drains. Cleanup is masked across waits and task movement.
+A finalizer installed by a continuation that already ran is armed, as in Cats
+Effect: cancellation observed at the body's first checkpoint runs it. An unopened
+`IO` runs neither body nor finalizer. The typed `Guarantee` machine adapts to the
+existing `Scope` instead: a unit resource marks entry, cleanup borrows the exit
+on each poll, and a typed guarantee that never entered skips its cleanup.
 
 ## Masks and Poll
 
-`uncancelable_with[E](factory)` invokes a consuming typed factory under a new
-mask and gives it a copyable `Poll[E]`. Factory errors are captured with their
-exact compatible error type. `uncancelable(program)` uses the same implementation
-with a constant factory. A successful terminal result produced inside that mask
-survives structural forwarding to its owner. Starting another unmasked operation
-(for example a bind continuation) observes a pending cancellation request. Entry
-into an entirely unopened masked recipe remains a cancellation checkpoint.
+`IO.uncancelable(factory)` checks cancellation, enters a new mask, and invokes a
+consuming factory with a copyable `Poll[E]`; it then runs the `IO` the factory
+builds. Factory errors are captured with their exact compatible error type. A
+successful terminal result produced inside that mask survives to its owner.
+Starting another unmasked operation (for example a bind continuation) observes a
+pending cancellation request. Entry into a masked region remains a cancellation
+checkpoint. The private typed `uncancelable_with` machine shares the same mask and
+`Poll` owners.
 
 The async execution step records protected success privately; execution slots
-pass that fact to the canonical settlement helper. Bind's terminal forwarding
+and the run loop pass that fact to the canonical settlement helper. Region exits
 and Poll restoration preserve it, without changing the public Outcome shape.
 Errors still retain an independent cancellation flag. A resource scope observes
 the body's protected exit, then its own post-cleanup settlement remains a
 checkpoint. Synchronous IO keeps its existing settlement behavior.
 
-`poll.apply(program)` restores the cancellation state preceding its own region.
+`io.restore(poll)` restores the cancellation state preceding the poll's region
+(`poll(fa)` in Cats Effect); the typed `poll.apply(program)` does the same.
 The canonical synchronous Poll owns a shared private restoration helper,
 which both runners use. It restores the mask and lexical region while retaining
 the current invocation's token, clock, scheduler, and parent registration.
@@ -62,8 +65,9 @@ to a finished stack frame; retained handles may extend metadata ownership.
 
 Tests cover all 16 body/parent-cancellation/cleanup-error combinations, scoped
 borrowing of move-only body errors across cleanup suspension, on_cancel selection,
-unopened recipes, retained body owners, nested error order, and movement during
-cleanup. Mask tests cover active and stale Poll handles, nested regions, restored
+unopened programs, retained body owners, nested error order, and movement during
+cleanup. `io_finalization` covers the same cases for `IO`'s frames, and `io_depth`
+unwinds a failure through 100,000 nested finalizers under a 1 MiB stack. Mask tests cover active and stale Poll handles, nested regions, restored
 structured children, manual-clock waits, finalizer protection, and factory errors.
 Native-origin clients cover body values/errors, finalizer captures, factories,
 and restored results. Negative clients reject escaping exit borrows, incompatible

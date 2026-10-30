@@ -1,8 +1,8 @@
 # Structured races and timeouts
 
-`fp.effects.async_runtime` exposes first-terminal selection through `race_first`
-and `timeout_after`, and cancellation-aware selection through `race` and
-`timeout_to`. All four operations share the canonical pure-Mojo child and timer
+`IO` exposes first-terminal selection through `race_first` and `timeout_after`,
+and cancellation-aware selection through `race` and `timeout_to`. Each method
+lifts a private race or timeout leaf. All four operations share the canonical pure-Mojo child and timer
 owners and are part of the opt-in preview.
 
 Race uses the existing child pair's independent tokens, execution slots, FIFO
@@ -35,7 +35,8 @@ their cancellation flag, while cancellation on the discarded side is normalized.
 
 Timeout starts its Sleep deadline when the wrapper is first entered, before the
 timer child gets a poll. The timer competes through the same Race implementation.
-Typed bind selects either the original value or the owned fallback recipe.
+Inside the leaf, a typed bind selects either the original value or the owned
+fallback.
 Its private machine branch uses the standard library Variant directly, avoiding
 reflected data-family admission over entire nested machine types. Public race
 values still use the existing Choice and Left/Right constructors.

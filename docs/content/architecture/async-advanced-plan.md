@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-proposal), [8c](#pass-8c-proposal), and [9](#pass-9-proposal) proposals drafted for review** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -458,6 +458,7 @@ cross-thread memory correctness.
 | **7b — `IO` and fiber API proposal** | Specify the public `IO[T, E]` surface in Cats Effect vocabulary, callback admission, the private node kinds, join ownership, failure accounting, and the migration from typed recipes, using 7a evidence. | A concrete API migration proposal reviewed before Pass 8. |
 | **8a — Iterative sequencing and unwinding** | Implement `IO[T, E]` over the private node representation; drive continuations, errors, masks, finalizers, and disposal through one iterative engine registered once per fiber. Migrate the public async operations, family, examples, and guide from typed recipes to `IO`. Record an allocation baseline. | Runtime-built deep binds and recursive deferred programs satisfy the stack contract, including cancellation, failure, and unopened disposal; existing lifecycle behavior remains qualified. |
 | **8b — Budgets and test stepping** | Add transition accounting, separate cancellation/yield budgets, and controllable test-host stepping on the same engine. | Budget checks cover nested work and masked cleanup. |
+| **8c — Owned native callbacks in free operations** | Give the free `map`, `flat_map`, `traverse`, and other free entry points whose callbacks a deferred family retains owned overloads for plain functions, as `Pipeline` has. See the [proposal](#pass-8c-proposal). | `IO` accepts plain functions through the free operations; eager families resolve them unchanged; closures stay rejected for `IO`. |
 | **9 — General lightweight fibers** | Add typed handles, start/join/cancel, completion observers, `cede`, `never`, dynamic scoped ownership, and bounded diagnostic snapshots. Generalize canonical task storage rather than wrapping the homogeneous nursery. | Heterogeneous children progress independently; joining parks; all shutdown paths drain; each failure is joined or reported exactly once; sequential spawn/join churn reuses storage; diagnostic handles do not retain payloads or completed graphs. |
 | **10 — Cancellation and spawn capabilities** | Add generic error/defer/cancellation/spawn contracts and provider forwarding; expose `race_pair` with settled ownership rules and a `Supervisor` that owns fibers beyond one program's lifetime. Reuse them for existing higher-level operations where contracts match. | Generic clients use minimal capabilities across actual and test providers; law/admission checks pass; no duplicate masking, error, or child-draining policy. |
 | **11 — Coordination and temporal capabilities** | Add generic Ref/Deferred access and time/sleep/timeout contracts over canonical owners. Specify unique identity and clock domains; extend controlled scheduling to event delivery and virtual time. Audit ownership-sensitive derived operations. | Reproducible manual-time and cancellation laws respecting promised event ordering; no polling loop masquerading as suspension; no async collection API additions. |
@@ -965,6 +966,217 @@ implementation.
 - `IO[NoneType, E].delay` also takes a plain function with no return value,
   raising or not. The shared delay adapter maps the missing result to
   `NoneType`, and the examples' cleanup functions no longer spell it out.
+
+## Pass 8b proposal
+
+Status: **draft for review**. Pass 8b finishes Pass 8: transitions become the
+unit of work, yield and cancellation checks become separate policies, and tests
+can step the same engine one transition at a time.
+
+### Current state
+
+- Each `IO` run loop yields after a fixed 1,024 transitions per poll. An `IO`
+  inside a leaf, such as a child of `both`, has its own run loop and its own
+  1,024, so one root poll's work grows with nesting depth.
+- `Driver.poll(budget)` counts root polls and timer events, not transitions.
+- Cancellation is observed at every bind and recovery handoff, at leaf entry,
+  and at region entry.
+- Manual clocks, `Driver.poll` budgets, and `Progress` already drive programs
+  deterministically, one root poll at a time.
+
+### Proposal
+
+1. **One transition budget per root poll.** The root task refills a slice at
+   each root poll. Every run loop in that task tree draws from the same slice
+   through its inherited context, and yields with a runnable wait when the slice
+   is spent.
+   - Counted transitions: evaluating a head; applying a bind, map, or recovery;
+     unwinding a finalize, finish, or region-exit frame; and polling a leaf.
+   - Native callback bodies, custom polls, and destructors stay uncounted and
+     cannot be preempted; the guide states that boundary.
+   - The counter is private, carried in the context beside the clock and
+     scheduler, and thread-confined. A run loop reads it once per poll and
+     writes it back on return, so the hot loop does not change.
+2. **Separate yield and cancellation policies**, as in Cats Effect's
+   [`IORuntimeConfig`](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/IORuntimeConfig.scala):
+   - `auto_yield_threshold`: transitions per root poll; default 1,024.
+   - `cancelation_check_threshold`: binds between handoff checks; default 1,
+     which is today's behavior.
+   - Validation: both must be positive, and the yield threshold a multiple of
+     the check threshold, so every yield point is also a check point and
+     yielding cannot disable checks.
+   - Leaves, region entries, and masked cleanup keep their own checkpoints.
+     Masked cleanup may yield without becoming cancelable, because the region's
+     context is run-loop state.
+3. **Host configuration.**
+   - `Driver(program, token, clock, config)` and `run(program, config)` take the
+     configuration; the existing constructors keep the defaults.
+   - `Progress` gains `transitions`, the transitions spent in the call.
+4. **Test stepping on the same engine.**
+   - With `auto_yield_threshold = 1`, `Driver.poll(1)` runs exactly one
+     transition.
+   - `Progress` gains `quiescent`: not completed, nothing runnable, and no live
+     deadline, so the program awaits external input. A test host treats
+     quiescence as deadlock only when it knows no input will arrive.
+   - Virtual time remains `Clock.manual` with `advance_to(progress.deadline)`.
+     Event and choice traces arrive with fibers, whose start, join, and cancel
+     races need them.
+5. **Measurements.** Transitions per root poll for nested `both` trees and long
+   chains; wall-clock per root poll at the defaults; and the IO loop probe with
+   cancellation intervals of 1 and 512.
+
+### Gate and clients
+
+- `io_budget`:
+  - A million-bind chain takes the expected number of root polls.
+  - A nested `both` of long chains never exceeds the threshold plus one
+    transition per leaf poll in a root poll.
+  - Masked cleanup running a long chain yields between polls and completes
+    without observing cancellation.
+  - With a check interval of k, cancellation is observed within k binds.
+  - Invalid configurations raise setup `Error` at construction.
+- `io_stepping`: single-steps a small program and checks each transition's
+  effect, quiescence against completion, and manual time.
+
+### Review questions
+
+1. Name the configuration `IORuntimeConfig`, as Cats Effect does?
+2. Default check interval: 1 keeps today's every-bind checkpoint, which the
+   documented laws assume. 512 is Cats Effect's default: faster loops, later
+   observation. Recommendation: 1, unless the probe shows a measurable cost.
+3. Add `transitions` and `quiescent` to the public `Progress`?
+
+## Pass 8c proposal
+
+Status: **draft for review**. The free operations take plain functions for
+`IO`.
+
+### Problem
+
+- The free `map`, `flat_map`, and `traverse` borrow native functions and closures
+  through reference adapters. Eager families call the callback before returning,
+  so borrowing is safe for them.
+- A deferred `IO` must own its callback, so the `IO` family rejects those
+  borrows. Users must write `as_unary(f)` today.
+- `Pipeline`, `tail_rec_m`, and iterator `traverse` already store plain functions
+  as owned callables and borrow only closures.
+
+### Proposal
+
+- Give the free operations the same owned overloads for plain (`thin`) functions.
+  They store an owned `NativeUnary` with the register-passable evidence
+  `Pipeline` uses. Closures keep their borrowed overloads, which `IO` still
+  rejects.
+- Generate the overloads with the existing native-convention generator, so
+  every entry point shares one adapter.
+- Candidates: `fp.algebra` `map`, `flat_map`, and `traverse`, the free
+  `fp.iteration` traversal entry points, and other free operations whose
+  callbacks a deferred family retains. An audit lists them before building.
+- Probe first:
+  - Inferring the element type from the value argument when the function type
+    depends on it. Each free function takes the function first and infers from
+    the value, while `Pipeline` already knows the element type.
+  - That eager families still resolve plain functions without ambiguity or a
+    change in behavior.
+
+### Gate
+
+- Existing algebra, iteration, and `Pipeline` clients pass unchanged.
+- `io_family` uses the free `map`, `flat_map`, and `traverse` with plain
+  functions.
+- `reject_io_borrowed` passes a capturing closure, which stays rejected.
+
+## Pass 9 proposal
+
+Status: **draft for review**. It implements the approved
+[fiber contract](#fiber-contract) on the Pass 8 engine.
+
+### Public surface
+
+| Cats Effect | FP Mojo | Notes |
+|---|---|---|
+| `fa.start` | `io.start()` returning `IO[Fiber[T, E], E]` | The fiber running `start` owns the child. |
+| `fiber.join` | `fiber^.join()` returning `IO[Outcome[T, E], E]` | Consumes the handle; parks until the child and its cleanup finish. |
+| `fiber.cancel` | `fiber.cancel()` returning `IO[NoneType, E]` | Requests cancellation and waits for termination without taking the result. |
+| — | `fiber.request_cancel()` returning `IO[NoneType, E]` | Requests only. |
+| `reportUnhandledFiberErrors`, `reportFailure` | `IORuntimeConfig.report_unhandled_fiber_errors` and a replaceable reporter | Reporting is on by default. |
+| `IO.cede`, `IO.never` | Already present | |
+
+`Fiber` lives in `fp.effects.async_runtime`, apart from the OS-thread
+`fp.effects.Fiber`.
+
+### Representation
+
+- **Shared state.** A handle and its child share a private fiber record:
+  status, the child's cancellation token, a completion signal, the failure
+  (typed only by `E`), and flags for joined and dropped handles. A typed success
+  cell is shared only by the handle and the child's completion step. The owner
+  holds the erased child program and the record, never `T`, so it can drain and
+  report without knowing `T`.
+- **Flat scheduling.** The entered root `IO` hosts every fiber started beneath
+  it. Fibers register as siblings in the existing wake registry, so nested
+  fibers cost no native stack, and each takes its slice of the Pass 8b budget.
+  An `IO` inside a lifted leaf is its own root and hosts its own fibers.
+- **Start.** A new head admits the erased child into the host's generation-checked
+  slot table, records its owner, and returns the handle. Slot reuse generalizes
+  the nursery's child slots and the registry's generations, so start/join churn
+  does not grow storage.
+- **Join.** A join leaf waits on the child's completion signal, then moves the
+  failure out of the record or the success out of the cell. If the joiner is
+  canceled after taking the right to deliver but before delivery, the failure
+  returns to the record to be reported, and a suppressed success is destroyed
+  once.
+- **Owner draining.** When a fiber's own program is terminal, it requests
+  cancellation of its unjoined live children, parks until they finish, and only
+  then completes. Fibers never outlive their owner.
+- **Reporting.** A failure is reported once it can no longer be joined: when its
+  handle is dropped, or when its owner finishes. The reporter is a host callback
+  taking a formatted line: the error text when `E` is `Writable`, otherwise its
+  type and error count. The default writes one line to standard error. A
+  non-generic callback avoids the existentials Mojo 1.2 lacks.
+- **Self-join.** The join leaf compares the current fiber's identity, carried in
+  the context, with the handle's, and aborts on a direct self-join.
+- **Diagnostics.** A bounded snapshot lists live fibers by identity, status, and
+  owner, without payloads or completed graphs.
+
+### Steps
+
+1. **9a:** the host, `start`, `join`, `cancel`, and `request_cancel`, with owner
+   draining.
+2. **9b:** failure accounting and the reporter, dropped handles, the joiner
+   cancellation race, self-join detection, and storage reuse.
+3. **9c:** diagnostics; then retire the private `Nursery` and `Spawner` and move
+   their internal clients to fibers.
+
+### Gate and clients
+
+From the delivery table:
+
+- Heterogeneous children progress independently, and joining parks.
+- Every shutdown path drains.
+- Each failure is joined or reported exactly once.
+- Sequential start/join churn reuses storage.
+- Diagnostic handles retain no payloads or completed graphs.
+
+Planned clients:
+
+- `fiber_basics`: independent progress, a parking join, and cancel waiting for
+  cleanup.
+- `fiber_drain`: owner completion with unjoined, failed, and masked children.
+- `fiber_reporting`: each failure exactly once, across dropped handles, owner
+  exit, and the joiner race.
+- `fiber_churn`: a million start/join cycles in constant storage under a 1 MiB
+  stack.
+- Rejections: joining a moved handle, and an `E` mismatch.
+
+### Review questions
+
+1. Is a reporter callback taking a formatted line, set through `IORuntimeConfig`,
+   acceptable?
+2. Should Cats Effect's `joinWith` and `joinWithNever` arrive in Pass 9 or
+   later?
+3. Should diagnostics expose fiber identities publicly, or only through the
+   driver's snapshot?
 
 ## Implementation reference map
 

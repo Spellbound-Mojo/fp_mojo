@@ -1,7 +1,10 @@
 # Dynamic typed nurseries
 
-`fp.effects.async_runtime.Nursery` owns runtime admission and joining of typed
-children. It preserves native Mojo types and origins, cooperative polling, and
+Status: private since Pass 8a. `Nursery` and `Spawner` left the public API when
+it switched to `IO`; [Pass 9 fibers](async-advanced-plan.md#pass-9-proposal)
+replace them with `start` and `join`, and generalize the storage described here.
+
+The private `Nursery` owns runtime admission and joining of typed children. It preserves native Mojo types and origins, cooperative polling, and
 complete draining of entered work. The [scheduler](async-scheduler.md) selects
 ready children without scanning parked work; [coordination](async-coordination.md)
 provides reusable queues and permits.
@@ -10,7 +13,7 @@ provides reusable queues and permits.
 
 `Nursery[P](limit)` owns a runtime-sized group of one exact machine type `P`.
 `spawner()` returns a copyable submission handle. `try_spawn(child)` transfers a
-recipe on success (`None`) or returns the original unentered recipe on rejection
+child on success (`None`) or returns the original unentered recipe on rejection
 (`Some(child)`). Handles may be retained after the nursery finishes; subsequent
 submissions are rejected. They are not child-task owners or detached join handles.
 
@@ -28,7 +31,7 @@ failure. Closing normally allows all accepted children to finish. Failure or
 cancellation closes admission and requests cancellation of unfinished children,
 including queued children before entry. Every entered child drains before the
 nursery returns. Dropping an unopened nursery closes retained handles and drops
-only unentered recipes. A linear `Driver` owns entered execution.
+only unentered children. A linear `Driver` owns entered execution.
 
 Children have independent, initially unmasked tokens. The parent's mask controls
 whether its own request is observed. Shared child storage and draining policy
@@ -38,7 +41,7 @@ completion order. Cancellation remains independent of failure.
 
 ## Scheduling and ownership
 
-Each poll admits at most one queued recipe and polls at most one ready child.
+Each poll admits at most one queued child and polls at most one ready child.
 After admission closes and all children finish, each poll collects one terminal
 outcome. The scheduled path uses FIFO ready-child metadata and does not scan
 parked children. Blocking convenience runners still use a 1 ms idle-sleep fallback.
