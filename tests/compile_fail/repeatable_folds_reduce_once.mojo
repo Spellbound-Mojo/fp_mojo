@@ -8,4 +8,4 @@ struct Step(OnceBinary):
     comptime Out=Int
     def __init__(out self):pass
     def call_once(deinit self,var a:Int,var b:Int)->Self.Out: return a
-def main() raises: _=reduce(Step(),[1])
+def main() raises: _=reduce([1],Step())

@@ -58,13 +58,16 @@ def forward(name, parameters, argument, result, source, operation, callback, doc
     """Only native admission and nominal type recovery belong in this body."""
     effect = f' raises {error}' if error else ''
     where = condition or f'Self.Value == {source}'
+    value = f'rebind_var[{source}](self.value^)'
+    # Free operations are value-first; family primitives keep their own order.
+    call = f'{operation}({value}, {callback})' if operation.startswith('_family_') else f'{operation}({callback}, {value})'
     return f'''
     def {name}[{', '.join(parameters)}](
         deinit self, {argument}
     ){effect} -> Piped[{result}] where {where}:
         """{doc}"""
         comptime assert Self.Value == {source}
-        return Piped({operation}({callback}, rebind_var[{source}](self.value^)))
+        return Piped({call})
 '''
 
 

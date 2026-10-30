@@ -7,7 +7,7 @@ def constant(offset: Int, value: Ior[Int, Int]) -> Int:
     return offset
 def main():
     var project = partial(constant, 1)
-    var pending = align_with(project, range(2), range(3))
+    var pending = align_with(range(2), range(3), project)
     var moved = project^
     var value: Ior[Int, Int] = Left(0)
     _ = moved(value)

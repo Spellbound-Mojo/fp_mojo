@@ -14,4 +14,4 @@ struct UnionError(ReaderAction, Defaultable):
         raise Self.Error[o]()
 
 def same(env: List[Int]) -> List[Int]: return env.copy()
-def main(): _ = local[Reader[List[Int]]](same, UnionError())
+def main(): _ = local[Reader[List[Int]]](UnionError(), same)

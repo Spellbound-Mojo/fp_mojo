@@ -5,10 +5,10 @@ from fp.callables import BorrowCallable, BinaryContract, ThunkContract, Binary, 
 from std.testing import assert_equal
 
 def select[I: Filterable, V: Movable & Deinitable, P: BorrowCallable](var values: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:
-    return filter[I](predicate^, values^)
+    return filter[I](values^, predicate^)
 
 def combine[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: V, var right: R, var function: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].Compatible:
-    return map2_lazy[I](function^, left^, right^)
+    return map2_lazy[I](left^, right^, function^)
 
 @fieldwise_init
 struct Positive(BorrowCallable):

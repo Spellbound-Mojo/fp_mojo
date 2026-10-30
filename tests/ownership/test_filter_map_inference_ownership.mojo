@@ -23,7 +23,7 @@ def native_capture() raises:
     var callback = as_unary(select^)
     comptime assert not conforms_to(type_of(callback), Copyable)
     var values: List[Token] = [Token(1, payloads), Token(2, payloads), Token(3, payloads), Token(4, payloads)]
-    var pending = filter_map(callback, iterated(values^).map(pulled))
+    var pending = filter_map(iterated(values^).map(pulled), callback)
     assert_equal(ledger[].calls, 0)
     assert_equal(payloads[].pulls, 0)
     var retained = next(pending)
@@ -84,7 +84,7 @@ def partial_capture() raises:
     assert_equal(ledger[].drops[0], 2)
     _ = pending^
     assert_equal(payloads[].drops[3], 1)
-    var empty = filter_map[U=Int](callback^, List[Token]())
+    var empty = filter_map[U=Int](List[Token](), callback^)
     _ = empty^
     assert_equal(ledger[].drops[0], 3)
     _ = prefix^

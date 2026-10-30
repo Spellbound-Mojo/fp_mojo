@@ -8,7 +8,7 @@ from std.iter import next
 def classify(offset: Int, value: Int) -> Result[Int, Int]: return Ok(offset + value)
 def main() raises:
     var classifier = partial(classify, 1)
-    var branches = partition_map(classifier, range(3), buffer=Unbounded())
+    var branches = partition_map(range(3), classifier, buffer=Unbounded())
     var first = MaybeUninit[type_of(branches[0])]()
     var second = MaybeUninit[type_of(branches[1])]()
     _take_pair(branches^, first, second)

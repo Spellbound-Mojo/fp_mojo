@@ -55,7 +55,7 @@ def exercise(library: Bool, mode: Int, length: Int, fail_at: Int, stop_at: Int,
         return ControlFlow[FoundationFoldCleanupToken, FoundationFoldCleanupToken](Continue(acc^))
     if library and mode == 1:
         try:
-            var output = reduce(step, source^)
+            var output = reduce(source^, step)
             return output.value
         except error:
             if error.isa[EmptyReductionError](): return -900
@@ -63,10 +63,10 @@ def exercise(library: Bool, mode: Int, length: Int, fail_at: Int, stop_at: Int,
             return -1000 - failure.code
     try:
         if library and mode == 0:
-            var output = reduce(step, source^, initial=FoundationFoldCleanupToken(20, drops))
+            var output = reduce(source^, step, initial=FoundationFoldCleanupToken(20, drops))
             return output.value
         if library:
-            var output = fold_until(control, FoundationFoldCleanupToken(20, drops), source^)
+            var output = fold_until(source^, FoundationFoldCleanupToken(20, drops), control)
             if output.isa[Break[FoundationFoldCleanupToken]]():
                 return 2000 + output^.unwrap[Break[FoundationFoldCleanupToken]]().into_payload().value
             return output^.unwrap[Continue[FoundationFoldCleanupToken]]().into_payload().value

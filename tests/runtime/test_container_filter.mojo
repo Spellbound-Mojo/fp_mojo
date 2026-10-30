@@ -132,7 +132,7 @@ def filter_shapes() raises:
     comptime assert type_of(some) == Optional[Int]
     assert_equal(some.take(), 2)
     assert_equal(Bool(piped(Optional(-1)).filter(filter_positive).get()), False)
-    assert_equal(Bool(filter[OptionalFamily](filter_positive, Optional[Int]())), False)
+    assert_equal(Bool(filter[OptionalFamily](Optional[Int](), filter_positive)), False)
     var count_before = calls
     _ = piped(Optional[Int]()).filter(counted).get()
     assert_equal(calls, count_before)
@@ -164,7 +164,7 @@ def filter_library_and_deferred() raises:
     def select(value: Int) {mut lazy_calls} -> Bool:
         lazy_calls += 1
         return value > 0
-    var native_deferred = filter[ContainerDeferredFamily](select, List[Int]([0, 1]))
+    var native_deferred = filter[ContainerDeferredFamily](List[Int]([0, 1]), select)
     assert_equal(lazy_calls, 0)
     assert_equal(native_deferred^.run(), [1])
     assert_equal(lazy_calls, 2)

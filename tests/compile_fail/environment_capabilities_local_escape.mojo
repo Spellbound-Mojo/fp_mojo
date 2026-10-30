@@ -10,6 +10,6 @@ comptime RR = ReaderT[R, Env]
 def next_value(var value: Env) -> RR.Asked: return ask[RR]()
 def change(value: Env) -> Env: return Env(value.value + 1)
 def main():
-    var scoped = local[RR](change, flat_map[RR](as_unary(next_value), ask[RR]()))
+    var scoped = local[RR](flat_map[RR](ask[RR](), as_unary(next_value)), change)
     var retained = run[RR](scoped^, Env(3))
     print(run[R](retained^, 0).value)

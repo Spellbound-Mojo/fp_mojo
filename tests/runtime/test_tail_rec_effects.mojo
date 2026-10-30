@@ -28,11 +28,11 @@ def branching_step(var value: Int) -> List[LoopControl]:
     return [LoopControl(Break(value)), LoopControl(Break(value + 1))]
 
 def main() raises:
-    assert_equal(tail_rec_m[IdentityFamily](deep_step, 0), 100000)
-    assert_false(tail_rec_m[OptionalFamily](optional_step, 0))
-    assert_equal(tail_rec_m[ListFamily](branching_step, 0), [1, 2, 3])
-    var program = tail_rec_m[Reader[Int]](reader_step, 0)
+    assert_equal(tail_rec_m[IdentityFamily](0, deep_step), 100000)
+    assert_false(tail_rec_m[OptionalFamily](0, optional_step))
+    assert_equal(tail_rec_m[ListFamily](0, branching_step), [1, 2, 3])
+    var program = tail_rec_m[Reader[Int]](0, reader_step)
     var env = 4
     assert_equal(run[Reader[Int]](program^, env), 100000)
-    var state_program = tail_rec_m[State[Int]](state_step, 0)
+    var state_program = tail_rec_m[State[Int]](0, state_step)
     assert_equal(run[State[Int]](state_program^, 9), (100000, 9))

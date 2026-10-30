@@ -13,5 +13,5 @@ def wrong[o: ImmOrigin](ref[o] outer: List[Int]) -> List[Span[Int, o]]:
         return None
     var project = partial(select, 1)
     var values: List[View] = [view]
-    return collect_fold[ListMonoid[View]](project, values^)
+    return collect_fold[ListMonoid[View]](values^, project)
 def main(): pass

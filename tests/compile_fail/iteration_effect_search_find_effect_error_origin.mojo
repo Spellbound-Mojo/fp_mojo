@@ -11,6 +11,6 @@ struct Bad[o:ImmOrigin](BorrowCallable):
     def invoke(self,ref value:Int) raises Self.Failure capturing ->Self.Result:
         raise self.error
 def mismatch(left:List[Int],right:List[Int]):
-    try: _=find_effect[OptionalFamily,X=Span[Int,origin_of(right)]](Bad(Span(left)),range(3))
+    try: _=find_effect[OptionalFamily,X=Span[Int,origin_of(right)]](range(3),Bad(Span(left)))
     except:pass
 def main():mismatch([1],[2])

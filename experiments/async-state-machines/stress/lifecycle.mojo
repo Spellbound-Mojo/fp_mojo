@@ -135,7 +135,7 @@ def main() raises:
     var window = Window()
     var host = ArcPointer(Host(window))
     var clock = Clock.manual(Int.MAX)
-    var driver = Driver(tail_rec_m[Async[Int]](Factory(host.copy(), Duration.nanoseconds(10), Duration.nanoseconds(2)), 0), CancellationToken(), clock)
+    var driver = Driver(tail_rec_m[Async[Int]](0, Factory(host.copy(), Duration.nanoseconds(10), Duration.nanoseconds(2))), CancellationToken(), clock)
     var runtime = driver._driver.task.context._runtime.value().copy()
     var progress = driver.poll()
     var polls = 0

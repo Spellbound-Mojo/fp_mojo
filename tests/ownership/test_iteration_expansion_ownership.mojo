@@ -214,7 +214,7 @@ def library_calls() raises:
     assert_equal(drops[],6)
     assert_equal(iterated(tokens(4,drops)).take_while(I12Borrow()).count(),2)
     assert_equal(iterated(tokens(4,drops)).drop_while(I12Borrow()).count(),2)
-    assert_equal(count_where(I12Borrow(),tokens(4,drops)),2)
+    assert_equal(count_where(tokens(4,drops),I12Borrow()),2)
     var trace=ArcPointer(List[Int]())
     iterated(tokens(3,drops)).for_each(I12Sink(trace))
     assert_equal(trace[],[0,1,2])
@@ -304,9 +304,9 @@ def main() raises:
     for mode in range(3):
         var caught=False
         try:
-            if mode==0: _=count_where(stop_predicate,range(3))
-            elif mode==1: for_each(stop_sink,range(3))
+            if mode==0: _=count_where(range(3),stop_predicate)
+            elif mode==1: for_each(range(3),stop_sink)
             else:
-                _=collect_fold[M=StringMonoid](stop_collect,range(3))
+                _=collect_fold[M=StringMonoid](range(3),stop_collect)
         except StopIteration:caught=True
         assert_equal(caught,True)

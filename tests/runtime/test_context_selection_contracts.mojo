@@ -9,13 +9,13 @@ from std.memory import ArcPointer
 from std.testing import assert_equal
 
 def selected[I: Filterable, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:
-    return filter[I](predicate^, value^)
+    return filter[I](value^, predicate^)
 
 def rejected[I: Filterable, V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:
-    return filter_not[I](predicate^, value^)
+    return filter_not[I](value^, predicate^)
 
 def combined[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: V, var right: R, var function: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].Compatible:
-    return map2_lazy[I](function^, left^, right^)
+    return map2_lazy[I](left^, right^, function^)
 
 @fieldwise_init
 struct Positive(BorrowCallable):

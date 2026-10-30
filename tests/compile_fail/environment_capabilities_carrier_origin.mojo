@@ -6,5 +6,5 @@ def bad(left: List[Int], right: List[Int]):
     comptime C = LiftLocal[StateT[Reader[L], Int], Reader[L]]
     comptime D = LiftLocal[StateT[Reader[R], Int], Reader[R]]
     def same(value: L) -> L: return value
-    _ = local[C](same, ask[D]())
+    _ = local[C](ask[D](), same)
 def main(): bad([1], [2])

@@ -28,7 +28,7 @@ def check[I:Applicative]() raises where TraverseContract[ListFamily,I,List[Owner
         var values=List[Owner]()
         for value in range(1,4):values.append(Owner(value,inputs))
         var code=0
-        try:_=traverse[ListFamily,I](Produce[I](Owner(10,captures),calls,fail),values^)
+        try:_=traverse[ListFamily,I](values^,Produce[I](Owner(10,captures),calls,fail))
         except error:
             comptime assert type_of(error)==Int
             code=rebind_var[Int](error^)

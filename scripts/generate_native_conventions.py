@@ -3,6 +3,7 @@
 from pathlib import Path
 
 from native_signatures import (
+    admissions,
     MD,
     native_dispatch,
     NATIVE_INVOCATIONS,
@@ -24,8 +25,8 @@ SCOPED_OUTPUT = ROOT / "src/fp/effects/scoped.mojo"
 SCOPED_START = "# --- native scoped IO pointers (generated) ---\n"
 SCOPED_END = "# --- end native scoped IO pointers ---\n"
 ALGEBRA_OUTPUT = ROOT / "src/fp/algebra/operations.mojo"
-ALGEBRA_START = "# --- native algebra pointers (generated) ---\n"
-ALGEBRA_END = "# --- end native algebra pointers ---\n"
+ALGEBRA_START = "# --- native algebra admission (generated) ---\n"
+ALGEBRA_END = "# --- end native algebra admission ---\n"
 ADAPTER_START = "# --- native unary admission (generated) ---\n"
 ADAPTER_END = "# --- end native unary admission ---\n"
 BINARY_START = "# --- native binary admission (generated) ---\n"
@@ -321,40 +322,53 @@ def scoped_pointers():
     return "".join(out)
 
 
-# Each operation: instance parameters, carrier argument, error and result
-# families, element owner, admission and shared execution entry; the borrowed
-# native overloads in operations.mojo use the same spelling.
+# Each operation: family parameters, explicit binding, carrier argument,
+# element, error and result families, family admission and shared entry.
 ALGEBRA_OPERATIONS = (
-    ("map", "I: Functor", "value", "I.MapError[V, {D}]", "I.Mapped[V, {D}]", "I",
-     "_MapCompatible[I, V, {D}]", "_map_as[Raised, I]"),
-    ("flat_map", "I: Monad", "value", "I.BindError[V, {D}]", "I.Bound[V, {D}]", "I",
-     "_BindCompatible[I, V, {D}]", "_flat_map_as[Raised, I]"),
-    ("traverse", "S: Traversable, G: Applicative", "source", "S.TraverseError[G, V, {D}]",
-     "S.Traversed[G, V, {D}]", "S", "S.TargetCompatible[G, V, {D}]", "_traverse_as[S, G, V, {D}, Raised]"),
+    ("map", "I: Functor", "I", "value", "I.Element[V]", "I.MapError[V, {D}]", "I.Mapped[V, {D}]",
+     "_MapCompatible[I, V, {D}]", "_map_as[{Raised}, I]"),
+    ("flat_map", "I: Monad", "I", "value", "I.Element[V]", "I.BindError[V, {D}]", "I.Bound[V, {D}]",
+     "_BindCompatible[I, V, {D}]", "_flat_map_as[{Raised}, I]"),
+    ("traverse", "S: Traversable, G: Applicative", "S, G", "source", "S.Element[V]", "S.TraverseError[G, V, {D}]",
+     "S.Traversed[G, V, {D}]", "S.TargetCompatible[G, V, {D}]", "_traverse_as[S, G, V, {D}, {Raised}]"),
 )
 
 
-def algebra_pointers():
-    """Copy plain functions into owned callbacks for the shared execution entries.
+def algebra_overloads():
+    """Value-first native admission for map, flat_map and traverse.
 
-    Closures stay borrowed. Owned pointers let deferred families keep their
-    callback; by-value ABI evidence keeps them disjoint from closure borrows.
-    The error is named through the callback-type probe, as for borrowed
-    callbacks, so it reduces in the raises clause.
+    The documented library-callable overloads stay hand-written; every other
+    form comes from the callback catalog. Native errors are named through the
+    callback-type probe so they reduce in the raises clause; generic code
+    forwarding a raising closure may name its error with `X=`.
     """
     out = []
-    for name, family, carrier, error, result, owner, admission, entry in ALGEBRA_OPERATIONS:
-        for factory in native_factories("owned", ["A"], include_void=False):
-            D = factory.adapter
-            E = "E" if any(p == "E" for p, _ in factory.parameters) else "Never"
-            parameters = [f"V: {MD}", *(f"{p}: {bound}" for p, bound in factory.parameters), "//", family]
-            raised = error.format(D=f"_ErrorProbe[A, R, {E}]")
-            guards = [*factory.abi.conditions, f"{owner}.Element[V] == A", admission.format(D=D)]
-            out.append(f'''def {name}[{", ".join(parameters)}](function: {factory.signature}, var {carrier}: V) raises {raised} -> {result.format(D=D)} where {" and ".join(guards)}:
-    """Copy a plain function into an owned callback; closures stay borrowed."""
-    comptime Raised = {raised}
-    comptime assert {error.format(D=D)} == Raised
-    return {entry.format(D=D)}({D}(function), {carrier}^)
+    for name, family, explicit, carrier, element, error, result, admission, entry in ALGEBRA_OPERATIONS:
+        for form in admissions("owned", [element], library=False, names={"X": "E", "C": "F", "in0": "A"}):
+            D = form.type
+            if form.kind == "view":
+                raised = error.format(D=D)
+                hint = ""
+            else:
+                # The probe carries only the callback's result and error; the body
+                # asserts it names the same family error as the stored callback. A
+                # plain function's input is the element expression, which need not
+                # reduce in a raises clause, so the probe does not use it.
+                probe_input = "NoneType" if form.kind == "thin" else form.inputs[0]
+                raised = error.format(D=f"_ErrorProbe[{probe_input}, {form.result}, {form.error}]")
+                hint = ", X: AnyType = _InferError" if form.kind == "closure" and form.raising else ""
+            declared = f"_EntryError[X, {raised}]" if hint else raised
+            parameters = [f"V: {MD}", *form.parameters, "//", family, *form.explicit]
+            guards = [*form.conditions, admission.format(D=D)]
+            if hint:
+                guards.append(f"(X == _InferError or X == {form.error})")
+            inline = "@always_inline\n" if form.kind == "closure" else ""
+            out.append(f'''{inline}def {name}[{", ".join(parameters)}{hint}](var {carrier}: V, {form.argument}) raises {declared} -> {result.format(D=D)} where {" and ".join(guards)}:
+    """Admit a {form.kind} callback{" that raises" if form.raising else ""}; execution stays with the family."""
+    comptime Raised = {declared}
+    comptime assert {error.format(D=D)} == {raised}
+    comptime assert _ErrorCompatible[Raised, {error.format(D=D)}]
+    return {entry.format(D=D, Raised="Raised")}({form.build}, {carrier}^)
 
 
 ''')
@@ -365,7 +379,7 @@ def algebra_source(text=None):
     text = ALGEBRA_OUTPUT.read_text() if text is None else text
     before, remaining = text.split(ALGEBRA_START, 1)
     _, after = remaining.split(ALGEBRA_END, 1)
-    return before + ALGEBRA_START + algebra_pointers() + ALGEBRA_END + after
+    return before + ALGEBRA_START + algebra_overloads() + ALGEBRA_END + after
 
 
 def projection_source(text=None):

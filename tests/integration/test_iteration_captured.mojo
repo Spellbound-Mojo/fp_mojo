@@ -21,7 +21,7 @@ def exercise_results(drops: ArcPointer[Int]) raises:
         if value == 2: return Result[Int, CapturedFailure](Err(CapturedFailure(27, drops)))
         return Result[Int, CapturedFailure](Ok(value * 10))
     var values = [1, 2, 3]
-    var mapped = map(transform, iter(values^))
+    var mapped = map(iter(values^), transform)
     var first = next(mapped)
     var first_value: Int
     try: first_value = first^.raise_on_err()
@@ -38,7 +38,7 @@ def exercise_results(drops: ArcPointer[Int]) raises:
     # Explicit aggregation stops at Err; ordinary lazy mapping above continues.
     calls = 0
     var inputs = [1, 2, 3]
-    var collected = collect_results(map(transform, iter(inputs^)))
+    var collected = collect_results(map(iter(inputs^), transform))
     assert_equal(collected.is_err(), True)
     assert_equal(calls, 2)
 
@@ -48,7 +48,7 @@ def main() raises:
         calls += 1
         return value * 2
     var values = [1, 2, 3]
-    var mapped = map(double, iter(values))
+    var mapped = map(iter(values), double)
     var forwarded = transfer_iterator(mapped^)
     var indexed = enumerate(forwarded^)
     var outputs = List[Int]()
@@ -64,7 +64,7 @@ def main() raises:
     def append(var acc: String, var value: Int) {mut steps} -> String:
         steps += 1
         return acc + String(value)
-    var scanned = scan_left(append, String("s"), iter(range(3)))
+    var scanned = scan_left(iter(range(3)), String("s"), append)
     var labels = [10, 20, 30, 40]
     var paired = zip(scanned^, iter(labels^))
     var snapshots = List[String]()
@@ -80,5 +80,5 @@ def main() raises:
     assert_equal(error_drops[], 2)
     # Returned iterators keep the supplied native callable type through a
     # factory boundary; this does not return a newly declared closure.
-    var empty = collect_list(map(double, iter(range(0))))
+    var empty = collect_list(map(iter(range(0)), double))
     assert_equal(len(empty), 0)

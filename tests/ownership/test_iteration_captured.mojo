@@ -50,7 +50,7 @@ def exercise(library: Bool, length: Int, count: Int, copies: ArcPointer[Int],
     var source = Source(values^, pulls)
     var output = List[Int]()
     if library:
-        var mapped = map(transform^, source^)
+        var mapped = map(source^, transform^)
         assert_equal(copies[], 0)
         assert_equal(calls[], 0)
         assert_equal(pulls[], 0)

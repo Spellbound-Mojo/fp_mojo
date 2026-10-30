@@ -109,10 +109,10 @@ preserved through mutable callbacks and their returned snapshots.
 ## Folds
 
 ```text
-fold_left(step, initial, iterator) -> A       step: (A, T) -> A
-fold_until(step, initial, iterator) -> ControlFlow[B, A]
-reduce(step, iterator[, initial]) -> A or T
-reduce_optional(step, iterator) -> Optional[T]
+fold_left(iterator, initial, step) -> A       step: (A, T) -> A
+fold_until(iterator, initial, step) -> ControlFlow[B, A]
+reduce(iterator, step[, initial=]) -> A or T
+reduce_optional(iterator, step) -> Optional[T]
 ```
 
 - Evaluation is sequential, left to right, one `step` call per consumed

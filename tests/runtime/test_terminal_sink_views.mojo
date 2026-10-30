@@ -45,11 +45,11 @@ def errors() raises:
     for mode in range(6):
         var caught = False
         try:
-            if mode == 0: _ = count_where(predicate, range(4))
+            if mode == 0: _ = count_where(range(4), predicate)
             elif mode == 1: _ = iterated(range(4)).count_where(predicate)
-            elif mode == 2: for_each(sink, range(4))
+            elif mode == 2: for_each(range(4), sink)
             elif mode == 3: iterated(range(4)).for_each(sink)
-            elif mode == 4: _ = collect_fold[StringMonoid](project, range(4))
+            elif mode == 4: _ = collect_fold[StringMonoid](range(4), project)
             else: _ = iterated(range(4)).collect_fold[StringMonoid](project)
         except error:
             comptime assert type_of(error) == StopIteration
@@ -57,7 +57,7 @@ def errors() raises:
         assert_equal(caught, True)
     var selected = partial(show, String())
     var code = 0
-    try: _ = collect_fold[FailingCombine](selected, range(5))
+    try: _ = collect_fold[FailingCombine](range(5), selected)
     except error:
         comptime assert type_of(error) == Int
         code = error
@@ -66,31 +66,31 @@ def errors() raises:
 def main() raises:
     errors()
     var predicate = partial(below, 3)
-    assert_equal(count_where(predicate, range(5)), 3)
+    assert_equal(count_where(range(5), predicate), 3)
     assert_equal(iterated(range(5)).count_where(predicate), 3)
     var count = ArcPointer(0)
     var sink = partial(record, count)
-    for_each(sink, range(4))
+    for_each(range(4), sink)
     iterated(range(4)).for_each(sink)
     assert_equal(count[], 12)
     var project = partial(show, String("#"))
-    assert_equal(collect_fold[StringMonoid](project, range(5)), "#0#2#4")
+    assert_equal(collect_fold[StringMonoid](range(5), project), "#0#2#4")
     assert_equal(iterated(range(5)).collect_fold[StringMonoid](project), "#0#2#4")
-    assert_equal(count_where(predicate, range(0)), 0)
-    assert_equal(collect_fold[StringMonoid](project, range(0)), "")
-    for_each(sink, range(0))
+    assert_equal(count_where(range(0), predicate), 0)
+    assert_equal(collect_fold[StringMonoid](range(0), project), "")
+    for_each(range(0), sink)
     assert_equal(count[], 12)
     # Existing read-only search overloads already borrow the same predicate.
     assert_equal(iterated(range(5)).find(predicate).value(), 0)
     assert_equal(iterated(range(5)).any(predicate), True)
     assert_equal(iterated(range(5)).all(predicate), False)
     var chain = flow(increment, even_text)
-    assert_equal(collect_fold[StringMonoid](chain, range(5)), "24")
+    assert_equal(collect_fold[StringMonoid](range(5), chain), "24")
     assert_equal(iterated(range(5)).collect_fold[StringMonoid](chain), "24")
     var native = as_unary(even_text)
-    assert_equal(collect_fold[StringMonoid](native, range(5)), "024")
+    assert_equal(collect_fold[StringMonoid](range(5), native), "024")
     assert_equal(iterated(range(5)).collect_fold[StringMonoid](native), "024")
-    for_each(sink^, range(4))
+    for_each(range(4), sink^)
     assert_equal(count[], 18)
     assert_equal(iterated(range(5)).count_where(predicate^), 3)
     assert_equal(iterated(range(5)).collect_fold[StringMonoid](project^), "#0#2#4")

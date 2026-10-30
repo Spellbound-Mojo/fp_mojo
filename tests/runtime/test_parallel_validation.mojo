@@ -193,10 +193,10 @@ def pv_traversal() raises:
     assert_equal(code,7)
     assert_equal(calls[],3)
     calls[] = 0
-    var combined = map2_lazy[PVFamily](PVAdd(),pv_validate(-1),PVRight(calls,pv_validate(-2)))
+    var combined = map2_lazy[PVFamily](pv_validate(-1),PVRight(calls,pv_validate(-2)),PVAdd())
     assert_equal(calls[],1)
     assert_equal(combined._err().value,[String('-1'),String('-2')])
-    _ = map2_lazy[ResultFamily[List[String]]](PVAdd(),pv_validate(-1),PVRight(calls,pv_validate(-2)))
+    _ = map2_lazy[ResultFamily[List[String]]](pv_validate(-1),PVRight(calls,pv_validate(-2)),PVAdd())
     assert_equal(calls[],1)
 
 

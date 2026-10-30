@@ -23,6 +23,7 @@ import generate_result_syntax as result_syntax
 import generate_traversal_syntax as traversal_syntax
 import generate_effect_syntax as effect_syntax
 import generate_nary_syntax as nary_syntax
+import value_first
 from native_signatures import native_factories
 
 MD = 'Movable & Deinitable'
@@ -646,6 +647,7 @@ def main():
         if effect_mode:
             indent = '' if effect_mode in ('free', 'conditional') else '    '
             expected = splice_source(expected, effect_syntax.methods(effect_mode), indent+effect_syntax.START, indent+effect_syntax.END, indent+effect_syntax.HEADER)
+        expected = value_first.rewrite_defs(expected)[0]
         if path.read_text() != expected:
             stale.append(str(path.relative_to(ROOT)))
             if not args.check:

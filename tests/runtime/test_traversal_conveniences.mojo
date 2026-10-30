@@ -84,9 +84,9 @@ def main() raises:
     var retained = iterated(Counted(Pointer(to=pulls), 0, 3)).traverse_tap[OptionalFamily](tv_optional)
     assert_equal(retained.take(), [1, 2, 3])
     assert_equal(pulls, 4)
-    var free = traverse_tap[OptionalFamily](tv_optional, tv_values())
+    var free = traverse_tap[OptionalFamily](tv_values(), tv_optional)
     assert_equal(free.take(), [1, 2, 3])
-    _ = traverse_void[OptionalFamily](as_unary(tv_optional), tv_values())
+    _ = traverse_void[OptionalFamily](tv_values(), as_unary(tv_optional))
     var raised = 0
     try: _ = piped(tv_values()).traverse_tap[OptionalFamily](tv_raise)
     except error: raised = error.code
@@ -123,7 +123,7 @@ def main() raises:
         assert_equal(calls[], count)
         pulls = 0
         calls[] = 0
-        var state = traverse_void[State[Int]](Produce[True](calls), Counted(Pointer(to=pulls), 0, count))
+        var state = traverse_void[State[Int]](Counted(Pointer(to=pulls), 0, count), Produce[True](calls))
         assert_equal(pulls, 0)
         var output = run[State[Int]](state^, 10)
         assert_equal(output[1], 10 if count == 0 else 16)

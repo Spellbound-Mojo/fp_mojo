@@ -200,21 +200,21 @@ struct Add(Binary, Copyable):
 
 
 def main() raises:
-    assert_equal(map[CellFamily](as_unary(increment), pure[CellFamily](1)).value, 2)
-    assert_equal(flat_map[CellFamily](as_unary(next_cell), pure[CellFamily](2)).value, 20)
+    assert_equal(map[CellFamily](pure[CellFamily](1), as_unary(increment)).value, 2)
+    assert_equal(flat_map[CellFamily](pure[CellFamily](2), as_unary(next_cell)).value, 20)
     assert_equal(map2[CellFamily](Add(), Cell(3), Cell(4)).value, 7)
-    var mapped = map[TwoFamily](as_unary(increment), Two(1, 2))
+    var mapped = map[TwoFamily](Two(1, 2), as_unary(increment))
     assert_equal(mapped.first, 2)
     assert_equal(mapped.second, 3)
-    var traversed = traverse[TwoFamily, CellFamily](as_unary(as_cell), Two(1, 2))
+    var traversed = traverse[TwoFamily, CellFamily](Two(1, 2), as_unary(as_cell))
     assert_equal(traversed.value.first, 101)
     assert_equal(traversed.value.second, 102)
-    var collected = traverse[ListFamily, CellFamily](as_unary(as_cell), [1, 2, 3])
+    var collected = traverse[ListFamily, CellFamily]([1, 2, 3], as_unary(as_cell))
     assert_equal(collected.value, [101, 102, 103])
     assert_equal(combine[CountMonoid](empty[CountMonoid](), 5), 5)
     var environment = 21
     assert_equal(run[Reader[Int]](ReadDouble(), environment), 42)
-    var state = run[State[Int]](flat_map[State[Int]](as_unary(after_tick), Tick()), 7)
+    var state = run[State[Int]](flat_map[State[Int]](Tick(), as_unary(after_tick)), 7)
     assert_equal(state[0], 8)
     assert_equal(state[1], 8)
     print("third-party instances: Monad, Traversable, Monoid, ReaderAction, StateAction")

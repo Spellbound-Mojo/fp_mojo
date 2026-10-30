@@ -94,7 +94,7 @@ def demand() raises:
     assert_equal(drops[], 1)
     branches[0].close()
     branches[0].close()
-    var empty = partition(i3_even, range(0), buffer=Unbounded())
+    var empty = partition(range(0), i3_even, buffer=Unbounded())
     i3_done(empty[1])
     i3_done(empty[0])
 
@@ -109,7 +109,7 @@ def failures() raises:
         assert_equal(rejected, True)
     var pulls = ArcPointer(List[Int]())
     var drops = ArcPointer(0)
-    var branches = partition(i3_even, I3Source(0,5,pulls,drops), buffer=i3_capacity(1))
+    var branches = partition(I3Source(0,5,pulls,drops), i3_even, buffer=i3_capacity(1))
     assert_equal(next(branches[0])._take_ok(), 0)
     assert_equal(next(branches[0])._take_ok(), 2)
     var first_error = next(branches[0])._take_err()
@@ -123,12 +123,12 @@ def failures() raises:
     assert_equal(pulls[], [0,1,2,3])
     assert_equal(drops[], 1)
     # Reversed demand reports the first queue instead.
-    var reverse = partition(i3_even, range(8), buffer=i3_capacity(1))
+    var reverse = partition(range(8), i3_even, buffer=i3_capacity(1))
     assert_equal(next(reverse[1])._take_ok(), 1)
     assert_equal(next(reverse[1])._take_err().branch, 0)
     assert_equal(next(reverse[0])._take_err().branch, 0)
     # Closing a branch removes its budget, without prefetching.
-    var closed = partition(i3_even, range(6), buffer=i3_capacity(1))
+    var closed = partition(range(6), i3_even, buffer=i3_capacity(1))
     closed[1].close()
     for expected in range(0,6,2):
         assert_equal(next(closed[0])._take_ok(), expected)
@@ -161,7 +161,7 @@ def classify_and_close() raises:
     assert_equal(next(captured[1]), "1")
     assert_equal(next(captured[0]), 10)
     assert_equal(next(captured[0]), 12)
-    var thin = partition_map(i3_classify, range(3), buffer=Unbounded())
+    var thin = partition_map(range(3), i3_classify, buffer=Unbounded())
     assert_equal(next(thin[0]), 0)
     assert_equal(next(thin[1]), "1")
 
@@ -175,7 +175,7 @@ def owned() raises:
     var drops = ArcPointer(List[Int]())
     var values = List[I3Token]()
     for id in range(4): values.append(I3Token(id, drops))
-    var branches = partition(i3_token_even, values^, buffer=Unbounded())
+    var branches = partition(values^, i3_token_even, buffer=Unbounded())
     var value = next(branches[1])
     assert_equal(value.id, 1)
     _ = value^
@@ -187,7 +187,7 @@ def owned() raises:
     var classified_values = List[I3Token]()
     classified_values.append(I3Token(6,drops))
     classified_values.append(I3Token(7,drops))
-    var classified = partition_map(i3_move_classify, classified_values^, buffer=Unbounded())
+    var classified = partition_map(classified_values^, i3_move_classify, buffer=Unbounded())
     var rejected = next(classified[1])
     assert_equal(rejected.id, 7)
     _ = rejected^
@@ -198,7 +198,7 @@ def owned() raises:
     # Independently move the native tuple's fields, then drop one handle.
     var pulls = ArcPointer(List[Int]())
     var source_drops = ArcPointer(0)
-    var handles = partition(i3_even, I3Source(0,5,pulls,source_drops), buffer=i3_capacity(1))
+    var handles = partition(I3Source(0,5,pulls,source_drops), i3_even, buffer=i3_capacity(1))
     var first = MaybeUninit[type_of(handles[0])]()
     var second = MaybeUninit[type_of(handles[1])]()
     _take_pair(handles^, first, second)
@@ -258,7 +258,7 @@ struct I3Predicate(BorrowCallable):
 
 def i3_generic[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //,
                F: def(var T) -> U](var function: F, var source: I) -> PartitionMapBranches[T,U,I,F,Unbounded] where I.Element == T and conforms_to(U, _ResultType):
-    return partition_map[T=T,U=U](function^, source^, buffer=Unbounded())
+    return partition_map[T=T,U=U](source^, function^, buffer=Unbounded())
 
 
 def generic_and_guard() raises:
@@ -276,7 +276,7 @@ def generic_and_guard() raises:
     assert_equal(next(classified[1]), 1)
     var pointers = List[Pointer[Int,origin_of(base)]]()
     pointers.append(Pointer(to=base))
-    var addresses = partition_map(i3_pointer[origin_of(base)], pointers^, buffer=Unbounded())
+    var addresses = partition_map(pointers^, i3_pointer[origin_of(base)], buffer=Unbounded())
     assert_equal(next(addresses[0])[], 10)
     var owner = ArcPointer(_ExclusiveCell(Int32(0), 1))
     var lease = _exclusive(owner)

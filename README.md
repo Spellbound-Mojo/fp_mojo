@@ -33,7 +33,7 @@ def add(total: Int, value: Int) -> Int: return total + value
 
 def sum_of_squares(var values: List[Int]) -> Int:
     # Lazy: filter and map run one element at a time as fold_left pulls.
-    return fold_left(add, 0, map(square, filter(positive, values^)))
+    return fold_left(map(filter(values^, positive), square), 0, add)
 
 def report(total: Int) -> String: return "sum of squares = " + String(total)
 
@@ -159,11 +159,11 @@ def main():
         return value * value
 
     var values: List[Int] = [3, -1, 4, -1, 5]
-    var squares = map(square, filter(positive, values^))   # a lazy iterator
+    var squares = map(filter(values^, positive), square)   # a lazy iterator
     print(calls)                                           # 0: nothing has run yet
-    var running = collect_list(scan_left(add, 0, squares^))
+    var running = collect_list(scan_left(squares^, 0, add))
     print(running[3], calls)                               # 50 3
-    print(find(large, range(100)).value())                 # 11: stops at the first match
+    print(find(range(100), large).value())                 # 11: stops at the first match
 ```
 
 Building `squares` calls nothing, so `calls` is still 0. Collecting the running
@@ -294,11 +294,11 @@ def twice(value: Int) -> Int: return value * 2
 def main() raises:
     var good: List[Int] = [1, 2, 3]
     var bad: List[Int] = [1, -2, 3]
-    print(Bool(traverse[ListFamily, OptionalFamily](positive, good^)))  # True: every value present
-    print(Bool(traverse[ListFamily, OptionalFamily](positive, bad^)))   # False: stops at -2
+    print(Bool(traverse[ListFamily, OptionalFamily](good^, positive)))  # True: every value present
+    print(Bool(traverse[ListFamily, OptionalFamily](bad^, positive)))   # False: stops at -2
 
     # A State computation is an ordinary value until you run it.
-    var doubled = map[State[Int]](twice, get[State[Int]]())
+    var doubled = map[State[Int]](get[State[Int]](), twice)
     var outcome = run[State[Int]](doubled^, 21)
     print(outcome[0], outcome[1])                                       # 42 21
     print(run[State[Int]](modify[State[Int]](twice), 21)[1])            # 42

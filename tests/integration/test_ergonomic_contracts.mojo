@@ -15,7 +15,7 @@ def fallback_generic[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movab
 
 def loop_generic[I: Monad, F: UnaryContract & Movable & Deinitable](var step: F, var initial: F.Arg
 ) raises TailRecContract[I,F].Error -> TailRecContract[I,F].Out where TailRecContract[I,F].Compatible:
-    return tail_rec_m[I](step^,initial^)
+    return tail_rec_m[I](initial^,step^)
 
 @fieldwise_init
 struct GenericProjection(BorrowCallable, Copyable, Defaultable):

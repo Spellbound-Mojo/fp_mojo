@@ -7,4 +7,4 @@ struct Callback(MutableUnary):
     comptime Error = String
     def __init__(out self): pass
     def call_mut(mut self, var value: Int) raises String -> List[Int]: return [value]
-def main(): _ = flat_map(Callback(), range(3))
+def main(): _ = flat_map(range(3), Callback())

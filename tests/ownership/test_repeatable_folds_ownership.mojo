@@ -43,7 +43,7 @@ struct Until(MutableBinary):
         return Self.Out(Continue(result^))
 
 def reduced(var step:Step,var source:Source,mut observed:Int) raises Token -> Optional[Token]:
-    try: return Optional(reduce(step^,source^))
+    try: return Optional(reduce(source^,step^))
     except error:
         if error.isa[EmptyReductionError]():
             observed=-1
@@ -59,7 +59,7 @@ def exercise[mode:Int](length:Int,fail:Bool) raises:
     var result=Optional[Token]()
     var observed=0
     try:
-        comptime if mode==0: result=Optional(fold_left(step^,Token(0,state),source^))
+        comptime if mode==0: result=Optional(fold_left(source^,Token(0,state),step^))
         elif mode==1: result=Optional(iterated(source^).reduce(step^,initial=Token(0,state)))
         elif mode==2: result=iterated(source^).reduce_optional(step^)
         elif mode==3: result=reduced(step^,source^,observed)

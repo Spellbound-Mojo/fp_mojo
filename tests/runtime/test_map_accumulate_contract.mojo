@@ -32,7 +32,7 @@ struct Step(Binary, MutableBinary, OnceBinary):
 def accumulated[A: Movable & Deinitable,Y: Movable & Deinitable,I: Iterator,F: BinaryContract & Movable & Deinitable](
     var step: F,var initial: A,var source: I
 ) raises F.Error -> Tuple[A,List[Y]] where F.First==A and F.Second==I.Element and F.Out==Tuple[A,Y] and RepeatableBinary[F]:
-    return map_accumulate[Y=Y](step^,initial^,source^)
+    return map_accumulate[Y=Y](source^,initial^,step^)
 
 def stop(var carry: Int,var item: Int) raises StopIteration -> Tuple[Int,Int]:
     if item==2: raise StopIteration()

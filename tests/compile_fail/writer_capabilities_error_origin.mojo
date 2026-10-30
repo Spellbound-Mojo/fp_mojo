@@ -19,5 +19,5 @@ struct Reject[o: ImmOrigin](OnceUnary):
 def bad(left: List[Int], right: List[Int]):
     comptime W = Writer[StringMonoid]
     comptime R = ReaderT[W, Int]
-    _ = censor[LiftCensor[R, W]](Reject[origin_of(right)](Span(right)), action[R, NoneType](Source[origin_of(left)](Span(left))))
+    _ = censor[LiftCensor[R, W]](action[R, NoneType](Source[origin_of(left)](Span(left))), Reject[origin_of(right)](Span(right)))
 def main(): bad([1], [2])

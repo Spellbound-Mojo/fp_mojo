@@ -17,16 +17,16 @@ def exercise(first: List[Int], second: List[Int]) raises:
         if item == 1: return ControlFlow[B, A](Break(stopped))
         return ControlFlow[B, A](Continue(acc))
 
-    var inferred = fold_until(pure, initial, iter(range(3)))
+    var inferred = fold_until(iter(range(3)), initial, pure)
     comptime assert type_of(inferred) == ControlFlow[B, A]
     var payload = inferred^.unwrap[Break[B]]().into_payload()
     assert_equal(Pointer(to=payload[0]) == Pointer(to=second[0]), True)
 
     # F remains the first positional explicit binding; B remains nameable.
-    var explicit = fold_until[type_of(pure), B=B](pure, initial, iter(range(3)))
+    var explicit = fold_until[type_of(pure), B=B](iter(range(3)), initial, pure)
     payload = explicit^.unwrap[Break[B]]().into_payload()
     assert_equal(Pointer(to=payload[0]) == Pointer(to=second[0]), True)
-    var raised = fold_until[type_of(raising), B=B](raising, initial, iter(range(3)))
+    var raised = fold_until[type_of(raising), B=B](iter(range(3)), initial, raising)
     payload = raised^.unwrap[Break[B]]().into_payload()
     assert_equal(Pointer(to=payload[0]) == Pointer(to=second[0]), True)
 
@@ -37,11 +37,11 @@ def exercise(first: List[Int], second: List[Int]) raises:
     payload = fluent_raising^.unwrap[Break[B]]().into_payload()
     assert_equal(Pointer(to=payload[0]) == Pointer(to=second[0]), True)
 
-    var empty = fold_until(pure, initial, iter(range(0)))
+    var empty = fold_until(iter(range(0)), initial, pure)
     var continued = empty^.unwrap[Continue[A]]().into_payload()
     assert_equal(Pointer(to=continued[0]) == Pointer(to=first[0]), True)
     var caught = False
-    try: _ = fold_until(raising, initial, iter(range(-1, 0)))
+    try: _ = fold_until(iter(range(-1, 0)), initial, raising)
     except error:
         assert_equal(String(error), "negative item")
         caught = True

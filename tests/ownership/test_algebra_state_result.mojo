@@ -46,7 +46,7 @@ def check[retain:Bool]() raises where Stack[retain].Element[Source[retain]] == N
             var data=Data(Err(Token[2](9,trace))) if stored_failure else Data(Ok(3))
             var computation:C
             try:
-                computation=flat_map[I](Next[retain](Token[1](10,trace),native_failure),source[retain](data^))
+                computation=flat_map[I](source[retain](data^),Next[retain](Token[1](10,trace),native_failure))
             except error:
                 comptime assert type_of(error)==Never
                 _propagate_error[Never](error^)

@@ -9,6 +9,6 @@ struct State(Movable):
 def main():
     var state = State(2)
     def callback(var value: Int) {var state^} -> Int: return value + state.offset
-    var mapped = map(callback^, iter(range(3)))
+    var mapped = map(iter(range(3)), callback^)
     print(callback(4))
     _ = mapped^

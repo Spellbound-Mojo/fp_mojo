@@ -47,7 +47,7 @@ def main() raises:
                 var step=BinarySignature[Token,Token,Tuple[Token,Token],Token].capture(callback^)
                 saved=Optional(iterated(Source(1,state)).map_accumulate(step^,Token(0,state)))
             else:
-                saved=Optional(map_accumulate(Step(Token(6,state),fail),Token(0,state),Source(1,state)))
+                saved=Optional(map_accumulate(Source(1,state),Token(0,state),Step(Token(6,state),fail)))
         except error:
             comptime assert type_of(error)==Token
             assert_equal(error.id,7)
@@ -75,7 +75,7 @@ struct Keep[o: ImmOrigin](MutableBinary):
         return (carry,carry[item:])
 
 def external(owner: List[Int]) -> Tuple[Span[Int,origin_of(owner)],List[Span[Int,origin_of(owner)]]]:
-    return map_accumulate(Keep[origin_of(owner)](),Span(owner),[0,1])
+    return map_accumulate([0,1],Span(owner),Keep[origin_of(owner)]())
 
 def origins() raises:
     var owner: List[Int] = [7,11]

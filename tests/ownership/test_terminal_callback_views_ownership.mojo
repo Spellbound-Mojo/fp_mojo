@@ -17,18 +17,18 @@ def captures() raises:
     var callback = as_unary(project^)
     comptime assert not conforms_to(type_of(callback), Copyable)
     var one: List[Token] = [Token(1, payloads)]
-    assert_equal(sum_by(callback, one^), 1)
+    assert_equal(sum_by(one^, callback), 1)
     var two: List[Token] = [Token(2, payloads)]
     assert_equal(iterated(two^).sum_by(callback), 2)
     var three: List[Token] = [Token(3, payloads)]
     assert_equal(piped(three^).sum_by(callback).get(), 3)
     var four: List[Token] = [Token(4, payloads)]
     assert_equal(pipeline(four^).sum_by(callback).get(), 4)
-    assert_equal(sum_by(callback, List[Token]()), 0)
+    assert_equal(sum_by(List[Token](), callback), 0)
     assert_equal(ledger[].calls, 4)
     assert_equal(ledger[].drops[0], 0)
     var five: List[Token] = [Token(5, payloads)]
-    assert_equal(sum_by(callback^, five^), 5)
+    assert_equal(sum_by(five^, callback^), 5)
     assert_equal(ledger[].calls, 5)
     assert_equal(ledger[].drops[0], 1)
     for i in range(1, 6): assert_equal(payloads[].drops[i], 1)
@@ -56,7 +56,7 @@ def borrowed_keys() raises:
     assert_equal(ledger[].factories, 1)
     assert_equal(ledger[].calls, 0)
     var first: List[Token] = [Token(1, payloads), Token(2, payloads), Token(3, payloads)]
-    var maximum = max_by(rank, first^)
+    var maximum = max_by(first^, rank)
     assert_equal(maximum.value().id, 2)
     assert_equal(payloads[].drops[1], 1)
     assert_equal(payloads[].drops[2], 0)
@@ -99,7 +99,7 @@ def stopping() raises:
         return None
     var callback = as_unary(choose^)
     var values: List[Token] = [Token(4, payloads), Token(3, payloads), Token(2, payloads), Token(1, payloads)]
-    var selected = find_map(callback, Source(values^, ledger))
+    var selected = find_map(Source(values^, ledger), callback)
     assert_equal(selected.value().id, 2)
     assert_equal(ledger[].pulls, 2)
     assert_equal(ledger[].calls, 2)

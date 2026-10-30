@@ -90,8 +90,7 @@ def terminal_methods(mode, carrier=None):
                 boundary = {'Dict': '_dict_terminal', 'StringDict': '_string_dict_terminal',
                             'Array': '_array_terminal'}.get(carrier.name, '_run_terminal')
                 result, call = f'Piped[{result}]', f'Piped({boundary}({run}({build}), {source}))'
-            args = ([arg] if arg else []) + (['var source: V'] if mode == 'free' else [])
-            if mode != 'free': args.insert(0,'deinit self')
+            args = (['var source: V'] if mode == 'free' else ['deinit self']) + ([arg] if arg else [])
             indent = '' if mode == 'free' else '    '
             doc = operation.summary
             param_text = '['+', '.join(params)+']' if params else ''

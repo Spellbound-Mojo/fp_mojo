@@ -13,7 +13,7 @@ struct Even(BorrowCallable):
 def forward[I: Monad, V: Movable & Deinitable, C: BorrowCallable](
     var predicate: C, var source: V
 ) raises FindContract[I, V, C].Error -> FindContract[I, V, C].Out where FindContract[I, V, C].Compatible:
-    return find_effect[I](predicate^, source^)
+    return find_effect[I](source^, predicate^)
 
 def main() raises:
     var result = forward[OptionalFamily](Even(), List[Int]([1, 2, 4]))

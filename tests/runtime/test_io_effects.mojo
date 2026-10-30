@@ -71,14 +71,14 @@ struct IOAfterCancel(Unary):
 
 def main() raises:
     var log = ArcPointer(List[Int]())
-    var program = map[IO[IOTestFailure]](io_double, delay[IOTestFailure](IOTestStep(21, False, log.copy())))
+    var program = map[IO[IOTestFailure]](delay[IOTestFailure](IOTestStep(21, False, log.copy())), io_double)
     assert_equal(len(log[]), 0)
     var output = run_io(program^)
     var result = output.take()
     assert_equal(result^._take_ok(), 42)
     assert_equal(log[], [21])
     log[] = List[Int]()
-    var failed_map = map[IO[IOTestFailure]](io_map_failure, delay[IOTestFailure](IOTestStep(1, False, log.copy())))
+    var failed_map = map[IO[IOTestFailure]](delay[IOTestFailure](IOTestStep(1, False, log.copy())), io_map_failure)
     var finalized = run_io(guarantee(failed_map^, delay[IOTestFailure](IOTestStep(2, True, log.copy()))))
     assert_equal(log[], [1, 2])
     var failed = finalized.take()
@@ -107,7 +107,7 @@ def main() raises:
         invalid_sleep = True
     assert_true(invalid_sleep)
 
-    var looped = run_io(tail_rec_m[IO[IOTestFailure]](IOCountStep(), 0))
+    var looped = run_io(tail_rec_m[IO[IOTestFailure]](0, IOCountStep()))
     var counted = looped.take()
     assert_equal(counted^._take_ok(), 100000)
     var scoped = run_io(use_resource(resource[IOTestFailure](io_resource_open, io_resource_close), io_double))
@@ -115,7 +115,7 @@ def main() raises:
     assert_equal(scoped_result^._take_ok(), 42)
 
     log[] = List[Int]()
-    var mapped_error = map[IO[IOTestFailure]](io_map_failure, pure[IO[IOTestFailure]](1))
+    var mapped_error = map[IO[IOTestFailure]](pure[IO[IOTestFailure]](1), io_map_failure)
     var recovered = run_io(IO[IOTestFailure].or_else(IORecovery(log.copy()), capture_io(mapped_error^)))
     var recovered_result = recovered.take()
     assert_equal(recovered_result^._take_ok(), 7)
@@ -126,10 +126,10 @@ def main() raises:
     assert_equal(len(log[]), 0)
 
     log[] = List[Int]()
-    var masked_steps = flat_map[IO[IOTestFailure]](IOAfterCancel(log.copy()), canceled[IOTestFailure]())
+    var masked_steps = flat_map[IO[IOTestFailure]](canceled[IOTestFailure](), IOAfterCancel(log.copy()))
     assert_true(not run_io(uncancelable(masked_steps^)))
     assert_equal(log[], [55])
     log[] = List[Int]()
-    var unmasked_steps = flat_map[IO[IOTestFailure]](IOAfterCancel(log.copy()), canceled[IOTestFailure]())
+    var unmasked_steps = flat_map[IO[IOTestFailure]](canceled[IOTestFailure](), IOAfterCancel(log.copy()))
     assert_true(not run_io(unmasked_steps^))
     assert_equal(len(log[]), 0)

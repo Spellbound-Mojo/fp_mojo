@@ -6,12 +6,12 @@ from std.testing import assert_equal
 
 def mapped[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //,
            F: def(var T) -> U](var function: F, var source: I) -> MapIterator[T, U, I, F] where I.Element == T:
-    return map(function^, source^)
+    return map(source^, function^)
 
 
 def scanned[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator, //,
             F: def(var A, var T) -> A](var function: F, var initial: A, var source: I) -> ScanIterator[A, T, I, F] where I.Element == T:
-    return scan_left(function^, initial^, source^)
+    return scan_left(source^, initial^, function^)
 
 
 def main() raises:

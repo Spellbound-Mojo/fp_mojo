@@ -12,7 +12,7 @@ struct Logged[M:Monad](Unary):
         return Self.Out(Self.M.pure(Tuple(String(value),value+1)))
 
 def collect[M:Monad]() raises TraverseContract[ListFamily,WriterT[M,StringMonoid],List[Int],Logged[M]].Error ->TraverseContract[ListFamily,WriterT[M,StringMonoid],List[Int],Logged[M]].Out where TraverseContract[ListFamily,WriterT[M,StringMonoid],List[Int],Logged[M]].Compatible:
-    return traverse[ListFamily,WriterT[M,StringMonoid]](Logged[M](),List[Int]([1,2]))
+    return traverse[ListFamily,WriterT[M,StringMonoid]](List[Int]([1,2]),Logged[M]())
 
 def main() raises:
     comptime W=WriterT[IdentityFamily,StringMonoid]

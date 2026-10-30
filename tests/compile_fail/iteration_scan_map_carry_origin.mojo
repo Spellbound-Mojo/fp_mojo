@@ -17,8 +17,8 @@ struct I5BorrowedStep[o:ImmOrigin](Binary):
 
 def check(anchor:List[Int]):
     var local:List[Int]=[1,2]
-    var expected=scan_map(I5BorrowedStep[origin_of(anchor)](),I5BorrowedCarry(Pointer(to=anchor)),range(2))
-    var actual=scan_map(I5BorrowedStep[origin_of(local)](),I5BorrowedCarry(Pointer(to=local)),range(2))
+    var expected=scan_map(range(2),I5BorrowedCarry(Pointer(to=anchor)),I5BorrowedStep[origin_of(anchor)]())
+    var actual=scan_map(range(2),I5BorrowedCarry(Pointer(to=local)),I5BorrowedStep[origin_of(local)]())
     expected=actual^
 def main():
     var anchor:List[Int]=[1,2]

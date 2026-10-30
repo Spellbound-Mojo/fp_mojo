@@ -223,7 +223,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             emit(name, cb, cb["params"], cb["argument"],
                  f"{selection}.{output}[Self.V, {adapter}]",
                  f"{selection}.{error}[Self.V, {adapter}]", f"{selection}.Family",
-                 conditions, f"_{name}_effect[{selection}]({cb['build']}, self.value^)",
+                 conditions, f"_{name}_effect[{selection}](self.value^, {cb['build']})",
                  "Scope a recipe under a transformed environment; the enclosing environment is unchanged."
                  if name == "local" else "Transform this recipe's log while preserving its payload.")
 
@@ -338,7 +338,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             params = ([f"A: {MD}"] if initial else []) + cb["params"]
             build = cb["build"]
             entry = f"_context_{name}" + ("[B=B]" if name == "fold_until" else "")
-            expr = f"{entry}({build}, " + ("initial^, " if initial else "") + "self.value^)"
+            expr = f"{entry}(self.value^, " + ("initial^, " if initial else "") + f"{build})"
             emit(
                 name,
                 cb,
@@ -359,7 +359,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         result = f"Optional[{cb['result']}]"
         emit("reduce_optional", cb, cb["params"], cb["argument"], result, cb["error"],
              f"_NativeFamily[{result}]", cb["conditions"] + [f"{cb['result']} == _FoldElement[Self.V]"],
-             f"_context_reduce_optional({cb['build']}, self.value^)",
+             f"_context_reduce_optional(self.value^, {cb['build']})",
              "Consume the source in order through the canonical terminal reduction.")
 
     # These older folds admit the callback before the initial accumulator.
@@ -381,7 +381,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 entry = "_context_" + name + ("[B=B]" if name == "fold_until" else "")
                 emit(name, cb, params, cb["argument"] + ", var initial: A", result, cb["error"],
                      f"_NativeFamily[{result}]", cb["conditions"],
-                     f"{entry}({cb['build']}, initial^, self.value^)",
+                     f"{entry}(self.value^, initial^, {cb['build']})",
                      "Consume the source in order through the canonical terminal fold.")
 
     # Validation is an operation policy over native Result carriers.

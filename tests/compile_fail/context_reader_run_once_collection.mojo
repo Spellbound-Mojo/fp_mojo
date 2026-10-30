@@ -4,4 +4,4 @@ from fp.effects import Reader, run
 from fp.algebra import ListFamily, traverse, map
 
 def main():
-    _ = traverse[ListFamily, Reader[Int]](Once(), List[Int]([1, 2]))
+    _ = traverse[ListFamily, Reader[Int]](List[Int]([1, 2]), Once())

@@ -17,7 +17,7 @@ def main():
     var first = 1
     comptime I = Reader[Int]
     var pending = I.collect(Produce(Pointer(to=first)), List[Int]([1]))
-    var scoped = local[I](Replace(), pending^)
+    var scoped = local[I](pending^, Replace())
     try:
         _ = run[I](scoped^, first)
     except error:

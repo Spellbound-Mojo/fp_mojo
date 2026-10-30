@@ -11,7 +11,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime B = type_of(b)
     print(a[0], b[0])
     def step(var acc: A, var item: Int) {b} -> ControlFlow[B, A]: return ControlFlow[B, A](Break(b))
-    _ = fold_until[A=A, B=A](step, a, iter(range(1)))
+    _ = fold_until[A=A, B=A](iter(range(1)), a, step)
 
 def main():
     var first: List[Int] = [11]

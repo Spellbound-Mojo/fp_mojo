@@ -55,8 +55,8 @@ def check[callback_raises:Bool,factory_raises:Bool](mode:Int) raises:
     var native = False
     try:
         output = Optional(map2_lazy[ResultFamily[Token]](
-            Combine[callback_raises](Token(2,log),mode == 4),left^,
-            Factory[factory_raises](Token(3,log),right^,mode == 3)))
+            left^,Factory[factory_raises](Token(3,log),right^,mode == 3),
+            Combine[callback_raises](Token(2,log),mode == 4)))
     except error:
         comptime if callback_raises or factory_raises:
             comptime assert type_of(error) == NativeFailure
@@ -89,7 +89,7 @@ def main() raises:
     check[False,True](3)
     check[True,False](4)
     # Other native families keep their existing application semantics.
-    assert_equal(map2_lazy[IdentityFamily](Add(),2,Next(3)),5)
-    assert_equal(map2_lazy[OptionalFamily](Add(),Optional(2),Next(Optional(3))).value(),5)
-    assert_equal(map2_lazy[ListFamily](Add(),ints(1,2),Next(ints(10,20))),ints(11,21,12,22))
+    assert_equal(map2_lazy[IdentityFamily](2,Next(3),Add()),5)
+    assert_equal(map2_lazy[OptionalFamily](Optional(2),Next(Optional(3)),Add()).value(),5)
+    assert_equal(map2_lazy[ListFamily](ints(1,2),Next(ints(10,20)),Add()),ints(11,21,12,22))
     print("Result application: lazy branches, exact native errors and owned cleanup")

@@ -6,4 +6,4 @@ from fp.callables._transforms import _ValueThunk
 from context_combination_admission_support import Add,OnceAdd,CapturedAdd,MoveLeft,MoveRight,MoveState,Missing,ErrorAdd,OtherError,AdmissionBase
 
 def main() raises:
-    _=map2_lazy[ListFamily](Add(),List[Int]([1]),Missing())
+    _=map2_lazy[ListFamily](List[Int]([1]),Missing(),Add())

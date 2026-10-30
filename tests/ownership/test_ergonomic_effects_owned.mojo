@@ -117,7 +117,7 @@ def main() raises:
         assert_equal(counts[].created, counts[].destroyed)
 
     var looping = ArcPointer(ErgonomicCounts(0, 0, 0))
-    var finished = tail_rec_m[OptionalFamily](OwnedLoopStep(looping.copy()), ErgonomicOwner(0, looping.copy()))
+    var finished = tail_rec_m[OptionalFamily](ErgonomicOwner(0, looping.copy()), OwnedLoopStep(looping.copy()))
     assert_equal(finished.value().value, 1000)
     assert_equal(looping[].calls, 1001)
     _ = finished^
@@ -129,9 +129,9 @@ def main() raises:
         var caught = False
         try:
             if mapped:
-                _ = reduce_map[OwnedAdd](OwnedIdentity(), values^)
+                _ = reduce_map[OwnedAdd](values^, OwnedIdentity())
             else:
-                _ = reduce_non_empty(OwnedReduction(0), values^)
+                _ = reduce_non_empty(values^, OwnedReduction(0))
         except error:
             caught = error.owner.value == -2
         assert_true(caught)

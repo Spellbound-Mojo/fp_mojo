@@ -57,12 +57,12 @@ def predicate_owners() raises:
     _ = branches^
     _ = rejected^
     var unused: List[Token] = [Token(5, payloads)]
-    var abandoned = partition(predicate, unused^, buffer=Unbounded())
+    var abandoned = partition(unused^, predicate, buffer=Unbounded())
     _ = abandoned^
     assert_equal(payloads[].drops[5], 1)
     assert_equal(ledger[].calls, 3)
     assert_equal(ledger[].factories, 4)
-    var empty = partition(predicate^, List[Token](), buffer=Unbounded())
+    var empty = partition(List[Token](), predicate^, buffer=Unbounded())
     _ = empty^
     assert_equal(ledger[].drops[0], 4)
     _ = prefix^
@@ -81,7 +81,7 @@ def classifier_owners() raises:
     var classifier = as_unary(route^)
     comptime assert not conforms_to(type_of(classifier), Copyable)
     var values: List[Token] = [Token(1, payloads), Token(2, payloads), Token(3, payloads), Token(4, payloads)]
-    var branches = partition_map(classifier, iterated(values^).map(pulled), buffer=Unbounded())
+    var branches = partition_map(iterated(values^).map(pulled), classifier, buffer=Unbounded())
     assert_equal(ledger[].calls, 0)
     var first = MaybeUninit[type_of(branches[0])]()
     var second = MaybeUninit[type_of(branches[1])]()
@@ -126,7 +126,7 @@ def overflow() raises:
         return Err(value^)
     var classifier = as_unary(reject^)
     var values: List[Token] = [Token(1, payloads), Token(2, payloads), Token(3, payloads)]
-    var branches = partition_map(classifier, iterated(values^).map(pulled), buffer=capacity())
+    var branches = partition_map(iterated(values^).map(pulled), classifier, buffer=capacity())
     assert_true(next(branches[0]).is_err())
     assert_true(next(branches[1]).is_err())
     assert_equal(ledger[].calls, 2)
@@ -134,7 +134,7 @@ def overflow() raises:
     for i in range(1, 4): assert_equal(payloads[].drops[i], 1)
     assert_equal(ledger[].drops[0], 0)
     _ = branches^
-    var empty = partition_map(classifier, List[Token](), buffer=Unbounded())
+    var empty = partition_map(List[Token](), classifier, buffer=Unbounded())
     _ = empty^
     assert_equal(ledger[].calls, 2)
     _ = classifier^
@@ -149,7 +149,7 @@ def outside(owner: List[Int]) raises -> Span[Int, origin_of(owner)]:
         return Err(len(value))
     var classifier = partial(classify, 1)
     var values: List[View] = [view]
-    var branches = partition_map(classifier, values^, buffer=Unbounded())
+    var branches = partition_map(values^, classifier, buffer=Unbounded())
     return next(branches[0])
 
 

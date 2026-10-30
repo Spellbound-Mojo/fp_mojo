@@ -42,7 +42,7 @@ def optional_scenario(left_drops:ArcPointer[Int],right_drops:ArcPointer[Int],com
     if skip:
         left=Base.pure(Optional[Owner]())
     else:left=I.pure(Owner(1,left_drops))
-    var pending=map2_lazy[I](Combine(Owner(2,combine_drops),combine_calls,failure==2),left^,Produce(I.pure(Owner(3,right_drops)),Owner(4,factory_drops),factory_calls,failure==1))
+    var pending=map2_lazy[I](left^,Produce(I.pure(Owner(3,right_drops)),Owner(4,factory_drops),factory_calls,failure==1),Combine(Owner(2,combine_drops),combine_calls,failure==2))
     comptime assert not conforms_to(type_of(pending),Copyable)
     if not execute:return 0
     try:_=run[Base](pending^,0)
@@ -58,7 +58,7 @@ def result_scenario(left_drops:ArcPointer[Int],right_drops:ArcPointer[Int],combi
     if skip:
         left=Base.pure(Result[Owner,String](Err(String("skip"))))
     else:left=I.pure(Owner(1,left_drops))
-    var pending=map2_lazy[I](Combine(Owner(2,combine_drops),combine_calls,failure==2),left^,Produce(I.pure(Owner(3,right_drops)),Owner(4,factory_drops),factory_calls,failure==1))
+    var pending=map2_lazy[I](left^,Produce(I.pure(Owner(3,right_drops)),Owner(4,factory_drops),factory_calls,failure==1),Combine(Owner(2,combine_drops),combine_calls,failure==2))
     comptime assert not conforms_to(type_of(pending),Copyable)
     if not execute:return 0
     try:_=run[Base](pending^,0)

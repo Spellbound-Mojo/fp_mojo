@@ -10,4 +10,4 @@ struct Once(OnceBinary):
     def call_once(deinit self, var first: Int, var second: Int) -> Int: return first + second
 def main():
     var callback = flip(Once())
-    _ = zip_with(callback^, range(2), range(2))
+    _ = zip_with(range(2), range(2), callback^)

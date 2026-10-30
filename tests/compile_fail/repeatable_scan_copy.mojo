@@ -10,4 +10,4 @@ struct Keep(MutableBinary):
     comptime Out = Token
     def __init__(out self): pass
     def call_mut(mut self, var carry: Token, var value: Int) -> Token: return carry^
-def main(): _ = scan_left(Keep(), Token(0), range(2))
+def main(): _ = scan_left(range(2), Token(0), Keep())

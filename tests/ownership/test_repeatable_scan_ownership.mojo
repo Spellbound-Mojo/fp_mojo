@@ -31,7 +31,7 @@ def snapshots() raises:
         var callback = Append(Token(0, captures), 0)
         comptime assert not conforms_to(type_of(callback), Copyable)
         var source = iterated(Source(0, 2, pulls)).map(token)
-        var pending = scan_left(callback^, Snapshot(List[Int](), copies, drops), source^)
+        var pending = scan_left(source^, Snapshot(List[Int](), copies, drops), callback^)
         assert_equal(copies[], 0)
         assert_equal(pulls[], 0)
         assert_equal(captures[].calls, 0)

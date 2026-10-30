@@ -20,7 +20,7 @@ def composition_lifetime() raises:
     comptime assert not conforms_to(type_of(callback), Copyable)
     var pulls = ArcPointer(List[Int]())
     var drops = ArcPointer(0)
-    var pending = zip_with(callback, I4Source(0,3,1,pulls,drops), I4Source(0,1,2,pulls,drops))
+    var pending = zip_with(I4Source(0,3,1,pulls,drops), I4Source(0,1,2,pulls,drops), callback)
     assert_equal(len(pulls[]), 0)
     assert_equal(ledger[].calls, 0)
     assert_equal(next(pending), 10)
@@ -69,7 +69,7 @@ def flipped_payloads() raises:
     _ = pending^
     assert_equal(payloads[].drops[3], 1)
     assert_equal(captures[].drops[0], 0)
-    var empty = zip_with(callback^, List[Token](), List[Token]())
+    var empty = zip_with(List[Token](), List[Token](), callback^)
     _ = empty^
     assert_equal(captures[].calls, 1)
     assert_equal(captures[].drops[0], 1)
@@ -106,7 +106,7 @@ def partial_copies() raises:
     assert_equal(ledger[].restarts, 0)
     _ = pending^
     assert_equal(ledger[].drops[0], 1)
-    var empty = zip_with(callback^, List[Token](), List[Token]())
+    var empty = zip_with(List[Token](), List[Token](), callback^)
     _ = empty^
     assert_equal(ledger[].drops[0], 2)
     _ = prefix^

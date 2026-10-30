@@ -51,8 +51,8 @@ struct IEVisit(MutableUnary):
 def main() raises:
     var calls = ArcPointer(0)
     var combines = ArcPointer(0)
-    var skipped = map2_lazy[IorFamily[IEPolicy]](IEAdd(combines, True),
-        Ior[String, Int](Left(String("stored"))), IEThunk(calls, True))
+    var skipped = map2_lazy[IorFamily[IEPolicy]](Ior[String, Int](Left(String("stored"))),
+        IEThunk(calls, True), IEAdd(combines, True))
     assert_equal(skipped[Left[String]].value, "stored")
     assert_equal(calls[], 0)
     assert_equal(combines[], 0)
@@ -61,8 +61,8 @@ def main() raises:
         combines[] = 0
         var raised = False
         try:
-            _ = map2_lazy[IorValidationFamily[IEPolicy]](IEAdd(combines, mode == 1),
-                Ior[String, Int](Both(String("stored"), 2)), IEThunk(calls, mode == 0))
+            _ = map2_lazy[IorValidationFamily[IEPolicy]](Ior[String, Int](Both(String("stored"), 2)),
+                IEThunk(calls, mode == 0), IEAdd(combines, mode == 1))
         except error:
             raised = True
             assert_equal(error, "thunk" if mode == 0 else ("combiner" if mode == 1 else "policy"))
@@ -72,7 +72,7 @@ def main() raises:
     calls[] = 0
     var raised = False
     try:
-        _ = traverse[ListFamily, IorValidationFamily[StringMonoid]](IEVisit(calls), List[Int]([0, 1, 2, 3]))
+        _ = traverse[ListFamily, IorValidationFamily[StringMonoid]](List[Int]([0, 1, 2, 3]), IEVisit(calls))
     except error:
         raised = True
         assert_equal(error, "visit")

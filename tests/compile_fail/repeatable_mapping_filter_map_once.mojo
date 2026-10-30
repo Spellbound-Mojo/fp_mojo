@@ -6,4 +6,4 @@ struct Callback(OnceUnary):
     comptime Out = Optional[Int]
     def __init__(out self): pass
     def call_once(deinit self, var value: Int) -> Optional[Int]: return Optional(value)
-def main(): _ = filter_map(Callback(), range(3))
+def main(): _ = filter_map(range(3), Callback())

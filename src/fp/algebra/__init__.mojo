@@ -2,15 +2,15 @@
 
 | Interface | Primitive operations | Meaning |
 |---|---|---|
-| `Functor` | `map[I](f, value)` | Transform a payload without changing its context |
-| `Filterable` | `filter[I](predicate, value)` | Retain accepted payloads without changing their types |
-| `FunctorFilter` | `filter_map[I](transform, value)` | Transform payloads and retain present Optional results |
-| `Applicative` | `pure[I](value)`, `map2_lazy[I](f, left, right)` | Introduce a payload; combine independent computations |
+| `Functor` | `map[I](value, f)` | Transform a payload without changing its context |
+| `Filterable` | `filter[I](value, predicate)` | Retain accepted payloads without changing their types |
+| `FunctorFilter` | `filter_map[I](value, transform)` | Transform payloads and retain present Optional results |
+| `Applicative` | `pure[I](value)`, `map2_lazy[I](left, right, f)` | Introduce a payload; combine independent computations |
 | `ErrorRecovery` | `I.or_else(handler, value)` | Recover the selected stored-error channel; terminal states may bypass it |
 | `ApplicativeError` | `fail[I, A](error)`, `I.or_else(handler, value)` | Construct or recover the selected stored-error layer |
 | `ErrorMapping` | `I.bimap[Target](on_ok, on_err, source)` | Transform success and one selected stored-error channel with an admitted destination policy |
-| `Monad` | `flat_map[I](f, value)` | Choose the next computation from the current payload |
-| `Traversable` | `traverse[S, G](f, source)` | Visit a source shape `S` in an applicative context `G` |
+| `Monad` | `flat_map[I](value, f)` | Choose the next computation from the current payload |
+| `Traversable` | `traverse[S, G](source, f)` | Visit a source shape `S` in an applicative context `G` |
 | `Semigroup` | `combine[S](left, right)` | An associative, ordered combination |
 | `Monoid` | `empty[M]()`, `combine[M](left, right)` | An identity and an associative, ordered combination |
 

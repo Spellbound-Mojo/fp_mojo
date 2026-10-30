@@ -9,4 +9,4 @@ struct NonIterable(Movable):
 def main():
     var offset = 1
     def noninner(var value: Int) {var offset} -> NonIterable: return NonIterable(value + offset)
-    _ = flat_map(noninner, iter(range(3)))
+    _ = flat_map(iter(range(3)), noninner)

@@ -20,7 +20,7 @@ def exercise(first: List[Int], second: List[Int]) raises:
         var explicit = scan[Y=Y](checked, initial, range(2))
         debug_assert[assert_mode="safe"](Pointer(to=explicit[1][0][0]) == Pointer(to=second[0]))
     except: raise Error("unexpected scan error")
-    var lazy = scan_map[type_of(step)](step, initial, range(2))
+    var lazy = scan_map[type_of(step)](range(2), initial, step)
     assert_equal(Pointer(to=next(lazy)[0]) == Pointer(to=second[0]), True)
     var fluent = iterated(range(2)).scan_map[Y=Y](step, initial)
     assert_equal(Pointer(to=next(fluent)[0]) == Pointer(to=second[0]), True)

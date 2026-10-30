@@ -10,4 +10,4 @@ struct BorrowError(ReaderAction, Defaultable):
     def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) raises Self.Error[o] -> Int:
         raise Span(env)
 def same(env: List[Int]) -> List[Int]: return env.copy()
-def main(): _ = local[Reader[List[Int]]](same, BorrowError())
+def main(): _ = local[Reader[List[Int]]](BorrowError(), same)

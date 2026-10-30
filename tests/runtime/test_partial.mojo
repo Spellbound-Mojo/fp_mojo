@@ -164,32 +164,32 @@ def fixed_arity_views() raises:
 
 
 def algebra() raises:
-    assert_equal(map[OptionalFamily](partial(add, 10), Optional(5)).value(), 15)
-    assert_equal(map[IdentityFamily](partial(double), 21), 42)
+    assert_equal(map[OptionalFamily](Optional(5), partial(add, 10)).value(), 15)
+    assert_equal(map[IdentityFamily](21, partial(double)), 42)
     var values: List[Int] = [1, 2, 3]
-    assert_equal(map[ListFamily](partial(add3, 1, 2), values^), [121, 122, 123])
+    assert_equal(map[ListFamily](values^, partial(add3, 1, 2)), [121, 122, 123])
     assert_equal(map2[OptionalFamily](partial(add), Optional(1), Optional(2)).value(), 3)
-    assert_false(Bool(flat_map[OptionalFamily](partial(keep_above, 5), Optional(3))))
+    assert_false(Bool(flat_map[OptionalFamily](Optional(3), partial(keep_above, 5))))
 
 
 def iteration() raises:
     var xs: List[Int] = [1, 2, 3]
-    assert_equal(collect_list(lazy_map(partial(add, 10), iter(xs))), [11, 12, 13])
-    assert_equal(collect_list(filter_map[Int](partial(keep_above, 1), iter(xs))), [2, 3])
-    assert_equal(collect_list(lazy_flat_map(partial(repeat, 2), iter(xs))), [1, 1, 2, 2, 3, 3])
-    assert_equal(collect_list(scan_left(partial(add3, 0), 0, iter(xs))), [0, 1, 12, 123])
-    assert_equal(fold_left(partial(add3, 0), 0, iter(xs)), 123)
-    assert_equal(reduce(partial(add), iter(xs)), 6)
-    assert_equal(reduce(partial(add), iter(xs), initial=100), 106)
-    assert_equal(reduce_optional(partial(add), iter(xs)).value(), 6)
+    assert_equal(collect_list(lazy_map(iter(xs), partial(add, 10))), [11, 12, 13])
+    assert_equal(collect_list(filter_map[Int](iter(xs), partial(keep_above, 1))), [2, 3])
+    assert_equal(collect_list(lazy_flat_map(iter(xs), partial(repeat, 2))), [1, 1, 2, 2, 3, 3])
+    assert_equal(collect_list(scan_left(iter(xs), 0, partial(add3, 0))), [0, 1, 12, 123])
+    assert_equal(fold_left(iter(xs), 0, partial(add3, 0)), 123)
+    assert_equal(reduce(iter(xs), partial(add)), 6)
+    assert_equal(reduce(iter(xs), partial(add), initial=100), 106)
+    assert_equal(reduce_optional(iter(xs), partial(add)).value(), 6)
     var empty = List[Int]()
-    assert_false(Bool(reduce_optional(partial(add), iter(empty))))
-    var stopped = fold_until[Int](partial(until, 4), 0, iter(xs))
+    assert_false(Bool(reduce_optional(iter(empty), partial(add))))
+    var stopped = fold_until[Int](iter(xs), 0, partial(until, 4))
     assert_true(stopped.isa[Break[Int]]())
     assert_equal(stopped[Break[Int]].value, 3)
     var failed = False
     try:
-        _ = fold_left(partial(capped, 4), 0, iter(xs))
+        _ = fold_left(iter(xs), 0, partial(capped, 4))
     except error:
         comptime assert type_of(error) == Rejected
         failed = True

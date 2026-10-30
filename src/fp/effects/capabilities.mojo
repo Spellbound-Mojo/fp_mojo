@@ -124,7 +124,7 @@ def ask[I: Ask]() raises I.AskError -> I.Asked where I.AskAvailable:
     return I.ask()
 
 
-def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, //, I: Local](var f: F, var value: V
+def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, //, I: Local](var value: V, var f: F
 ) raises I.LocalError[V, F] -> I.Localized[V, F] where I.LocalCompatible[V] and F.Payload == I.Environment and F.Result == I.Environment:
     """Run a computation under a changed selected environment.
 
@@ -139,8 +139,8 @@ def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable,
         I: The selected Local capability, such as Reader or LiftLocal.
 
     Args:
-        f: The environment transformation, consumed.
         value: The computation, consumed.
+        f: The environment transformation, consumed.
 
     Returns:
         The scoped carrier, preserving payload, origins and deferred execution.
@@ -151,16 +151,16 @@ def local[V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable,
     return I.local(f^, value^)
 
 
-def local[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, //, I: Local, F: _Borrowing[P, R]](var f: F, var value: V
+def local[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, //, I: Local, F: _Borrowing[P, R]](var value: V, var f: F
 ) raises I.LocalError[V, _NativeBorrow[P, R, Never, F, False]] -> I.Localized[V, _NativeBorrow[P, R, Never, F, False]] where I.LocalCompatible[V] and P == I.Environment and R == I.Environment:
     """Scope with an owned native borrowing function or closure."""
-    return local[I](_NativeBorrow[P, R, Never, F, False](f^), value^)
+    return local[I](value^, _NativeBorrow[P, R, Never, F, False](f^))
 
 
-def local[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Local, F: _RaisingBorrowing[P, R, E]](var f: F, var value: V
+def local[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Local, F: _RaisingBorrowing[P, R, E]](var value: V, var f: F
 ) raises I.LocalError[V, _NativeBorrow[P, R, E, F, True]] -> I.Localized[V, _NativeBorrow[P, R, E, F, True]] where I.LocalCompatible[V] and P == I.Environment and R == I.Environment:
     """Scope with a raising native callback; keep its exact error type."""
-    return local[I](_NativeBorrow[P, R, E, F, True](f^), value^)
+    return local[I](value^, _NativeBorrow[P, R, E, F, True](f^))
 
 
 @fieldwise_init
@@ -581,7 +581,7 @@ def listen[V: Movable & Deinitable, //, I: Listen](var value: V
     return I.listen(value^)
 
 
-def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, I: Censor](var f: F, var value: V
+def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, I: Censor](var value: V, var f: F
 ) raises I.CensorError[V, F] -> I.Censored[V, F] where I.CensorCompatible[V, F] and F.Arg == I.Log.Value and F.Out == I.Log.Value:
     """Replace this computation's selected log with f(log).
 
@@ -595,8 +595,8 @@ def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //,
         I: The selected Censor capability.
 
     Args:
-        f: The log transformation, consumed.
         value: The computation, consumed.
+        f: The log transformation, consumed.
 
     Returns:
         A Family carrier preserving payload and native origins.
@@ -607,16 +607,16 @@ def censor[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //,
     return I.censor(f^, value^)
 
 
-def censor[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, I: Censor, F: _Unary[A, R]](var f: F, var value: V
+def censor[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, I: Censor, F: _Unary[A, R]](var value: V, var f: F
 ) raises I.CensorError[V, NativeUnary[A, R, Never, F, False]] -> I.Censored[V, NativeUnary[A, R, Never, F, False]] where I.CensorCompatible[V, NativeUnary[A, R, Never, F, False]] and A == I.Log.Value and R == I.Log.Value:
     """Scope the selected log with an owned native consuming callback."""
-    return censor[I](as_unary(f^), value^)
+    return censor[I](value^, as_unary(f^))
 
 
-def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, I: Censor, F: _RaisingUnary[A, R, E]](var f: F, var value: V
+def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, I: Censor, F: _RaisingUnary[A, R, E]](var value: V, var f: F
 ) raises I.CensorError[V, NativeUnary[A, R, E, F, True]] -> I.Censored[V, NativeUnary[A, R, E, F, True]] where I.CensorCompatible[V, NativeUnary[A, R, E, F, True]] and A == I.Log.Value and R == I.Log.Value:
     """Scope the selected log with a raising native callback; keep its error."""
-    return censor[I](as_unary(f^), value^)
+    return censor[I](value^, as_unary(f^))
 
 
 def defer[F: ThunkContract & Movable & Deinitable, //, I: Defer](var factory: F) -> I.Deferred[F] where I.DeferCompatible[F]:

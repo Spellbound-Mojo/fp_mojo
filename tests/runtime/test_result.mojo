@@ -26,16 +26,16 @@ def main() raises:
     var err = Result[Int, Int](Err(21))
     assert_equal(ok.fold(positive, negative), 21)
     assert_equal(err.fold(positive, negative), -21)
-    var mapped = map[ResultFamily[type_of(ok).Error]](double, ok^)
+    var mapped = map[ResultFamily[type_of(ok).Error]](ok^, double)
     assert_equal(mapped.fold(positive, negative), 42)
     var calls = 0
     def track(var value: Int) {mut calls} -> Int:
         calls += 1
         return value * 10
-    var unchanged = map[ResultFamily[type_of(err).Error]](track, err^)
+    var unchanged = map[ResultFamily[type_of(err).Error]](err^, track)
     assert_true(unchanged.is_err())
     assert_equal(calls, 0)
-    var rebound = flat_map[ResultFamily[type_of(mapped).Error]](checked, mapped^)
+    var rebound = flat_map[ResultFamily[type_of(mapped).Error]](mapped^, checked)
     assert_equal(rebound.fold(positive, negative), 42)
     var remapped = unchanged^.map_err(double)
     assert_equal(remapped.fold(positive, negative), -42)

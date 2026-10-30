@@ -69,7 +69,7 @@ def borrow_flat(values: List[Int]) -> type_of(flatten(once(borrowed(values)))):
 
 def main() raises:
     var trace = ArcPointer(List[Int]())
-    var mapped = map(doubled, Source(0, 2, trace))
+    var mapped = map(Source(0, 2, trace), doubled)
     assert_equal(len(trace[]), 0)
     assert_equal(mapped.__next__(), 2)
     var expected: List[Int] = [0, 101]
@@ -80,7 +80,7 @@ def main() raises:
     assert_equal(trace[], expected)
 
     trace[].clear()
-    var filtered = filter(even, Source(0, 3, trace))
+    var filtered = filter(Source(0, 3, trace), even)
     assert_equal(len(trace[]), 0)
     var retained = filtered.__next__()
     assert_equal(retained.value, 2)
@@ -91,14 +91,14 @@ def main() raises:
     assert_equal(trace[], expected)
 
     trace[].clear()
-    var optional = filter_map(selected, Source(0, 3, trace))
+    var optional = filter_map(Source(0, 3, trace), selected)
     assert_equal(len(trace[]), 0)
     assert_equal(optional.__next__(), 2)
     check(optional)
     assert_equal(trace[], expected)
 
     trace[].clear()
-    var flat = flat_map(unpack, Source(0, 3, trace))
+    var flat = flat_map(Source(0, 3, trace), unpack)
     assert_equal(len(trace[]), 0)
     assert_equal(flat.__next__(), 1)
     assert_equal(flat.__next__(), -1)
@@ -124,10 +124,10 @@ def main() raises:
     assert_equal(len(collect_list(flatten(iter(only_empty^)))), 0)
 
     # Result is an ordinary element; only collect_results stops at Err.
-    var results = collect_list(filter_map(optional_result, iter(range(4))))
+    var results = collect_list(filter_map(iter(range(4)), optional_result))
     assert_equal(len(results), 3)
     assert_equal(results[1].is_err(), True)
-    var error = collect_results(map(result_value, iter(range(4))))
+    var error = collect_results(map(iter(range(4)), result_value))
     var caught = False
     try:
         _ = error^.raise_on_err()
@@ -138,13 +138,13 @@ def main() raises:
 
     # Canonical standard adapters consume our native Iterator/IterableOwned.
     trace[].clear()
-    var limited = take(map(doubled, Source(0, 5, trace)), 1)
+    var limited = take(map(Source(0, 5, trace), doubled), 1)
     expected = [2]
     assert_equal(collect_list(limited^), expected)
     expected = [0, 101]
     assert_equal(trace[], expected)
     trace[].clear()
-    var zero = take(map(doubled, Source(0, 5, trace)), 0)
+    var zero = take(map(Source(0, 5, trace), doubled), 0)
     assert_equal(len(collect_list(zero^)), 0)
     assert_equal(len(trace[]), 0)
     var combined = chain(once(1), once(2))

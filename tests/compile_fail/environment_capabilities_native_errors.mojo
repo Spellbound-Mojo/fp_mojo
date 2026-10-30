@@ -12,6 +12,6 @@ def reject(value: Int) raises Int -> Int: raise value
 def main() raises:
     comptime R = Reader[Int]
     comptime S = StateT[R, Int]
-    var base = run[S](local[LiftLocal[S, R]](reject, S.lift(action[R, Int](Read()))), 0)
+    var base = run[S](local[LiftLocal[S, R]](S.lift(action[R, Int](Read())), reject), 0)
     try: _ = run[R](base^, 1)
     except: pass

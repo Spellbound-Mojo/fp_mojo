@@ -271,22 +271,22 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             Iter[ZipWithIterator[A, B, R, Self.I, _Source[W], def(var A, var B) thin -> R]] with the ownership, timing and empty-input behavior described above.
         """
-        return Iter(_zip_with(function, self._iterator^, other^))
+        return Iter(_zip_with(self._iterator^, other^, function))
 
     def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, W: Movable & Deinitable, //, F: _Binary[A, B, R]](deinit self, var other: W, var function: F) -> Iter[ZipWithIterator[A, B, R, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B:
         """Lazily combine pairs using native left-to-right zip followed by map.
         """
-        return Iter(_zip_with(function^, self._iterator^, other^))
+        return Iter(_zip_with(self._iterator^, other^, function^))
 
     def zip_with[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[ZipWithIterator[F.First, F.Second, F.Out, Self.I, _Source[W], F]] where Self.I.Element == F.First and _Source[W].Element == F.Second and F.Error == Never and RepeatableBinary[F]:
         """Lazily combine pairs using native left-to-right zip followed by map.
         """
-        return Iter(_zip_with(function^, self._iterator^, other^))
+        return Iter(_zip_with(self._iterator^, other^, function^))
 
     def zip_with[F: _BinaryViewable, o: ImmOrigin, W: Movable & Deinitable](deinit self, var other: W, ref[o] function: F) -> Iter[ZipWithIterator[_SharedBinaryRef[F, o].First, _SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, Self.I, _Source[W], _SharedBinaryRef[F, o]]] where Self.I.Element == _SharedBinaryRef[F, o].First and _Source[W].Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:
         """Lazily combine pairs using native left-to-right zip followed by map.
         """
-        return Iter(_zip_with(_SharedBinaryRef[F, o](Pointer(to=function)), self._iterator^, other^))
+        return Iter(_zip_with(self._iterator^, other^, _SharedBinaryRef[F, o](Pointer(to=function))))
 
     def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable](deinit self, var function: def(var Int, var T) thin -> R, *, start: Int = 0) -> Iter[IndexedMapIterator[T, R, Self.I, def(var Int, var T) thin -> R]] where Self.I.Element == T:
         """Lazily map (index, owned element), using native enumerate then map.
@@ -305,22 +305,22 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             Iter[IndexedMapIterator[T, R, Self.I, def(var Int, var T) thin -> R]] with the ownership, timing and empty-input behavior described above.
         """
-        return Iter(_map_with_index(function, self._iterator^, start=start))
+        return Iter(_map_with_index(self._iterator^, function, start=start))
 
     def map_with_index[T: Movable & Deinitable, R: Movable & Deinitable, //, F: _IndexedBinary[T, R]](deinit self, var function: F, *, start: Int = 0) -> Iter[IndexedMapIterator[T, R, Self.I, F]] where Self.I.Element == T:
         """Lazily map (index, owned element), using native enumerate then map.
         """
-        return Iter(_map_with_index(function^, self._iterator^, start=start))
+        return Iter(_map_with_index(self._iterator^, function^, start=start))
 
     def map_with_index[F: BinaryContract & Movable & Deinitable](deinit self, var function: F, *, start: Int = 0) -> Iter[IndexedMapIterator[F.Second, F.Out, Self.I, F]] where Self.I.Element == F.Second and F.Error == Never and RepeatableBinary[F] and F.First == Int:
         """Lazily map (index, owned element), using native enumerate then map.
         """
-        return Iter(_map_with_index(function^, self._iterator^, start=start))
+        return Iter(_map_with_index(self._iterator^, function^, start=start))
 
     def map_with_index[F: _BinaryViewable, o: ImmOrigin](deinit self, ref[o] function: F, *, start: Int = 0) -> Iter[IndexedMapIterator[_SharedBinaryRef[F, o].Second, _SharedBinaryRef[F, o].Out, Self.I, _SharedBinaryRef[F, o]]] where Self.I.Element == _SharedBinaryRef[F, o].Second and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]] and _SharedBinaryRef[F, o].First == Int:
         """Lazily map (index, owned element), using native enumerate then map.
         """
-        return Iter(_map_with_index(_SharedBinaryRef[F, o](Pointer(to=function)), self._iterator^, start=start))
+        return Iter(_map_with_index(self._iterator^, _SharedBinaryRef[F, o](Pointer(to=function)), start=start))
 
     def take_while[T: Movable & Deinitable](deinit self, var predicate: def(T) thin -> Bool) -> Iter[TakeWhileIterator[T, Self.I, def(T) thin -> Bool]] where Self.I.Element == T:
         """Yield the initial matching prefix; consume and discard its first rejection.
@@ -338,22 +338,22 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             Iter[TakeWhileIterator[T, Self.I, def(T) thin -> Bool]] with the ownership, timing and empty-input behavior described above.
         """
-        return Iter(_take_while(predicate, self._iterator^))
+        return Iter(_take_while(self._iterator^, predicate))
 
     def take_while[T: Movable & Deinitable, //, F: _LazyPredicate[T]](deinit self, var predicate: F) -> Iter[TakeWhileIterator[T, Self.I, F]] where Self.I.Element == T:
         """Yield the initial matching prefix; consume and discard its first rejection.
         """
-        return Iter(_take_while(predicate^, self._iterator^))
+        return Iter(_take_while(self._iterator^, predicate^))
 
     def take_while[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) -> Iter[TakeWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Yield the initial matching prefix; consume and discard its first rejection.
         """
-        return Iter(_take_while(predicate^, self._iterator^))
+        return Iter(_take_while(self._iterator^, predicate^))
 
     def take_while[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) -> Iter[TakeWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o]]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
         """Yield the initial matching prefix; consume and discard its first rejection.
         """
-        return Iter(_take_while(predicate._borrow_view(), self._iterator^))
+        return Iter(_take_while(self._iterator^, predicate._borrow_view()))
 
     def drop_while[T: Movable & Deinitable](deinit self, var predicate: def(T) thin -> Bool) -> Iter[DropWhileIterator[T, Self.I, def(T) thin -> Bool]] where Self.I.Element == T:
         """Discard the matching prefix; yield the first rejection and stop testing.
@@ -371,22 +371,22 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             Iter[DropWhileIterator[T, Self.I, def(T) thin -> Bool]] with the ownership, timing and empty-input behavior described above.
         """
-        return Iter(_drop_while(predicate, self._iterator^))
+        return Iter(_drop_while(self._iterator^, predicate))
 
     def drop_while[T: Movable & Deinitable, //, F: _LazyPredicate[T]](deinit self, var predicate: F) -> Iter[DropWhileIterator[T, Self.I, F]] where Self.I.Element == T:
         """Discard the matching prefix; yield the first rejection and stop testing.
         """
-        return Iter(_drop_while(predicate^, self._iterator^))
+        return Iter(_drop_while(self._iterator^, predicate^))
 
     def drop_while[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) -> Iter[DropWhileIterator[downcast[C.Payload, Movable & Deinitable], Self.I, C]] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Discard the matching prefix; yield the first rejection and stop testing.
         """
-        return Iter(_drop_while(predicate^, self._iterator^))
+        return Iter(_drop_while(self._iterator^, predicate^))
 
     def drop_while[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C) -> Iter[DropWhileIterator[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o]]] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
         """Discard the matching prefix; yield the first rejection and stop testing.
         """
-        return Iter(_drop_while(predicate._borrow_view(), self._iterator^))
+        return Iter(_drop_while(self._iterator^, predicate._borrow_view()))
 
     def first(deinit self) -> Optional[downcast[Self.I.Element, Movable & Deinitable]] where conforms_to(Self.I.Element, Deinitable):
         """Consume at most one element and return it, or None for empty input.
@@ -636,22 +636,22 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             PartitionBranches[T, Self.I, def(T) thin -> Bool, P] with the ownership, timing and empty-input behavior described above.
         """
-        return _partition[T=T](predicate, self._iterator^, buffer=buffer^)
+        return _partition[T=T](self._iterator^, predicate, buffer=buffer^)
 
     def partition[T: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyPredicate[T]](deinit self, var predicate: F, *, var buffer: P) -> PartitionBranches[T, Self.I, F, P] where Self.I.Element == T:
         """Lazily split accepted and rejected elements into independent iterators.
         """
-        return _partition[T=T](predicate^, self._iterator^, buffer=buffer^)
+        return _partition[T=T](self._iterator^, predicate^, buffer=buffer^)
 
     def partition[C: BorrowCallContract & Movable & Deinitable, P: _BufferPolicy](deinit self, var predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C.Payload, Movable & Deinitable], Self.I, C, P] where Self.I.Element == downcast[C.Payload, Movable & Deinitable] and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Lazily split accepted and rejected elements into independent iterators.
         """
-        return _partition(predicate^, self._iterator^, buffer=buffer^)
+        return _partition(self._iterator^, predicate^, buffer=buffer^)
 
     def partition[C: _BorrowViewable, o: ImmOrigin, P: _BufferPolicy](deinit self, ref[o] predicate: C, *, var buffer: P) -> PartitionBranches[downcast[C._BorrowView[o].Payload, Movable & Deinitable], Self.I, C._BorrowView[o], P] where Self.I.Element == downcast[C._BorrowView[o].Payload, Movable & Deinitable] and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
         """Lazily split accepted and rejected elements into independent iterators.
         """
-        return _partition(predicate._borrow_view(), self._iterator^, buffer=buffer^)
+        return _partition(self._iterator^, predicate._borrow_view(), buffer=buffer^)
 
     def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy](deinit self, var function: def(var T) thin -> U, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P] where Self.I.Element == T and conforms_to(U, _ResultType):
         """Lazily route Result payloads into independent Ok and Err iterators.
@@ -674,22 +674,22 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             PartitionMapBranches[T, U, Self.I, def(var T) thin -> U, P] with the ownership, timing and empty-input behavior described above.
         """
-        return _partition_map[T=T, U=U](function, self._iterator^, buffer=buffer^)
+        return _partition_map[T=T, U=U](self._iterator^, function, buffer=buffer^)
 
     def partition_map[T: Movable & Deinitable, U: Movable & Deinitable, P: _BufferPolicy, //, F: _LazyUnary[T, U]](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[T, U, Self.I, F, P] where Self.I.Element == T and conforms_to(U, _ResultType):
         """Lazily route Result payloads into independent Ok and Err iterators.
         """
-        return _partition_map[T=T, U=U](function^, self._iterator^, buffer=buffer^)
+        return _partition_map[T=T, U=U](self._iterator^, function^, buffer=buffer^)
 
     def partition_map[F: UnaryContract & Movable & Deinitable, P: _BufferPolicy](deinit self, var function: F, *, var buffer: P) -> PartitionMapBranches[F.Arg, F.Out, Self.I, F, P] where Self.I.Element == F.Arg and conforms_to(F.Out, _ResultType) and F.Error == Never and RepeatableUnary[F]:
         """Lazily route Result payloads into independent Ok and Err iterators.
         """
-        return _partition_map(function^, self._iterator^, buffer=buffer^)
+        return _partition_map(self._iterator^, function^, buffer=buffer^)
 
     def partition_map[F: _UnaryViewable, o: ImmOrigin, P: _BufferPolicy](deinit self, ref[o] function: F, *, var buffer: P) -> PartitionMapBranches[F._View[o].Arg, F._View[o].Out, Self.I, F._View[o], P] where Self.I.Element == F._View[o].Arg and conforms_to(F._View[o].Out, _ResultType) and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:
         """Lazily route Result payloads into independent Ok and Err iterators.
         """
-        return _partition_map(function._unary_view(), self._iterator^, buffer=buffer^)
+        return _partition_map(self._iterator^, function._unary_view(), buffer=buffer^)
 
     def unzip[A: Movable & Deinitable, B: Movable & Deinitable, P: _BufferPolicy](deinit self, *, var buffer: P) -> UnzipBranches[A, B, Self.I, P] where Self.I.Element == Tuple[A, B]:
         """Lazily split native tuple fields, checking both queues before publishing either field.
@@ -774,22 +774,22 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], def(var T) thin -> U]] with the ownership, timing and empty-input behavior described above.
         """
-        return Iter(_align_with[A=A, B=B, T=T, U=U](function, self._iterator^, other^))
+        return Iter(_align_with[A=A, B=B, T=T, U=U](self._iterator^, other^, function))
 
     def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, W: Movable & Deinitable, //, F: _LazyUnary[T, U]](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, U, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and T == Ior[A, B]:
         """Map each owned Ior from alignment through a non-raising callback.
         """
-        return Iter(_align_with[A=A, B=B, T=T, U=U](function^, self._iterator^, other^))
+        return Iter(_align_with[A=A, B=B, T=T, U=U](self._iterator^, other^, function^))
 
     def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, W: Movable & Deinitable](deinit self, var other: W, var function: F) -> Iter[AlignWithIterator[A, B, F.Out, Self.I, _Source[W], F]] where Self.I.Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]:
         """Map each owned Ior from alignment through a non-raising callback.
         """
-        return Iter(_align_with[A=A, B=B](function^, self._iterator^, other^))
+        return Iter(_align_with[A=A, B=B](self._iterator^, other^, function^))
 
     def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, W: Movable & Deinitable](deinit self, var other: W, ref[o] function: F) -> Iter[AlignWithIterator[A, B, F._View[o].Out, Self.I, _Source[W], F._View[o]]] where Self.I.Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:
         """Map each owned Ior from alignment through a non-raising callback.
         """
-        return Iter(_align_with[A=A, B=B](function._unary_view(), self._iterator^, other^))
+        return Iter(_align_with[A=A, B=B](self._iterator^, other^, function._unary_view()))
 
     def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, R: Movable & Deinitable](deinit self, var function: def(var A, var T) thin -> R, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> R]] where Self.I.Element == T and R == Tuple[A, Y]:
         """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
@@ -811,22 +811,22 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             Iter[ScanMapIterator[A, T, Y, Self.I, def(var A, var T) thin -> R]] with the ownership, timing and empty-input behavior described above.
         """
-        return Iter(_scan_map[A=A, T=T, Y=Y](function, initial^, self._iterator^))
+        return Iter(_scan_map[A=A, T=T, Y=Y](self._iterator^, initial^, function))
 
     def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var T) -> R](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T and R == Tuple[A, Y]:
         """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
         """
-        return Iter(_scan_map[A=A, T=T, Y=Y](function^, initial^, self._iterator^))
+        return Iter(_scan_map[A=A, T=T, Y=Y](self._iterator^, initial^, function^))
 
     def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, F]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never and RepeatableBinary[F]:
         """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
         """
-        return Iter(_scan_map[A=A, T=T, Y=Y](function^, initial^, self._iterator^))
+        return Iter(_scan_map[A=A, T=T, Y=Y](self._iterator^, initial^, function^))
 
     def scan_map[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](deinit self, ref[o] function: F, var initial: A) -> Iter[ScanMapIterator[A, T, Y, Self.I, _SharedBinaryRef[F, o]]] where Self.I.Element == T and _SharedBinaryRef[F, o].First == A and _SharedBinaryRef[F, o].Second == T and _SharedBinaryRef[F, o].Out == Tuple[A, Y] and _SharedBinaryRef[F, o].Error == Never and RepeatableBinary[_SharedBinaryRef[F, o]]:
         """Lazily consume (carry, input) into (new carry, output), yielding one output per input.
         """
-        return Iter(_scan_map[A=A, T=T, Y=Y](_SharedBinaryRef[F, o](Pointer(to=function)), initial^, self._iterator^))
+        return Iter(_scan_map[A=A, T=T, Y=Y](self._iterator^, initial^, _SharedBinaryRef[F, o](Pointer(to=function))))
 
     def map_accumulate[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var function: F, var initial: A) raises F.Error -> Tuple[A, List[Y]] where Self.I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and RepeatableBinary[F]:
         """Thread a carry through the remaining source, returning the final carry and collected outputs.
@@ -965,42 +965,42 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
     def fold_left[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A and RepeatableBinary[F]:
         """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
         """
-        return _fold_left[A=A, F=F](step^, initial^, self._iterator^)
+        return _fold_left[A=A, F=F](self._iterator^, initial^, step^)
 
     def reduce[A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A and RepeatableBinary[F]:
         """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
         """
-        return _reduce[A=A, F=F](step^, self._iterator^, initial=initial^)
+        return _reduce[A=A, F=F](self._iterator^, step^, initial=initial^)
 
     def reduce_optional[F: BinaryContract & Movable & Deinitable](deinit self, var step: F) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out and RepeatableBinary[F]:
         """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
         """
-        return _reduce_optional[F=F](step^, self._iterator^)
+        return _reduce_optional[F=F](self._iterator^, step^)
 
     def reduce[F: BinaryContract & Movable & Deinitable](deinit self, var step: F) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out and RepeatableBinary[F]:
         """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
         """
-        return _reduce[F=F](step^, self._iterator^)
+        return _reduce[F=F](self._iterator^, step^)
 
     def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](deinit self, var step: F, var initial: A) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == Self.I.Element and F.Out == ControlFlow[B, A] and RepeatableBinary[F]:
         """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
         """
-        return _fold_until[B=B, A=A, F=F](step^, initial^, self._iterator^)
+        return _fold_until[B=B, A=A, F=F](self._iterator^, initial^, step^)
 
     def find[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Optional[Self.I.Element] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]:
         """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
         """
-        return _find[C=C](predicate^, self._iterator^)
+        return _find[C=C](self._iterator^, predicate^)
 
     def any[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]:
         """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
         """
-        return _any[C=C](predicate^, self._iterator^)
+        return _any[C=C](self._iterator^, predicate^)
 
     def all[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and RepeatableBorrow[C]:
         """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
         """
-        return _all[C=C](predicate^, self._iterator^)
+        return _all[C=C](self._iterator^, predicate^)
     # --- end iterator expansion syntax ---
 
     # Native thin functions and closures keep their own admission signatures,
@@ -1025,24 +1025,24 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             An `Iter` over the transformed elements.
         """
-        return Iter(_map(function, self._iterator^))
+        return Iter(_map(self._iterator^, function))
 
     def map[T: Movable & Deinitable, U: Movable & Deinitable, //,
             F: def(var T) -> U](
         deinit self, var function: F
     ) -> Iter[MapIterator[T, U, Self.I, F]] where Self.I.Element == T:
         """Lazily transform each element with a stored closure."""
-        return Iter(_map(function^, self._iterator^))
+        return Iter(_map(self._iterator^, function^))
 
     def map[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
     ) -> Iter[MapIterator[F._View[o].Arg, F._View[o].Out, Self.I, F._View[o]]] where Self.I.Element == F._View[o].Arg and F._View[o].Error == Never:
         """Retain a shared callable view in the lazy pipeline."""
-        return Iter(_map(function._unary_view(), self._iterator^))
+        return Iter(_map(self._iterator^, function._unary_view()))
 
     def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F
     ) -> Iter[MapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
         """Lazily transform each element with a repeatable library unary value."""
-        return Iter(_map(function^, self._iterator^))
+        return Iter(_map(self._iterator^, function^))
 
 
     def fill[T: Movable & Deinitable, U: Copyable & Deinitable](deinit self, var value: U
@@ -1136,12 +1136,12 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             The source shape containing each original element beside its borrowed projection.
         """
-        return Iter(_derived_pair_with[P=P](function^, self._iterator^))
+        return Iter(_derived_pair_with[P=P](self._iterator^, function^))
 
     def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C
     ) -> Iter[_Map[T, Tuple[T, C.Result], Self.I, _ObserveOnce[T, C, True]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]:
         """Borrow each element and pair it with its projection. Evaluation is lazy."""
-        return Iter(_derived_pair_with[T=T](function^, self._iterator^))
+        return Iter(_derived_pair_with[T=T](self._iterator^, function^))
 
     def tap_each[P: AnyType, R: Movable & Deinitable, //, F: _Borrowing[P, R]](deinit self, var function: F
     ) -> Iter[_Map[downcast[P, Movable & Deinitable], downcast[P, Movable & Deinitable], Self.I, _ObserveNative[P, R, F, False]]] where Self.I.Element == downcast[P, Movable & Deinitable]:
@@ -1158,12 +1158,12 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             The original elements after inspection; callback results are discarded.
         """
-        return Iter(_derived_tap_each[P=P](function^, self._iterator^))
+        return Iter(_derived_tap_each[P=P](self._iterator^, function^))
 
     def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C
     ) -> Iter[_Map[T, T, Self.I, _ObserveOnce[T, C, False]]] where Self.I.Element == T and C.Payload == T and C.Failure == Never and RepeatableBorrow[C]:
         """Borrow each element and inspect it without changing it. Evaluation is lazy."""
-        return Iter(_derived_tap_each[T=T](function^, self._iterator^))
+        return Iter(_derived_tap_each[T=T](self._iterator^, function^))
 
     def filter[T: Movable & Deinitable](
         deinit self, predicate: def(T) thin -> Bool
@@ -1183,23 +1183,23 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             An `Iter` over accepted elements, in source order.
         """
-        return Iter(_filter(predicate, self._iterator^))
+        return Iter(_filter(self._iterator^, predicate))
 
     def filter[T: Movable & Deinitable, //, F: def(T) -> Bool](
         deinit self, var predicate: F
     ) -> Iter[FilterIterator[T, Self.I, F]] where Self.I.Element == T:
         """Lazily retain elements with a stored closure predicate."""
-        return Iter(_filter(predicate^, self._iterator^))
+        return Iter(_filter(self._iterator^, predicate^))
 
     def filter[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C
     ) -> Iter[FilterIterator[Self.I.Element, Self.I, C._BorrowView[o]]] where conforms_to(Self.I.Element, Movable & Deinitable) and C._BorrowView[o].Payload == Self.I.Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
         """Lazily filter with a retained shared predicate."""
-        return Iter(_filter(predicate._borrow_view(), self._iterator^))
+        return Iter(_filter(self._iterator^, predicate._borrow_view()))
 
     def filter[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C
     ) -> Iter[FilterIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Lazily retain elements with a library borrowing predicate."""
-        return Iter(_filter(predicate^, self._iterator^))
+        return Iter(_filter(self._iterator^, predicate^))
 
     def filter_not[T: Movable & Deinitable](
         deinit self, predicate: def(T) thin -> Bool
@@ -1219,23 +1219,23 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             An Iter over rejected elements, in source order.
         """
-        return Iter(_filter_not(predicate, self._iterator^))
+        return Iter(_filter_not(self._iterator^, predicate))
 
     def filter_not[T: Movable & Deinitable, //, F: def(T) -> Bool](
         deinit self, var predicate: F
     ) -> Iter[FilterNotIterator[T, Self.I, F]] where Self.I.Element == T:
         """Lazily retain rejected elements with a stored native closure."""
-        return Iter(_filter_not(predicate^, self._iterator^))
+        return Iter(_filter_not(self._iterator^, predicate^))
 
     def filter_not[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] predicate: C
     ) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C._BorrowView[o]]] where conforms_to(Self.I.Element, Movable & Deinitable) and C._BorrowView[o].Payload == Self.I.Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
         """Lazily filter with a retained shared predicate."""
-        return Iter(_filter_not(predicate._borrow_view(), self._iterator^))
+        return Iter(_filter_not(self._iterator^, predicate._borrow_view()))
 
     def filter_not[C: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C
     ) -> Iter[FilterNotIterator[Self.I.Element, Self.I, C]] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
         """Lazily retain rejected elements with an owned library predicate."""
-        return Iter(_filter_not(predicate^, self._iterator^))
+        return Iter(_filter_not(self._iterator^, predicate^))
 
     def compact[T: Movable & Deinitable](deinit self
     ) -> Iter[_FilterMap[Optional[T], T, Self.I, _Same[Optional[T]]]] where Self.I.Element == Optional[T]:
@@ -1268,31 +1268,31 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             An `Iter` over present results.
         """
-        return Iter(_filter_map(function, self._iterator^))
+        return Iter(_filter_map(self._iterator^, function))
 
     def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, //,
                    F: def(var T) -> Optional[U]](
         deinit self, var function: F
     ) -> Iter[FilterMapIterator[T, U, Self.I, F]] where Self.I.Element == T:
         """Lazily transform and filter elements with a stored closure."""
-        return Iter(_filter_map(function^, self._iterator^))
+        return Iter(_filter_map(self._iterator^, function^))
 
     def filter_map[U: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](deinit self, var function: F
     ) -> Iter[FilterMapIterator[F.Arg, U, Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never and RepeatableUnary[F]:
         """Lazily filter a repeatable library unary callback with an explicit Optional payload binding."""
-        return Iter(_filter_map[U=U](function^, self._iterator^))
+        return Iter(_filter_map[U=U](self._iterator^, function^))
 
     def filter_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F
     ) -> Iter[FilterMapIterator[F.Arg, _OptionalElement[F.Out], Self.I, F]] where Self.I.Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never and RepeatableUnary[F]:
         """Infer the Optional payload and move the callback into the lazy iterator."""
-        return Iter(_filter_map[U=_OptionalElement[F.Out]](function^, self._iterator^))
+        return Iter(_filter_map[U=_OptionalElement[F.Out]](self._iterator^, function^))
 
     def filter_map[F: _UnaryViewable, o: ImmOrigin, //,
                    U: Movable & Deinitable = _OptionalElement[F._View[o].Out]](
         deinit self, ref[o] function: F
     ) -> Iter[FilterMapIterator[F._View[o].Arg, U, Self.I, F._View[o]]] where Self.I.Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never:
         """Infer the Optional payload and retain a shared callback until consumption."""
-        return Iter(_filter_map[U=U](function._unary_view(), self._iterator^))
+        return Iter(_filter_map[U=U](self._iterator^, function._unary_view()))
 
     def flat_map[T: Movable & Deinitable, U: Movable & Deinitable](
         deinit self, function: def(var T) thin -> U
@@ -1314,24 +1314,24 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             An `Iter` over the concatenated inner elements.
         """
-        return Iter(_flat_map(function, self._iterator^))
+        return Iter(_flat_map(self._iterator^, function))
 
     def flat_map[T: Movable & Deinitable, U: Movable & Deinitable, //,
                  F: def(var T) -> U](
         deinit self, var function: F
     ) -> Iter[FlatMapIterator[T, U, Self.I, F]] where Self.I.Element == T:
         """Lazily expand each element with a stored closure."""
-        return Iter(_flat_map(function^, self._iterator^))
+        return Iter(_flat_map(self._iterator^, function^))
 
     def flat_map[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
     ) -> Iter[FlatMapIterator[F._View[o].Arg, F._View[o].Out, Self.I, F._View[o]]] where Self.I.Element == F._View[o].Arg and F._View[o].Error == Never:
         """Retain a shared callable view in the lazy pipeline."""
-        return Iter(_flat_map(function._unary_view(), self._iterator^))
+        return Iter(_flat_map(self._iterator^, function._unary_view()))
 
     def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F
     ) -> Iter[FlatMapIterator[F.Arg, F.Out, Self.I, F]] where Self.I.Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
         """Lazily expand elements with a repeatable library unary value."""
-        return Iter(_flat_map(function^, self._iterator^))
+        return Iter(_flat_map(self._iterator^, function^))
 
     # --- sequencing conveniences (generated) ---
     # Generated by scripts/generate_sequencing_syntax.py; execution stays in shared continuations.
@@ -1477,26 +1477,26 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             An `Iter` over the accumulator snapshots.
         """
-        return Iter(_scan_left(step, initial^, self._iterator^))
+        return Iter(_scan_left(self._iterator^, initial^, step))
 
     def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable, //,
                   F: def(var A, var T) -> A](
         deinit self, var step: F, var initial: A
     ) -> Iter[ScanIterator[A, T, Self.I, F]] where Self.I.Element == T:
         """Lazily yield accumulator snapshots with a stored closure."""
-        return Iter(_scan_left(step^, initial^, self._iterator^))
+        return Iter(_scan_left(self._iterator^, initial^, step^))
 
     def scan_left[A: Copyable & Deinitable, F: BinaryContract & Movable & Deinitable](
         deinit self, var step: F, var initial: A
     ) -> Iter[ScanIterator[A, F.Second, Self.I, F]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never and RepeatableBinary[F]:
         """Lazily yield accumulator snapshots with a shared or mutable library binary step."""
-        return Iter(_scan_left(step^, initial^, self._iterator^))
+        return Iter(_scan_left(self._iterator^, initial^, step^))
 
     def scan_left[A: Copyable & Deinitable, F: _BinaryViewable, o: ImmOrigin](
         deinit self, ref[o] step: F, var initial: A
     ) -> Iter[ScanIterator[A, F.Second, Self.I, _SharedBinaryRef[F, o]]] where F.First == A and F.Second == Self.I.Element and F.Out == A and F.Error == Never:
         """Retain a shared step while yielding the same native accumulator snapshots."""
-        return Iter(_scan_left(_SharedBinaryRef[F, o](Pointer(to=step)), initial^, self._iterator^))
+        return Iter(_scan_left(self._iterator^, initial^, _SharedBinaryRef[F, o](Pointer(to=step))))
 
     # --- traversal conveniences (generated) ---
     # Generated by scripts/generate_traversal_syntax.py; execution stays in algebra._traversal and families.
@@ -2340,7 +2340,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             The final accumulator, moved out.
         """
-        return _fold_left(step, initial^, self._iterator^)
+        return _fold_left(self._iterator^, initial^, step)
 
     # Pass E explicitly through every raising boundary. Reading F.E or inferring
     # it again loses the caller's error equality in precompiled generic clients.
@@ -2349,13 +2349,13 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         deinit self, step: F, var initial: A
     ) raises E -> A where Self.I.Element == T:
         """Fold with a raising step, propagating its exact error type."""
-        return _fold_left[E=E](step, initial^, self._iterator^)
+        return _fold_left[E=E](self._iterator^, initial^, step)
 
     def fold_left[A: Movable & Deinitable, F: Binary](
         deinit self, step: F, var initial: A
     ) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A:
         """Fold with a library `Binary` step."""
-        return _fold_left(step, initial^, self._iterator^)
+        return _fold_left(self._iterator^, initial^, step)
 
     def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
                    T: Movable & Deinitable, //,
@@ -2382,7 +2382,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             The first `Break`, or `Continue` with the final accumulator.
         """
-        return _fold_until[B=B](step, initial^, self._iterator^)
+        return _fold_until[B=B](self._iterator^, initial^, step)
 
     def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
                    T: Movable & Deinitable, E: Movable & Deinitable, //,
@@ -2390,13 +2390,13 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         deinit self, step: F, var initial: A
     ) raises E -> ControlFlow[B, A] where Self.I.Element == T and Q == B:
         """Fold until `Break` with a raising step, preserving its error."""
-        return _fold_until[E=E, B=B](step, initial^, self._iterator^)
+        return _fold_until[E=E, B=B](self._iterator^, initial^, step)
 
     def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, F: Binary](
         deinit self, step: F, var initial: A
     ) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == Self.I.Element and F.Out == ControlFlow[B, A]:
         """Fold until `Break` with a library `Binary` step."""
-        return _fold_until[B=B](step, initial^, self._iterator^)
+        return _fold_until[B=B](self._iterator^, initial^, step)
 
     def reduce[T: Movable & Deinitable, //, F: def(var T, var T) -> T](
         deinit self, step: F
@@ -2422,39 +2422,39 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Raises:
             EmptyReductionError: The source is empty and no initializer was supplied.
         """
-        return _reduce(step, self._iterator^)
+        return _reduce(self._iterator^, step)
 
     def reduce[T: Movable & Deinitable, E: Movable & Deinitable, //,
                F: def(var T, var T) raises E -> T](
         deinit self, step: F
     ) raises ReductionError[E] -> T where Self.I.Element == T:
         """Reduce with a raising step, distinguishing step failure from empty input."""
-        return _reduce[E=E](step, self._iterator^)
+        return _reduce[E=E](self._iterator^, step)
 
     def reduce[F: Binary](deinit self, step: F
     ) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out:
         """Reduce from the first element with a library `Binary` step."""
-        return _reduce(step, self._iterator^)
+        return _reduce(self._iterator^, step)
 
     def reduce[A: Movable & Deinitable, T: Movable & Deinitable, //,
                F: def(var A, var T) -> A](
         deinit self, step: F, *, var initial: A
     ) -> A where Self.I.Element == T:
         """Reduce from an explicit initial accumulator, as `fold_left` does."""
-        return _reduce(step, self._iterator^, initial=initial^)
+        return _reduce(self._iterator^, step, initial=initial^)
 
     def reduce[A: Movable & Deinitable, T: Movable & Deinitable,
                E: Movable & Deinitable, //, F: def(var A, var T) raises E -> A](
         deinit self, step: F, *, var initial: A
     ) raises E -> A where Self.I.Element == T:
         """Reduce from an initial accumulator, preserving the step's error."""
-        return _reduce[E=E](step, self._iterator^, initial=initial^)
+        return _reduce[E=E](self._iterator^, step, initial=initial^)
 
     def reduce[A: Movable & Deinitable, F: Binary](
         deinit self, step: F, *, var initial: A
     ) raises F.Error -> A where F.First == A and F.Second == Self.I.Element and F.Out == A:
         """Reduce from an initial accumulator with a library `Binary` step."""
-        return _reduce(step, self._iterator^, initial=initial^)
+        return _reduce(self._iterator^, step, initial=initial^)
 
     def reduce_optional[T: Movable & Deinitable, //, F: def(var T, var T) -> T](
         deinit self, step: F
@@ -2475,19 +2475,19 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             The reduced value inside `Optional`, or `None`.
         """
-        return _reduce_optional(step, self._iterator^)
+        return _reduce_optional(self._iterator^, step)
 
     def reduce_optional[T: Movable & Deinitable, E: AnyType, //,
                         F: def(var T, var T) raises E -> T](
         deinit self, step: F
     ) raises E -> Optional[T] where Self.I.Element == T:
         """Reduce with a raising step; only empty input becomes `None`."""
-        return _reduce_optional[E=E](step, self._iterator^)
+        return _reduce_optional[E=E](self._iterator^, step)
 
     def reduce_optional[F: Binary](deinit self, step: F
     ) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and Self.I.Element == F.Out:
         """Reduce with a library `Binary` step, returning `None` for empty input."""
-        return _reduce_optional(step, self._iterator^)
+        return _reduce_optional(self._iterator^, step)
 
     def find[T: Movable & Deinitable, //, F: def(T) -> Bool](
         deinit self, predicate: F
@@ -2508,25 +2508,25 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             The first accepted element inside `Optional`, or `None`.
         """
-        return _find(predicate, self._iterator^)
+        return _find(self._iterator^, predicate)
 
     def find[T: Movable & Deinitable, E: Movable & Deinitable, //,
              F: def(T) raises E -> Bool](
         deinit self, predicate: F
     ) raises E -> Optional[T] where Self.I.Element == T:
         """Find with a raising predicate, propagating its exact error."""
-        return _find[E=E](predicate, self._iterator^)
+        return _find[E=E](self._iterator^, predicate)
 
     def find[T: Movable & Deinitable, E: Movable & Deinitable, //](
         deinit self, predicate: def(T) raises E thin -> Bool
     ) raises E -> Optional[T] where Self.I.Element == T:
         """Preserve a plain raising predicate, including explicitly bound Never."""
-        return _find[E=E](predicate, self._iterator^)
+        return _find[E=E](self._iterator^, predicate)
 
     def find[C: BorrowCallable](deinit self, predicate: C
     ) raises C.Failure -> Optional[Self.I.Element] where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool:
         """Find with a library borrowing predicate."""
-        return _find(predicate, self._iterator^)
+        return _find(self._iterator^, predicate)
 
     def any[T: Movable & Deinitable, //, F: def(T) -> Bool](
         deinit self, predicate: F
@@ -2547,25 +2547,25 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             `True` if any element is accepted, otherwise `False`.
         """
-        return _any(predicate, self._iterator^)
+        return _any(self._iterator^, predicate)
 
     def any[T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(T) raises E -> Bool](
         deinit self, predicate: F
     ) raises E -> Bool where Self.I.Element == T:
         """Test any element with a raising predicate, preserving its error."""
-        return _any[E=E](predicate, self._iterator^)
+        return _any[E=E](self._iterator^, predicate)
 
     def any[T: Movable & Deinitable, E: Movable & Deinitable, //](
         deinit self, predicate: def(T) raises E thin -> Bool
     ) raises E -> Bool where Self.I.Element == T:
         """Preserve a plain raising predicate, including explicitly bound Never."""
-        return _any[E=E](predicate, self._iterator^)
+        return _any[E=E](self._iterator^, predicate)
 
     def any[C: BorrowCallable](deinit self, predicate: C
     ) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool:
         """Test any element with a library borrowing predicate."""
-        return _any(predicate, self._iterator^)
+        return _any(self._iterator^, predicate)
 
     def all[T: Movable & Deinitable, //, F: def(T) -> Bool](
         deinit self, predicate: F
@@ -2586,25 +2586,25 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         Returns:
             `True` if every element is accepted, otherwise `False`.
         """
-        return _all(predicate, self._iterator^)
+        return _all(self._iterator^, predicate)
 
     def all[T: Movable & Deinitable, E: Movable & Deinitable, //,
             F: def(T) raises E -> Bool](
         deinit self, predicate: F
     ) raises E -> Bool where Self.I.Element == T:
         """Test every element with a raising predicate, preserving its error."""
-        return _all[E=E](predicate, self._iterator^)
+        return _all[E=E](self._iterator^, predicate)
 
     def all[T: Movable & Deinitable, E: Movable & Deinitable, //](
         deinit self, predicate: def(T) raises E thin -> Bool
     ) raises E -> Bool where Self.I.Element == T:
         """Preserve a plain raising predicate, including explicitly bound Never."""
-        return _all[E=E](predicate, self._iterator^)
+        return _all[E=E](self._iterator^, predicate)
 
     def all[C: BorrowCallable](deinit self, predicate: C
     ) raises C.Failure -> Bool where conforms_to(Self.I.Element, Movable & Deinitable) and C.Payload == Self.I.Element and C.Result == Bool:
         """Test every element with a library borrowing predicate."""
-        return _all(predicate, self._iterator^)
+        return _all(self._iterator^, predicate)
 
 
 def iterated[S: Movable & Deinitable](var source: S) -> Iter[_Source[S]]:

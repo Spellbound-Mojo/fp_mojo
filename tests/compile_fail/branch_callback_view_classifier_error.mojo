@@ -5,4 +5,4 @@ from fp.data import Result
 def fail(offset: Int, value: Int) raises Int -> Result[Int, Int]: raise offset + value
 def main():
     var classifier = partial(fail, 1)
-    _ = partition_map(classifier, range(3), buffer=Unbounded())
+    _ = partition_map(range(3), classifier, buffer=Unbounded())

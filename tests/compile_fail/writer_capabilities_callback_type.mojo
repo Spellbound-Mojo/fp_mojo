@@ -9,4 +9,4 @@ struct Wrong(Unary, Defaultable):
     def call(self, var log: String) -> Int: return log.byte_length()
 def main():
     comptime W = Writer[StringMonoid]
-    _ = censor[W](Wrong(), tell[W](String("a")))
+    _ = censor[W](tell[W](String("a")), Wrong())

@@ -7,5 +7,5 @@ def observe(prefix: Int, value: Int) -> NoneType:
     return None
 def main():
     var sink = partial(observe, 1)
-    for_each(sink^, range(3))
-    for_each(sink, range(3))
+    for_each(range(3), sink^)
+    for_each(range(3), sink)

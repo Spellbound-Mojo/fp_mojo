@@ -11,7 +11,7 @@ def main() raises:
         return Optional(quantity) if 0 < quantity <= 5 else Optional[Int]()
 
     var quantities: List[Int] = [1, 3, 5]
-    var accepted = traverse[ListFamily, OptionalFamily](available, quantities^)
+    var accepted = traverse[ListFamily, OptionalFamily](quantities^, available)
     var expected: List[Int] = [1, 3, 5]
     assert_equal(accepted.value(), expected)
     assert_equal(calls, 3)
@@ -19,7 +19,7 @@ def main() raises:
 
     calls = 0
     var unavailable: List[Int] = [1, 8, 3]
-    var rejected = traverse[ListFamily, OptionalFamily](available, unavailable^)
+    var rejected = traverse[ListFamily, OptionalFamily](unavailable^, available)
     assert_equal(Bool(rejected), False)
     assert_equal(calls, 2)
     print("failed traversal: present =", Bool(rejected), "; calls =", calls)
@@ -37,7 +37,7 @@ def main() raises:
 
     calls = 0
     var empty = List[Int]()
-    var empty_result = traverse[ListFamily, OptionalFamily](available, empty^)
+    var empty_result = traverse[ListFamily, OptionalFamily](empty^, available)
     assert_equal(Bool(empty_result), True)
     assert_equal(len(empty_result.value()), 0)
     assert_equal(calls, 0)

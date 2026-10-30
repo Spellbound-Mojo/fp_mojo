@@ -12,8 +12,8 @@ struct I5OutputStep[o:ImmOrigin](Binary):
 
 def check(anchor:List[Int]):
     var local:List[Int]=[1,2]
-    var expected=scan_map(I5OutputStep(Pointer(to=anchor)),0,range(2))
-    var actual=scan_map(I5OutputStep(Pointer(to=local)),0,range(2))
+    var expected=scan_map(range(2),0,I5OutputStep(Pointer(to=anchor)))
+    var actual=scan_map(range(2),0,I5OutputStep(Pointer(to=local)))
     expected=actual^
 def main():
     var anchor:List[Int]=[1,2]

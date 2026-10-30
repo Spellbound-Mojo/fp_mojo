@@ -30,5 +30,5 @@ def canceled() -> Int:
 
 
 def main():
-    var program = tail_rec_m[Async[Int]](Increment(), 0)
+    var program = tail_rec_m[Async[Int]](0, Increment())
     print(fold_outcome(run(program^), success, failure, canceled))

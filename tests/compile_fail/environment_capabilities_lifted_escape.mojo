@@ -9,4 +9,4 @@ comptime C = LiftLocal[S, RR]
 def next_value(var value: Int) -> RR.Asked: return ask[RR]()
 def change(value: Int) -> Int: return value + 1
 def main():
-    _ = local[C](change, S.lift(flat_map[RR](as_unary(next_value), ask[RR]())))
+    _ = local[C](S.lift(flat_map[RR](ask[RR](), as_unary(next_value))), change)

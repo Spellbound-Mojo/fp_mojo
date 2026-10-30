@@ -4,4 +4,4 @@ from fp.iteration import scan_left
 def step(bias: Int, carry: Int, item: Int) -> Tuple[Int, Int]: return (carry + bias, item)
 def main():
     var callback = partial(step, 0)
-    _ = scan_left(callback, 0, range(2))
+    _ = scan_left(range(2), 0, callback)

@@ -22,10 +22,10 @@ def sinks() raises:
     var sink = as_unary(record^)
     comptime assert not conforms_to(type_of(sink), Copyable)
     var first: List[Token] = [Token(1, payloads), Token(2, payloads)]
-    for_each(sink, first^)
+    for_each(first^, sink)
     var second: List[Token] = [Token(3, payloads)]
     iterated(second^).for_each(sink)
-    for_each(sink, List[Token]())
+    for_each(List[Token](), sink)
     assert_equal(ledger[].calls, 6)
     assert_equal(ledger[].drops[0], 0)
     var last: List[Token] = [Token(4, payloads)]
@@ -53,7 +53,7 @@ def counted() raises:
     var payloads = trace()
     var prefix = Prefix(ledger)
     var predicate = partial(selected, prefix)
-    assert_equal(count_where(predicate, List[Token]()), 0)
+    assert_equal(count_where(List[Token](), predicate), 0)
     assert_equal(ledger[].factories, 1)
     var values: List[Token] = [Token(1, payloads), Token(2, payloads), Token(3, payloads)]
     assert_equal(iterated(values^).count_where(predicate), 2)
@@ -61,7 +61,7 @@ def counted() raises:
     assert_equal(ledger[].calls, 3)
     assert_equal(ledger[].restarts, 0)
     assert_equal(ledger[].drops[0], 3)
-    assert_equal(count_where(predicate^, List[Token]()), 0)
+    assert_equal(count_where(List[Token](), predicate^), 0)
     assert_equal(ledger[].drops[0], 4)
     _ = prefix^
     assert_equal(ledger[].drops[0], 5)
@@ -101,7 +101,7 @@ def optional_fold() raises:
     var project = as_unary(select^)
     comptime assert not conforms_to(type_of(project), Copyable)
     var first: List[Token] = [Token(1, payloads), Token(2, payloads), Token(3, payloads), Token(4, payloads)]
-    var result = collect_fold[Totals](project, first^)
+    var result = collect_fold[Totals](first^, project)
     comptime assert not conforms_to(type_of(result), Copyable)
     assert_equal(result.value, 6)
     assert_equal(iterated(List[Token]()).collect_fold[Totals](project).value, 0)
@@ -144,7 +144,7 @@ def errors() raises:
     var callback = as_unary(never_called^)
     var unopened: List[Token] = [Token(5, payloads), Token(6, payloads)]
     var code = 0
-    try: _ = collect_fold[FailedIdentity](callback, iterated(unopened^).map(pulled))
+    try: _ = collect_fold[FailedIdentity](iterated(unopened^).map(pulled), callback)
     except error:
         comptime assert type_of(error) == Int
         code = error

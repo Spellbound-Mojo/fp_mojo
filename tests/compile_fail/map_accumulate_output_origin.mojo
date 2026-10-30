@@ -12,8 +12,8 @@ struct OutputStep[o:ImmOrigin](Binary):
 
 def check(anchor:List[Int]):
     var local:List[Int]=[1,2]
-    var expected=map_accumulate(OutputStep(Pointer(to=anchor)),0,range(2))
-    var actual=map_accumulate(OutputStep(Pointer(to=local)),0,range(2))
+    var expected=map_accumulate(range(2),0,OutputStep(Pointer(to=anchor)))
+    var actual=map_accumulate(range(2),0,OutputStep(Pointer(to=local)))
     expected=actual^
 def main():
     var anchor:List[Int]=[1,2]

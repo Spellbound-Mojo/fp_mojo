@@ -5,37 +5,37 @@ from std.memory import ArcPointer
 from std.testing import assert_equal
 
 def find_pure1[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Optional[T] where I.Element == T:
-    return find(f, source^)
+    return find(source^, f)
 
 def find_pure2[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Optional[T] where I.Element == T:
     return find_pure1(f, source^)
 
 def any_pure1[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Bool where I.Element == T:
-    return any(f, source^)
+    return any(source^, f)
 
 def any_pure2[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Bool where I.Element == T:
     return any_pure1(f, source^)
 
 def all_pure1[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Bool where I.Element == T:
-    return all(f, source^)
+    return all(source^, f)
 
 def all_pure2[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Bool where I.Element == T:
     return all_pure1(f, source^)
 
 def find_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Optional[T] where I.Element == T:
-    return find[E=E](f, source^)
+    return find[E=E](source^, f)
 
 def find_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Optional[T] where I.Element == T:
     return find_error1[E=E](f, source^)
 
 def any_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
-    return any[E=E](f, source^)
+    return any[E=E](source^, f)
 
 def any_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
     return any_error1[E=E](f, source^)
 
 def all_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
-    return all[E=E](f, source^)
+    return all[E=E](source^, f)
 
 def all_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
     return all_error1[E=E](f, source^)

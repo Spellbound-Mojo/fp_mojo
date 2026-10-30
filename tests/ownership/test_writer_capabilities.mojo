@@ -57,7 +57,7 @@ def wc_owned_case(calls: ArcPointer[Int], captures: ArcPointer[Int], logs: ArcPo
     comptime C = LiftCensor[T, LiftCensor[S, LiftCensor[R, W]]]
     var source = tell[C](WCOwnedLog(String("a"), logs))
     comptime assert not C.ListenCompatible[type_of(source)]
-    var pending = censor[C](WCOnce(WCCapture(captures), calls, mode == 1), source^)
+    var pending = censor[C](source^, WCOnce(WCCapture(captures), calls, mode == 1))
     comptime assert not conforms_to(type_of(pending), Copyable)
     assert_equal(calls[], 0)
     if mode == 2:
@@ -149,7 +149,7 @@ def wc_borrowed(owner: List[Int]) raises:
     comptime S = StateT[W, Int]
     comptime C = LiftCensor[S, W]
     var source = S.lift(writer[W, View](Tuple(Optional(Span(owner)), Span(owner))))
-    var result = run_writer[W](run[S](listen[C](censor[C](WCViewIdentity[origin_of(owner)](), source^)), 42))
+    var result = run_writer[W](run[S](listen[C](censor[C](source^, WCViewIdentity[origin_of(owner)]())), 42))
     comptime assert type_of(result) == Tuple[Optional[View], Tuple[Tuple[View, Optional[View]], Int]]
     assert_equal(result[0].value()[0], 11)
     assert_equal(result[1][0][0][1], 12)
@@ -159,7 +159,7 @@ def wc_borrowed(owner: List[Int]) raises:
     comptime Plain = Writer[StringMonoid]
     comptime R = ReaderT[Plain, Int]
     comptime RC = LiftCensor[R, Plain]
-    var pending = censor[RC](WCReject[origin_of(owner)](Span(owner)), tell[RC](String("a")))
+    var pending = censor[RC](tell[RC](String("a")), WCReject[origin_of(owner)](Span(owner)))
     try: _ = run[R](pending^, 0)
     except error:
         comptime assert type_of(error) == View

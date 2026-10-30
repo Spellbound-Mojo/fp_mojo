@@ -30,7 +30,7 @@ struct Repeat(Unary):
 
 
 def repeat[I: Monad, F: Unary](var step: F, var initial: F.Arg) raises TailRecContract[I, F].Error -> TailRecContract[I, F].Out where TailRecContract[I, F].Compatible:
-    return tail_rec_m[I](step^, initial^)
+    return tail_rec_m[I](initial^, step^)
 
 
 def answer() -> Int:

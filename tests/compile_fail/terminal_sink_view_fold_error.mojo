@@ -12,5 +12,5 @@ struct M(Monoid):
 def fail(offset: Int, value: Int) raises String -> Optional[Int]: raise String(offset + value)
 def main():
     var project = partial(fail, 1)
-    try: _ = collect_fold[M](project, range(3))
+    try: _ = collect_fold[M](range(3), project)
     except: pass

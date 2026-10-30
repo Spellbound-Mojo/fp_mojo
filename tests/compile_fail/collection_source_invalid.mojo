@@ -5,4 +5,4 @@ def add(total: Int, value: Int) -> Int:
     return total + value
 
 def main():
-    _ = fold_left(add, 0, 5)
+    _ = fold_left(5, 0, add)

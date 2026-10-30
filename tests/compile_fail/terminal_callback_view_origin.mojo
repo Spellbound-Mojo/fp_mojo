@@ -12,5 +12,5 @@ def wrong[o: ImmOrigin](ref[o] outer: List[Int]) -> Optional[Span[Int, o]]:
         return None
     var project = partial(keep, 1)
     var values: List[View] = [view]
-    return find_map(project, values^)
+    return find_map(values^, project)
 def main(): pass

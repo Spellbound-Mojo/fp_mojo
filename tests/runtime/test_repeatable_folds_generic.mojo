@@ -7,7 +7,7 @@ from test_repeatable_folds import Add, Until, Failure
 
 def folded[A:Movable & Deinitable,I:Iterator,F:BinaryContract & Movable & Deinitable](var step:F,var initial:A,var source:I
 ) raises F.Error -> A where F.First==A and F.Second==I.Element and F.Out==A and RepeatableBinary[F]:
-    return fold_left(step^,initial^,source^)
+    return fold_left(source^,initial^,step^)
 
 def reduced[I:Iterator,F:BinaryContract & Movable & Deinitable](var step:F,var source:I
 ) raises F.Error -> Optional[F.Out] where F.First==F.Out and F.Second==F.Out and I.Element==F.Out and RepeatableBinary[F]:
@@ -15,7 +15,7 @@ def reduced[I:Iterator,F:BinaryContract & Movable & Deinitable](var step:F,var s
 
 def stopped[A:Movable & Deinitable,B:Movable & Deinitable,I:Iterator,F:BinaryContract & Movable & Deinitable](var step:F,var initial:A,var source:I
 ) raises F.Error -> ControlFlow[B,A] where F.First==A and F.Second==I.Element and F.Out==ControlFlow[B,A] and RepeatableBinary[F]:
-    return fold_until[B=B](step^,initial^,source^)
+    return fold_until[B=B](source^,initial^,step^)
 
 def main() raises:
     assert_equal(folded(Add(0),0,range(1,3)),6)

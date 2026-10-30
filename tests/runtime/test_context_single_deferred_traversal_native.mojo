@@ -23,7 +23,7 @@ def main() raises:
     var output=Optional[Int]()
     var construction_error=0
     try:
-        var free=traverse[OptionalFamily,R](read,Optional(3))
+        var free=traverse[OptionalFamily,R](Optional(3),read)
         free_output=run[R](free^,env)
         var selected=pipeline(Optional(3)).raising[Int]().traverse[R](read).get()
         output=run[R](selected^,env)

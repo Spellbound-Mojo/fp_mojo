@@ -12,7 +12,7 @@ def check(anchor: List[Int], local: List[Int]):
     def callback(var value: Int) {expected} -> Result[Int, Expected]:
         return Err(expected)
     # Returning a different error origin must be rejected before evaluation.
-    _ = flat_map[ResultFamily[Local]](callback, Result[Int, Local](Err(actual)))
+    _ = flat_map[ResultFamily[Local]](Result[Int, Local](Err(actual)), callback)
 def main():
     var anchor: List[Int] = [1]
     var local: List[Int] = [2]

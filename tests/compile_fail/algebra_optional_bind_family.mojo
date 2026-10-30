@@ -7,4 +7,4 @@ def wrong_family(var value:Int)->List[Int]:
     return [value]
 
 def main():
-    _=flat_map[OptionalFamily](as_unary(wrong_family),Optional(1))
+    _=flat_map[OptionalFamily](Optional(1),as_unary(wrong_family))

@@ -10,7 +10,7 @@ struct Project[o:ImmOrigin](Unary):
     def call(self,var value:Int)->Self.Out:return Reader[Int].pure(Optional(self.value[0]))
 def mismatch(anchor:List[Int]):
     var local:List[Int]=[1]
-    var expected=find_map_effect[Reader[Int]](Project(Span(anchor)),range(3))
-    expected=find_map_effect[Reader[Int]](Project(Span(local)),range(3))
+    var expected=find_map_effect[Reader[Int]](range(3),Project(Span(anchor)))
+    expected=find_map_effect[Reader[Int]](range(3),Project(Span(local)))
     _=run[Reader[Int]](expected^,0)
 def main():mismatch([1])

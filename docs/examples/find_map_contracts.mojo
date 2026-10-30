@@ -13,7 +13,7 @@ struct EvenText(Unary):
 def forward[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: V
 ) raises FindMapContract[I, V, F].Error -> FindMapContract[I, V, F].Out where FindMapContract[I, V, F].Compatible:
-    return find_map_effect[I](function^, source^)
+    return find_map_effect[I](source^, function^)
 
 def main() raises:
     var result = forward[OptionalFamily](EvenText(), List[Int]([1, 2, 4]))

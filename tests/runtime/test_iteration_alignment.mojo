@@ -28,7 +28,7 @@ struct I4Mapper(MutableUnary):
 
 
 def i4_generic[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, J: Iterator, //, F: def(var T) -> U](var f:F,var source:I,var other:J) -> AlignWithIterator[A,B,U,I,J,F] where I.Element==A and J.Element==B and T==Ior[A,B]:
-    return align_with[A=A,B=B,T=T,U=U](f^,source^,other^)
+    return align_with[A=A,B=B,T=T,U=U](source^,other^,f^)
 
 
 def tags() raises:
@@ -97,7 +97,7 @@ def callbacks() raises:
     assert_equal(iterated(mapped^).to_list(),[1,4,5])
     assert_equal(calls,3)
     var drops = ArcPointer(0)
-    var library = align_with(I4Mapper(0,drops),range(2),range(3))
+    var library = align_with(range(2),range(3),I4Mapper(0,drops))
     var first = next(library)
     assert_equal(first.value,"1")
     _ = first^

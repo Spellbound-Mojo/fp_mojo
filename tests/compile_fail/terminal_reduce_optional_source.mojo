@@ -11,7 +11,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime B = type_of(b)
     print(a[0], b[0])
     def step(var acc: A, var item: A) -> A: return acc
-    _ = reduce_optional[T=A](step, iter(List[B]()))
+    _ = reduce_optional[T=A](iter(List[B]()), step)
 
 def main():
     var first: List[Int] = [11]

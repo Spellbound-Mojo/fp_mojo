@@ -37,7 +37,7 @@ struct Pure[I:Applicative](OnceUnary):
     def call_once(deinit self,var value:Int)->Self.Out:return Self.I.pure(value+1)
 
 def generic[I:Applicative](var value:Optional[Int]) raises TraverseContract[OptionalFamily,I,Optional[Int],Pure[I]].Error ->OptionalFamily.Traversed[I,Optional[Int],Pure[I]] where TraverseContract[OptionalFamily,I,Optional[Int],Pure[I]].Compatible:
-    return traverse[OptionalFamily,I](Pure[I](),value^)
+    return traverse[OptionalFamily,I](value^,Pure[I]())
 
 def main() raises:
     comptime I=Reader[Int]
@@ -60,16 +60,16 @@ def main() raises:
         if result:assert_equal(result.take(),17)
     calls[]=0
     runs[]=0
-    var pending=traverse[ResultFamily[String],I](ProduceRead(calls,runs),Result[Int,String](Err("stored")))
+    var pending=traverse[ResultFamily[String],I](Result[Int,String](Err("stored")),ProduceRead(calls,runs))
     assert_equal(calls[],0)
     var retained=run[I](pending^,env)
     assert_true(retained.is_err())
     assert_equal(runs[],0)
     var construction_error=0
-    try:_=traverse[OptionalFamily,I](ProduceRead(calls,runs),Optional(-1))
+    try:_=traverse[OptionalFamily,I](Optional(-1),ProduceRead(calls,runs))
     except error:construction_error=error
     assert_equal(construction_error,91)
-    var execution=traverse[OptionalFamily,I](ProduceRead(calls,runs),Optional(5))
+    var execution=traverse[OptionalFamily,I](Optional(5),ProduceRead(calls,runs))
     env=-1
     var execution_error=String()
     try:_=run[I](execution^,env)

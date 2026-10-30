@@ -43,9 +43,9 @@ def typed_owned(var value: Int) raises Int -> Int:
 def pure(ok: Bool) -> Int:
     var value = Result[Int, Int](Ok(7)) if ok else Result[Int, Int](Err(7))
     _ = value.fold(never_borrow, never_borrow)
-    var mapped = map[ResultFamily[type_of(value).Error]](consume, value^)
+    var mapped = map[ResultFamily[type_of(value).Error]](value^, consume)
     var remapped = mapped^.map_err(consume)
-    var empty_error = map[ResultFamily[type_of(remapped).Error]](never, remapped^)
+    var empty_error = map[ResultFamily[type_of(remapped).Error]](remapped^, never)
     return empty_error^.fold_owned(consume, consume_error)
 
 def main() raises:

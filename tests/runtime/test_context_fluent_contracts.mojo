@@ -14,14 +14,14 @@ from std.memory import ArcPointer
 from test_context_selection_contracts import Token
 
 def selected[I: Filterable, V: Movable & Deinitable, P: BorrowCallable](var value: V, var predicate: P) raises FilterContract[I,V,P].Error -> Pipeline[FilterContract[I,V,P].Family, FilterContract[I,V,P].Out] where FilterContract[I,V,P].Compatible and conforms_to(I.FilteredFamily, Functor):
-    return Pipeline[FilterContract[I,V,P].Family, FilterContract[I,V,P].Out](filter[I](predicate^, value^))
+    return Pipeline[FilterContract[I,V,P].Family, FilterContract[I,V,P].Out](filter[I](value^, predicate^))
 
 def compacted[I: FunctorFilter,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var v:V,var f:F) raises FilterMapContract[I,V,F].Error -> Pipeline[FilterMapContract[I,V,F].Family,FilterMapContract[I,V,F].Out] where FilterMapContract[I,V,F].Compatible:
     return pipeline[I](v^).filter_map(f^)
 
 def main() raises:
     all_contracts()
-    assert_equal(filter[Independent](Positive(), List[Int]([1, -1])), [1])
+    assert_equal(filter[Independent](List[Int]([1, -1]), Positive()), [1])
     assert_equal(selected[Tagged](List[Int]([1, -1]), Positive()).get(), [1])
     assert_equal(compacted[Tagged](List[Int]([1, 2]), Choose()).get(), [1, 2])
 
@@ -36,7 +36,7 @@ def traversed[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryC
     return pipeline[S](value^).traverse[G](function^)
 
 def combined[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: V, var right: R, var function: F) raises CombineContract[I,V,F,R].Error -> Pipeline[CombineContract[I,V,F,R].Family,CombineContract[I,V,F,R].Out] where CombineContract[I,V,F,R].Compatible:
-    return Pipeline[CombineContract[I,V,F,R].Family,CombineContract[I,V,F,R].Out](map2_lazy[I](function^,left^,right^))
+    return Pipeline[CombineContract[I,V,F,R].Family,CombineContract[I,V,F,R].Out](map2_lazy[I](left^,right^,function^))
 
 def all_contracts() raises:
     assert_equal(mapped[ListFamily](List[Int]([1,2]),Identity[Int]()).get(), [1,2])

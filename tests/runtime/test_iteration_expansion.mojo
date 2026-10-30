@@ -162,9 +162,9 @@ def captured() raises:
     def observe(var value: Int) {mut calls} -> NoneType:
         calls += value
         return None
-    for_each(observe,range(4))
+    for_each(range(4),observe)
     assert_equal(calls,6)
-    assert_equal(count_where(prefix,range(5)),2)
+    assert_equal(count_where(range(5),prefix),2)
 
 
 def reductions() raises:
@@ -177,7 +177,7 @@ def reductions() raises:
     var xs: List[String] = ['a','b','c']
     assert_equal(iterated(xs^).combine_all_optional[S=StringMonoid]().value(), 'abc')
     assert_equal(Bool(combine_all_optional[S=StringMonoid](empty[String]())),False)
-    assert_equal(collect_fold[M=StringMonoid](selected_text,range(6)), '024')
+    assert_equal(collect_fold[M=StringMonoid](range(6),selected_text), '024')
     assert_equal(iterated(range(6)).collect_fold[M=StringMonoid](selected_text), '024')
 
 

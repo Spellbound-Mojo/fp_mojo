@@ -83,10 +83,10 @@ def ef_state_predicate(x: Int) -> State[Int].Endpoint[Bool, EFStatePredicate]:
 def ef_basics() raises:
     var xs = ef_values()
     assert_equal(piped(xs.copy()).fold_effect[ResultFamily[String]](ef_add,0).get().raise_on_err(),6)
-    assert_equal(fold_effect[ResultFamily[String]](ef_add,5,List[Int]()).raise_on_err(),5)
+    assert_equal(fold_effect[ResultFamily[String]](List[Int](),5,ef_add).raise_on_err(),5)
     assert_true(iterated(xs.copy()).all_effect[ResultFamily[String]](ef_positive).raise_on_err())
-    assert_false(any_effect[ResultFamily[String]](ef_positive,List[Int]()).raise_on_err())
-    assert_true(all_effect[ResultFamily[String]](ef_positive,List[Int]()).raise_on_err())
+    assert_false(any_effect[ResultFamily[String]](List[Int](),ef_positive).raise_on_err())
+    assert_true(all_effect[ResultFamily[String]](List[Int](),ef_positive).raise_on_err())
     assert_equal(piped(Optional(4)).fold_effect[ResultFamily[String]](ef_add,2).get().raise_on_err(),6)
     assert_equal(piped(Optional[Int]()).fold_effect[ResultFamily[String]](ef_add,2).get().raise_on_err(),2)
     var array: Array[Int,3] = [1,2,3]
@@ -101,9 +101,9 @@ def ef_basics() raises:
     _ = cursor.__next__()
     assert_equal(iterated(cursor^).fold_effect[ResultFamily[String]](ef_add,0).raise_on_err(),5)
     var pair: List[Int] = [1,2]
-    assert_equal(fold_effect[ListFamily](ef_branch,0,pair.copy()),[3,-1,1,-3])
-    assert_equal(fold_effect[CellFamily](ef_cell,0,pair.copy()).value,3)
-    assert_equal(run_writer[Writer[StringMonoid]](fold_effect[Writer[StringMonoid]](ef_logged,0,pair.copy())), (String("12"),3))
+    assert_equal(fold_effect[ListFamily](pair.copy(),0,ef_branch),[3,-1,1,-3])
+    assert_equal(fold_effect[CellFamily](pair.copy(),0,ef_cell).value,3)
+    assert_equal(run_writer[Writer[StringMonoid]](fold_effect[Writer[StringMonoid]](pair.copy(),0,ef_logged)), (String("12"),3))
     assert_equal(run[Reader[Int]](piped(pair.copy()).fold_effect[Reader[Int]](EFReaderStep(),0).get(),5),13)
     assert_equal(run[State[Int]](iterated(pair^).fold_effect[State[Int]](EFStateStep(),0),10),(24,12))
 
@@ -141,7 +141,7 @@ def ef_stops() raises:
         calls[] += 1
         return [False, True]
     var xs: List[Int] = [1,2]
-    assert_equal(any_effect[ListFamily](branching,xs^),[False,True,True])
+    assert_equal(any_effect[ListFamily](xs^,branching),[False,True,True])
     assert_equal(calls[],2)
     calls[] = 0; pulls = 0
     def deferred(x: Int) {calls} -> Reader[Int].Pure[Bool]:
@@ -156,7 +156,7 @@ def ef_stops() raises:
 def ef_conditions() raises:
     assert_equal(piped(Result[Bool,String](Ok(True))).if_effect(ef_yes,ef_no).get().raise_on_err(),11)
     assert_equal(piped(Result[Bool,String](Ok(False))).if_effect(ef_yes,ef_no).get().raise_on_err(),22)
-    assert_equal(if_effect[ResultFamily[String]](ef_yes,ef_no,Result[Bool,String](Ok(True))).raise_on_err(),11)
+    assert_equal(if_effect[ResultFamily[String]](Result[Bool,String](Ok(True)),ef_yes,ef_no).raise_on_err(),11)
     var calls = ArcPointer(0)
     def selected() {calls} -> Result[Int,String]:
         calls[] += 1

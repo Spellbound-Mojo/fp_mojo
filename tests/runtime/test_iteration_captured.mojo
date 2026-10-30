@@ -25,7 +25,7 @@ def exercise(library: Bool, length: Int, count: Int, trace: ArcPointer[List[Int]
     var source = Source(0, length, trace)
     var output = List[String]()
     if library:
-        var mapped = map(transform, source^)
+        var mapped = map(source^, transform)
         assert_equal(len(trace[]), 0)
         assert_equal(calls, 0)
         for _ in range(count): output.append(next(mapped))

@@ -6,4 +6,4 @@ struct Project(Unary):
     comptime Arg = Int
     comptime Out = Int
     def call(self, var value: Int) -> Int: return value
-def main(): _ = filter_map(Project(), range(3))
+def main(): _ = filter_map(range(3), Project())

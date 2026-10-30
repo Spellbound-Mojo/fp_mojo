@@ -26,7 +26,7 @@ def check[S:Traversable,V:Movable & Deinitable](var value:V,drops:ArcPointer[Int
     var calls=ArcPointer(0)
     var code=0
     try:
-        _=traverse[S,ListFamily](Produce(Owner(10,captures),calls,fail),value^)
+        _=traverse[S,ListFamily](value^,Produce(Owner(10,captures),calls,fail))
     except error:
         comptime assert type_of(error)==Int
         code=rebind_var[Int](error^)

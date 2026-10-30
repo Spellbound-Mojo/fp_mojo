@@ -120,7 +120,7 @@ struct ExternalOwned[origin: ImmOrigin](OnceUnary):
 def forward[F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable](
     var subject: Result[T,E], var function: F
 ) raises F.Error -> Result[F.Out, E] where F.Arg == T:
-    return map[ResultFamily[E]](function^, subject^)
+    return map[ResultFamily[E]](subject^, function^)
 
 
 def outer[F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable](
@@ -138,7 +138,7 @@ def forward_error[F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable
 def forward_then[U: Movable & Deinitable, F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable, I: Monad = ResultFamily[E]](
     var subject: Result[T,E], var function: F
 ) raises I.BindError[Result[T,E], F] -> I.Bound[Result[T,E], F] where I.Element[Result[T,E]] == F.Arg and F.Out == Result[U,E] and I.BindCompatible[Result[T,E], F]:
-    return flat_map[I](function^, subject^)
+    return flat_map[I](subject^, function^)
 
 
 def forward_else[U: Movable & Deinitable, F: OnceUnary, T: Movable & Deinitable, E: Movable & Deinitable](
@@ -244,8 +244,8 @@ def main() raises:
     eliminations()
     var dual = Dual()
     # One call prefers the consuming mode; fold_owned uses the shared one.
-    assert_equal(map[ResultFamily[type_of(Result[Int,Int](Ok(4))).Error]](dual, Result[Int,Int](Ok(4))).fold_owned(dual,dual), 1)
-    assert_equal(map[ResultFamily[type_of(Result[Int,Int](Ok(4))).Error]](dual^, Result[Int,Int](Ok(4))).fold_owned_once(Dual(),Dual()), 2)
+    assert_equal(map[ResultFamily[type_of(Result[Int,Int](Ok(4))).Error]](Result[Int,Int](Ok(4)), dual).fold_owned(dual,dual), 1)
+    assert_equal(map[ResultFamily[type_of(Result[Int,Int](Ok(4))).Error]](Result[Int,Int](Ok(4)), dual^).fold_owned_once(Dual(),Dual()), 2)
     # Never is neutral in either branch; a callback StopIteration propagates.
     assert_equal(Result[Int,Int](Ok(4)).fold_owned_once(Dual(),Stop()), 2)
     assert_equal(Result[Int,Int](Err(4)).fold_owned_once(Stop(),Dual()), 2)
@@ -265,7 +265,7 @@ def main() raises:
     var is_inner_error: Bool
     var dropped: Int
     try:
-        var nested = map[ResultFamily[type_of(Result[Token[2],Token[2]](Ok(Token[2](1,trace)))).Error]](Sequence(Transform(Token[1](2,trace),False),True), Result[Token[2],Token[2]](Ok(Token[2](1,trace))))
+        var nested = map[ResultFamily[type_of(Result[Token[2],Token[2]](Ok(Token[2](1,trace)))).Error]](Result[Token[2],Token[2]](Ok(Token[2](1,trace))), Sequence(Transform(Token[1](2,trace),False),True))
         var inner = nested^.raise_on_err()
         is_inner_error = inner.is_err()
         _ = inner^

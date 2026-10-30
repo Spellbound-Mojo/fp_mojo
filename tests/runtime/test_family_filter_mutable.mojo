@@ -26,9 +26,9 @@ def ordinary_forms() raises:
     assert_equal(piped(other^).filter_not(mut_ref(predicate)).get(), [0, 2])
     assert_equal(predicate.calls, 16)
     var free: List[Int] = [0, 1, 2, 3]
-    assert_equal(filter[ListFamily](mut_ref(predicate), free^), [1, 3])
+    assert_equal(filter[ListFamily](free^, mut_ref(predicate)), [1, 3])
     var inverse: List[Int] = [0, 1, 2, 3]
-    assert_equal(filter_not[ListFamily](mut_ref(predicate), inverse^), [0, 2])
+    assert_equal(filter_not[ListFamily](inverse^, mut_ref(predicate)), [0, 2])
     assert_equal(predicate.calls, 24)
     assert_equal(pipeline(Optional(7)).filter(mut_ref(predicate)).get(), Optional[Int]())
     assert_equal(predicate.calls, 25)

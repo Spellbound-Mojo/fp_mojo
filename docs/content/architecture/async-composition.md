@@ -14,7 +14,7 @@ loop was built and measured.
 |---|---|
 | `IO[T, E].pure(value)`, `.delay(f)`, `.defer(f)` | Own a value, evaluate a function, or build an `IO` when the program reaches it |
 | `io.flat_map(f)`, `.map(f)`, `.handle_error_with(h)` | Append a frame; the callback runs once, when the run loop reaches it |
-| `tail_rec_m[Async[E]](step, initial)`, `traverse`, `collect` | Fold on the run loop: each step binds after the previous step's `IO` |
+| `tail_rec_m[Async[E]](initial, step)`, `traverse`, `collect` | Fold on the run loop: each step binds after the previous step's `IO` |
 | `io.both(other)` | Run a typed child pair as a leaf and return its ordered success tuple after both finish |
 | `IO[T, E].lift(machine)` | Run a custom machine as one leaf |
 

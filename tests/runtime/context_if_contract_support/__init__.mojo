@@ -6,7 +6,7 @@ from algebra_support.box import BoxMonad
 from std.testing import assert_equal
 
 def forward[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where IfContract[I,V,L,R].Compatible:
-    return if_effect[I](left^, right^, source^)
+    return if_effect[I](source^, left^, right^)
 
 def fluent[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where IfContract[I,V,L,R].Compatible:
     return piped(source^).if_effect[G=I](left^, right^).get()
@@ -64,7 +64,7 @@ def immediate[G: Monad, route: Int, truth: Bool, absent: Bool, fail: Bool]() -> 
             condition = rebind_var[G.Pure[Bool]](Result[Bool,String](Err(String("skip"))))
     try:
         comptime if route == 0:
-            var result = if_effect[G](left^,right^,condition^)
+            var result = if_effect[G](condition^,left^,right^)
             trace[] += "r"
             _ = result^
         elif route == 1:
@@ -147,7 +147,7 @@ struct MappedReader(Thunk):
 # Preserve the predicates existing generic free/fluent callers already forward.
 def legacy_forward[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V
 ) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where I.Element[V] == Bool and I.Element[L.Out] == I.Element[R.Out] and I.CarrierCompatible[V] and I.CarrierCompatible[L.Out] and I.CarrierCompatible[R.Out]:
-    return if_effect[I](left^, right^, source^)
+    return if_effect[I](source^, left^, right^)
 
 def legacy_fluent[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V
 ) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where I.Element[V] == Bool and I.Element[L.Out] == I.Element[R.Out] and I.CarrierCompatible[V] and I.CarrierCompatible[L.Out] and I.CarrierCompatible[R.Out]:

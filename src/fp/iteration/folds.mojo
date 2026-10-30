@@ -19,7 +19,7 @@ from fp.iteration._callbacks import _binary_fixed, _control_fixed, _binary_repea
 
 def fold_left[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, I: Movable & Deinitable, //,
               F: def(var P, var Q) -> R, T: Movable & Deinitable = Q](
-    step: F, var initial: A, var iterator: I
+    var iterator: I, var initial: A, step: F
 ) -> A where _Source[I].Element == T and P == A and Q == T and R == A:
     """Fold a source from the left: `step(... step(step(initial, x0), x1) ..., xn)`.
 
@@ -39,9 +39,9 @@ def fold_left[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Dei
         T: The requested element type, which must match the callback and source.
 
     Args:
-        step: The step, borrowed; it is called once per element.
-        initial: The first accumulator, consumed.
         iterator: The source, consumed.
+        initial: The first accumulator, consumed.
+        step: The step, borrowed; it is called once per element.
 
     Returns:
         The final accumulator.
@@ -52,7 +52,7 @@ def fold_left[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Dei
 
 def reduce_optional[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, I: Movable & Deinitable, //,
                     F: def(var P, var Q) -> R, T: Movable & Deinitable = Q](
-    step: F, var iterator: I
+    var iterator: I, step: F
 ) -> Optional[T] where _Source[I].Element == T and P == T and Q == T and R == T:
     """Reduce a source with its first element as the accumulator; empty input gives `None`.
 
@@ -69,8 +69,8 @@ def reduce_optional[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable
         T: The requested element and accumulator type; all callback types must match it.
 
     Args:
-        step: The step, borrowed; it is called once per element after the first.
         iterator: The source, consumed.
+        step: The step, borrowed; it is called once per element after the first.
 
     Returns:
         The final accumulator, or `None` for an empty source.
@@ -82,7 +82,7 @@ def reduce_optional[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable
 
 def fold_left[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, I: Movable & Deinitable, E: AnyType, //,
               F: def(var P, var Q) raises E -> R, T: Movable & Deinitable = Q](
-    step: F, var initial: A, var iterator: I
+    var iterator: I, var initial: A, step: F
 ) raises E -> A where _Source[I].Element == T and P == A and Q == T and R == A:
     """Fold with a raising step; its error stops the fold with its own type."""
     return _fold_left[A, T, _Source[I], E, F, _binary_raising[P, Q, R, E, F, A, T, A]](
@@ -91,7 +91,7 @@ def fold_left[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Dei
 
 def reduce_optional[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, I: Movable & Deinitable, E: AnyType, //,
                     F: def(var P, var Q) raises E -> R, T: Movable & Deinitable = Q](
-    step: F, var iterator: I
+    var iterator: I, step: F
 ) raises E -> Optional[T] where _Source[I].Element == T and P == T and Q == T and R == T:
     """Reduce with a raising step; empty input gives `None`, and the step's error is kept."""
     return _reduce_optional[T, _Source[I], E, F, _binary_raising[P, Q, R, E, F, T, T, T]](
@@ -101,7 +101,7 @@ def reduce_optional[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable
 def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
                P: Movable & Deinitable, R: Movable & Deinitable, S: Movable & Deinitable, I: Movable & Deinitable, //,
                F: def(var P, var S) -> ControlFlow[Q, R], B: Movable & Deinitable = Q, T: Movable & Deinitable = S](
-    step: F, var initial: A, var iterator: I
+    var iterator: I, var initial: A, step: F
 ) -> ControlFlow[B, A] where _Source[I].Element == T and Q == B and P == A and R == A and S == T:
     """Fold until a step returns `Break`, without pulling another element.
 
@@ -122,9 +122,9 @@ def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
         T: The requested element type, which must match the callback and source.
 
     Args:
-        step: The step, borrowed.
-        initial: The first accumulator, consumed.
         iterator: The source, consumed.
+        initial: The first accumulator, consumed.
+        step: The step, borrowed.
 
     Returns:
         The first `Break`, or `Continue` with the final accumulator.
@@ -137,7 +137,7 @@ def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
 def fold_until[A: Movable & Deinitable, Q: Movable & Deinitable,
                P: Movable & Deinitable, R: Movable & Deinitable, S: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
                F: def(var P, var S) raises E -> ControlFlow[Q, R], B: Movable & Deinitable = Q, T: Movable & Deinitable = S](
-    step: F, var initial: A, var iterator: I
+    var iterator: I, var initial: A, step: F
 ) raises E -> ControlFlow[B, A] where _Source[I].Element == T and Q == B and P == A and R == A and S == T:
     """Fold until `Break` with a raising step; its error is a separate outcome from `Break`."""
     return rebind_var[ControlFlow[B, A]](_fold_until[A, Q, T, _Source[I], E, F,
@@ -151,7 +151,7 @@ struct EmptyReductionError(Copyable, Movable, Writable):
 
 
 def reduce[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, I: Movable & Deinitable, //,
-           F: def(var P, var Q) -> R, T: Movable & Deinitable = Q](step: F, var iterator: I, *, var initial: A) -> A where _Source[I].Element == T and P == A and Q == T and R == A:
+           F: def(var P, var Q) -> R, T: Movable & Deinitable = Q](var iterator: I, step: F, *, var initial: A) -> A where _Source[I].Element == T and P == A and Q == T and R == A:
     """Reduce a source from an initial value: the same as `fold_left`.
 
     Parameters:
@@ -165,18 +165,18 @@ def reduce[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinit
         T: The requested element type, which must match the callback and source.
 
     Args:
-        step: The step, borrowed; it is called once per element.
         iterator: The source, consumed.
+        step: The step, borrowed; it is called once per element.
         initial: The first accumulator, consumed; returned for empty input.
 
     Returns:
         The final accumulator.
     """
-    return fold_left[A=A, P=P, Q=Q, R=R, T=T, I=I, F=F](step, initial^, iterator^)
+    return fold_left[A=A, P=P, Q=Q, R=R, T=T, I=I, F=F](iterator^, initial^, step)
 
 
 def reduce[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, I: Movable & Deinitable, //,
-           F: def(var P, var Q) -> R, T: Movable & Deinitable = Q](step: F, var iterator: I) raises EmptyReductionError -> T where _Source[I].Element == T and P == T and Q == T and R == T:
+           F: def(var P, var Q) -> R, T: Movable & Deinitable = Q](var iterator: I, step: F) raises EmptyReductionError -> T where _Source[I].Element == T and P == T and Q == T and R == T:
     """Reduce a source with its first element as the accumulator.
 
     Parameters:
@@ -189,8 +189,8 @@ def reduce[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinit
         T: The requested element and accumulator type; all callback types must match it.
 
     Args:
-        step: The step, borrowed; it is called once per element after the first.
         iterator: The source, consumed.
+        step: The step, borrowed; it is called once per element after the first.
 
     Returns:
         The final accumulator.
@@ -240,15 +240,15 @@ Parameters:
 def reduce[A: Movable & Deinitable, P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, I: Movable & Deinitable,
            E: Movable & Deinitable, //,
            F: def(var P, var Q) raises E -> R, T: Movable & Deinitable = Q](
-    step: F, var iterator: I, *, var initial: A
+    var iterator: I, step: F, *, var initial: A
 ) raises E -> A where _Source[I].Element == T and P == A and Q == T and R == A:
     """Reduce from an initial value with a raising step; its error is kept."""
-    return fold_left[A=A, P=P, Q=Q, R=R, T=T, I=I, E=E, F=F](step, initial^, iterator^)
+    return fold_left[A=A, P=P, Q=Q, R=R, T=T, I=I, E=E, F=F](iterator^, initial^, step)
 
 
 def reduce[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
            F: def(var P, var Q) raises E -> R, T: Movable & Deinitable = Q](
-    step: F, var iterator: I
+    var iterator: I, step: F
 ) raises ReductionError[E] -> T where _Source[I].Element == T and P == T and Q == T and R == T:
     """Reduce with a raising step and no initial value.
 
@@ -266,8 +266,8 @@ def reduce[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinit
         T: The requested element and accumulator type; all callback types must match it.
 
     Args:
-        step: The step, borrowed; it is called once per element after the first.
         iterator: The source, consumed.
+        step: The step, borrowed; it is called once per element after the first.
 
     Returns:
         The final accumulator.
@@ -282,35 +282,35 @@ def reduce[P: Movable & Deinitable, Q: Movable & Deinitable, R: Movable & Deinit
 # Fixed-arity library steps with a shared receiver, such as partials, through
 # the same terminal drivers.
 def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: Binary](
-    step: F, var initial: A, var iterator: I
+    var iterator: I, var initial: A, step: F
 ) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A:
     """Fold with a library `Binary` step, such as a partial with two remaining arguments."""
     return _fold_left[A, F.Second, _Source[I], F.Error, F, _binary_fixed[A, F.Second, F]](step, initial^, _source(iterator^))
 
 
 def reduce_optional[I: Movable & Deinitable, F: Binary](
-    step: F, var iterator: I
+    var iterator: I, step: F
 ) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out:
     """Reduce with a library `Binary` step; empty input gives `None`."""
     return _reduce_optional[F.Out, _Source[I], F.Error, F, _binary_fixed[F.Out, F.Out, F]](step, _source(iterator^))
 
 
 def reduce[A: Movable & Deinitable, I: Movable & Deinitable, F: Binary](
-    step: F, var iterator: I, *, var initial: A
+    var iterator: I, step: F, *, var initial: A
 ) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A:
     """Reduce from an initial value with a library `Binary` step."""
-    return fold_left(step, initial^, iterator^)
+    return fold_left(iterator^, initial^, step)
 
 
 def reduce[I: Movable & Deinitable, F: Binary](
-    step: F, var iterator: I
+    var iterator: I, step: F
 ) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out:
     """Reduce with a library `Binary` step and no initial value."""
     return _reduce_value[F.Out, _Source[I], F.Error, F, _binary_fixed[F.Out, F.Out, F]](step, _source(iterator^))
 
 
 def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, I: Movable & Deinitable, F: Binary](
-    step: F, var initial: A, var iterator: I
+    var iterator: I, var initial: A, step: F
 ) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == _Source[I].Element and F.Out == ControlFlow[B, A]:
     """Fold until `Break` with a library `Binary` step."""
     return _fold_until[A, B, F.Second, _Source[I], F.Error, F, _control_fixed[A, B, F.Second, F]](step, initial^, _source(iterator^))
@@ -349,27 +349,27 @@ def _reduce_value[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable,
 # --- iterator expansion syntax (generated) ---
 # Generated by scripts/generate_plain_overloads.py; algorithms live in the operation owners.
 
-def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var initial: A, var iterator: I) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]:
+def fold_left[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var iterator: I, var initial: A, var step: F) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]:
     """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
     """
     return _fold_left[A, F.Second, _Source[I], F.Error, Pointer[F, origin_of(step)], _binary_repeated[A, F.Second, F, origin_of(step), A]](Pointer(to=step), initial^, _source(iterator^))
 
-def reduce[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]:
+def reduce[A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var iterator: I, var step: F, *, var initial: A) raises F.Error -> A where F.First == A and F.Second == _Source[I].Element and F.Out == A and RepeatableBinary[F]:
     """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
     """
-    return fold_left[A=A, F=F](step^, initial^, iterator^)
+    return fold_left[A=A, F=F](iterator^, initial^, step^)
 
-def reduce_optional[I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out and RepeatableBinary[F]:
+def reduce_optional[I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var iterator: I, var step: F) raises F.Error -> Optional[F.Out] where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out and RepeatableBinary[F]:
     """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
     """
     return _reduce_optional[F.Out, _Source[I], F.Error, Pointer[F, origin_of(step)], _binary_repeated[F.Out, F.Out, F, origin_of(step), F.Out]](Pointer(to=step), _source(iterator^))
 
-def reduce[I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var iterator: I) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out and RepeatableBinary[F]:
+def reduce[I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var iterator: I, var step: F) raises _ReductionFailure[F.Error] -> F.Out where F.First == F.Out and F.Second == F.Out and _Source[I].Element == F.Out and RepeatableBinary[F]:
     """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
     """
     return _reduce_value[F.Out, _Source[I], F.Error, Pointer[F, origin_of(step)], _binary_repeated[F.Out, F.Out, F, origin_of(step), F.Out]](Pointer(to=step), _source(iterator^))
 
-def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var step: F, var initial: A, var iterator: I) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == _Source[I].Element and F.Out == ControlFlow[B, A] and RepeatableBinary[F]:
+def fold_until[B: Movable & Deinitable, A: Movable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var iterator: I, var initial: A, var step: F) raises F.Error -> ControlFlow[B, A] where F.First == A and F.Second == _Source[I].Element and F.Out == ControlFlow[B, A] and RepeatableBinary[F]:
     """Consume a repeatable library step, preserving its mutable receiver and exact fold contract.
     """
     return _fold_until[A, B, F.Second, _Source[I], F.Error, Pointer[F, origin_of(step)], _binary_repeated[A, F.Second, F, origin_of(step), ControlFlow[B, A]]](Pointer(to=step), initial^, _source(iterator^))

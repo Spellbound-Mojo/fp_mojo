@@ -8,4 +8,4 @@ struct NELOnce(OnceUnary):
     comptime Out = Int
     def call_once(deinit self, var arg: Int) -> Int: return arg
 def main():
-    _ = map[NonEmptyListFamily](NELOnce(), NonEmptyList(1))
+    _ = map[NonEmptyListFamily](NonEmptyList(1), NELOnce())

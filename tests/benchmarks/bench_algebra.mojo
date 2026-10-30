@@ -51,7 +51,7 @@ def mapped[library:Bool](n:Int,seed:Int)->Int:
     for index in range(n):
         comptime if library:
             var input=Result[Int,Int](Ok(value)) if index%64 else Result[Int,Int](Err(value))
-            var output=map[ResultFamily[Int]](Mix(),input^)
+            var output=map[ResultFamily[Int]](input^,Mix())
             try:
                 value=output^.raise_on_err()
             except error:
@@ -76,7 +76,7 @@ def collected[library:Bool](n:Int,seed:Int)->Int:
             source.append(code+index+batch)
         var result:List[Int]
         comptime if library:
-            result=traverse[ListFamily,IdentityApplicative](Mix(),source^)
+            result=traverse[ListFamily,IdentityApplicative](source^,Mix())
         else:
             result=List[Int]()
             for item in source^:

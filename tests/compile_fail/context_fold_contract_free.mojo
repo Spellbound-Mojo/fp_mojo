@@ -5,4 +5,4 @@ from fp.iteration import fold_effect, iterated
 from fp.functions import piped
 
 def main():
-    _ = fold_effect[OptionalFamily](Once[OptionalFamily](), 0, List[Int]([1, 2]))
+    _ = fold_effect[OptionalFamily](List[Int]([1, 2]), 0, Once[OptionalFamily]())

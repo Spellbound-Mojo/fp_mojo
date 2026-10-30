@@ -6,7 +6,7 @@ from std.testing import assert_equal
 
 def mapped[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //,
            F: def(var T) -> U](var function: F, var source: I) -> MapIterator[T, U, I, F] where I.Element == T:
-    return map(function^, source^)
+    return map(source^, function^)
 
 
 def mapped_again[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //,

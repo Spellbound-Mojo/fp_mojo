@@ -40,7 +40,7 @@ def i6_owned_source(drops:ArcPointer[Int],failure:Bool=False)->List[I6Owner]:
 
 def main() raises:
     var drops=ArcPointer(0)
-    var selected=find_effect[OptionalFamily](i6_keep,i6_owned_source(drops))
+    var selected=find_effect[OptionalFamily](i6_owned_source(drops),i6_keep)
     var found=selected.take()
     var value=found.take()
     assert_equal(value.text,"keep")
@@ -49,7 +49,7 @@ def main() raises:
     assert_equal(drops[],3)
     drops[]=0
     var calls=ArcPointer(0)
-    var mapped=find_map_effect[ResultFamily[String]](I6OwnedMapper(I6Owner("keep",drops),calls),i6_owned_source(drops)).raise_on_err()
+    var mapped=find_map_effect[ResultFamily[String]](i6_owned_source(drops),I6OwnedMapper(I6Owner("keep",drops),calls)).raise_on_err()
     var moved=mapped.take()
     assert_equal(moved.text,"keep")
     assert_equal(calls[],2);assert_equal(drops[],3)
@@ -59,13 +59,13 @@ def main() raises:
     var failed=iterated(i6_owned_source(drops,True)).find_map_effect[ResultFamily[String]](I6OwnedMapper(I6Owner("keep",drops),calls))
     assert_true(failed.is_err());assert_equal(calls[],2);assert_equal(drops[],4)
     drops[]=0
-    var combined=fold_map_effect[ResultFamily[String],ListMonoid[I6Owner]](i6_list,i6_owned_source(drops)).raise_on_err()
+    var combined=fold_map_effect[ResultFamily[String],ListMonoid[I6Owner]](i6_owned_source(drops),i6_list).raise_on_err()
     assert_equal(combined[0].text,"first");assert_equal(combined[1].text,"keep");assert_equal(combined[2].text,"unvisited")
     assert_equal(drops[],0)
     _=combined^
     assert_equal(drops[],3)
     drops[]=0
-    var failure=fold_map_effect[ResultFamily[String],ListMonoid[I6Owner]](i6_list,i6_owned_source(drops,True))
+    var failure=fold_map_effect[ResultFamily[String],ListMonoid[I6Owner]](i6_owned_source(drops,True),i6_list)
     assert_true(failure.is_err());assert_equal(drops[],3)
     drops[]=0
     var effects=List[Result[Optional[I6Owner],String]]()

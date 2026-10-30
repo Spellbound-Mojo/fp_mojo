@@ -86,7 +86,7 @@ def main() raises:
     var calls = ArcPointer(0)
     var combined_calls = ArcPointer(0)
     var value: IOR = Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))
-    var bound = flat_map[IOS](IOBind(IOToken(2, drops), calls), value^)
+    var bound = flat_map[IOS](value^, IOBind(IOToken(2, drops), calls))
     assert_equal(calls[], 1)
     assert_equal(len(bound[Both[IOE, IOToken]].left), 2)
     assert_equal(bound[Both[IOE, IOToken]].right.id, 1)
@@ -95,7 +95,7 @@ def main() raises:
     assert_equal(drops[], [1, 1, 1, 0, 0])
     drops[] = [0, 0, 0, 0, 0]
     calls[] = 0
-    var skipped = flat_map[IOS](IOBind(IOToken(2, drops), calls), IOR(Left(NonEmptyList(IOToken(0, drops)))))
+    var skipped = flat_map[IOS](IOR(Left(NonEmptyList(IOToken(0, drops)))), IOBind(IOToken(2, drops), calls))
     assert_equal(calls[], 0)
     assert_equal(drops[], [0, 0, 1, 0, 0])
     _ = skipped^
@@ -108,18 +108,18 @@ def main() raises:
         var right: IOR = Both(NonEmptyList(IOToken(2, drops)), IOToken(1, drops))
         var result: IOR
         if accumulating:
-            result = map2_lazy[IOV](IOCombine(IOToken(3, drops), combined_calls), left^, IOThunk(right^, calls))
+            result = map2_lazy[IOV](left^, IOThunk(right^, calls), IOCombine(IOToken(3, drops), combined_calls))
         else:
-            result = map2_lazy[IOS](IOCombine(IOToken(3, drops), combined_calls), left^, IOThunk(right^, calls))
+            result = map2_lazy[IOS](left^, IOThunk(right^, calls), IOCombine(IOToken(3, drops), combined_calls))
         assert_equal(calls[], accumulating)
         assert_equal(combined_calls[], 0)
         assert_equal(drops[], [0, 1, 0 if accumulating else 1, 1, 0])
         _ = result^
         assert_equal(drops[], [1, 1, 1, 1, 0])
     drops[] = [0, 0, 0, 0, 0]
-    var two_values = map2_lazy[IOV](IOCombine(IOToken(4, drops), combined_calls),
-        IOR(Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))),
-        IOThunk(IOR(Both(NonEmptyList(IOToken(2, drops)), IOToken(3, drops))), calls))
+    var two_values = map2_lazy[IOV](IOR(Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))),
+        IOThunk(IOR(Both(NonEmptyList(IOToken(2, drops)), IOToken(3, drops))), calls),
+        IOCombine(IOToken(4, drops), combined_calls))
     assert_equal(drops[], [0, 0, 0, 1, 1])
     assert_equal(len(two_values[Both[IOE, IOToken]].left), 2)
     assert_equal(two_values[Both[IOE, IOToken]].right.id, 1)
@@ -128,9 +128,9 @@ def main() raises:
     drops[] = [0, 0, 0, 0, 0]
     var binary_raised = False
     try:
-        _ = map2_lazy[IOV](IOFailCombine(IOToken(4, drops)),
-            IOR(Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))),
-            IOThunk(IOR(Both(NonEmptyList(IOToken(2, drops)), IOToken(3, drops))), calls))
+        _ = map2_lazy[IOV](IOR(Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))),
+            IOThunk(IOR(Both(NonEmptyList(IOToken(2, drops)), IOToken(3, drops))), calls),
+            IOFailCombine(IOToken(4, drops)))
     except error:
         binary_raised = True
         assert_equal(error, "binary failure")
@@ -139,7 +139,7 @@ def main() raises:
     drops[] = [0, 0, 0, 0, 0]
     var raised = False
     try:
-        _ = map[IOS](io_raise, IOR(Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))))
+        _ = map[IOS](IOR(Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))), io_raise)
     except error:
         raised = True
         assert_equal(error, "callback failure")
@@ -148,8 +148,8 @@ def main() raises:
     drops[] = [0, 0, 0, 0, 0]
     raised = False
     try:
-        _ = flat_map[IorFamily[IOReject]](IOBind(IOToken(2, drops), calls),
-            IOR(Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))))
+        _ = flat_map[IorFamily[IOReject]](IOR(Both(NonEmptyList(IOToken(0, drops)), IOToken(1, drops))),
+            IOBind(IOToken(2, drops), calls))
     except error:
         raised = True
         assert_equal(error, "policy failure")
@@ -157,7 +157,7 @@ def main() raises:
     assert_equal(drops[], [1, 1, 1, 0, 0])
     drops[] = [0, 0, 0, 0, 0]
     calls[] = 0
-    var collected = traverse[ListFamily, IOV](IOVisit(calls, drops), List[Int]([0, 1, 2, 3]))
+    var collected = traverse[ListFamily, IOV](List[Int]([0, 1, 2, 3]), IOVisit(calls, drops))
     assert_equal(calls[], 4)
     assert_equal(drops[], [1, 1, 0, 1, 0])
     assert_equal(collected[Left[IOE]].value.first().id, 2)

@@ -26,7 +26,7 @@ struct Next(OnceUnary):
         var value=argument+self.state.value
         if self.fail:
             raise Token[2](value,self.state.trace)
-        return map[Layer](as_unary(increment),pure[Layer](value))
+        return map[Layer](pure[Layer](value),as_unary(increment))
 
 def main() raises:
     for present in [False,True]:
@@ -40,7 +40,7 @@ def main() raises:
             var value=0
             var got_present=False
             try:
-                var result=run[Base](flat_map[Layer](Next(Token[1](10,trace),fail),pure[Base](optional^)),environment)
+                var result=run[Base](flat_map[Layer](pure[Base](optional^),Next(Token[1](10,trace),fail)),environment)
                 got_present=Bool(result)
                 if result:
                     value=result.take()

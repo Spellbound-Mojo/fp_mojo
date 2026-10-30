@@ -21,7 +21,7 @@ def wc_hear[C: Listen, V: Movable & Deinitable](var value: V) raises C.ListenErr
 
 
 def wc_scope[C: Censor, V: Movable & Deinitable](var value: V) raises C.CensorError[V, WCWrap] -> C.Censored[V, WCWrap] where C.Log.Value == String and C.CensorCompatible[V, WCWrap]:
-    return censor[C](WCWrap(), value^)
+    return censor[C](value^, WCWrap())
 
 
 def main() raises:
@@ -33,19 +33,19 @@ def main() raises:
     var pure_log = run_writer[W](listen[W](pure[W](7)))
     assert_equal(pure_log[1][1], "")
     def next(var unused: NoneType) -> W.Told: return tell[W](String("b"))
-    var ordered = run_writer[W](flat_map[W](next, wc_emit[W](String("a"))))
+    var ordered = run_writer[W](flat_map[W](wc_emit[W](String("a")), next))
     assert_equal(ordered[0], "ab")
     # A scope affects only its argument, not preceding or following writes.
     def scoped_next(var unused: NoneType) -> type_of(wc_scope[W](tell[W](String("b")))):
         return wc_scope[W](tell[W](String("b")))
-    assert_equal(run_writer[W](flat_map[W](scoped_next, tell[W](String("a"))))[0], "a[b]")
+    assert_equal(run_writer[W](flat_map[W](tell[W](String("a")), scoped_next))[0], "a[b]")
     def observed_next(var unused: NoneType) -> type_of(listen[W](tell[W](String("b")))):
         return listen[W](tell[W](String("b")))
-    var scoped_read = run_writer[W](flat_map[W](observed_next, tell[W](String("a"))))
+    var scoped_read = run_writer[W](flat_map[W](tell[W](String("a")), observed_next))
     assert_equal(scoped_read[0], "ab")
     assert_equal(scoped_read[1][1], "b")
     def same(var log: String) -> String: return log^
-    assert_equal(run_writer[W](censor[W](same, tell[W](String("a"))))[0], "a")
+    assert_equal(run_writer[W](censor[W](tell[W](String("a")), same))[0], "a")
     assert_equal(run_writer[W](wc_scope[W](wc_scope[W](tell[W](String("a")))))[0], "[[a]]")
     var heard_before_change = run_writer[W](wc_scope[W](listen[W](tell[W](String("a")))))
     assert_equal(heard_before_change[0], "[a]")
@@ -99,7 +99,7 @@ def main() raises:
     assert_equal(success[1]._ok().value[1], "[t]")
     def fail_after(var unused: NoneType) -> type_of(fail[T, Int](String("stored"))):
         return fail[T, Int](String("stored"))
-    var failed = run_writer[W](wc_hear[TC](wc_scope[TC](flat_map[T](fail_after, tell[TC](String("kept"))))))
+    var failed = run_writer[W](wc_hear[TC](wc_scope[TC](flat_map[T](tell[TC](String("kept")), fail_after))))
     assert_equal(failed[0], "[kept]")
     assert_equal(failed[1]._err().value, "stored")
     # Reversing the stack loses the log on a stored failure.
@@ -120,19 +120,19 @@ def main() raises:
 
     def reject(var text: String) raises Int -> String: raise text.byte_length()
     var code = 0
-    try: _ = censor[TC](reject, tell[TC](String("abc")))
+    try: _ = censor[TC](tell[TC](String("abc")), reject)
     except error:
         comptime assert type_of(error) == Int
         code = error
     assert_equal(code, 3)
     var skipped: Bool
     try:
-        var rejected = run_writer[Discard](censor[Discard](reject, fail[Discard, Int](String("lost"))))
+        var rejected = run_writer[Discard](censor[Discard](fail[Discard, Int](String("lost")), reject))
         skipped = rejected.is_err()
     except error:
         raise Error("censor must not run when the base has no log")
     assert_equal(skipped, True)
     var suffix = String("!")
     def append(var text: String) {suffix} -> String: return text + suffix
-    assert_equal(run_writer[W](censor[W](append, wc_scope[W](tell[W](String("a")))))[0], "[a]!")
+    assert_equal(run_writer[W](censor[W](wc_scope[W](tell[W](String("a"))), append))[0], "[a]!")
     print("Writer capabilities: scoped laws, explicit stacks and sum behavior")

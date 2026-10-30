@@ -13,7 +13,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime B = type_of(b)
     print(a[0], b[0])
     var subject = Result[A, Int](Ok(a))
-    var mapped: Result[B, Int] = map[ResultFamily[type_of(subject).Error]](identity[A], subject^)
+    var mapped: Result[B, Int] = map[ResultFamily[type_of(subject).Error]](subject^, identity[A])
     _ = mapped^
 
 def main():

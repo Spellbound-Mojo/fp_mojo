@@ -19,8 +19,8 @@ def choose(which:Int)->Tree:
     if which==0:
         return Layer._join_left[Pair,Mapped](Layer._join_left[Plain,Mapped](pure[Layer](10)))
     if which==1:
-        return Layer._join_left[Pair,Mapped](Layer._join_right[Plain,Mapped](map[Layer](as_unary(increment),pure[Layer](20))))
-    return Layer._join_right[Pair,Mapped](map[Layer](as_unary(increment),pure[Layer](30)))
+        return Layer._join_left[Pair,Mapped](Layer._join_right[Plain,Mapped](map[Layer](pure[Layer](20),as_unary(increment))))
+    return Layer._join_right[Pair,Mapped](map[Layer](pure[Layer](30),as_unary(increment)))
 
 def next_value(var value:Int)->Plain:
     return pure[Layer](value+10)
@@ -32,11 +32,11 @@ def main() raises:
     var environment=42
     var constructed=run[Base](pure[Layer](2),environment)
     assert_equal(constructed.take(),2)
-    var mapped=run[Base](map[Layer](as_unary(increment),pure[Layer](2)),environment)
+    var mapped=run[Base](map[Layer](pure[Layer](2),as_unary(increment)),environment)
     assert_equal(mapped.take(),3)
-    var bound=run[Base](flat_map[Layer](as_unary(next_value),pure[Layer](2)),environment)
+    var bound=run[Base](flat_map[Layer](pure[Layer](2),as_unary(next_value)),environment)
     assert_equal(bound.take(),12)
-    var skipped=run[Base](flat_map[Layer](as_unary(next_value),pure[Base](Optional[Int]())),environment)
+    var skipped=run[Base](flat_map[Layer](pure[Base](Optional[Int]()),as_unary(next_value)),environment)
     assert_true(not skipped)
     var expected:List[Int]=[10,21,31]
     for which in range(3):

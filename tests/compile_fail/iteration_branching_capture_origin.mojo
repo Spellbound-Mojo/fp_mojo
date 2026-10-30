@@ -12,7 +12,7 @@ struct I3BorrowedPredicate[o: ImmOrigin](BorrowCallable):
 
 def check(anchor: Int):
     var local = 2
-    var expected = partition(I3BorrowedPredicate(Pointer(to=anchor)),range(3),buffer=Unbounded())
-    var actual = partition(I3BorrowedPredicate(Pointer(to=local)),range(3),buffer=Unbounded())
+    var expected = partition(range(3),I3BorrowedPredicate(Pointer(to=anchor)),buffer=Unbounded())
+    var actual = partition(range(3),I3BorrowedPredicate(Pointer(to=local)),buffer=Unbounded())
     expected = actual^
 def main(): check(1)

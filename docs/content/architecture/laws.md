@@ -33,18 +33,18 @@ For every instance `I` (`IdentityFamily`, `OptionalFamily`, `ResultFamily[E]`,
 `ListFamily` and the transformers):
 
 ```text
-map[I](identity, v)                  = v
-map[I](g, map[I](f, v))              = map[I](compose(g, f), v)
+map[I](v, identity)                  = v
+map[I](map[I](v, f), g)              = map[I](v, compose(g, f))
 
-flat_map[I](f, pure[I](x))           = f(x)
-flat_map[I](pure[I], m)              = m
-flat_map[I](g, flat_map[I](f, m))    = flat_map[I](x -> flat_map[I](g, f(x)), m)
+flat_map[I](pure[I](x), f)           = f(x)
+flat_map[I](m, pure[I])              = m
+flat_map[I](flat_map[I](m, f), g)    = flat_map[I](m, x -> flat_map[I](f(x), g))
 ```
 
 For `ResultFamily[E]` the laws hold on both cases: an `Err` passes through every
 operation unchanged, because callbacks never run on the inactive case. The
-instance's operations are the Result methods, so `map[ResultFamily[E]](f, r)` is
-`r.map(f)` and `flat_map[ResultFamily[E]](f, r)` is `r.flat_map(f)`.
+instance's operations are the Result methods, so `map[ResultFamily[E]](r, f)` is
+`r.map(f)` and `flat_map[ResultFamily[E]](r, f)` is `r.flat_map(f)`.
 
 Traversal preserves the source's shape and callback order, and stops at the
 first failure or absence without pulling another element; these are tested as
@@ -78,7 +78,7 @@ whether a `Node`, a `Choice`, a `Result` or an `Optional`.
 For finite inputs and compatible value semantics:
 
 ```text
-fold_left(step, init, chain(xs, ys)) = fold_left(step, fold_left(step, init, xs), ys)
+fold_left(chain(xs, ys), init, step) = fold_left(ys, fold_left(xs, init, step), step)
 ```
 
 This law does not require `step` to be associative, and the tests use
@@ -86,7 +86,7 @@ subtraction to make that visible. Reassociating a reduction would need
 additional assumptions and is never done implicitly.
 
 Lazy adapters obey the list laws of their eager counterparts: `map` preserves
-order and length, `map(g, map(f, xs))` equals `map(compose(g, f), xs)`, `filter`
+order and length, `map(map(xs, f), g)` equals `map(xs, compose(g, f))`, `filter`
 keeps the relative order of accepted elements, and `flat_map` equals `map`
 followed by `flatten`.
 

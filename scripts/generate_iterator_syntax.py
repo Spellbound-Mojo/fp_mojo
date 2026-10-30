@@ -47,7 +47,7 @@ def prefixes(mode):
             args=[shared.argument if shared else 'var predicate: '+cb]+(['var source: V'] if mode=='free' else [])
             result=f'{"Take" if taking else "Drop"}WhileIterator[{t}, {it}, {cb}]'
             build=shared.build if shared else 'predicate'+('' if kind=='thin' else '^')
-            call=f'_Prefix[{t}, {it}, {cb}, {taking}]({build}, _source(source^), True, False)' if mode=='free' else f'_{name}({build}, self._iterator^)'
+            call=f'_Prefix[{t}, {it}, {cb}, {taking}]({build}, _source(source^), True, False)' if mode=='free' else f'_{name}(self._iterator^, {build})'
             if mode!='free':args.insert(0,'deinit self'); result=f'Iter[{result}]';call=f'Iter({call})'
             out+=emit(name,params,args,result,condition,'return '+call,desc,'Construction pulls nothing. The stored predicate borrows each candidate and cannot raise.\nExhaustion is fused; abandonment releases captures and the unconsumed source.\nUses constant state and preserves move-only elements and embedded origins.',indent='' if mode=='free' else '    ',docs=kind=='thin')
     return out
@@ -87,7 +87,7 @@ def indexed(mode):
                 # Fluent zip takes the peer before the callback.
                 if iszip:args=['deinit self','var other: W',shared.argument if shared else 'var function: '+cb]
                 result='Iter['+result+']'
-                body='return Iter(_'+name+'('+value+', self._iterator^'+(', other^)' if iszip else ', start=start)')+')'
+                body='return Iter(_'+name+'(self._iterator^, '+('other^, '+value+')' if iszip else value+', start=start)')+')'
             summary='Lazily combine pairs using native left-to-right zip followed by map.' if iszip else 'Lazily map (index, owned element), using native enumerate then map.'
             out+=emit(name,params,args,result,condition,body,summary,'Construction is inert; each output moves its inputs into the non-raising callback.\n'+('Native zip can consume an earlier input before a later one ends.\n' if iszip else '')+'Mapping fuses exhaustion and retains owned captures, move-only results and native origins.',indent='' if mode=='free' else '    ',docs=kind=='thin')
     return out
@@ -118,7 +118,7 @@ def terminals(mode):
         if mode=='iter':body='return _'+name+('[S=S]' if name=='combine_all_optional' else '')+f'({src}'+(', value)' if name=='contains' else ')')
         elif name=='first':body='return _source(source^).nth(0)'
         elif name=='is_empty':body='return not first(source^)'
-        elif name=='contains':body='return _any(_EqualTo[T, o](Pointer(to=value)), source^)'
+        elif name=='contains':body='return _any(source^, _EqualTo[T, o](Pointer(to=value)))'
         elif name=='to_non_empty_list':body=f'return NonEmptyList[{t}].from_list(collect_list[T={t}](source^))'
         elif name=='combine_all_optional':body=f'return _map_accumulate[_Source[V], Identity[S.Value], _OptionalCombine[S], S.Error](Identity[S.Value](), _source(source^), Optional[S.Value]())'
         else:
@@ -218,7 +218,7 @@ def branching(mode):
                 body=f'return _branches[{a}, {b}](_source({src}), {route}, buffer^)'
             else:
                 forward='[T=T'+('' if ispart else ', U=U')+']' if kind in ('thin','native') else ''
-                body=f'return _{name}{forward}({value}, {src}, buffer=buffer^)'
+                body=f'return _{name}{forward}({value}, {src}, buffer=buffer^)' if mode=='free' else f'return _{name}{forward}({src}, {value}, buffer=buffer^)'
             out+=emit(name,params,args,result,condition,body,'Lazily split accepted and rejected elements into independent iterators.' if ispart else 'Lazily route Result payloads into independent Ok and Err iterators.',detail,indent=ind,docs=kind=='thin')
     params=[f'A: {MD}',f'B: {MD}']+([f'V: {MD}'] if mode=='free' else [])+['P: _BufferPolicy']
     args=(['var source: V'] if mode=='free' else ['deinit self'])+['*','var buffer: P']
@@ -259,7 +259,7 @@ def alignment(mode):
             else:
                 args=['deinit self','var other: W']+([shared.argument if shared else 'var function: '+cb] if name=='align_with' else [])
                 explicit='[A=A, B=B'+(', T=T, U=U' if kind in ['thin','native'] else '')+']'
-                call=f'_{name}{explicit}('+(value+', ' if name=='align_with' else '')+f'{src}, other^)'
+                call=f'_{name}{explicit}({src}, other^'+(', '+value if name=='align_with' else '')+')'
                 result=f'Iter[{result}]';body=f'return Iter({call})'
             summary={'align':'Align positions to Ior until both sources end, without truncating either side.','pad_zip':'Align positions to pairs of Optional fields, never yielding two absent fields.','align_with':'Map each owned Ior from alignment through a non-raising callback.'}[name]
             out+=emit(name,params,args,result,cond,body,summary,detail,indent=ind,docs=kind in ('plain','thin'))
@@ -282,13 +282,19 @@ def scans(mode):
         condition=f'{it}.Element == T'
         if metadata:condition+=f' and {metadata.inputs[0]} == A and {metadata.inputs[1]} == T and {metadata.result} == Tuple[A, Y] and {metadata.error} == Never and RepeatableBinary[{cb}]'
         else:condition+=' and R == Tuple[A, Y]'
-        args=[shared.argument if shared else 'var function: '+cb,'var initial: A']+(['var source: V'] if mode=='free' else [])
+        # A free closure's carry is inferred from the closure; initial has its
+        # own parameter, since a closure input fixed by an earlier argument
+        # crashes Mojo 1.2 on mismatched callbacks.
+        own = mode=='free' and kind=='native'
+        if own:params.insert(0,f'A0: {MD}');condition='A0 == A and '+condition
+        args=[shared.argument if shared else 'var function: '+cb,'var initial: '+('A0' if own else 'A')]+(['var source: V'] if mode=='free' else [])
         result=f'ScanMapIterator[A, T, Y, {it}, {cb}]'
         val=shared.build if shared else 'function'+('' if kind=='thin' else '^')
-        if mode=='free':body=f'return {result}({val}, initial^, _source({src}), False, False)'
+        initial='rebind_var[A](initial^)' if own else 'initial^'
+        if mode=='free':body=f'return {result}({val}, {initial}, _source({src}), False, False)'
         else:
             args.insert(0,'deinit self');result=f'Iter[{result}]'
-            body=f'return Iter(_scan_map[A=A, T=T, Y=Y]({val}, initial^, {src}))'
+            body=f'return Iter(_scan_map[A=A, T=T, Y=Y]({src}, initial^, {val}))'
         out+=emit('scan_map',params,args,result,condition,body,'Lazily consume (carry, input) into (new carry, output), yielding one output per input.','Construction pulls nothing and there is no initial output. The carry need not be Copyable.\nEach non-raising step moves both arguments; output and carry may have different types.\nExhaustion is fused. Abandonment releases carry, callback and source; final carry is not exposed.',indent=ind,docs=kind=='thin')
     return out + map_accumulate(mode)
 
@@ -382,10 +388,11 @@ def folds(mode):
         if not free or name == 'reduce' and initialized:
             explicit = (['B=B'] if control else []) + (['A=A'] if initialized else []) + ['F=F']
             target = '_' + name if not free else 'fold_left'
-            values = ['step^'] + (['initial^'] if initialized and (name != 'reduce' or free) else [])
-            values += [source if not free else 'iterator^']
+            values = [source] + (['initial^'] if initialized and name != 'reduce' else []) + ['step^']
             if initialized and name == 'reduce' and not free:
                 values += ['initial=initial^']
+            if free:
+                values = ['iterator^', 'initial^', 'step^']  # the value-first free fold_left
             body = f'return {target}[{", ".join(explicit)}]({", ".join(values)})'
         else:
             driver = '_fold_until' if control else '_fold_left' if initialized else '_reduce_value' if name == 'reduce' else '_reduce_optional'
@@ -414,7 +421,7 @@ def predicate_searches(mode):
             driver = '_find' if name == 'find' else '_quantify'
             body = f'return {driver}[{t}, {it}, C.Failure, Pointer[C, origin_of(predicate)], _predicate_repeated[{t}, C, origin_of(predicate)]](Pointer(to=predicate), _source(source^)' + (')' if name == 'find' else ', ' + str(name == 'any') + ')')
         else:
-            body = f'return _{name}[C=C](predicate^, self._iterator^)'
+            body = f'return _{name}[C=C](self._iterator^, predicate^)'
         out += emit(name, params, args, result, condition, body,
                     'Search with an owned repeatable borrowing predicate, preferring its mutable receiver.',
                     error='C.Failure', indent='' if free else '    ', docs=False)

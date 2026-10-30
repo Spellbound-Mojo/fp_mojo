@@ -44,7 +44,7 @@ def exercise_filter(library: Bool, length: Int, count: Int, copies: ArcPointer[I
     var source = Source(values^, pulls)
     var output = List[Int]()
     if library:
-        var selected = filter(callback^, source^)
+        var selected = filter(source^, callback^)
         assert_equal(copies[], 0)
         assert_equal(calls[], 0)
         assert_equal(pulls[], 0)
@@ -71,7 +71,7 @@ def exercise_filter_map(library: Bool, length: Int, count: Int, copies: ArcPoint
     var source = Source(values^, pulls)
     var output = List[Int]()
     if library:
-        var selected = filter_map(callback^, source^)
+        var selected = filter_map(source^, callback^)
         assert_equal(copies[], 0)
         assert_equal(calls[], 0)
         assert_equal(pulls[], 0)

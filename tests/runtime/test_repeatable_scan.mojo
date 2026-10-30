@@ -20,10 +20,10 @@ struct Step(MutableBinary, OnceBinary):
 
 def scanned[A: Copyable & Deinitable, I: Iterator, F: BinaryContract & Movable & Deinitable](var callback: F, var initial: A, var source: I
 ) -> ScanIterator[A, F.Second, I, F] where F.First == A and F.Second == I.Element and F.Out == A and F.Error == Never and RepeatableBinary[F]:
-    return scan_left[A=A, F=F](callback^, initial^, source^)
+    return scan_left[A=A, F=F](source^, initial^, callback^)
 
 def main() raises:
-    assert_equal(iterated(scan_left(Join(0), 2, range(2, 4))).collect_list(), [2, 5, 17])
+    assert_equal(iterated(scan_left(range(2, 4), 2, Join(0))).collect_list(), [2, 5, 17])
     assert_equal(iterated(range(2, 4)).scan_left(Join(0), 2).collect_list(), [2, 5, 17])
     assert_equal(iterated(scanned(Join(0), 2, range(2, 4))).collect_list(), [2, 5, 17])
     assert_equal(iterated(range(2, 4)).scan_left[A=Int](flip(Join(0)), 2).collect_list(), [2, 5, 17])

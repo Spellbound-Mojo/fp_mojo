@@ -8,7 +8,7 @@ def main():
     var second = 2
     comptime I = Reader[Int]
     var pending = I.collect(Produce(Pointer(to=first)), List[Int]([1]))
-    var mapped = map[I](Length(), pending^)
+    var mapped = map[I](pending^, Length())
     try:
         _ = run[I](mapped^, second)
     except error:

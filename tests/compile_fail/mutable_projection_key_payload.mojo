@@ -8,4 +8,4 @@ struct Wrong(BorrowMutableCallable):
     comptime Result=Int
     def __init__(out self):pass
     def invoke_mut(mut self,ref value:String)->Self.Result:return 1
-def main() raises:_=min_by(Wrong(),range(3))
+def main() raises:_=min_by(range(3),Wrong())

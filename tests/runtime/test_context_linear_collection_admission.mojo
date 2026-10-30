@@ -57,7 +57,7 @@ def main() raises:
     comptime assert not R.CollectCompatible[List[Int],OnceNext[R]]
     comptime assert not A.CollectCompatible[List[Int],OnceNext[A]]
     comptime assert R.BindCompatible[Result[Int,String],OnceNext[R]]
-    var bound=flat_map[R](OnceNext[R](),Result[Int,String](Ok(3)))
+    var bound=flat_map[R](Result[Int,String](Ok(3)),OnceNext[R]())
     assert_equal(bound._ok().value,4)
     comptime assert IdentityFamily._LoopCompatible[List[Int],Next[IdentityFamily],OwnedAccumulator]
     comptime assert OptionalFamily._LoopCompatible[List[Int],Next[OptionalFamily],OwnedAccumulator]

@@ -91,7 +91,7 @@ def run_result(counter: ArcPointer[Int], success: Bool):
         value = Result[R, R](Ok(R(counter, 10)))
     else:
         value = Result[R, R](Err(R(counter, 20)))
-    var mapped = map[ResultFamily[type_of(value).Error]](preserve, value^)
+    var mapped = map[ResultFamily[type_of(value).Error]](value^, preserve)
     debug_assert[assert_mode="safe"](mapped.is_ok() == success)
 
 

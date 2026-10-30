@@ -22,21 +22,21 @@ struct Dual(Binary, MutableBinary, ImplicitlyCopyable):
     def call_mut(mut self, var carry: Int, var item: Int) -> Self.Out: return (carry + item, String("mutable"))
 
 def generic[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable, F: Binary, I: Iterator](var callback: F, var initial: A, var source: I) -> ScanMapIterator[A, T, Y, I, F] where I.Element == T and F.First == A and F.Second == T and F.Out == Tuple[A, Y] and F.Error == Never:
-    return scan_map[A=A, T=T, Y=Y](callback^, initial^, source^)
+    return scan_map[A=A, T=T, Y=Y](source^, initial^, callback^)
 
 def main() raises:
     var callback = partial(step, 2)
-    assert_equal(iterated(scan_map(callback, 0, range(3))).collect_list(), ["0","2","6"])
+    assert_equal(iterated(scan_map(range(3), 0, callback)).collect_list(), ["0","2","6"])
     assert_equal(iterated(range(3)).scan_map(callback, 0).collect_list(), ["0","2","6"])
-    assert_equal(iterated(scan_map[Int, Int, String](callback, 0, range(3))).collect_list(), ["0","2","6"])
+    assert_equal(iterated(scan_map[Int, Int, String](range(3), 0, callback)).collect_list(), ["0","2","6"])
     assert_equal(iterated(range(3)).scan_map[Y=String](callback, 0).collect_list(), ["0","2","6"])
     assert_equal(iterated(range(3)).scan_map(partial(step, 2), 0).collect_list(), ["0","2","6"])
     var chain = flow(pair, retain)
-    assert_equal(iterated(scan_map(chain, 0, range(3))).collect_list(), ["0","2","6"])
+    assert_equal(iterated(scan_map(range(3), 0, chain)).collect_list(), ["0","2","6"])
     assert_equal(iterated(range(3)).scan_map(chain, 0).collect_list(), ["0","2","6"])
     assert_equal(iterated(range(3)).scan_map(callback^, 0).collect_list(), ["0","2","6"])
     var flipped = flip(reversed_pair)
-    assert_equal(iterated(scan_map(flipped, 0, range(3))).collect_list(), ["0","2","6"])
+    assert_equal(iterated(scan_map(range(3), 0, flipped)).collect_list(), ["0","2","6"])
     assert_equal(iterated(range(3)).scan_map(flipped, 0).collect_list(), ["0","2","6"])
     assert_equal(iterated(generic[Int, Int, String](partial(step, 2), 0, range(3))).collect_list(), ["0","2","6"])
     var dual = Dual()

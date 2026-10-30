@@ -55,5 +55,5 @@ def main() raises:
     comptime assert not W.CollectCompatible[List[Int],Next[IdentityFamily]]
     comptime Fallible=Writer[FallibleLog]
     comptime assert not Fallible._LoopCompatible[List[Int],Next[Fallible],StringAcc]
-    assert_equal(run_writer[W](traverse[ListFamily,W](Next[W](),List[Int]([1,2])))[1],[2,3])
-    assert_equal(run_writer[W](traverse[OptionalFamily,W](OnceNext[W](),Optional(2)))[1].value(),3)
+    assert_equal(run_writer[W](traverse[ListFamily,W](List[Int]([1,2]),Next[W]()))[1],[2,3])
+    assert_equal(run_writer[W](traverse[OptionalFamily,W](Optional(2),OnceNext[W]()))[1].value(),3)

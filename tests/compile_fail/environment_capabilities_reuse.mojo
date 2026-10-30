@@ -5,6 +5,6 @@ def main():
     comptime R = Reader[Int]
     comptime S = StateT[R, Int]
     comptime C = LiftLocal[S, R]
-    var scoped = local[C](same, ask[C]())
+    var scoped = local[C](ask[C](), same)
     _ = run[S](scoped^, 0)
     _ = run[S](scoped^, 0)

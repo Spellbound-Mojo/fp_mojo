@@ -14,7 +14,7 @@ def check[a: ImmOrigin](ref[a] first: Int) raises:
     comptime assert I.RunCompatible[I.Bound[Collected, Continue], a]
     # The single-value Optional source consumes its producer once and never
     # uses the collection hook, so its existing consuming API stays available.
-    var single = traverse[OptionalFamily, I](Once(), Optional(7))
+    var single = traverse[OptionalFamily, I](Optional(7), Once())
     assert_equal(run[I](single^, first).value(), 7)
     for value in [-1, 1]:
         var caught = False

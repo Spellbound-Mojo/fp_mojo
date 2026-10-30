@@ -47,8 +47,8 @@ receives a reference to the stored constructor or value. To move a value out,
 use the type's consuming methods: `Result.fold_owned`, `Choice.unwrap`,
 `Optional.take`.
 
-For iteration, pass a native iterator or an owned collection. `fold_left(add, 0,
-values^)` consumes the collection, as `iter(values^)` does, and receives owned
+For iteration, pass a native iterator or an owned collection. `fold_left(values^, 0,
+add)` consumes the collection, as `iter(values^)` does, and receives owned
 elements; `iter(values)` borrows it and yields whatever the standard iterator
 yields for a borrowed collection. A collection passed without `^` is an implicit
 copy, which Mojo rejects for `List`.

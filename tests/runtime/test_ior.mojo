@@ -78,44 +78,44 @@ def main() raises:
     var calls = ArcPointer(0)
     var combines = ArcPointer(0)
     for a in range(3):
-        var mapped = map[IS](ir_twice, ir_case(a, 2, "a"))
+        var mapped = map[IS](ir_case(a, 2, "a"), ir_twice)
         ir_check(mapped, a != 0, "" if a == 1 else "a", 4)
         for b in range(3):
             calls[] = 0
             combines[] = 0
-            var seq = map2_lazy[IS](IRAdd(combines), ir_case(a, 2, "a"), IRNext(calls, b))
+            var seq = map2_lazy[IS](ir_case(a, 2, "a"), IRNext(calls, b), IRAdd(combines))
             assert_equal(calls[], 0 if a == 0 else 1)
             assert_equal(combines[], 1 if a != 0 and b != 0 else 0)
             var issues = String("" if a == 1 else "a")
             if a != 0 and b != 1: issues += "b"
             ir_check(seq, a != 0 and b != 0, issues, 5)
             calls[] = 0
-            var bound = flat_map[IS](IRStep(calls, b), ir_case(a, 2, "a"))
+            var bound = flat_map[IS](ir_case(a, 2, "a"), IRStep(calls, b))
             assert_equal(calls[], 0 if a == 0 else 1)
             ir_check(bound, a != 0 and b != 0, issues, 5)
             calls[] = 0
             combines[] = 0
-            var accumulated = map2_lazy[IV](IRAdd(combines), ir_case(a, 2, "a"), IRNext(calls, b))
+            var accumulated = map2_lazy[IV](ir_case(a, 2, "a"), IRNext(calls, b), IRAdd(combines))
             assert_equal(calls[], 1)
             assert_equal(combines[], 1 if a != 0 and b != 0 else 0)
             issues = "" if a == 1 else "a"
             if b != 1: issues += "b"
             ir_check(accumulated, a != 0 and b != 0, issues, 5)
     calls[] = 0
-    var seq = traverse[ListFamily, IS](IRVisit(calls), List[Int]([1, -2, 3, -4]))
+    var seq = traverse[ListFamily, IS](List[Int]([1, -2, 3, -4]), IRVisit(calls))
     assert_equal(calls[], 2)
     assert_equal(seq[Left[String]].value, "1-2")
     calls[] = 0
-    var acc = traverse[ListFamily, IV](IRVisit(calls), List[Int]([1, -2, 3, -4]))
+    var acc = traverse[ListFamily, IV](List[Int]([1, -2, 3, -4]), IRVisit(calls))
     assert_equal(calls[], 4)
     assert_equal(acc[Left[String]].value, "1-23-4")
-    var success = traverse[ListFamily, IV](IRVisit(calls), List[Int]([1, 2]))
+    var success = traverse[ListFamily, IV](List[Int]([1, 2]), IRVisit(calls))
     assert_equal(success[Both[String, List[Int]]].left, "12")
     assert_equal(success[Both[String, List[Int]]].right, [10, 20])
-    var empty = traverse[ListFamily, IV](IRVisit(calls), List[Int]())
+    var empty = traverse[ListFamily, IV](List[Int](), IRVisit(calls))
     assert_equal(empty[Right[List[Int]]].value, List[Int]())
     comptime NE = IorValidationFamily[NonEmptyListSemigroup[Int]]
-    var nonempty = traverse[ListFamily, NE](ir_nonempty, List[Int]([1, -2, 3]))
+    var nonempty = traverse[ListFamily, NE](List[Int]([1, -2, 3]), ir_nonempty)
     assert_equal(nonempty[Left[NonEmptyList[Int]]].value.copy().into_list(), [1, -2, 3])
     var piped_value = piped(IR(Both(String("warning"), 5))).map[IS](ir_twice).get()
     ir_check(piped_value, True, "warning", 10)
@@ -132,16 +132,16 @@ def main() raises:
     calls[] = 0
     var iterator = iter(List[Int]([99, 1, 2]))
     _ = iterator.__next__()
-    var continued = traverse[ListFamily, IV](IRVisit(calls), iterator^)
+    var continued = traverse[ListFamily, IV](iterator^, IRVisit(calls))
     assert_equal(calls[], 2)
     assert_equal(continued[Both[String, List[Int]]].right, [10, 20])
     assert_equal(continued[Both[String, List[Int]]].left, "12")
     var piped_bound = piped(IR(Both(String("a"), 2))).flat_map[IS](IRStep(calls, 2)).get()
     ir_check(piped_bound, True, "ab", 5)
-    ir_check(map[IS](ir_twice, IR(Left(String()))), False, "", 0)
-    ir_check(map[IS](ir_twice, IR(Both(String(), 0))), True, "", 0)
-    var unit = map[IS](ir_drop, IR(Right(1)))
+    ir_check(map[IS](IR(Left(String())), ir_twice), False, "", 0)
+    ir_check(map[IS](IR(Both(String(), 0)), ir_twice), True, "", 0)
+    var unit = map[IS](IR(Right(1)), ir_drop)
     assert_true(unit.isa[Right[NoneType]]())
-    var kept_unit = map[IS](Identity[NoneType](), unit^)
+    var kept_unit = map[IS](unit^, Identity[NoneType]())
     assert_true(kept_unit.isa[Right[NoneType]]())
     print("ior: ok")

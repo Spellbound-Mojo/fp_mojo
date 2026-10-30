@@ -420,6 +420,114 @@ def native_factories(mode, payloads, *, name="function", result="R", error="E", 
                 yield NativeFactory(parameters, pointer, signature, adapter, abi)
 
 
+
+@dataclass(frozen=True)
+class Admission:
+    """One callback form an entry point declares, and the value it passes on.
+
+    `parameters` are inferred and precede the operation's `//`; `explicit`
+    follow the operation's own parameters. `conditions` join the operation's
+    where clause. `type` is the library value the operation receives, and
+    `build` produces it from the argument.
+    """
+
+    kind: str
+    raising: bool
+    parameters: tuple
+    explicit: tuple
+    argument: str
+    type: str
+    build: str
+    inputs: tuple
+    result: str
+    error: str
+    conditions: tuple
+
+
+_CONVENTIONS = {"owned": "o", "borrow": "r", "binary": "o", "thunk": ""}
+_NATIVE = {"owned": "Unary", "borrow": "Borrowing", "binary": "Binary", "thunk": "Thunk"}
+
+
+def admissions(mode, elements=(), *, arg="function", fixed_error=None, known_closure=False,
+               library=True, view=True, repeatable=False, names=None, result_register=None):
+    """Every form an entry point declares for one callback, and nothing else.
+
+    `elements` are the callback's operand types, already known from earlier
+    arguments or from `Self`; value-first free functions and every fluent
+    surface know them. Forms, each required on Mojo 1.2:
+
+    - library callable and shared view; the operation's contract checks
+      their inputs;
+    - closures, pure and raising. Their inputs are inferred and related to the
+      elements in `where`: spelling a closure input with a value-dependent
+      element crashes the compiler on a mismatched callback. A surface whose
+      elements are fixed by `Self` may spell them directly (`known_closure`).
+      With `fixed_error` (a surface's selected error) the raising closures are
+      `raises <fixed_error>` and `raises Never`, because inferring a closure
+      error crashes on wrong arity, convention or `mut`;
+    - plain functions, pure with memory and register results (stored
+      register-result pointers need the split) and raising with one result
+      bound. Borrowed register payloads carry their own evidence.
+
+    `names` renames C (the closure type), L (the library type, default C), R,
+    X, o and the fresh inputs in0, in1, so a surface keeps its public
+    parameter names. `result_register` fixes the plain-function result
+    bound when the operation fixes the result (a `Bool` predicate).
+    """
+    names = {"C": "C", "R": "R", "X": "X", "o": "o", **(names or {})}
+    C, R, X, o = names["C"], names["R"], names["X"], names["o"]
+    convention = _CONVENTIONS[mode]
+    elements = tuple(elements)
+    if len(elements) != len(CALLBACK_SHAPES[mode].inputs):
+        raise ValueError("Callback shape and elements must agree")
+    fresh = tuple(names.get(f"in{i}", f"{C}{i}") for i in range(len(elements)))
+    out = []
+    if library:
+        L = names.get("L", C)
+        trait = callable_protocol(mode, repeatable=repeatable)
+        metadata = callable_metadata(mode, L)
+        out.append(Admission(
+            "library", False, (), (f"{L}: {trait}" + ("" if repeatable else f" & {MD}"),), f"var {arg}: {L}",
+            L, arg + "^", metadata.inputs, metadata.result, metadata.error, ()))
+    if view and mode in ("owned", "borrow", "binary"):
+        shared = callback(mode, "view", arg=arg).renamed({"C": C, "o": o})
+        out.append(Admission(
+            "view", False, tuple(shared.parameters), (), shared.argument, shared.type, shared.build,
+            (shared.payload,) if shared.payload else (), shared.result, shared.error, ()))
+    # Closures, borrowed in place.
+    inputs = elements if known_closure else fresh
+    relations = () if known_closure else tuple(f"{e} == {i}" for e, i in zip(elements, inputs))
+    input_params = () if known_closure else tuple(
+        (f"{i}: AnyType" if convention == "r" else f"{i}: {MD}") for i in inputs)
+    spelled = ", ".join((i if convention == "r" else "var " + i) for i in inputs)
+    efforts = ([("Never", False, ""), (fixed_error, True, ""), ("Never", True, f"{fixed_error} != Never")]
+               if fixed_error else [("Never", False, ""), (X, True, "")])
+    for error, raising, guard in efforts:
+        signature = f"def({spelled})" + (f" raises {error}" if raising else "") + f" -> {R}"
+        adapter = native_adapter(mode, list(inputs), R, error, C, raising, origin=o)
+        explicit = ((f"{X}: {MD}",) if raising and error == X else ()) + (f"{C}: {signature}",)
+        out.append(Admission(
+            "closure", raising, (*input_params, f"{R}: {MD}", f"{o}: ImmOrigin"), explicit,
+            f"ref[{o}] {arg}: {C}", adapter, f"{adapter}(Pointer(to={arg}))", tuple(inputs), R, error,
+            relations + ((guard,) if guard else ())))
+    # Plain functions, copied into an owned callable.
+    operands = [Operand(e, convention, read_parameter=names.get(f"read{i}", f"{C}P{i}"))
+                for i, e in enumerate(elements)]
+    for raising in (False, True):
+        bound = result_register if result_register is not None else (False if raising else None)
+        for abi in variants(operands, R, result_register=bound):
+            error = X if raising else "Never"
+            signature = ("def(" + ", ".join(argument(p, op.convention, thin=True) for p, op in zip(abi.payloads, operands))
+                         + ")" + (f" raises {X}" if raising else "") + f" thin -> {R}")
+            adapter = native_adapter(mode, list(abi.payloads), R, error, f"type_of({arg})", raising)
+            conditions = tuple(c for c in abi.conditions if not (raising and c == f"not conforms_to({R}, RegisterPassable)"))
+            if raising and fixed_error:
+                conditions += (f"_ErrorCompatible[{fixed_error}, {X}]",)
+            out.append(Admission(
+                "thin", raising, tuple(f"{p}: {b}" for p, b in abi.parameters) + ((f"{X}: {MD}",) if raising else ()), (),
+                f"{arg}: {signature}", adapter, f"{adapter}({arg})", tuple(abi.payloads), R, error, conditions))
+    return out
+
 # Dispatch is separate from admission: the complete native F is already known.
 # Concrete ABI witnesses must be introduced in comptime branches before forming
 # its function type, including register results and borrowed register operands.

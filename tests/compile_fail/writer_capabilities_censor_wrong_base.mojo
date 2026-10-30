@@ -5,4 +5,4 @@ def same(var log: String) -> String: return log^
 def main():
     comptime W = Writer[StringMonoid]
     comptime R = ReaderT[W, Int]
-    _ = censor[LiftCensor[ReaderT[State[Int], Int], W]](same, R.lift(tell[W](String("a"))))
+    _ = censor[LiftCensor[ReaderT[State[Int], Int], W]](R.lift(tell[W](String("a"))), same)

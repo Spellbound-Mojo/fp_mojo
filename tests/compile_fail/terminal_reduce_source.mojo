@@ -12,7 +12,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     def step(var acc: A, var item: A) -> A: return acc
     try:
-        _ = reduce[T=A](step, iter(List[B]()))
+        _ = reduce[T=A](iter(List[B]()), step)
     except: pass
 
 def main():

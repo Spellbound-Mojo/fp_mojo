@@ -9,7 +9,7 @@ from std.testing import assert_equal
 def nelg_map[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable,
              F: def(var A) raises X -> B](var values: NonEmptyList[A], ref f: F
 ) raises X -> NonEmptyList[B]:
-    return map[NonEmptyListFamily, X=X](f, values^)
+    return map[NonEmptyListFamily, X=X](values^, f)
 
 def nelg_same[o: ImmOrigin](var value: Span[Int, o]) raises String -> Span[Int, o]:
     return value
@@ -37,7 +37,7 @@ def main() raises:
     singleton.first()[0] = 7
     _ = singleton^
     assert_equal(mutable_values[0], 7)
-    var effect = traverse[NonEmptyListFamily, Reader[Int]](nelg_produce, NonEmptyList(1, List[Int]([2])))
+    var effect = traverse[NonEmptyListFamily, Reader[Int]](NonEmptyList(1, List[Int]([2])), nelg_produce)
     var result = run[Reader[Int]](effect^, 42)
     assert_equal(result^.into_list(), [1, 2])
     print("non-empty list generic: ok")

@@ -21,6 +21,6 @@ def main() raises:
     var result = run[State[Int]](count^, 7)
     assert_equal(result, (10, 7))
     print("count:", result[0], "state:", result[1])
-    var completed = tail_rec_m[OptionalFamily](count_step, 0)
+    var completed = tail_rec_m[OptionalFamily](0, count_step)
     assert_equal(completed.value(), 100000)
     print("loop:", completed.value())

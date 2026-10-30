@@ -10,4 +10,4 @@ struct Invalid(BorrowMutableCallable, Movable):
 
 def main():
     var values: List[Int] = [0, 1]
-    _ = filter_not[ListFamily](Invalid(), values^)
+    _ = filter_not[ListFamily](values^, Invalid())

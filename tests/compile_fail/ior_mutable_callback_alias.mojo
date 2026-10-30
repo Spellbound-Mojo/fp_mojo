@@ -7,4 +7,4 @@ def main():
     var view = Span(values)
     comptime View = type_of(view)
     var source = Ior[String, View](Right(view))
-    _ = map[IorFamily[StringMonoid]](Identity[View](), source^)
+    _ = map[IorFamily[StringMonoid]](source^, Identity[View]())

@@ -37,7 +37,7 @@ def main() raises:
     def add(var total: Int, var item: Int) {mut calls} -> Int:
         calls += 1
         return total + item
-    var total = fold_left(add, 0, range(1, 6))
+    var total = fold_left(range(1, 6), 0, add)
     assert_equal(total, 15)
     assert_equal(calls, 5)
 

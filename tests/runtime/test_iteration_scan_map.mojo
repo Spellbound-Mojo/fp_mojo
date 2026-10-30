@@ -52,7 +52,7 @@ def i5_scalar(var carry: Int,var item: Int)->Tuple[Int,Int]:
 
 
 def i5_generic[A: Movable & Deinitable,T: Movable & Deinitable,Y: Movable & Deinitable,R: Movable & Deinitable,I:Iterator,//,F:def(var A,var T)->R](var function:F,var initial:A,var source:I)->ScanMapIterator[A,T,Y,I,F] where I.Element==T and R==Tuple[A,Y]:
-    return scan_map[A=A,T=T,Y=Y](function^,initial^,source^)
+    return scan_map[A=A,T=T,Y=Y](source^,initial^,function^)
 
 
 def i5_done[I:Iterator](mut value:I) raises where conforms_to(I.Element,Deinitable):
@@ -76,12 +76,12 @@ def demand() raises:
     _=values^
     assert_equal(drops[],1)
     pulls[].clear()
-    var empty=scan_map(i5_step,I5Carry(10,drops),I5Source(0,0,pulls))
+    var empty=scan_map(I5Source(0,0,pulls),I5Carry(10,drops),i5_step)
     i5_done(empty)
     assert_equal(pulls[],[0])
     _=empty^
     assert_equal(drops[],2)
-    var abandoned=scan_map(i5_step,I5Carry(10,drops),I5Source(0,3,pulls))
+    var abandoned=scan_map(I5Source(0,3,pulls),I5Carry(10,drops),i5_step)
     _=abandoned^
     assert_equal(drops[],3)
     assert_equal(pulls[],[0])
@@ -164,7 +164,7 @@ def i5_borrow[o:ImmOrigin](ref[o] anchor: Int) raises:
 
 
 def i5_thin[A:Movable & Deinitable,T:Movable & Deinitable,Y:Movable & Deinitable,I:Iterator](function:def(var A,var T) thin -> Tuple[A,Y],var initial:A,var source:I)->ScanMapIterator[A,T,Y,I] where I.Element==T:
-    return scan_map[A,T,Y,I](function,initial^,source^)
+    return scan_map[A,T,Y,I](source^,initial^,function)
 
 
 def i5_pointer[o:ImmOrigin](var carry:Pointer[Int,o],var item:Int)->Tuple[Pointer[Int,o],Pointer[Int,o]]:

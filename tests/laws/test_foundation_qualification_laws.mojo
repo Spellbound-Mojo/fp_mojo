@@ -62,8 +62,8 @@ def result_equal(a: Result[String, String], b: Result[String, String]) raises:
 def result_laws(value: Int) raises:
     for ok in range(2):
         var r = Result[String, String](Ok(String(value))) if ok else Result[String, String](Err(String(value)))
-        result_equal(map[ResultFamily[String]](id_text, r.copy()), r)
-        result_equal(map[ResultFamily[String]](tag, map[ResultFamily[String]](tag, r.copy())), map[ResultFamily[String]](tag_twice, r.copy()))
+        result_equal(map[ResultFamily[String]](r.copy(), id_text), r)
+        result_equal(map[ResultFamily[String]](map[ResultFamily[String]](r.copy(), tag), tag), map[ResultFamily[String]](r.copy(), tag_twice))
         result_equal(r.copy().map_err(id_text), r)
         result_equal(r.copy().map_err(tag).map_err(tag), r.copy().map_err(tag_twice))
         result_equal(r.copy().or_else(reject), r)
@@ -85,7 +85,7 @@ def effects() raises:
     assert_equal(trace[], "ab")
     trace[] = ""
     var failed = Result[Int, String](Err(String("domain")))
-    _ = map[ResultFamily[type_of(failed).Error]](a^, failed^)
+    _ = map[ResultFamily[type_of(failed).Error]](failed^, a^)
     assert_equal(trace[], "")
 
 def main() raises:

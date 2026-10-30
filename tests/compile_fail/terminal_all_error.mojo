@@ -12,7 +12,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     def step(value: A) raises B -> Bool: return True
     try:
-        _ = all[T=A, E=A](step, iter(List[A]()))
+        _ = all[T=A, E=A](iter(List[A]()), step)
     except: pass
 
 def main():

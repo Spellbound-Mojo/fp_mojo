@@ -12,6 +12,6 @@ struct Count(MutableBinary):
         return carry + value + self.calls
 def main():
     var callback = Count(0)
-    var pending = fold_left(callback^, 0, range(2))
+    var pending = fold_left(range(2), 0, callback^)
     _ = callback.call_mut(0, 1)
     _ = pending

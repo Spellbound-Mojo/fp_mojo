@@ -15,7 +15,7 @@ struct Add(Binary):
 def forward[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](
     var function: F, var initial: F.First, var source: V
 ) raises FoldContract[I, V, F].Error -> FoldContract[I, V, F].Out where FoldContract[I, V, F].Compatible:
-    return fold_effect[I](function^, initial^, source^)
+    return fold_effect[I](source^, initial^, function^)
 
 def staged[I: Monad, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](
     var function: F, var initial: F.First, var source: V

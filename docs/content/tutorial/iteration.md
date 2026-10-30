@@ -27,7 +27,7 @@ elements into a `List`.
 
 The first chain consumes `words`, expands each word into codepoints, and
 collects ten values. It has the same behavior as
-`collect_list(flat_map(codepoints_of, words^))`: each word's codepoint list is
+`collect_list(flat_map(words^, codepoints_of))`: each word's codepoint list is
 built only when that word is reached. The helper still materializes an inner
 list. Returning a borrowing codepoint iterator from a temporary owned string
 would require a different ownership contract.
@@ -85,7 +85,7 @@ reduction.
 
 <!-- example: docs/examples/iteration.mojo -->
 
-`filter(positive, values^)` consumes the list as its source. A range such as
+`filter(values^, positive)` consumes the list as its source. A range such as
 `range(1, 4)` is already an iterator, and `iter(values)` would borrow the list
 instead.
 
@@ -123,9 +123,9 @@ shows the same callback across these forms.
 | Absence instead of an empty error | `reduce_optional` | Returns native Optional absence |
 | Explicit early termination | `fold_until` | Returns `Continue(initial)` |
 
-`fold_left(subtract, 10, range(1, 4))` computes `((10 - 1) - 2) - 3 = 4`. Folds
+`fold_left(range(1, 4), 10, subtract)` computes `((10 - 1) - 2) - 3 = 4`. Folds
 run in order: they do not reassociate operations, assume numeric types, or
-reduce SIMD lanes for you. `reduce_optional(add, range(0))` returns an empty
+reduce SIMD lanes for you. `reduce_optional(range(0), add)` returns an empty
 `Optional`.
 
 A stateful library callback can be passed directly: the example's
@@ -216,7 +216,7 @@ promotion.
 `forwarded(append, String("entries:"), range(3))` returns `"entries:012"` after
 three calls. Over `[4, -7, 9]`, `append` raises `InvalidEntry(-7)` on the
 second value. That exact error crosses both wrappers, and `9` is never pulled,
-so the call count ends at five. `find(even, range(3, 8))` returns `4`.
+so the call count ends at five. `find(range(3, 8), even)` returns `4`.
 
 Use the non-raising overload when the callback does not raise. The same
 forwarding rule applies to `reduce_optional`, both `reduce` forms, `fold_until`,

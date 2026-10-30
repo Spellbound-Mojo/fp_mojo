@@ -27,7 +27,7 @@ struct Iterate(Unary):
 def sequence[library: Bool](count: Int, seed: Int) -> Int:
     comptime if library:
         var initial: Tuple[Int, Int] = (0, seed)
-        var outcome = run(tail_rec_m[Async[Int]](Iterate(count), initial^))
+        var outcome = run(tail_rec_m[Async[Int]](initial^, Iterate(count)))
         return outcome.take()._take_ok()
     else:
         var value = seed

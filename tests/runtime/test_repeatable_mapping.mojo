@@ -39,23 +39,23 @@ struct Dual(Unary, MutableUnary, OnceUnary, ImplicitlyCopyable):
 
 def mapped[I: Iterator, F: UnaryContract & Movable & Deinitable](var callback: F, var source: I
 ) -> MapIterator[F.Arg, F.Out, I, F] where I.Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
-    return map[F=F](callback^, source^)
+    return map[F=F](source^, callback^)
 
 def selected[U: Movable & Deinitable, I: Iterator, F: UnaryContract & Movable & Deinitable](var callback: F, var source: I
 ) -> FilterMapIterator[F.Arg, U, I, F] where I.Element == F.Arg and F.Out == Optional[U] and F.Error == Never and RepeatableUnary[F]:
-    return filter_map[U=U, F=F](callback^, source^)
+    return filter_map[U=U, F=F](source^, callback^)
 
 def main() raises:
-    assert_equal(iterated(map(Tally(0), range(3))).collect_list(), [1, 12, 23])
+    assert_equal(iterated(map(range(3), Tally(0))).collect_list(), [1, 12, 23])
     assert_equal(iterated(range(3)).map(Tally(0)).collect_list(), [1, 12, 23])
     assert_equal(iterated(mapped(Tally(0), range(3))).collect_list(), [1, 12, 23])
     var chain = flow(Tally(0), Shift(10))
     assert_equal(iterated(range(3)).map(chain^).collect_list(), [11, 22, 33])
     var pairs: List[Tuple[Int, Int]] = [(2, 3), (2, 3)]
     assert_equal(iterated(pairs^).map(tupled(Join(0))).collect_list(), [7, 8])
-    assert_equal(iterated(filter_map(Select(0), range(4))).collect_list(), [1, 5])
+    assert_equal(iterated(filter_map(range(4), Select(0))).collect_list(), [1, 5])
     assert_equal(iterated(range(4)).filter_map(Select(0)).collect_list(), [1, 5])
-    assert_equal(iterated(filter_map[U=Int](Select(0), range(4))).collect_list(), [1, 5])
+    assert_equal(iterated(filter_map[U=Int](range(4), Select(0))).collect_list(), [1, 5])
     assert_equal(iterated(range(4)).filter_map[Int](Select(0)).collect_list(), [1, 5])
     assert_equal(iterated(selected[Int](Select(0), range(4))).collect_list(), [1, 5])
     # Custom dual-mode callbacks keep the canonical repeated-call preference.
@@ -64,7 +64,7 @@ def main() raises:
     assert_equal(iterated(range(2)).map(reusable).collect_list(), [100, 101])
     assert_equal(iterated(range(2)).map(reusable^).collect_list(), [201, 203])
     var calls = ArcPointer(0)
-    var output = flat_map(Expand(calls), range(2))
+    var output = flat_map(range(2), Expand(calls))
     assert_equal(calls[], 0)
     assert_equal(next(output), 0)
     assert_equal(calls[], 1)

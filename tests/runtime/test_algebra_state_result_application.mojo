@@ -16,7 +16,7 @@ def check[retain:Bool]() raises where Stack[retain].CombineCompatible[Endpoint[r
                 var trace=ArcPointer(List[Int]())
                 var computation:C
                 try:
-                    computation=map2_lazy[I](Combine(trace,combine_failure),step[retain](trace,1,5,left_failure),Produce[retain](trace,right_failure))
+                    computation=map2_lazy[I](step[retain](trace,1,5,left_failure),Produce[retain](trace,right_failure),Combine(trace,combine_failure))
                 except error:
                     comptime assert type_of(error)==Never
                     _propagate_error[Never](error^)

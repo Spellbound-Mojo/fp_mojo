@@ -49,7 +49,7 @@ def stop_at_absence(var total: Int, var value: Optional[Int]) -> ControlFlow[Opt
 
 def main() raises:
     var pulls = ArcPointer(0)
-    var found = find(absent, Source(0, 2, pulls))
+    var found = find(Source(0, 2, pulls), absent)
     assert_true(Bool(found))
     assert_false(Bool(found.value()))
     assert_equal(pulls[], 1)
@@ -62,29 +62,29 @@ def main() raises:
     assert_equal(pulls[], 3)
 
     pulls[] = 0
-    assert_equal(fold_left(count, 0, Source(0, 2, pulls)), 101)
+    assert_equal(fold_left(Source(0, 2, pulls), 0, count), 101)
     assert_equal(pulls[], 3)
 
     pulls[] = 0
-    var singleton = reduce_optional(choose_last, Source(0, 1, pulls))
+    var singleton = reduce_optional(Source(0, 1, pulls), choose_last)
     assert_true(Bool(singleton))
     assert_false(Bool(singleton.value()))
     assert_equal(pulls[], 2)
 
     pulls[] = 0
-    var reduced = reduce_optional(choose_last, Source(0, 2, pulls))
+    var reduced = reduce_optional(Source(0, 2, pulls), choose_last)
     assert_equal(reduced.value().value(), 10)
     assert_equal(pulls[], 3)
 
     pulls[] = 0
-    assert_true(any(absent, Source(0, 2, pulls)))
+    assert_true(any(Source(0, 2, pulls), absent))
     assert_equal(pulls[], 1)
     pulls[] = 0
-    assert_false(all(present, Source(0, 2, pulls)))
+    assert_false(all(Source(0, 2, pulls), present))
     assert_equal(pulls[], 1)
 
     pulls[] = 0
-    var control = fold_until(stop_at_absence, 0, Source(0, 2, pulls))
+    var control = fold_until(Source(0, 2, pulls), 0, stop_at_absence)
     assert_true(control.isa[Break[Optional[Int]]]())
     var stopped = control^.unwrap[Break[Optional[Int]]]().into_payload()
     assert_false(Bool(stopped))

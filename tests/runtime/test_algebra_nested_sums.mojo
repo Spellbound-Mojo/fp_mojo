@@ -15,7 +15,7 @@ def check[optional_first:Bool,stateful:Bool,o:ImmOrigin](ref[o] environment:Int=
             comptime C=Stack[optional_first,stateful].Bound[Endpoint[optional_first,stateful],Next[optional_first,stateful]]
             var value:C
             try:
-                value=flat_map[Stack[optional_first,stateful]](Next[optional_first,stateful](trace,next_failure),endpoint[optional_first,stateful](trace,1,5,source_failure))
+                value=flat_map[Stack[optional_first,stateful]](endpoint[optional_first,stateful](trace,1,5,source_failure),Next[optional_first,stateful](trace,next_failure))
             except error:
                 comptime assert type_of(error)==Never
                 _propagate_error[Never](error^)

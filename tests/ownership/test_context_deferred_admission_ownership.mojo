@@ -25,7 +25,7 @@ struct Next(OnceUnary):
         self.state.trace[].calls += 1
         var value = argument + self.state.value
         if self.fail: raise Token[2](value, self.state.trace)
-        return map[Layer](as_unary(increment), pure[Layer](value))
+        return map[Layer](pure[Layer](value), as_unary(increment))
 
 def main() raises:
     for present in [False, True]:

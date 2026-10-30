@@ -11,5 +11,5 @@ struct Bad(Monoid):
     def combine(var a:String,var b:String) raises Int ->String:raise 2
 def wrong(var value:Int) raises String ->Reader[Int].Pure[String]:raise String("failure")
 def main():
-    try: _=fold_map_effect[Reader[Int],Bad](wrong,range(3))
+    try: _=fold_map_effect[Reader[Int],Bad](range(3),wrong)
     except:pass

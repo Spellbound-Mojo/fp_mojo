@@ -9,6 +9,6 @@ struct Keep[o: ImmOrigin](OnceUnary):
     def call_once(deinit self, var value: Self.Arg) -> Self.Out:
         return value
 def wrong[o: ImmOrigin, p: ImmOrigin](var source: Async[Int].Pure[Span[Int, o]], var function: Keep[p]):
-    _ = map[Async[Int]](function^, source^)
+    _ = map[Async[Int]](source^, function^)
 def main():
     pass

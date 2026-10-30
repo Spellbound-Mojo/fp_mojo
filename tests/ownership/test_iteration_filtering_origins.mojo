@@ -11,16 +11,16 @@ def source_origins(anchor: List[Int]) raises:
     def predicate(value: Int) {var offset} -> Bool: return value < offset + 1
     def optional(var value: Int) {var offset} -> Optional[Int]: return Optional(value + offset)
     def expand(var value: Int) {var offset} -> List[Int]: return [value, value + offset]
-    var expected_filter = filter(predicate, borrowed(anchor))
-    var candidate_filter = filter(predicate, borrowed(anchor))
+    var expected_filter = filter(borrowed(anchor), predicate)
+    var candidate_filter = filter(borrowed(anchor), predicate)
     var selected: type_of(expected_filter) = candidate_filter^
     assert_equal(collect_list(selected^), [1, 2])
-    var expected_optional = filter_map(optional, borrowed(anchor))
-    var candidate_optional = filter_map(optional, borrowed(anchor))
+    var expected_optional = filter_map(borrowed(anchor), optional)
+    var candidate_optional = filter_map(borrowed(anchor), optional)
     var mapped: type_of(expected_optional) = candidate_optional^
     assert_equal(collect_list(mapped^), [3, 4])
-    var expected_flat = flat_map(expand, borrowed(anchor))
-    var candidate_flat = flat_map(expand, borrowed(anchor))
+    var expected_flat = flat_map(borrowed(anchor), expand)
+    var candidate_flat = flat_map(borrowed(anchor), expand)
     var flattened: type_of(expected_flat) = candidate_flat^
     assert_equal(collect_list(flattened^), [1, 3, 2, 4])
     _ = expected_filter^
@@ -32,7 +32,7 @@ def borrowed_inners(values: List[Int]) raises:
     def expand(var value: Int) {values, mut calls} -> List[Int].IteratorType[origin_of(values)]:
         calls += value
         return iter(values)
-    var flattened = flat_map(expand, iter(range(3)))
+    var flattened = flat_map(iter(range(3)), expand)
     assert_equal(calls, 0)
     assert_equal(collect_list(flattened^), [1, 2, 1, 2, 1, 2])
     assert_equal(calls, 3)

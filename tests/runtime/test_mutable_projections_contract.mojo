@@ -37,27 +37,27 @@ struct Count(BorrowMutableCallable):
 
 def forwarded[I:Iterator,C:BorrowCallContract & Movable & Deinitable](var key:C,var source:I
 ) raises C.Failure -> Optional[C.Payload] where conforms_to(C.Payload,Movable & Deinitable) and I.Element==C.Payload and conforms_to(C.Result,Comparable & Movable & Deinitable) and RepeatableBorrow[C]:
-    return min_by(key^,source^)
+    return min_by(source^,key^)
 
 def main() raises:
-    assert_equal(min_by(Dual(0),range(1,4)).value(),3)
-    assert_equal(max_by(Dual(0),range(1,4)).value(),1)
+    assert_equal(min_by(range(1,4),Dual(0)).value(),3)
+    assert_equal(max_by(range(1,4),Dual(0)).value(),1)
     assert_equal(iterated(range(1,4)).min_by(Dual(0)).value(),3)
     assert_equal(piped(List[Int]([1,2,3])).min_by(Dual(0)).get().value(),3)
     assert_equal(pipeline(range(1,4)).min_by(Dual(0)).get().value(),3)
-    assert_equal(minimum_by_non_empty(Dual(0),NonEmptyList(1,[2,3])),3)
+    assert_equal(minimum_by_non_empty(NonEmptyList(1,[2,3]),Dual(0)),3)
     assert_equal(forwarded(Dual(0),range(1,4)).value(),3)
     assert_equal(iterated(range(1,4)).pair_with(Dual(0)).to_list(),[(1,-1),(2,-2),(3,-3)])
     var seen=ArcPointer(0)
-    assert_equal(Bool(min_by(Count(seen),range(0))),False)
+    assert_equal(Bool(min_by(range(0),Count(seen))),False)
     assert_equal(seen[],0)
-    assert_equal(min_by(Count(seen),range(3,7)).value(),3)
+    assert_equal(min_by(range(3,7),Count(seen)).value(),3)
     assert_equal(seen[],4)
     seen[]=0
-    assert_equal(max_by(Count(seen),range(3,7)).value(),3)
+    assert_equal(max_by(range(3,7),Count(seen)).value(),3)
     assert_equal(seen[],4)
     seen[]=0
-    assert_equal(minimum_by_non_empty(Count(seen),NonEmptyList(9)),9)
+    assert_equal(minimum_by_non_empty(NonEmptyList(9),Count(seen)),9)
     assert_equal(seen[],1)
     seen[]=0
     var caught=False

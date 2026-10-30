@@ -13,7 +13,7 @@ def bad(left: List[Int], right: List[Int]) raises Span[Int, origin_of(left)]:
     comptime R = Reader[Int]
     comptime S = StateT[R, Int]
     comptime C = LiftLocal[S, R]
-    var base = run[S](local[C](Reject[origin_of(right)](Span(right)), ask[C]()), 0)
+    var base = run[S](local[C](ask[C](), Reject[origin_of(right)](Span(right))), 0)
     _ = run[R](base^, 1)
 def main() raises:
     try: bad([1], [2])

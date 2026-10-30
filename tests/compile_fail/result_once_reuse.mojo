@@ -5,5 +5,5 @@ from result_once_support import Constant, Address
 
 def main():
     var callback = Constant(1)
-    _ = map[ResultFamily[type_of(Result[Int,Int](Ok(2))).Error]](callback^, Result[Int,Int](Ok(2)))
+    _ = map[ResultFamily[type_of(Result[Int,Int](Ok(2))).Error]](Result[Int,Int](Ok(2)), callback^)
     _ = callback^

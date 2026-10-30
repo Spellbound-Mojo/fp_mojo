@@ -12,7 +12,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     def step(var acc: A, var item: Int) raises B -> A: return acc
     try:
-        _ = fold_left[A=A, E=A](step, a, iter(range(1)))
+        _ = fold_left[A=A, E=A](iter(range(1)), a, step)
     except: pass
 
 def main():

@@ -5,7 +5,7 @@ from std.iter import next
 def below(limit: Int, value: Int) -> Bool: return value < limit
 def main() raises:
     var predicate = partial(below, 2)
-    var branches = partition(predicate, range(3), buffer=Unbounded())
+    var branches = partition(range(3), predicate, buffer=Unbounded())
     var moved = predicate^
     _ = moved(1)
     _ = next(branches[0])

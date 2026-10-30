@@ -61,8 +61,8 @@ For lazy signatures, see the [iteration reference](iteration.md).
 | `.if_effect(on_true, on_false)` | Select a zero-argument effect factory from an effectful Bool |
 
 For direct calls, put the source last: `fill(value, source^)`,
-`replace(old, new, source^)`, `sum_by(project, source^)` or
-`fold_map[Monoid](project, source^)`. Operations without a runtime argument take
+`replace(old, new, source^)`, `sum_by(source^, project)` or
+`fold_map[Monoid](source^, project)`. Operations without a runtime argument take
 only the source, such as `compact(source^)` and `sum(source^)`. `tap` is a
 whole-value `Pipeline` method. Direct traversal, like `Iter.traverse`, gathers a
 `List` inside the chosen effect.
@@ -606,8 +606,8 @@ stops at `False`. A native error propagates unchanged and also stops the work.
 
 Piped wraps the resulting effect for further chaining; Iter returns it
 directly. Direct calls put the source last:
-`fold_effect[EffectFamily](step, initial^, source^)` and
-`any_effect[EffectFamily](predicate, source^)`. Both pipeline forms run eager
+`fold_effect[EffectFamily](source^, initial^, step)` and
+`any_effect[EffectFamily](source^, predicate)`. Both pipeline forms run eager
 effects immediately. A Reader or State target stores the source and callbacks
 until `run`; keep borrowed native callbacks alive and unmoved until then.
 The source iterator is consumed at its current position.
@@ -617,7 +617,7 @@ selected zero-argument factory. It skips both factories for a failed Result or
 absent Optional. The branches return effects from the same family with the
 same successful payload type; Result also keeps the exact stored error type.
 Piped infers List, Optional and Result, or accepts an explicit Monad family.
-The free form is `if_effect[EffectFamily](on_true, on_false, condition^)`.
+The free form is `if_effect[EffectFamily](condition^, on_true, on_false)`.
 Library factories are consumed even when skipped; native factories are
 borrowed. Optional and Result accept once-only factories with move-only
 captures. A branching effect such as List needs repeatable factories.

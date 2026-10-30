@@ -21,7 +21,7 @@ def main() raises:
     assert_equal(pointer(4), 12)
     assert_equal(pipeline(Optional(4)).map(transform).get_or(0), 8)
     assert_equal(pipeline(5).then(transform).get(), 10)
-    assert_equal(algebra_map[OptionalFamily](transform, Optional(3)).value(), 6)
+    assert_equal(algebra_map[OptionalFamily](Optional(3), transform).value(), 6)
     assert_equal(piped(Optional(4)).map(transform).get().value(), 8)
     assert_equal(ok[Never](6).map(transform).raise_on_err(), 12)
     assert_equal(err[Int](2).value_or(transform), 4)

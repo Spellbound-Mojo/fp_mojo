@@ -20,4 +20,4 @@ struct Combine(Binary):
 
 def main():
     comptime I=ResultT[State[Int],Int]
-    _=map2_lazy[I](Combine(),pure[I](1),Wrong())
+    _=map2_lazy[I](pure[I](1),Wrong(),Combine())

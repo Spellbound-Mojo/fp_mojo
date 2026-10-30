@@ -9,7 +9,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime A = type_of(a)
     comptime B = type_of(b)
     print(a[0], b[0])
-    var laundered = map[OptionalFamily](keep[B], Optional(a))
+    var laundered = map[OptionalFamily](Optional(a), keep[B])
     _ = laundered^
 
 def main():

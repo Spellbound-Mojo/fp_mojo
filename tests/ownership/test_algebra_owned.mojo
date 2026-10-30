@@ -17,7 +17,7 @@ def main() raises:
             var present=False
             var payload=0
             try:
-                var output=map[OptionalFamily](Transform(Token[1](10,trace),fail),source^)
+                var output=map[OptionalFamily](source^,Transform(Token[1](10,trace),fail))
                 present=Bool(output)
                 if active:
                     payload=output.value().value
@@ -36,7 +36,7 @@ def main() raises:
     var identity_value=0
     var identity_caught=False
     try:
-        var output=map[IdentityFamily](Transform(Token[1](10,trace),False),Token[2](3,trace))
+        var output=map[IdentityFamily](Token[2](3,trace),Transform(Token[1](10,trace),False))
         identity_value=output.value
         _=output^
     except error:

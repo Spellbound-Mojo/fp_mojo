@@ -13,4 +13,4 @@ def main():
     var values: List[Token] = [Token(1)]
     # An owned iterator is supported; a borrowed source cannot implicitly give
     # away each move-only element as an owned callback argument.
-    print(fold_left(consume, 0, iter(values)))
+    print(fold_left(iter(values), 0, consume))

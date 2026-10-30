@@ -32,7 +32,7 @@ def check_state_over_list() raises:
     # One producer call per item; every live branch runs the prepared
     # computation on its own state, and a dead carrier stops the pulls.
     var calls=ArcPointer(Int(0))
-    var output=run[Branching](traverse[ListFamily,Branching](Branches(calls),[1,2]),0)
+    var output=run[Branching](traverse[ListFamily,Branching]([1,2],Branches(calls)),0)
     assert_equal(calls[],2)
     assert_equal(len(output),4)
     var expected=[ints(1,2),ints(1,20),ints(10,2),ints(10,20)]
@@ -41,7 +41,7 @@ def check_state_over_list() raises:
         assert_equal(output[index][0],expected[index])
         assert_equal(output[index][1],states[index])
     calls[]=0
-    var stopped=run[Branching](traverse[ListFamily,Branching](Branches(calls),[1,0,3]),0)
+    var stopped=run[Branching](traverse[ListFamily,Branching]([1,0,3],Branches(calls)),0)
     assert_equal(len(stopped),0)
     assert_equal(calls[],2)
 
@@ -49,7 +49,7 @@ def main() raises:
     for count in [0,3]:
         var pulls=0
         var calls=ArcPointer(Int(0))
-        var reader=traverse[ListFamily,Reader[Int]](Produce[False](calls),Counted(Pointer(to=pulls),0,count))
+        var reader=traverse[ListFamily,Reader[Int]](Counted(Pointer(to=pulls),0,count),Produce[False](calls))
         assert_equal(pulls,0)
         assert_equal(calls[],0)
         var environment=10
@@ -59,7 +59,7 @@ def main() raises:
         assert_equal(calls[],count)
         pulls=0
         calls[]=0
-        var state=traverse[ListFamily,State[Int]](Produce[True](calls),Counted(Pointer(to=pulls),0,count))
+        var state=traverse[ListFamily,State[Int]](Counted(Pointer(to=pulls),0,count),Produce[True](calls))
         assert_equal(pulls,0)
         assert_equal(calls[],0)
         var output=run[State[Int]](state^,10)

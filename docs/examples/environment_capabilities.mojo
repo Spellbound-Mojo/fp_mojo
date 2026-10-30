@@ -16,7 +16,7 @@ def main():
 
     comptime S = StateT[R, Int]
     comptime C = LiftLocal[S, R]
-    var computation = local[C](increase, read_config[C]())
+    var computation = local[C](read_config[C](), increase)
     var reader = run[S](computation^, 42)
     var result = run[R](reader^, environment)
     print("scoped config:", result[0], "; state:", result[1])

@@ -6,7 +6,7 @@ def present[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, R: Mo
             F: def(var T) -> R](
     var function: F, var source: I
 ) -> FilterMapIterator[T, U, I, F] where I.Element == T and R == Optional[U]:
-    return filter_map(function^, source^)
+    return filter_map(source^, function^)
 
 def present_again[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, R: Movable & Deinitable, //,
                   F: def(var T) -> R](

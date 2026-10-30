@@ -6,7 +6,7 @@ from std.testing import assert_equal
 
 def scanned[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator, //,
             F: def(var A, var T) -> A](var function: F, var initial: A, var source: I) -> ScanIterator[A, T, I, F] where I.Element == T:
-    return scan_left(function^, initial^, source^)
+    return scan_left(source^, initial^, function^)
 
 
 @fieldwise_init

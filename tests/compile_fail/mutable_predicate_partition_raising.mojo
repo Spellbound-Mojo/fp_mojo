@@ -7,4 +7,4 @@ struct Step(BorrowMutableCallable):
     comptime Failure=Int
     def __init__(out self):pass
     def invoke_mut(mut self,ref value:Int) raises Int->Bool:return True
-def main() raises:_=partition(Step(),range(3),buffer=Unbounded())
+def main() raises:_=partition(range(3),Step(),buffer=Unbounded())

@@ -367,7 +367,7 @@ def _dict_terminal[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hashe
     # dies; a returned iterator would let this borrow escape. The generic run
     # method preserves the view's native origin without erasing it.
     var entries = source.take_items()
-    var values = _lazy_map(_EntryPayload[K, T, H](), entries^)
+    var values = _lazy_map(entries^, _EntryPayload[K, T, H]())
     return reduction^.run(values^)
 
 

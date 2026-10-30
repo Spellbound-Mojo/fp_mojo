@@ -8,6 +8,6 @@ def check(left: List[Int], right: List[Int]):
     def next_step(value: Int) -> Ior[Other, Int]:
         var issues = Other([borrowed])
         return Both(issues^, value)
-    _ = flat_map[IorFamily[ListMonoid[Span[Int, origin_of(left)]]]](next_step, Ior[E, Int](Right(1)))
+    _ = flat_map[IorFamily[ListMonoid[Span[Int, origin_of(left)]]]](Ior[E, Int](Right(1)), next_step)
 def main():
     check(List[Int]([1]), List[Int]([2]))

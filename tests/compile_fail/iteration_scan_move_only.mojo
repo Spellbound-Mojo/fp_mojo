@@ -11,4 +11,4 @@ def step(var state: State, var value: Int) -> State:
     return state^
 
 def main():
-    _ = scan_left(step, State(0), iter(range(2)))
+    _ = scan_left(iter(range(2)), State(0), step)

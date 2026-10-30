@@ -129,8 +129,8 @@ def filter_not_families() raises:
     assert_equal(native_deferred^.run(), [-1])
     assert_equal(native_calls, 2)
     assert_equal(filter_not_deferred_native(1), True)
-    assert_equal(family_filter_not[ListFamily](filter_not_positive, List[Int]([-1, 2])), [-1])
-    assert_equal(family_filter_not[ListFamily](ContainerFilterPredicate(calls), List[Int]([-1, 2])), [-1])
+    assert_equal(family_filter_not[ListFamily](List[Int]([-1, 2]), filter_not_positive), [-1])
+    assert_equal(family_filter_not[ListFamily](List[Int]([-1, 2]), ContainerFilterPredicate(calls)), [-1])
 
 
 def filter_not_lazy() raises:
@@ -144,12 +144,12 @@ def filter_not_lazy() raises:
     assert_equal(calls, 1)
     assert_equal(lazy^.collect_list(), [-3])
     assert_equal(calls, 3)
-    assert_equal(collect_list(filter_not(filter_not_positive, range(3))), [0])
-    assert_equal(collect_list(filter_not(filter_not_lazy_counted, range(3))), [0])
+    assert_equal(collect_list(filter_not(range(3), filter_not_positive)), [0])
+    assert_equal(collect_list(filter_not(range(3), filter_not_lazy_counted)), [0])
     assert_equal(calls, 6)
     var library_calls = ArcPointer(0)
     assert_equal(iterated(range(3)).filter_not(ContainerFilterPredicate(library_calls)).collect_list(), [0])
-    assert_equal(collect_list(filter_not(ContainerFilterPredicate(library_calls), range(3))), [0])
+    assert_equal(collect_list(filter_not(range(3), ContainerFilterPredicate(library_calls))), [0])
     assert_equal(library_calls[], 6)
     var state_drops = ArcPointer(0)
     var filter_not_state = ContainerMapItem(0, state_drops)

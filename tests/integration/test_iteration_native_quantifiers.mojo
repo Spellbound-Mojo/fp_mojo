@@ -27,5 +27,5 @@ def main() raises:
     # For copyable sources and static thin callbacks, native composition suffices.
     for start in range(-2, 3):
         var values: List[Int] = [start, start + 1, start + 2]
-        assert_equal(native_any(native_map[positive](values)), predicate_any(borrow_positive, iter(values)))
-        assert_equal(native_all(native_map[positive](values)), predicate_all(borrow_positive, iter(values)))
+        assert_equal(native_any(native_map[positive](values)), predicate_any(iter(values), borrow_positive))
+        assert_equal(native_all(native_map[positive](values)), predicate_all(iter(values), borrow_positive))

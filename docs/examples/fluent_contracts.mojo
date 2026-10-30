@@ -9,7 +9,7 @@ def mapped[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Dei
 
 
 def selected[I: Filterable, V: Movable & Deinitable, P: BorrowCallable](var values: V, var predicate: P) raises FilterContract[I, V, P].Error -> Pipeline[FilterContract[I, V, P].Family, FilterContract[I, V, P].Out] where FilterContract[I, V, P].Compatible and conforms_to(I.FilteredFamily, Functor):
-    return Pipeline[FilterContract[I, V, P].Family, FilterContract[I, V, P].Out](filter[I](predicate^, values^))
+    return Pipeline[FilterContract[I, V, P].Family, FilterContract[I, V, P].Out](filter[I](values^, predicate^))
 
 
 @fieldwise_init

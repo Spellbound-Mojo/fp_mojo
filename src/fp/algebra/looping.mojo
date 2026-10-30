@@ -1,6 +1,6 @@
 """Stack-safe effectful iteration through the family's existing dependent fold."""
 from std.iter import Iterator
-from std.builtin.rebind import downcast
+from std.builtin.rebind import downcast, rebind_var
 from fp.adt.data import _ChoiceType
 from fp.data.control import ControlFlow, Continue, Break, _ControlShape
 from fp.callables.protocols import UnaryContract, MutableBinary, Unary
@@ -81,7 +81,7 @@ struct TailRecContract[I: Monad, F: UnaryContract & Movable & Deinitable]:
 
 
 def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](
-    var step: F, var initial: A
+    var initial: A, var step: F
 ) raises TailRecContract[I, F].Error -> TailRecContract[I, F].Out where A == F.Arg and TailRecContract[I, F].Compatible:
     """Repeat effectful steps until Break, using constant native call-stack space.
 
@@ -99,8 +99,8 @@ def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
         I: The selected Monad family, including its existing fold restrictions.
 
     Args:
-        step: The callback, consumed; results and state may be move-only.
         initial: The first state, consumed.
+        step: The callback, consumed; results and state may be move-only.
 
     Returns:
         The effect's carrier of B, or its existing failure/absence outcome.
@@ -114,13 +114,17 @@ def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
     return _map_as[C.Error, I](C._Finish(), folded^)
 
 
-def tail_rec_m[A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Unary[A, R]](var step: F, var initial: A
-) raises TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error -> TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out where TailRecContract[I, NativeUnary[A, R, Never, F, False]].Compatible:
+def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Unary[A, R]](var initial: A0, var step: F
+) raises TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error -> TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, Never, F, False]].Compatible:
     """Loop with an owned native consuming function or closure."""
-    return tail_rec_m[I](NativeUnary[A, R, Never, F, False](step^), initial^)
+    # initial has its own type parameter: a closure input fixed by an earlier
+    # argument crashes Mojo 1.2 on mismatched callbacks; where relates them.
+    return tail_rec_m[I](rebind_var[A](initial^), NativeUnary[A, R, Never, F, False](step^))
 
 
-def tail_rec_m[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingUnary[A, R, E]](var step: F, var initial: A
-) raises TailRecContract[I, NativeUnary[A, R, E, F, True]].Error -> TailRecContract[I, NativeUnary[A, R, E, F, True]].Out where TailRecContract[I, NativeUnary[A, R, E, F, True]].Compatible:
+def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingUnary[A, R, E]](var initial: A0, var step: F
+) raises TailRecContract[I, NativeUnary[A, R, E, F, True]].Error -> TailRecContract[I, NativeUnary[A, R, E, F, True]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, E, F, True]].Compatible:
     """Loop with an owned native consuming function or closure."""
-    return tail_rec_m[I](NativeUnary[A, R, E, F, True](step^), initial^)
+    # initial has its own type parameter: a closure input fixed by an earlier
+    # argument crashes Mojo 1.2 on mismatched callbacks; where relates them.
+    return tail_rec_m[I](rebind_var[A](initial^), NativeUnary[A, R, E, F, True](step^))

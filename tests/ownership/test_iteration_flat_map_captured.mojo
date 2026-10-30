@@ -77,7 +77,7 @@ def exercise(library: Bool, length: Int, count: Int, counts: Counts) raises -> L
     var source = Outer(parents^, counts.pulls)
     var output = List[Int]()
     if library:
-        var flattened = flat_map(expand^, source^)
+        var flattened = flat_map(source^, expand^)
         assert_equal(counts.calls[], 0)
         assert_equal(counts.acquired[], 0)
         assert_equal(counts.pulls[], 0)

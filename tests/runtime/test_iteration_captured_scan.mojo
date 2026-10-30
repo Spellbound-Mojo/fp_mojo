@@ -47,7 +47,7 @@ def exercise(library: Bool, length: Int, count: Int, copies: ArcPointer[Int],
     var source = Source(0, length, pulls)
     var snapshots = List[Snapshot]()
     if library:
-        var scanned = scan_left(step^, accumulator^, source^)
+        var scanned = scan_left(source^, accumulator^, step^)
         assert_equal(copies[], 0)
         assert_equal(calls, 0)
         assert_equal(pulls[], 0)

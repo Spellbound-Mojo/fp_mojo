@@ -85,7 +85,7 @@ def main() raises:
     # A lazy callback cannot raise, so `attempt` keeps each failure as an `Err`.
     def routed(var command: C) {trace} -> String:
         return outcome(attempt(route, command, trace))
-    var outcomes = collect_list(map(routed, queue^))
+    var outcomes = collect_list(map(queue^, routed))
 
     assert_equal(outcomes, ["dispatched 1", "deferred", "deferred", "dispatch failed for job 3"])
     assert_equal(trace[], ["check 1", "dispatch 1", "check 2", "defer", "defer", "check 3", "dispatch 3"])

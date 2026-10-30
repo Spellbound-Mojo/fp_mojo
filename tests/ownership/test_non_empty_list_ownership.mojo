@@ -46,7 +46,7 @@ def main() raises:
     assert_equal(drops[], 3)
     var raised = False
     try:
-        _ = map[NonEmptyListFamily](nelo_raise, nelo_source(drops))
+        _ = map[NonEmptyListFamily](nelo_source(drops), nelo_raise)
     except error:
         raised = True
         assert_equal(error, "native failure")
@@ -59,7 +59,7 @@ def main() raises:
     assert_equal(drops[], 12)
     var calls = ArcPointer(0)
     var failed = traverse[NonEmptyListFamily, ValidationFamily[NonEmptyListSemigroup[NELOwner]]](
-        NELValidate(drops, calls), NonEmptyList(1, List[Int]([2, 3])))
+        NonEmptyList(1, List[Int]([2, 3])), NELValidate(drops, calls))
     assert_equal(calls[], 3)
     assert_equal(len(failed._err().value), 3)
     assert_equal(drops[], 12)

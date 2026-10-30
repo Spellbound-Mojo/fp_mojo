@@ -13,8 +13,8 @@ collects optional results with `traverse` and `sequence`.
 ## Choose an instance
 
 An *instance* supplies the operations for a particular family of values. Select
-it in square brackets: `map[OptionalFamily](f, value)` maps an `Optional`, while
-`map[ListFamily](f, values^)` maps a list. The values keep their native types;
+it in square brackets: `map[OptionalFamily](value, f)` maps an `Optional`, while
+`map[ListFamily](values^, f)` maps a list. The values keep their native types;
 selecting an instance does not wrap them in another container.
 
 | Instance | A value in that family | What `map` transforms |
@@ -39,7 +39,7 @@ free of side effects.
 
 When a function already works specifically with `Result`, its methods remain
 convenient: `value^.map(f)` uses the same implementation as
-`map[ResultFamily[E]](f, value^)`. Use the family interface when the context is
+`map[ResultFamily[E]](value^, f)`. Use the family interface when the context is
 a parameter of your code or when combining it with other algebra operations.
 
 ## Choose the operation by what the next step needs
@@ -65,7 +65,7 @@ describes the dependency between your steps: a price calculation may only need
 `map` calls it and returns a present total of 36.
 
 Mapping preserves the outer context. `in_stock(8)` returns an empty
-`Optional`, so `map[OptionalFamily](in_stock, Optional(8))` produces a present
+`Optional`, so `map[OptionalFamily](Optional(8), in_stock)` produces a present
 `Optional` containing that empty `Optional`. Its type is
 `Optional[Optional[Int]]`.
 

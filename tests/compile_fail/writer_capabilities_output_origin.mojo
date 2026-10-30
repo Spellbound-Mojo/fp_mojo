@@ -19,5 +19,5 @@ struct Change[a: ImmOrigin, b: ImmOrigin](OnceUnary):
 def bad(left: List[Int], right: List[Int]):
     comptime W = Writer[Log[origin_of(left)]]
     comptime C = LiftCensor[ReaderT[W, Int], W]
-    _ = censor[C](Change[origin_of(left), origin_of(right)](Optional(Span(right))), tell[C](Optional(Span(left))))
+    _ = censor[C](tell[C](Optional(Span(left))), Change[origin_of(left), origin_of(right)](Optional(Span(right))))
 def main(): bad([1], [2])

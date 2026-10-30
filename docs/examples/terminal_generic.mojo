@@ -9,7 +9,7 @@ def folded[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator,
            E: Movable & Deinitable, //, F: def(var A, var T) raises E -> A](
     step: F, var initial: A, var source: I
 ) raises E -> A where I.Element == T:
-    return fold_left[E=E](step, initial^, source^)
+    return fold_left[E=E](source^, initial^, step)
 
 
 def forwarded[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator,
@@ -44,6 +44,6 @@ def main() raises:
     assert_equal(rejected, -7)
     assert_equal(calls, 5)
     def even(value: Int) -> Bool: return value % 2 == 0
-    var first = find(even, range(3, 8))
+    var first = find(range(3, 8), even)
     assert_equal(first.value(), 4)
     print(result, "; rejected:", rejected, "; first even:", first.value())

@@ -9,4 +9,4 @@ struct Raising(BorrowMutableCallable):
     comptime Failure=Int
     def __init__(out self):pass
     def invoke_mut(mut self,ref value:Int) raises Int -> Int:raise value
-def main() raises:_=pair_with(Raising(),range(3))
+def main() raises:_=pair_with(range(3),Raising())

@@ -5,4 +5,4 @@ from fp.iteration import fold_effect, iterated
 from fp.functions import piped
 
 def main():
-    _ = fold_effect[ListFamily](SumOwned[ListFamily](), 0, owned_items())
+    _ = fold_effect[ListFamily](owned_items(), 0, SumOwned[ListFamily]())

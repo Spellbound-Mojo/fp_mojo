@@ -8,12 +8,12 @@ def predicate(value: Int) raises Never -> Bool:
 def forward[T: Copyable & Deinitable, //, F: def(T) raises Never -> Bool](
     function: F, values: List[T]
 ) -> Bool:
-    return any[E=Never, F=F](function, values.copy())
+    return any[E=Never, F=F](values.copy(), function)
 
 def main() raises:
-    assert_equal(any[E=Never](predicate, range(2)), True)
-    assert_equal(all[E=Never](predicate, range(2)), False)
-    assert_equal(find[E=Never](predicate, range(2)).value(), 1)
+    assert_equal(any[E=Never](range(2), predicate), True)
+    assert_equal(all[E=Never](range(2), predicate), False)
+    assert_equal(find[E=Never](range(2), predicate).value(), 1)
     assert_equal(iterated(range(2)).any[E=Never](predicate), True)
     assert_equal(iterated(range(2)).all[E=Never](predicate), False)
     assert_equal(iterated(range(2)).find[E=Never](predicate).value(), 1)
@@ -21,7 +21,7 @@ def main() raises:
     def captured(value: Int) raises Never {mut calls} -> Bool:
         calls += 1
         return value == 1
-    assert_equal(any[E=Never](captured, range(3)), True)
+    assert_equal(any[E=Never](range(3), captured), True)
     assert_equal(calls, 2)
     assert_equal(iterated(range(3)).find[E=Never](captured).value(), 1)
     assert_equal(calls, 4)

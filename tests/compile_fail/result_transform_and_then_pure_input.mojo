@@ -16,7 +16,7 @@ def success_count_raising[T: Movable & Deinitable, E: Movable & Deinitable, X: M
 def recovery_count[T: Movable & Deinitable, E: Movable & Deinitable](var value: E) -> Result[T, Int]: return Result[T, Int](Err(1))
 def recovery_count_raising[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable](var value: E) raises X -> Result[T, Int]: return Result[T, Int](Err(1))
 def and_then_pure1[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> Result[U, E]](var value: Result[T, E], callback: F) -> Result[U, E]:
-    return flat_map[ResultFamily[type_of(value).Error]](callback, value^)
+    return flat_map[ResultFamily[type_of(value).Error]](value^, callback)
 def and_then_pure2[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> Result[U, E]](var value: Result[T, E], callback: F) -> Result[U, E]:
     return and_then_pure1(value^, callback)
 

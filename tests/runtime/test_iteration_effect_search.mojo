@@ -36,12 +36,12 @@ struct I6Mapper(MutableUnary):
 
 
 def basic() raises:
-    assert_equal(find_effect[ResultFamily[String]](i6_predicate,range(5)).raise_on_err().value(),2)
+    assert_equal(find_effect[ResultFamily[String]](range(5),i6_predicate).raise_on_err().value(),2)
     assert_equal(iterated(range(5)).find_map_effect[ResultFamily[String]](i6_project).raise_on_err().value(),"2")
-    assert_false(find_effect[ResultFamily[String]](i6_predicate,range(0)).raise_on_err())
-    assert_false(find_map_effect[ResultFamily[String]](i6_project,range(1)).raise_on_err())
+    assert_false(find_effect[ResultFamily[String]](range(0),i6_predicate).raise_on_err())
+    assert_false(find_map_effect[ResultFamily[String]](range(1),i6_project).raise_on_err())
     assert_equal(iterated(range(4)).fold_map_effect[ResultFamily[String],StringMonoid](i6_text).raise_on_err(),"0123")
-    assert_equal(fold_map_effect[ResultFamily[String],StringMonoid](i6_text,range(0)).raise_on_err(),"")
+    assert_equal(fold_map_effect[ResultFamily[String],StringMonoid](range(0),i6_text).raise_on_err(),"")
     var xs:List[Int]=[0,1,2]
     assert_equal(piped(xs^).find_effect[ResultFamily[String]](i6_predicate).get().raise_on_err().value(),2)
     var array:Array[Int,3]=[0,1,2]
@@ -49,9 +49,9 @@ def basic() raises:
     var array2:Array[Int,3]=[0,1,2]
     assert_equal(piped(array2^).fold_map_effect[ResultFamily[String],StringMonoid](i6_text).get().raise_on_err(),"012")
     assert_equal(iterated(range(5)).find_map_effect[OptionalFamily](I6Mapper(0)).value().value(),1)
-    assert_equal(find_map_effect[CellFamily](i6_cell,range(3)).value.value(),0)
-    assert_equal(run_writer[Writer[StringMonoid]](fold_map_effect[Writer[StringMonoid],StringMonoid](i6_logged,range(3))),(String("log0log1log2"),String("012")))
-    var warnings=fold_map_effect[IorFamily[StringMonoid],StringMonoid](i6_warn,range(3))
+    assert_equal(find_map_effect[CellFamily](range(3),i6_cell).value.value(),0)
+    assert_equal(run_writer[Writer[StringMonoid]](fold_map_effect[Writer[StringMonoid],StringMonoid](range(3),i6_logged)),(String("log0log1log2"),String("012")))
+    var warnings=fold_map_effect[IorFamily[StringMonoid],StringMonoid](range(3),i6_warn)
     assert_equal(warnings[Both[String,String]].left,"www")
     assert_equal(warnings[Both[String,String]].right,"012")
     var cursor=CombinatorRestarting(1)
@@ -72,20 +72,20 @@ def stopping() raises:
         calls[]+=1
         if value==2:return Err(String("stored"))
         return Ok(Optional[Int]())
-    assert_true(find_map_effect[ResultFamily[String]](missing,Counted(Pointer(to=pulls),0,8)).is_err())
+    assert_true(find_map_effect[ResultFamily[String]](Counted(Pointer(to=pulls),0,8),missing).is_err())
     assert_equal(calls[],2);assert_equal(pulls,2)
     calls[]=0;pulls=0
     def absent(value:Int) {calls}->Optional[Bool]:
         calls[]+=1
         return None
-    assert_false(find_effect[OptionalFamily](absent,Counted(Pointer(to=pulls),0,8)))
+    assert_false(find_effect[OptionalFamily](Counted(Pointer(to=pulls),0,8),absent))
     assert_equal(calls[],1);assert_equal(pulls,1)
     calls[]=0;pulls=0
     def branching(var value:Int) {calls}->List[Optional[Int]]:
         calls[]+=1
         if value==1:return [Optional[Int](),Optional(value)]
         return [Optional(20)]
-    var found=find_map_effect[ListFamily](branching,Counted(Pointer(to=pulls),0,8))
+    var found=find_map_effect[ListFamily](Counted(Pointer(to=pulls),0,8),branching)
     assert_equal(len(found),2)
     assert_equal(found[0].value(),20);assert_equal(found[1].value(),1)
     assert_equal(calls[],2);assert_equal(pulls,2)
@@ -94,7 +94,7 @@ def stopping() raises:
         calls[]+=1
         if value==0:return ["a","A"]
         return ["b","B"]
-    assert_equal(fold_map_effect[ListFamily,StringMonoid](alternatives,range(2)),["ab","aB","Ab","AB"])
+    assert_equal(fold_map_effect[ListFamily,StringMonoid](range(2),alternatives),["ab","aB","Ab","AB"])
     assert_equal(calls[],3)
 
 
@@ -115,7 +115,7 @@ def deferred() raises:
     def select(var value:Int) {calls}->Reader[Int].Pure[Optional[Int]]:
         calls[]+=1
         return Reader[Int].pure(Optional(value) if value==2 else Optional[Int]())
-    var search=find_map_effect[Reader[Int]](select,Counted(Pointer(to=pulls),0,8))
+    var search=find_map_effect[Reader[Int]](Counted(Pointer(to=pulls),0,8),select)
     assert_equal(calls[],0);assert_equal(pulls,0)
     assert_equal(run[Reader[Int]](search^,10).value(),2)
     assert_equal(calls[],2);assert_equal(pulls,2)
@@ -129,7 +129,7 @@ def deferred() raises:
     def text(var value:Int) {calls}->Reader[Int].Pure[String]:
         calls[]+=1
         return Reader[Int].pure(String(value))
-    var total=fold_map_effect[Reader[Int],StringMonoid](text,Counted(Pointer(to=pulls),0,3))
+    var total=fold_map_effect[Reader[Int],StringMonoid](Counted(Pointer(to=pulls),0,3),text)
     assert_equal(calls[],0);assert_equal(pulls,0)
     assert_equal(run[Reader[Int]](total^,0),"123")
     assert_equal(calls[],3);assert_equal(pulls,4)
@@ -160,12 +160,12 @@ def errors() raises:
         calls[]+=1
         return Optional(String(value))
     var code=0
-    try: _=fold_map_effect[OptionalFamily,I6Monoid[True]](text,Counted(Pointer(to=pulls),0,5))
+    try: _=fold_map_effect[OptionalFamily,I6Monoid[True]](Counted(Pointer(to=pulls),0,5),text)
     except error:
         comptime assert type_of(error)==I6Failure
         code=error.code
     assert_equal(code,10);assert_equal(calls[],0);assert_equal(pulls,0)
-    try: _=fold_map_effect[OptionalFamily,I6Monoid[False]](text,Counted(Pointer(to=pulls),0,5))
+    try: _=fold_map_effect[OptionalFamily,I6Monoid[False]](Counted(Pointer(to=pulls),0,5),text)
     except error:
         comptime assert type_of(error)==I6Failure
         code=error.code
@@ -173,13 +173,13 @@ def errors() raises:
     pulls=0
     def failure(var value:Int) raises I6Failure -> Optional[Optional[Int]]:
         raise I6Failure(value)
-    try: _=find_map_effect[OptionalFamily](failure,Counted(Pointer(to=pulls),0,5))
+    try: _=find_map_effect[OptionalFamily](Counted(Pointer(to=pulls),0,5),failure)
     except error:code=error.code
     assert_equal(code,1);assert_equal(pulls,1)
     from std.iter import StopIteration
     def native_stop(value:Int) raises StopIteration -> Optional[Bool]:raise StopIteration()
     var stopped=False
-    try: _=find_effect[OptionalFamily](native_stop,range(4))
+    try: _=find_effect[OptionalFamily](range(4),native_stop)
     except StopIteration:stopped=True
     assert_true(stopped)
 
@@ -190,7 +190,7 @@ def deferred_errors() raises:
     def failure(var value:Int) raises I6Failure {calls} -> Reader[Int].Pure[Optional[Int]]:
         calls[]+=1
         raise I6Failure(value)
-    var search=find_map_effect[Reader[Int]](failure,Counted(Pointer(to=pulls),0,5))
+    var search=find_map_effect[Reader[Int]](Counted(Pointer(to=pulls),0,5),failure)
     assert_equal(calls[],0);assert_equal(pulls,0)
     var code=0
     try: _=run[Reader[Int]](search^,0)
@@ -202,12 +202,12 @@ def deferred_errors() raises:
     def text(var value:Int) {calls}->Reader[Int].Pure[String]:
         calls[]+=1
         return Reader[Int].pure(String(value))
-    try: _=fold_map_effect[Reader[Int],I6Monoid[True]](text,Counted(Pointer(to=pulls),0,5))
+    try: _=fold_map_effect[Reader[Int],I6Monoid[True]](Counted(Pointer(to=pulls),0,5),text)
     except error: code=error.code
     assert_equal(code,10);assert_equal(calls[],0);assert_equal(pulls,0)
     # Construction may raise only the identity error. Combination is deferred.
     try:
-        var folded=fold_map_effect[Reader[Int],I6Monoid[False]](text,Counted(Pointer(to=pulls),0,5))
+        var folded=fold_map_effect[Reader[Int],I6Monoid[False]](Counted(Pointer(to=pulls),0,5),text)
         if calls[]!=0 or pulls!=0:raise I6Failure(-1)
         _=run[Reader[Int]](folded^,0)
     except error:

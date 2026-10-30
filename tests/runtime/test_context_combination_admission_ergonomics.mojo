@@ -17,7 +17,7 @@ def generic_product[A:Copyable & Deinitable,B:Copyable & Deinitable](var left:Li
     return piped(left^).product(right^).get()
 
 def generic_combine[I:Applicative,V:Movable & Deinitable,F:BinaryContract & Movable & Deinitable,R:ThunkContract & Movable & Deinitable](var left:V,var function:F,var right:R) raises CombineContract[I,V,F,R].Error -> CombineContract[I,V,F,R].Out where CombineContract[I,V,F,R].Compatible:
-    return map2_lazy[I](function^,left^,right^)
+    return map2_lazy[I](left^,right^,function^)
 
 def add(var first:Int,var second:Int)->Int:return first+second
 

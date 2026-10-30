@@ -10,7 +10,7 @@ from std.memory import ArcPointer
 def forward[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: V
 ) raises FoldMapContract[I, M, V, F].Error -> FoldMapContract[I, M, V, F].Out where FoldMapContract[I, M, V, F].Compatible:
-    return fold_map_effect[I, M](function^, source^)
+    return fold_map_effect[I, M](source^, function^)
 
 
 def fluent[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](

@@ -10,17 +10,17 @@ from std.testing import assert_equal, assert_true
 def ig_family_map[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var f: F, var source: V
 ) raises I.MapError[V, F] -> I.Mapped[V, F] where I.Element[V] == F.Arg and I.MapCompatible[V, F]:
-    return map[I](f^, source^)
+    return map[I](source^, f^)
 
 def ig_family_bind[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var f: F, var source: V
 ) raises I.BindError[V, F] -> I.Bound[V, F] where I.Element[V] == F.Arg and I.BindCompatible[V, F]:
-    return flat_map[I](f^, source^)
+    return flat_map[I](source^, f^)
 
 def ig_family_traverse[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var f: F, var source: V
 ) raises S.TraverseError[G, V, F] -> S.Traversed[G, V, F] where S.Element[V] == F.Arg and S.TargetCompatible[G, V, F]:
-    return traverse[S, G](f^, source^)
+    return traverse[S, G](source^, f^)
 
 @fieldwise_init
 struct IGNext(Unary, Copyable, Defaultable):
@@ -38,12 +38,12 @@ struct IGViewStep[o: ImmOrigin](Unary, Copyable):
 def ig_map[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable,
            F: def(var A) raises X -> B](var source: Ior[String, A], ref f: F
 ) raises X -> Ior[String, B]:
-    return map[IorFamily[StringMonoid], X=X](f, source^)
+    return map[IorFamily[StringMonoid], X=X](source^, f)
 
 def ig_bind[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable,
             F: def(var A) raises X -> Ior[String, B]](var source: Ior[String, A], ref f: F
 ) raises X -> Ior[String, B]:
-    return flat_map[IorFamily[StringMonoid], X=X](f, source^)
+    return flat_map[IorFamily[StringMonoid], X=X](source^, f)
 
 def ig_identity[o: Origin](var value: Span[Int, o]) raises String -> Span[Int, o]: return value
 def ig_next[o: Origin](var value: Span[Int, o]) raises String -> Ior[String, Span[Int, o]]:
@@ -68,7 +68,7 @@ def ig_borrow(values: List[Int]) raises:
     var issues = List[View]([view])
     var diagnostics = Ior[List[View], Int](Both(issues^, 4))
     def later(value: Int) -> Ior[List[View], Int]: return Right(value * 2)
-    var kept = flat_map[IorFamily[ListMonoid[View]]](later, diagnostics^)
+    var kept = flat_map[IorFamily[ListMonoid[View]]](diagnostics^, later)
     assert_equal(kept[Both[List[View], Int]].left[0][0], 7)
     assert_equal(kept[Both[List[View], Int]].right, 8)
     var raised = False

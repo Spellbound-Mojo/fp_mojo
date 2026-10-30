@@ -48,7 +48,7 @@ def scoped_case(calls: ArcPointer[Int], drops: ArcPointer[Int], mode: Int) raise
     comptime S = StateT[R, ECMoveState]
     comptime C = LiftLocal[S, R]
     comptime assert not C.AskAvailable
-    var pending = local[C](ECChangeOnce(ECCapture(drops), calls, mode == 1), S.lift(action[R, Int](ECReadEnv())))
+    var pending = local[C](S.lift(action[R, Int](ECReadEnv())), ECChangeOnce(ECCapture(drops), calls, mode == 1))
     comptime assert not conforms_to(type_of(pending), Copyable)
     assert_equal(calls[], 0)
     if mode == 2:
@@ -79,7 +79,7 @@ def borrowed_environment(owner: List[Int]) raises:
     comptime C = LiftLocal[S, R]
     def same(value: View) -> View: return value
     var env = Span(owner)
-    var base = run[S](local[C](same, ask[C]()), 9)
+    var base = run[S](local[C](ask[C](), same), 9)
     var pair = run[R](base^, env)
     assert_equal(pair[0][1], 12)
     assert_equal(pair[1], 9)
@@ -100,7 +100,7 @@ def borrowed_error(owner: List[Int]) raises:
     comptime R = Reader[Int]
     comptime S = StateT[R, Int]
     comptime C = LiftLocal[S, R]
-    var base = run[S](local[C](ECReject[origin_of(owner)](Span(owner)), ask[C]()), 0)
+    var base = run[S](local[C](ask[C](), ECReject[origin_of(owner)](Span(owner))), 0)
     try:
         _ = run[R](base^, 5)
     except error:
@@ -115,8 +115,8 @@ def outer_borrow(owner: List[Int]) raises:
     comptime Inner = LiftLocal[Outer, R]
     def read_again(var ignored: List[Int]) -> Outer.Asked: return ask[Outer]()
     def change_inner(value: Int) -> Int: return value + 10
-    var source = flat_map[Outer](as_unary(read_again), ask[Outer]())
-    var base = run[Outer](local[Inner](change_inner, source^), owner)
+    var source = flat_map[Outer](ask[Outer](), as_unary(read_again))
+    var base = run[Outer](local[Inner](source^, change_inner), owner)
     var result = run[R](base^, 7)
     assert_equal(result, owner)
 

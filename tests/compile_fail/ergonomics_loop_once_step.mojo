@@ -7,4 +7,4 @@ struct OnlyOnce(OnceUnary):
     comptime Arg = Int
     comptime Out = ControlFlow[Int,Int]
     def call_once(deinit self, var a: Int) -> Self.Out: return Break(a)
-def main(): _ = tail_rec_m[IdentityFamily](OnlyOnce(), 1)
+def main(): _ = tail_rec_m[IdentityFamily](1, OnlyOnce())

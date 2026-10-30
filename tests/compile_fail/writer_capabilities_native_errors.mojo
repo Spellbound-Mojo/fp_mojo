@@ -12,4 +12,4 @@ def reject(var log: String) raises Int -> String: raise 7
 def main():
     comptime W = Writer[StringMonoid]
     comptime R = ReaderT[W, Int]
-    _ = censor[LiftCensor[R, W]](reject, action[R, NoneType](Source()))
+    _ = censor[LiftCensor[R, W]](action[R, NoneType](Source()), reject)

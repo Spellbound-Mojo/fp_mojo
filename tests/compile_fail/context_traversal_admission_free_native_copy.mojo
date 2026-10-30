@@ -8,4 +8,4 @@ from context_traversal_admission_support import MoveState,Next,OnceNext,OnceOwne
 
 def main() raises:
     def produce(var value:Int)->List[MoveState]:return ListFamily.pure(MoveState(value))
-    _=traverse[ListFamily,ListFamily](produce,List[Int]([1,2]))
+    _=traverse[ListFamily,ListFamily](List[Int]([1,2]),produce)

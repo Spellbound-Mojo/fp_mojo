@@ -54,8 +54,8 @@ def main() raises:
         stepped += 1
         return total + value
 
-    var selected = map(twice, filter(positive, values^))
-    var scanned = scan_left(running, 0, selected^)
+    var selected = map(filter(values^, positive), twice)
+    var scanned = scan_left(selected^, 0, running)
     assert_equal(tested, 0)
     assert_equal(mapped, 0)
     assert_equal(stepped, 0)
@@ -78,7 +78,7 @@ def main() raises:
         expanded += 1
         return [value, value + offset]
 
-    var pairs = flat_map(pair, filter_map(odd, range(1, 4)))
+    var pairs = flat_map(filter_map(range(1, 4), odd), pair)
     assert_equal(checked, 0)
     assert_equal(expanded, 0)
     var outputs = collect_list(pairs^)
@@ -86,14 +86,14 @@ def main() raises:
     assert_equal(outputs, expected_pairs)
     assert_equal(checked, 3)
     assert_equal(expanded, 2)
-    assert_equal(fold_left(subtract, 10, range(1, 4)), 4)
-    var empty = reduce_optional(add, range(0))
+    assert_equal(fold_left(range(1, 4), 10, subtract), 4)
+    var empty = reduce_optional(range(0), add)
     assert_equal(Bool(empty), False)
     for i in range(len(snapshots)):
         print(snapshots[i])
     var step = partial(weighted, 2)
     print("weighted:", iterated(range(1, 4)).scan_left(step, 0).collect_list())
-    print("again:", collect_list(scan_left(step, 10, range(1, 3))))
+    print("again:", collect_list(scan_left(range(1, 3), 10, step)))
     print("initial:", iterated(range(0)).scan_left(step^, 5).collect_list())
     print("stateful:", iterated(range(1, 4)).map(Running(0)).collect_list())
     print("changing weights:", iterated(range(1, 4)).scan_left(IncreasingWeight(1), 0).collect_list())

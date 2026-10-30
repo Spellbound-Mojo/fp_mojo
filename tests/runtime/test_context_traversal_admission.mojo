@@ -16,7 +16,7 @@ def generic[S:Traversable,G:Applicative,V:Movable & Deinitable,F:UnaryContract &
 # The producer itself depends on the target dictionary. Combined admission
 # must remain usable after its associated carrier and error types expand.
 def optional_generic[G:Applicative](var value:Optional[Int]) raises TraverseContract[OptionalFamily,G,Optional[Int],OnceNext[G]].Error ->TraverseContract[OptionalFamily,G,Optional[Int],OnceNext[G]].Out where TraverseContract[OptionalFamily,G,Optional[Int],OnceNext[G]].Compatible:
-    return traverse[OptionalFamily,G](OnceNext[G](),value^)
+    return traverse[OptionalFamily,G](value^,OnceNext[G]())
 
 def result_generic[G:Applicative](var value:Result[Int,String]) raises TraverseContract[ResultFamily[String],G,Result[Int,String],OnceNext[G]].Error ->TraverseContract[ResultFamily[String],G,Result[Int,String],OnceNext[G]].Out where TraverseContract[ResultFamily[String],G,Result[Int,String],OnceNext[G]].Compatible:
     return pipeline[ResultFamily[String]](value^).traverse[G](OnceNext[G]()).get()
@@ -58,7 +58,7 @@ def main() raises:
     var results=generic[ListFamily,R](List[Int]([1,2]),Next[R]())
     assert_equal(results[0]._ok().value,[2,3])
     def choose(var value:Int)->List[Int]:return [value,value+10]
-    var cartesian=traverse[ListFamily,ListFamily](choose,List[Int]([1,2]))
+    var cartesian=traverse[ListFamily,ListFamily](List[Int]([1,2]),choose)
     assert_equal(cartesian[0],[1,2])
     assert_equal(cartesian[3],[11,12])
     assert_equal(piped(List[Int]([1,2])).traverse[ListFamily](choose).get(),cartesian)

@@ -10,4 +10,4 @@ struct Once(BorrowOnceCallable):
 
 def main():
     var values: List[Int] = [0, 1]
-    _ = filter[ListFamily](Once(), values^)
+    _ = filter[ListFamily](values^, Once())

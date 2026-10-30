@@ -40,28 +40,28 @@ struct Outer(Iterator):
 def abandon(mode: Int, drops: ArcPointer[Int]) raises:
     var values: List[IterationAdaptersToken] = [IterationAdaptersToken(1, drops), IterationAdaptersToken(2, drops), IterationAdaptersToken(3, drops)]
     if mode == 0:
-        var output = map(increment, iter(values^))
+        var output = map(iter(values^), increment)
         var first = output.__next__()
         assert_equal(first.value, 2)
         assert_equal(drops[], 0)
         _ = first^
         _ = output^
     elif mode == 1:
-        var output = filter(even, iter(values^))
+        var output = filter(iter(values^), even)
         var first = output.__next__()
         assert_equal(first.value, 2)
         assert_equal(drops[], 1)
         _ = first^
         _ = output^
     elif mode == 2:
-        var output = filter_map(optional, iter(values^))
+        var output = filter_map(iter(values^), optional)
         var first = output.__next__()
         assert_equal(first.value, 2)
         assert_equal(drops[], 1)
         _ = first^
         _ = output^
     else:
-        var output = flat_map(nested, iter(values^))
+        var output = flat_map(iter(values^), nested)
         var first = output.__next__()
         assert_equal(first.value, 1)
         assert_equal(drops[], 0)
@@ -92,7 +92,7 @@ def main() raises:
     assert_equal(drops[], 3)
     assert_equal(pulls[], 1)
     var values: List[IterationAdaptersToken] = [IterationAdaptersToken(1, drops), IterationAdaptersToken(2, drops)]
-    var collected = collect_list(map(increment, iter(values^)))
+    var collected = collect_list(map(iter(values^), increment))
     assert_equal(drops[], 3)
     assert_equal(collected[0].value, 2)
     assert_equal(collected[1].value, 3)

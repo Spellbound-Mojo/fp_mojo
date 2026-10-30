@@ -12,5 +12,5 @@ def main():
     comptime W = Writer[StringMonoid]
     comptime C = LiftCensor[ReaderT[W, Int], W]
     var callback = Change(String("!"))
-    _ = censor[C](callback^, tell[C](String("a")))
-    _ = censor[C](callback^, tell[C](String("b")))
+    _ = censor[C](tell[C](String("a")), callback^)
+    _ = censor[C](tell[C](String("b")), callback^)

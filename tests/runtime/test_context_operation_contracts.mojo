@@ -21,7 +21,7 @@ def bound[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinit
 def legacy_map[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var value: V, var function: F
 ) raises I.MapError[V, F] -> I.Mapped[V, F] where I.Element[V] == F.Arg and I.MapCompatible[V, F]:
-    return map[I](function^, value^)
+    return map[I](value^, function^)
 
 @fieldwise_init
 struct Present[T: Movable & Deinitable](Unary):

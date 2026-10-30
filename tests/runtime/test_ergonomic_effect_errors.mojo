@@ -51,14 +51,14 @@ def failed_default() raises ErgonomicError -> Int:
 def failed_result_default() -> Result[Int, String]: return Err(String("missing"))
 
 def main() raises:
-    var state_program = tail_rec_m[State[Int]](stateful_loop_step, 0)
+    var state_program = tail_rec_m[State[Int]](0, stateful_loop_step)
     assert_equal(run[State[Int]](state_program^, 20), (10, 31))
     var limit = 2000
-    var reader_program = tail_rec_m[Reader[Int]](reader_loop_step, 0)
+    var reader_program = tail_rec_m[Reader[Int]](0, reader_loop_step)
     assert_equal(run[Reader[Int]](reader_program^, limit), 2000)
     var seen = 0
     try:
-        _ = tail_rec_m[IdentityFamily](failing_loop_step, 0)
+        _ = tail_rec_m[IdentityFamily](0, failing_loop_step)
     except error:
         seen = error.code
     assert_equal(seen, 3)

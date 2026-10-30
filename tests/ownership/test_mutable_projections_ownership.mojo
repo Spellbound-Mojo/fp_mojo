@@ -30,10 +30,10 @@ def extrema[mode:Int](fail:Bool) raises:
     var result=Optional[Token]()
     var error_id=0
     try:
-        comptime if mode==0:result=min_by(Rank(Token(6,state),fail),[Token(1,state),Token(2,state),Token(3,state)])
-        elif mode==1:result=max_by(Rank(Token(6,state),fail),[Token(1,state),Token(2,state),Token(3,state)])
-        elif mode==2:result=minimum_by_non_empty(Rank(Token(6,state),fail),NonEmptyList(Token(1,state),[Token(2,state),Token(3,state)]))
-        else:result=maximum_by_non_empty(Rank(Token(6,state),fail),NonEmptyList(Token(1,state),[Token(2,state),Token(3,state)]))
+        comptime if mode==0:result=min_by([Token(1,state),Token(2,state),Token(3,state)],Rank(Token(6,state),fail))
+        elif mode==1:result=max_by([Token(1,state),Token(2,state),Token(3,state)],Rank(Token(6,state),fail))
+        elif mode==2:result=minimum_by_non_empty(NonEmptyList(Token(1,state),[Token(2,state),Token(3,state)]),Rank(Token(6,state),fail))
+        else:result=maximum_by_non_empty(NonEmptyList(Token(1,state),[Token(2,state),Token(3,state)]),Rank(Token(6,state),fail))
     except error:
         comptime assert type_of(error)==Token
         error_id=error.id

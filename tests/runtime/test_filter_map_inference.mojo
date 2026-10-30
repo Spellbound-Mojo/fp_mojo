@@ -35,7 +35,7 @@ def absent(offset: Int, value: Int) -> Optional[Never]:
 def direct[U: Movable & Deinitable, C: Unary, I: Iterator](var callback: C, var source: I
 ) -> List[U] where I.Element == C.Arg and C.Out == Optional[U] and C.Error == Never:
     # Generic symbolic equality retains the established explicit payload form.
-    return collect_list(filter_map[U](callback^, source^))
+    return collect_list(filter_map[U](source^, callback^))
 
 def fluent[U: Movable & Deinitable, C: Unary, I: Iterator](var callback: C, var source: I
 ) -> List[U] where I.Element == C.Arg and C.Out == Optional[U] and C.Error == Never:
@@ -45,23 +45,23 @@ def main() raises:
     assert_equal(direct[Int](Select(), range(5)), [3, 4])
     assert_equal(fluent[Int](Select(), range(5)), [3, 4])
     var project = partial(select, 2)
-    assert_equal(collect_list(filter_map(project, range(5))), [3, 4])
+    assert_equal(collect_list(filter_map(range(5), project)), [3, 4])
     assert_equal(iterated(range(5)).filter_map(project).collect_list(), [3, 4])
-    assert_equal(collect_list(filter_map[Int](project, range(5))), [3, 4])
+    assert_equal(collect_list(filter_map[Int](range(5), project)), [3, 4])
     assert_equal(iterated(range(5)).filter_map[U=Int](project).collect_list(), [3, 4])
-    assert_equal(collect_list(filter_map(Select(), range(5))), [3, 4])
+    assert_equal(collect_list(filter_map(range(5), Select())), [3, 4])
     assert_equal(iterated(range(5)).filter_map(Select()).collect_list(), [3, 4])
-    assert_equal(collect_list(filter_map[Int](Select(), range(5))), [3, 4])
+    assert_equal(collect_list(filter_map[Int](range(5), Select())), [3, 4])
     assert_equal(iterated(range(5)).filter_map[Int](Select()).collect_list(), [3, 4])
     assert_equal(iterated(range(5)).filter_map(project^).collect_list(), [3, 4])
     var native = as_unary(even)
-    assert_equal(collect_list(filter_map(native, range(5))), [0, 2, 4])
+    assert_equal(collect_list(filter_map(range(5), native)), [0, 2, 4])
     assert_equal(iterated(range(5)).filter_map(native).collect_list(), [0, 2, 4])
     var chain = flow(increment, even)
-    assert_equal(collect_list(filter_map(chain, range(5))), [2, 4])
+    assert_equal(collect_list(filter_map(range(5), chain)), [2, 4])
     assert_equal(iterated(range(5)).filter_map(chain).collect_list(), [2, 4])
     var effect = kleisli[OptionalFamily](even)
-    assert_equal(collect_list(filter_map(effect, range(5))), [0, 2, 4])
+    assert_equal(collect_list(filter_map(range(5), effect)), [0, 2, 4])
     assert_equal(iterated(range(5)).filter_map(effect).collect_list(), [0, 2, 4])
     var outcomes = partial(nested, 10)
     var values = iterated(range(3)).filter_map(outcomes).collect_list()

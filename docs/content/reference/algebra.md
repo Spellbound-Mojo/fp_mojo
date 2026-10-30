@@ -483,9 +483,9 @@ always derive the full carrier proof from an equality like `R == Optional[A]`;
 use the public predicate alongside the operation's payload and error constraints.
 Ordinary calls infer their concrete carrier types as before.
 
-`filter[ListFamily](predicate, values^)` and
-`filter[OptionalFamily](predicate, value^)` retain accepted original payloads.
-`filter_not[Family](predicate, value^)` retains rejected payloads through the
+`filter[ListFamily](values^, predicate)` and
+`filter[OptionalFamily](value^, predicate)` retain accepted original payloads.
+`filter_not[Family](value^, predicate)` retains rejected payloads through the
 same Filterable primitive. The predicate borrows each payload, returns Bool,
 and may raise a typed error. Owned `BorrowMutableCallable` and `BorrowCallable`
 values are both accepted; repeated invocation prefers the mutable receiver.
@@ -499,7 +499,7 @@ admission. The same partial works in inferred Piped container calls and lazy
 filtering; each native invocation keeps its documented bound-argument copies.
 
 
-`filter_map[Family](transform, values^)` uses `FunctorFilter` to transform
+`filter_map[Family](values^, transform)` uses `FunctorFilter` to transform
 payloads and retain present Optional results. `compact[Family](values^)`
 derives from this primitive with the identity callback. This capability can
 change payload types; it is separate from `Filterable`, which retains original
@@ -597,7 +597,7 @@ native Optional, or the base of OptionalT. Present values and base failures
 skip the factory; earlier state and output are retained. A branching base calls
 a repeatable factory for each absent branch.
 
-`tail_rec_m[Family](step, initial)` repeatedly runs a step returning an effect
+`tail_rec_m[Family](initial, step)` repeatedly runs a step returning an effect
 of `ControlFlow[B, A]`. Continue supplies the next state; Break supplies the
 result. The existing effectful fold gives built-in families constant call-stack
 usage in the number of steps, with no recursive callback chain. Family failure,
@@ -632,10 +632,10 @@ addition must not be reassociated using the Monoid laws.
 
 <!-- example: docs/examples/algebra_core.mojo -->
 
-`map[I](twice, ...)` doubles `3` to `6` as a bare value, inside an `Optional`
+`map[I](..., twice)` doubles `3` to `6` as a bare value, inside an `Optional`
 and inside a `Result`, and doubles `[1, 2, 3]` to `2 4 6`; each result keeps its
-native type. `flat_map[OptionalFamily](positive, Optional(-1))` lets `positive`
-return an absent value. `traverse[ListFamily, OptionalFamily](positive, ...)`
+native type. `flat_map[OptionalFamily](Optional(-1), positive)` lets `positive`
+return an absent value. `traverse[ListFamily, OptionalFamily](..., positive)`
 returns a present list of three values for `[1, 2, 3]`, and an absent value
 for `[1, -2, 3]`, stopping at `-2`.
 

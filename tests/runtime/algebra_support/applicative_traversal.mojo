@@ -45,7 +45,7 @@ struct Produce(Unary):
         return Result[Int,Int](Ok(item+1))
 
 def generic_traverse[S:Traversable,G:Applicative,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var function:F,var source:V) raises S.TraverseError[G,V,F] -> S.Traversed[G,V,F] where S.Element[V] == F.Arg and S.TargetCompatible[G,V,F]:
-    return traverse[S,G](function^,source^)
+    return traverse[S,G](source^,function^)
 
 
 from fp.algebra import Monad

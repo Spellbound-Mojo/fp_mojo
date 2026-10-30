@@ -12,7 +12,7 @@ struct I4Borrowed[o: ImmOrigin](Unary):
 
 def check(anchor: Int):
     var local=2
-    var expected=align_with(I4Borrowed(Pointer(to=anchor)),range(1),range(1))
-    var actual=align_with(I4Borrowed(Pointer(to=local)),range(1),range(1))
+    var expected=align_with(range(1),range(1),I4Borrowed(Pointer(to=anchor)))
+    var actual=align_with(range(1),range(1),I4Borrowed(Pointer(to=local)))
     expected=actual^
 def main(): check(1)

@@ -9,5 +9,5 @@ struct Step[o: ImmOrigin](Unary, Copyable):
     def call(self, var value: Self.Arg) -> Self.Out: return Right(value)
 def check(left: List[Int], right: List[Int]):
     comptime Other = Span[Int, origin_of(right)]
-    _ = traverse[ListFamily, IorFamily[StringMonoid]](Step[origin_of(left)](), List[Other]([Span(right)]))
+    _ = traverse[ListFamily, IorFamily[StringMonoid]](List[Other]([Span(right)]), Step[origin_of(left)]())
 def main(): check(List[Int]([1]), List[Int]([2]))

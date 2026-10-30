@@ -222,7 +222,7 @@ def main() raises:
         calls += 1
         return forward[owned=True](parse, text^)
     var values: List[String] = ["one", "bad", "unread"]
-    var sequence = map(parse_result, iter(values^))
+    var sequence = map(iter(values^), parse_result)
     var collected = collect_results(sequence^)
     assert_equal(calls, 2)
     var error_code = 0
@@ -230,7 +230,7 @@ def main() raises:
     except error: error_code = error.code
     assert_equal(error_code, 7)
     var result = forward[owned=True](parse, String("four"))
-    var combined = flat_map[ResultFamily[type_of(result).Error]](success, result^)
+    var combined = flat_map[ResultFamily[type_of(result).Error]](result^, success)
     var output: Int
     try: output = raise_on_err(combined^)
     except error: raise Error("unexpected failure")

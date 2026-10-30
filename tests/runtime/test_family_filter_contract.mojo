@@ -9,11 +9,11 @@ from std.testing import assert_equal
 
 
 def accepted[I: Filterable, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var callback: C, var value: V) raises FilterContract[I, V, C].Error -> FilterContract[I, V, C].Out where FilterContract[I, V, C].Compatible:
-    return filter[I](callback^, value^)
+    return filter[I](value^, callback^)
 
 
 def rejected[I: Filterable, V: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var callback: C, var value: V) raises FilterContract[I, V, C, True].Error -> FilterContract[I, V, C, True].Out where FilterContract[I, V, C, True].Compatible:
-    return filter_not[I](callback^, value^)
+    return filter_not[I](value^, callback^)
 
 
 struct Once(BorrowOnceCallable):

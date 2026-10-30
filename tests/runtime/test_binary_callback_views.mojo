@@ -30,14 +30,14 @@ struct Dual(Binary, MutableBinary, ImplicitlyCopyable):
     def call_mut(mut self, var a: Int, var b: Int) -> Int: return 200 + self.offset + a + b
 
 def generic[F: Binary, I: Iterator, J: Iterator](var callback: F, var left: I, var right: J) -> ZipWithIterator[F.First, F.Second, F.Out, I, J, F] where I.Element == F.First and J.Element == F.Second and F.Error == Never:
-    return zip_with[F=F](callback^, left^, right^)
+    return zip_with[F=F](left^, right^, callback^)
 
 
 def main() raises:
     var project = partial(combine, 100)
-    assert_equal(iterated(zip_with(project, range(2), range(3,5))).collect_list(), [103,114])
+    assert_equal(iterated(zip_with(range(2), range(3,5), project)).collect_list(), [103,114])
     assert_equal(iterated(range(2)).zip_with(range(3,5), project).collect_list(), [103,114])
-    assert_equal(iterated(map_with_index(project, range(3), start=2)).collect_list(), [120,131,142])
+    assert_equal(iterated(map_with_index(range(3), project, start=2)).collect_list(), [120,131,142])
     assert_equal(iterated(range(3)).map_with_index(project, start=2).collect_list(), [120,131,142])
     var composed = flow(add, twice)
     assert_equal(iterated(range(2)).zip_with(range(3,5), composed).collect_list(), [6,10])

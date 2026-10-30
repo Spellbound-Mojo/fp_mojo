@@ -11,8 +11,8 @@ reuse, explicit moves, and the independent ownership of callback inputs.
 
 ## Use a non-empty source guarantee
 
-`reduce_non_empty(step, values)` returns the accumulator directly, seeded from
-the first element. `reduce_map[Semigroup](projection, values)` combines mapped
+`reduce_non_empty(values, step)` returns the accumulator directly, seeded from
+the first element. `reduce_map[Semigroup](values, projection)` combines mapped
 values without requiring an empty identity. `combine_non_empty[Semigroup]`
 combines the original elements. Each takes NonEmptyList, moves payloads and
 preserves left-to-right order. A singleton skips the binary combine operation.
@@ -114,7 +114,7 @@ The value-taking forms fuse exhaustion; standard adapters keep
 their native exhaustion behavior. `.enumerate(start=0)` and
 `.map_with_index(function, start=0)` put the index first. The binary method is
 `.zip_with(other, function)`; its free counterpart is
-`zip_with(function, source, other)`.
+`zip_with(source, other, function)`.
 
 `zip_with` and `map_with_index` can reuse a named two-argument `partial`, shared
 binary `flow`/`compose` chain or binary `flip` wrapper. The example binds the
@@ -173,7 +173,7 @@ result and stops at its first present result. Raised errors keep their exact
 types; callback and Monoid errors must match when both can raise.
 
 Owned key projections can implement `BorrowMutableCallable` directly:
-`min_by(key^, source^)`, `iterated(source^).max_by(key^)`, and the corresponding
+`min_by(source^, key^)`, `iterated(source^).max_by(key^)`, and the corresponding
 Piped and selected Pipeline methods infer the payload and key types. The
 non-empty variants accept the same callbacks. A repeated call prefers
 `invoke_mut`, retaining one callback state throughout the reduction; a
@@ -213,7 +213,7 @@ word count of 3, the same as the loop in `main`.
 
 <!-- example: docs/examples/iteration_branching.mojo -->
 
-`partition(predicate, source, buffer=...)`, `partition_map(classify, source,
+`partition(source, predicate, buffer=...)`, `partition_map(source, classify,
 buffer=...)` and `unzip(source, buffer=...)` return native tuples of two
 move-only iterators. The same methods are available on `Iter`. The policy is
 required: `Unbounded()` yields raw values; `BoundedFail(n)` yields
@@ -247,7 +247,7 @@ aborts before another mutable borrow. See the [full contract](../architecture/it
 
 `align(left, right)` yields `Ior[A,B]` until both inputs end. Left and Right
 identify the input sides; they do not mean failure or success here.
-`align_with(function, left, right)` maps each owned Ior, and
+`align_with(left, right, function)` maps each owned Ior, and
 `pad_zip(left, right)` yields `(Optional[A], Optional[B])`. The pair always has
 at least one present field. Fluent calls are `.align(other)`,
 `.align_with(other, function)` and `.pad_zip(other)`.
@@ -270,7 +270,7 @@ unknown. The mapped forms retain the existing map adapter's conservative bounds.
 
 <!-- example: docs/examples/iteration_scan_map.mojo -->
 
-`scan_map(step, initial, source)` and `.scan_map(step, initial)` apply a step
+`scan_map(source, initial, step)` and `.scan_map(step, initial)` apply a step
 `(var A, var T) -> Tuple[A,Y]`. The carry `A` and output `Y` are independent;
 neither needs to be Copyable. Every pull consumes one source item and invokes
 the non-raising step once. Empty input yields nothing, and exhaustion is fused.
@@ -291,7 +291,7 @@ copy, including the sole snapshot produced for an empty source.
 Generic native wrappers preserve `A`, `T`, `Y` and forward them explicitly;
 `ScanMapIterator[A,T,Y,I,F]` names the concrete lazy iterator, including origins.
 
-To keep the final carry, use `map_accumulate(step, initial, source)` or
+To keep the final carry, use `map_accumulate(source, initial, step)` or
 `.map_accumulate(step, initial)`. Inspired by Cats `Traverse.mapAccumulate`,
 it returns `(final_carry, List[output])`. It consumes a finite source from its
 current position, invoking the step immediately after each pull. Empty input
@@ -446,9 +446,9 @@ Existing positional and named family/error arguments keep their meaning.
 
 | Operation | Callback or input | Result |
 |---|---|---|
-| `find_effect[G](predicate, source)` | Borrowed element → `G[Bool]` | `G[Optional[element]]` |
-| `find_map_effect[G](function, source)` | Owned element → `G[Optional[B]]` | `G[Optional[B]]` |
-| `fold_map_effect[G, M](function, source)` | Owned element → `G[M.Value]` | `G[M.Value]` |
+| `find_effect[G](source, predicate)` | Borrowed element → `G[Bool]` | `G[Optional[element]]` |
+| `find_map_effect[G](source, function)` | Owned element → `G[Optional[B]]` | `G[Optional[B]]` |
+| `fold_map_effect[G, M](source, function)` | Owned element → `G[M.Value]` | `G[M.Value]` |
 | `sequence_filter[G](source)` | Elements already contain `G[Optional[B]]` | Effect containing present values |
 
 The first three are consuming Monad terminals, also available on `Iter` and

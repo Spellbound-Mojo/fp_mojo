@@ -8,4 +8,4 @@ struct Step(MutableBinary):
     comptime Out=String
     def __init__(out self):pass
     def call_mut(mut self,var a:Int,var b:Int)->Self.Out: return String("wrong")
-def main() raises: _=fold_until(Step(),0,[1])
+def main() raises: _=fold_until([1],0,Step())

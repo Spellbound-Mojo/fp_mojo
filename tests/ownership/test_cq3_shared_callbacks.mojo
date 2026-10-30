@@ -22,9 +22,9 @@ def exercise(destroyed: ArcPointer[List[Int]]) raises:
     def step(var accumulator: Int, var item: Int) {var state^} -> Int:
         state.calls += 1
         return accumulator - item * state.calls
-    assert_equal(fold_left(step, 100, iter(range(1, 3))), 95)
-    assert_equal(fold_left(step, 100, iter(range(1, 3))), 89)
-    var reduced = reduce_optional(step, iter(range(1, 4)))
+    assert_equal(fold_left(iter(range(1, 3)), 100, step), 95)
+    assert_equal(fold_left(iter(range(1, 3)), 100, step), 89)
+    var reduced = reduce_optional(iter(range(1, 4)), step)
     assert_equal(reduced.take(), -27)
 
     var control_state = State(2, 0, destroyed)
@@ -33,19 +33,19 @@ def exercise(destroyed: ArcPointer[List[Int]]) raises:
     def control(var accumulator: String, var item: Int) raises Never {mut control_state} -> ControlFlow[Int, String]:
         control_state.calls += 1
         return ControlFlow[Int, String](Continue(accumulator + String(item * control_state.calls)))
-    var controlled = fold_until(control, String("x"), iter(range(1, 3)))
+    var controlled = fold_until(iter(range(1, 3)), String("x"), control)
     assert_equal(controlled^.unwrap[Continue[String]]().into_payload(), "x14")
-    var controlled_again = fold_until(control, String("x"), iter(range(1, 3)))
+    var controlled_again = fold_until(iter(range(1, 3)), String("x"), control)
     assert_equal(controlled_again^.unwrap[Continue[String]]().into_payload(), "x38")
 
     var search_state = State(3, 0, destroyed)
     def predicate(item: Int) raises Never {mut search_state} -> Bool:
         search_state.calls += 1
         return item == search_state.calls
-    var selected = find(predicate, iter(range(3, 6)))
+    var selected = find(iter(range(3, 6)), predicate)
     assert_equal(Bool(selected), False)
-    assert_equal(any(predicate, iter(range(4, 5))), True)
-    assert_equal(all(predicate, iter(range(5, 7))), True)
+    assert_equal(any(iter(range(4, 5)), predicate), True)
+    assert_equal(all(iter(range(5, 7)), predicate), True)
 
     # Later native uses keep each captured owner live at this observation;
     # Mojo otherwise destroys a closure immediately after its final use.

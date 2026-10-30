@@ -982,6 +982,72 @@ the value-first probe, as does a consuming callback passed to a borrowing
 reduction (recorded above). Both come from inferring a native error type and
 predate these probes.
 
+
+### Value-first free functions and the callback catalog
+
+Decision, following the probes above.
+
+**Argument order.** Free operations that take a carrier and callbacks put the
+carrier first, then other data, then the callbacks, as Cats does
+(`Functor[F].map(fa)(f)`, `foldLeft(fa, b)(f)`, `tailRecM(a)(f)`):
+
+| Shape today | Value-first | Operations |
+|---|---|---|
+| `(f, source)` | `(source, f)` | `map`, `flat_map`, `traverse`, `filter`, `filter_map`, `filter_not`, the effectful traversals, folds and searches, and the iteration adapters, terminals and reductions |
+| `(f, initial, source)` | `(source, initial, f)` | `fold_effect`, `fold_left`, `fold_until`, `scan_left`, `scan_map`, `map_accumulate` |
+| `(step, source, *, initial)` | `(source, step, *, initial)` | `reduce` |
+| `(f, source, other)` | `(source, other, f)` | `zip_with`, `align_with` |
+| `(f, left, right)` | `(left, right, f)` | `map2_lazy` |
+| `(on_true, on_false, condition)` | `(condition, on_true, on_false)` | `if_effect` |
+| `(step, initial)` | `(initial, step)` | `tail_rec_m` |
+| `(f, value)` | `(value, f)` | `local`, `censor` |
+
+Keyword arguments keep their names. Excluded: `fp.control.scan` and
+`while_loop`, which mirror JAX (`lax.scan(f, init, xs)`,
+`lax.while_loop(cond_fun, body_fun, init_val)`), and helpers whose arguments
+are only callbacks or call arguments (`compose`, `flow`, `partial`, `tupled`,
+`merge`, `split`, `attempt`, `call_once`, `as_unary`, `as_binary`, `flip`).
+
+**Callback catalog.** `scripts/native_signatures.py` owns one `admissions()`
+catalog that yields every form an entry point needs for a callback shape:
+library callable, shared view, closures (pure and raising, input inferred and
+related in `where`), and plain functions (pure with memory and register
+results, raising with one bound, with payload evidence for borrowing). Each
+form comes from the required-forms table above. A surface chooses only the
+error policy (`Pipeline` fixes it to `Self.E` and `Never`) and whether the
+element type is known. Generators keep their per-operation contracts and
+execution entries and take every callback form from the catalog, replacing
+their own kind loops.
+
+**Implementation.**
+
+- `admissions()` is tested in `tests/tooling/test_callback_catalog.py`.
+- The free `map`, `flat_map`, `traverse`, the free `fp.iteration` traversals,
+  the effectful folds and searches, and `if_effect` take every native form from
+  the catalog. Their library-callable overloads stay hand-written where they
+  carry the documentation. Per operation: 7 overloads for `map`, `flat_map` and
+  `traverse` (was 12), 6 for unary traversals and searches (was 7 to 11), 9 for
+  borrowing ones (was 11), 6 for `fold_effect` (was 19), 24 for `if_effect` (was 33).
+- The other free functions keep their native overloads and change order only.
+  `scripts/value_first.py` holds the order rule; `generate_plain_overloads.py`
+  passes every generated module through it, so emitters cannot drift.
+- Public parameter names are kept for generic callers that bind them: `F` for a
+  native callback, `C` for a borrowing library callback, `A` or `P` for its
+  input, `B` for a fold element, `E` for its error and `X` for the forwarding
+  hint.
+
+Found while implementing:
+
+- A closure parameter whose input is fixed by an earlier argument crashes on a
+  mismatched callback, as above; `tail_rec_m`, `scan_left` and `scan_map` hit it
+  once `initial` came first. `initial` now has its own type parameter, related
+  to the closure input in `where` and rebound at the call.
+- A plain function's error probe must not name the element expression: for a
+  carrier whose payload is itself an unreduced alias (a `Result` after
+  `map_err`), `_ErrorProbe[I.Element[V], R, E].Error` does not reduce in a raises
+  clause. The probe uses `NoneType` as its input; each body asserts that it names
+  the same family error as the stored callback.
+
 ## Callables and argument packs
 
 | Mojo 1.1 behavior | Library consequence | Replacement trigger |

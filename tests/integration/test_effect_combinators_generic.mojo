@@ -19,7 +19,7 @@ def efg_any[P: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deini
 
 def efg_choose[U: Movable & Deinitable, W: Movable & Deinitable, Y: Movable & Deinitable, //,
                L: def() raises Y -> U, R: def() -> W](ref on_true: L, ref on_false: R, var condition: Optional[Bool]) raises Y -> U where W == U and U == Optional[Int] and OptionalFamily.Element[U] == OptionalFamily.Element[W] and OptionalFamily.CarrierCompatible[U] and OptionalFamily.CarrierCompatible[W]:
-    return if_effect[G=OptionalFamily, U=U, W=W, Y=Y, X=Y](on_true,on_false,condition^)
+    return if_effect[G=OptionalFamily, U=U, W=W, Y=Y, X=Y](condition^,on_true,on_false)
 
 
 @fieldwise_init
@@ -43,7 +43,7 @@ def efg_origins(anchor: List[Int]) raises:
     def last(var first: View,var second: View) -> Optional[View]: return Optional(second)
     var values = List[View]()
     values.append(Span(anchor)); values.append(Span(anchor))
-    var result = fold_effect[OptionalFamily](last,Span(anchor),values^)
+    var result = fold_effect[OptionalFamily](values^,Span(anchor),last)
     assert_equal(result.take()[1],12)
     def choose_view() {ref anchor} -> Result[View,String]: return Ok(Span(anchor))
     var chosen = piped(Result[Bool,String](Ok(True))).if_effect(choose_view,choose_view).get().raise_on_err()
@@ -76,7 +76,7 @@ def main() raises:
         failure = error.code
     assert_equal(failure,71)
     failure = 0
-    try: _ = if_effect[OptionalFamily](efg_right,efg_raise,Optional(False))
+    try: _ = if_effect[OptionalFamily](Optional(False),efg_right,efg_raise)
     except error:
         comptime assert type_of(error) == EFGenericFailure
         failure = error.code

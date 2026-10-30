@@ -451,7 +451,7 @@ struct Semaphore(Copyable):
             An IO recipe preserving the body's value and error types. The permit
             is returned on success, failure, cancellation, or an unopened drop.
         """
-        return flat_map[IO[IOContract[P].Error]](_WithPermit(program^), self.acquire[IOContract[P].Error]())
+        return flat_map[IO[IOContract[P].Error]](self.acquire[IOContract[P].Error](), _WithPermit(program^))
 
 
 @fieldwise_init

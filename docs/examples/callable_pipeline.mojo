@@ -8,10 +8,10 @@ def nonnegative(value: Int) -> Bool: return value >= 0
 def plus(var total: Int, var value: Int) -> Int: return total + value
 
 def accepted(var values: List[Int]) -> List[Int]:
-    return collect_list(filter(nonnegative, values^))
+    return collect_list(filter(values^, nonnegative))
 
 def total(var values: List[Int]) -> Int:
-    return fold_left(plus, 0, values^)
+    return fold_left(values^, 0, plus)
 
 def receipt(var value: Int) -> String: return "total=" + String(value)
 def surcharge(amount: Int, value: Int) -> Int: return amount + value

@@ -14,7 +14,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     var subject = Result[A, Int](Ok(a))
     try:
-        var sequenced: Result[B, Int] = flat_map[ResultFamily[type_of(subject).Error], X=B](keep_raising[A, Int, B], subject^)
+        var sequenced: Result[B, Int] = flat_map[ResultFamily[type_of(subject).Error], X=B](subject^, keep_raising[A, Int, B])
         _ = sequenced^
     except: pass
 

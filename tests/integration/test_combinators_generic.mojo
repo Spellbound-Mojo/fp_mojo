@@ -28,7 +28,7 @@ def combinator_rejected[T: Movable & Deinitable, I: Iterator, //,
 def combinator_direct_rejected[T: Movable & Deinitable, I: Iterator, //,
                                F: def(T) -> Bool](var predicate: F, var source: I
 ) -> FilterNotIterator[T, I, F] where I.Element == T:
-    return filter_not(predicate^, source^)
+    return filter_not(source^, predicate^)
 
 
 def combinator_eager_rejected[T: Movable & Deinitable, //, F: def(T) -> Bool](

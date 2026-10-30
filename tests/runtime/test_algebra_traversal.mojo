@@ -26,18 +26,18 @@ def alternatives(var value:Int)->List[Int]:
 
 def main() raises:
     var pulls=0
-    var absent=traverse[ListFamily,OptionalFamily](as_unary(option),Counted(Pointer(to=pulls),0,8))
+    var absent=traverse[ListFamily,OptionalFamily](Counted(Pointer(to=pulls),0,8),as_unary(option))
     assert_true(not absent)
     assert_equal(pulls,3)
     pulls=0
-    var failed=traverse[ListFamily,ResultFamily[Int]](as_unary(result),Counted(Pointer(to=pulls),0,8))
+    var failed=traverse[ListFamily,ResultFamily[Int]](Counted(Pointer(to=pulls),0,8),as_unary(result))
     assert_true(failed.is_err())
     assert_equal(pulls,3)
     pulls=0
-    var present=traverse[ListFamily,OptionalFamily](as_unary(option),Counted(Pointer(to=pulls),0,2))
+    var present=traverse[ListFamily,OptionalFamily](Counted(Pointer(to=pulls),0,2),as_unary(option))
     assert_equal(present.value(),ints(2,3))
     assert_equal(pulls,3)
-    var choices=traverse[ListFamily,ListFamily](as_unary(alternatives),ints(1,2))
+    var choices=traverse[ListFamily,ListFamily](ints(1,2),as_unary(alternatives))
     assert_equal(len(choices),4)
     assert_equal(choices[0],ints(1,2))
     assert_equal(choices[1],ints(1,12))

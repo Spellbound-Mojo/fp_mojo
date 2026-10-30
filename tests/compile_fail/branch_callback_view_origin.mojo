@@ -14,6 +14,6 @@ def wrong[o: ImmOrigin](ref[o] outer: List[Int]) raises -> Span[Int, o]:
         return Ok(value)
     var classifier = partial(keep, 1)
     var values: List[View] = [view]
-    var branches = partition_map(classifier, values^, buffer=Unbounded())
+    var branches = partition_map(values^, classifier, buffer=Unbounded())
     return next(branches[0])
 def main(): pass

@@ -144,7 +144,7 @@ def expansion_selection() raises:
     var xs: List[Int] = [1, 2, 3]
     assert_equal(piped(xs.copy()).filter_map(expansion_select).get(), ['2', '3'])
     assert_equal(piped(xs.copy()).filter_map[ListFamily](expansion_select).get(), ['2', '3'])
-    assert_equal(family_filter_map[ListFamily](expansion_select, xs.copy()), ['2', '3'])
+    assert_equal(family_filter_map[ListFamily](xs.copy(), expansion_select), ['2', '3'])
     assert_equal(piped(xs.copy()).filter_map(ExpansionSelect(0)).get(), [2, 4, 6])
     assert_equal(piped(xs^).flat_map(expansion_many).get(), [1, 2, 2, 3, 3, 4])
     var opts: List[Optional[Int]] = [None, Optional(2), None, Optional(4)]
@@ -231,7 +231,7 @@ def expansion_timing() raises:
         return None
     assert_equal(iterated(range(10)).find_map(expansion_first).value(), 20)
     assert_equal(scans, 3)
-    assert_equal(find_map(expansion_first, range(4)).value(), 20)
+    assert_equal(find_map(range(4), expansion_first).value(), 20)
     assert_equal(scans, 6)
 
 
@@ -241,7 +241,7 @@ def expansion_reductions() raises:
     assert_equal(piped(xs.copy()).sum_by(expansion_square).get(), 30)
     assert_equal(iterated(xs.copy()).sum_by(expansion_square), 30)
     assert_equal(sum(xs.copy()), 10)
-    assert_equal(sum_by(expansion_square, xs.copy()), 30)
+    assert_equal(sum_by(xs.copy(), expansion_square), 30)
     assert_equal(piped(xs.copy()).fold_map[StringMonoid](expansion_text).get(), '1234')
     assert_equal(iterated(xs.copy()).fold_map[StringMonoid](expansion_text), '1234')
     assert_equal(iterated(xs.copy()).min_by(expansion_key).value(), 3)
@@ -273,7 +273,7 @@ def expansion_effects() raises:
     var xs: List[Int] = [1, 2, 3]
     assert_equal(piped(xs.copy()).traverse[OptionalFamily](expansion_some).get().value(), [2, 4, 6])
     assert_equal(iterated(xs.copy()).traverse[OptionalFamily](expansion_some).value(), [2, 4, 6])
-    assert_equal(traverse[OptionalFamily](expansion_some, xs^).value(), [2, 4, 6])
+    assert_equal(traverse[OptionalFamily](xs^, expansion_some).value(), [2, 4, 6])
     var os: List[Optional[Int]] = [Optional(4), Optional(6)]
     assert_equal(iterated(os.copy()).sequence[OptionalFamily]().value(), [4, 6])
     assert_equal(sequence[OptionalFamily](os^).value(), [4, 6])

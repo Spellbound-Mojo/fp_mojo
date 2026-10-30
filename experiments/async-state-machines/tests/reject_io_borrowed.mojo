@@ -7,4 +7,4 @@ def main():
     def scale(value: Int) {factor} -> IO[Int, Int]:
         return IO[Int, Int].pure(value * factor)
     var values: List[Int] = [1, 2, 3]
-    _ = traverse[ListFamily, Async[Int]](scale, values^)
+    _ = traverse[ListFamily, Async[Int]](values^, scale)

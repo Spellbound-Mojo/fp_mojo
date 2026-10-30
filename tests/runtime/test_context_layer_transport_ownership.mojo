@@ -23,7 +23,7 @@ def optional[execute: Bool,fail: Bool]() -> String:
     comptime I = OptionalT[R]
     comptime C = LiftLocal[I,R]
     var trace = ArcPointer(String())
-    var pending = local[C](Change(Owner(9,trace),fail),pure[I](Owner(2,trace)))
+    var pending = local[C](pure[I](Owner(2,trace)),Change(Owner(9,trace),fail))
     trace[] += "d"
     if execute:
         try:
@@ -44,7 +44,7 @@ def result[execute: Bool,fail: Bool]() -> String:
     comptime I = ResultT[R,String]
     comptime C = LiftLocal[I,R]
     var trace = ArcPointer(String())
-    var pending = local[C](Change(Owner(9,trace),fail),pure[I](Owner(2,trace)))
+    var pending = local[C](pure[I](Owner(2,trace)),Change(Owner(9,trace),fail))
     trace[] += "d"
     if execute:
         try:

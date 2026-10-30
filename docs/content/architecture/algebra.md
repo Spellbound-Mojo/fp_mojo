@@ -22,7 +22,7 @@ origins remain available to the compiler throughout composition.
 An instance is a compile-time dictionary: a type whose operations are static
 methods and whose result and error types are associated aliases. The public free
 functions forward to it, and the caller selects it explicitly:
-`map[OptionalFamily](f, value^)`. List's applicative combination is Cartesian in
+`map[OptionalFamily](value^, f)`. List's applicative combination is Cartesian in
 left-major order.
 
 ## Compose accumulation policies
@@ -59,7 +59,7 @@ its success value, but rejection needs an explicit error policy. Neither has
 an automatic filter.
 
 A family supplies `Element[V]`, `Filtered[V, P]`, `FilterError[V, P]` and static
-`filter(predicate, value)`. Predicates use `BorrowCallContract` metadata and
+`filter(value, predicate)`. Predicates use `BorrowCallContract` metadata and
 have a shared or mutable receiver, checked by `FilterContract.ReceiverCompatible`.
 They borrow each payload and return Bool, preserving the exact failure type.
 Third-party instances use `invoke_borrowed_repeated[P.Failure](value, predicate)`
@@ -810,7 +810,7 @@ independently, so a consuming callback remains valid for a single Result. Mappin
 `I.Element[V] == F.Arg` at the call boundary.
 
 Generic forwarding signatures must now carry the corresponding predicates.
-For example, a wrapper around `map[I](f^, value^)` returning `I.Mapped[V, F]`
+For example, a wrapper around `map[I](value^, f^)` returning `I.Mapped[V, F]`
 needs `where I.Element[V] == F.Arg and I.MapCompatible[V, F]`; a wrapper around
 `traverse[S, G]` needs `where S.Element[V] == F.Arg and S.TargetCompatible[G, V, F]`. Bind uses the same
 input equality with `I.BindCompatible[V, F]`. The generic integration test
@@ -1016,7 +1016,7 @@ concrete deferred carriers may join without boxing or erasing origins.
 
 ## Step-driven effectful loops
 
-`tail_rec_m[Family](step, initial)` repeats a step from `A` to a family carrier
+`tail_rec_m[Family](initial, step)` repeats a step from `A` to a family carrier
 of `ControlFlow[B, A]`. `Continue[A]` moves the next state into another step;
 `Break[B]` supplies the final result. A failed or absent effect stops its branch
 without another step. List keeps its ordinary branch order and copying rules.

@@ -10,4 +10,4 @@ def main():
     var offset = 1
     def consuming_predicate(var value: Token) {var offset} -> Bool: return value.value > offset
     var values = List[Token]()
-    _ = filter(consuming_predicate, iter(values^))
+    _ = filter(iter(values^), consuming_predicate)

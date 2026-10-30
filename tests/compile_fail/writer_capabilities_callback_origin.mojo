@@ -18,5 +18,5 @@ struct Same[o: ImmOrigin](OnceUnary, Defaultable):
 def bad(left: List[Int], right: List[Int]):
     comptime W = Writer[Log[origin_of(left)]]
     comptime C = LiftCensor[StateT[W, Int], W]
-    _ = censor[C](Same[origin_of(right)](), tell[C](Optional(Span(left))))
+    _ = censor[C](tell[C](Optional(Span(left))), Same[origin_of(right)]())
 def main(): bad([1], [2])

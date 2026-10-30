@@ -10,7 +10,7 @@ def i6g_find[P:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitabl
 
 
 def i6g_map[A:Movable & Deinitable,B:Movable & Deinitable,E:Movable & Deinitable,//,F:def(var A) raises E -> Optional[Optional[B]]](ref function:F,var values:List[A]) raises E ->Optional[Optional[B]]:
-    return find_map_effect[G=OptionalFamily,A=A,E=E,X=E](function,values^)
+    return find_map_effect[G=OptionalFamily,A=A,E=E,X=E](values^,function)
 
 
 def i6g_fold[A:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitable,//,F:def(var A) raises E -> R](ref function:F,var values:List[A]) raises E ->Optional[String] where R==Optional[String] and OptionalFamily.Element[R]==String and OptionalFamily.CarrierCompatible[R]:
@@ -42,11 +42,11 @@ def origins(anchor:List[Int]) raises:
         return Optional(xs^)
     var values=List[View]()
     values.append(Span(anchor));values.append(Span(anchor))
-    var found=find_effect[OptionalFamily](select,values.copy())
+    var found=find_effect[OptionalFamily](values.copy(),select)
     assert_equal(found.value().value()[1],12)
-    var mapped=find_map_effect[OptionalFamily](project,values.copy())
+    var mapped=find_map_effect[OptionalFamily](values.copy(),project)
     assert_equal(mapped.value().value()[0],11)
-    var folded=fold_map_effect[OptionalFamily,ListMonoid[View]](collect,values^)
+    var folded=fold_map_effect[OptionalFamily,ListMonoid[View]](values^,collect)
     assert_equal(folded.value()[1][1],12)
 
 

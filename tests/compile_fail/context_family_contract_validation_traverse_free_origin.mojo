@@ -13,7 +13,7 @@ def check(anchor: List[Int], local: List[Int]):
     comptime Expected = List[ExpectedView]
     comptime Family = ValidationFamily[ListMonoid[ExpectedView]]
     def next(var value: Int) {actual} -> Result[Int, Actual]: return Err(List[ActualView]([actual]))
-    _ = traverse[ListFamily, Family](next, List[Int]([1]))
+    _ = traverse[ListFamily, Family](List[Int]([1]), next)
 def main():
     var anchor: List[Int] = [1]
     var local: List[Int] = [2]

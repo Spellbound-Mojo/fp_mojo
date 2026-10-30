@@ -30,14 +30,14 @@ def check(owner:List[Int],failure_owner:List[Int]) raises:
     var failed=pipeline(Result[Value,Failure](Err(Span(failure_owner)))).traverse[R](keep).get()
     var retained=run[R](failed^,env)
     assert_equal(retained._err().value.unsafe_ptr()==Span(failure_owner).unsafe_ptr(),True)
-    var pending_error=traverse[OptionalFamily,EnvRaises.Family](ProduceEnvironment(),Optional(1))
+    var pending_error=traverse[OptionalFamily,EnvRaises.Family](Optional(1),ProduceEnvironment())
     var caught=False
     try:_=run[EnvRaises.Family](pending_error^,failure_owner)
     except error:
         comptime assert type_of(error)==Failure
         caught=error.unsafe_ptr()==Span(failure_owner).unsafe_ptr()
     assert_equal(caught,True)
-    var absent=traverse[OptionalFamily,EnvRaises.Family](ProduceEnvironment(),Optional[Int]())
+    var absent=traverse[OptionalFamily,EnvRaises.Family](Optional[Int](),ProduceEnvironment())
     caught=False
     var was_absent=False
     try:

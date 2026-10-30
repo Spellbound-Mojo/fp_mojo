@@ -11,7 +11,7 @@ def check(anchor: List[Int]) raises:
     comptime Actual = type_of(actual)
     def step(var carry: Expected, var item: Int) {actual} -> Tuple[Actual, Int]:
         return (actual, item)
-    _ = scan_map[Y=Int](step, expected, range(1))
+    _ = scan_map[Y=Int](range(1), expected, step)
 
 def main() raises:
     var anchor: List[Int] = [11]

@@ -9,7 +9,7 @@ struct Above[o:ImmOrigin](BorrowMutableCallable):
     def invoke_mut(mut self,ref value:Int)->Bool:return value>self.owner[][0]
 def wrong(anchor:List[Int]):
     var local:List[Int]=[1]
-    var expected=pair_with(Above(Pointer(to=anchor)),range(3))
-    var actual=pair_with(Above(Pointer(to=local)),range(3))
+    var expected=pair_with(range(3),Above(Pointer(to=anchor)))
+    var actual=pair_with(range(3),Above(Pointer(to=local)))
     expected=actual^
 def main():pass

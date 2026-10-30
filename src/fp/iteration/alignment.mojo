@@ -124,7 +124,7 @@ def pad_zip[A: Movable & Deinitable, B: Movable & Deinitable, V: Movable & Deini
     var aligned = _Align[A, B, _Source[V], _Source[W]](_source(source^), _source(other^), False, False)
     return PadZipIterator[A, B, _Source[V], _Source[W]](_Pad[A, B](), aligned^, False)
 
-def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: def(var T) thin -> U, var source: V, var other: W) -> AlignWithIterator[A, B, U, _Source[V], _Source[W], def(var T) thin -> U] where _Source[V].Element == A and _Source[W].Element == B and T == Ior[A, B]:
+def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var source: V, var other: W, var function: def(var T) thin -> U) -> AlignWithIterator[A, B, U, _Source[V], _Source[W], def(var T) thin -> U] where _Source[V].Element == A and _Source[W].Element == B and T == Ior[A, B]:
     """Map each owned Ior from alignment through a non-raising callback.
 
     Construction pulls nothing; each output pulls each live side once, left before right.
@@ -140,9 +140,9 @@ def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & De
         W: The second consumed source type.
 
     Args:
-        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
         source: The source, consumed at its current position.
         other: The second source, consumed at its current position.
+        function: The callback, borrowed or owned according to the selected overload; captures retain their native origins.
 
     Returns:
         AlignWithIterator[A, B, U, _Source[V], _Source[W], def(var T) thin -> U] with the ownership, timing and empty-input behavior described above.
@@ -150,19 +150,19 @@ def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & De
     var aligned = _Align[A, B, _Source[V], _Source[W]](_source(source^), _source(other^), False, False)
     return AlignWithIterator[A, B, U, _Source[V], _Source[W], def(var T) thin -> U](function, aligned^, False)
 
-def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable, //, F: _LazyUnary[T, U]](var function: F, var source: V, var other: W) -> AlignWithIterator[A, B, U, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and T == Ior[A, B]:
+def align_with[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, U: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable, //, F: _LazyUnary[T, U]](var source: V, var other: W, var function: F) -> AlignWithIterator[A, B, U, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and T == Ior[A, B]:
     """Map each owned Ior from alignment through a non-raising callback.
     """
     var aligned = _Align[A, B, _Source[V], _Source[W]](_source(source^), _source(other^), False, False)
     return AlignWithIterator[A, B, U, _Source[V], _Source[W], F](function^, aligned^, False)
 
-def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]:
+def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable](var source: V, var other: W, var function: F) -> AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B and F.Arg == Ior[A, B] and F.Error == Never and RepeatableUnary[F]:
     """Map each owned Ior from alignment through a non-raising callback.
     """
     var aligned = _Align[A, B, _Source[V], _Source[W]](_source(source^), _source(other^), False, False)
     return AlignWithIterator[A, B, F.Out, _Source[V], _Source[W], F](function^, aligned^, False)
 
-def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, W: Movable & Deinitable](ref[o] function: F, var source: V, var other: W) -> AlignWithIterator[A, B, F._View[o].Out, _Source[V], _Source[W], F._View[o]] where _Source[V].Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:
+def align_with[A: Movable & Deinitable, B: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, W: Movable & Deinitable](var source: V, var other: W, ref[o] function: F) -> AlignWithIterator[A, B, F._View[o].Out, _Source[V], _Source[W], F._View[o]] where _Source[V].Element == A and _Source[W].Element == B and F._View[o].Arg == Ior[A, B] and F._View[o].Error == Never and RepeatableUnary[F._View[o]]:
     """Map each owned Ior from alignment through a non-raising callback.
     """
     var aligned = _Align[A, B, _Source[V], _Source[W]](_source(source^), _source(other^), False, False)

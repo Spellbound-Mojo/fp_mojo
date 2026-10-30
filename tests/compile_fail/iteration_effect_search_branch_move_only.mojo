@@ -8,4 +8,4 @@ def yes(value:Owner)->List[Bool]:return [True,False]
 def main():
     var xs=List[Owner]()
     xs.append(Owner(1))
-    _=find_effect[ListFamily](yes,xs^)
+    _=find_effect[ListFamily](xs^,yes)

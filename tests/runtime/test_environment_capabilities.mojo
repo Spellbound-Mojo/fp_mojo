@@ -19,7 +19,7 @@ def program[C: Ask]() raises C.AskError -> C.Asked where C.AskAvailable:
 
 
 def scoped[C: Local, V: Movable & Deinitable](var value: V) raises C.LocalError[V, ECAdd] -> C.Localized[V, ECAdd] where C.Environment == Int and C.LocalCompatible[V]:
-    return local[C](ECAdd(2), value^)
+    return local[C](value^, ECAdd(2))
 
 
 def main() raises:
@@ -31,13 +31,13 @@ def main() raises:
     assert_equal(run[R](copy^, env), 7)
     assert_equal(run[R](replay^, 9), 11)
     # Identity, composition and restoration laws.
-    assert_equal(run[R](local[R](ECAdd(0), ask[R]()), env), 5)
-    assert_equal(run[R](local[R](ECAdd(2), local[R](ECAdd(3), ask[R]())), env), 10)
-    assert_equal(run[R](local[R](ECAdd(5), ask[R]()), env), 10)
+    assert_equal(run[R](local[R](ask[R](), ECAdd(0)), env), 5)
+    assert_equal(run[R](local[R](local[R](ask[R](), ECAdd(3)), ECAdd(2)), env), 10)
+    assert_equal(run[R](local[R](ask[R](), ECAdd(5)), env), 10)
     assert_equal(run[R](ask[R](), env), 5)
-    assert_equal(run[R](local[R](ECAdd(20), pure[R](9)), env), 9)
+    assert_equal(run[R](local[R](pure[R](9), ECAdd(20)), env), 9)
     def again(var value: Int) -> R.Asked: return ask[R]()
-    var restored = flat_map[R](as_unary(again), local[R](ECAdd(3), ask[R]()))
+    var restored = flat_map[R](local[R](ask[R](), ECAdd(3)), as_unary(again))
     assert_equal(run[R](restored^, env), 5)
 
     comptime S = StateT[R, Int]
@@ -47,7 +47,7 @@ def main() raises:
     assert_equal(pair[0], 7)
     assert_equal(pair[1], 42)
     def after_put(var nothing: NoneType) -> SC.Asked: return ask[SC]()
-    var updated = flat_map[S](as_unary(after_put), put[S](99))
+    var updated = flat_map[S](put[S](99), as_unary(after_put))
     var updated_base = run[S](scoped[SC](updated^), 42)
     var updated_pair = run[R](updated_base^, env)
     assert_equal(updated_pair[0], 7)
@@ -79,7 +79,7 @@ def main() raises:
     var failed = run[R](scoped[TC](fail[T, Int](String("stored"))), env)
     assert_equal(failed._err().value, "stored")
     def reject(value: Int) raises Int -> Int: raise value + 70
-    var raised = local[TC](reject, ask[TC]())
+    var raised = local[TC](ask[TC](), reject)
     var native_code = 0
     try:
         _ = run[R](raised^, env)

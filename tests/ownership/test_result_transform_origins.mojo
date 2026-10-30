@@ -4,13 +4,13 @@ from fp.data import Result, Ok, Err
 from std.testing import assert_equal, assert_true
 
 def map_pure1[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U](var value: Result[T, E], callback: F) -> Result[U, E]:
-    return map[ResultFamily[type_of(value).Error]](callback, value^)
+    return map[ResultFamily[type_of(value).Error]](value^, callback)
 
 def map_pure2[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U](var value: Result[T, E], callback: F) -> Result[U, E]:
     return map_pure1(value^, callback)
 
 def map_raising1[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var T) raises X -> U](var value: Result[T, E], callback: F) raises X -> Result[U, E]:
-    return map[ResultFamily[type_of(value).Error], X=X](callback, value^)
+    return map[ResultFamily[type_of(value).Error], X=X](value^, callback)
 
 def map_raising2[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var T) raises X -> U](var value: Result[T, E], callback: F) raises X -> Result[U, E]:
     return map_raising1[X=X](value^, callback)
@@ -28,13 +28,13 @@ def map_err_raising2[T: Movable & Deinitable, E: Movable & Deinitable, U: Movabl
     return map_err_raising1[X=X](value^, callback)
 
 def and_then_pure1[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> Result[U, E]](var value: Result[T, E], callback: F) -> Result[U, E]:
-    return flat_map[ResultFamily[type_of(value).Error]](callback, value^)
+    return flat_map[ResultFamily[type_of(value).Error]](value^, callback)
 
 def and_then_pure2[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> Result[U, E]](var value: Result[T, E], callback: F) -> Result[U, E]:
     return and_then_pure1(value^, callback)
 
 def and_then_raising1[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var T) raises X -> Result[U, E]](var value: Result[T, E], callback: F) raises X -> Result[U, E]:
-    return flat_map[ResultFamily[type_of(value).Error], X=X](callback, value^)
+    return flat_map[ResultFamily[type_of(value).Error], X=X](value^, callback)
 
 def and_then_raising2[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var T) raises X -> Result[U, E]](var value: Result[T, E], callback: F) raises X -> Result[U, E]:
     return and_then_raising1[X=X](value^, callback)

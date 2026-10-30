@@ -12,5 +12,5 @@ struct M(Monoid):
 def fail(offset: Int, value: Int) raises String -> Int: raise String(value + offset)
 def main():
     var project = partial(fail, 1)
-    try: _ = fold_map[M](project, range(3))
+    try: _ = fold_map[M](range(3), project)
     except: pass

@@ -52,7 +52,7 @@ def check_traversal_ownership[I:StateFamily]() raises where I.StateType == Token
         comptime assert ListFamily.TraverseError[I,List[Token[0]],Produce[I]]==Never
         var computation:ListFamily.Traversed[I,List[Token[0]],Produce[I]]
         try:
-            computation=traverse[ListFamily,I](Produce[I](Token[2](0,trace),failure),items^)
+            computation=traverse[ListFamily,I](items^,Produce[I](Token[2](0,trace),failure))
         except error:
             comptime assert type_of(error)==Never
             _propagate_error[Never](error^)

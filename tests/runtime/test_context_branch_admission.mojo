@@ -105,8 +105,8 @@ def native_admission() raises:
     def raising(var value:Int) raises String -> Int:
         if value<0:raise String("negative")
         return value+2
-    assert_equal(map[ListFamily](increment,List[Int]([1,2])),[2,3])
-    assert_equal(flat_map[ListFamily](branches,List[Int]([1,2])),[1,11,2,12])
+    assert_equal(map[ListFamily](List[Int]([1,2]),increment),[2,3])
+    assert_equal(flat_map[ListFamily](List[Int]([1,2]),branches),[1,11,2,12])
     assert_equal(piped(List[Int]([3,4])).map(increment).get(),[4,5])
     assert_equal(piped(List[Int]([3,4])).map(StatefulMap(0)).get(),[4,6])
     assert_equal(piped(List[Int]([3,4])).map(raising).get(),[5,6])
@@ -114,7 +114,7 @@ def native_admission() raises:
     assert_equal(pipeline[O](O.pure(5)).map(increment).get()[0].value(),6)
     comptime R=ResultT[ListFamily,String]
     def next_result(var value:Int)->R.Pure[Int]:return R.pure(value+3)
-    assert_equal(flat_map[R](next_result,R.pure(6))[0]._ok().value,9)
+    assert_equal(flat_map[R](R.pure(6),next_result)[0]._ok().value,9)
 
 
 def main() raises:

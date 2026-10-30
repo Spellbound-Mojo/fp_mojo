@@ -5,4 +5,4 @@ def combine(bias: Int, first: String, second: Int) -> Int:
     return bias + len(first) + second
 def main():
     var callback = partial(combine, 0)
-    _ = zip_with(callback, range(2), range(2))
+    _ = zip_with(range(2), range(2), callback)

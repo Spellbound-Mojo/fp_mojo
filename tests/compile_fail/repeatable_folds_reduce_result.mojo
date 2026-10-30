@@ -8,4 +8,4 @@ struct Step(MutableBinary):
     comptime Out=String
     def __init__(out self):pass
     def call_mut(mut self,var a:Int,var b:Int)->Self.Out: return String("wrong")
-def main() raises: _=reduce(Step(),[1])
+def main() raises: _=reduce([1],Step())

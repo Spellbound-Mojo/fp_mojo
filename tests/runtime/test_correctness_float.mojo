@@ -13,8 +13,8 @@ def check(initial: Float64, values: List[Float64]) raises:
     for value in values:
         expected = expected - value
         states.append(expected)
-    var actual = fold_left(subtract, initial, iter(values))
-    var scan = collect_list(scan_left(subtract, initial, iter(values)))
+    var actual = fold_left(iter(values), initial, subtract)
+    var scan = collect_list(scan_left(iter(values), initial, subtract))
     assert_equal(len(scan), len(states))
     # NaNs need not preserve payload bits across compiler operations, but must
     # remain NaN. For zero, reciprocal infinity retains its sign.

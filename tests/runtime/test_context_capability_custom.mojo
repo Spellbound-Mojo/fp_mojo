@@ -49,4 +49,4 @@ def main() raises:
     comptime assert type_of(forwarded).I == Tagged
     assert_equal(forwarded^.map(plus).get(), List[Int]([4,5]))
     comptime assert not conforms_to(Independent,Functor)
-    assert_equal(filter[Independent](keep,List[Int]([1,2])),List[Int]([2]))
+    assert_equal(filter[Independent](List[Int]([1,2]),keep),List[Int]([2]))

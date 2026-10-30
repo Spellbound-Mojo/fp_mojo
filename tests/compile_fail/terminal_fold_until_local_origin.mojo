@@ -12,7 +12,7 @@ def escape(first: List[Int]) -> Span[Int, origin_of(first)]:
     comptime B = type_of(b)
     def step(var acc: A, var item: Int) {b} -> ControlFlow[B, A]:
         return ControlFlow[B, A](Break(b))
-    var result = fold_until[A=A, B=A](step, a, iter(range(1)))
+    var result = fold_until[A=A, B=A](iter(range(1)), a, step)
     return result^.unwrap[Break[A]]().into_payload()
 
 def main():

@@ -13,7 +13,7 @@ constructor directly. A bare native `Variant` is not a match subject.
 
 <!-- example: docs/examples/foundations.mojo -->
 
-`fold_left(add, 0, range(1, 6))` returns `15` after five calls to `add`.
+`fold_left(range(1, 6), 0, add)` returns `15` after five calls to `add`.
 `Pair(total, 7)` converts to `Choice[Term]`, and the match calls the `Pair`
 clause, which returns `15 + 7 = 22`. `attempt(checked)` wraps that answer in
 `Ok`, and `raise_on_err` returns `22` without raising. The program prints

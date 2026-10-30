@@ -53,7 +53,7 @@ def wc_generic_listen[C: Listen, V: Movable & Deinitable](var value: V) raises C
 
 def wc_generic_censor[C: Censor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V
 ) raises C.CensorError[V, F] -> C.Censored[V, F] where C.CensorCompatible[V, F] and F.Arg == C.Log.Value and F.Out == C.Log.Value:
-    return censor[C](f^, value^)
+    return censor[C](value^, f^)
 
 
 def main() raises:
@@ -91,7 +91,7 @@ def main() raises:
     try: source = wc_generic_tell[C](String("abc"))
     except error: raise Error("unexpected construction failure")
     def reject(var log: String) raises Int -> String: raise log.byte_length()
-    var scoped = censor[C](reject, source^)
+    var scoped = censor[C](source^, reject)
     try: _ = run[R](scoped^, 0)
     except error:
         comptime assert type_of(error) == Int

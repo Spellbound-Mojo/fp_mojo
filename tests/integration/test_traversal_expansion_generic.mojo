@@ -18,14 +18,14 @@ def txg_select[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & De
                F: def(var A) raises E -> Optional[Optional[B]]](
     ref function: F, var source: List[A]
 ) raises E -> Optional[List[B]]:
-    return traverse_filter[OptionalFamily, E=E, X=E](function, source^)
+    return traverse_filter[OptionalFamily, E=E, X=E](source^, function)
 
 
 def txg_filter[A: Movable & Deinitable, E: Movable & Deinitable, //,
                F: def(A) raises E -> Optional[Bool]](
     ref function: F, var source: List[A]
 ) raises E -> Optional[List[A]]:
-    return filter_effect[OptionalFamily, E=E, X=E](function, source^)
+    return filter_effect[OptionalFamily, E=E, X=E](source^, function)
 
 
 @fieldwise_init
@@ -74,7 +74,7 @@ def txg_origins(left: List[Int], right: List[Int]) raises:
     def decide(value: Left) -> Optional[Bool]: return Optional(len(value) > 0)
     var packets = List[Packet]()
     packets.append(Packet(Span(left), Span(right)))
-    var flattened = flat_traverse[OptionalFamily](groups, packets^)
+    var flattened = flat_traverse[OptionalFamily](packets^, groups)
     assert_equal(flattened.take()[0][1], 22)
     var more = List[Packet]()
     more.append(Packet(Span(left), Span(right)))
@@ -82,7 +82,7 @@ def txg_origins(left: List[Int], right: List[Int]) raises:
     assert_equal(selected.take()[0][1], 22)
     var views = List[Left]()
     views.append(Span(left))
-    var kept = filter_effect[OptionalFamily](decide, views^)
+    var kept = filter_effect[OptionalFamily](views^, decide)
     assert_equal(kept.take()[0][1], 12)
     var values: List[Int] = [1, 2]
     var code = 0

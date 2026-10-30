@@ -4,7 +4,7 @@ from fp.iteration import iterated, zip_with
 def combine(bias: Int, first: Int, second: Int) -> Int: return bias + first + second
 def main():
     var callback = partial(combine, 0)
-    var pending = zip_with(callback, range(2), range(2))
+    var pending = zip_with(range(2), range(2), callback)
     var moved = callback^
     _ = moved(0, 0)
     _ = iterated(pending^).collect_list()

@@ -53,7 +53,7 @@ struct Present(OnceUnary):
     def call_once(deinit self, var value: Int) -> Self.Out: return Optional(value)
 
 def mapped[I: Functor,V: Movable & Deinitable,F: UnaryContract & Movable & Deinitable](var source:V,var function:F) raises MapContract[I,V,F].Error -> MapContract[I,V,F].Out where MapContract[I,V,F].Compatible:
-    return map[I](function^,source^)
+    return map[I](source^,function^)
 
 def checked_map[I: Functor,V: Movable & Deinitable,F: UnaryContract & Movable & Deinitable](var source:V,var function:F) raises MapContract[I,V,F].Error -> MapContract[I,V,F].Out where MapContract[I,V,F].InvocationCompatible:
     return mapped[I](source^,function^)
@@ -62,7 +62,7 @@ def expanded_map[I: Functor,V: Movable & Deinitable,F: UnaryContract & Movable &
     return mapped[I](source^,function^)
 
 def bound[I: Monad,V: Movable & Deinitable,F: UnaryContract & Movable & Deinitable](var source:V,var function:F) raises BindContract[I,V,F].Error -> BindContract[I,V,F].Out where BindContract[I,V,F].Compatible:
-    return flat_map[I](function^,source^)
+    return flat_map[I](source^,function^)
 
 def checked_bind[I: Monad,V: Movable & Deinitable,F: UnaryContract & Movable & Deinitable](var source:V,var function:F) raises BindContract[I,V,F].Error -> BindContract[I,V,F].Out where BindContract[I,V,F].InvocationCompatible:
     return bound[I](source^,function^)
@@ -71,7 +71,7 @@ def expanded_bind[I: Monad,V: Movable & Deinitable,F: UnaryContract & Movable & 
     return bound[I](source^,function^)
 
 def combined[I: Applicative,V: Movable & Deinitable,F: BinaryContract & Movable & Deinitable,R: ThunkContract & Movable & Deinitable](var source:V,var function:F,var right:R) raises CombineContract[I,V,F,R].Error -> CombineContract[I,V,F,R].Out where CombineContract[I,V,F,R].Compatible:
-    return map2_lazy[I](function^,source^,right^)
+    return map2_lazy[I](source^,right^,function^)
 
 def checked_combine[I: Applicative,V: Movable & Deinitable,F: BinaryContract & Movable & Deinitable,R: ThunkContract & Movable & Deinitable](var source:V,var function:F,var right:R) raises CombineContract[I,V,F,R].Error -> CombineContract[I,V,F,R].Out where CombineContract[I,V,F,R].InvocationCompatible:
     return combined[I](source^,function^,right^)

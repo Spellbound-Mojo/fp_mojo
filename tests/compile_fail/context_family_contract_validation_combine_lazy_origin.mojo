@@ -27,7 +27,7 @@ def check(anchor: List[Int], local: List[Int]):
     comptime Family = ValidationFamily[ListMonoid[ExpectedView]]
     var left = Result[Int, Expected](Ok(1))
     var right = Result[Int, Actual](Err(List[ActualView]([actual])))
-    _ = map2_lazy[Family](Combine(), left^, Deferred(right^))
+    _ = map2_lazy[Family](left^, Deferred(right^), Combine())
 def main():
     var anchor: List[Int] = [1]
     var local: List[Int] = [2]

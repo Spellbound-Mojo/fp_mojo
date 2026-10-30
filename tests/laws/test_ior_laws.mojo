@@ -38,7 +38,7 @@ struct ILComposed(Unary):
     var g: ILStep
     comptime Arg = Int
     comptime Out = ILR
-    def call(self, var arg: Int) -> ILR: return flat_map[ILM](self.g.copy(), self.f.call(arg))
+    def call(self, var arg: Int) -> ILR: return flat_map[ILM](self.f.call(arg), self.g.copy())
 
 @fieldwise_init
 struct ILPure(Unary, Copyable, Defaultable):
@@ -60,19 +60,19 @@ def il_composed(value: Int) -> Int: return value * 2 + 1
 def main() raises:
     for a in range(3):
         var original = il_value(a, 5, "a")
-        il_equal(map[ILM](Identity[Int](), original.copy()), original)
-        var mapped = map[ILM](il_twice, original.copy())
-        il_equal(map[ILM](il_plus, mapped^), map[ILM](il_composed, original.copy()))
-        il_equal(flat_map[ILM](ILPure(), original.copy()), original)
+        il_equal(map[ILM](original.copy(), Identity[Int]()), original)
+        var mapped = map[ILM](original.copy(), il_twice)
+        il_equal(map[ILM](mapped^, il_plus), map[ILM](original.copy(), il_composed))
+        il_equal(flat_map[ILM](original.copy(), ILPure()), original)
         il_equal(ap[ILM](Ior[String, Identity[Int]](Right(Identity[Int]())), original.copy()), original)
         il_equal(ap[ILV](Ior[String, Identity[Int]](Right(Identity[Int]())), original.copy()), original)
-        il_equal(flat_map[ILM](ILStep(a, "f", 3), ILM.pure(5)), ILStep(a, "f", 3).call(5))
+        il_equal(flat_map[ILM](ILM.pure(5), ILStep(a, "f", 3)), ILStep(a, "f", 3).call(5))
         for b in range(3):
             for c in range(3):
                 var f = ILStep(b, "b", 3)
                 var g = ILStep(c, "c", 7)
-                var bound = flat_map[ILM](f.copy(), original.copy())
-                il_equal(flat_map[ILM](g.copy(), bound^), flat_map[ILM](ILComposed(f^, g^), original.copy()))
+                var bound = flat_map[ILM](original.copy(), f.copy())
+                il_equal(flat_map[ILM](bound^, g.copy()), flat_map[ILM](original.copy(), ILComposed(f^, g^)))
                 var second = il_value(b, 3, "b")
                 var third = il_value(c, 7, "c")
                 var left = map2[ILV](ILAdd(), original.copy(), second.copy())

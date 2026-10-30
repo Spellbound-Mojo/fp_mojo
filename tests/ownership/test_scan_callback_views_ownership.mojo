@@ -45,7 +45,7 @@ def owners() raises:
         assert_equal(inputs[], 3)
         assert_equal(outputs[], 0)
         assert_equal(ledger[].drops[0], 0)
-        var empty = scan_map(callback, I5Carry(0, carries), List[I5Input]())
+        var empty = scan_map(List[I5Input](), I5Carry(0, carries), callback)
         assert_equal(len(iterated(empty^).collect_list()), 0)
         assert_equal(carries[], 2)
         assert_equal(ledger[].calls, count)

@@ -26,7 +26,7 @@ def main() raises:
     assert_equal(a.take(), [1, 11, 2, 12, 3, 13])
     var b = iterated(xs.copy()).flat_traverse[OptionalFamily](tx_groups)
     assert_equal(b.take(), [1, 11, 2, 12, 3, 13])
-    var c = traverse_filter[ResultFamily[String]](tx_select, xs.copy())
+    var c = traverse_filter[ResultFamily[String]](xs.copy(), tx_select)
     assert_equal(c^.raise_on_err(), [20])
     var d = piped(xs.copy()).traverse_filter[ResultFamily[String]](tx_select).get()
     assert_equal(d^.raise_on_err(), [20])
@@ -149,7 +149,7 @@ def tx_sources() raises:
     var result = iterated(current^).filter_effect[OptionalFamily](tx_accept)
     assert_equal(result.take(), [2])
     var native = as_unary(tx_groups)
-    var result2 = flat_traverse[OptionalFamily](native^, tx_pair())
+    var result2 = flat_traverse[OptionalFamily](tx_pair(), native^)
     assert_equal(result2.take(), [1, 11, 2, 12])
 
 

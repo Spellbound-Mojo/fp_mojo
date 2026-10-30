@@ -53,22 +53,22 @@ type.
 
 | Operation | Non-empty input | Empty input |
 |---|---|---|
-| `fold_left(step, initial, source)` | `n` calls of `step(var A, var T) -> A`, in order | `initial`, no calls |
-| `reduce(step, source, initial=value)` | The same as `fold_left` | `initial`, no calls |
-| `reduce(step, source)` | The first element seeds the accumulator; `n - 1` calls | Raises `EmptyReductionError` |
-| `reduce_optional(step, source)` | As above, wrapped in `Optional` | `None` |
-| `fold_until(step, initial, source)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |
+| `fold_left(source, initial, step)` | `n` calls of `step(var A, var T) -> A`, in order | `initial`, no calls |
+| `reduce(source, step, initial=value)` | The same as `fold_left` | `initial`, no calls |
+| `reduce(source, step)` | The first element seeds the accumulator; `n - 1` calls | Raises `EmptyReductionError` |
+| `reduce_optional(source, step)` | As above, wrapped in `Optional` | `None` |
+| `fold_until(source, initial, step)` | Each call returns `ControlFlow[B, A]`; `Break(b)` returns at once | `Continue(initial)` |
 | `collect_list(source)` | A `List` of every element, moved | An empty list |
 | `first(source)` / `last(source)` | First / last remaining element | `None` |
 | `is_empty(source)` | Pulls at most one value; returns `False` | `True` |
-| `count(source)` / `count_where(p, source)` | Visits and counts values / matches | `0` |
+| `count(source)` / `count_where(source, p)` | Visits and counts values / matches | `0` |
 | `contains(source, value)` | Borrows for equality, stops at first match | `False` |
-| `for_each(f, source)` | Moves each value into a callback returning `NoneType` | `None`, no calls |
+| `for_each(source, f)` | Moves each value into a callback returning `NoneType` | `None`, no calls |
 | `to_non_empty_list(source)` | `Some(NonEmptyList)` | `None` |
 | `combine_all_optional[S](source)` | Left-to-right Semigroup reduction | `None` |
-| `collect_fold[M](f, source)` | Combines present Optional results with the Monoid | Monoid identity |
-| `find(p, source)` | The first accepted element | `None` |
-| `any(p, source)` / `all(p, source)` | Stops at the first decisive element | `False` / `True` |
+| `collect_fold[M](source, f)` | Combines present Optional results with the Monoid | Monoid identity |
+| `find(source, p)` | The first accepted element | `None` |
+| `any(source, p)` / `all(source, p)` | Stops at the first decisive element | `False` / `True` |
 
 Steps are never reassociated. Pure and raising callbacks have separate
 overloads, and a callback's error type propagates unchanged; a callback that

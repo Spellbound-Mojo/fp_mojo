@@ -7,4 +7,4 @@ from fp.data import NonEmptyList
 from context_traversal_admission_support import MoveState,Next,OnceNext,OnceOwned,RepeatedOwned,AdmissionBase
 
 def main() raises:
-    _=collect[ListFamily](RepeatedOwned[ListFamily](),List[Int]([1,2]))
+    _=collect[ListFamily](List[Int]([1,2]),RepeatedOwned[ListFamily]())

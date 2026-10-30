@@ -64,7 +64,7 @@ def complete(config: Config) -> Checked:
 
 
 def validate(var entries: List[Entry]) -> Checked:
-    return fp.match(fold_until(record, Config(0, 0), entries^),
+    return fp.match(fold_until(entries^, Config(0, 0), record),
         lambda (stop: Break[ConfigError]) -> Checked: Err(stop.value.copy()),
         lambda (done: Continue[Config]) -> Checked: complete(done.value))
 
@@ -92,7 +92,7 @@ def configure(var lines: List[String], mut parsed: Int) -> String:
     def counted(var line: String) {mut parsed} -> Result[Entry, ConfigError]:
         parsed += 1
         return parse(line^)
-    return pipe(collect_results(map(counted, lines^)), check, render, finish)
+    return pipe(collect_results(map(lines^, counted)), check, render, finish)
 
 
 def scenario(var lines: List[String], expected: String, parsed_lines: Int) raises:

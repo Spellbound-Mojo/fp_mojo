@@ -81,14 +81,14 @@ def check_optional_reduction() raises:
         var values = List[Int]()
         for i in range(length):
             values.append(5 - i)
-        var actual = reduce_optional(subtract, iter(values^))
+        var actual = reduce_optional(iter(values^), subtract)
         assert_equal(Bool(actual), length != 0)
         if actual:
             assert_equal(actual.value(), 5 if length == 1 else 1 if length == 2 else -2)
     var failing: List[Int] = [5, -7, 3]
     var observed = 0
     try:
-        _ = reduce_optional(subtract, iter(failing^))
+        _ = reduce_optional(iter(failing^), subtract)
     except error:
         comptime assert type_of(error) == Int
         observed = error
