@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Pass 7a complete; 7b next**. The [representation decisions](#representation-decisions)
+Status: **Pass 7a complete; the [Pass 7b proposal](#pass-7b-proposal) is a draft for review**. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -523,6 +523,185 @@ Consequences for 7b and 8a: interpreter frames are explicit node structs with
 iterative destructors; every erased operation borrows through `view()`;
 programs captured inside user callbacks are still destroyed by native
 destructors, which is a documented limit.
+
+## Pass 7b proposal
+
+Status: **draft for review**. No existing public name, signature, or behavior
+changes. Pass 8a would implement the carrier and engine below, and Pass 9 the
+fiber contract.
+
+### Tiers and family selection
+
+Typed recipes stay as they are: `Async[E]` remains their family, and their
+types keep every origin. The erased tier adds one carrier and one family:
+
+| Name | Kind | Behavior |
+|---|---|---|
+| `Program[T, E]` | struct | An unopened or running erased program. Movable, not copyable. An unopened program may be dropped; an entered one is owned like any machine. Implements `Machine` with `Value = T`, `Error = E`, and `Family = ProgramFamily[E]`. |
+| `ProgramFamily[E]` | family | `Monad` and `ErrorRecovery`. `Pure`, `Mapped`, `Bound`, `Handled`, and `Combined` are all `Program[_, E]`. Overrides the deferred fold and loop hooks as `Async[E]` does, so `tail_rec_m[ProgramFamily[E]]` and collection folds also return programs. Adds `raise_error`. |
+| `program(machine)` | function | Erases any machine with error `E` into a leaf: the typed-to-erased boundary. |
+| `defer[E](factory)` | function | Invokes a factory once on entry. The factory returns a program or a typed machine. Recursive programs use it, so construction is not eagerly recursive. |
+
+`Pipeline` selects a family from the source's `Family` declaration, so users opt
+into the erased tier by lifting the source:
+`pipeline(program(delay[Int](initial))).flat_map(next_value)`. A
+`ProgramFamily` continuation may return a `Program[U, E]` or any typed machine
+with error `E`; the bind erases a typed result as a leaf. `Bound[V, F]` is
+therefore the fixed type `Program[Element[F.Out], E]`, much as `ResultFamily`'s
+is a `Result`. Nothing in `Monad` or `Pipeline` assumes that `Bound` contains
+`V` or `F`.
+
+Operations without a `Pipeline` method are methods on `Program`: `guarantee`,
+`guarantee_case`, `on_cancel`, and `uncancelable`. A family-level
+`uncancelable_with` factory receives the existing `Poll[E]`. These build
+interpreter frames, so nesting them recursively stays stack safe. The existing
+free functions keep accepting a program as an ordinary typed machine.
+
+### Representation
+
+`Program[T, E]` owns one node tree until it is entered, then interpreter state:
+
+| Node | Payload | Evaluation |
+|---|---|---|
+| Pure | boxed value | Deliver success. |
+| Fail | `EffectFailure[E]` | Deliver failure. Errors are never boxed, because `E` is uniform. |
+| Leaf | erased machine whose value is boxed on completion | Poll through a canonical `_Slot`. |
+| Defer | erased factory | Invoke once through the canonical error capture; continue with its result. |
+| Bind | source node, erased continuation | Push the continuation; evaluate the source. |
+| Recover | source node, erased handler | Push the handler; evaluate the source. |
+| Finalize | source node, finalizer node, mode | Push the finalizer; evaluate the source. Modes cover `guarantee`, `on_cancel`, and `guarantee_case`. |
+| Mask | erased factory receiving `Poll[E]` | Enter a region through the canonical `context._mask()`; push its exit. |
+
+Pass 9 adds start, join, and cancel nodes. `cede` and `never` are leaves.
+
+Values cross nodes in `_Erased` boxes. A box is opened only by a function
+specialized at the typed call that consumes it. `flat_map` on `Program[T, E]`
+specializes the continuation's unboxing for `T`, and a program's own result is
+unboxed as its `T`. The typed API therefore pairs every cast with the type that
+created the box. Pass 8a adds a consuming `_Erased.take[T]` restricted to such
+functions.
+
+Nodes link their children through `OwnedPointer`, and their destructors detach
+descendants into a worklist, as `erased_depth` does. The continuation stack is a
+`List`. Disposing of an unopened or partially run program is therefore iterative,
+except for programs captured inside user callbacks, which native destructors
+still release.
+
+### Execution
+
+The run loop alternates two moves until it suspends, completes, or spends its
+transition budget:
+
+1. **Evaluate** the current node. Pure and Fail produce an outcome. Bind,
+   Recover, Finalize, and Mask push a frame and descend. Defer replaces the
+   node. Leaf polls the active leaf slot and, if pending, returns its wait.
+2. **Deliver** an outcome to the top frame. A bind continuation runs only on
+   success, after the handoff checkpoint. A recovery handler runs only on a
+   failure whose `canceled` flag is false. A finalizer runs masked with the exit
+   case, and its outcome merges through canonical `_finish`. A mask exit
+   restores the context. Other frames are dropped. An empty stack completes the
+   program.
+
+Cancellation, settlement, and error merging reuse their existing owners: the
+`_Slot` entry checkpoint and `_settle` for leaves, `_capture` for callbacks,
+`_finish` for finalizer outcomes, `context._mask()` and `Poll` for regions, and
+protected success for masked completion. The interpreter adds sequencing, not
+policy. A program registers one wake-registry node through its parent's slot,
+plus one for its active leaf. Binds, recoveries, and finalizer frames register
+nothing. When the budget runs out, the loop returns a runnable `Wait()`. Pass 8a
+uses a fixed budget; Pass 8b makes it a policy.
+
+The stack guarantee covers interpreter nodes. A typed leaf keeps native depth
+proportional to its static type, and a program with a different error type can
+only appear as a leaf. Recursion through typed combinators or across error types
+is therefore not stack safe until those combinators are rebuilt on fibers.
+
+### Leaf boundary
+
+- **Typed to erased.** `program(machine)`, `defer`, and `ProgramFamily`
+  continuations erase typed machines as leaves. Custom `Machine`
+  implementations need no change.
+- **Erased to typed.** `Program[T, E]` is a `Machine`, so `both`, `race`,
+  timeouts, scopes, `Nursery[Program[T, E]]`, `Driver`, and `run` accept it. Each
+  enclosing typed combinator adds one native level.
+- **Precondition.** The owned-state rule in the
+  [representation decisions](#representation-decisions) applies to everything
+  erased: leaves, continuations, handlers, factories, and finalizers.
+
+### Fiber contract for Pass 9
+
+In Pass 9, fibers start only in an explicit scope, so a scope's error type is
+part of its type:
+
+| Name | Behavior |
+|---|---|
+| `fiber_scope[E](body)` | Returns a `Program[T, E]` that builds `body(scope)` on entry. When the body is terminal, the scope closes admission, cancels unjoined children, drains them, and settles. |
+| `FiberScope[E]` | A copyable admission handle, shared like `Spawner`. `scope.start(child)` is a `Program[Fiber[U, E], E]` that admits the child on entry. Children must have error `E`. |
+| `Fiber[U, E]` | A move-only handle. `join(deinit self)` returns `Program[Outcome[U, E], E]`: it parks until the child and its cleanup finish, then transfers the outcome once. `cancel(self)` requests cancellation and waits for termination without taking the result. `request_cancel(self)` only requests. |
+| `cede[E]()`, `never[T, E]()` | Leaves. `cede` yields once while runnable; `never` stays pending until cancellation. |
+
+Ownership and accounting:
+
+- The scope owns execution; a handle grants observation and cancellation.
+  Dropping a handle neither stops nor detaches the child.
+- A child's success goes into a typed cell shared only by its handle and its
+  task. Its failure stays in scope-owned state typed only by `E`, so the scope
+  can settle unobserved failures without knowing `U`.
+- `join` moves the failure out of the scope state, or the success out of the
+  cell. A dropped handle marks the child unobserved: its success is destroyed
+  once the child completes, and its failure joins scope settlement.
+- If a joiner is canceled after taking the right but before delivery, the
+  failure returns to the scope state and a suppressed success is destroyed once.
+- Settlement merges unobserved failures after the body outcome through
+  `_finish`, in admission order. Cancellation-only children contribute nothing,
+  so a scope whose body succeeded but whose unobserved child failed fails.
+- Child storage generalizes the nursery's slots with generation-checked reuse, so
+  spawn/join churn does not grow storage. `Nursery` keeps its documented
+  lifetime admission limit.
+- Starting on a closed scope (through a leaked handle) destroys the child
+  unopened and returns a fiber whose join yields cancellation only.
+- A direct self-join is a protocol violation detected at join entry. Indirect
+  dependency cycles are not detected.
+
+### Error and cancellation laws
+
+Unless a row says otherwise, these compare programs run without a cancellation
+request.
+
+| Law | Expected | Reason |
+|---|---|---|
+| `handle_error_with(raise_error(e), h)` equals `h(EffectFailure([e], canceled=False))` | Holds | `raise_error` never sets `canceled`, and recovery admits only such failures. |
+| `handle_error_with(pure(a), h)` equals `pure(a)` | Holds | A recovery frame is dropped on success. |
+| `attempt(raise_error(e))` equals `pure(Err(...))`; `attempt(pure(a))` equals `pure(Ok(a))` | Holds | `attempt` is `map` plus recovery, as in `Async[E]`. |
+| A failure with `canceled` set bypasses recovery and `attempt` | Holds by design | It belongs to the cancellation side, and keeps finalizer errors that Cats Effect would only report. |
+| `uncancelable(poll => poll(fa))` equals `fa` | Expected | The mask and `Poll` restoration are the existing owners. |
+| A masked success survives cancellation requested during its region | Holds | The existing protected-success rule; the next checkpoint observes cancellation. |
+| Finalizers run once, innermost first, with the exact exit case | Holds | Finalize frames unwind in stack order through `_finish`. |
+| Racing two canceled children under a mask | Recorded difference | Terminal cancellation, as [racing](async-racing.md) documents, rather than Cats Effect's indefinite wait. |
+
+Pass 8a law clients check sequencing and recovery against observable outcomes and
+destruction counts. Pass 10 adds the cancellation and spawn law suites.
+
+### Migration
+
+No existing name changes. The proposed new public names, all in
+`fp.effects.async_runtime`, are `Program`, `ProgramFamily`, `program`, and
+`defer` in Pass 8a, then `FiberScope`, `Fiber`, `fiber_scope`, `cede`, and
+`never` in Pass 9. Each lands with reviewed `public-exports.json`, `api.json`,
+and `compatibility.json` entries and examples, following the
+[documentation process](../contributing/documentation.md).
+
+### Questions for review
+
+1. Names: `Program`, `ProgramFamily`, `program()`, `defer`, `fiber_scope`.
+2. Should a scope whose body succeeded fail when an unobserved child failed
+   (proposed), or report child failures separately?
+3. Should starting on a closed scope return a cancellation-only fiber
+   (proposed), or a visible rejection?
+4. Should a direct self-join abort as a protocol violation (proposed), or be
+   left to diagnostics?
+5. Should finalizer and mask operations be `Program` methods (proposed), or
+   overloads of the existing free functions?
 
 ## Implementation reference map
 
