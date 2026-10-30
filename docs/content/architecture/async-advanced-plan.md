@@ -922,9 +922,17 @@ static constructors and methods. Each one reuses an existing owner:
   `public_reject_capture` checks.
 - `public_traversal_view` traverses with an owned repeatable callable. A
   deferred `IO` cannot keep a borrowed `Kleisli` view.
-- Open for review: `ScopedMachine` and `CleanupMachine` remain public protocols,
-  but no public operation takes them since the typed resource plans became
-  private. The typed recipe family remains private beside the `IO` family.
+
+**Review follow-up: scoped resources.** `ScopedMachine` and `CleanupMachine`
+stay public, with `Resource` operations that take them:
+
+- `use_scoped` polls a `ScopedMachine` body with a fresh loan on every poll, so
+  work that suspends can keep using a move-only resource.
+- `make_case` takes a `CleanupMachine` release that sees the exact exit, like
+  Cats Effect's `Resource.makeCase`.
+- Both reuse the canonical plan and `Scope` owners. `public_resource_scoped`
+  covers loans across a suspension, and release after success, failure, and
+  cancellation.
 
 ## Implementation reference map
 

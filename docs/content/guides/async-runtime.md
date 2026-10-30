@@ -53,7 +53,10 @@ release built from the borrowed resource. `use` acquires masked, lends the
 resource to a body that builds an `IO`, runs it, then releases masked with the
 exact exit. Dependent resources from `flat_map` release in reverse order. Bodies
 and releases borrow the resource only while building their `IO`, which cannot
-retain the loan.
+retain the loan. When work that suspends must keep using a move-only resource,
+`use_scoped` polls a `ScopedMachine` body with a fresh loan on every poll.
+`make_case` takes a `CleanupMachine` release that also sees the exact exit, like
+Cats Effect's `Resource.makeCase`.
 
 <!-- example: docs/examples/async_resources.mojo -->
 
@@ -124,7 +127,7 @@ reported deadline.
 | `IO.cede`, `IO.never`, `IO.sleep`, `IO.canceled` | the same, on `IO[T, E]` | |
 | `both`, `race`, `timeoutTo` | `both`, `race`, `timeout_to` | Cancel and drain; surviving source outcomes can win |
 | Earlier selection policies | `race_first`, `timeout_after` | First terminal outcome, or timer-selected fallback after clean draining |
-| `Resource.make`, `use` | `Resource.make`, `use` | Scoped borrowing; reverse release order |
+| `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
 | `Fiber.cancel` | `request_cancel`, poll, `finish` | Request plus explicit complete draining |
 
 Operations use snake_case. Types follow the repository's Mojo class convention.
@@ -151,6 +154,7 @@ operation now returns `IO`:
 | `uncancelable(p)`, `uncancelable_with[E](f)` | `IO[T, E].uncancelable(f)`; `f` receives a `Poll[E]` it may ignore |
 | `callback(register, withdrawal)` | `IO[T, E].async(register, withdrawal)` |
 | `resource(acquire, release)`, `use(body)` | `Resource[T, E].make(acquire, release)`, `use(body)` |
+| `resource_case(acquire, cleanup)`, `use(scoped_body)` | `Resource[T, E].make_case(acquire, cleanup)`, `use_scoped(scoped_body)` |
 | `Deferred`, `Queue`, `Semaphore` operations | the same names, returning `IO` |
 | A custom `Machine` with `Family = Async[E]` | A `Machine`, lifted with `IO[T, E].lift(machine)` |
 | `Nursery`, `Spawner`, `scope`, `ScopedBoth` | Removed; fibers with `start` and `join` follow in Pass 9 |

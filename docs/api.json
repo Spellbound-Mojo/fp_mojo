@@ -59141,6 +59141,45 @@
       "summary": "Acquire with an IO; release with a native function of the borrowed resource."
      }
     ],
+    "make_case": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The acquisition, run masked.",
+        "name": "acquire",
+        "type": "IO[Self.T, Self.E]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The release, run masked after each use.",
+        "name": "release",
+        "type": "C",
+        "variadic": false
+       }
+      ],
+      "description": "The Cats Effect counterpart is Resource.makeCase. The release borrows\nthe resource and the body's ExitCase on each poll and may suspend.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A cleanup machine borrowing T, with error E.",
+        "inferred": false,
+        "name": "C",
+        "type": "CleanupMachine",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An unopened resource; a failed acquisition runs no release.",
+       "type": "Self"
+      },
+      "signature": "def make_case[C: CleanupMachine](var acquire: IO[Self.T, Self.E], var release: C) -> Self where C.Input == Self.T and C.Error == Self.E",
+      "summary": "Acquire with an IO; release with a machine that sees the exact exit."
+     }
+    ],
     "map": [
      {
       "args": [
@@ -59287,6 +59326,38 @@
       },
       "signature": "def use[U: Movable & Deinitable, //](deinit self, body: def(Self.T) thin -> IO[U, Self.E]) -> IO[U, Self.E]",
       "summary": "Use the resource through a native function."
+     }
+    ],
+    "use_scoped": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The body, polled until it completes.",
+        "name": "body",
+        "type": "U",
+        "variadic": false
+       }
+      ],
+      "description": "Use this when work that suspends must keep using a move-only resource:\nan IO built by use cannot retain the resource across suspensions.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A scoped machine borrowing T, with error E.",
+        "inferred": false,
+        "name": "U",
+        "type": "ScopedMachine",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO owning acquisition, body and release; release errors follow body errors.",
+       "type": "IO[U.Value, Self.E]"
+      },
+      "signature": "def use_scoped[U: ScopedMachine](deinit self, var body: U) -> IO[U.Value, Self.E] where U.Input == Self.T and U.Error == Self.E",
+      "summary": "Acquire, poll a body with a fresh loan of the resource each poll, then release."
      }
     ]
    },

@@ -763,7 +763,7 @@
       ]
     },
     "effects.async_runtime.protocols": {
-      "scope": "Public Machine lifted by IO.lift, scoped body/cleanup, Step, Wait, Signal, and canonical Context alias.",
+      "scope": "Public Machine lifted by IO.lift, scoped body and cleanup for Resource.use_scoped and make_case, Step, Wait, Signal, and canonical Context alias.",
       "restrictions": "Fresh per-poll loans cannot escape. Terminal steps must discharge entered work; notification does not provide device synchronization or cross-thread callback safety.",
       "evidence": [
         "docs/content/guides/async-runtime.md",

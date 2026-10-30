@@ -15,8 +15,8 @@ from fp._internal.errors import _ErrorCompatible
 from fp.effects import IOContext
 from fp.effects.resources import _MapScopeFactory
 from .kernel import Machine, Step
-from .scopes import ScopedMachine
-from .resources import ResourcePlan, _AsyncResourceType, _Join, _ScopedBuild, _PureFactory, _acquire_release
+from .scopes import ScopedMachine, CleanupMachine
+from .resources import ResourcePlan, _AsyncResourceType, _Acquire, _Join, _ScopedBuild, _PureFactory, _acquire_release
 from .engine import IO, _IsIO, _Admitted, _box_step, _Unbox
 
 
@@ -114,6 +114,25 @@ struct Resource[T: Movable & Deinitable, E: Movable & Deinitable](ResourcePlan, 
         return Self.make(acquire^, NativeBorrow[Self.T, IO[NoneType, Self.E], Never, def(Self.T) thin -> IO[NoneType, Self.E], False](release))
 
     @staticmethod
+    def make_case[C: CleanupMachine](var acquire: IO[Self.T, Self.E], var release: C) -> Self where C.Input == Self.T and C.Error == Self.E:
+        """Acquire with an IO; release with a machine that sees the exact exit.
+
+        The Cats Effect counterpart is Resource.makeCase. The release borrows
+        the resource and the body's ExitCase on each poll and may suspend.
+
+        Parameters:
+            C: A cleanup machine borrowing T, with error E.
+
+        Args:
+            acquire: The acquisition, run masked.
+            release: The release, run masked after each use.
+
+        Returns:
+            An unopened resource; a failed acquisition runs no release.
+        """
+        return Self(_Acquire(acquire^, release^))
+
+    @staticmethod
     def pure(var value: Self.T) -> Self:
         """Own a value as a resource with nothing to release."""
         return Self(_PureFactory[Self.T, Self.E]().call(value^)._into_plan())
@@ -131,6 +150,23 @@ struct Resource[T: Movable & Deinitable, E: Movable & Deinitable](ResourcePlan, 
             An IO owning acquisition, body and release; release errors follow body errors.
         """
         return self^._use(_ScopedBuild[F, Self.E](body^))
+
+    def use_scoped[U: ScopedMachine](deinit self, var body: U) -> IO[U.Value, Self.E] where U.Input == Self.T and U.Error == Self.E:
+        """Acquire, poll a body with a fresh loan of the resource each poll, then release.
+
+        Use this when work that suspends must keep using a move-only resource:
+        an IO built by use cannot retain the resource across suspensions.
+
+        Parameters:
+            U: A scoped machine borrowing T, with error E.
+
+        Args:
+            body: The body, polled until it completes.
+
+        Returns:
+            An IO owning acquisition, body and release; release errors follow body errors.
+        """
+        return self^._use(body^)
 
     def use[U: Movable & Deinitable, //](deinit self, body: def(Self.T) thin -> IO[U, Self.E]) -> IO[U, Self.E]:
         """Use the resource through a native function."""

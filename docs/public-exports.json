@@ -6831,6 +6831,12 @@
       "signature": "def make(var acquire: IO[Self.T, Self.E], release: def(Self.T) thin -> IO[NoneType, Self.E]) -> Self:"
      }
     ],
+    "make_case": [
+     {
+      "sha256": "7861794b6ee0b03b31c3010cd3b3f6491cb189851ccb7a50be58d7cd8dbcfeec",
+      "signature": "def make_case[C: CleanupMachine](var acquire: IO[Self.T, Self.E], var release: C) -> Self where C.Input == Self.T and C.Error == Self.E:"
+     }
+    ],
     "map": [
      {
       "sha256": "9780d3d74b2a62908083aa4039ff668d0b02081a681259e46254d029ac4e4f63",
@@ -6855,6 +6861,12 @@
      {
       "sha256": "dfafd9eeac12687852171a1f710fdf2da45c517a1e86457b14a0ec9fcb31d0f4",
       "signature": "def use[U: Movable & Deinitable, //](deinit self, body: def(Self.T) thin -> IO[U, Self.E]) -> IO[U, Self.E]:"
+     }
+    ],
+    "use_scoped": [
+     {
+      "sha256": "fca345c06db5977bc12cf849b2b22629a2cfcbb8f4cb7a3e6bd8442ba1ef9d53",
+      "signature": "def use_scoped[U: ScopedMachine](deinit self, var body: U) -> IO[U.Value, Self.E] where U.Input == Self.T and U.Error == Self.E:"
      }
     ]
    },

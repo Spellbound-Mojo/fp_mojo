@@ -72,7 +72,7 @@ for example in suite_inventory():
     if example["kind"] == "example" and Path(example["path"]).stem in PUBLIC_EXAMPLES:
         REGRESSIONS += (example["path"],)
         REGRESSION_STDOUT[Path(example["path"]).stem] = example["stdout"]
-POSITIVE.update({"public_generic", "public_resources", "public_owned", "public_extension", "public_traversal_view"})
+POSITIVE.update({"public_generic", "public_resources", "public_owned", "public_extension", "public_traversal_view", "public_resource_scoped"})
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
@@ -146,7 +146,7 @@ def main():
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
                     memory_limit_bytes=(3 if client.stem in PUBLIC_EXAMPLES or client.stem.startswith("public_") else 6) * 1024**3,
-                    werror=True, compiler_threads=1, compile_timeout={"async_masking": 600, "io_bridge": 600, "scheduler": 600, **{name: 900 for name in PUBLIC_EXAMPLES | {"public_generic", "public_resources", "public_owned", "public_extension", "public_traversal_view"}}, "host_admission": 600, "extension_boundary": 600, "instant_timers": 600, "instant_cleanup": 900, "application_errors": 900, "application_owned": 900, "application_native": 900, "application_aliases": 900, "coordination_family": 900, "resource_generic": 900, "depth": 360, "racing_origins": 240, "timeouts": 600, "selection_policies": 600, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 600, "workload": 360, "io_engine": 360, "io_depth": 360, "io_finalization": 360, "io_laws": 360, "io_family": 600, "io_operations": 600, "io_resources": 600, "async_coordination": 600, "coordination_origins": 600, "coordination_owned": 600}.get(client.stem, 120),
+                    werror=True, compiler_threads=1, compile_timeout={"async_masking": 600, "io_bridge": 600, "scheduler": 600, **{name: 900 for name in PUBLIC_EXAMPLES | {"public_generic", "public_resources", "public_owned", "public_extension", "public_traversal_view", "public_resource_scoped"}}, "host_admission": 600, "extension_boundary": 600, "instant_timers": 600, "instant_cleanup": 900, "application_errors": 900, "application_owned": 900, "application_native": 900, "application_aliases": 900, "coordination_family": 900, "resource_generic": 900, "depth": 360, "racing_origins": 240, "timeouts": 600, "selection_policies": 600, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 600, "workload": 360, "io_engine": 360, "io_depth": 360, "io_finalization": 360, "io_laws": 360, "io_family": 600, "io_operations": 600, "io_resources": 600, "async_coordination": 600, "coordination_origins": 600, "coordination_owned": 600}.get(client.stem, 120),
                     execution_timeout={"composition": 90, "io_depth": 120}.get(client.stem, 15))
                 jobs.append((route, case))
 
