@@ -1,29 +1,16 @@
+"""Resource composes ownership as IO: projection, dependent resources and borrowed bodies."""
 from std.os import abort
-from fp.effects import Outcome, EffectFailure, fold_outcome, IOContext, ExitCase
-from fp.effects.async_runtime import ResourcePlan, AsyncResource, ResourceCase, resource_case, pure, Pure, run
-from fp.effects.async_runtime.protocols import ScopedMachine, CleanupMachine, Step
-from fp.callables import BorrowOnceCallable, BorrowCallContract, BorrowSignature
-from fp.data import Result, Ok
+from fp.effects import Outcome, EffectFailure, fold_outcome
+from fp.effects.async_runtime import IO, Resource, run
+from fp.callables import BorrowOnceCallable, BorrowSignature
 
 
-def use_recipe[P: ResourcePlan, U: ScopedMachine](var resource: AsyncResource[P], var body: U) -> AsyncResource[P].Used[U] where P.Value == U.Input and P.Error == U.Error:
-    return resource^.use(body^)
+def release(value: Int) -> IO[NoneType, Int]:
+    return IO[NoneType, Int].pure(NoneType())
 
 
-def project[P: ResourcePlan, F: BorrowCallContract & Movable & Deinitable](var resource: AsyncResource[P], var function: F) -> AsyncResource[P].Mapped[F] where AsyncResource[P].MapCompatible[F]:
-    return resource^.map(function^)
-
-
-def compose[P: ResourcePlan, F: BorrowCallContract & Movable & Deinitable](var resource: AsyncResource[P], var function: F) -> AsyncResource[P].Bound[F] where AsyncResource[P].BindCompatible[F]:
-    return resource^.flat_map(function^)
-
-
-def use_factory[P: ResourcePlan, F: BorrowCallContract & Movable & Deinitable](var resource: AsyncResource[P], var function: F) -> AsyncResource[P].Use[F] where AsyncResource[P].UseCompatible[F]:
-    return resource^.use(function^)
-
-
-def body(value: Int) -> Pure[Int, Int]:
-    return pure[Int](value + 2)
+def body(value: Int) -> IO[Int, Int]:
+    return IO[Int, Int].pure(value + 2)
 
 
 @fieldwise_init
@@ -35,48 +22,33 @@ struct Double(BorrowOnceCallable):
 
 
 @fieldwise_init
-struct Body(ScopedMachine):
-    comptime Input = Int
-    comptime Value = Int
-    comptime Error = Int
-    def poll[o: ImmOrigin](mut self, ref[o] value: Int, context: IOContext[Int]) -> Step[Int, Int]:
-        return .ready(Optional(Result[Int, EffectFailure[Int]](Ok(value + 2))))
-
-
-@fieldwise_init
-struct Release(CleanupMachine):
-    comptime Input = Int
-    comptime Error = Int
-    def poll[o: ImmOrigin](mut self, ref[o] value: Int, exit: ExitCase[Int], context: IOContext[Int]) -> Step[NoneType, Int]:
-        return .ready(Optional(Result[NoneType, EffectFailure[Int]](Ok(NoneType()))))
-
-
-@fieldwise_init
 struct Next(BorrowOnceCallable):
     comptime Payload = Int
-    comptime Result = ResourceCase[Pure[Int, Int], Release]
+    comptime Result = Resource[Int, Int]
     def invoke_once(deinit self, ref value: Int) -> Self.Result:
-        return resource_case(pure[Int](value + 1), Release())
+        return Resource[Int, Int].make(IO[Int, Int].pure(value + 1), release)
+
+
+@fieldwise_init
+struct Body(BorrowOnceCallable):
+    comptime Payload = Int
+    comptime Result = IO[Int, Int]
+    def invoke_once(deinit self, ref value: Int) -> Self.Result:
+        return IO[Int, Int].pure(value + 2)
 
 
 def main():
-    var resource = resource_case(pure[Int](19), Release())
-    var composed = compose(resource^, Next())
-    var outcome = run(use_recipe(project(composed^, Double()), Body()))
+    var resource = Resource[Int, Int].make(IO[Int, Int].pure(19), release)
+    var outcome = run(resource^.flat_map(Next()).map(Double()).use(Body()))
     if take_int(outcome^) != 42:
-        abort("generic resource ownership")
-    var pointer: def(Int) thin -> Pure[Int, Int] = body
-    var native = BorrowSignature[Int, Pure[Int, Int]].capture(pointer)
-    var second = resource_case(pure[Int](40), Release())
-    var result = run(use_factory(second^, native^))
+        abort("resource composition")
+    var pointer: def(Int) thin -> IO[Int, Int] = body
+    var native = BorrowSignature[Int, IO[Int, Int]].capture(pointer)
+    var second = Resource[Int, Int].make(IO[Int, Int].pure(40), release)
+    var result = run(second^.use(native^))
     if take_int(result^) != 42:
-        abort("generic borrowed body factory")
-    print("resource generic: logical aliases, borrowed projection, dependent composition, scoped use, native body factory")
-
-
-def check(condition: Bool, message: String):
-    if not condition:
-        abort(message)
+        abort("borrowed body factory")
+    print("resource composition: borrowed projection, dependent resources, borrowed body, native body factory")
 
 
 def success(value: Int) -> Int:

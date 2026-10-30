@@ -13301,7 +13301,7 @@
     }
    ],
    "provider": "callables/_receiver",
-   "signature": "struct MutableRef[F: Movable & Deinitable, o: MutOrigin](Movable, Deinitable, CallContract where conforms_to(F, CallContract), UnaryContract where conforms_to(F, CallContract) and conforms_to(F, UnaryContract), MutableUnary where conforms_to(F, CallContract) and conforms_to(F, UnaryContract) and RepeatableUnary[F], OnceUnary where conforms_to(F, CallContract) and conforms_to(F, UnaryContract) and RepeatableUnary[F], BinaryContract where conforms_to(F, CallContract) and conforms_to(F, BinaryContract), MutableBinary where conforms_to(F, CallContract) and conforms_to(F, BinaryContract) and RepeatableBinary[F], OnceBinary where conforms_to(F, CallContract) and conforms_to(F, BinaryContract) and RepeatableBinary[F], ThunkContract where conforms_to(F, CallContract) and conforms_to(F, ThunkContract), MutableThunk where conforms_to(F, CallContract) and conforms_to(F, ThunkContract) and RepeatableThunk[F], OnceThunk where conforms_to(F, CallContract) and conforms_to(F, ThunkContract) and RepeatableThunk[F], BorrowCallContract where conforms_to(F, BorrowCallContract), BorrowMutableCallable where conforms_to(F, BorrowCallContract) and RepeatableBorrow[F], BorrowOnceCallable where conforms_to(F, BorrowCallContract) and RepeatableBorrow[F],)",
+   "signature": "struct MutableRef[F: Movable & Deinitable, o: MutOrigin](Movable, Deinitable, _BorrowedView, CallContract where conforms_to(F, CallContract), UnaryContract where conforms_to(F, CallContract) and conforms_to(F, UnaryContract), MutableUnary where conforms_to(F, CallContract) and conforms_to(F, UnaryContract) and RepeatableUnary[F], OnceUnary where conforms_to(F, CallContract) and conforms_to(F, UnaryContract) and RepeatableUnary[F], BinaryContract where conforms_to(F, CallContract) and conforms_to(F, BinaryContract), MutableBinary where conforms_to(F, CallContract) and conforms_to(F, BinaryContract) and RepeatableBinary[F], OnceBinary where conforms_to(F, CallContract) and conforms_to(F, BinaryContract) and RepeatableBinary[F], ThunkContract where conforms_to(F, CallContract) and conforms_to(F, ThunkContract), MutableThunk where conforms_to(F, CallContract) and conforms_to(F, ThunkContract) and RepeatableThunk[F], OnceThunk where conforms_to(F, CallContract) and conforms_to(F, ThunkContract) and RepeatableThunk[F], BorrowCallContract where conforms_to(F, BorrowCallContract), BorrowMutableCallable where conforms_to(F, BorrowCallContract) and RepeatableBorrow[F], BorrowOnceCallable where conforms_to(F, BorrowCallContract) and RepeatableBorrow[F],)",
    "summary": "An exclusive, origin-tracked reference to a repeatable library callable.",
    "traits": [
     "BinaryContract",
@@ -13316,7 +13316,8 @@
     "OnceThunk",
     "OnceUnary",
     "ThunkContract",
-    "UnaryContract"
+    "UnaryContract",
+    "_BorrowedView"
    ]
   },
   "callables.MutableThunk": {
@@ -56686,7 +56687,7 @@
      "name": "CollectError"
     }
    ],
-   "description": "Construction owns unopened work; execution captures compatible callback\nerrors in the canonical outcome. Dependent composition stays sequential.\nUse explicit both for child concurrency. This dictionary does not claim the\ncomplete Cats Effect Async capability set or erase concrete recipe types.",
+   "description": "Pipeline, tail_rec_m, traverse and attempt select it from an IO. Every\noperation returns an unopened IO; callbacks run once, when the program\nreaches them, and their errors become the IO's failure. Folds and loops\nrun on the IO run loop in constant native stack. Callbacks must own their\nstate: borrowed callback views are rejected, so pass a native function or\nan owned callable.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -56695,14 +56696,14 @@
       "args": [
        {
         "convention": "var",
-        "description": "The owned continuation, deferred until success and an entry checkpoint.",
+        "description": "The callback, consumed; it runs after success and an entry checkpoint.",
         "name": "f",
         "type": "F",
         "variadic": false
        },
        {
         "convention": "var",
-        "description": "The unopened source, consumed once.",
+        "description": "The IO, consumed.",
         "name": "value",
         "type": "V",
         "variadic": false
@@ -56712,14 +56713,14 @@
       "error": "",
       "parameters": [
        {
-        "description": "The source carrier admitted by this family.",
+        "description": "An IO in this family.",
         "inferred": false,
         "name": "V",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
-        "description": "A once-admitted continuation returning the same exact error family.",
+        "description": "A once-admitted owned callback returning an IO with the same error.",
         "inferred": false,
         "name": "F",
         "type": "UnaryContract & Movable & Deinitable",
@@ -56729,11 +56730,11 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A concrete recipe owning both execution lifetimes in sequence.",
+       "doc": "An IO running both in sequence.",
        "type": "Self.Bound[V, F]"
       },
       "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Bound[V, F]",
-      "summary": "Sequence a dependent recipe through the canonical bind owner."
+      "summary": "Continue with the IO a callback builds from the success value."
      }
     ],
     "map": [
@@ -56741,14 +56742,14 @@
       "args": [
        {
         "convention": "var",
-        "description": "The owned callback, receiving the success value.",
+        "description": "The callback, consumed.",
         "name": "f",
         "type": "F",
         "variadic": false
        },
        {
         "convention": "var",
-        "description": "The unopened source, consumed once.",
+        "description": "The IO, consumed.",
         "name": "value",
         "type": "V",
         "variadic": false
@@ -56758,14 +56759,14 @@
       "error": "",
       "parameters": [
        {
-        "description": "The source carrier admitted by this family.",
+        "description": "An IO in this family.",
         "inferred": false,
         "name": "V",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
-        "description": "A once-admitted callback with a compatible native error.",
+        "description": "A once-admitted owned callback with a compatible native error.",
         "inferred": false,
         "name": "F",
         "type": "UnaryContract & Movable & Deinitable",
@@ -56775,11 +56776,11 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A recipe capturing callback failure during execution. Error and\ncancellation outcomes bypass the callback.",
+       "doc": "An IO whose failure includes the callback's error. Failure and\ncancellation bypass the callback.",
        "type": "Self.Mapped[V, F]"
       },
       "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Mapped[V, F]",
-      "summary": "Defer one callback after a successful source outcome."
+      "summary": "Apply a callback to the success value when the IO reaches it."
      }
     ],
     "map2_lazy": [
@@ -56787,21 +56788,21 @@
       "args": [
        {
         "convention": "var",
-        "description": "The owned combining callback.",
+        "description": "The combiner, consumed.",
         "name": "f",
         "type": "F",
         "variadic": false
        },
        {
         "convention": "var",
-        "description": "The owned left recipe.",
+        "description": "The left IO, consumed.",
         "name": "left",
         "type": "V",
         "variadic": false
        },
        {
         "convention": "var",
-        "description": "The owned right factory, deferred until left succeeds.",
+        "description": "The right factory, run only after left succeeds.",
         "name": "right",
         "type": "R",
         "variadic": false
@@ -56811,21 +56812,21 @@
       "error": "",
       "parameters": [
        {
-        "description": "The left carrier admitted by this family.",
+        "description": "The left IO in this family.",
         "inferred": false,
         "name": "V",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
-        "description": "The once-admitted combiner of the exact left and right values.",
+        "description": "The once-admitted combiner of the left and right values.",
         "inferred": false,
         "name": "F",
         "type": "BinaryContract & Movable & Deinitable",
         "variadic": false
        },
        {
-        "description": "The once-admitted factory returning a recipe in this error family.",
+        "description": "The once-admitted factory of the right IO.",
         "inferred": false,
         "name": "R",
         "type": "ThunkContract & Movable & Deinitable",
@@ -56835,11 +56836,11 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "Sequential dependent composition; use both for concurrent children.",
+       "doc": "Sequential composition; use both for concurrent children.",
        "type": "Self.Combined[V, F, R]"
       },
       "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) -> Self.Combined[V, F, R]",
-      "summary": "Run the left recipe, build and run the right, then combine their values."
+      "summary": "Run the left IO, build and run the right, then combine their values."
      }
     ],
     "or_else": [
@@ -56847,14 +56848,14 @@
       "args": [
        {
         "convention": "var",
-        "description": "The owned recovery callback; cancellation bypasses it.",
+        "description": "The handler, consumed; cancellation bypasses it.",
         "name": "handler",
         "type": "H",
         "variadic": false
        },
        {
         "convention": "var",
-        "description": "The unopened source, consumed once.",
+        "description": "The IO, consumed.",
         "name": "source",
         "type": "V",
         "variadic": false
@@ -56864,14 +56865,14 @@
       "error": "",
       "parameters": [
        {
-        "description": "The source carrier in this family.",
+        "description": "An IO in this family.",
         "inferred": false,
         "name": "V",
         "type": "Movable & Deinitable",
         "variadic": false
        },
        {
-        "description": "A once-admitted handler of EffectFailure[E], preserving value and error types.",
+        "description": "A once-admitted owned handler of EffectFailure[E], keeping the value type.",
         "inferred": false,
         "name": "H",
         "type": "UnaryContract & Movable & Deinitable",
@@ -56881,11 +56882,11 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A recipe retaining full ordered errors and the cancellation flag.",
+       "doc": "An IO retaining full ordered errors and the cancellation flag.",
        "type": "Self.Handled[V, H]"
       },
       "signature": "def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) -> Self.Handled[V, H]",
-      "summary": "Recover an ordinary failure through the canonical bind continuation."
+      "summary": "Recover an ordinary failure with the IO a handler builds."
      }
     ],
     "pure": [
@@ -56913,588 +56914,32 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A concrete recipe in this family.",
+       "doc": "An IO producing the value.",
        "type": "Self.Pure[A]"
       },
       "signature": "def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]",
-      "summary": "Own an already evaluated value in an unopened recipe."
+      "summary": "Own an evaluated value in an IO."
      }
     ]
    },
    "parameters": [
     {
-     "description": "The exact domain error shared by every recipe in this family.",
+     "description": "The exact domain error shared by every IO in this family.",
      "inferred": false,
      "name": "E",
      "type": "Movable & Deinitable",
      "variadic": false
     }
    ],
-   "provider": "effects/_async/family",
+   "provider": "effects/_async/engine",
    "signature": "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery)",
-   "summary": "The native sequencing and recovery family for cooperative async recipes.",
+   "summary": "The sequencing and recovery family of IO.",
    "traits": [
     "Applicative",
     "ErrorRecovery",
     "Functor",
     "Monad"
    ]
-  },
-  "effects.async_runtime.AsyncResource": {
-   "aliases": [
-    {
-     "description": "The concrete unopened plan; infer this parameter from constructors.",
-     "name": "Plan"
-    },
-    {
-     "description": "The owned resource value lent during use.",
-     "name": "Value"
-    },
-    {
-     "description": "The exact domain error of acquisition, use and cleanup.",
-     "name": "Error"
-    },
-    {
-     "description": "The application machine built from a scoped body descriptor.",
-     "name": "Used"
-    },
-    {
-     "description": "The application machine built by a borrowing body factory.",
-     "name": "Use"
-    },
-    {
-     "description": "Exact borrowed input, receiver and factory-error admission for map.",
-     "name": "MapCompatible"
-    },
-    {
-     "description": "Exact borrowing factory admission and independently owned body error family.",
-     "name": "UseCompatible"
-    },
-    {
-     "description": "Exact borrowing factory admission and dependent resource error family.",
-     "name": "BindCompatible"
-    },
-    {
-     "description": "The dependent resource recipe returned by flat_map.",
-     "name": "Bound"
-    },
-    {
-     "description": "The resource recipe retaining release ownership after map.",
-     "name": "Mapped"
-    }
-   ],
-   "description": "Acquisitions and releases may suspend. Each use runs through the canonical\nScope engine: acquisition and cleanup are masked, release order is reversed,\nand failures retain body-before-cleanup order. Fresh resource loans last one\ncallback invocation or poll; they cannot escape into returned machines.",
-   "fields": [],
-   "kind": "struct",
-   "methods": {
-    "flat_map": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The deferred factory, owning its captures.",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "A once-admitted borrowing factory returning another AsyncResource.",
-        "inferred": false,
-        "name": "F",
-        "type": "BorrowCallContract & Movable & Deinitable",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "An unopened plan exposing the inner value while retaining both owners.",
-       "type": "Self.Bound[F]"
-      },
-      "signature": "def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Bound[F] where Self.BindCompatible[F]",
-      "summary": "Acquire a dependent resource and release it before this resource."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "AnyType",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Borrowing[A, R]",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "Self.Bound[_NativeBorrow[A, R, Never, F, False]]"
-      },
-      "signature": "def flat_map[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Bound[_NativeBorrow[A, R, Never, F, False]] where Self.BindCompatible[_NativeBorrow[A, R, Never, F, False]]",
-      "summary": "Adapt a native borrowing callback through the canonical callable boundary."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "AnyType",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingBorrowing[A, R, X]",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "Self.Bound[_NativeBorrow[A, R, X, F, True]]"
-      },
-      "signature": "def flat_map[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Bound[_NativeBorrow[A, R, X, F, True]] where Self.BindCompatible[_NativeBorrow[A, R, X, F, True]]",
-      "summary": "Adapt a native borrowing callback through the canonical callable boundary."
-     }
-    ],
-    "map": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The projection, deferred until successful acquisition.",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "A once-admitted borrowing projection with a compatible native error.",
-        "inferred": false,
-        "name": "F",
-        "type": "BorrowCallContract & Movable & Deinitable",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "An unopened resource plan; the result cannot retain the fresh input loan.",
-       "type": "Self.Mapped[F]"
-      },
-      "signature": "def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Mapped[F] where Self.MapCompatible[F]",
-      "summary": "Project an owned value while retaining the original release owner."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "AnyType",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Borrowing[A, R]",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "Self.Mapped[_NativeBorrow[A, R, Never, F, False]]"
-      },
-      "signature": "def map[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Mapped[_NativeBorrow[A, R, Never, F, False]] where Self.MapCompatible[_NativeBorrow[A, R, Never, F, False]]",
-      "summary": "Adapt a native borrowing callback through the canonical callable boundary."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "AnyType",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingBorrowing[A, R, X]",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "Self.Mapped[_NativeBorrow[A, R, X, F, True]]"
-      },
-      "signature": "def map[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Mapped[_NativeBorrow[A, R, X, F, True]] where Self.MapCompatible[_NativeBorrow[A, R, X, F, True]]",
-      "summary": "Adapt a native borrowing callback through the canonical callable boundary."
-     }
-    ],
-    "use": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The unopened body, consumed once.",
-        "name": "body",
-        "type": "U",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "A scoped machine with the exact resource input and domain error.",
-        "inferred": false,
-        "name": "U",
-        "type": "ScopedMachine",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "A machine owning the complete acquisition, body and cleanup lifetime.",
-       "type": "Self.Used[U]"
-      },
-      "signature": "def use[U: ScopedMachine](deinit self, var body: U) -> Self.Used[U] where U.Input == Self.Value and U.Error == Self.Error",
-      "summary": "Lend the resource afresh for each poll, then drain its release."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The factory, deferred until successful acquisition.",
-        "name": "body",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "A once-admitted borrowing factory returning an owned machine.",
-        "inferred": false,
-        "name": "F",
-        "type": "BorrowCallContract & Movable & Deinitable",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "A machine that captures compatible factory errors and always releases\nan acquired resource; the returned body cannot retain the fresh loan.",
-       "type": "Self.Use[F]"
-      },
-      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var body: F) -> Self.Use[F] where Self.UseCompatible[F]",
-      "summary": "Build an independently owned body through one fresh resource loan."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "AnyType",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_Borrowing[A, R]",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "Self.Use[_NativeBorrow[A, R, Never, F, False]]"
-      },
-      "signature": "def use[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Use[_NativeBorrow[A, R, Never, F, False]] where Self.UseCompatible[_NativeBorrow[A, R, Never, F, False]]",
-      "summary": "Adapt a native borrowing callback through the canonical callable boundary."
-     },
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "",
-        "name": "function",
-        "type": "F",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [
-       {
-        "description": "",
-        "inferred": true,
-        "name": "A",
-        "type": "AnyType",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "R",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": true,
-        "name": "X",
-        "type": "Movable & Deinitable",
-        "variadic": false
-       },
-       {
-        "description": "",
-        "inferred": false,
-        "name": "F",
-        "type": "_RaisingBorrowing[A, R, X]",
-        "variadic": false
-       }
-      ],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "",
-       "type": "Self.Use[_NativeBorrow[A, R, X, F, True]]"
-      },
-      "signature": "def use[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Use[_NativeBorrow[A, R, X, F, True]] where Self.UseCompatible[_NativeBorrow[A, R, X, F, True]]",
-      "summary": "Adapt a native borrowing callback through the canonical callable boundary."
-     }
-    ]
-   },
-   "parameters": [
-    {
-     "description": "The inferred concrete acquisition plan, including all owned captures.",
-     "inferred": false,
-     "name": "P",
-     "type": "ResourcePlan",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/resources",
-   "signature": "struct AsyncResource[P: ResourcePlan](_AsyncResourceType)",
-   "summary": "An unopened resource plan, consumed by composition or scoped use.",
-   "traits": [
-    "_AsyncResourceType"
-   ]
-  },
-  "effects.async_runtime.Bind": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The source machine.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The owned continuation returning a machine in the same error family.",
-     "inferred": false,
-     "name": "F",
-     "type": "UnaryContract & Movable & Deinitable",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Bind[P: Machine, F: UnaryContract & Movable & Deinitable] = Async[P.Error].Bound[P, F]",
-   "summary": "The concrete recipe returned by selected Async flat_map.",
-   "traits": []
-  },
-  "effects.async_runtime.Both": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The left child type.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The right child type, with exactly the same error type.",
-     "inferred": false,
-     "name": "Q",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Both[P: Machine, Q: Machine] = _Recipe[_Both[P, Q]]",
-   "summary": "A pair recipe that drains both child subtrees before completion.",
-   "traits": []
-  },
-  "effects.async_runtime.Callback": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The once-callable accepting a Completion and returning native no result or explicit NoneType.",
-     "inferred": false,
-     "name": "F",
-     "type": "UnaryContract & Movable & Deinitable",
-     "variadic": false
-    },
-    {
-     "description": "The owned withdrawal machine yielding native no result or explicit NoneType, with the same error.",
-     "inferred": false,
-     "name": "C",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Callback[F: UnaryContract & Movable & Deinitable, C: Machine] = _Recipe[_Callback[F, C]]",
-   "summary": "A registration scope retaining withdrawal ownership through completion.",
-   "traits": []
   },
   "effects.async_runtime.Clock": {
    "aliases": [],
@@ -57637,20 +57082,7 @@
    ]
   },
   "effects.async_runtime.Deferred": {
-   "aliases": [
-    {
-     "description": "The exact unopened machine returned by complete.",
-     "name": "Complete"
-    },
-    {
-     "description": "The exact unopened machine returned by try_get.",
-     "name": "TryGet"
-    },
-    {
-     "description": "The exact unopened machine returned by get.",
-     "name": "Get"
-    }
-   ],
+   "aliases": [],
    "description": "",
    "fields": [],
    "kind": "struct",
@@ -57680,10 +57112,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine yielding whether this assignment won; later assignments leave the stored value intact.",
-       "type": "Self.Complete[E]"
+       "doc": "An IO yielding whether this assignment won; later assignments leave the stored value intact.",
+       "type": "IO[Bool, E]"
       },
-      "signature": "def complete[E: Movable & Deinitable](self, var value: Self.T) -> Self.Complete[E]",
+      "signature": "def complete[E: Movable & Deinitable](self, var value: Self.T) -> IO[Bool, E]",
       "summary": "Attempt single assignment when the recipe executes."
      }
     ],
@@ -57704,10 +57136,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine yielding an owned copy after assignment.",
-       "type": "Self.Get[E]"
+       "doc": "An IO yielding an owned copy after assignment.",
+       "type": "IO[Self.T, E]"
       },
-      "signature": "def get[E: Movable & Deinitable](self) -> Self.Get[E]",
+      "signature": "def get[E: Movable & Deinitable](self) -> IO[Self.T, E]",
       "summary": "Wait cooperatively for assignment, unless canceled."
      }
     ],
@@ -57728,10 +57160,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine yielding an owned optional copy of the value.",
-       "type": "Self.TryGet[E]"
+       "doc": "An IO yielding an owned optional copy of the value.",
+       "type": "IO[Optional[Self.T], E]"
       },
-      "signature": "def try_get[E: Movable & Deinitable](self) -> Self.TryGet[E]",
+      "signature": "def try_get[E: Movable & Deinitable](self) -> IO[Optional[Self.T], E]",
       "summary": "Read the current assignment without waiting."
      }
     ]
@@ -57751,33 +57183,6 @@
    "traits": [
     "Copyable"
    ]
-  },
-  "effects.async_runtime.Delay": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The owned thunk descriptor, invoked once after entry.",
-     "inferred": false,
-     "name": "F",
-     "type": "ThunkContract & Movable & Deinitable",
-     "variadic": false
-    },
-    {
-     "description": "The selected domain error; it admits the thunk error or Never.",
-     "inferred": false,
-     "name": "E",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Delay[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable] = EvalIO[DelayContract[F, E].Out]",
-   "summary": "The concrete delayed recipe for a library thunk.",
-   "traits": []
   },
   "effects.async_runtime.Driver": {
    "aliases": [],
@@ -57954,79 +57359,1311 @@
     "Copyable"
    ]
   },
-  "effects.async_runtime.EvalIO": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
+  "effects.async_runtime.IO": {
+   "aliases": [
     {
-     "description": "The compatible synchronous IO recipe type.",
-     "inferred": false,
-     "name": "P",
-     "type": "ReaderAction",
-     "variadic": false
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Value"
+    },
+    {
+     "description": "",
+     "name": "Error"
     }
    ],
-   "provider": "effects/_async/application",
-   "signature": "comptime EvalIO[P: ReaderAction] = _Recipe[_EvalIO[P]]",
-   "summary": "A synchronous IO endpoint executed in one poll under the inherited context.",
-   "traits": []
-  },
-  "effects.async_runtime.Guarantee": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
+   "description": "Building an IO runs nothing. A value runs once, when a host drives it;\nrepeated work builds a fresh IO. Sequencing, recovery, and finalizers run\niteratively in constant native stack, and an unopened IO may be dropped.\nCallbacks stored in an IO must own their state: plain functions and owned\nlibrary callables are admitted, capturing closures and borrowed callback\nviews are rejected.",
    "fields": [],
-   "kind": "alias",
-   "methods": {},
+   "kind": "struct",
+   "methods": {
+    "async": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The registration, run once when reached.",
+        "name": "register",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "Runs masked after every entered registration.",
+        "name": "withdrawal",
+        "type": "IO[NoneType, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "Declared with backticks because async is a Mojo keyword; call it as\n`IO[T, E].async(...)`.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable receiving Completion[T, E] and returning no value.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO settling with the completion, then the withdrawal's errors.",
+       "type": "Self"
+      },
+      "signature": "def `async`[F: UnaryContract & Movable & Deinitable](var register: F, var withdrawal: IO[NoneType, Self.E]) -> Self where F.Arg == Completion[Self.T, Self.E] and _CallbackUnit[F.Out] and _Maps[Self.E, F]",
+      "summary": "Register with an external source that completes this IO once."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "register",
+        "type": "def(var Completion[Self.T, Self.E]) thin",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "",
+        "name": "withdrawal",
+        "type": "IO[NoneType, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def `async`(register: def(var Completion[Self.T, Self.E]) thin, var withdrawal: IO[NoneType, Self.E]) -> Self",
+      "summary": "Register a native function with an external source."
+     }
+    ],
+    "async_": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The registration, run once when reached.",
+        "name": "register",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable receiving Completion[T, E] and returning no value.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO settling with the completion.",
+       "type": "Self"
+      },
+      "signature": "def async_[F: UnaryContract & Movable & Deinitable](var register: F) -> Self where F.Arg == Completion[Self.T, Self.E] and _CallbackUnit[F.Out] and _Maps[Self.E, F]",
+      "summary": "Register with an external source that needs no withdrawal."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "register",
+        "type": "def(var Completion[Self.T, Self.E]) thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def async_(register: def(var Completion[Self.T, Self.E]) thin) -> Self",
+      "summary": "Register a native function that needs no withdrawal."
+     }
+    ],
+    "attempt": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO of Result[T, EffectFailure[E]]. Cancellation and failures\nmarked canceled stay terminal.",
+       "type": "IO[Result[Self.T, EffectFailure[Self.E]], Self.E]"
+      },
+      "signature": "def attempt(deinit self) -> IO[Result[Self.T, EffectFailure[Self.E]], Self.E]",
+      "summary": "Materialize success or an ordinary failure as a Result."
+     }
+    ],
+    "both": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The other IO, consumed.",
+        "name": "other",
+        "type": "IO[U, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The other IO's value type.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO of both values; failures keep left-before-right error order.",
+       "type": "IO[Tuple[Self.T, U], Self.E]"
+      },
+      "signature": "def both[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[Tuple[Self.T, U], Self.E]",
+      "summary": "Run this IO and another concurrently, draining both."
+     }
+    ],
+    "canceled": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO; a mask defers observing the request.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def canceled() -> IO[NoneType, Self.E]",
+      "summary": "Request cancellation of the running program."
+     }
+    ],
+    "cede": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO that is runnable again after one yield.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def cede() -> IO[NoneType, Self.E]",
+      "summary": "Yield to other work once, then continue."
+     }
+    ],
+    "defer": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, consumed; it runs once, when reached.",
+        "name": "factory",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable returning this IO type, with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO running the program the factory builds.",
+       "type": "Self"
+      },
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self where _Defers[Self.E, F] and F.Out == Self",
+      "summary": "Build the IO when it is reached, so recursive programs build lazily."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "factory",
+        "type": "def() thin -> Self",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def defer(factory: def() thin -> Self) -> Self",
+      "summary": "Build the IO with a native function when it is reached."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "factory",
+        "type": "def() raises X thin -> Self",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def defer[X: Movable & Deinitable, //](factory: def() raises X thin -> Self) -> Self where _ErrorCompatible[Self.E, X]",
+      "summary": "Build the IO with a raising native function; its error becomes the failure."
+     }
+    ],
+    "delay": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed; it runs once, when reached.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "Use defer when the function builds an IO.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable producing T with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the function's result; its error becomes the failure.",
+       "type": "Self"
+      },
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where F.Out == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]",
+      "summary": "Evaluate a synchronous function when the IO reaches it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def delay[R: Movable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T and not conforms_to(R, RegisterPassable)",
+      "summary": "Evaluate a native function when the IO reaches it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def delay[R: RegisterPassable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T",
+      "summary": "Evaluate a native function when the IO reaches it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def delay[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable)",
+      "summary": "Evaluate a raising native function; its error becomes the failure."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def delay[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]",
+      "summary": "Evaluate a raising native function; its error becomes the failure."
+     }
+    ],
+    "eval_io": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed; it runs once.",
+        "name": "program",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A synchronous IO program producing T with error E.",
+        "inferred": false,
+        "name": "P",
+        "type": "ReaderAction",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO with the program's outcome.",
+       "type": "Self"
+      },
+      "signature": "def eval_io[P: ReaderAction](var program: P) -> Self where IOContract[P].Compatible and P.Value == Self.T and IOContract[P].Error == Self.E",
+      "summary": "Run a synchronous IO program inside this IO's context when reached."
+     }
+    ],
+    "flat_map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; failure and cancellation skip it.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable from T to an IO with error E.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO running both in sequence; the callback's error becomes the failure.",
+       "type": "IO[downcast[F.Out, Machine].Value, Self.E]"
+      },
+      "signature": "def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[downcast[F.Out, Machine].Value, Self.E] where F.Arg == Self.T and _Binds[Self.E, F]",
+      "summary": "Continue with the IO a callback builds from the success value."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "f",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> IO[U, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[U, Self.E]"
+      },
+      "signature": "def flat_map[U: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) thin -> IO[U, Self.E]) -> IO[U, Self.E]",
+      "summary": "Continue with the IO a native function builds from the success value."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "f",
+        "type": "def(var _NativeOwnedArg[Self.T]) raises X thin -> IO[U, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[U, Self.E]"
+      },
+      "signature": "def flat_map[U: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) raises X thin -> IO[U, Self.E]) -> IO[U, Self.E] where _ErrorCompatible[Self.E, X]",
+      "summary": "Continue with a raising native function; its error becomes the failure."
+     }
+    ],
+    "guarantee": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The cleanup, consumed; it runs once after the body.",
+        "name": "finalizer",
+        "type": "IO[NoneType, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO with the body's outcome; body errors precede cleanup errors.",
+       "type": "Self"
+      },
+      "signature": "def guarantee(deinit self, var finalizer: IO[NoneType, Self.E]) -> Self",
+      "summary": "Run a finalizer masked after every outcome."
+     }
+    ],
+    "guarantee_case": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, consumed; it borrows the exit only while building.",
+        "name": "factory",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable borrowing ExitCase[E] and returning IO[NoneType, E].",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO with the body's outcome; body errors precede cleanup errors.",
+       "type": "Self"
+      },
+      "signature": "def guarantee_case[F: BorrowCallContract & Movable & Deinitable](deinit self, var factory: F) -> Self where F.Payload == ExitCase[Self.E] and F.Result == IO[NoneType, Self.E] and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure] and _Admitted[F]",
+      "summary": "Build a finalizer from the body's exact exit, then run it masked."
+     }
+    ],
+    "handle_error_with": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The handler, consumed; success and failures marked canceled skip it.",
+        "name": "handler",
+        "type": "H",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable from EffectFailure[E] to this IO type.",
+        "inferred": false,
+        "name": "H",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO with the original success or the handler's program.",
+       "type": "Self"
+      },
+      "signature": "def handle_error_with[H: UnaryContract & Movable & Deinitable](deinit self, var handler: H) -> Self where H.Arg == EffectFailure[Self.E] and _Maps[Self.E, H] and H.Out == Self",
+      "summary": "Recover an ordinary failure with the IO a handler builds."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "handler",
+        "type": "def(var EffectFailure[Self.E]) thin -> Self",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def handle_error_with(deinit self, handler: def(var EffectFailure[Self.E]) thin -> Self) -> Self",
+      "summary": "Recover an ordinary failure with a native handler."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "handler",
+        "type": "def(var EffectFailure[Self.E]) raises X thin -> Self",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def handle_error_with[X: Movable & Deinitable, //](deinit self, handler: def(var EffectFailure[Self.E]) raises X thin -> Self) -> Self where _ErrorCompatible[Self.E, X]",
+      "summary": "Recover with a raising native handler; its error replaces the failure."
+     }
+    ],
+    "lift": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The unopened machine, consumed once.",
+        "name": "machine",
+        "type": "P",
+        "variadic": false
+       }
+      ],
+      "description": "The IO keeps origins only through T and E, so the machine must own its\nstate, or borrow only what T or E already names.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A machine with this IO's value and error types.",
+        "inferred": false,
+        "name": "P",
+        "type": "Machine",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO that polls the machine until it completes.",
+       "type": "Self"
+      },
+      "signature": "def lift[P: Machine](var machine: P) -> Self where P.Value == Self.T and P.Error == Self.E",
+      "summary": "Run a custom machine as one step of an IO."
+     }
+    ],
+    "map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The callback, consumed; failure and cancellation skip it.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable from T, with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO of the callback's result; its error becomes the failure.",
+       "type": "IO[F.Out, Self.E]"
+      },
+      "signature": "def map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[F.Out, Self.E] where F.Arg == Self.T and _Maps[Self.E, F]",
+      "summary": "Apply a callback to the success value."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "f",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[R, Self.E]"
+      },
+      "signature": "def map[R: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) thin -> R) -> IO[R, Self.E] where not conforms_to(R, RegisterPassable)",
+      "summary": "Apply a native function to the success value."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "f",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[R, Self.E]"
+      },
+      "signature": "def map[R: RegisterPassable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) thin -> R) -> IO[R, Self.E]",
+      "summary": "Apply a native function to the success value."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "f",
+        "type": "def(var _NativeOwnedArg[Self.T]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[R, Self.E]"
+      },
+      "signature": "def map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) raises X thin -> R) -> IO[R, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable)",
+      "summary": "Apply a raising native function; its error becomes the failure."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "f",
+        "type": "def(var _NativeOwnedArg[Self.T]) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[R, Self.E]"
+      },
+      "signature": "def map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) raises X thin -> R) -> IO[R, Self.E] where _ErrorCompatible[Self.E, X]",
+      "summary": "Apply a raising native function; its error becomes the failure."
+     }
+    ],
+    "never": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO that never produces a value.",
+       "type": "Self"
+      },
+      "signature": "def never() -> Self",
+      "summary": "Wait until canceled."
+     }
+    ],
+    "on_cancel": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The cleanup, consumed; dropped unopened otherwise.",
+        "name": "finalizer",
+        "type": "IO[NoneType, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO with the body's outcome.",
+       "type": "Self"
+      },
+      "signature": "def on_cancel(deinit self, var finalizer: IO[NoneType, Self.E]) -> Self",
+      "summary": "Run a finalizer masked only when the body observed cancellation."
+     }
+    ],
+    "poll": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The inherited cancellation and runtime context.",
+        "name": "context",
+        "type": "IOContext[Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A pending wait or the terminal outcome.",
+       "type": "Step[Self.T, Self.E]"
+      },
+      "signature": "def poll(mut self, context: IOContext[Self.E]) -> Step[Self.T, Self.E]",
+      "summary": "Advance the program; hosts and combinators call this, not applications."
+     }
+    ],
+    "pure": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The value, consumed once.",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the value.",
+       "type": "Self"
+      },
+      "signature": "def pure(var value: Self.T) -> Self",
+      "summary": "Own an evaluated value."
+     }
+    ],
+    "race": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The other IO, consumed.",
+        "name": "other",
+        "type": "IO[U, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The other IO's value type.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO of the first outcome that is not cancellation-only, tagged by side.",
+       "type": "IO[RaceResult[Self.T, U], Self.E]"
+      },
+      "signature": "def race[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]",
+      "summary": "Race this IO against another; the loser is canceled and drained."
+     }
+    ],
+    "race_first": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The other IO, consumed.",
+        "name": "other",
+        "type": "IO[U, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The other IO's value type.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO of the first terminal outcome, tagged by side.",
+       "type": "IO[RaceResult[Self.T, U], Self.E]"
+      },
+      "signature": "def race_first[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]",
+      "summary": "Race by first terminal outcome; the loser is canceled and drained."
+     }
+    ],
+    "raise_error": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The error, consumed once.",
+        "name": "error",
+        "type": "Self.E",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO failing with an uncanceled EffectFailure holding the error.",
+       "type": "Self"
+      },
+      "signature": "def raise_error(var error: Self.E) -> Self",
+      "summary": "Fail with one domain error."
+     }
+    ],
+    "restore": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The handle an uncancelable factory received.",
+        "name": "poll",
+        "type": "Poll[Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO that observes cancellation as it would outside the region.",
+       "type": "Self"
+      },
+      "signature": "def restore(deinit self, poll: Poll[Self.E]) -> Self",
+      "summary": "Run this program with the cancellation state outside poll's region."
+     }
+    ],
+    "sleep": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The checked relative duration.",
+        "name": "duration",
+        "type": "Duration",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A cancelable unit IO.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def sleep(duration: Duration) -> IO[NoneType, Self.E]",
+      "summary": "Wait cooperatively for a duration measured from entry."
+     }
+    ],
+    "timeout_after": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The checked relative duration, anchored on entry.",
+        "name": "duration",
+        "type": "Duration",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "Runs after the timer wins and this IO has drained.",
+        "name": "fallback",
+        "type": "Self",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO retaining all errors from both and their cleanup.",
+       "type": "Self"
+      },
+      "signature": "def timeout_after(deinit self, duration: Duration, var fallback: Self) -> Self",
+      "summary": "Fall back by first terminal outcome after a duration."
+     }
+    ],
+    "timeout_to": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The checked relative duration, anchored on entry.",
+        "name": "duration",
+        "type": "Duration",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "Runs after the timer wins and this IO drains without a result.",
+        "name": "fallback",
+        "type": "Self",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO retaining all errors from both and their cleanup.",
+       "type": "Self"
+      },
+      "signature": "def timeout_to(deinit self, duration: Duration, var fallback: Self) -> Self",
+      "summary": "Fall back after a duration, preferring this IO's drained result."
+     }
+    ],
+    "uncancelable": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, consumed; it runs once, when reached.",
+        "name": "factory",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable from Poll[E] to this IO type.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO whose region observes no cancellation except through Poll.",
+       "type": "Self"
+      },
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var factory: F) -> Self where F.Arg == Poll[Self.E] and F.Out == Self and _Maps[Self.E, F]",
+      "summary": "Build and run a program masked; its Poll restores the outer state."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "factory",
+        "type": "def(var Poll[Self.E]) thin -> Self",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def uncancelable(factory: def(var Poll[Self.E]) thin -> Self) -> Self",
+      "summary": "Build and run a program masked with a native factory."
+     }
+    ]
+   },
    "parameters": [
     {
-     "description": "The body machine.",
+     "description": "The owned success value, including its origins.",
      "inferred": false,
-     "name": "P",
-     "type": "Machine",
+     "name": "T",
+     "type": "Movable & Deinitable",
      "variadic": false
     },
     {
-     "description": "The cleanup machine; its successful value is discarded.",
+     "description": "The exact domain error shared by every IO in one chain.",
      "inferred": false,
-     "name": "Q",
-     "type": "Machine",
+     "name": "E",
+     "type": "Movable & Deinitable",
      "variadic": false
     }
    ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Guarantee[P: Machine, Q: Machine] = _Recipe[_Guarantee[P, _ProgramUse[Q, ExitCase[P.Error]]]]",
-   "summary": "A recipe retaining the body result until owned cleanup finishes.",
-   "traits": []
-  },
-  "effects.async_runtime.GuaranteeCase": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The body machine.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The scoped cleanup, borrowing ExitCase[P.Error] each poll.",
-     "inferred": false,
-     "name": "F",
-     "type": "ScopedMachine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime GuaranteeCase[P: Machine, F: ScopedMachine] = _Recipe[_Guarantee[P, F]]",
-   "summary": "A recipe lending its exact exit case to resumable cleanup.",
-   "traits": []
+   "provider": "effects/_async/engine",
+   "signature": "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine)",
+   "summary": "An asynchronous program producing T or failing with the exact domain error E.",
+   "traits": [
+    "Machine",
+    "Machine",
+    "_FamilyCarrier"
+   ]
   },
   "effects.async_runtime.Instant": {
    "aliases": [],
@@ -58068,206 +58705,6 @@
     "Copyable",
     "Equatable"
    ]
-  },
-  "effects.async_runtime.Loop": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The repeatable step returning a machine whose value is ControlFlow.",
-     "inferred": false,
-     "name": "F",
-     "type": "UnaryContract & Movable & Deinitable",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Loop[F: UnaryContract & Movable & Deinitable] = TailRecContract[Async[downcast[F.Out, _CoreMachine].Error], F].Out",
-   "summary": "The concrete tail_rec_m recipe in the step machine's Async family.",
-   "traits": []
-  },
-  "effects.async_runtime.Masked": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "A once-callable consuming Poll[E] and returning a machine.",
-     "inferred": false,
-     "name": "F",
-     "type": "UnaryContract & Movable & Deinitable",
-     "variadic": false
-    },
-    {
-     "description": "The exact domain error type.",
-     "inferred": false,
-     "name": "E",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Masked[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable] = _Recipe[_Masked[F, E]]",
-   "summary": "The recipe built by a lexical masking factory.",
-   "traits": []
-  },
-  "effects.async_runtime.NativeDelay": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The callback result.",
-     "inferred": false,
-     "name": "T",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    },
-    {
-     "description": "The selected domain error.",
-     "inferred": false,
-     "name": "E",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    },
-    {
-     "description": "The exact native callable type, including captures.",
-     "inferred": false,
-     "name": "F",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    },
-    {
-     "description": "The callback's native error, Never by default.",
-     "inferred": false,
-     "name": "X",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    },
-    {
-     "description": "Whether the native signature declares raises, false by default.",
-     "inferred": false,
-     "name": "raising",
-     "type": "Bool",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime NativeDelay[T: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, X: Movable & Deinitable = Never, raising: Bool = False] = Delay[_NativeThunk[T, X, F, raising], E]",
-   "summary": "The concrete delayed recipe for an owned native function or closure.",
-   "traits": []
-  },
-  "effects.async_runtime.Nursery": {
-   "aliases": [
-    {
-     "description": "Successful child values in admission order.",
-     "name": "Value"
-    },
-    {
-     "description": "The exact child domain error.",
-     "name": "Error"
-    },
-    {
-     "description": "The selected family for Pipeline composition.",
-     "name": "Family"
-    }
-   ],
-   "description": "",
-   "fields": [],
-   "kind": "struct",
-   "methods": {
-    "poll": [
-     {
-      "args": [
-       {
-        "convention": "",
-        "description": "Runtime cancellation, mask and clock handles.",
-        "name": "context",
-        "type": "IOContext[Self.Error]",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "A pending wait or the settled subtree outcome.",
-       "type": "Step[Self.Value, Self.Error]"
-      },
-      "signature": "def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]",
-      "summary": "Advance the canonical nursery engine under the inherited context."
-     }
-    ],
-    "spawner": [
-     {
-      "args": [],
-      "description": "",
-      "error": "",
-      "parameters": [],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "A handle supporting try_spawn and close, without detach or joining.",
-       "type": "Spawner[Self.P]"
-      },
-      "signature": "def spawner(self) -> Spawner[Self.P]",
-      "summary": "Copy the submission capability; accepted children stay owned here."
-     }
-    ]
-   },
-   "parameters": [
-    {
-     "description": "The child machine type, including all payload, error and capture origins.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/host",
-   "signature": "struct Nursery[P: Machine](Machine)",
-   "summary": "Own a bounded lifetime total of accepted children of one exact type.",
-   "traits": [
-    "Machine",
-    "Machine",
-    "_FamilyCarrier"
-   ]
-  },
-  "effects.async_runtime.OnCancel": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The body machine.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The cleanup machine in the same exact error family.",
-     "inferred": false,
-     "name": "Q",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime OnCancel[P: Machine, Q: Machine] = _Recipe[_Guarantee[P, _ProgramUse[Q, ExitCase[P.Error]], True]]",
-   "summary": "A recipe selecting cleanup when the body exit records cancellation.",
-   "traits": []
   },
   "effects.async_runtime.Poll": {
    "aliases": [
@@ -58369,56 +58806,8 @@
     "Copyable"
    ]
   },
-  "effects.async_runtime.Pure": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The owned value type, including external origins.",
-     "inferred": false,
-     "name": "T",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    },
-    {
-     "description": "The exact domain error type.",
-     "inferred": false,
-     "name": "E",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Pure[T: Movable & Deinitable, E: Movable & Deinitable] = _Recipe[_Pure[T, E]]",
-   "summary": "An unopened recipe owning an already evaluated value.",
-   "traits": []
-  },
   "effects.async_runtime.Queue": {
-   "aliases": [
-    {
-     "description": "The exact unopened machine returned by size.",
-     "name": "Size"
-    },
-    {
-     "description": "The exact unopened machine returned by try_offer.",
-     "name": "TryOffer"
-    },
-    {
-     "description": "The exact unopened machine returned by offer.",
-     "name": "Offer"
-    },
-    {
-     "description": "The exact unopened machine returned by try_take.",
-     "name": "TryTake"
-    },
-    {
-     "description": "The exact unopened machine returned by take.",
-     "name": "Take"
-    }
-   ],
+   "aliases": [],
    "description": "",
    "fields": [],
    "kind": "struct",
@@ -58448,10 +58837,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine yielding NoneType after admission; cancellation destroys a retained input.",
-       "type": "Self.Offer[E]"
+       "doc": "An IO yielding NoneType after admission; cancellation destroys a retained input.",
+       "type": "IO[NoneType, E]"
       },
-      "signature": "def offer[E: Movable & Deinitable](self, var value: Self.T) -> Self.Offer[E]",
+      "signature": "def offer[E: Movable & Deinitable](self, var value: Self.T) -> IO[NoneType, E]",
       "summary": "Wait cooperatively to enqueue one owned value."
      }
     ],
@@ -58472,10 +58861,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine yielding the observed queue size.",
-       "type": "Self.Size[E]"
+       "doc": "An IO yielding the observed queue size.",
+       "type": "IO[Int, E]"
       },
-      "signature": "def size[E: Movable & Deinitable](self) -> Self.Size[E]",
+      "signature": "def size[E: Movable & Deinitable](self) -> IO[Int, E]",
       "summary": "Read the current number of queued values."
      }
     ],
@@ -58496,10 +58885,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine transferring the removed value; cancellation remains observable.",
-       "type": "Self.Take[E]"
+       "doc": "An IO transferring the removed value; cancellation remains observable.",
+       "type": "IO[Self.T, E]"
       },
-      "signature": "def take[E: Movable & Deinitable](self) -> Self.Take[E]",
+      "signature": "def take[E: Movable & Deinitable](self) -> IO[Self.T, E]",
       "summary": "Wait cooperatively for the oldest queued value."
      }
     ],
@@ -58528,10 +58917,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine yielding None on admission or the original value when full.",
-       "type": "Self.TryOffer[E]"
+       "doc": "An IO yielding None on admission or the original value when full.",
+       "type": "IO[Optional[Self.T], E]"
       },
-      "signature": "def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> Self.TryOffer[E]",
+      "signature": "def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> IO[Optional[Self.T], E]",
       "summary": "Attempt to enqueue one owned value without waiting."
      }
     ],
@@ -58552,10 +58941,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine yielding the owned value if available.",
-       "type": "Self.TryTake[E]"
+       "doc": "An IO yielding the owned value if available.",
+       "type": "IO[Optional[Self.T], E]"
       },
-      "signature": "def try_take[E: Movable & Deinitable](self) -> Self.TryTake[E]",
+      "signature": "def try_take[E: Movable & Deinitable](self) -> IO[Optional[Self.T], E]",
       "summary": "Attempt to remove the oldest queued value without waiting."
      }
     ]
@@ -58575,60 +58964,6 @@
    "traits": [
     "Copyable"
    ]
-  },
-  "effects.async_runtime.Race": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The left child type.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The right child type, with exactly the same error type.",
-     "inferred": false,
-     "name": "Q",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Race[P: Machine, Q: Machine] = _Recipe[_Race[P, Q, 1]]",
-   "summary": "The race recipe using the other drained outcome after cancellation-only wins.",
-   "traits": []
-  },
-  "effects.async_runtime.RaceFirst": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The left child type.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The right child type, with exactly the same error type.",
-     "inferred": false,
-     "name": "Q",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime RaceFirst[P: Machine, Q: Machine] = _Recipe[_Race[P, Q]]",
-   "summary": "The race recipe selecting the first observed terminal outcome.",
-   "traits": []
   },
   "effects.async_runtime.RaceResult": {
    "aliases": [],
@@ -58658,147 +58993,7 @@
    "traits": []
   },
   "effects.async_runtime.Resource": {
-   "aliases": [],
-   "description": "",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The acquisition machine.",
-     "inferred": false,
-     "name": "A",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The release descriptor borrowing A.Value with the exact same error.",
-     "inferred": false,
-     "name": "C",
-     "type": "ScopedMachine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/resources",
-   "signature": "comptime Resource[A: Machine, C: ScopedMachine] = AsyncResource[_Acquire[A, _ScopedCleanup[C, False, True]]]",
-   "summary": "A resource built with a suspensible scoped release descriptor.",
-   "traits": []
-  },
-  "effects.async_runtime.ResourceCase": {
-   "aliases": [],
-   "description": "",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The acquisition machine.",
-     "inferred": false,
-     "name": "A",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The cleanup descriptor borrowing A.Value and ExitCase[A.Error].",
-     "inferred": false,
-     "name": "C",
-     "type": "CleanupMachine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/resources",
-   "signature": "comptime ResourceCase[A: Machine, C: CleanupMachine] = AsyncResource[_Acquire[A, C]]",
-   "summary": "A resource whose release also borrows the exact exit case.",
-   "traits": []
-  },
-  "effects.async_runtime.ResourceFactory": {
-   "aliases": [],
-   "description": "",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The acquisition machine.",
-     "inferred": false,
-     "name": "A",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The borrowing release factory, called under the cleanup mask.",
-     "inferred": false,
-     "name": "F",
-     "type": "BorrowCallContract & Movable & Deinitable",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/resources",
-   "signature": "comptime ResourceFactory[A: Machine, F: BorrowCallContract & Movable & Deinitable] = Resource[A, _ScopedBuild[F, A.Error]]",
-   "summary": "A resource whose release factory builds an independently owned machine.",
-   "traits": []
-  },
-  "effects.async_runtime.ResourcePlan": {
    "aliases": [
-    {
-     "description": "The owned value made available by successful acquisition.",
-     "name": "Value"
-    },
-    {
-     "description": "The exact error shared by acquisition, use and release.",
-     "name": "Error"
-    }
-   ],
-   "description": "Use this bound to name AsyncResource[P] in generic helpers. Plans are supplied\nby resource constructors and composition; AsyncResource owns their execution.\nNo plan storage or independent release operation is part of this contract.",
-   "fields": [],
-   "kind": "trait",
-   "methods": {},
-   "parameters": [],
-   "provider": "effects/_async/resources",
-   "signature": "trait ResourcePlan(Movable, Deinitable)",
-   "summary": "The native bound for an inferred resource acquisition plan.",
-   "traits": []
-  },
-  "effects.async_runtime.Scope": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The acquisition machine.",
-     "inferred": false,
-     "name": "A",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The scoped body type.",
-     "inferred": false,
-     "name": "U",
-     "type": "ScopedMachine",
-     "variadic": false
-    },
-    {
-     "description": "The cleanup type, borrowing the resource and exact exit.",
-     "inferred": false,
-     "name": "C",
-     "type": "CleanupMachine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Scope[A: Machine, U: ScopedMachine, C: CleanupMachine] = _Recipe[_Scope[A, U, C]]",
-   "summary": "A recipe owning acquisition, fresh per-poll resource loans and release.",
-   "traits": []
-  },
-  "effects.async_runtime.ScopedBoth": {
-   "aliases": [
-    {
-     "description": "",
-     "name": "Input"
-    },
     {
      "description": "",
      "name": "Value"
@@ -58806,27 +59001,24 @@
     {
      "description": "",
      "name": "Error"
+    },
+    {
+     "description": "",
+     "name": "Plan"
     }
    ],
-   "description": "",
+   "description": "`use` acquires masked, lends the resource to a body factory, runs the IO it\nbuilds, then releases masked with the exact exit. Releases run in reverse\nacquisition order and their errors follow the body's. Bodies and release\nfactories borrow the resource and cannot retain it in the IO they return.",
    "fields": [],
    "kind": "struct",
    "methods": {
-    "poll": [
+    "flat_map": [
      {
       "args": [
        {
-        "convention": "ref[o]",
-        "description": "The enclosing resource, borrowed only during this call.",
-        "name": "value",
-        "type": "Self.Input",
-        "variadic": false
-       },
-       {
-        "convention": "",
-        "description": "The inherited execution context.",
-        "name": "context",
-        "type": "IOContext[Self.Error]",
+        "convention": "var",
+        "description": "The factory, called after this resource's acquisition.",
+        "name": "f",
+        "type": "F",
         "variadic": false
        }
       ],
@@ -58834,62 +59026,296 @@
       "error": "",
       "parameters": [
        {
-        "description": "The fresh immutable resource origin for this poll.",
+        "description": "A once-admitted owned factory borrowing T and returning a Resource.",
         "inferred": false,
-        "name": "o",
-        "type": "ImmOrigin",
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
         "variadic": false
        }
       ],
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "Pending readiness or the fully drained pair outcome.",
-       "type": "Step[Self.Value, Self.Error]"
+       "doc": "A resource exposing the dependent value while owning both releases.",
+       "type": "Resource[downcast[F.Result, _AsyncResourceType].Plan.Value, Self.E]"
       },
-      "signature": "def poll[o: ImmOrigin](mut self, ref[o] value: Self.Input, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]",
-      "summary": "Advance one ready child and retain both through cancellation draining."
+      "signature": "def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var f: F) -> Resource[downcast[F.Result, _AsyncResourceType].Plan.Value, Self.E] where _Factory[Self.T, Self.E, F] and _Joins[Self.E, F.Result]",
+      "summary": "Acquire a dependent resource from the borrowed one; release it first."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "f",
+        "type": "def(Self.T) thin -> Resource[U, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Resource[U, Self.E]"
+      },
+      "signature": "def flat_map[U: Movable & Deinitable, //](deinit self, f: def(Self.T) thin -> Resource[U, Self.E]) -> Resource[U, Self.E]",
+      "summary": "Acquire a dependent resource through a native function."
+     }
+    ],
+    "make": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The acquisition, run masked.",
+        "name": "acquire",
+        "type": "IO[Self.T, Self.E]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The release factory, run masked after each use.",
+        "name": "release",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-admitted owned factory borrowing T and returning IO[NoneType, E].",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An unopened resource; a failed acquisition runs no release.",
+       "type": "Self"
+      },
+      "signature": "def make[F: BorrowCallContract & Movable & Deinitable](var acquire: IO[Self.T, Self.E], var release: F) -> Self where _Factory[Self.T, Self.E, F] and _IsIO[F.Result, Self.E] and downcast[F.Result, Machine].Value == NoneType",
+      "summary": "Acquire with an IO; release with the IO a factory builds from the borrowed resource."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "acquire",
+        "type": "IO[Self.T, Self.E]",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "release",
+        "type": "def(Self.T) thin -> IO[NoneType, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def make(var acquire: IO[Self.T, Self.E], release: def(Self.T) thin -> IO[NoneType, Self.E]) -> Self",
+      "summary": "Acquire with an IO; release with a native function of the borrowed resource."
+     }
+    ],
+    "map": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The projection, called after acquisition.",
+        "name": "f",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-admitted owned projection borrowing T.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A resource of the projected value; the projection cannot retain the loan.",
+       "type": "Resource[F.Result, Self.E]"
+      },
+      "signature": "def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var f: F) -> Resource[F.Result, Self.E] where _Factory[Self.T, Self.E, F]",
+      "summary": "Project an owned value from the borrowed resource, keeping its release."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "f",
+        "type": "def(Self.T) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Resource[R, Self.E]"
+      },
+      "signature": "def map[R: Movable & Deinitable, //](deinit self, f: def(Self.T) thin -> R) -> Resource[R, Self.E]",
+      "summary": "Project an owned value through a native function."
+     }
+    ],
+    "pure": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def pure(var value: Self.T) -> Self",
+      "summary": "Own a value as a resource with nothing to release."
+     }
+    ],
+    "use": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, called once after acquisition.",
+        "name": "body",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-admitted owned factory borrowing T and returning an IO.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO owning acquisition, body and release; release errors follow body errors.",
+       "type": "IO[downcast[F.Result, Machine].Value, Self.E]"
+      },
+      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var body: F) -> IO[downcast[F.Result, Machine].Value, Self.E] where _Factory[Self.T, Self.E, F] and _IsIO[F.Result, Self.E]",
+      "summary": "Acquire, build the body's IO from the borrowed resource, run it, then release."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "body",
+        "type": "def(Self.T) thin -> IO[U, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[U, Self.E]"
+      },
+      "signature": "def use[U: Movable & Deinitable, //](deinit self, body: def(Self.T) thin -> IO[U, Self.E]) -> IO[U, Self.E]",
+      "summary": "Use the resource through a native function."
      }
     ]
    },
    "parameters": [
     {
-     "description": "The left scoped body, retaining independent external origins.",
+     "description": "The owned resource value, lent during use.",
      "inferred": false,
-     "name": "P",
-     "type": "ScopedMachine",
+     "name": "T",
+     "type": "Movable & Deinitable",
      "variadic": false
     },
     {
-     "description": "The right body with the same Input and Error as P.",
+     "description": "The exact domain error of acquisition, use and release.",
      "inferred": false,
-     "name": "Q",
-     "type": "ScopedMachine",
+     "name": "E",
+     "type": "Movable & Deinitable",
      "variadic": false
     }
    ],
-   "provider": "effects/_async/children",
-   "signature": "struct ScopedBoth[P: ScopedMachine, Q: ScopedMachine](ScopedMachine)",
-   "summary": "Own two scoped children borrowing the same resource afresh each poll.",
+   "provider": "effects/_async/io_resource",
+   "signature": "struct Resource[T: Movable & Deinitable, E: Movable & Deinitable](ResourcePlan, _AsyncResourceType)",
+   "summary": "A resource acquired before and released after each use, as an IO.",
    "traits": [
-    "ScopedMachine"
+    "ResourcePlan",
+    "_AsyncResourceType"
    ]
   },
   "effects.async_runtime.Semaphore": {
-   "aliases": [
-    {
-     "description": "The exact unopened machine returned by available.",
-     "name": "Available"
-    },
-    {
-     "description": "The exact unopened machine returned by acquire.",
-     "name": "Acquire"
-    },
-    {
-     "description": "The exact unopened machine returned by with_permit.",
-     "name": "WithPermit"
-    }
-   ],
+   "aliases": [],
    "description": "",
    "fields": [],
    "kind": "struct",
@@ -58911,10 +59337,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine transferring one permit; cancellation before admission consumes none.",
-       "type": "Self.Acquire[E]"
+       "doc": "An IO transferring one permit; cancellation before admission consumes none.",
+       "type": "IO[Permit, E]"
       },
-      "signature": "def acquire[E: Movable & Deinitable](self) -> Self.Acquire[E]",
+      "signature": "def acquire[E: Movable & Deinitable](self) -> IO[Permit, E]",
       "summary": "Wait cooperatively for an owned canonical permit."
      }
     ],
@@ -58935,10 +59361,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "A machine yielding the observed permit count.",
-       "type": "Self.Available[E]"
+       "doc": "An IO yielding the observed permit count.",
+       "type": "IO[Int, E]"
       },
-      "signature": "def available[E: Movable & Deinitable](self) -> Self.Available[E]",
+      "signature": "def available[E: Movable & Deinitable](self) -> IO[Int, E]",
       "summary": "Read the current number of available permits."
      }
     ],
@@ -58957,7 +59383,7 @@
       "error": "",
       "parameters": [
        {
-        "description": "The concrete body machine.",
+        "description": "The body: an IO, or a machine that owns its state.",
         "inferred": false,
         "name": "P",
         "type": "Machine",
@@ -58967,10 +59393,10 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "An application recipe retaining the permit until the body and cleanup finish.",
-       "type": "Self.WithPermit[P]"
+       "doc": "An IO retaining the permit until the body and cleanup finish.",
+       "type": "IO[P.Value, P.Error]"
       },
-      "signature": "def with_permit[P: Machine](self, var program: P) -> Self.WithPermit[P]",
+      "signature": "def with_permit[P: Machine](self, var program: P) -> IO[P.Value, P.Error]",
       "summary": "Acquire cancelably, run an owned body, then release through the canonical scope."
      }
     ]
@@ -58982,1149 +59408,6 @@
    "traits": [
     "Copyable"
    ]
-  },
-  "effects.async_runtime.Sleep": {
-   "aliases": [],
-   "description": "",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The exact domain error; timer setup introduces no domain failure.",
-     "inferred": false,
-     "name": "E",
-     "type": "Movable & Deinitable",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Sleep[E: Movable & Deinitable] = _Recipe[_Sleep[E]]",
-   "summary": "An unopened timer recipe using checked relative time.",
-   "traits": []
-  },
-  "effects.async_runtime.Spawner": {
-   "aliases": [],
-   "description": "The admission limit counts lifetime accepted children, not simultaneous\nactivity. Copies share closure and capacity. Host-thread cooperation is\nrequired; copyability alone does not promise cross-thread submission.",
-   "fields": [],
-   "kind": "struct",
-   "methods": {
-    "close": [
-     {
-      "args": [],
-      "description": "",
-      "error": "",
-      "parameters": [],
-      "raises": false,
-      "raises_doc": "",
-      "returns": null,
-      "signature": "def close(self)",
-      "summary": "Close future admission; the nursery still drains every accepted child."
-     }
-    ],
-    "try_spawn": [
-     {
-      "args": [
-       {
-        "convention": "var",
-        "description": "The child to offer, consumed into the admission attempt.",
-        "name": "program",
-        "type": "Self.P",
-        "variadic": false
-       }
-      ],
-      "description": "",
-      "error": "",
-      "parameters": [],
-      "raises": false,
-      "raises_doc": "",
-      "returns": {
-       "doc": "None when accepted, or the original unopened recipe if closed or\nat the lifetime admission limit. Accepted children cannot detach.",
-       "type": "Optional[Self.P]"
-      },
-      "signature": "def try_spawn(self, var program: Self.P) -> Optional[Self.P]",
-      "summary": "Submit one unopened child without transferring rejection ownership."
-     }
-    ]
-   },
-   "parameters": [
-    {
-     "description": "The exact homogeneous child recipe type, including native origins.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/nurseries",
-   "signature": "struct Spawner[P: Machine](Copyable)",
-   "summary": "Submission capability; accepted work remains owned by its nursery.",
-   "traits": [
-    "Copyable"
-   ]
-  },
-  "effects.async_runtime.TimeoutAfter": {
-   "aliases": [],
-   "description": "",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The source machine.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The fallback machine with the same value and error types.",
-     "inferred": false,
-     "name": "Q",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime TimeoutAfter[P: Machine, Q: Machine] = _Recipe[_Timeout[P, Q]]",
-   "summary": "A timeout retaining the preserved first-terminal selection policy.",
-   "traits": []
-  },
-  "effects.async_runtime.TimeoutTo": {
-   "aliases": [],
-   "description": "",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The source machine.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    },
-    {
-     "description": "The fallback machine with the same value and error types.",
-     "inferred": false,
-     "name": "Q",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime TimeoutTo[P: Machine, Q: Machine] = _Recipe[_Timeout[P, Q, True]]",
-   "summary": "A timeout preferring a source result after required draining.",
-   "traits": []
-  },
-  "effects.async_runtime.Uncancelable": {
-   "aliases": [],
-   "description": "Only the logical parameters and machine protocol are supported, not storage layout.",
-   "fields": [],
-   "kind": "alias",
-   "methods": {},
-   "parameters": [
-    {
-     "description": "The body machine type.",
-     "inferred": false,
-     "name": "P",
-     "type": "Machine",
-     "variadic": false
-    }
-   ],
-   "provider": "effects/_async/application",
-   "signature": "comptime Uncancelable[P: Machine] = Masked[_ConstantMask[P], P.Error]",
-   "summary": "A recipe running owned work under a fresh lexical cancellation mask.",
-   "traits": []
-  },
-  "effects.async_runtime.attempt": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The unopened source, consumed once.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The concrete source machine, retaining native origins.",
-       "inferred": false,
-       "name": "P",
-       "type": "_Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A recipe yielding Result[P.Value, EffectFailure[P.Error]]. Cancellation\nand mixed canceled failures remain terminal in the outer outcome.",
-      "type": "_Materialize[Async[P.Error], P].Out"
-     },
-     "signature": "def attempt[P: _Machine](var program: P) -> _Materialize[Async[P.Error], P].Out where _Materialize[Async[P.Error], P].MapCompatible and _Materialize[Async[P.Error], P].HandleCompatible",
-     "summary": "Materialize success or ordinary failure without recovering cancellation."
-    }
-   ],
-   "provider": "effects/_async/recovery",
-   "summary": ""
-  },
-  "effects.async_runtime.both": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The owned left recipe.",
-       "name": "left",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "The owned right recipe.",
-       "name": "right",
-       "type": "Q",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The left machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The right machine with the same exact error.",
-       "inferred": false,
-       "name": "Q",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A recipe yielding the pair of values; failures retain left-before-right error order.",
-      "type": "Both[P, Q]"
-     },
-     "signature": "def both[P: Machine, Q: Machine](var left: P, var right: Q) -> Both[P, Q] where P.Error == Q.Error",
-     "summary": "Cooperatively run two children and drain both before returning."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.callback": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "Synchronous registration receiving a Completion; compatible errors are captured.",
-       "name": "register",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "Owned cleanup after every entered registration, including success or registration failure.",
-       "name": "withdrawal",
-       "type": "C",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The owned once-callable registration, returning native no result or explicit NoneType.",
-       "inferred": false,
-       "name": "F",
-       "type": "UnaryContract & Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "The withdrawal machine, yielding unit in the same exact error family.",
-       "inferred": false,
-       "name": "C",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A recipe that becomes terminal only after withdrawal has discharged all external uses.",
-      "type": "Callback[F, C]"
-     },
-     "signature": "def callback[F: UnaryContract & Movable & Deinitable, C: Machine](var register: F, var withdrawal: C) -> Callback[F, C] where _OnceUnaryAvailable[F] and conforms_to(F.Arg, _CompletionType) and F.Arg == Completion[downcast[F.Arg, _CompletionType].Value, C.Error] and _CallbackUnit[F.Out] and _CallbackUnit[C.Value] and _ErrorCompatible[C.Error, F.Error]",
-     "summary": "Register one completion source and retain owned withdrawal until it has drained."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "register",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "withdrawal",
-       "type": "C",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "C",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "_Unary[A, NoneType]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Callback[NativeUnary[A, NoneType, Never, F, False], C]"
-     },
-     "signature": "def callback[A: Movable & Deinitable, C: Machine, //, F: _Unary[A, NoneType]](var register: F, var withdrawal: C) -> Callback[NativeUnary[A, NoneType, Never, F, False], C] where conforms_to(A, _CompletionType) and A == Completion[downcast[A, _CompletionType].Value, C.Error] and _CallbackUnit[C.Value]",
-     "summary": "Adapt an owned native callback through the canonical callable boundary."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "register",
-       "type": "F",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "withdrawal",
-       "type": "C",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "X",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "C",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "_RaisingUnary[A, NoneType, X]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Callback[NativeUnary[A, NoneType, X, F, True], C]"
-     },
-     "signature": "def callback[A: Movable & Deinitable, X: Movable & Deinitable, C: Machine, //, F: _RaisingUnary[A, NoneType, X]](var register: F, var withdrawal: C) -> Callback[NativeUnary[A, NoneType, X, F, True], C] where conforms_to(A, _CompletionType) and A == Completion[downcast[A, _CompletionType].Value, C.Error] and _CallbackUnit[C.Value] and _ErrorCompatible[C.Error, X]",
-     "summary": "Adapt an owned native callback through the canonical callable boundary."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.delay": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The thunk, consumed without invoking it.",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The owned once-admitted thunk descriptor.",
-       "inferred": true,
-       "name": "F",
-       "type": "ThunkContract & Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "The selected domain error.",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "An unopened recipe; this does not offload or preempt a blocking callback.",
-      "type": "Delay[F, E]"
-     },
-     "signature": "def delay[F: ThunkContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F) -> Delay[F, E] where DelayContract[F, E].Compatible",
-     "summary": "Defer a synchronous callback and capture its compatible native error during execution."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "_Thunk[T]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "NativeDelay[T, E, F]"
-     },
-     "signature": "def delay[T: Movable & Deinitable, //, E: Movable & Deinitable, F: _Thunk[T]](var function: F) -> NativeDelay[T, E, F]",
-     "summary": "Adapt an owned native callback through the canonical callable boundary."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "function",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "X",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "_RaisingThunk[T, X]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "NativeDelay[T, E, F, X, True]"
-     },
-     "signature": "def delay[T: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingThunk[T, X]](var function: F) -> NativeDelay[T, E, F, X, True] where _ErrorCompatible[E, X]",
-     "summary": "Adapt an owned native callback through the canonical callable boundary."
-    },
-    {
-     "args": [
-      {
-       "convention": "ref[o]",
-       "description": "",
-       "name": "function",
-       "type": "def() thin -> T",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "o",
-       "type": "ImmOrigin",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "NativeDelay[T, E, type_of(function), Never, False]"
-     },
-     "signature": "def delay[T: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable](ref[o] function: def() thin -> T) -> NativeDelay[T, E, type_of(function), Never, False]",
-     "summary": "Own a thin function pointer through the canonical native thunk adapter."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "def() thin -> T",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "RegisterPassable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "NativeDelay[T, E, type_of(function), Never, False]"
-     },
-     "signature": "def delay[T: RegisterPassable & Deinitable, //, E: Movable & Deinitable](function: def() thin -> T) -> NativeDelay[T, E, type_of(function), Never, False]",
-     "summary": "Own a thin function pointer through the canonical native thunk adapter."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "def() thin",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "NativeDelay[type_of(None), E, type_of(function), Never, False]"
-     },
-     "signature": "def delay[E: Movable & Deinitable](function: def() thin) -> NativeDelay[type_of(None), E, type_of(function), Never, False]",
-     "summary": "Own a thin function pointer through the canonical native thunk adapter."
-    },
-    {
-     "args": [
-      {
-       "convention": "ref[o]",
-       "description": "",
-       "name": "function",
-       "type": "def() raises X thin -> T",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "o",
-       "type": "ImmOrigin",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "X",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "NativeDelay[T, E, type_of(function), X, True]"
-     },
-     "signature": "def delay[T: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, //, E: Movable & Deinitable](ref[o] function: def() raises X thin -> T) -> NativeDelay[T, E, type_of(function), X, True] where _ErrorCompatible[E, X]",
-     "summary": "Own a thin function pointer through the canonical native thunk adapter."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "def() raises X thin -> T",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "RegisterPassable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "X",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "NativeDelay[T, E, type_of(function), X, True]"
-     },
-     "signature": "def delay[T: RegisterPassable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable](function: def() raises X thin -> T) -> NativeDelay[T, E, type_of(function), X, True] where _ErrorCompatible[E, X]",
-     "summary": "Own a thin function pointer through the canonical native thunk adapter."
-    },
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "",
-       "name": "function",
-       "type": "def() raises X thin",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "X",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "NativeDelay[type_of(None), E, type_of(function), X, True]"
-     },
-     "signature": "def delay[X: Movable & Deinitable, //, E: Movable & Deinitable](function: def() raises X thin) -> NativeDelay[type_of(None), E, type_of(function), X, True] where _ErrorCompatible[E, X]",
-     "summary": "Own a thin function pointer through the canonical native thunk adapter."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.eval_io": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The owned synchronous endpoint.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The compatible IO recipe type.",
-       "inferred": false,
-       "name": "P",
-       "type": "ReaderAction",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A one-poll recipe; blocking endpoint code still blocks that poll.",
-      "type": "EvalIO[P]"
-     },
-     "signature": "def eval_io[P: ReaderAction](var program: P) -> EvalIO[P] where IOContract[P].Compatible",
-     "summary": "Bridge a compatible synchronous IO recipe through the inherited async context."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.guarantee": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The owned body.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "The owned cleanup; its successful value is discarded.",
-       "name": "cleanup",
-       "type": "Q",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The body machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "Cleanup in the same exact error family.",
-       "inferred": false,
-       "name": "Q",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A recipe preserving body-before-cleanup error order and the cancellation flag.",
-      "type": "Guarantee[P, Q]"
-     },
-     "signature": "def guarantee[P: Machine, Q: Machine](var program: P, var cleanup: Q) -> Guarantee[P, Q] where P.Error == Q.Error",
-     "summary": "Drain owned cleanup after entry, retaining any successful body value meanwhile."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.guarantee_case": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The owned body.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "The owned finalizer, run masked.",
-       "name": "cleanup",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The body machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "A scoped machine borrowing ExitCase[P.Error].",
-       "inferred": false,
-       "name": "F",
-       "type": "ScopedMachine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A recipe retaining body and cleanup errors without copying their payloads.",
-      "type": "GuaranteeCase[P, F]"
-     },
-     "signature": "def guarantee_case[P: Machine, F: ScopedMachine](var program: P, var cleanup: F) -> GuaranteeCase[P, F] where F.Input == ExitCase[P.Error] and P.Error == F.Error",
-     "summary": "Lend the exact body exit to each cleanup poll without lending its success value."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.handle_error_with": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The unopened source, consumed once.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "Builds a replacement with the same value and domain error.",
-       "name": "handler",
-       "type": "H",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The source machine and its exact value/error origins.",
-       "inferred": false,
-       "name": "P",
-       "type": "_Machine",
-       "variadic": false
-      },
-      {
-       "description": "The once-admitted handler consuming EffectFailure[P.Error].",
-       "inferred": false,
-       "name": "H",
-       "type": "UnaryContract & Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A deferred recipe. Cancellation-only and mixed canceled failures bypass\nthe handler. Handler failure replaces the consumed original failure.",
-      "type": "Async[P.Error].Handled[P, H]"
-     },
-     "signature": "def handle_error_with[P: _Machine, H: UnaryContract & Movable & Deinitable](var program: P, var handler: H) -> Async[P.Error].Handled[P, H] where Async[P.Error]._Handles[P, H]",
-     "summary": "Recover a noncanceled failure through the selected Async family."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "handler",
-       "type": "H",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "P",
-       "type": "_Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "R",
-       "type": "_Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "H",
-       "type": "_Unary[EffectFailure[P.Error], R]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Async[P.Error].Handled[P, NativeUnary[EffectFailure[P.Error], R, Never, H, False]]"
-     },
-     "signature": "def handle_error_with[P: _Machine, R: _Machine, //, H: _Unary[EffectFailure[P.Error], R]](var program: P, var handler: H) -> Async[P.Error].Handled[P, NativeUnary[EffectFailure[P.Error], R, Never, H, False]] where Async[P.Error]._Handles[P, NativeUnary[EffectFailure[P.Error], R, Never, H, False]]",
-     "summary": "Adapt a native recovery handler through the canonical callable boundary."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "handler",
-       "type": "H",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "P",
-       "type": "_Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "R",
-       "type": "_Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "X",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "H",
-       "type": "_RaisingUnary[EffectFailure[P.Error], R, X]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Async[P.Error].Handled[P, NativeUnary[EffectFailure[P.Error], R, X, H, True]]"
-     },
-     "signature": "def handle_error_with[P: _Machine, R: _Machine, X: Movable & Deinitable, //, H: _RaisingUnary[EffectFailure[P.Error], R, X]](var program: P, var handler: H) -> Async[P.Error].Handled[P, NativeUnary[EffectFailure[P.Error], R, X, H, True]] where Async[P.Error]._Handles[P, NativeUnary[EffectFailure[P.Error], R, X, H, True]]",
-     "summary": "Adapt a native recovery handler through the canonical callable boundary."
-    }
-   ],
-   "provider": "effects/_async/recovery",
-   "summary": ""
-  },
-  "effects.async_runtime.on_cancel": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The owned body.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "Cleanup for cancellation-only or failure with cancellation.",
-       "name": "cleanup",
-       "type": "Q",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The body machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "Cleanup in the same exact error family.",
-       "inferred": false,
-       "name": "Q",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A recipe using the canonical scoped finalization policy.",
-      "type": "OnCancel[P, Q]"
-     },
-     "signature": "def on_cancel[P: Machine, Q: Machine](var program: P, var cleanup: Q) -> OnCancel[P, Q] where P.Error == Q.Error",
-     "summary": "Select owned cleanup when the body exit records cancellation."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
   },
   "effects.async_runtime.protocols.CleanupMachine": {
    "aliases": [
@@ -60215,19 +59498,50 @@
    "traits": []
   },
   "effects.async_runtime.protocols.Machine": {
-   "aliases": [],
-   "description": "Declare Value and Error, Family = Async[Error], and a mutating poll accepting\nIOContext[Error] and returning Step[Value, Error]. Poll must return promptly;\nterminal steps discharge entered external work and cleanup. Driver and the\nlibrary's combinators own polling. Implementations retain independent\nexternal origins, never a temporary per-poll context loan.",
+   "aliases": [
+    {
+     "description": "The owned success value.",
+     "name": "Value"
+    },
+    {
+     "description": "The exact domain error.",
+     "name": "Error"
+    }
+   ],
+   "description": "Declare Value and Error and a mutating poll accepting IOContext[Error] and\nreturning Step[Value, Error]. Poll must return promptly; terminal steps\ndischarge entered external work and cleanup. Driver and the library's\ncombinators own polling. Implementations retain independent external\norigins, never a temporary per-poll context loan.",
    "fields": [],
    "kind": "trait",
-   "methods": {},
+   "methods": {
+    "poll": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The inherited cancellation and runtime context, valid for this call.",
+        "name": "context",
+        "type": "IOContext[Self.Error]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A pending wait descriptor or a terminal owned outcome.",
+       "type": "Step[Self.Value, Self.Error]"
+      },
+      "signature": "def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]",
+      "summary": "Advance cooperatively without blocking."
+     }
+    ]
+   },
    "parameters": [],
-   "provider": "effects/_async/family",
-   "signature": "trait Machine(_Machine, _FamilyCarrier)",
-   "summary": "A concretely typed cooperative leaf with native family metadata.",
-   "traits": [
-    "Machine",
-    "_FamilyCarrier"
-   ]
+   "provider": "effects/_async/kernel",
+   "signature": "trait Machine(Movable, Deinitable)",
+   "summary": "A concretely typed cooperative leaf; IO.lift runs one as a step of an IO.",
+   "traits": []
   },
   "effects.async_runtime.protocols.ScopedMachine": {
    "aliases": [
@@ -60500,471 +59814,6 @@
     "Copyable"
    ]
   },
-  "effects.async_runtime.pure": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The value, consumed once.",
-       "name": "value",
-       "type": "T",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The selected domain error.",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "The owned value type.",
-       "inferred": false,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "An unopened recipe in Async[E].",
-      "type": "Pure[T, E]"
-     },
-     "signature": "def pure[E: Movable & Deinitable, T: Movable & Deinitable](var value: T) -> Pure[T, E]",
-     "summary": "Own an already evaluated value without running a callback."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.race": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The owned left recipe.",
-       "name": "left",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "The owned right recipe.",
-       "name": "right",
-       "type": "Q",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The left machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The right machine with the same exact error.",
-       "inferred": false,
-       "name": "Q",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A recipe retaining all subtree errors; both children are canceled and drained as required.",
-      "type": "Race[P, Q]"
-     },
-     "signature": "def race[P: Machine, Q: Machine](var left: P, var right: Q) -> Race[P, Q] where P.Error == Q.Error",
-     "summary": "After a cancellation-only first outcome, use the other child's drained outcome."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.race_first": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The owned left recipe.",
-       "name": "left",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "The owned right recipe.",
-       "name": "right",
-       "type": "Q",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The left machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The right machine with the same exact error.",
-       "inferred": false,
-       "name": "Q",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A tagged successful value, failure or cancellation; losing errors remain in the outcome.",
-      "type": "RaceFirst[P, Q]"
-     },
-     "signature": "def race_first[P: Machine, Q: Machine](var left: P, var right: Q) -> RaceFirst[P, Q] where P.Error == Q.Error",
-     "summary": "Select the first observed terminal outcome, then cancel and drain the other child."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.raise_error": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The owned domain error, retained until execution or discard.",
-       "name": "error",
-       "type": "E",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The selected domain error type, consumed without conversion.",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "The success type of the failed recipe.",
-       "inferred": false,
-       "name": "T",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "An unopened recipe producing the canonical full failure.",
-      "type": "_Recipe[EvalIO[DelayContract[_Raise[E, T], E].Out]]"
-     },
-     "signature": "def raise_error[E: Movable & Deinitable, T: Movable & Deinitable](var error: E) -> _Recipe[EvalIO[DelayContract[_Raise[E, T], E].Out]]",
-     "summary": "Construct a deferred failure containing one exact domain error."
-    }
-   ],
-   "provider": "effects/_async/recovery",
-   "summary": ""
-  },
-  "effects.async_runtime.resource": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "Unopened acquisition, consumed once when run.",
-       "name": "acquire",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "Cleanup borrowing the acquired resource each poll.",
-       "name": "release",
-       "type": "C",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The concrete acquisition machine.",
-       "inferred": false,
-       "name": "A",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The scoped release descriptor with matching input and domain error.",
-       "inferred": false,
-       "name": "C",
-       "type": "ScopedMachine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "An unopened resource plan; successful release values are discarded.",
-      "type": "Resource[A, C]"
-     },
-     "signature": "def resource[A: Machine, C: ScopedMachine](var acquire: A, var release: C) -> Resource[A, C] where A.Value == C.Input and A.Error == C.Error",
-     "summary": "Build a resource plan with a scoped, suspensible release."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "Unopened acquisition, consumed once when run.",
-       "name": "acquire",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "A factory returning an independently owned cleanup machine.",
-       "name": "release",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The acquisition machine.",
-       "inferred": false,
-       "name": "A",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The once-admitted borrowing release factory.",
-       "inferred": false,
-       "name": "F",
-       "type": "BorrowCallContract & Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A resource plan that captures factory errors as cleanup failures.",
-      "type": "ResourceFactory[A, F]"
-     },
-     "signature": "def resource[A: Machine, F: BorrowCallContract & Movable & Deinitable](var acquire: A, var release: F) -> ResourceFactory[A, F] where F.Payload == A.Value and _OnceBorrowAvailable[F] and _ErrorCompatible[A.Error, F.Failure] and conforms_to(F.Result, Machine) and downcast[F.Result, Machine].Error == A.Error",
-     "summary": "Build masked cleanup through a fresh loan of the acquired resource."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "acquire",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "release",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "AnyType",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "R",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "_Borrowing[T, R]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "ResourceFactory[A, _NativeBorrow[T, R, Never, F, False]]"
-     },
-     "signature": "def resource[A: Machine, T: AnyType, R: Machine, //, F: _Borrowing[T, R]](var acquire: A, var release: F) -> ResourceFactory[A, _NativeBorrow[T, R, Never, F, False]] where T == A.Value and R.Error == A.Error",
-     "summary": "Adapt a native release factory through the canonical borrowing boundary."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "acquire",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "",
-       "name": "release",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "A",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "T",
-       "type": "AnyType",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "R",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "X",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "_RaisingBorrowing[T, R, X]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "ResourceFactory[A, _NativeBorrow[T, R, X, F, True]]"
-     },
-     "signature": "def resource[A: Machine, T: AnyType, R: Machine, X: Movable & Deinitable, //, F: _RaisingBorrowing[T, R, X]](var acquire: A, var release: F) -> ResourceFactory[A, _NativeBorrow[T, R, X, F, True]] where T == A.Value and R.Error == A.Error and _ErrorCompatible[A.Error, X]",
-     "summary": "Adapt a raising native release factory through the same cleanup owner."
-    }
-   ],
-   "provider": "effects/_async/resources",
-   "summary": ""
-  },
-  "effects.async_runtime.resource_case": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "Unopened acquisition, consumed once when run.",
-       "name": "acquire",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "Suspensible cleanup, installed before body entry.",
-       "name": "release",
-       "type": "C",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The concrete acquisition machine.",
-       "inferred": false,
-       "name": "A",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The cleanup descriptor with matching input and domain error.",
-       "inferred": false,
-       "name": "C",
-       "type": "CleanupMachine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "An unopened resource plan; failed acquisition executes no release.",
-      "type": "ResourceCase[A, C]"
-     },
-     "signature": "def resource_case[A: Machine, C: CleanupMachine](var acquire: A, var release: C) -> ResourceCase[A, C] where A.Value == C.Input and A.Error == C.Error",
-     "summary": "Build a resource plan whose release borrows the exact exit case."
-    }
-   ],
-   "provider": "effects/_async/resources",
-   "summary": ""
-  },
   "effects.async_runtime.run": {
    "description": "",
    "kind": "function",
@@ -61038,458 +59887,6 @@
     }
    ],
    "provider": "effects/_async/host",
-   "summary": ""
-  },
-  "effects.async_runtime.scope": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The unopened acquisition.",
-       "name": "acquire",
-       "type": "A",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "The body receiving fresh resource loans.",
-       "name": "use",
-       "type": "U",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "Owned cleanup, also borrowing the exact exit.",
-       "name": "release",
-       "type": "C",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The acquisition machine.",
-       "inferred": false,
-       "name": "A",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The scoped body, with exact resource input and error.",
-       "inferred": false,
-       "name": "U",
-       "type": "ScopedMachine",
-       "variadic": false
-      },
-      {
-       "description": "The cleanup, with exact resource input and error.",
-       "inferred": false,
-       "name": "C",
-       "type": "CleanupMachine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A recipe that retains resource and successful body values until release completes.",
-      "type": "Scope[A, U, C]"
-     },
-     "signature": "def scope[A: Machine, U: ScopedMachine, C: CleanupMachine](var acquire: A, var use: U, var release: C) -> Scope[A, U, C] where A.Value == U.Input and A.Value == C.Input and A.Error == U.Error and A.Error == C.Error",
-     "summary": "Acquire masked, lend the resource afresh to each body poll, then release masked."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.scoped_both": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The unopened left scoped body, consumed once.",
-       "name": "left",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "The unopened right scoped body, consumed once.",
-       "name": "right",
-       "type": "Q",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The left body, whose Input and Error determine the pair.",
-       "inferred": false,
-       "name": "P",
-       "type": "ScopedMachine",
-       "variadic": false
-      },
-      {
-       "description": "The right body with exactly matching Input and Error.",
-       "inferred": false,
-       "name": "Q",
-       "type": "ScopedMachine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A scoped pair yielding both values after complete child draining.",
-      "type": "ScopedBoth[P, Q]"
-     },
-     "signature": "def scoped_both[P: ScopedMachine, Q: ScopedMachine](var left: P, var right: Q) -> ScopedBoth[P, Q]",
-     "summary": "Compose two owned scoped bodies through the shared child scheduler."
-    }
-   ],
-   "provider": "effects/_async/children",
-   "summary": ""
-  },
-  "effects.async_runtime.sleep": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "",
-       "description": "A nonnegative checked duration, copied into the unopened timer.",
-       "name": "duration",
-       "type": "Duration",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The exact selected domain error.",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A cancelable unit recipe whose absolute deadline uses opaque Instant.",
-      "type": "Sleep[E]"
-     },
-     "signature": "def sleep[E: Movable & Deinitable](duration: Duration) -> Sleep[E]",
-     "summary": "Wait cooperatively from entry using a checked relative duration."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.timeout_after": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The unopened source, consumed once.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "",
-       "description": "The checked relative duration anchored when the timeout enters.",
-       "name": "duration",
-       "type": "Duration",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "Owned fallback, entered only after the selected timeout and draining.",
-       "name": "fallback",
-       "type": "Q",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The source machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The fallback with exactly the same value and error types.",
-       "inferred": false,
-       "name": "Q",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A structured timeout retaining all source and cleanup errors.",
-      "type": "TimeoutAfter[P, Q]"
-     },
-     "signature": "def timeout_after[P: Machine, Q: Machine](var program: P, duration: Duration, var fallback: Q) -> TimeoutAfter[P, Q] where P.Error == Q.Error and P.Value == Q.Value",
-     "summary": "Choose by first terminal outcome, draining the source before fallback entry."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.timeout_to": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The unopened source, consumed once.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      },
-      {
-       "convention": "",
-       "description": "The checked relative duration anchored on entry.",
-       "name": "duration",
-       "type": "Duration",
-       "variadic": false
-      },
-      {
-       "convention": "var",
-       "description": "Owned fallback used after timer victory and cancellation-only\n    source completion; parent cancellation still prevents its entry.",
-       "name": "fallback",
-       "type": "Q",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The source machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "The fallback with exactly the same value and error types.",
-       "inferred": false,
-       "name": "Q",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A structured timeout preserving all subtree errors and cleanup ownership.",
-      "type": "TimeoutTo[P, Q]"
-     },
-     "signature": "def timeout_to[P: Machine, Q: Machine](var program: P, duration: Duration, var fallback: Q) -> TimeoutTo[P, Q] where P.Error == Q.Error and P.Value == Q.Value",
-     "summary": "After the timer wins, prefer the drained source outcome when available."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.uncancelable": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The unopened body.",
-       "name": "program",
-       "type": "P",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The owned body machine.",
-       "inferred": false,
-       "name": "P",
-       "type": "Machine",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A masked recipe; pending cancellation remains observable at later unmasked checkpoints.",
-      "type": "Uncancelable[P]"
-     },
-     "signature": "def uncancelable[P: Machine](var program: P) -> Uncancelable[P]",
-     "summary": "Run a recipe under a fresh lexical mask."
-    }
-   ],
-   "provider": "effects/_async/application",
-   "summary": ""
-  },
-  "effects.async_runtime.uncancelable_with": {
-   "description": "",
-   "kind": "function",
-   "overloads": [
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "The deferred factory, consumed once.",
-       "name": "factory",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "The owned once-callable factory accepting Poll[E].",
-       "inferred": true,
-       "name": "F",
-       "type": "UnaryContract & Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "The exact domain error of the returned work.",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "A masked recipe; escaped Poll handles cannot pierce another region or finalizer mask.",
-      "type": "Masked[F, E]"
-     },
-     "signature": "def uncancelable_with[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](var factory: F) -> Masked[F, E] where _OnceUnaryAvailable[F] and F.Arg == Poll[E] and _ErrorCompatible[E, F.Error] and conforms_to(F.Out, Machine) and downcast[F.Out, Machine].Error == E",
-     "summary": "Build masked work with a handle restoring this region's preceding cancellation state."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "factory",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "R",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "_Unary[Poll[E], R]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Masked[NativeUnary[Poll[E], R, Never, F, False], E]"
-     },
-     "signature": "def uncancelable_with[R: Machine, //, E: Movable & Deinitable, F: _Unary[Poll[E], R]](var factory: F) -> Masked[NativeUnary[Poll[E], R, Never, F, False], E] where R.Error == E",
-     "summary": "Adapt an owned native callback through the canonical callable boundary."
-    },
-    {
-     "args": [
-      {
-       "convention": "var",
-       "description": "",
-       "name": "factory",
-       "type": "F",
-       "variadic": false
-      }
-     ],
-     "description": "",
-     "error": "",
-     "parameters": [
-      {
-       "description": "",
-       "inferred": true,
-       "name": "R",
-       "type": "Machine",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": true,
-       "name": "X",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "_RaisingUnary[Poll[E], R, X]",
-       "variadic": false
-      }
-     ],
-     "raises": false,
-     "raises_doc": "",
-     "returns": {
-      "doc": "",
-      "type": "Masked[NativeUnary[Poll[E], R, X, F, True], E]"
-     },
-     "signature": "def uncancelable_with[R: Machine, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[Poll[E], R, X]](var factory: F) -> Masked[NativeUnary[Poll[E], R, X, F, True], E] where R.Error == E and _ErrorCompatible[E, X]",
-     "summary": "Adapt an owned native callback through the canonical callable boundary."
-    }
-   ],
-   "provider": "effects/_async/application",
    "summary": ""
   },
   "effects.canceled": {
@@ -337910,11 +336307,11 @@
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "effects.async_runtime": {
-   "description": "This opt-in preview targets the pinned Mojo 1.2 Linux x86-64 toolchain. Recipes\nare concrete one-shot owners. Pipeline selects Async sequencing; both and race\nown their children through completion and cleanup. Native callbacks run on the\nhost thread and must return cooperatively. No detached work or GPU backend is\nprovided. Types, origins, and full Outcome failures retain their native shape.\n\nUse protocols for custom leaf machines and per-poll scoped loans. Driver owns\nentered roots linearly: request cancellation, continue polling, then finish.\nChecked Duration and opaque Instant keep deadline arithmetic wide. Only reviewed\nnames and documented metadata are supported, not private layout or ABI.",
-   "summary": "Pure-Mojo async recipes and structured cooperative host execution."
+   "description": "This opt-in preview targets the pinned Mojo 1.2 Linux x86-64 toolchain. An\n`IO[T, E]` describes asynchronous work producing T or failing with the exact\ndomain error E; it runs once, when a host drives it. Methods and Pipeline\ncompose IO values, and `Async[E]` is their family for tail_rec_m, traversal and\nattempt. Long sequences run iteratively in constant native stack. Callbacks\nstored in an IO must own their state. Native callbacks run on the host thread\nand must return cooperatively. No detached work or GPU backend is provided.\n\nUse protocols for custom leaf machines, lifted with IO.lift. Driver owns entered\nroots linearly: request cancellation, continue polling, then finish. Checked\nDuration and opaque Instant keep deadline arithmetic wide. Only reviewed names\nand documented metadata are supported, not private layout or ABI.",
+   "summary": "Pure-Mojo async IO with Cats Effect vocabulary and structured cooperative execution."
   },
   "effects.async_runtime.protocols": {
-   "description": "Each poll returns promptly with Step.ready or Step.pending. A terminal step\ncertifies that entered work and cleanup finished or transferred ownership into\nthe result. Fresh scoped loans end with each poll. External work retains its own\naccess rights and must drain before release; readiness alone is not memory\nsynchronization. Public Context is the canonical IOContext, including its clock.",
+   "description": "IO.lift runs a custom Machine as one step of an IO. Each poll returns promptly\nwith Step.ready or Step.pending. A terminal step\ncertifies that entered work and cleanup finished or transferred ownership into\nthe result. Fresh scoped loans end with each poll. External work retains its own\naccess rights and must drain before release; readiness alone is not memory\nsynchronization. Public Context is the canonical IOContext, including its clock.",
    "summary": "Extension contracts for cooperative leaves and scoped asynchronous bodies."
   },
   "functions": {

@@ -1,6 +1,6 @@
 """Request cancellation and retain the root until all cleanup finishes."""
 from fp.effects import CancellationToken, EffectFailure, fold_outcome
-from fp.effects.async_runtime import Clock, Driver, Duration, delay, guarantee, sleep
+from fp.effects.async_runtime import IO, Clock, Driver, Duration
 
 
 def cleanup() -> NoneType:
@@ -23,7 +23,8 @@ def canceled() -> Int:
 def main() raises:
     var clock = Clock.manual()
     var span = Duration.seconds(30)
-    var driver = Driver(guarantee(sleep[Int](span), delay[Int](cleanup)), CancellationToken(), clock)
+    var program = IO[NoneType, Int].sleep(span).guarantee(IO[NoneType, Int].delay(cleanup))
+    var driver = Driver(program^, CancellationToken(), clock)
     _ = driver.poll()
     driver.request_cancel()
     while not driver.poll().completed:

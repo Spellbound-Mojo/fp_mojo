@@ -1,8 +1,20 @@
 """Drive a callback timeout with deterministic time and owned withdrawal."""
 from std.memory import ArcPointer
 from std.os import abort
+from fp.callables import OnceUnary
 from fp.effects import CancellationToken, EffectFailure, fold_outcome
-from fp.effects.async_runtime import Completion, Clock, Duration, Driver, callback, delay, pure, timeout_to
+from fp.effects.async_runtime import IO, Completion, Clock, Duration, Driver
+
+
+@fieldwise_init
+struct Register(OnceUnary):
+    """Keep the completion for an external producer; the IO owns this state."""
+    var saved: ArcPointer[Optional[Completion[Int, Int]]]
+    comptime Arg = Completion[Int, Int]
+    comptime Out = NoneType
+    def call_once(deinit self, var done: Completion[Int, Int]) -> NoneType:
+        self.saved[] = Optional(done^)
+        return None
 
 
 def withdrawn() -> NoneType:
@@ -27,10 +39,8 @@ def main() raises:
     var clock = Clock.manual()
     var duration = Duration.milliseconds(5)
     var saved = ArcPointer(Optional[Completion[Int, Int]]())
-    def register(done: Completion[Int, Int]) {saved}:
-        saved[] = Optional(done.copy())
-    var source = callback(register, delay[Int](withdrawn))
-    var driver = Driver(timeout_to(source^, duration, pure[Int](-1)), CancellationToken(), clock)
+    var source = IO[Int, Int].async(Register(saved.copy()), IO[NoneType, Int].delay(withdrawn))
+    var driver = Driver(source^.timeout_to(duration, IO[Int, Int].pure(-1)), CancellationToken(), clock)
     var pending = driver.poll()
     try:
         clock.advance_to(pending.deadline.value())

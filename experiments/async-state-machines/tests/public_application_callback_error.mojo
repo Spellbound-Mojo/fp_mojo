@@ -1,5 +1,5 @@
-# error: call to 'callback'
-from fp.effects.async_runtime import callback, Completion, pure
+# error: call to 'async'
+from fp.effects.async_runtime import IO, Completion
 
 
 def wrong(var completion: Completion[Int, Int]) raises String:
@@ -7,4 +7,4 @@ def wrong(var completion: Completion[Int, Int]) raises String:
 
 
 def main():
-    _ = callback(wrong, pure[Int](NoneType()))
+    _ = IO[Int, Int].async(wrong, IO[NoneType, Int].pure(NoneType()))

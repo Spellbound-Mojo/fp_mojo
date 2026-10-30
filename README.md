@@ -61,10 +61,11 @@ one value at a time through `map` and `filter`.
   `flat_map`, and execute it with `run_io`. Resource scopes and finalizers
   retain cleanup on success, failure and cooperative cancellation, preserving
   ordered errors in `Outcome`.
-- **Structured async.** The pure-Mojo runtime uses explicit state machines on
-  one host thread. Sequence tasks, combine concurrent children, race work,
-  wait on timers or callbacks, and coordinate through queues and semaphores.
-  Entered child tasks remain owned until their work and cleanup finish.
+- **Structured async.** The pure-Mojo runtime follows Cats Effect: an
+  `IO[T, E]` sequences work in constant native stack on one host thread.
+  Combine concurrent children, race work, wait on timers or callbacks, and
+  coordinate through queues and semaphores. Entered child tasks remain owned
+  until their work and cleanup finish.
 - **Exhaustive pattern matching.** The compiler rejects a match that misses a
   constructor or includes an unreachable clause. It also checks the types
   between pipeline stages and names a stage whose input does not fit.
@@ -87,8 +88,8 @@ one value at a time through `map` and `filter`.
 | `fp.matching` | Pattern matching | `fp.match` (a `Node`, `Choice`, `Result` or `Optional`, a context, or several values), `fp.rewrite`, `fp.when`, `Next` |
 | `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid | `map`, `filter`, `pure`, `flat_map`, `tail_rec_m`, `map2`, `ap`, `traverse`, `sequence`; Identity, Optional, Result and List instances |
 | `fp.effects` | Reader, State, Writer, monad transformers, synchronous IO and resource scopes | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`, `IO`, `Resource`, `IOResource`, `Outcome`; `delay`, `run_io`, `guarantee`, `fold_outcome` |
-| `fp.effects.async_runtime` | Cooperative async execution and structured concurrency (preview) | `Async`, `Driver`, `Nursery`, `AsyncResource`, `Deferred`, `Queue`, `Semaphore`; `both`, `race`, `sleep`, `timeout_to`, `callback`, `eval_io` |
-| `fp.effects.async_runtime.protocols` | Extension contracts for custom async operations and scoped borrowing | `Machine`, `ScopedMachine`, `CleanupMachine`, `Context`, `Step`, `Wait`, `Signal` |
+| `fp.effects.async_runtime` | Cooperative async IO and structured concurrency (preview) | `IO`, `Async`, `Resource`, `Driver`, `Deferred`, `Queue`, `Semaphore`; `IO.both`, `IO.race`, `IO.sleep`, `IO.timeout_to`, `IO.async`, `IO.eval_io` |
+| `fp.effects.async_runtime.protocols` | Extension contracts for custom async leaves lifted into `IO` and scoped borrowing | `Machine`, `ScopedMachine`, `CleanupMachine`, `Context`, `Step`, `Wait`, `Signal` |
 | `fp.callables` | The calling protocols shared by other components | `Unary`, `Binary`, `Thunk`, `as_unary`, `call_once`, `call_repeated` |
 
 ## See it in action
@@ -361,19 +362,19 @@ and [effectful resources](docs/content/reference/effects.md#effectful-resources)
 
 ### Sequence asynchronous work
 
-Async recipes use the same `pipeline(...).map(...).flat_map(...)` style.
+An async `IO` uses the same `pipeline(...).map(...).flat_map(...)` style.
 `run` drives a self-contained program to completion, and `fold_outcome` handles
-success, the complete failure, or cancellation. Each recipe owns one execution;
-construct a fresh recipe to repeat work.
+success, the complete failure, or cancellation. An `IO` runs once; build a
+fresh one to repeat work.
 
 ```mojo
 from fp.effects import EffectFailure, fold_outcome
-from fp.effects.async_runtime import pure, Pure, delay, run
+from fp.effects.async_runtime import IO, run
 from fp.functions import pipeline
 
 
-def next_value(value: Int) -> Pure[Int, Int]:
-    return pure[Int](value + 2)
+def next_value(value: Int) -> IO[Int, Int]:
+    return IO[Int, Int].pure(value + 2)
 
 
 def initial() -> Int:
@@ -394,22 +395,23 @@ def canceled() -> Int:
 
 
 def main():
-    var program = pipeline(delay[Int](initial)).flat_map(next_value).get()
+    var program = pipeline(IO[Int, Int].delay(initial)).flat_map(next_value).get()
     print(fold_outcome(run(program^), success, failure, canceled))
 ```
 
 The [runnable example](docs/examples/async_sequencing.mojo) prints `42`.
-`flat_map` sequences work; `both` owns concurrent children. `tail_rec_m` runs
-iterative work while retaining one active iteration. Resources, races, timeouts
-and bounded nurseries retain ownership through cancellation and cleanup.
+`flat_map` sequences work; `both` owns concurrent children. Chains, recursion
+through `IO.defer`, and `tail_rec_m` loops of any length run in constant native
+stack. Resources, races and timeouts retain ownership through cancellation and
+cleanup.
 Checked `Duration` values and opaque `Instant` timestamps support system and
 manual clocks.
 
 For host integration, use `Driver`: poll until complete, then consume
 `finish()`. After `request_cancel()`, continue polling until cleanup finishes.
 Timeouts also wait for cleanup; they do not impose a hard return deadline.
-`delay` and `eval_io` run synchronous callbacks inside a poll, so callbacks must
-return promptly. Blocking IO is not offloaded.
+`IO.delay` and `IO.eval_io` run synchronous callbacks inside a poll, so callbacks
+must return promptly. Blocking IO is not offloaded.
 
 The [async guide](docs/content/guides/async-runtime.md) includes runnable
 resource, callback, timeout and host-cancellation examples, plus a Cats Effect

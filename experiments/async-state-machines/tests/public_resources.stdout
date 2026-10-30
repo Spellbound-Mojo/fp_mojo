@@ -1,1 +1,1 @@
-resource generic: logical aliases, borrowed projection, dependent composition, scoped use, native body factory
+resource composition: borrowed projection, dependent resources, borrowed body, native body factory

@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1, 2, 3a, 3b and 3c complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -748,7 +748,7 @@ Steps 1 and 2 are complete: the private engine core, optimized, and
 finalizers, masks, and law clients. Step 3 switches the public API to `IO` in
 four parts: the `Async[E]` family (3a, complete), constructors and combinators
 (3b, complete), coordination and resources (3c, complete), and the public exports and documentation
-(3d). The full verification gates run after step 3.
+(3d, complete). The full verification gates run after step 3.
 
 - `src/fp/effects/_async/engine.mojo` implements `IO[T, E]` as a flat program
   with pure, fail, leaf, defer, mask, and restore heads and bind, recover,
@@ -899,6 +899,32 @@ static constructors and methods. Each one reuses an existing owner:
 - `async_coordination`, `coordination_origins`, and `coordination_owned` exceeded
   the default 120 s compile limit with four builds in parallel. Their limit is
   now 600 s.
+
+**Step 3d: the public switch-over.** `fp.effects.async_runtime` now exports
+`IO`, `Async`, `Resource`, `Deferred`, `Queue`, `Semaphore`, `Clock`, `Driver`,
+`run`, `Progress`, `Duration`, `Instant`, `RaceResult`, `Poll`, and
+`Completion`.
+
+- The recipe aliases and free functions, the typed resource plans, `Nursery`,
+  `Spawner`, and `ScopedBoth` are no longer public. They remain private
+  implementations where `IO` lifts them.
+- `protocols.Machine` is now the kernel machine contract, with no `Family`
+  requirement, because `IO.lift` runs any machine. `Driver` and `run` accept
+  it too. Existing machines that declare `Family` still conform.
+- `IO`'s constructor is private and keyword-only, since it takes the engine's
+  program.
+- The six examples print their reviewed output unchanged. The public clients,
+  the guide (with an old-to-new table), the README, the reference index,
+  `public-exports.json`, `api.json`, and `compatibility.json` are migrated.
+  The two export contracts also take `MutableRef`'s marker from step 3c.
+- `public_owned` now checks owned callable state where it previously checked
+  closures with moved captures. `IO` rejects capturing closures, which
+  `public_reject_capture` checks.
+- `public_traversal_view` traverses with an owned repeatable callable. A
+  deferred `IO` cannot keep a borrowed `Kleisli` view.
+- Open for review: `ScopedMachine` and `CleanupMachine` remain public protocols,
+  but no public operation takes them since the typed resource plans became
+  private. The typed recipe family remains private beside the `IO` family.
 
 ## Implementation reference map
 

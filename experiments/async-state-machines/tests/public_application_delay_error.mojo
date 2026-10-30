@@ -1,5 +1,5 @@
 # error: call to 'delay'
-from fp.effects.async_runtime import delay
+from fp.effects.async_runtime import IO
 
 
 def wrong() raises String -> Int:
@@ -8,4 +8,4 @@ def wrong() raises String -> Int:
 
 def main():
     var pointer: def() raises String thin -> Int = wrong
-    _ = delay[Int](pointer)
+    _ = IO[Int, Int].delay(pointer)

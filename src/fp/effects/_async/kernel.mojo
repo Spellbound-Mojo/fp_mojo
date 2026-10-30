@@ -220,9 +220,27 @@ struct Step[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
 
 
 trait Machine(Movable, Deinitable):
+    """A concretely typed cooperative leaf; IO.lift runs one as a step of an IO.
+
+    Declare Value and Error and a mutating poll accepting IOContext[Error] and
+    returning Step[Value, Error]. Poll must return promptly; terminal steps
+    discharge entered external work and cleanup. Driver and the library's
+    combinators own polling. Implementations retain independent external
+    origins, never a temporary per-poll context loan.
+    """
     comptime Value: Movable & Deinitable
+    """The owned success value."""
     comptime Error: Movable & Deinitable
+    """The exact domain error."""
     def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
+        """Advance cooperatively without blocking.
+
+        Args:
+            context: The inherited cancellation and runtime context, valid for this call.
+
+        Returns:
+            A pending wait descriptor or a terminal owned outcome.
+        """
         ...
 
 

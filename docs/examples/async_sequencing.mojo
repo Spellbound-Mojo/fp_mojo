@@ -1,11 +1,11 @@
-"""Sequence deferred native callbacks with the selected Async family."""
+"""Sequence deferred native callbacks with IO and Pipeline."""
 from fp.effects import EffectFailure, fold_outcome
-from fp.effects.async_runtime import pure, Pure, delay, run
+from fp.effects.async_runtime import IO, run
 from fp.functions import pipeline
 
 
-def next_value(value: Int) -> Pure[Int, Int]:
-    return pure[Int](value + 2)
+def next_value(value: Int) -> IO[Int, Int]:
+    return IO[Int, Int].pure(value + 2)
 
 
 def initial() -> Int:
@@ -26,5 +26,5 @@ def canceled() -> Int:
 
 
 def main():
-    var program = pipeline(delay[Int](initial)).flat_map(next_value).get()
+    var program = pipeline(IO[Int, Int].delay(initial)).flat_map(next_value).get()
     print(fold_outcome(run(program^), success, failure, canceled))

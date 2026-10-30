@@ -1,8 +1,9 @@
-"""Owned native delay ends admission loans while retaining independent origins."""
+"""IO owns its callbacks: deferred, discarded unopened, run once; external origins travel in T."""
 from std.os import abort
-from fp.effects import Outcome, EffectFailure, fold_outcome
 from std.memory import ArcPointer
-from fp.effects.async_runtime import delay, run
+from fp.callables import OnceThunk
+from fp.effects import Outcome, EffectFailure, fold_outcome
+from fp.effects.async_runtime import IO, run
 
 
 @fieldwise_init
@@ -12,21 +13,33 @@ struct Guard(Movable):
         self.drops[] += 1
 
 
+@fieldwise_init
+struct Count(OnceThunk):
+    var guard: Guard
+    var calls: ArcPointer[Int]
+    comptime Out = Int
+    def call_once(deinit self) -> Int:
+        self.calls[] += 1
+        return 41 + self.guard.drops[]
+
+
+@fieldwise_init
+struct View[o: ImmOrigin](OnceThunk):
+    var view: Span[Int, Self.o]
+    comptime Out = Span[Int, Self.o]
+    def call_once(deinit self) -> Self.Out:
+        return self.view
+
+
 def unopened(drops: ArcPointer[Int], calls: ArcPointer[Int]):
-    var guard = Guard(drops.copy())
-    def callback() {var guard^, calls} -> Int:
-        calls[] += 1
-        return guard.drops[]
-    var recipe = delay[Int](callback^)
+    var io = IO[Int, Int].delay(Count(Guard(drops.copy()), calls.copy()))
     check(calls[] == 0 and drops[] == 0, "owned callback remains deferred")
-    _ = recipe^
+    _ = io^
 
 
 def external[o: ImmOrigin](ref[o] owner: List[Int]):
-    var view = Span(owner)
-    def borrowed() {view} -> Span[Int, o]:
-        return view
-    var kept = run(delay[Int](borrowed))
+    # The callback's origin is also the value's, so the IO's type keeps it.
+    var kept = run(IO[Span[Int, o], Int].delay(View(Span(owner))))
     def first(var result: Span[Int, o]) -> Int:
         return result[0]
     var value = fold_outcome(kept^, first, failure, canceled)
@@ -37,17 +50,12 @@ def main():
     var drops = ArcPointer(0)
     var calls = ArcPointer(0)
     unopened(drops, calls)
-    check(drops[] == 1 and calls[] == 0, "unopened recipe destroys its capture without executing")
-    var guard = Guard(drops.copy())
-    def callback() {var guard^, calls} -> Int:
-        calls[] += 1
-        return 41 + guard.drops[]
-    var recipe = delay[Int](callback^)
-    var outcome = run(recipe^)
-    check(take_int(outcome^) == 42 and drops[] == 2 and calls[] == 1, "entered callback runs once and drops its capture")
+    check(drops[] == 1 and calls[] == 0, "an unopened IO destroys its callback without running it")
+    var outcome = run(IO[Int, Int].delay(Count(Guard(drops.copy()), calls.copy())))
+    check(take_int(outcome^) == 42 and drops[] == 2 and calls[] == 1, "an entered callback runs once and drops its state")
     var owner: List[Int] = [42]
     external(owner)
-    print("application ownership: moved native captures, unopened discard, one execution, external origins")
+    print("io ownership: owned callback state, unopened discard, one execution, external origins")
 
 
 def check(condition: Bool, message: String):

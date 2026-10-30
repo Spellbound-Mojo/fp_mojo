@@ -1,16 +1,15 @@
-"""A leaf reports completion through the host without accessing scheduler fields."""
+"""A lifted leaf reports completion through the host without accessing scheduler fields."""
 from std.os import abort
 from fp.effects import Outcome, EffectFailure, fold_outcome, CancellationToken
 from std.memory import ArcPointer
 from fp.effects.async_runtime.protocols import Context, Machine, Step, Wait, Signal
 from fp.data import Result, Ok
 from fp.functions import pipeline
-from fp.effects.async_runtime import Async, Driver, Clock, Duration, Instant
+from fp.effects.async_runtime import IO, Driver, Clock, Duration, Instant
 
 
 @fieldwise_init
 struct External(Machine):
-    comptime Family = Async[Int]
     comptime Value = Int
     comptime Error = Int
     var signal: Signal
@@ -34,7 +33,6 @@ def add(var value: Int) -> Int:
 
 
 struct Timed(Machine):
-    comptime Family = Async[Int]
     comptime Value = Int
     comptime Error = Int
     var duration: Duration
@@ -54,7 +52,7 @@ struct Timed(Machine):
 def main() raises:
     var signal = Signal()
     var state = ArcPointer(0)
-    var driver = Driver(pipeline(External(signal.copy(), state.copy(), False)).map(add).get())
+    var driver = Driver(pipeline(IO[Int, Int].lift(External(signal.copy(), state.copy(), False))).map(add).get())
     var first = driver.poll()
     check(not first.completed and not first.runnable, "leaf parks through supported wait descriptor")
     state[] = 42
@@ -62,7 +60,7 @@ def main() raises:
     while not driver.poll().completed:
         pass
     var result = driver^.finish()
-    check(take_int(result^) == 43, "host completion flows through selected Pipeline")
+    check(take_int(result^) == 43, "host completion flows through a lifted leaf and Pipeline")
     state[] = 0
     var raced = Driver(External(signal.copy(), state.copy(), True))
     while not raced.poll().completed:
@@ -81,7 +79,7 @@ def main() raises:
     while not timed.poll().completed:
         pass
     check(take_int(timed^.finish()) == 42, "custom opaque timer completes past Int.MAX")
-    print("extension boundary: cooperative host completion, selected family, notification before parking")
+    print("extension boundary: cooperative host completion, lifted leaf in Pipeline, notification before parking")
 
 
 def check(condition: Bool, message: String):

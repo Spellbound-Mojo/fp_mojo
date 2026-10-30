@@ -1,11 +1,13 @@
-"""Iterator views retain the declared Async family and deferred execution."""
+"""Iterator traversal into IO selects Async, defers pulls, and owns a repeatable callback.
+
+A deferred IO cannot retain a borrowed Kleisli view, so the callback is owned.
+"""
 from std.iter import Iterator
 from std.memory import ArcPointer
 from std.os import abort
 from fp.callables import Unary
 from fp.effects import CancellationToken, EffectFailure, fold_outcome
-from fp.effects.async_runtime import Async, Pure, pure, run
-from fp.functions import kleisli
+from fp.effects.async_runtime import Async, IO, run
 from fp.iteration import iterated
 
 
@@ -28,13 +30,13 @@ struct Source(Iterator):
 struct Produce(Unary):
     var calls: ArcPointer[Int]
     comptime Arg = Int
-    comptime Out = Pure[Int, Int]
+    comptime Out = IO[Int, Int]
     comptime Error = Int
     def call(self, var value: Int) raises Int -> Self.Out:
         self.calls[] += 1
         if value == 2:
             raise 22
-        return pure[Int](value + 10)
+        return Self.Out.pure(value + 10)
 
 
 def check(condition: Bool):
@@ -65,11 +67,10 @@ def canceled() -> Int:
 def main() raises:
     var calls = ArcPointer(0)
     var pulls = ArcPointer(0)
-    var chain = kleisli[Async[Int]](Produce(calls.copy()))
     for count in [0, 2, 5]:
         calls[] = 0
         pulls[] = 0
-        var collected = iterated(Source(pulls.copy(), 0, count)).traverse(chain)
+        var collected = iterated(Source(pulls.copy(), 0, count)).traverse(Produce(calls.copy()))
         comptime assert type_of(collected).Family == Async[Int]
         check(calls[] == 0 and pulls[] == 0)
         var result = fold_outcome(run(collected^), sum_values, failed, canceled)
@@ -78,7 +79,7 @@ def main() raises:
         check(pulls[] == (3 if count == 5 else count + 1))
         calls[] = 0
         pulls[] = 0
-        var discarded = iterated(Source(pulls.copy(), 0, count)).traverse_void(chain)
+        var discarded = iterated(Source(pulls.copy(), 0, count)).traverse_void(Produce(calls.copy()))
         comptime assert type_of(discarded).Family == Async[Int]
         check(calls[] == 0 and pulls[] == 0)
         check(fold_outcome(run(discarded^), ignored, failed, canceled) == (-22 if count == 5 else 0))
@@ -88,7 +89,7 @@ def main() raises:
     pulls[] = 0
     var token = CancellationToken()
     token.cancel()
-    var unopened = iterated(Source(pulls.copy(), 0, 5)).traverse(chain)
+    var unopened = iterated(Source(pulls.copy(), 0, 5)).traverse(Produce(calls.copy()))
     check(fold_outcome(run(unopened^, token), sum_values, failed, canceled) == -999)
     check(calls[] == 0 and pulls[] == 0)
-    print("public traversal views: selected Async family, deferred pulls, reuse, exact errors and cancellation")
+    print("public traversal views: selected Async family, deferred pulls, owned callbacks, exact errors and cancellation")

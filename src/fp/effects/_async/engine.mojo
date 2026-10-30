@@ -1,4 +1,4 @@
-"""The private IO run loop: flat programs evaluated iteratively over canonical owners.
+"""IO, its Async family, and the private run loop that evaluates IO programs iteratively.
 
 An IO is a head (a value, a failure, a leaf machine, or a deferred factory) and
 the continuation frames applied after it. `flat_map` appends a frame, and
@@ -481,9 +481,18 @@ comptime _Defers[E: Movable & Deinitable, F: ThunkContract & Movable & Deinitabl
 
 
 struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
-    """An asynchronous effect producing T or failing with E, run by the private engine.
+    """An asynchronous program producing T or failing with the exact domain error E.
 
-    An IO runs once. Unopened values may be dropped; disposal is iterative.
+    Building an IO runs nothing. A value runs once, when a host drives it;
+    repeated work builds a fresh IO. Sequencing, recovery, and finalizers run
+    iteratively in constant native stack, and an unopened IO may be dropped.
+    Callbacks stored in an IO must own their state: plain functions and owned
+    library callables are admitted, capturing closures and borrowed callback
+    views are rejected.
+
+    Parameters:
+        T: The owned success value, including its origins.
+        E: The exact domain error shared by every IO in one chain.
     """
     comptime Family = Async[Self.E]
     comptime Value = Self.T
@@ -492,8 +501,8 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
     var _loop: MaybeUninit[OwnedPointer[_RunLoop[Self.E]]]
     var _entered: Bool
 
-    def __init__(out self, var program: _Program[Self.E]):
-        self._program = program^
+    def __init__(out self, *, var _program: _Program[Self.E]):
+        self._program = _program^
         self._loop = MaybeUninit[OwnedPointer[_RunLoop[Self.E]]]()
         self._entered = False
 
@@ -511,29 +520,67 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
 
     @staticmethod
     def pure(var value: Self.T) -> Self:
-        return Self(_Program[Self.E](_Head[Self.E](_PURE, _Erased(value^))))
+        """Own an evaluated value.
+
+        Args:
+            value: The value, consumed once.
+
+        Returns:
+            An IO producing the value.
+        """
+        return Self(_program=_Program[Self.E](_Head[Self.E](_PURE, _Erased(value^))))
 
     @staticmethod
     def raise_error(var error: Self.E) -> Self:
-        return Self(_Program[Self.E](_Head[Self.E](_FAIL, _Erased(EffectFailure[Self.E](NonEmptyList(error^), False)))))
+        """Fail with one domain error.
+
+        Args:
+            error: The error, consumed once.
+
+        Returns:
+            An IO failing with an uncanceled EffectFailure holding the error.
+        """
+        return Self(_program=_Program[Self.E](_Head[Self.E](_FAIL, _Erased(EffectFailure[Self.E](NonEmptyList(error^), False)))))
 
     # Public operations state admission in their signatures and delegate to
     # private forms, which generic code calls after its own checks.
     @staticmethod
     def lift[P: Machine](var machine: P) -> Self where P.Value == Self.T and P.Error == Self.E:
-        """Run a custom machine as one step of an IO."""
+        """Run a custom machine as one step of an IO.
+
+        The IO keeps origins only through T and E, so the machine must own its
+        state, or borrow only what T or E already names.
+
+        Parameters:
+            P: A machine with this IO's value and error types.
+
+        Args:
+            machine: The unopened machine, consumed once.
+
+        Returns:
+            An IO that polls the machine until it completes.
+        """
         return Self._lifted(machine^)
 
     @staticmethod
     def _lifted[P: Machine](var machine: P) -> Self:
         comptime assert P.Value == Self.T and P.Error == Self.E
-        return Self(_Program[Self.E](_Head[Self.E](_LEAF, _Erased(_Leaf[Self.E](_Boxed[P, Self.E](machine^))))))
+        return Self(_program=_Program[Self.E](_Head[Self.E](_LEAF, _Erased(_Leaf[Self.E](_Boxed[P, Self.E](machine^))))))
 
     @staticmethod
     def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where F.Out == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]:
         """Evaluate a synchronous function when the IO reaches it.
 
-        Its error becomes this IO's failure. Use defer when the function builds an IO.
+        Use defer when the function builds an IO.
+
+        Parameters:
+            F: An owned once-callable producing T with error E or none.
+
+        Args:
+            function: The function, consumed; it runs once, when reached.
+
+        Returns:
+            An IO producing the function's result; its error becomes the failure.
         """
         return Self._deferred(_Delay[F, Self.E](function^))
 
@@ -561,7 +608,17 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
 
     @staticmethod
     def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self where _Defers[Self.E, F] and F.Out == Self:
-        """Build the IO when it is reached, so recursive programs build lazily."""
+        """Build the IO when it is reached, so recursive programs build lazily.
+
+        Parameters:
+            F: An owned once-callable returning this IO type, with error E or none.
+
+        Args:
+            factory: The factory, consumed; it runs once, when reached.
+
+        Returns:
+            An IO running the program the factory builds.
+        """
         return Self._deferred(factory^)
 
     @staticmethod
@@ -590,10 +647,20 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
                     run.set_failure(EffectFailure[Self.E](NonEmptyList(error^), False))
 
         comptime assert _Defers[Self.E, F] and F.Out == Self
-        return Self(_Program[Self.E](_Head[Self.E](_DEFER, _Erased(factory^), invoke)))
+        return Self(_program=_Program[Self.E](_Head[Self.E](_DEFER, _Erased(factory^), invoke)))
 
     def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[downcast[F.Out, Machine].Value, Self.E] where F.Arg == Self.T and _Binds[Self.E, F]:
-        """Continue with the IO a callback builds from the success value."""
+        """Continue with the IO a callback builds from the success value.
+
+        Parameters:
+            F: An owned once-callable from T to an IO with error E.
+
+        Args:
+            f: The callback, consumed; failure and cancellation skip it.
+
+        Returns:
+            An IO running both in sequence; the callback's error becomes the failure.
+        """
         return self^._bind(f^)
 
     def flat_map[U: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) thin -> IO[U, Self.E]) -> IO[U, Self.E]:
@@ -624,10 +691,20 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         comptime assert F.Arg == Self.T and _Binds[Self.E, F]
         var program = self^._into_program()
         program.frames.append(_Frame(_BIND, _Erased(f^), invoke))
-        return IO[U, Self.E](program^)
+        return IO[U, Self.E](_program=program^)
 
     def map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[F.Out, Self.E] where F.Arg == Self.T and _Maps[Self.E, F]:
-        """Apply a callback to the success value; failure and cancellation bypass it."""
+        """Apply a callback to the success value.
+
+        Parameters:
+            F: An owned once-callable from T, with error E or none.
+
+        Args:
+            f: The callback, consumed; failure and cancellation skip it.
+
+        Returns:
+            An IO of the callback's result; its error becomes the failure.
+        """
         return self^._mapped(f^)
 
     def map[R: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) thin -> R) -> IO[R, Self.E] where not conforms_to(R, RegisterPassable):
@@ -662,10 +739,20 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         comptime assert F.Arg == Self.T and _Maps[Self.E, F]
         var program = self^._into_program()
         program.frames.append(_Frame(_BIND, _Erased(f^), invoke))
-        return IO[F.Out, Self.E](program^)
+        return IO[F.Out, Self.E](_program=program^)
 
     def handle_error_with[H: UnaryContract & Movable & Deinitable](deinit self, var handler: H) -> Self where H.Arg == EffectFailure[Self.E] and _Maps[Self.E, H] and H.Out == Self:
-        """Recover an ordinary failure with the IO a handler builds; cancellation bypasses it."""
+        """Recover an ordinary failure with the IO a handler builds.
+
+        Parameters:
+            H: An owned once-callable from EffectFailure[E] to this IO type.
+
+        Args:
+            handler: The handler, consumed; success and failures marked canceled skip it.
+
+        Returns:
+            An IO with the original success or the handler's program.
+        """
         return self^._recover(handler^)
 
     def handle_error_with(deinit self, handler: def(var EffectFailure[Self.E]) thin -> Self) -> Self:
@@ -677,7 +764,12 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         return self^._recover(NativeUnary[EffectFailure[Self.E], Self, X, def(var EffectFailure[Self.E]) raises X thin -> Self, True](handler))
 
     def attempt(deinit self) -> IO[Result[Self.T, EffectFailure[Self.E]], Self.E]:
-        """Materialize success or an ordinary failure; cancellation stays terminal."""
+        """Materialize success or an ordinary failure as a Result.
+
+        Returns:
+            An IO of Result[T, EffectFailure[E]]. Cancellation and failures
+            marked canceled stay terminal.
+        """
         return rebind_var[IO[Result[Self.T, EffectFailure[Self.E]], Self.E]](_Materialize[Async[Self.E], Self].apply[Never](self^))
 
     def _recover[H: UnaryContract & Movable & Deinitable](deinit self, var handler: H) -> Self:
@@ -696,23 +788,47 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         comptime assert H.Arg == EffectFailure[Self.E] and _Maps[Self.E, H] and H.Out == Self
         var program = self^._into_program()
         program.frames.append(_Frame(_RECOVER, _Erased(handler^), invoke))
-        return Self(program^)
+        return Self(_program=program^)
 
     def _finalized(deinit self, var finalizer: _Finalizer[Self.E]) -> Self:
         var program = self^._into_program()
         program.frames.append(_Frame(_FINALIZE, _Erased(finalizer^), _no_invoke))
-        return Self(program^)
+        return Self(_program=program^)
 
     def guarantee(deinit self, var finalizer: IO[NoneType, Self.E]) -> Self:
-        """Run the finalizer masked after every outcome, combining their errors."""
+        """Run a finalizer masked after every outcome.
+
+        Args:
+            finalizer: The cleanup, consumed; it runs once after the body.
+
+        Returns:
+            An IO with the body's outcome; body errors precede cleanup errors.
+        """
         return self^._finalized(_Finalizer[Self.E](False, Optional(finalizer^._into_program()), _Erased(), _no_cleanup[Self.E]))
 
     def on_cancel(deinit self, var finalizer: IO[NoneType, Self.E]) -> Self:
-        """Run the finalizer masked only when the outcome observed cancellation."""
+        """Run a finalizer masked only when the body observed cancellation.
+
+        Args:
+            finalizer: The cleanup, consumed; dropped unopened otherwise.
+
+        Returns:
+            An IO with the body's outcome.
+        """
         return self^._finalized(_Finalizer[Self.E](True, Optional(finalizer^._into_program()), _Erased(), _no_cleanup[Self.E]))
 
     def guarantee_case[F: BorrowCallContract & Movable & Deinitable](deinit self, var factory: F) -> Self where F.Payload == ExitCase[Self.E] and F.Result == IO[NoneType, Self.E] and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure] and _Admitted[F]:
-        """Build the finalizer from the borrowed exact exit case, then run it masked."""
+        """Build a finalizer from the body's exact exit, then run it masked.
+
+        Parameters:
+            F: An owned once-callable borrowing ExitCase[E] and returning IO[NoneType, E].
+
+        Args:
+            factory: The factory, consumed; it borrows the exit only while building.
+
+        Returns:
+            An IO with the body's outcome; body errors precede cleanup errors.
+        """
         def build(var callable: _Erased, exit: ExitCase[Self.E]) -> _Program[Self.E]:
             comptime assert F.Payload == ExitCase[Self.E] and F.Result == IO[NoneType, Self.E] and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure]
             comptime if F.Failure == Never:
@@ -727,7 +843,17 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
 
     @staticmethod
     def uncancelable[F: UnaryContract & Movable & Deinitable](var factory: F) -> Self where F.Arg == Poll[Self.E] and F.Out == Self and _Maps[Self.E, F]:
-        """Build and run a program masked; the Poll handle restores the outer state."""
+        """Build and run a program masked; its Poll restores the outer state.
+
+        Parameters:
+            F: An owned once-callable from Poll[E] to this IO type.
+
+        Args:
+            factory: The factory, consumed; it runs once, when reached.
+
+        Returns:
+            An IO whose region observes no cancellation except through Poll.
+        """
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
             comptime assert F.Arg == Poll[Self.E] and F.Out == Self and _Maps[Self.E, F]
             ref run = _loop_at[Self.E](loop)
@@ -740,7 +866,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
                 except error:
                     run.set_failure(EffectFailure[Self.E](NonEmptyList(error^), False))
 
-        return Self(_Program[Self.E](_Head[Self.E](_MASK, _Erased(factory^), invoke)))
+        return Self(_program=_Program[Self.E](_Head[Self.E](_MASK, _Erased(factory^), invoke)))
 
     @staticmethod
     def uncancelable(factory: def(var Poll[Self.E]) thin -> Self) -> Self:
@@ -748,15 +874,32 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         return Self.uncancelable(NativeUnary[Poll[Self.E], Self, Never, def(var Poll[Self.E]) thin -> Self, False](factory))
 
     def restore(deinit self, poll: Poll[Self.E]) -> Self:
-        """Run this program under the cancellation state preceding poll's region."""
-        return Self(_Program[Self.E](_Head[Self.E](_RESTORE, _Erased(_Restore[Self.E](poll.copy(), self^._into_program())))))
+        """Run this program with the cancellation state outside poll's region.
+
+        Args:
+            poll: The handle an uncancelable factory received.
+
+        Returns:
+            An IO that observes cancellation as it would outside the region.
+        """
+        return Self(_program=_Program[Self.E](_Head[Self.E](_RESTORE, _Erased(_Restore[Self.E](poll.copy(), self^._into_program())))))
 
     @staticmethod
     def `async`[F: UnaryContract & Movable & Deinitable](var register: F, var withdrawal: IO[NoneType, Self.E]) -> Self where F.Arg == Completion[Self.T, Self.E] and _CallbackUnit[F.Out] and _Maps[Self.E, F]:
         """Register with an external source that completes this IO once.
 
-        The withdrawal runs masked after every entered registration, then the
-        IO settles with the completion and both outcomes' errors.
+        Declared with backticks because async is a Mojo keyword; call it as
+        `IO[T, E].async(...)`.
+
+        Parameters:
+            F: An owned once-callable receiving Completion[T, E] and returning no value.
+
+        Args:
+            register: The registration, run once when reached.
+            withdrawal: Runs masked after every entered registration.
+
+        Returns:
+            An IO settling with the completion, then the withdrawal's errors.
         """
         return Self._lifted(_Callback[F, IO[NoneType, Self.E]](register^, withdrawal^))
 
@@ -767,7 +910,17 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
 
     @staticmethod
     def async_[F: UnaryContract & Movable & Deinitable](var register: F) -> Self where F.Arg == Completion[Self.T, Self.E] and _CallbackUnit[F.Out] and _Maps[Self.E, F]:
-        """Register with an external source that needs no withdrawal."""
+        """Register with an external source that needs no withdrawal.
+
+        Parameters:
+            F: An owned once-callable receiving Completion[T, E] and returning no value.
+
+        Args:
+            register: The registration, run once when reached.
+
+        Returns:
+            An IO settling with the completion.
+        """
         var unit: NoneType = None
         return Self.`async`(register^, IO[NoneType, Self.E].pure(unit))
 
@@ -778,50 +931,133 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
 
     @staticmethod
     def eval_io[P: ReaderAction](var program: P) -> Self where IOContract[P].Compatible and P.Value == Self.T and IOContract[P].Error == Self.E:
-        """Run a synchronous IO program inside this IO's context when reached."""
+        """Run a synchronous IO program inside this IO's context when reached.
+
+        Parameters:
+            P: A synchronous IO program producing T with error E.
+
+        Args:
+            program: The program, consumed; it runs once.
+
+        Returns:
+            An IO with the program's outcome.
+        """
         return Self._lifted(_EvalIO(program^))
 
     @staticmethod
     def canceled() -> IO[NoneType, Self.E]:
-        """Request cancellation of the running program; a mask defers its observation."""
+        """Request cancellation of the running program.
+
+        Returns:
+            A unit IO; a mask defers observing the request.
+        """
         return IO[NoneType, Self.E]._lifted(_EvalIO(_cancel_request[Self.E]()))
 
     @staticmethod
     def cede() -> IO[NoneType, Self.E]:
-        """Yield to other work once, then continue."""
+        """Yield to other work once, then continue.
+
+        Returns:
+            A unit IO that is runnable again after one yield.
+        """
         return IO[NoneType, Self.E]._lifted(_Cede[Self.E]())
 
     @staticmethod
     def never() -> Self:
-        """Wait until canceled; never produces a value."""
+        """Wait until canceled.
+
+        Returns:
+            An IO that never produces a value.
+        """
         return Self._lifted(_Never[Self.T, Self.E]())
 
     @staticmethod
     def sleep(duration: Duration) -> IO[NoneType, Self.E]:
-        """Wait cooperatively for a checked relative duration from entry; cancelable."""
+        """Wait cooperatively for a duration measured from entry.
+
+        Args:
+            duration: The checked relative duration.
+
+        Returns:
+            A cancelable unit IO.
+        """
         return IO[NoneType, Self.E]._lifted(_Sleep[Self.E](duration._nanoseconds))
 
     def both[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[Tuple[Self.T, U], Self.E]:
-        """Run both cooperatively and drain both; errors keep left-before-right order."""
+        """Run this IO and another concurrently, draining both.
+
+        Parameters:
+            U: The other IO's value type.
+
+        Args:
+            other: The other IO, consumed.
+
+        Returns:
+            An IO of both values; failures keep left-before-right error order.
+        """
         return IO[Tuple[Self.T, U], Self.E]._lifted(_both(self^, other^))
 
     def race[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]:
-        """Return the first outcome that is not cancellation-only, then cancel and drain the other."""
+        """Race this IO against another; the loser is canceled and drained.
+
+        Parameters:
+            U: The other IO's value type.
+
+        Args:
+            other: The other IO, consumed.
+
+        Returns:
+            An IO of the first outcome that is not cancellation-only, tagged by side.
+        """
         return IO[RaceResult[Self.T, U], Self.E]._lifted(_race(self^, other^))
 
     def race_first[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]:
-        """Return the first terminal outcome, then cancel and drain the other."""
+        """Race by first terminal outcome; the loser is canceled and drained.
+
+        Parameters:
+            U: The other IO's value type.
+
+        Args:
+            other: The other IO, consumed.
+
+        Returns:
+            An IO of the first terminal outcome, tagged by side.
+        """
         return IO[RaceResult[Self.T, U], Self.E]._lifted(_race_first(self^, other^))
 
     def timeout_to(deinit self, duration: Duration, var fallback: Self) -> Self:
-        """After the timer wins, prefer this IO's drained result, else run the fallback."""
+        """Fall back after a duration, preferring this IO's drained result.
+
+        Args:
+            duration: The checked relative duration, anchored on entry.
+            fallback: Runs after the timer wins and this IO drains without a result.
+
+        Returns:
+            An IO retaining all errors from both and their cleanup.
+        """
         return Self._lifted(_timeout_to(self^, duration._nanoseconds, fallback^))
 
     def timeout_after(deinit self, duration: Duration, var fallback: Self) -> Self:
-        """Choose by first terminal outcome; drain this IO before running the fallback."""
+        """Fall back by first terminal outcome after a duration.
+
+        Args:
+            duration: The checked relative duration, anchored on entry.
+            fallback: Runs after the timer wins and this IO has drained.
+
+        Returns:
+            An IO retaining all errors from both and their cleanup.
+        """
         return Self._lifted(_timeout_after(self^, duration._nanoseconds, fallback^))
 
     def poll(mut self, context: IOContext[Self.E]) -> Step[Self.T, Self.E]:
+        """Advance the program; hosts and combinators call this, not applications.
+
+        Args:
+            context: The inherited cancellation and runtime context.
+
+        Returns:
+            A pending wait or the terminal outcome.
+        """
         if not self._entered:
             var program = _Program[Self.E](_Head[Self.E]())
             swap(program, self._program)

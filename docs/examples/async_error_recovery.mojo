@@ -1,10 +1,10 @@
-"""Handle the complete noncanceled failure with an owned replacement recipe."""
+"""Handle the complete noncanceled failure with a replacement IO."""
 from fp.effects import EffectFailure, fold_outcome
-from fp.effects.async_runtime import Pure, pure, raise_error, handle_error_with, run
+from fp.effects.async_runtime import IO, run
 
 
-def recover(var errors: EffectFailure[Int]) -> Pure[Int, Int]:
-    return pure[Int](errors.errors.first() + 1)
+def recover(var errors: EffectFailure[Int]) -> IO[Int, Int]:
+    return IO[Int, Int].pure(errors.errors.first() + 1)
 
 
 def success(value: Int) -> Int:
@@ -21,5 +21,5 @@ def canceled() -> Int:
 
 
 def main():
-    var program = handle_error_with(raise_error[Int, Int](41), recover)
+    var program = IO[Int, Int].raise_error(41).handle_error_with(recover)
     print(fold_outcome(run(program^), success, failure, canceled))
