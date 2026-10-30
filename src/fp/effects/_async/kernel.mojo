@@ -1,10 +1,10 @@
 """Typed resumable work with no coroutine intrinsics or context-switch ABI."""
-from std.memory import OwnedPointer
+from std.memory import OwnedPointer, ArcPointer
 from std.time import sleep
 from std.os import abort
 from .time import Duration, Instant
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
-from fp.effects._io_core import _settle
+from fp.effects._io_core import _settle, _Budget
 from fp.data import Result, Ok
 from fp._internal.waking import _Event as Signal, _Runtime, _Ticket, _Subscription, _Waker, _Clock as Clock
 
@@ -340,15 +340,56 @@ def _tick[P: Machine](mut slot: _Slot[P, P.Value, P.Error], context: IOContext[P
     return True
 
 
+struct IORuntimeConfig(Copyable):
+    """How often IO yields to its host and checks for cancellation.
+
+    The counterpart of Cats Effect's IORuntimeConfig. Every run loop under one
+    root draws from one budget of interpreter transitions per root poll and
+    yields when it is spent. Bind and recovery handoffs check for cancellation
+    every `cancelation_check_threshold` handoffs; leaves, masked regions and
+    cleanup keep their own checkpoints. Native callback bodies, custom polls and
+    destructors are not counted and cannot be preempted.
+    """
+    var cancelation_check_threshold: Int
+    """Handoffs between cancellation checks; 1 checks every bind."""
+    var auto_yield_threshold: Int
+    """Interpreter transitions per root poll before yielding to the host."""
+
+    def __init__(out self):
+        """The defaults: check every handoff and yield every 1,024 transitions."""
+        self.cancelation_check_threshold = 1
+        self.auto_yield_threshold = 1024
+
+    def __init__(out self, cancelation_check_threshold: Int, auto_yield_threshold: Int) raises:
+        """Validate a configuration so that yielding never disables checks.
+
+        Args:
+            cancelation_check_threshold: Positive handoffs between cancellation checks.
+            auto_yield_threshold: Positive transitions per root poll, a multiple
+                of the check threshold so every yield point is a check point.
+
+        Raises:
+            Error: A threshold is not positive, or the yield threshold is not a
+                multiple of the check threshold.
+        """
+        if cancelation_check_threshold <= 0 or auto_yield_threshold <= 0:
+            raise Error("IORuntimeConfig thresholds must be positive")
+        if auto_yield_threshold % cancelation_check_threshold != 0:
+            raise Error("auto yield threshold must be a multiple of the cancelation check threshold")
+        self.cancelation_check_threshold = cancelation_check_threshold
+        self.auto_yield_threshold = auto_yield_threshold
+
+
 struct Task[P: Machine](Movable, not Deinitable):
     """Linear owner of the complete execution subtree, including cleanup."""
     var _slot: _Slot[Self.P, Self.P.Value, Self.P.Error]
     var context: IOContext[Self.P.Error]
 
-    def __init__(out self, var program: Self.P, token: CancellationToken):
+    def __init__(out self, var program: Self.P, token: CancellationToken, config: IORuntimeConfig = IORuntimeConfig()):
         self._slot = _Slot[Self.P, Self.P.Value, Self.P.Error](program^)
         self.context = IOContext[Self.P.Error](token.copy(), False)
         self.context._runtime = Optional(_Runtime())
+        self.context._budget = Optional(ArcPointer(_Budget(config.auto_yield_threshold, config.cancelation_check_threshold)))
         self._slot.prepare(self.context)
 
     def done(self) -> Bool:
@@ -366,7 +407,12 @@ struct Task[P: Machine](Movable, not Deinitable):
         return self._poll_ready()
 
     def _poll_ready(mut self) -> Bool:
+        # Each root poll gets a fresh slice of interpreter transitions.
+        self.context._budget.value()[].refill()
         return _tick(self._slot, self.context)
+
+    def _transitions(self) -> Int:
+        return self.context._budget.value()[].consumed
 
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
         return self._slot.take_outcome()
@@ -390,6 +436,10 @@ struct Progress(Copyable):
     """Root polls performed during this call."""
     var timers: Int
     """Due timer events fired during this call."""
+    var transitions: Int
+    """IO interpreter transitions run during this call, across nested run loops."""
+    var quiescent: Bool
+    """Not completed, nothing runnable, and no live deadline: awaiting external input."""
 
 
 struct Driver[P: Machine](Movable, not Deinitable):
@@ -397,8 +447,8 @@ struct Driver[P: Machine](Movable, not Deinitable):
     var task: Task[Self.P]
     var _timer_turn: Bool
 
-    def __init__(out self, var program: Self.P, token: CancellationToken, clock: Clock):
-        self.task = Task(program^, token)
+    def __init__(out self, var program: Self.P, token: CancellationToken, clock: Clock, config: IORuntimeConfig = IORuntimeConfig()):
+        self.task = Task(program^, token, config)
         self.task.context._clock = clock.copy()
         self._timer_turn = True
 
@@ -417,6 +467,7 @@ struct Driver[P: Machine](Movable, not Deinitable):
             abort("driver budget must be nonnegative")
         var polls = 0
         var timers = 0
+        var before = self.task._transitions()
         while polls + timers < budget and not self.task.done():
             var now = self.task.context._clock.now()
             var ready = self.task.ready(now)
@@ -431,7 +482,9 @@ struct Driver[P: Machine](Movable, not Deinitable):
                 break
         var deadline = self.task.context._runtime.value().next_deadline()
         var ready = not self.task.done() and (self.task.ready(self.task.context._clock.now()) or (Bool(deadline) and deadline.value() <= self.task.context._clock.now()))
-        return Progress(self.task.done(), ready, deadline^, polls, timers)
+        var done = self.task.done()
+        var quiescent = not done and not ready and not deadline
+        return Progress(done, ready, deadline^, polls, timers, self.task._transitions() - before, quiescent)
 
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
         return self.task^.finish()
@@ -443,8 +496,8 @@ def _host_idle(progress: Progress):
         sleep(0.001)
 
 
-def run[P: Machine](var program: P, token: CancellationToken) -> Outcome[P.Value, P.Error]:
-    var driver = Driver(program^, token, Clock())
+def run[P: Machine](var program: P, token: CancellationToken, config: IORuntimeConfig = IORuntimeConfig()) -> Outcome[P.Value, P.Error]:
+    var driver = Driver(program^, token, Clock(), config)
     var progress = driver.poll(64)
     while not progress.completed:
         _host_idle(progress)

@@ -17,7 +17,7 @@ from fp.effects._async.engine import IO, Async
 from fp.effects._async.io_resource import Resource
 from fp.effects._async.coordination import Deferred, Queue, Semaphore
 from fp.effects._async.host import Clock, Driver, run
-from fp.effects._async.kernel import Progress
+from fp.effects._async.kernel import Progress, IORuntimeConfig
 from fp._internal.time import Duration, Instant
 from fp.effects._async.racing import RaceResult
 from fp.effects._async.finalization import Poll

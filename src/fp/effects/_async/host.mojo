@@ -2,7 +2,7 @@
 from fp.effects import CancellationToken, Outcome, IOContext
 from fp._internal.waking import _Clock
 from fp._internal.time import Instant
-from .kernel import Machine, Driver as _Driver, Progress, Step, run as _run
+from .kernel import Machine, Driver as _Driver, Progress, Step, IORuntimeConfig, run as _run
 from .nurseries import Nursery as _Nursery, Spawner
 
 
@@ -77,6 +77,16 @@ struct Driver[P: Machine](Movable, not Deinitable):
             clock: The shared runtime clock, copied.
         """
         self._driver = _Driver(program^, token, clock._clock)
+    def __init__(out self, var program: Self.P, token: CancellationToken, clock: Clock, config: IORuntimeConfig):
+        """Own a program with supplied handles and an interpreter configuration.
+
+        Args:
+            program: The unopened program, consumed once.
+            token: The shared cancellation request handle, copied.
+            clock: The shared runtime clock, copied.
+            config: How often IO yields and checks for cancellation.
+        """
+        self._driver = _Driver(program^, token, clock._clock, config)
     def request_cancel(self):
         """Request cancellation; continue polling to join all work and cleanup."""
         self._driver.cancel()
@@ -175,3 +185,36 @@ def run[P: Machine](var program: P, token: CancellationToken) -> Outcome[P.Value
 def run[P: Machine](var program: P) -> Outcome[P.Value, P.Error]:
     """Block on self-contained work with a fresh cancellation token."""
     return _run(program^)
+
+
+def run[P: Machine](var program: P, token: CancellationToken, config: IORuntimeConfig) -> Outcome[P.Value, P.Error]:
+    """Block until work and cleanup finish under a token and an interpreter configuration.
+
+    Parameters:
+        P: The exact machine type and its native origins.
+
+    Args:
+        program: The unopened program, consumed once.
+        token: Shared cancellation requests.
+        config: How often IO yields and checks for cancellation.
+
+    Returns:
+        The owned terminal outcome.
+    """
+    return _run(program^, token, config)
+
+
+def run[P: Machine](var program: P, config: IORuntimeConfig) -> Outcome[P.Value, P.Error]:
+    """Block on self-contained work with a fresh token and an interpreter configuration.
+
+    Parameters:
+        P: The exact machine type and its native origins.
+
+    Args:
+        program: The unopened program, consumed once.
+        config: How often IO yields and checks for cancellation.
+
+    Returns:
+        The owned terminal outcome.
+    """
+    return _run(program^, CancellationToken(), config)

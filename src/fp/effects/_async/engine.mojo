@@ -63,7 +63,8 @@ comptime _FAILURE = 2
 comptime _CANCELED = 3
 comptime _WAITING = 4
 
-# Interpreter transitions per poll before yielding; Pass 8b makes this a policy.
+# Transitions per poll for a context without a root budget, such as a test
+# polling an IO directly; roots take theirs from IORuntimeConfig.
 comptime _BUDGET = 1024
 
 comptime _Leaf[E: Movable & Deinitable] = _ErasedMachine[_Erased, E]
@@ -244,6 +245,9 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
     var override: Optional[IOContext[Self.E]]
     var poll: Optional[Poll[Self.E]]
     var switched: Bool
+    # Handoffs left before the next cancellation check, and the interval.
+    var until_check: Int
+    var check_every: Int
 
     def __init__(out self, var program: _Program[Self.E]):
         self.state = _EVALUATE
@@ -256,6 +260,8 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
         self.override = None
         self.poll = None
         self.switched = False
+        self.until_check = 1
+        self.check_every = 1
         program^.install_into(self)
 
     def take_override(mut self) -> Optional[IOContext[Self.E]]:
@@ -296,6 +302,9 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
 
     def run(mut self, context: IOContext[Self.E]) -> Step[_Erased, Self.E]:
         var budget = _BUDGET
+        if context._budget:
+            budget = context._budget.value()[].remaining
+            self.check_every = context._budget.value()[].check_threshold
         while True:
             # Region boundaries switch the effective context; reselect it then.
             self.switched = False
@@ -306,6 +315,7 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
             else:
                 step = self.steps(context, context, budget)
             if step:
+                _publish(context, budget)
                 return step.take()
 
     def steps(mut self, context: IOContext[Self.E], base: IOContext[Self.E], mut budget: Int) -> Optional[Step[_Erased, Self.E]]:
@@ -319,11 +329,14 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
                     return Optional(Step[_Erased, Self.E]._make(Optional(success^), Wait(), self.protected))
                 var frame = self.frames.pop()
                 if frame.kind == _BIND:
-                    if context.canceled():
-                        # The handoff checkpoint drops the unopened continuation.
-                        _ = self.take_value()
-                        self.state = _CANCELED
-                        continue
+                    self.until_check -= 1
+                    if self.until_check == 0:
+                        self.until_check = self.check_every
+                        if context.canceled():
+                            # The handoff checkpoint drops the unopened continuation.
+                            _ = self.take_value()
+                            self.state = _CANCELED
+                            continue
                     self.protected = False
                     frame^.call(self.address())
                 elif frame.kind >= _FINALIZE:
@@ -334,9 +347,12 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
                     return Optional(Step[_Erased, Self.E]._make(Optional(failed^), Wait(), self.protected))
                 var frame = self.frames.pop()
                 if frame.kind == _RECOVER and not self.failure.value().canceled:
-                    if context.canceled():
-                        self.failure.value().canceled = True
-                        continue
+                    self.until_check -= 1
+                    if self.until_check == 0:
+                        self.until_check = self.check_every
+                        if context.canceled():
+                            self.failure.value().canceled = True
+                            continue
                     self.protected = False
                     frame^.call(self.address())
                 elif frame.kind >= _FINALIZE:
@@ -349,7 +365,13 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
                 if frame.kind >= _FINALIZE:
                     self.unwind(frame^, context, base)
             else:
+                # A nested IO inside the leaf draws from the same root budget,
+                # including this transition, so a threshold as small as one
+                # still reaches it. The leaf poll counts only if it spent none.
+                _publish(base, budget + 1)
                 _ = _tick(self.leaf.value(), context)
+                if base._budget:
+                    budget = min(budget, base._budget.value()[].remaining)
                 if not self.leaf.value().done():
                     return Optional(Step[_Erased, Self.E].pending(self.leaf.value().waiting()))
                 self.finish_leaf()
@@ -419,6 +441,14 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
         self.leaf = None
         self.protected = step._protected_success
         self.put_outcome(step^._outcome())
+
+
+def _publish[E: Movable & Deinitable](context: IOContext[E], budget: Int):
+    """Return a run loop's unspent transitions to the root budget it shares."""
+    if context._budget:
+        ref shared = context._budget.value()[]
+        shared.consumed += shared.remaining - budget
+        shared.remaining = budget
 
 
 def _loop_at[E: Movable & Deinitable](loop: MutOpaquePointer[_]) -> ref[loop.origin] _RunLoop[E]:

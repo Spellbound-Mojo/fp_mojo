@@ -61288,6 +61288,31 @@
     "_FamilyCarrier"
    ]
   },
+  "effects.async_runtime.IORuntimeConfig": {
+   "aliases": [],
+   "description": "The counterpart of Cats Effect's IORuntimeConfig. Every run loop under one\nroot draws from one budget of interpreter transitions per root poll and\nyields when it is spent. Bind and recovery handoffs check for cancellation\nevery `cancelation_check_threshold` handoffs; leaves, masked regions and\ncleanup keep their own checkpoints. Native callback bodies, custom polls and\ndestructors are not counted and cannot be preempted.",
+   "fields": [
+    {
+     "description": "Handoffs between cancellation checks; 1 checks every bind.",
+     "name": "cancelation_check_threshold",
+     "type": "Int"
+    },
+    {
+     "description": "Interpreter transitions per root poll before yielding to the host.",
+     "name": "auto_yield_threshold",
+     "type": "Int"
+    }
+   ],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [],
+   "provider": "effects/_async/kernel",
+   "signature": "struct IORuntimeConfig(Copyable)",
+   "summary": "How often IO yields to its host and checks for cancellation.",
+   "traits": [
+    "Copyable"
+   ]
+  },
   "effects.async_runtime.Instant": {
    "aliases": [],
    "description": "Compare points only within a shared clock origin. Add checked Duration\nvalues with after or the addition operator. The private two-word counter\npermits ordinary timer arithmetic across Int.MAX and the low-word boundary;\nit does not expose arbitrary numeric construction or a wall-clock timestamp.\nCounter exhaustion, like wake-generation exhaustion, ends the runtime's\nfinite operational lifetime; ordinary bounded configuration cannot approach\nits 128-bit horizon in one operation.",
@@ -61417,6 +61442,16 @@
      "description": "Due timer events fired during this call.",
      "name": "timers",
      "type": "Int"
+    },
+    {
+     "description": "IO interpreter transitions run during this call, across nested run loops.",
+     "name": "transitions",
+     "type": "Int"
+    },
+    {
+     "description": "Not completed, nothing runnable, and no live deadline: awaiting external input.",
+     "name": "quiescent",
+     "type": "Bool"
     }
    ],
    "kind": "struct",
@@ -61870,7 +61905,7 @@
       "args": [
        {
         "convention": "var",
-        "description": "",
+        "description": "The resource, moved in and lent to each use.",
         "name": "value",
         "type": "Self.T",
         "variadic": false
@@ -61882,7 +61917,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "",
+       "doc": "A resource that acquires the value and releases nothing.",
        "type": "Self"
       },
       "signature": "def pure(var value: Self.T) -> Self",
@@ -62578,6 +62613,87 @@
      },
      "signature": "def run[P: Machine](var program: P) -> Outcome[P.Value, P.Error]",
      "summary": "Block on self-contained work with a fresh cancellation token."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The unopened program, consumed once.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "Shared cancellation requests.",
+       "name": "token",
+       "type": "CancellationToken",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "How often IO yields and checks for cancellation.",
+       "name": "config",
+       "type": "IORuntimeConfig",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The exact machine type and its native origins.",
+       "inferred": false,
+       "name": "P",
+       "type": "Machine",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The owned terminal outcome.",
+      "type": "Outcome[P.Value, P.Error]"
+     },
+     "signature": "def run[P: Machine](var program: P, token: CancellationToken, config: IORuntimeConfig) -> Outcome[P.Value, P.Error]",
+     "summary": "Block until work and cleanup finish under a token and an interpreter configuration."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The unopened program, consumed once.",
+       "name": "program",
+       "type": "P",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "How often IO yields and checks for cancellation.",
+       "name": "config",
+       "type": "IORuntimeConfig",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The exact machine type and its native origins.",
+       "inferred": false,
+       "name": "P",
+       "type": "Machine",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The owned terminal outcome.",
+      "type": "Outcome[P.Value, P.Error]"
+     },
+     "signature": "def run[P: Machine](var program: P, config: IORuntimeConfig) -> Outcome[P.Value, P.Error]",
+     "summary": "Block on self-contained work with a fresh token and an interpreter configuration."
     }
    ],
    "provider": "effects/_async/host",

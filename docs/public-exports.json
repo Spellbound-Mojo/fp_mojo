@@ -6890,6 +6890,13 @@
    },
    "provider": "effects/_async/engine"
   },
+  "effects.async_runtime.IORuntimeConfig": {
+   "declarations": [
+    "struct IORuntimeConfig(Copyable):"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/kernel"
+  },
   "effects.async_runtime.Instant": {
    "declarations": [
     "struct Instant(Copyable, Comparable):"
@@ -7198,6 +7205,14 @@
     {
      "sha256": "2aed51184c3927150b11166891c7fcc91a9217b7dc3cb9babdd6582c20e452bb",
      "signature": "def run[P: Machine](var program: P) -> Outcome[P.Value, P.Error]:"
+    },
+    {
+     "sha256": "2e29eee86c551607cea615fd9d1b7c15c2a17450e7176e0c0a27afcb77457aab",
+     "signature": "def run[P: Machine](var program: P, token: CancellationToken, config: IORuntimeConfig) -> Outcome[P.Value, P.Error]:"
+    },
+    {
+     "sha256": "a1edd361b095e7f75eed8f1f58a9ef92f67ea375ba28714d22620e26014e28fc",
+     "signature": "def run[P: Machine](var program: P, config: IORuntimeConfig) -> Outcome[P.Value, P.Error]:"
     }
    ],
    "provider": "effects/_async/host"

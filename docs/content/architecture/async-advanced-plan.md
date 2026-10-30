@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-proposal) and [8c](#pass-8c-proposal) in progress; [Pass 9](#pass-9-proposal) proposal reviewed** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-proposal) proposal reviewed** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -970,7 +970,7 @@ implementation.
 
 ## Pass 8b proposal
 
-Status: **approved, in progress**. Pass 8b finishes Pass 8: transitions become the
+Status: **complete** ([progress](#pass-8b-progress)). Pass 8b finishes Pass 8: transitions become the
 unit of work, yield and cancellation checks become separate policies, and tests
 can step the same engine one transition at a time.
 
@@ -1050,6 +1050,48 @@ Decided on 2026-10-30:
 3. `Progress` gains `transitions` and `quiescent`.
 4. Pass 8c runs in a parallel session, in its own container, while Pass 8b is
    built; Pass 9 follows Pass 8b.
+
+### Pass 8b progress
+
+Built on 2026-10-30 as approved, with one addition: `run` also takes a token
+and a configuration together.
+
+- **Budget.** The private `_Budget` in `_io_core.mojo` holds the remaining and
+  consumed transitions and both thresholds. `IOContext` carries it through
+  `copy`, `_inherit`, and `_restore`, so children, scopes, and masked regions
+  share their root's budget. `Task._poll_ready` refills it before each root
+  poll. A context without a root budget, such as one a test polls directly,
+  falls back to the run loop's own 1,024.
+- **Run loop.** `_RunLoop.run` reads the remaining budget once, counts
+  transitions in a local, and calls `_publish` before polling a leaf and before
+  returning; it reloads the budget after the leaf. Handoffs decrement a check
+  countdown and observe cancellation when it reaches zero.
+- **Leaf polls.** A leaf poll first spent its own transition, so at a threshold
+  of one, or with leaf nesting as deep as the threshold, a nested `IO` such as a
+  `both` child always found the budget spent and never progressed. The leaf
+  poll now publishes its transition to the run loops inside it and counts only
+  when they spent nothing. `io_stepping` steps a nested `both` at a threshold of
+  one, and `io_budget` checks that two children share root polls at a
+  threshold of two.
+- **Host.** `IORuntimeConfig` lives in `kernel.mojo` and validates as Cats
+  Effect does. `Driver(program, token, clock, config)`, `run(program, config)`,
+  and `run(program, token, config)` take it; existing constructors keep the
+  defaults. `Progress` gains `transitions` and `quiescent`.
+- **Clients.** `io_budget` runs a 100,000-bind chain at a threshold of 1,024,
+  a `both` of two 5,000-bind chains at 64, masked cleanup of a 5,000-bind chain
+  under cancellation at 64, check intervals of 1 and 8, and invalid
+  configurations. No root poll exceeds the threshold; children and masked
+  cleanup yield between root polls. It also runs under a 1 MiB native stack.
+  `io_stepping` steps a head and three frames, then a nested `both`, one
+  transition per poll through the public `Driver`. It checks quiescence on a
+  parked `Deferred.get` and its cancellation, completes a sleep under manual
+  time, and runs both configured `run` overloads.
+- **Measurements.** In the `erased_cost` probe at O3, an `IO` loop iteration
+  costs 39.1 ns without handoff checks and 39.3 ns with a check at every bind.
+  With the shared budget and countdown in place it costs 38 to 41 ns, within
+  run-to-run noise of the 39 to 60 ns recorded in Pass 8a. The cost is
+  negligible, so the default check interval stays 1. At the defaults, a root
+  poll of a plain bind loop runs 1,024 transitions in about 41 µs.
 
 ## Pass 8c proposal
 

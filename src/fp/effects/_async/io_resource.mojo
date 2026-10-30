@@ -135,7 +135,14 @@ struct Resource[T: Movable & Deinitable, E: Movable & Deinitable](ResourcePlan, 
 
     @staticmethod
     def pure(var value: Self.T) -> Self:
-        """Own a value as a resource with nothing to release."""
+        """Own a value as a resource with nothing to release.
+
+        Args:
+            value: The resource, moved in and lent to each use.
+
+        Returns:
+            A resource that acquires the value and releases nothing.
+        """
         return _PureFactory[Self.T, Self.E]().call(value^)
 
     def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var body: F) -> IO[downcast[F.Result, Machine].Value, Self.E] where _Factory[Self.T, Self.E, F] and _IsIO[F.Result, Self.E]:

@@ -66,7 +66,7 @@ ASYNC_PROVIDERS = (
     ('effects.async_runtime', 'effects/_async/io_resource', ('Resource',)),
     ('effects.async_runtime', 'effects/_async/coordination', ('Deferred', 'Queue', 'Semaphore')),
     ('effects.async_runtime', 'effects/_async/host', ('Clock', 'Driver', 'run')),
-    ('effects.async_runtime', 'effects/_async/kernel', ('Progress',)),
+    ('effects.async_runtime', 'effects/_async/kernel', ('Progress', 'IORuntimeConfig')),
     ('effects.async_runtime', '_internal/time', ('Duration', 'Instant')),
     ('effects.async_runtime', 'effects/_async/racing', ('RaceResult',)),
     ('effects.async_runtime', 'effects/_async/finalization', ('Poll',)),

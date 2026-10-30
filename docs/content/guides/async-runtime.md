@@ -88,6 +88,29 @@ Negative poll budgets raise setup `Error` before advancing work and leave the
 owner usable; catch that error while retaining the driver. A zero budget only
 observes. The nonraising `poll()` overload uses a budget of 64.
 
+`IORuntimeConfig` sets how much `IO` work one root poll runs and how often the
+run loop checks for cancellation; pass it to `Driver(program, token, clock,
+config)` or `run(program, config)`. The defaults match the existing behavior:
+`auto_yield_threshold` is 1,024 transitions per root poll and
+`cancelation_check_threshold` is 1, a check at every bind and recovery handoff.
+Both thresholds must be positive, and the yield threshold must be a multiple of
+the check threshold; otherwise construction raises setup `Error`.
+
+A transition is evaluating a head, applying a bind, map or recovery, unwinding a
+finalizer or region exit, or polling a leaf. A leaf poll that runs nested `IO`
+counts their transitions instead of its own. Every `IO` run loop under one root,
+including the children of `both`, `race` and resources, draws from one budget
+per root poll and yields with a runnable wait when it is spent. Masked cleanup
+yields too, without becoming cancelable. The body of a native callback, a
+custom `Machine.poll`, and destructors are not counted and cannot be preempted.
+
+`Progress.transitions` reports the transitions a `poll` spent, and
+`Progress.quiescent` reports a program that is neither completed nor runnable
+and has no live deadline, so it awaits external input. With an
+`auto_yield_threshold` of 1, `Driver.poll(1)` runs one transition, which steps a
+program in tests on the same engine. Treat quiescence as deadlock only when no
+input will arrive.
+
 `IO.async(register, withdrawal)` owns withdrawal after every entered
 registration, including successful completion and registration failure;
 `IO.async_` has none. Copies of `Completion` share one decision; late or
@@ -132,6 +155,7 @@ reported deadline.
 | Earlier selection policies | `race_first`, `timeout_after` | First terminal outcome, or timer-selected fallback after clean draining |
 | `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
 | `Fiber.cancel` | `request_cancel`, poll, `finish` | Request plus explicit complete draining |
+| `IORuntimeConfig` | `IORuntimeConfig(cancelation_check_threshold, auto_yield_threshold)` | Same validation; by default checks every bind, where Cats Effect checks every 512, and yields every 1,024 transitions |
 
 Operations use snake_case. Types follow the repository's Mojo class convention.
 `async` is declared with backticks because it is a Mojo keyword, and called as

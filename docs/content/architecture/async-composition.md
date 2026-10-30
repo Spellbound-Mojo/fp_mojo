@@ -53,8 +53,18 @@ exit. Callbacks install the program they build directly into the run loop. Small
 values and callbacks live inline in their boxes, so a common bind allocates
 nothing.
 
-Each poll runs up to a fixed budget of 1,024 transitions, then returns a runnable
-wait. A pending leaf suspends the run loop until its own wake conditions hold.
+The root task refills one transition budget at each root poll, by default 1,024
+(`IORuntimeConfig.auto_yield_threshold`). The budget lives in the root context,
+and every run loop under that root, including those inside `both` children and
+resources, draws from it through the context it inherits. A run loop reads the
+budget once when polled, writes its unspent remainder back before polling a leaf
+and when it returns, and returns a runnable wait once the budget is spent. A
+leaf poll lends its own transition to the run loops nested inside it and counts
+only if they spent nothing, so even a budget of one reaches the innermost
+`IO`. A
+handoff checks cancellation every `cancelation_check_threshold` binds, by
+default every bind. A pending leaf suspends the run loop until its own wake
+conditions hold.
 Folds, `tail_rec_m`, and recursion through `defer` keep a bounded frame stack:
 million-step chains, nested `defer` levels, and tail-recursive loops run under a
 1 MiB native stack.
@@ -99,7 +109,9 @@ through any suspension of that release.
 The `io_engine`, `io_depth`, `io_family`, and `io_laws` clients cover the run
 loop: sequencing, recovery, deferred construction, leaves resuming a chain,
 cancellation, iterative disposal, the stack bound, and the monad and recovery
-laws. The maintained composition, loop lifecycle, child and origin clients cover
+laws. `io_budget` covers the shared per-poll budget across nested run loops,
+masked cleanup, and check intervals; `io_stepping` drives one transition per
+poll through the public host. The maintained composition, loop lifecycle, child and origin clients cover
 move-only state/errors, construction failure, cancellation checkpoints, child
 terminal-state combinations, independent external origins, unopened siblings,
 parent masking, wake-before-park races, mixed waits, and nested resource cleanup.

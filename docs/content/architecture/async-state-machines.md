@@ -75,8 +75,11 @@ entries. Timers use checked `Duration` and opaque `Instant`, with stale-entry
 compaction and reusable registration storage.
 
 `Driver.poll(budget)` bounds root polls plus timer events, not all nested child
-polls, instructions, destructor work or notification fanout. The driver does not
-sleep. Hosts deliver available events, drive runnable work, and arrange another
+polls, instructions, destructor work or notification fanout. Within each root
+poll, `IORuntimeConfig.auto_yield_threshold` bounds the `IO` transitions of the
+whole task tree; native callbacks and custom polls stay uncounted.
+`Progress.transitions` and `Progress.quiescent` report the work done and whether
+the program awaits external input. The driver does not sleep. Hosts deliver available events, drive runnable work, and arrange another
 call for an external notification or the earliest reported deadline. A zero
 budget only observes status. Manual clocks support deterministic driving.
 
