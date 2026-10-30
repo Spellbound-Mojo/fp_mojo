@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Pass 7a complete; the [Pass 7b proposal](#pass-7b-proposal) is a draft for review**. The [representation decisions](#representation-decisions)
+Status: **Pass 7a complete; the [Pass 7b proposal](#pass-7b-proposal), built around a public `IO[T, E]`, is a draft for review**. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -134,15 +134,16 @@ The approved decisions are:
    exposes the raw pointer, and moves move-only payloads without copying them.
    No widened public origin, invented Send/Sync proof, or copied move-only
    payload is acceptable.
-2. **Two tiers of origin checking.** Typed recipes remain the origin-checked
-   path. Erased programs, which runtime-built chains, recursion, and fibers of
-   different types require, accept only programs whose state is owned,
-   shared through owned handles, or borrowed from origins that also appear in
-   `T` or `E`; those origins remain in the carrier type. Mojo 1.2 cannot extract the origins a type embeds, so this
-   is a documented precondition rather than a compiler check. Borrowed captures
-   would be dangling after ASAP destruction, not merely unverified. Plan rule 6
-   (scoped borrowing into fibers) is therefore out of reach on 1.2 for erased
-   programs.
+2. **Erased programs own their state.** Runtime-built chains, recursion, and
+   fibers of different types need erased programs. These accept only state that
+   is owned, shared through owned handles, or borrowed from origins that also
+   appear in `T` or `E`; those origins remain in the carrier type. Mojo 1.2 cannot
+   extract the origins a type embeds, so this is a documented precondition
+   rather than a compiler check. Borrowed captures would be dangling after ASAP
+   destruction, not merely unverified. Plan rule 6 (scoped borrowing into
+   fibers) is therefore out of reach on 1.2. Revised on 2026-10-30: typed recipes
+   are no longer a public tier; `IO[T, E]` is the one public async type (see the
+   [Pass 7b proposal](#pass-7b-proposal)).
 3. **Fibers and stack safety precede generic capability dictionaries.**
 
 Hiding a type does not by itself remove recursion: an erased bind that polls an
@@ -454,8 +455,8 @@ cross-thread memory correctness.
 | Pass | Deliverable | Completion gate |
 |---|---|---|
 | **7a — Erasure and depth feasibility** | A private construction-paired erasure owner and an erased machine; a runtime-built recursive structure of one stable type; erased dispatch and allocation costs against the typed baseline; the origin result; the ordinary error-law mapping on paper. | Machines of different types run behind one carrier type with move-only values/errors and exact destruction counts at source/package O0/O3; a million-deep runtime chain is built and torn down iteratively under a 1 MiB stack; costs and the origin precondition are recorded here. No production migration. |
-| **7b — Carrier and fiber API proposal** | Specify the `Program[T, E]` node kinds, the leaf boundary for existing typed recipes, join ownership, failure accounting, and the scope error-type rule, using 7a evidence. | A concrete API migration proposal reviewed before Pass 8. |
-| **8a — Iterative sequencing and unwinding** | Implement deferred construction and the erased carrier; drive continuations, errors, masks, finalizers, and disposal through one iterative engine registered once per fiber. The carrier implements `Machine`, so existing drivers and combinators host it unchanged. Record an allocation baseline. | Runtime-built deep binds and recursive deferred programs satisfy the stack contract, including cancellation, failure, and unopened disposal; existing lifecycle behavior remains qualified. |
+| **7b — `IO` and fiber API proposal** | Specify the public `IO[T, E]` surface in Cats Effect vocabulary, callback admission, the private node kinds, join ownership, failure accounting, and the migration from typed recipes, using 7a evidence. | A concrete API migration proposal reviewed before Pass 8. |
+| **8a — Iterative sequencing and unwinding** | Implement `IO[T, E]` over the private node representation; drive continuations, errors, masks, finalizers, and disposal through one iterative engine registered once per fiber. Migrate the public async operations, family, examples, and guide from typed recipes to `IO`. Record an allocation baseline. | Runtime-built deep binds and recursive deferred programs satisfy the stack contract, including cancellation, failure, and unopened disposal; existing lifecycle behavior remains qualified. |
 | **8b — Budgets and test stepping** | Add transition accounting, separate cancellation/yield budgets, and controllable test-host stepping on the same engine. | Budget checks cover nested work and masked cleanup. |
 | **9 — General lightweight fibers** | Add typed handles, start/join/cancel, completion observers, `cede`, `never`, dynamic scoped ownership, and bounded diagnostic snapshots. Generalize canonical task storage rather than wrapping the homogeneous nursery. | Heterogeneous children progress independently; joining parks; all shutdown paths drain; observed/unobserved errors settle once; sequential spawn/join churn reuses storage; diagnostic handles do not retain payloads or completed graphs. |
 | **10 — Cancellation and spawn capabilities** | Add generic error/defer/cancellation/spawn contracts and provider forwarding; expose `race_pair` with settled ownership rules. Reuse them for existing higher-level operations where contracts match. | Generic clients use minimal capabilities across actual and test providers; law/admission checks pass; no duplicate masking, error, or child-draining policy. |
@@ -526,66 +527,86 @@ destructors, which is a documented limit.
 
 ## Pass 7b proposal
 
-Status: **draft for review**. No existing public name, signature, or behavior
-changes. Pass 8a would implement the carrier and engine below, and Pass 9 the
-fiber contract.
+Status: **draft for review**. Revised on 2026-10-30: the public async API
+follows Cats Effect. `IO[T, E]` is the one public async effect type, and how
+the runtime represents or executes a program is not part of the public API.
 
-### Tiers and family selection
+### Public surface
 
-Typed recipes stay as they are: `Async[E]` remains their family, and their
-types keep every origin. The erased tier adds one carrier and one family:
+End users write declarative programs with Cats Effect vocabulary: `IO`, fibers,
+`Deferred`, `Resource`, races, and timeouts. Every public async operation returns
+an `IO`, and a program's type never records how it was built.
 
-| Name | Kind | Behavior |
+| Cats Effect | FP Mojo (proposed) | Notes |
 |---|---|---|
-| `Program[T, E]` | struct | An unopened or running erased program. Movable, not copyable. An unopened program may be dropped; an entered one is owned like any machine. Implements `Machine` with `Value = T`, `Error = E`, and `Family = ProgramFamily[E]`. |
-| `ProgramFamily[E]` | family | `Monad` and `ErrorRecovery`. `Pure`, `Mapped`, `Bound`, `Handled`, and `Combined` are all `Program[_, E]`. Overrides the deferred fold and loop hooks as `Async[E]` does, so `tail_rec_m[ProgramFamily[E]]` and collection folds also return programs. Adds `raise_error`. |
-| `program(machine)` | function | Erases any machine with error `E` into a leaf: the typed-to-erased boundary. |
-| `defer[E](factory)` | function | Invokes a factory once on entry. The factory returns a program or a typed machine. Recursive programs use it, so construction is not eagerly recursive. |
+| `IO[A]` | `IO[T, E]` in `fp.effects.async_runtime` | Movable, not copyable. One value runs once; repeated work comes from a function that builds a new `IO`. `E` is the exact domain error. |
+| `IO.pure`, `IO.delay`, `IO.defer`, `IO.raiseError` | `IO[T, E].pure`, `.delay`, `.defer`, `.raise_error` | `defer` makes recursive programs build lazily. |
+| `IO.async`, `IO.async_` | `IO[T, E].async_`, `.async_with_withdrawal` | Callback registration over the existing completion and withdrawal owner. Names are open. |
+| `flatMap`, `map`, `handleErrorWith`, `attempt` | `flat_map`, `map`, `handle_error_with`, `attempt` | Methods and `Pipeline` stages. `Async[E]` remains the public family; its carrier becomes `IO`, so `tail_rec_m[Async[E]]` returns an `IO`. |
+| `guarantee`, `guaranteeCase`, `onCancel`, `uncancelable`, `IO.canceled` | `guarantee`, `guarantee_case`, `on_cancel`, `IO.uncancelable`, `IO.canceled` | `uncancelable` receives the existing `Poll[E]`. |
+| `start`, `Fiber.join`, `Fiber.cancel` | `start`, `Fiber[T, E].join`, `.cancel`, `.request_cancel` | See the [fiber contract](#fiber-contract). |
+| `IO.cede`, `IO.never`, `IO.sleep` | `IO.cede`, `IO.never`, `IO.sleep` | |
+| `both`, `race`, `racePair`, `timeout`, `timeoutTo` | `both`, `race`, `race_pair`, `timeout`, `timeout_to` | `race_pair` arrives in Pass 10. |
+| `Deferred`, `Ref`, `Queue`, `Semaphore` | the same names | Existing coordination owners; operations return `IO`. `Ref` arrives in Pass 11. |
+| `Resource[IO, A]` | `Resource[T, E]` | `use` builds an `IO` from a borrowed resource that the result cannot retain. |
+| `unsafeRunSync`, `IORuntime`, `ExecutionContext` | `run`, `Driver`, an `ExecutionContext` contract | The context starts as the cooperative single-thread provider; see [host services](#embedding-and-host-service-ownership). |
 
-`Pipeline` selects a family from the source's `Family` declaration, so users opt
-into the erased tier by lifting the source:
-`pipeline(program(delay[Int](initial))).flat_map(next_value)`. A
-`ProgramFamily` continuation may return a `Program[U, E]` or any typed machine
-with error `E`; the bind erases a typed result as a leaf. `Bound[V, F]` is
-therefore the fixed type `Program[Element[F.Out], E]`, much as `ResultFamily`'s
-is a `Result`. Nothing in `Monad` or `Pipeline` assumes that `Bound` contains
-`V` or `F`.
+`Fiber` here is distinct from the existing OS-thread `fp.effects.Fiber`; the
+namespaces separate them. `IO` in `fp.effects.async_runtime` is likewise distinct
+from the synchronous `fp.effects.IO[E]` family; the guide already imports the
+async namespace as `ar` when both are in scope. Folding the synchronous family
+into the async `IO`, as Cats Effect has one `IO`, is a later decision.
 
-Operations without a `Pipeline` method are methods on `Program`: `guarantee`,
-`guarantee_case`, `on_cancel`, and `uncancelable`. A family-level
-`uncancelable_with` factory receives the existing `Poll[E]`. These build
-interpreter frames, so nesting them recursively stays stack safe. The existing
-free functions keep accepting a program as an ordinary typed machine.
+Integration authors keep the `Machine` protocol in
+`fp.effects.async_runtime.protocols` for custom leaves, the counterpart of
+wrapping external events with `IO.async`. Lifting a machine into an `IO` is that
+namespace's only addition.
 
-### Representation
+### Callback admission
 
-`Program[T, E]` owns one node tree until it is entered, then interpreter state:
+`IO` keeps origins only through `T` and `E`, so the callbacks stored in an `IO`
+must own their state. Its entry points accept plain functions, capture-free
+lambdas, and library callables that own their state. Capturing closures, and
+adapters that wrap them, are rejected wherever the signature can tell. A
+callable struct holding a pointer cannot be detected; it is a documented rule,
+like the scoped-loan rules today. Pass 8a probes whether closures with only
+owned captures can be admitted safely.
+
+### Internal representation
+
+The runtime representation is private. An `IO` owns a node tree until it is
+entered, then interpreter state:
 
 | Node | Payload | Evaluation |
 |---|---|---|
 | Pure | boxed value | Deliver success. |
 | Fail | `EffectFailure[E]` | Deliver failure. Errors are never boxed, because `E` is uniform. |
-| Leaf | erased machine whose value is boxed on completion | Poll through a canonical `_Slot`. |
+| Leaf | private machine whose value is boxed on completion | Poll through a canonical `_Slot`. |
 | Defer | erased factory | Invoke once through the canonical error capture; continue with its result. |
 | Bind | source node, erased continuation | Push the continuation; evaluate the source. |
 | Recover | source node, erased handler | Push the handler; evaluate the source. |
 | Finalize | source node, finalizer node, mode | Push the finalizer; evaluate the source. Modes cover `guarantee`, `on_cancel`, and `guarantee_case`. |
 | Mask | erased factory receiving `Poll[E]` | Enter a region through the canonical `context._mask()`; push its exit. |
+| Start, join, cancel | fiber operations | Pass 9. |
 
-Pass 9 adds start, join, and cancel nodes. `cede` and `never` are leaves.
+Today's typed recipe machines (`both`, `race`, timeouts, scopes, callbacks,
+coordination waits) become private leaf implementations behind the public
+operations. They keep native stack depth proportional to their static type, so
+the stack guarantee covers interpreter nodes. Rebuilding `both` and `race` on
+fibers in Pass 10 brings them under it.
 
 Values cross nodes in `_Erased` boxes. A box is opened only by a function
-specialized at the typed call that consumes it. `flat_map` on `Program[T, E]`
-specializes the continuation's unboxing for `T`, and a program's own result is
-unboxed as its `T`. The typed API therefore pairs every cast with the type that
-created the box. Pass 8a adds a consuming `_Erased.take[T]` restricted to such
-functions.
+specialized at the typed call that consumes it: `flat_map` on `IO[T, E]`
+specializes the continuation's unboxing for `T`, and an `IO`'s own result is
+unboxed as its `T`. The typed public API therefore pairs every cast with the
+type that created the box. Pass 8a adds a consuming `_Erased.take[T]`
+restricted to such functions.
 
 Nodes link their children through `OwnedPointer`, and their destructors detach
 descendants into a worklist, as `erased_depth` does. The continuation stack is a
-`List`. Disposing of an unopened or partially run program is therefore iterative,
-except for programs captured inside user callbacks, which native destructors
-still release.
+`List`. Disposing of an unopened or partially run `IO` is therefore iterative,
+except for values captured inside user callbacks, which native destructors still
+release.
 
 ### Execution
 
@@ -600,66 +621,48 @@ transition budget:
    failure whose `canceled` flag is false. A finalizer runs masked with the exit
    case, and its outcome merges through canonical `_finish`. A mask exit
    restores the context. Other frames are dropped. An empty stack completes the
-   program.
+   fiber.
 
 Cancellation, settlement, and error merging reuse their existing owners: the
 `_Slot` entry checkpoint and `_settle` for leaves, `_capture` for callbacks,
 `_finish` for finalizer outcomes, `context._mask()` and `Poll` for regions, and
 protected success for masked completion. The interpreter adds sequencing, not
-policy. A program registers one wake-registry node through its parent's slot,
-plus one for its active leaf. Binds, recoveries, and finalizer frames register
-nothing. When the budget runs out, the loop returns a runnable `Wait()`. Pass 8a
-uses a fixed budget; Pass 8b makes it a policy.
+policy. Each fiber registers one wake-registry node, plus one for its active
+leaf. Binds, recoveries, and finalizer frames register nothing. When the budget
+runs out, the loop returns a runnable `Wait()`. Pass 8a uses a fixed budget;
+Pass 8b makes it a policy.
 
-The stack guarantee covers interpreter nodes. A typed leaf keeps native depth
-proportional to its static type, and a program with a different error type can
-only appear as a leaf. Recursion through typed combinators or across error types
-is therefore not stack safe until those combinators are rebuilt on fibers.
+### Fiber contract
 
-### Leaf boundary
+`start` follows Cats Effect's spelling with structured ownership: the fiber that
+runs `start` owns the child.
 
-- **Typed to erased.** `program(machine)`, `defer`, and `ProgramFamily`
-  continuations erase typed machines as leaves. Custom `Machine`
-  implementations need no change.
-- **Erased to typed.** `Program[T, E]` is a `Machine`, so `both`, `race`,
-  timeouts, scopes, `Nursery[Program[T, E]]`, `Driver`, and `run` accept it. Each
-  enclosing typed combinator adds one native level.
-- **Precondition.** The owned-state rule in the
-  [representation decisions](#representation-decisions) applies to everything
-  erased: leaves, continuations, handlers, factories, and finalizers.
-
-### Fiber contract for Pass 9
-
-In Pass 9, fibers start only in an explicit scope, so a scope's error type is
-part of its type:
-
-| Name | Behavior |
-|---|---|
-| `fiber_scope[E](body)` | Returns a `Program[T, E]` that builds `body(scope)` on entry. When the body is terminal, the scope closes admission, cancels unjoined children, drains them, and settles. |
-| `FiberScope[E]` | A copyable admission handle, shared like `Spawner`. `scope.start(child)` is a `Program[Fiber[U, E], E]` that admits the child on entry. Children must have error `E`. |
-| `Fiber[U, E]` | A move-only handle. `join(deinit self)` returns `Program[Outcome[U, E], E]`: it parks until the child and its cleanup finish, then transfers the outcome once. `cancel(self)` requests cancellation and waits for termination without taking the result. `request_cancel(self)` only requests. |
-| `cede[E]()`, `never[T, E]()` | Leaves. `cede` yields once while runnable; `never` stays pending until cancellation. |
-
-Ownership and accounting:
-
-- The scope owns execution; a handle grants observation and cancellation.
-  Dropping a handle neither stops nor detaches the child.
+- `io.start()` is an `IO[Fiber[T, E], E]`. On entry, it admits the child into
+  the running fiber. An `IO` chain shares one error type, so the child's `E` is
+  the owner's `E`. A program with a different error type runs as a leaf with its
+  own interpreter and owns its own children.
+- `Fiber[T, E]` is move-only. `join(deinit self)` returns `IO[Outcome[T, E], E]`:
+  it parks until the child and its cleanup finish, then transfers the outcome
+  once. `cancel(self)` requests cancellation and waits for termination without
+  taking the result. `request_cancel(self)` only requests.
+- When a fiber's own program is terminal, it cancels its unjoined children and
+  drains them before completing. Unlike Cats Effect, fibers never outlive their
+  owner; this is the existing rule that no running work is abandoned.
 - A child's success goes into a typed cell shared only by its handle and its
-  task. Its failure stays in scope-owned state typed only by `E`, so the scope
-  can settle unobserved failures without knowing `U`.
-- `join` moves the failure out of the scope state, or the success out of the
-  cell. A dropped handle marks the child unobserved: its success is destroyed
-  once the child completes, and its failure joins scope settlement.
+  task. Its failure stays in owner state typed only by `E`, so the owner can
+  settle unobserved failures without knowing `T`.
+- `join` moves the failure out of owner state, or the success out of the cell.
+  Dropping a handle neither stops nor detaches the child; its success is
+  destroyed once the child completes, and its failure joins settlement.
 - If a joiner is canceled after taking the right but before delivery, the
-  failure returns to the scope state and a suppressed success is destroyed once.
-- Settlement merges unobserved failures after the body outcome through
-  `_finish`, in admission order. Cancellation-only children contribute nothing,
-  so a scope whose body succeeded but whose unobserved child failed fails.
-- Child storage generalizes the nursery's slots with generation-checked reuse, so
-  spawn/join churn does not grow storage. `Nursery` keeps its documented
-  lifetime admission limit.
-- Starting on a closed scope (through a leaked handle) destroys the child
-  unopened and returns a fiber whose join yields cancellation only.
+  failure returns to owner state and a suppressed success is destroyed once.
+- Settlement merges unobserved failures after the fiber's own outcome through
+  `_finish`, in start order. Cancellation-only children contribute nothing.
+- Fiber storage generalizes the nursery's slots with generation-checked reuse,
+  so start/join churn does not grow storage. Fiber scheduling reuses the wake
+  registry; Pass 9 decides between polling children through their owner and a
+  flat runnable set at the root, preferring the flat set so that nested fibers
+  cost no native stack.
 - A direct self-join is a protocol violation detected at join entry. Indirect
   dependency cycles are not detected.
 
@@ -670,11 +673,11 @@ request.
 
 | Law | Expected | Reason |
 |---|---|---|
-| `handle_error_with(raise_error(e), h)` equals `h(EffectFailure([e], canceled=False))` | Holds | `raise_error` never sets `canceled`, and recovery admits only such failures. |
-| `handle_error_with(pure(a), h)` equals `pure(a)` | Holds | A recovery frame is dropped on success. |
-| `attempt(raise_error(e))` equals `pure(Err(...))`; `attempt(pure(a))` equals `pure(Ok(a))` | Holds | `attempt` is `map` plus recovery, as in `Async[E]`. |
+| `raise_error(e).handle_error_with(h)` equals `h(EffectFailure([e], canceled=False))` | Holds | `raise_error` never sets `canceled`, and recovery admits only such failures. |
+| `pure(a).handle_error_with(h)` equals `pure(a)` | Holds | A recovery frame is dropped on success. |
+| `raise_error(e).attempt()` equals `pure(Err(...))`; `pure(a).attempt()` equals `pure(Ok(a))` | Holds | `attempt` is `map` plus recovery, as in `Async[E]` today. |
 | A failure with `canceled` set bypasses recovery and `attempt` | Holds by design | It belongs to the cancellation side, and keeps finalizer errors that Cats Effect would only report. |
-| `uncancelable(poll => poll(fa))` equals `fa` | Expected | The mask and `Poll` restoration are the existing owners. |
+| `IO.uncancelable(poll => poll(fa))` equals `fa` | Expected | The mask and `Poll` restoration are the existing owners. |
 | A masked success survives cancellation requested during its region | Holds | The existing protected-success rule; the next checkpoint observes cancellation. |
 | Finalizers run once, innermost first, with the exact exit case | Holds | Finalize frames unwind in stack order through `_finish`. |
 | Racing two canceled children under a mask | Recorded difference | Terminal cancellation, as [racing](async-racing.md) documents, rather than Cats Effect's indefinite wait. |
@@ -684,24 +687,38 @@ destruction counts. Pass 10 adds the cancellation and spawn law suites.
 
 ### Migration
 
-No existing name changes. The proposed new public names, all in
-`fp.effects.async_runtime`, are `Program`, `ProgramFamily`, `program`, and
-`defer` in Pass 8a, then `FiberScope`, `Fiber`, `fiber_scope`, `cede`, and
-`never` in Pass 9. Each lands with reviewed `public-exports.json`, `api.json`,
-and `compatibility.json` entries and examples, following the
-[documentation process](../contributing/documentation.md).
+This replaces the preview's typed recipe surface:
+
+- **Removed from the public API:** the recipe type aliases `Pure`, `Bind`, `Loop`,
+  `Both`, `Scope`, `RaceFirst`, `Race`, `EvalIO`, `Delay`, `NativeDelay`,
+  `Guarantee`, `OnCancel`, `GuaranteeCase`, `Masked`, `Uncancelable`, `Callback`,
+  `Sleep`, `TimeoutAfter`, and `TimeoutTo`; the resource plan types; and
+  `ScopedBoth`. They remain as private leaf implementations where useful.
+- **Changed:** the free functions (`pure`, `delay`, `both`, `race`, `guarantee`,
+  `sleep`, and the rest) return `IO`, or become `IO` methods. Function signatures
+  in user code change from recipe types such as `Pure[Int, Int]` to `IO[Int, Int]`.
+- **Kept:** `Async[E]` as the family, `Driver`, `run`, `Clock`, `Progress`,
+  `Duration`, `Instant`, `Poll`, `Completion`, `Deferred`, `Queue`, `Semaphore`,
+  and the extension protocols.
+
+Pass 8a lands the migration in one change: reviewed `public-exports.json`,
+`api.json`, and `compatibility.json` entries, migrated examples, and an
+old-to-new table in the [async guide](../guides/async-runtime.md), following the
+[documentation process](../contributing/documentation.md). As an opt-in preview,
+the old names are removed rather than deprecated.
 
 ### Questions for review
 
-1. Names: `Program`, `ProgramFamily`, `program()`, `defer`, `fiber_scope`.
-2. Should a scope whose body succeeded fail when an unobserved child failed
-   (proposed), or report child failures separately?
-3. Should starting on a closed scope return a cancellation-only fiber
-   (proposed), or a visible rejection?
-4. Should a direct self-join abort as a protocol violation (proposed), or be
-   left to diagnostics?
-5. Should finalizer and mask operations be `Program` methods (proposed), or
-   overloads of the existing free functions?
+1. Should an owner whose own program succeeded fail when an unjoined child
+   failed (proposed), or report child failures separately as Cats Effect does?
+2. Should the removed recipe names go directly (proposed), or through a
+   deprecation release?
+3. Should `Nursery` and `Spawner` retire in favor of `start`/`join` and a later
+   `Supervisor` (proposed), or remain public?
+4. Should a direct self-join abort as a protocol violation (proposed), or be left
+   to diagnostics?
+5. Names for callback registration: `async_` and `async_with_withdrawal`, or
+   others.
 
 ## Implementation reference map
 
@@ -837,14 +854,16 @@ remaining alternatives. Do not relabel a deeper fixed-depth test or
 
 ## Decisions and open questions
 
-Approved: construction-paired private erasure, typed recipes as the
-origin-checked tier with an owned-state precondition for erased programs, and
-fibers with stack safety before generic capability dictionaries. Also retained:
-iterative execution and disposal, single-thread lightweight fibers first,
-scope-owned running work with a consuming result join, and native
-outcome-preserving capabilities. Transition budgets, fiber diagnostics, and
-controllable test scheduling accompany their runtime passes. Host-service
-ownership and execution profiles are specified before Pass 12. Real platform
-providers remain separately qualified, and allocation pooling follows evidence.
-The exact carrier/API migration and the ordinary-error law mapping depend on
-Pass 7a/7b evidence. Concurrent collection operations remain deferred throughout.
+Approved: construction-paired private erasure; an owned-state precondition for
+erased programs; fibers with stack safety before generic capability
+dictionaries; and a public API in Cats Effect vocabulary around one `IO[T, E]`
+type, replacing the typed recipe surface and keeping the runtime representation
+private. Also retained: iterative execution and disposal, single-thread
+lightweight fibers first, owner-held running work with a consuming result join,
+and native outcome-preserving capabilities. Transition budgets, fiber
+diagnostics, and controllable test scheduling accompany their runtime passes.
+Host-service ownership, an `ExecutionContext` contract, and execution profiles
+are specified before Pass 12. Real platform providers remain separately
+qualified, and allocation pooling follows evidence. The questions listed in the
+[Pass 7b proposal](#pass-7b-proposal) remain open. Concurrent collection
+operations remain deferred throughout.
