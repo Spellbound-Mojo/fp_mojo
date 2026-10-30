@@ -70,6 +70,10 @@ FFI calls into Mojo. The transferable lesson is the execution algorithm and
 separation of responsibilities. The storage representation needs its own native
 Mojo ownership proof. See also the [Scala Native overview](https://scala-native.org/en/stable/).
 
+The [implementation reference map](#implementation-reference-map) links each
+pass to inspected source symbols, adaptation notes, local owners, and starting
+qualification clients.
+
 ## Why arbitrary-depth flat_map is not promised today
 
 There are two separate issues in the current representation.
@@ -276,7 +280,7 @@ Define host-service contracts during Pass 7, before adding platform providers
 in Pass 12. An application should be able to supply scheduling and time services
 without adopting a global runtime or surrendering ownership of its event loop.
 Scala Native's development
-[`VirtualThreadScheduler`](https://github.com/scala-native/scala-native/blob/main/nativelib/src/main/scala/scala/scalanative/runtime/VirtualThreadScheduler.scala)
+[`VirtualThreadScheduler`](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/runtime/VirtualThreadScheduler.scala)
 is a reference for an embeddable scheduling interface, not a dependency or a
 claim about the stable Scala Native API.
 
@@ -348,7 +352,7 @@ capability boundary rather than silently select an unsafe fallback.
 ### Allocation ownership and prompt reclamation
 
 Scala Native's
-[`Zone`](https://github.com/scala-native/scala-native/blob/main/nativelib/src/main/scala/scala/scalanative/unsafe/Zone.scala)
+[`Zone`](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/unsafe/Zone.scala)
 is a reference for explicit allocation ownership. Investigate typed frame pools
 or segmented storage only after Pass 8 establishes a correct implementation and
 allocation baseline. Reuse canonical allocation and slot owners rather than
@@ -423,6 +427,80 @@ Each implemented pass gets targeted validation, a commit and push to shared
 work before pushing. Keep this as one living plan instead of creating separate
 pass journals. Retire it or fold completed decisions into current architecture
 documentation once the work is delivered.
+
+## Implementation reference map
+
+Use the following inspected snapshots, not moving branches:
+
+- **Scala Native:** [`b961982edab83915bcbbda559117f0a89d2f3e10`](https://github.com/scala-native/scala-native/commit/b961982edab83915bcbbda559117f0a89d2f3e10),
+  a development snapshot. Virtual-thread interfaces here are runtime internals,
+  not a stable API or a requirement to implement stackful continuations.
+- **Cats Effect:** [`de84c01f76b2f42fcee9d43aba66c82992add103`](https://github.com/typelevel/cats-effect/commit/de84c01f76b2f42fcee9d43aba66c82992add103),
+  covering its shared effect interpreter, native platform setup, and test tools.
+
+These snapshots were inspected independently; they are not a verified dependency
+pair and neither becomes a dependency of FP Mojo. Follow the named symbols and
+line links for the active pass. The Mojo contracts in this plan take precedence
+over upstream implementation choices.
+
+### Scala Native runtime references
+
+| Passes | Source and entry points | Concrete lesson and adaptation boundary |
+|---|---|---|
+| 7, 12 | [VirtualThreadScheduler.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/runtime/VirtualThreadScheduler.scala#L9): `execute`, `schedule`, `Cancellable`, `afterYieldOnCarrier` | Separate scheduling, delayed work, and host notifications. Adapt the service boundary to Mojo's owned/borrowed services; do not copy JVM-shaped virtual-thread or carrier assumptions. |
+| 7, 12 | [LinktimeInfo.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/meta/LinktimeInfo.scala#L8): `isMultithreadingEnabled`, `target`, platform predicates | Make execution-profile selection explicit. Use supported Mojo compile-time mechanisms; platform or single-thread selection is not proof that shared handles need no synchronization. |
+| 12 | [Blocker.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/runtime/Blocker.scala#L14): `apply`, `begin`, `end` | Pair entry/exit accounting for supported blocking regions, including failure. Scala Native inserts some calls through its compiler; our library must use explicit provider boundaries, with no compiler changes or assumption that marking a call makes it nonblocking. |
+| 8 baseline, 13 evaluation | [Zone.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/unsafe/Zone.scala#L13): `alloc`, `close`, `Zone.acquire` | Give allocations an explicit owner and scope. Its raw allocation model does not establish Mojo payload destruction, origins, or prompt per-frame reclamation; retain those obligations when evaluating typed pools. |
+
+### Cats Effect interpreter and native-host references
+
+| Passes | Source and entry points | Concrete lesson and adaptation boundary |
+|---|---|---|
+| 7–8 | [IO.scala: flatMap](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IO.scala#L469), [defer](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IO.scala#L1296), and [FlatMap node](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IO.scala#L2236) | Compare stable outer `IO[A]` typing with heterogeneous internal steps. Use this to identify the representation problem; Scala's inheritance/erased references are not a Mojo storage proof. |
+| 8 | [IOFiber.scala: runLoop](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L210), [succeeded](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L1210), and [failed](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L1270) | Trace continuation push/pop and return to the run loop. Upstream also uses bounded recursive fast paths via `MaxStackDepth`; do not mistake every helper for a loop or copy its casts. Prove all our runtime-owned unwind and disposal paths independently. |
+| 8 | [IORuntimeConfig.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/IORuntimeConfig.scala#L22), together with `IOFiber.runLoop` | Inspect `cancelationCheckThreshold`, `autoYieldThreshold`, and their validation. Borrow separate policies and accounting; determine thresholds from our transition costs rather than copying numeric defaults. |
+| 9–10 | [IOFiber.scala: cancel/join](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L197), [prepareFiberForCancelation](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L1132), and [done](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L1092) | Follow cancellation through suspended finalizers to completion publication and execution-state release. Upstream caches a reusable join outcome; our exclusive move-only result transfer and unobserved-error accounting require their own design. |
+| 7, 12 | [IORuntimeBuilder.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/IORuntimeBuilder.scala#L26): `setCompute`, `setBlocking`, `setScheduler`, `addShutdownHook`; [native IORuntimeCompanionPlatform.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/native/src/main/scala/cats/effect/unsafe/IORuntimeCompanionPlatform.scala#L30): `createWorkStealingComputeThreadPool`, `createDefaultPollingSystem`, `createDefaultBlockingExecutionContext` | Study service assembly and teardown ownership separately from effect evaluation. Pools, global setup, and platform bindings are reference implementations, not authorization to add FFI or thread-unsafe payload execution. |
+| 7, 12 | [PollingSystem.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/PollingSystem.scala#L36): `makePoller`, `poll`, `processReadyEvents`, `needsPoll`, `interrupt`, `closePoller`, `PollResult` | Specify wait/interrupt/ready-batch lifecycle before choosing a provider. The interface alone does not prove a lost-wakeup-free handshake; qualify that protocol against our generation and revision owners. |
+| 9, 13 | [FiberInfo.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/FiberInfo.scala#L21): `state`, `trace`, `pretty`; [FiberMonitorShared.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/FiberMonitorShared.scala#L21): `toFiberInfo`, `printFibers` | Borrow diagnostic vocabulary and presentation. `FiberInfo` explicitly retains the underlying fiber: our bounded snapshots must copy permitted metadata without retaining its payloads or execution graph. |
+
+### Capability laws and deterministic qualification references
+
+For Passes 7 and 10–12, start with the actual capability declarations:
+[`MonadCancel`](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel/shared/src/main/scala/cats/effect/kernel/MonadCancel.scala#L210)
+and
+[`GenSpawn`](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel/shared/src/main/scala/cats/effect/kernel/GenSpawn.scala#L171).
+The same [kernel directory](https://github.com/typelevel/cats-effect/tree/de84c01f76b2f42fcee9d43aba66c82992add103/kernel/shared/src/main/scala/cats/effect/kernel)
+contains `GenConcurrent.scala`, `GenTemporal.scala`, `Clock.scala`,
+`Sync.scala`, and `Async.scala`. Inspect required primitives before derived
+conveniences; the concurrent collection functions remain outside this plan.
+
+| Passes | Source and entry points | Concrete lesson and adaptation boundary |
+|---|---|---|
+| 7, 10, 13 | [MonadCancelLaws.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/laws/shared/src/main/scala/cats/effect/laws/MonadCancelLaws.scala#L24): `uncancelablePollIsIdentity`, `uncancelableFinalizers`, `canceledAssociatesLeftOverFlatMap` | Enumerate cancellation/masking equations before claiming an instance. Translate each into observable native outcomes and ownership events; record differences rather than weakening error/cancellation state to pass it. |
+| 9–10, 13 | [GenSpawnLaws.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/laws/shared/src/main/scala/cats/effect/laws/GenSpawnLaws.scala#L23): `fiberJoinIsGuaranteeCase`, `uncancelableStartIsCancelable`, `raceCanceledIdentityLeft` | Review join/finalization, child mask independence, and race cancellation together. Reusable Scala effects and outcomes cannot be substituted for consuming Mojo recipes without an admission/ownership analysis. |
+| 8–11, 13 | [TestControl.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/testkit/shared/src/main/scala/cats/effect/testkit/TestControl.scala#L123): `results`, `tickOne`, `advance`, `tickAll`, `seed`, `isDeadlocked`; [TestContext.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel-testkit/shared/src/main/scala/cats/effect/kernel/testkit/TestContext.scala#L62): `schedule`, `tickOne`, `advance` | Reproduce time and event interleavings through the real engine. Upstream randomizes some task ordering and its deadlock observation also covers external-scheduler waits; preserve our FIFO promises and distinguish quiescence from proven deadlock. |
+
+### Local owners and starting checks
+
+Paths below are repository-relative and identify existing owners to extend.
+Do not create parallel implementations of these mechanisms while following
+upstream examples.
+
+| Passes | Start in this repository | Existing checks to extend |
+|---|---|---|
+| 7–8 | `src/fp/effects/_async/composition.mojo` (`Bind`, `Loop`), `kernel.mojo` (`_Slot`, `_tick`), `family.mojo`; native adapters in `src/fp/callables/` | `depth`, `loop_lifecycle`, `checkpoints`, `public_generic` |
+| 7–9, 12 | `src/fp/_internal/waking.mojo` (`_Runtime`, `Signal`, registrations), `src/fp/effects/_async/host.mojo` (`Driver`, `Clock`), `children.mojo`, `nurseries.mojo` | `host_admission`, `scheduler`, `children`, `nurseries`, `instant_clock`, `instant_timers` |
+| 9–11 | `src/fp/effects/outcomes.mojo`, `finalization.mojo`, `protocols.mojo`, `capabilities.mojo`, `coordination.mojo`; resumable owners under `src/fp/effects/_async/` | `async_masking`, `async_finalization`, `selection_policies`, `async_coordination`, `public_generic` |
+| 12 | `src/fp/effects/_async/callbacks.mojo`, `host.mojo`, and the same wake registry | `callbacks`, `callback_origins`, `instant_cleanup` |
+| 13 | `experiments/async-state-machines/qualify.py` and `stress.py`; `scripts/fp_tools/cases.py` (`CompileCase`, `execute_case`, `audit_case`) and `runs.py` (`RunContext`) | Extend existing inventories and auditors; keep overnight runs separately scheduled. |
+
+Check names refer to clients under `experiments/async-state-machines/tests/`.
+The [composition qualification example](async-composition.md#qualification-and-limits)
+shows selecting clients with `--client`. For each pass, record which upstream
+behavior was adapted, which native owner implements it, and the targeted
+evidence supporting the contract. Update this map if local ownership moves;
+keep pinned upstream references stable unless deliberately re-audited.
 
 ## Qualification and acceptance
 
