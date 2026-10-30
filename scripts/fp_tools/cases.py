@@ -26,6 +26,7 @@ class CompileCase:
     execution_timeout: int = 60
     compiler_threads: int | None = None
     memory_limit_bytes: int | None = None
+    execution_memory_limit_bytes: int | None = None
     measured: bool = False
     # Compile with a fresh, task-owned Mojo cache; removed after compilation.
     cold_cache: bool = False
@@ -39,7 +40,7 @@ class CompileCase:
             raise ValueError("Measurement policy must be explicit")
         if type(self.cold_cache) is not bool:
             raise ValueError("Cache policy must be explicit")
-        for budget in (self.compiler_threads, self.memory_limit_bytes):
+        for budget in (self.compiler_threads, self.memory_limit_bytes, self.execution_memory_limit_bytes):
             if budget is not None and (type(budget) is not int or budget <= 0):
                 raise ValueError("Resource budgets must be positive integers")
         if not isinstance(self.source, str) or not self.source:
@@ -98,7 +99,8 @@ def execute_case(case, executable, prefix):
         ok = False
     if case.reject is None and ok:
         execution = command([executable], prefix.with_suffix(".run.log"),
-                            timeout=case.execution_timeout)
+                            timeout=case.execution_timeout,
+                            memory_limit_bytes=case.execution_memory_limit_bytes)
         ok = accepted(execution)
         if case.stdout_sha256 is not None:
             ok = ok and hashlib.sha256(execution["stdout"].encode()).hexdigest() == case.stdout_sha256
@@ -141,6 +143,8 @@ def audit_case(case, record, executable, *, root=ROOT, folder=None):
         else:
             if not accepted(execution) or not audit_command(execution, root):
                 raise ValueError("missing/failed/inconsistent execution")
+            if execution.get("memory_limit_bytes") != case.execution_memory_limit_bytes:
+                raise ValueError("execution memory policy")
             if ([normalized(x, root) for x in execution.get("command", [])]
                     != [normalized(executable, root)]):
                 raise ValueError("wrong executable")

@@ -6,13 +6,14 @@ implemented under `src/fp/effects/_async`, with focused qualification under
 [readiness review](async-public-api-review.md). **Status: implemented as an opt-in preview.** The
 [async guide](../guides/async-runtime.md) and generated references describe the
 available surface. The proposal below retains design rationale and staged
-qualification evidence. Overnight stress remains deferred.
+qualification evidence. [Pass 6 qualification](async-qualification.md) is now
+in progress.
 
 The recommended contract is cooperative execution on one host thread, concrete
 owned machine types, exact typed outcomes, and structured cleanup. Cats and Cats
 Effect inform sequencing, resources, and cancellation; native Mojo ownership and
 origins determine the representation. Long-running stress and performance work
-is deferred to a later overnight pass. It is not needed to discuss this design.
+is tracked separately from the public API design and its deterministic evidence.
 
 ## Cats alignment and naming
 
@@ -597,7 +598,7 @@ Mojo 1.2 Linux x86-64 environment and cooperative host-thread use. Source contra
 supported type aliases, and error/cancellation behavior are versioned; compiler
 ABI, concrete layout, allocation counts, and compilation complexity are not
 compatibility promises. Preview breaking changes require explicit migration notes.
-The supported-release decision follows the deferred long-running qualification;
+The supported-release decision follows long-running qualification;
 this proposal does not turn the previous correctness matrix into stress or
 performance evidence.
 
@@ -794,7 +795,7 @@ carry and total ordering, timer completion beyond `Int.MAX`, heap ordering acros
 the low-word boundary, masked callback withdrawal with retained captures and
 exact errors, scope and nursery draining, inherited IO clocks, and rejection of
 numeric timestamps and scheduler storage access. Runtime checks remain short and
-deterministic; sustained stress and performance qualification are still deferred.
+deterministic; they do not establish sustained stress or performance qualification.
 The module DAG, reviewed API inventory, and rendered documentation pass.
 
 The opt-in `fp.effects.async_runtime` and `.protocols` namespaces now publish
@@ -836,11 +837,13 @@ exact construction errors with short-circuiting, and cancellation before entry.
 Input and artifact audits pass, and an independent binding records the single
 upstream source change. Final API extraction, module dependency checks and
 rendered documentation include both agents' changes. Overnight qualification
-remains deferred.
+is tracked separately in Pass 6.
 
 ## Implementation passes after agreement
 
-Passes 1–5 are complete for the opt-in preview. Pass 6 remains deferred.
+Passes 1–5 are complete for the opt-in preview. Pass 6 is in progress;
+its [qualification protocol](async-qualification.md) separates short calibration
+from sustained storage evidence and local performance diagnostics.
 
 1. **Behavior and native-signature decisions.** Qualify race/timeout cancellation
    checkpoints, error-recovery capability and laws, resumable resource
@@ -868,13 +871,14 @@ Passes 1–5 are complete for the opt-in preview. Pass 6 remains deferred.
    external origins, and rejection diagnostics through source/package O0/O3.
    Extend export/provider tooling to understand the nested public namespaces;
    update inventories, compatibility records, and installation/import guidance.
-6. **Deferred overnight qualification.** Exercise sustained reuse, cancellation,
+6. **Overnight qualification.** Exercise sustained reuse, cancellation,
    callback/timer retirement, and bounded retained storage; measure performance
-   separately. Agree the run window and budgets when scheduling this work.
+   separately. The scheduled default is twelve one-hour cases with two workers,
+   a 512 MiB runtime limit per case, and serial performance samples afterward.
 
 All implementation passes stay in pure Mojo and integrate through shared
-`nightly`, with a tested commit and push after each pass. GPU support and the
-deferred overnight qualification remain outside the current implementation work.
+`nightly`, with a tested commit and push after each pass. GPU support remains
+outside the current implementation work.
 
 [cats-flat-map]: https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/FlatMap.scala
 [cats-errors]: https://github.com/typelevel/cats/blob/b055e31caf3b4922432f5423585094c3b3116eb8/core/src/main/scala/cats/ApplicativeError.scala

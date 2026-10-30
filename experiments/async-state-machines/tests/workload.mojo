@@ -235,7 +235,7 @@ def cycle(mode: Int) raises:
         check(host[].created[id] == host[].dropped[id], "every created request destroyed exactly once")
         if host[].completions[id]:
             check(not host[].completions[id].value().complete(success[Int, Int](999)._outcome()), "late callbacks rejected")
-            var subscription = _lock_metadata(host[].completions[id].value().signal._cell)
+            var subscription = _lock_metadata(host[].completions[id].value()._signal._cell)
             check(subscription.cell[].slot.value().active == 0, "callback subscription retired")
         var gate = _lock_metadata(host[].gates[id]._cell)
         check(gate.cell[].slot.value().active == 0, "withdrawal subscription retired")

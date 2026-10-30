@@ -1,6 +1,7 @@
 """Shared release tooling: bounded commands, immutable inputs and strict outcomes."""
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
@@ -153,7 +154,8 @@ def _linux_tree_rss(pid, proc_root=Path('/proc')):
     return total
 
 
-def command(argv, log, timeout=180, env=None, timed=False, memory_limit_bytes=None):
+def command(argv, log, timeout=180, env=None, timed=False, memory_limit_bytes=None,
+            rss_samples_log=None, rss_interval_seconds=5):
     """Kill the whole process group on timeout; retain stdout and stderr separately."""
     if memory_limit_bytes is not None:
         if type(memory_limit_bytes) is not int or memory_limit_bytes <= 0:
@@ -161,40 +163,71 @@ def command(argv, log, timeout=180, env=None, timed=False, memory_limit_bytes=No
         if platform.system() != 'Linux':
             raise RuntimeError('RSS budget enforcement currently requires Linux')
     actual = timed_argv(argv) if timed else list(map(str, argv))
+    samples = None
+    if rss_samples_log is not None:
+        if (memory_limit_bytes is None or type(rss_interval_seconds) not in (int, float)
+                or not math.isfinite(rss_interval_seconds) or rss_interval_seconds <= 0):
+            raise ValueError('RSS samples require a memory budget and positive interval')
+        rss_samples_log = Path(rss_samples_log).resolve()
+        if not rss_samples_log.is_relative_to(ROOT):
+            raise ValueError('RSS samples must remain within the project')
+        rss_samples_log.parent.mkdir(parents=True, exist_ok=True)
+        samples = rss_samples_log.open('x')
     start = time.perf_counter()
-    process = subprocess.Popen(actual, cwd=ROOT, text=True, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, start_new_session=True, env=env)
+    try:
+        process = subprocess.Popen(actual, cwd=ROOT, text=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, start_new_session=True, env=env)
+    except Exception:
+        if samples is not None:
+            samples.close()
+        raise
     expired, memory_exceeded, sampled_peak = False, False, 0
-    while True:
-        if memory_limit_bytes is not None:
-            sampled_peak = max(sampled_peak, _linux_tree_rss(process.pid))
-            memory_exceeded = sampled_peak > memory_limit_bytes
-        remaining = timeout - (time.perf_counter() - start)
-        expired = remaining <= 0
-        if expired or memory_exceeded:
+    next_sample = 0
+    try:
+        while True:
+            elapsed = time.perf_counter() - start
+            if memory_limit_bytes is not None:
+                resident = _linux_tree_rss(process.pid)
+                sampled_peak = max(sampled_peak, resident)
+                memory_exceeded = sampled_peak > memory_limit_bytes
+                if samples is not None and elapsed >= next_sample:
+                    samples.write(json.dumps(dict(elapsed_seconds=elapsed, rss_bytes=resident)) + '\n')
+                    samples.flush()
+                    next_sample = elapsed + rss_interval_seconds
+            remaining = timeout - elapsed
+            expired = remaining <= 0
+            if expired or memory_exceeded:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                out, err = process.communicate()
+                break
             try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            out, err = process.communicate()
-            break
-        try:
-            out, err = process.communicate(timeout=min(remaining, .1) if memory_limit_bytes else remaining)
-            break
-        except subprocess.TimeoutExpired:
-            continue
+                out, err = process.communicate(timeout=min(remaining, .1) if memory_limit_bytes else remaining)
+                break
+            except subprocess.TimeoutExpired:
+                continue
+    finally:
+        if samples is not None:
+            samples.close()
     log.parent.mkdir(parents=True, exist_ok=True)
     marker = ('\nTIMEOUT\n' if expired else '') + ('\nMEMORY LIMIT\n' if memory_exceeded else '')
     log.write_text((out + err + marker).replace(str(ROOT), '<PROJECT>'))
     rss = re.search(r'(\d+)\s+maximum resident set size', err) if timed else None
     linux_rss = re.search(r'Maximum resident set size \(kbytes\):\s*(\d+)', err) if timed else None
     peak = int(rss[1]) if rss else int(linux_rss[1]) * 1024 if linux_rss else None
-    return dict(command=actual, exit_code=process.returncode, timeout=expired,
+    record = dict(command=actual, exit_code=process.returncode, timeout=expired,
                 memory_limit_bytes=memory_limit_bytes, memory_limit_exceeded=memory_exceeded,
                 sampled_tree_peak_rss_bytes=sampled_peak or None,
                 crashed=bool(CRASH.search(out + err)) or (process.returncode < 0 and not expired and not memory_exceeded),
                 seconds=time.perf_counter() - start, stdout=out, stderr=err,
                 peak_rss_bytes=peak, log=str(log.resolve().relative_to(ROOT)))
+    if samples is not None:
+        record.update(rss_samples_log=str(rss_samples_log.relative_to(ROOT)),
+                      rss_samples_sha256=sha(rss_samples_log),
+                      rss_interval_seconds=rss_interval_seconds)
+    return record
 
 
 def accepted(record, expected_errors=None):
@@ -252,6 +285,11 @@ def audit_command(record, root=ROOT):
         if not log.is_relative_to(root.resolve()) or not log.is_file(): return False
         raw = (record['stdout'] + record['stderr'] + ('\nTIMEOUT\n' if record['timeout'] else '')
                + ('\nMEMORY LIMIT\n' if record.get('memory_limit_exceeded') else ''))
+        if 'rss_samples_log' in record:
+            samples = resolved(record['rss_samples_log'], root).resolve()
+            if (not samples.is_relative_to(root.resolve()) or not samples.is_file()
+                    or sha(samples) != record.get('rss_samples_sha256')):
+                return False
         return log.read_text() == normalized(raw, root)
     except (KeyError, TypeError, OSError):
         return False

@@ -58,6 +58,12 @@ compiler cache and competing work. Use retained build/run timings to estimate
 the next comparable run; benchmark diagnostics collected under shared load do
 not establish a performance regression.
 
+The opt-in [async overnight qualification](../architecture/async-qualification.md)
+has its own bounded runner and evidence audit. Run it from an immutable checkout;
+its default twelve one-hour cases take approximately six hours with two workers,
+plus compilation and separate serial performance measurements. It is not part of
+the routine suite, and short calibrations do not qualify as overnight results.
+
 `suite` and `compile-fail` test the library a `build` produced: pass its output
 directory to `--package`. `--source` compiles against `src/` instead, and with
 neither option they precompile `src/fp` into their own output folder first.

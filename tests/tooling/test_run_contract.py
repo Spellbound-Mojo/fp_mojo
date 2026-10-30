@@ -17,7 +17,8 @@ class RunContractTests(unittest.TestCase):
         for change in ({'optimization':False}, {'optimization':1}, {'reject':()},
                        {'reject':['error']}, {'reject':('error',),'stdout_sha256':'a'*64},
                        {'source_sha256':'wrong'}, {'werror':1}, {'compiler_threads':0},
-                       {'memory_limit_bytes':True}, {'measured':1}):
+                       {'memory_limit_bytes':True}, {'execution_memory_limit_bytes':0},
+                       {'execution_memory_limit_bytes':True}, {'measured':1}):
             values = dict(source='source.mojo', source_sha256='a'*64, optimization=0) | change
             with self.assertRaises(ValueError):
                 CompileCase(**values)

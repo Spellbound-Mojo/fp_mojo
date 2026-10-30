@@ -1,6 +1,7 @@
 """RSS accounting must follow compiler subprocesses under the native timer."""
 
 import ctypes
+import json
 import os
 from pathlib import Path
 import sys
@@ -8,10 +9,31 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from fp_tools.runtime import ROOT, _linux_tree_rss, command
+from fp_tools.runtime import ROOT, _linux_tree_rss, command, audit_command
 
 
 class ResourceTreeTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform == "linux", "Linux process accounting")
+    def test_retained_rss_trace_is_audited_and_never_overwritten(self):
+        with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as name:
+            folder = Path(name)
+            trace = folder / "rss.jsonl"
+            record = command(
+                [sys.executable, "-c", "import time; data=bytearray(8*1024*1024); time.sleep(.7)"],
+                folder / "run.log", timeout=5, memory_limit_bytes=128 * 1024**2,
+                rss_samples_log=trace, rss_interval_seconds=.1)
+            rows = [json.loads(line) for line in trace.read_text().splitlines()]
+            self.assertEqual(record["exit_code"], 0)
+            self.assertGreaterEqual(len(rows), 3)
+            self.assertGreater(max(row["rss_bytes"] for row in rows), 8 * 1024**2)
+            self.assertTrue(all(b["elapsed_seconds"] > a["elapsed_seconds"] for a, b in zip(rows, rows[1:])))
+            self.assertTrue(audit_command(record))
+            with self.assertRaises(FileExistsError):
+                command([sys.executable, "-c", "pass"], folder / "other.log",
+                        memory_limit_bytes=128 * 1024**2, rss_samples_log=trace)
+            trace.write_text(trace.read_text() + "{}\n")
+            self.assertFalse(audit_command(record))
+
     def test_parent_snapshot_includes_descendants_without_task_children(self):
         with tempfile.TemporaryDirectory() as name:
             root = Path(name)
