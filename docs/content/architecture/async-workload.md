@@ -2,7 +2,7 @@
 
 The `workload` qualification client assembles a bounded pipeline from the
 canonical runtime's existing operations. A producer transfers six move-only requests
-through a queue of capacity two. Six nursery children each acquire one of two
+through a queue of capacity two. Six worker fibers each acquire one of two
 semaphore permits, take a request, and execute a scoped callback operation with
 a timeout and fallback. The scope retains its request through callback withdrawal;
 the worker retains its permit until the complete operation finishes.

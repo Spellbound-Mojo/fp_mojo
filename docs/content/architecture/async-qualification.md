@@ -31,9 +31,11 @@ separate low-word carry boundary.
 
 Storage bounds depend on maximum simultaneously retained work. The registry
 keeps reusable slots, signal metadata keeps reusable subscriber entries, and
-timer compaction bounds stale entries relative to live timers. A nursery keeps
-accepted children/results up to its **lifetime admission limit**. Qualification does
-not require a nursery to forget results that its contract still owns.
+timer compaction bounds stale entries relative to live timers. Fiber hosts
+reuse completed slots, so storage follows the most simultaneously live fibers.
+The recorded overnight run predates fibers: its parked-work and worker clients
+then used the private nursery, which kept accepted children and results up to a
+lifetime admission limit. The maintained harness runs them as fibers.
 
 The clients assert logical bounds during execution and complete registration
 retirement after draining. Process RSS adds an allocator-level observation; it
@@ -97,8 +99,8 @@ honest. It measures the cost of representing every iteration as an async step;
 it does not imply that synchronous arithmetic should be written that way.
 
 The parked-work experiment performs 10,000 idle driver calls with 1, 64 and 512
-sleeping children, verifies zero child polls/timer events, then times complete
-cancellation and draining. Nursery construction is outside those timings.
+sleeping fibers, verifies zero polls/timer events, then times complete
+cancellation and draining. Starting the fibers is outside those timings.
 
 These are local Linux diagnostics on the recorded compiler, CPU and host. They
 do not replace the repository's historical macOS benchmark profile, define a

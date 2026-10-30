@@ -69806,6 +69806,22 @@
    "fields": [],
    "kind": "struct",
    "methods": {
+    "fibers": [
+     {
+      "args": [],
+      "description": "A bounded diagnostic view, like Cats Effect's fiber dump: each entry\nnames an internal slot, its owner's slot, and whether it is runnable,\nsuspended, or draining its children. It holds no payloads and no\ncompleted fibers. Fibers hosted by an IO inside a leaf, such as a child\nof both, belong to that IO and are not listed.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The live fibers in slot order; empty for a root that is not an IO,\nbefore the first start, and after completion.",
+       "type": "List[FiberInfo]"
+      },
+      "signature": "def fibers(self) -> List[FiberInfo]",
+      "summary": "List the live fibers the root IO hosts, between polls."
+     }
+    ],
     "finish": [
      {
       "args": [],
@@ -70106,6 +70122,123 @@
    "signature": "struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable)",
    "summary": "The handle of an IO started with `start`, owned by the fiber that started it.",
    "traits": []
+  },
+  "effects.async_runtime.FiberInfo": {
+   "aliases": [],
+   "description": "There is no public fiber identity, as in Cats Effect: the index names a\nslot of the root IO's fiber table and is reused once the fiber completes.",
+   "fields": [
+    {
+     "description": "The fiber's slot, from 1; 0 is the root program itself.",
+     "name": "index",
+     "type": "Int"
+    },
+    {
+     "description": "The slot of the fiber that started it, or 0 for the root program.",
+     "name": "owner",
+     "type": "Int"
+    },
+    {
+     "description": "Runnable, suspended, or draining its children.",
+     "name": "status",
+     "type": "FiberStatus"
+    }
+   ],
+   "kind": "struct",
+   "methods": {},
+   "parameters": [],
+   "provider": "effects/_async/fibers",
+   "signature": "struct FiberInfo(Copyable, Writable)",
+   "summary": "One live fiber in a driver snapshot, without payloads or completed work.",
+   "traits": [
+    "Copyable",
+    "Writable"
+   ]
+  },
+  "effects.async_runtime.FiberStatus": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "draining": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The draining status.",
+       "type": "Self"
+      },
+      "signature": "def draining() -> Self",
+      "summary": "Its program has finished; it waits for its own children to finish."
+     }
+    ],
+    "runnable": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The runnable status.",
+       "type": "Self"
+      },
+      "signature": "def runnable() -> Self",
+      "summary": "Ready to run on a coming poll, including a fiber not yet entered."
+     }
+    ],
+    "suspended": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The suspended status.",
+       "type": "Self"
+      },
+      "signature": "def suspended() -> Self",
+      "summary": "Parked until a signal, timer, or cancellation wakes it."
+     }
+    ],
+    "write_to": [
+     {
+      "args": [
+       {
+        "convention": "mut",
+        "description": "The destination.",
+        "name": "writer",
+        "type": "Some[Writer]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def write_to(self, mut writer: Some[Writer])",
+      "summary": "Write the status name: runnable, suspended, or draining."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/_async/fibers",
+   "signature": "struct FiberStatus(Copyable, Equatable, Writable)",
+   "summary": "Where a live fiber stands in a driver snapshot.",
+   "traits": [
+    "Copyable",
+    "Equatable",
+    "Writable"
+   ]
   },
   "effects.async_runtime.IO": {
    "aliases": [
@@ -71473,11 +71606,12 @@
     }
    ],
    "provider": "effects/_async/engine",
-   "signature": "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier)",
+   "signature": "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier, _FiberHost)",
    "summary": "An asynchronous program producing T or failing with the exact domain error E.",
    "traits": [
     "Machine",
-    "_FamilyCarrier"
+    "_FamilyCarrier",
+    "_FiberHost"
    ]
   },
   "effects.async_runtime.IORuntimeConfig": {

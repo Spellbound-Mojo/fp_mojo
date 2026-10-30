@@ -33,14 +33,14 @@ from fp.effects._io_core import _settle, IOContract, canceled as _cancel_request
 from fp.effects.protocols import ReaderAction
 from fp.effects.finalization import Poll as _SyncPoll
 from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep
-from .time import Duration
+from .time import Duration, Instant
 from .children import both as _both
 from .racing import RaceResult, race as _race, race_first as _race_first, timeout_after as _timeout_after, timeout_to as _timeout_to
 from .io import EvalIO as _EvalIO
 from .callbacks import Callback as _Callback, Completion, _CallbackUnit
 from .erased import _ErasedMachine
 from .finalization import Poll
-from .fibers import _FiberRecord, _Inbox, _Fibers, _Spawn, _Claim, _Join, _Delivery, _Unwrap, _CancelFiber, _RequestCancel
+from .fibers import FiberInfo, _FiberHost, _FiberRecord, _Inbox, _Fibers, _Spawn, _Claim, _Join, _Delivery, _Unwrap, _CancelFiber, _RequestCancel
 
 # Head and frame kinds.
 comptime _EMPTY = 0
@@ -666,7 +666,7 @@ comptime _Binds[E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable
 comptime _Defers[E: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _OnceThunkAvailable[F] and _ErrorCompatible[E, F.Error] and _Admitted[F] and _IsIO[F.Out, E]
 
 
-struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier):
+struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier, _FiberHost):
     """An asynchronous program producing T or failing with the exact domain error E.
 
     Building an IO runs nothing. A value runs once, when a host drives it;
@@ -1162,6 +1162,15 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
             A unit IO that is runnable again after one yield.
         """
         return IO[NoneType, Self.E]._lifted(_Cede[Self.E]())
+
+    def _fiber_snapshot(self, now: Instant) -> List[FiberInfo]:
+        """The live fibers this entered IO hosts; none before entry or any start."""
+        if not self._entered:
+            return List[FiberInfo]()
+        ref loop = self._loop.unsafe_assume_init()[]
+        if not loop.fibers:
+            return List[FiberInfo]()
+        return loop.fibers.value()[].snapshot(now)
 
     def _fiber_slots(mut self) -> Int:
         """Fiber table slots this entered IO has reserved; for storage-reuse checks."""

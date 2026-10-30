@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) steps 9a and 9b built** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -1214,7 +1214,7 @@ can return an `IO` now takes plain functions.
 
 ## Pass 9 proposal
 
-Status: **approved; 9a and 9b built** ([progress](#pass-9-progress)). It implements
+Status: **complete** ([progress](#pass-9-progress)). It implements
 the approved [fiber contract](#fiber-contract) on the Pass 8 engine.
 
 ### Public surface
@@ -1395,6 +1395,32 @@ program holds, so the usual case reports at owner completion.
   as documented. `fiber_churn` runs a million sequential start/join cycles in
   one fiber slot and at most four wake registrations, also under a 1 MiB
   stack. A cycle costs about 7.3 µs at O3, including the driver's polls.
+
+**9c** was built on 2026-10-30: the driver snapshot, and the private nursery
+retired. Decided in review: delete the nursery-only clients, port the general
+ones, rewrite the stress harness, and add `Driver.fibers()` for the root `IO`.
+
+- **Snapshot.** `Driver.fibers()` returns a `FiberInfo` per live fiber of the
+  root `IO`: its slot, its owner's slot, and a `FiberStatus` of runnable,
+  suspended, or draining. `IO` implements a private `_FiberHost` trait that the
+  driver downcasts to; other roots list nothing. Fibers hosted inside a leaf
+  are not reachable from the driver and are not listed. `fiber_snapshot`
+  covers owners, each status, completion, and a nested host.
+- **Nursery.** `nurseries.mojo`, its host wrapper, and its forwarding module
+  are gone, with the nursery-only clients `nurseries`, `nursery_origins`,
+  `reject_nursery_escape`, `reject_spawner_escape`, and `reject_spawn_type`.
+  `scheduler`, `async_coordination`, `erased_storage`, and `workload` run their
+  dynamic children as fibers with the same assertions; `workload` joins its
+  workers with `join_with`, so a worker's cleanup error still fails the
+  pipeline. `host_admission` drops its nursery limit checks.
+- **Stress harness.** The stress clients used the retired typed recipes and
+  nursery. `lifecycle` now loops with `tail_rec_m` over `IO.async` with a
+  timeout; `workers` composes queue and semaphore operations with `IO`
+  methods; `performance` times an `IO` loop and parks sleeping fibers. Their
+  output lines are unchanged, so `stress_contract.py` parses them as before.
+  The recorded overnight results predate this rewrite.
+- **Docs.** The nursery architecture page is replaced by
+  [async fibers](async-fibers.md).
 
 ## Implementation reference map
 

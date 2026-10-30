@@ -1,9 +1,10 @@
-"""Checked host boundaries over canonical clock, driver and nursery owners."""
+"""Checked host boundaries over canonical clock and driver owners."""
+from std.builtin.rebind import downcast
 from fp.effects import CancellationToken, Outcome, IOContext
 from fp._internal.waking import _Clock
 from fp._internal.time import Instant
 from .kernel import Machine, Driver as _Driver, Progress, Step, IORuntimeConfig, run as _run
-from .nurseries import Nursery as _Nursery, Spawner
+from .fibers import FiberInfo, _FiberHost
 
 
 struct Clock(Copyable):
@@ -113,6 +114,26 @@ struct Driver[P: Machine](Movable, not Deinitable):
         if not _Driver[Self.P]._valid_budget(budget):
             raise Error("driver budget must be nonnegative")
         return self._driver.poll(budget)
+    def fibers(self) -> List[FiberInfo]:
+        """List the live fibers the root IO hosts, between polls.
+
+        A bounded diagnostic view, like Cats Effect's fiber dump: each entry
+        names an internal slot, its owner's slot, and whether it is runnable,
+        suspended, or draining its children. It holds no payloads and no
+        completed fibers. Fibers hosted by an IO inside a leaf, such as a child
+        of both, belong to that IO and are not listed.
+
+        Returns:
+            The live fibers in slot order; empty for a root that is not an IO,
+            before the first start, and after completion.
+        """
+        comptime if conforms_to(Self.P, _FiberHost):
+            ref program = self._driver.task._slot._program
+            if program:
+                var now = self._driver.task.context._clock.now()
+                return rebind[downcast[Self.P, _FiberHost]](program.value()[])._fiber_snapshot(now)
+        return List[FiberInfo]()
+
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
         """Consume a completed root exactly once.
 
@@ -121,48 +142,6 @@ struct Driver[P: Machine](Movable, not Deinitable):
             Calling before completion is a protocol violation.
         """
         return self._driver^.finish()
-
-
-struct Nursery[P: Machine](Machine):
-    """Own a bounded lifetime total of accepted children of one exact type.
-
-    Parameters:
-        P: The child machine type, including all payload, error and capture origins.
-    """
-    comptime Value = List[Self.P.Value]
-    """Successful child values in admission order."""
-    comptime Error = Self.P.Error
-    """The exact child domain error."""
-    var _nursery: _Nursery[Self.P]
-    def __init__(out self, limit: Int) raises:
-        """Create an unopened nursery with checked total admission capacity.
-
-        Args:
-            limit: Maximum lifetime accepted children; zero is a valid empty bound.
-
-        Raises:
-            Error: A negative admission limit, before allocating an owner.
-        """
-        if not _Nursery[Self.P]._valid_limit(limit):
-            raise Error("nursery admission limit must be nonnegative")
-        self._nursery = _Nursery[Self.P](limit)
-    def spawner(self) -> Spawner[Self.P]:
-        """Copy the submission capability; accepted children stay owned here.
-
-        Returns:
-            A handle supporting try_spawn and close, without detach or joining.
-        """
-        return self._nursery.spawner()
-    def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
-        """Advance the canonical nursery engine under the inherited context.
-
-        Args:
-            context: Runtime cancellation, mask and clock handles.
-
-        Returns:
-            A pending wait or the settled subtree outcome.
-        """
-        return self._nursery.poll(context)
 
 
 def run[P: Machine](var program: P, token: CancellationToken) -> Outcome[P.Value, P.Error]:

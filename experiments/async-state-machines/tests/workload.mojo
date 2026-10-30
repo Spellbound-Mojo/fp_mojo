@@ -5,7 +5,8 @@ from fp.callables import OnceUnary
 from fp.data import Result, Err, NonEmptyList
 from fp.effects import CancellationToken, IOContext, EffectFailure, ExitCase
 from fp._internal.cells import _lock_metadata
-from state_machine import IO, Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Completion, Callback, Scope, Pure, Timeout, Nursery, Queue, Semaphore, Clock, Driver, callback, pure, bind, both, timeout_after as timeout_to
+from state_machine import IO, Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Completion, Callback, Scope, Pure, Timeout, Queue, Semaphore, Clock, Driver, callback, pure, bind, both, timeout_after as timeout_to
+from fp.effects._async.engine import Fiber
 from foundation import check, success
 from async_coordination import value
 
@@ -171,18 +172,72 @@ struct Producer(Machine):
         return .pending(Wait())
 
 
+def worker(queue: Queue[Request], semaphore: Semaphore) -> IO[Int, Int]:
+    return semaphore.with_permit(bind(queue.take[Int](), Start()))
+
+
+@fieldwise_init
+struct StartWorkers(OnceUnary):
+    """Start the workers as fibers, run the producer, then join every worker."""
+    var queue: Queue[Request]
+    var semaphore: Semaphore
+    var host: ArcPointer[Host]
+    var left: Int
+    var handles: List[Fiber[Int, Int]]
+    comptime Arg = Fiber[Int, Int]
+    comptime Out = IO[List[Int], Int]
+
+    def call_once(deinit self, var fiber: Fiber[Int, Int]) -> IO[List[Int], Int]:
+        self.handles.append(fiber^)
+        if self.left == 0:
+            return IO[NoneType, Int].lift(Producer(self.queue, self.host)).flat_map(Results(self.handles^))
+        return worker(self.queue, self.semaphore).start().flat_map(
+            StartWorkers(self.queue.copy(), self.semaphore.copy(), self.host.copy(), self.left - 1, self.handles^))
+
+
+@fieldwise_init
+struct Results(OnceUnary):
+    var handles: List[Fiber[Int, Int]]
+    comptime Arg = NoneType
+    comptime Out = IO[List[Int], Int]
+
+    def call_once(deinit self, var unit: NoneType) -> IO[List[Int], Int]:
+        return IO[List[Int], Int].pure(List[Int]()).flat_map(JoinWorkers(self.handles^))
+
+
+@fieldwise_init
+struct JoinWorkers(OnceUnary):
+    """Join in start order; a worker's failure fails the pipeline with all its errors."""
+    var handles: List[Fiber[Int, Int]]
+    comptime Arg = List[Int]
+    comptime Out = IO[List[Int], Int]
+
+    def call_once(deinit self, var results: List[Int]) -> IO[List[Int], Int]:
+        if not len(self.handles):
+            return IO[List[Int], Int].pure(results^)
+        var fiber = self.handles.pop(0)
+        return fiber^.join_with(IO[Int, Int].never()).flat_map(Append(results^, self.handles^))
+
+
+@fieldwise_init
+struct Append(OnceUnary):
+    var results: List[Int]
+    var handles: List[Fiber[Int, Int]]
+    comptime Arg = Int
+    comptime Out = IO[List[Int], Int]
+
+    def call_once(deinit self, var result: Int) -> IO[List[Int], Int]:
+        self.results.append(result)
+        return IO[List[Int], Int].pure(self.results^).flat_map(JoinWorkers(self.handles^))
+
+
 def cycle(mode: Int) raises:
     var queue = Queue[Request](2)
     var semaphore = Semaphore(2)
     var host = ArcPointer(Host(mode))
     var clock = Clock.manual()
-    comptime Worker = type_of(semaphore.with_permit(bind(queue.take[Int](), Start())))
-    var nursery = Nursery[Worker](6)
-    var spawn = nursery.spawner()
-    for _ in range(6):
-        check(not spawn.try_spawn(semaphore.with_permit(bind(queue.take[Int](), Start()))), "worker admitted")
-    spawn.close()
-    var driver = Driver(both(Producer(queue, host), nursery^), CancellationToken(), clock)
+    var program = worker(queue, semaphore).start().flat_map(StartWorkers(queue.copy(), semaphore.copy(), host.copy(), 5, List[Fiber[Int, Int]]()))
+    var driver = Driver(program^, CancellationToken(), clock)
     var progress = driver.poll(7)
     var timed = False
     var canceled = False
@@ -222,9 +277,9 @@ def cycle(mode: Int) raises:
         check(canceled and not outcome, "external cancellation drains pipeline")
     else:
         var results = outcome.take()._take_ok()
-        check(len(results[1]) == 6, "every worker returns one result")
+        check(len(results) == 6, "every worker returns one result")
         var total = 0
-        for result in results[1]:
+        for result in results:
             total += result
         check(total == (512 if mode == 1 else 615), "normal and fallback results preserved")
         check(host[].fallbacks[1] == Int(mode == 1), "only timed-out work enters fallback")

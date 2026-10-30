@@ -24,8 +24,84 @@ from fp.effects import CancellationToken, IOContext, Outcome, EffectFailure
 from fp.effects.outcomes import _failure_as
 from fp.effects._io_core import _Reporter
 from .kernel import Machine, Step, Wait, _tick, _report_to_stderr
+from .time import Instant
 from .children import _Child
 from .erased import _ErasedMachine
+
+
+struct FiberStatus(Copyable, Equatable, Writable):
+    """Where a live fiber stands in a driver snapshot."""
+    var _code: Int
+
+    @staticmethod
+    def runnable() -> Self:
+        """Ready to run on a coming poll, including a fiber not yet entered.
+
+        Returns:
+            The runnable status.
+        """
+        return Self(_code=0)
+
+    @staticmethod
+    def suspended() -> Self:
+        """Parked until a signal, timer, or cancellation wakes it.
+
+        Returns:
+            The suspended status.
+        """
+        return Self(_code=1)
+
+    @staticmethod
+    def draining() -> Self:
+        """Its program has finished; it waits for its own children to finish.
+
+        Returns:
+            The draining status.
+        """
+        return Self(_code=2)
+
+    def __init__(out self, *, _code: Int):
+        self._code = _code
+
+    def __eq__(self, other: Self) -> Bool:
+        return self._code == other._code
+
+    def __ne__(self, other: Self) -> Bool:
+        return self._code != other._code
+
+    def write_to(self, mut writer: Some[Writer]):
+        """Write the status name: runnable, suspended, or draining.
+
+        Args:
+            writer: The destination.
+        """
+        if self._code == 0:
+            writer.write("runnable")
+        elif self._code == 1:
+            writer.write("suspended")
+        else:
+            writer.write("draining")
+
+
+@fieldwise_init
+struct FiberInfo(Copyable, Writable):
+    """One live fiber in a driver snapshot, without payloads or completed work.
+
+    There is no public fiber identity, as in Cats Effect: the index names a
+    slot of the root IO's fiber table and is reused once the fiber completes.
+    """
+    var index: Int
+    """The fiber's slot, from 1; 0 is the root program itself."""
+    var owner: Int
+    """The slot of the fiber that started it, or 0 for the root program."""
+    var status: FiberStatus
+    """Runnable, suspended, or draining its children."""
+
+
+trait _FiberHost:
+    """A machine that can list the fibers it hosts, for driver snapshots."""
+    def _fiber_snapshot(self, now: Instant) -> List[FiberInfo]:
+        ...
 
 
 struct _FiberRecord[E: Movable & Deinitable](Movable):
@@ -272,6 +348,19 @@ struct _Fibers[E: Movable & Deinitable](Movable):
             self.admit(context)
             if done:
                 self.finished(selected)
+
+    def snapshot(self, now: Instant) -> List[FiberInfo]:
+        var fibers = List[FiberInfo]()
+        for index in range(len(self.entries)):
+            if self.entries[index]:
+                ref entry = self.entries[index].value()
+                var status = FiberStatus.suspended()
+                if entry.held:
+                    status = FiberStatus.draining()
+                elif entry.child.ready(now):
+                    status = FiberStatus.runnable()
+                fibers.append(FiberInfo(index + 1, entry.owner, status^))
+        return fibers^
 
     def step(mut self, context: IOContext[Self.E]) -> Step[_Erased, Self.E]:
         if self.main_done() and not self.main_children:

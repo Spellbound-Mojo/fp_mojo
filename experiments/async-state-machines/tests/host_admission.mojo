@@ -2,9 +2,8 @@
 from std.memory import ArcPointer
 from fp.effects import IOContext, EffectFailure
 from fp.data import Result, Ok
-from fp.effects._async.composition import pure, Pure
 from fp.effects._async.kernel import Machine, Step, Wait
-from fp.effects._async.host import Driver, Nursery, run
+from fp.effects._async.host import Driver
 from foundation import check
 
 
@@ -57,19 +56,4 @@ def main() raises:
         pass
     var canceled = moved^.finish()
     check(not canceled and calls[] == 3, "moved owner wakes and drains cancellation")
-    rejected = False
-    try:
-        _ = Nursery[Pure[Int, Int]](-1)
-    except error:
-        rejected = True
-    check(rejected, "negative nursery admission checked before allocation")
-    var nursery = Nursery[Pure[Int, Int]](0)
-    var spawner = nursery.spawner()
-    var returned = spawner.try_spawn(pure[Int](42))
-    check(Bool(returned), "rejected child stays owned by caller")
-    var retained = run(returned.take())
-    check(retained.take()._take_ok() == 42, "rejected child remains executable")
-    spawner.close()
-    var empty = run(nursery^)
-    check(len(empty.take()._take_ok()) == 0, "zero capacity closes and drains")
-    print("host admission: retained linear owners, checked budgets and nursery limits, moved cancellation drain")
+    print("host admission: retained linear owners, checked budgets, moved cancellation drain")

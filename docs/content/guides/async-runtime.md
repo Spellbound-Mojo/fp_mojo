@@ -114,6 +114,13 @@ hosts every fiber started beneath it, including fibers started by fibers, so
 nesting costs no native stack; each root poll alternates whether that `IO`'s own
 program or its fibers run first, sharing one transition budget.
 
+`Driver.fibers()` lists the root `IO`'s live fibers between polls, like Cats
+Effect's fiber dump: each `FiberInfo` names an internal slot, its owner's slot
+(0 is the root program), and a `FiberStatus` of runnable, suspended, or draining
+its children. It holds no payloads or completed fibers. Slots are reused, so an
+index is not an identity, and fibers hosted by an `IO` inside a leaf are not
+listed.
+
 ## Drive external work and shutdown
 
 `Driver` is a linear root owner. Poll it until `Progress.completed`, then consume
@@ -193,6 +200,7 @@ reported deadline.
 | `joinWith`, `joinWithNever`, `joinWithUnit` | `join_with`, `join_with_never`, `join_with_unit` | A canceled child runs the fallback, waits, or produces unit |
 | `IORuntimeConfig` | `IORuntimeConfig(cancelation_check_threshold, auto_yield_threshold)` | Same validation; by default checks every bind, where Cats Effect checks every 512, and yields every 1,024 transitions |
 | `reportUnhandledFiberErrors`, `reportFailure` | `IORuntimeConfig.report_unhandled_fiber_errors`, `.reporter` | On by default; reports when the last handle or join is dropped |
+| Fiber dump | `Driver.fibers()` returning `FiberInfo` | Live fibers of the root, with owner and status, no payloads |
 
 Operations use snake_case. Types follow the repository's Mojo class convention.
 `async` is declared with backticks because it is a Mojo keyword, and called as

@@ -7135,6 +7135,12 @@
    ],
    "kind": "type or alias",
    "methods": {
+    "fibers": [
+     {
+      "sha256": "b6b1d71261d90a2e2c8cedef422dfb504bcceb750c12ae8c7e0bf350cad84b7c",
+      "signature": "def fibers(self) -> List[FiberInfo]:"
+     }
+    ],
     "finish": [
      {
       "sha256": "3da358eb93992d37c64f006568bfbf514148c97b29b9939195d01be579f99f79",
@@ -7232,9 +7238,49 @@
    },
    "provider": "effects/_async/engine"
   },
+  "effects.async_runtime.FiberInfo": {
+   "declarations": [
+    "struct FiberInfo(Copyable, Writable):"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/fibers"
+  },
+  "effects.async_runtime.FiberStatus": {
+   "declarations": [
+    "struct FiberStatus(Copyable, Equatable, Writable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "draining": [
+     {
+      "sha256": "1348ac742847db8de892928419672d80be82e9debf059ce938a4692208be6f64",
+      "signature": "def draining() -> Self:"
+     }
+    ],
+    "runnable": [
+     {
+      "sha256": "75a4a38efa01ad63abcb5b9d21c29be4c15e97cce118621f02afe150254cfc4f",
+      "signature": "def runnable() -> Self:"
+     }
+    ],
+    "suspended": [
+     {
+      "sha256": "480156a6d7cf551f4d52996224e2384384e044e2e309fbe8d662ccb4073ed71b",
+      "signature": "def suspended() -> Self:"
+     }
+    ],
+    "write_to": [
+     {
+      "sha256": "7f28818b62b2e605447a3c7b857e6a7ada831aee31a6da730134704427107be4",
+      "signature": "def write_to(self, mut writer: Some[Writer]):"
+     }
+    ]
+   },
+   "provider": "effects/_async/fibers"
+  },
   "effects.async_runtime.IO": {
    "declarations": [
-    "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier):"
+    "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier, _FiberHost):"
    ],
    "kind": "type or alias",
    "methods": {

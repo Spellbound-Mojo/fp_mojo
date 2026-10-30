@@ -4,7 +4,9 @@ from std.memory import ArcPointer
 from fp._internal.waking import _Runtime
 from fp._internal.cells import _lock_metadata
 from fp.effects import CancellationToken, IOContext, ExitCase
-from state_machine import Clock, Driver, Signal, Wait, Step, Sleep, both, Nursery, Scope, ScopedMachine, CleanupMachine, pure
+from fp.callables import OnceUnary
+from fp.effects._async.engine import IO, Fiber
+from state_machine import Clock, Driver, Signal, Wait, Step, Sleep, both, Scope, ScopedMachine, CleanupMachine, pure
 from foundation import check, success, Yielding, Waiter
 
 
@@ -149,26 +151,40 @@ def cancellation_and_cleanup():
     check(not moved^.finish(), "cancellation preserved after cleanup")
 
 
-def parked_nursery():
+@fieldwise_init
+struct StartSleepers(OnceUnary):
+    """Start one timer fiber per remaining index, then wait until canceled."""
+    var next: Int
+    var limit: Int
+    comptime Arg = Fiber[NoneType, Int]
+    comptime Out = IO[NoneType, Int]
+
+    def call_once(deinit self, var fiber: Fiber[NoneType, Int]) -> IO[NoneType, Int]:
+        if self.next == self.limit:
+            return IO[NoneType, Int].never()
+        return sleeper(self.next).start().flat_map(StartSleepers(self.next + 1, self.limit))
+
+
+def sleeper(index: Int) -> IO[NoneType, Int]:
+    return IO[NoneType, Int].lift(Sleep[Int](10 + index))
+
+
+def parked_fibers():
     var clock = Clock.manual()
-    var nursery = Nursery[Sleep[Int]](128)
-    var spawn = nursery.spawner()
-    for i in range(128):
-        check(not spawn.try_spawn(Sleep[Int](10 + i)), "timer child accepted")
-    spawn.close()
-    var driver = Driver(nursery^, CancellationToken(), clock)
+    var program = sleeper(0).start().flat_map(StartSleepers(1, 128))
+    var driver = Driver(program^, CancellationToken(), clock)
     var parked = driver.poll(256)
-    check(not parked.runnable and parked.deadline.value() == at(10), "all timer children parked")
+    check(not parked.runnable and parked.deadline.value() == at(10), "all timer fibers parked")
     for _ in range(100):
-        check(driver.poll(100).polls == 0, "idle nursery performs no child polls")
+        check(driver.poll(100).polls == 0, "idle fibers perform no polls")
     clock.advance_to(at(10))
     var one = driver.poll(2)
-    check(one.timers == 1 and one.polls == 1 and one.deadline.value() == at(11), "one timer selects one child")
+    check(one.timers == 1 and one.polls == 1 and one.deadline.value() == at(11), "one timer selects one fiber")
     driver.cancel()
     var done = driver.poll(1000)
     check(done.completed and not done.deadline, "cancellation removes remaining timer registrations")
     var runtime = driver.task.context._runtime.value().copy()
-    check(not driver^.finish(), "nursery cancellation")
+    check(not driver^.finish(), "owner cancellation")
     var guard = _lock_metadata(runtime._cell)
     check(guard.cell[].slot.value().active == 0 and guard.cell[].slot.value().live_timers == 0, "all registrations retired")
 
@@ -178,5 +194,5 @@ def main():
     timer_lifecycle()
     deterministic_driver()
     cancellation_and_cleanup()
-    parked_nursery()
+    parked_fibers()
     print("scheduler: deterministic wakes, FIFO budgets, stale generations, timer bounds, manual time, masked cleanup")

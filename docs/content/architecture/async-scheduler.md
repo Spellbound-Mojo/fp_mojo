@@ -16,9 +16,9 @@ must also clear inherited ancestor readiness without losing an independent
 notification. Ready siblings use intrusive FIFO links; removal is O(1), and
 duplicate notifications retain the existing queue position.
 
-Nurseries select ready child IDs directly and count unfinished children. They
-no longer rebuild flattened wake lists or scan parked children on the scheduled
-path. Forwarding through bind, loop and callback cleanup uses the child
+Fiber hosts and child groups select ready child IDs directly and count
+unfinished children. They do not rebuild flattened wake lists or scan parked
+children on the scheduled path. Forwarding through bind, loop and callback cleanup uses the child
 registration. The legacy direct-poll path retains wait descriptors. Cancellation
 and error settlement remain canonical, including masked finalization.
 
@@ -78,7 +78,7 @@ independently of a future parking backend.
 
 Maintained clients cover notification ordering, FIFO budgets, stale task and
 wait generations, timer replacement, checked time arithmetic, linear-driver
-ownership, masked cleanup and parked nursery behavior. The runner checks source
+ownership, masked cleanup and parked fibers. The runner checks source
 and separate-package imports at O0/O3 with warnings as errors and retains raw
 compiler/execution evidence.
 

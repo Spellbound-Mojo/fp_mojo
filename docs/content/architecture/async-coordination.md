@@ -74,7 +74,7 @@ borrowed values and errors. Compiler rejection fixtures reject move-only Deferre
 payloads and escaped Queue/Deferred origins.
 
 The qualification runner includes these clients alongside the previous scheduler,
-composition, nursery, callback, and resource tests, plus nine synchronous IO,
+composition, fiber, callback, and resource tests, plus nine synchronous IO,
 resource, coordination, and fiber regression clients. Every client is checked
 through source and separate-package imports at O0 and O3, with warnings as errors.
 The three iterative/deep clients also run under a 1024 KiB stack limit.

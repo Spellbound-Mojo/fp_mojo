@@ -1,6 +1,6 @@
 """Repeated structured cancellation plus reuse of shared coordination handles."""
 from fp._internal.cells import _lock_metadata
-from fp.effects.async_runtime import Queue, Semaphore, both, pure, run
+from fp.effects.async_runtime import IO, Queue, Semaphore, run
 from workload import cycle
 from support import Window, check
 
@@ -18,12 +18,12 @@ def main() raises:
         cycle(cycles % 4)
         # These handles persist across roots. Both consumers park before the
         # producer runs; notifications and permits must be reusable indefinitely.
-        var consumers = both(queue.take[Int](), queue.take[Int]())
-        var producers = both(queue.offer[Int](cycles), queue.offer[Int](-cycles))
-        var transferred = run(both(consumers^, producers^))
+        var consumers = queue.take[Int]().both(queue.take[Int]())
+        var producers = queue.offer[Int](cycles).both(queue.offer[Int](-cycles))
+        var transferred = run(consumers^.both(producers^))
         var result = transferred.take()._take_ok()
         check(result[0][0] + result[0][1] == 0, "shared queue transfers both values")
-        var limited = run(permits.with_permit(pure[Int](cycles)))
+        var limited = run(permits.with_permit(IO[Int, Int].pure(cycles)))
         var available = run(permits.available[Int]())
         check(limited.take()._take_ok() == cycles and available.take()._take_ok() == 2, "shared semaphore restores permits")
         var guard = _lock_metadata(queue._source._state._cell)

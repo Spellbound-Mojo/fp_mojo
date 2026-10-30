@@ -14,6 +14,7 @@ Duration and opaque Instant keep deadline arithmetic wide. Only reviewed names
 and documented metadata are supported, not private layout or ABI.
 """
 from fp.effects._async.engine import IO, Async, Fiber
+from fp.effects._async.fibers import FiberInfo, FiberStatus
 from fp.effects._async.io_resource import Resource
 from fp.effects._async.coordination import Deferred, Queue, Semaphore
 from fp.effects._async.host import Clock, Driver, run

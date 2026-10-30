@@ -69,7 +69,7 @@ movement during draining, exact destruction, deadline anchoring under a one-poll
 budget, fallback entry after withdrawal, cleanup failure, and retired metadata.
 Native-origin clients cover winner values, errors, and fallback values. Compiler
 rejections cover mismatched child errors, mismatched fallback types, and escaped
-winner origins. Existing pair, nursery, scope, scheduler, and synchronous tests
+winner origins. Existing pair, fiber, scope, scheduler, and synchronous tests
 remain in the source/package O0/O3 qualification matrix.
 
 `qualify.py --client NAME` selects a focused source/package O0/O3 matrix; repeat

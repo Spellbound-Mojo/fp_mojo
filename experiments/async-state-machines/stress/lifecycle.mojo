@@ -1,10 +1,10 @@
-"""One public typed loop repeatedly owns callbacks and suspending withdrawal."""
+"""One public IO loop repeatedly owns callbacks and suspending withdrawal."""
 from std.memory import ArcPointer
-from fp.algebra import tail_rec_m, map
+from fp.algebra import tail_rec_m
 from fp.callables import Unary, OnceUnary
 from fp.data import ControlFlow, Continue, Break
 from fp.effects import CancellationToken
-from fp.effects.async_runtime import Async, Clock, Driver, Duration, Instant, Completion, Callback, TimeoutTo, Pure, callback, timeout_to, pure
+from fp.effects.async_runtime import IO, Async, Clock, Driver, Duration, Instant, Completion
 from fp.effects.async_runtime.protocols import Machine, Context, Step, Wait
 from fp._internal.cells import _lock_metadata
 from support import Window, check, success, advance
@@ -84,7 +84,6 @@ struct Withdraw(Machine):
     var deadline: Optional[Instant]
     comptime Value = NoneType
     comptime Error = Int
-    comptime Family = Async[Int]
     def poll(mut self, context: Context[Int]) -> Step[NoneType, Int]:
         check(context._masked and not context.canceled(), "withdrawal stays masked")
         if not self.deadline:
@@ -119,18 +118,17 @@ struct Factory(Unary):
     var timeout: Duration
     var pause: Duration
     comptime Arg = Int
-    comptime Body = TimeoutTo[Callback[Register, Withdraw], Pure[Payload, Int]]
-    comptime Out = Async[Int].Mapped[Self.Body, Advance]
+    comptime Out = IO[ControlFlow[Int, Int], Int]
     def call(self, var iteration: Int) -> Self.Out:
         check(self.host[].payloads[].created == self.host[].payloads[].dropped, "previous step releases all payloads before next construction")
         check(self.host[].guards[].created == self.host[].guards[].dropped, "withdrawal capture destroyed before next step")
         if self.host[].current:
             retired(self.host[].current.value(), self.host[].payloads)
             self.host[].history[(iteration - 1) % 4] = Optional(self.host[].current.take())
-        var body = callback(Register(self.host.copy(), iteration),
-            Withdraw(self.host.copy(), Payload(iteration, self.host[].guards), self.pause.copy(), None))
-        var selected = timeout_to(body^, self.timeout, pure[Int](Payload(-iteration - 1, self.host[].payloads)))
-        return map[Async[Int]](Advance(self.host.copy(), iteration), selected^)
+        var withdrawal = IO[NoneType, Int].lift(Withdraw(self.host.copy(), Payload(iteration, self.host[].guards), self.pause.copy(), None))
+        var body = IO[Payload, Int].`async`(Register(self.host.copy(), iteration), withdrawal^)
+        var selected = body^.timeout_to(self.timeout, IO[Payload, Int].pure(Payload(-iteration - 1, self.host[].payloads)))
+        return selected^.map(Advance(self.host.copy(), iteration))
 
 
 def main() raises:
@@ -169,7 +167,7 @@ def main() raises:
         _ = guard^
         progress = driver.poll()
     var outcome = driver^.finish()
-    check(outcome.take()._take_ok() == host[].completed, "typed loop returns exact completed count")
+    check(outcome.take()._take_ok() == host[].completed, "IO loop returns exact completed count")
     retired(host[].current.value(), host[].payloads)
     for prior in host[].history:
         if prior:

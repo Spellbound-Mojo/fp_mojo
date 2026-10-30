@@ -77,7 +77,7 @@ nav:
       - Advanced async development plan: architecture/async-advanced-plan.md
       - Async composition: architecture/async-composition.md
       - Async callback registration: architecture/async-callbacks.md
-      - Dynamic async nurseries: architecture/async-nurseries.md
+      - Async fibers: architecture/async-fibers.md
       - Wake-driven async execution: architecture/async-scheduler.md
       - Resumable async coordination: architecture/async-coordination.md
       - Structured races and timeouts: architecture/async-racing.md

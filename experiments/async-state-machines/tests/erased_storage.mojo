@@ -1,7 +1,9 @@
 """Machines of different types behind one carrier, with exact move-only ownership."""
 from std.memory import ArcPointer
 from fp.effects import IOContext, CancellationToken, Outcome
-from state_machine import ErasedMachine, Machine, Step, Wait, Task, Nursery, run, both
+from fp.callables import OnceUnary
+from fp.effects._async.engine import IO, Fiber
+from state_machine import ErasedMachine, Machine, Step, Wait, Task, run, both
 from foundation import check, success, failure, Failure, Borrowed
 
 # Stats slots: 0 machines destroyed, 1 tokens destroyed, 2 pending polls,
@@ -109,24 +111,65 @@ def unopened_and_moved():
     check(stats[][MACHINES] == 2 and stats[][TOKENS] == 0 and stats[][PENDING] == 0, "discarded without polling")
 
 
-def heterogeneous_nursery():
+def child(index: Int, stats: ArcPointer[List[Int]]) -> IO[Token, Failure]:
+    if index % 2 == 0:
+        return IO[Token, Failure].lift(Erased(Countdown(index, index, String("countdown"), stats.copy())))
+    return IO[Token, Failure].lift(Erased(Immediate(index, stats.copy())))
+
+
+@fieldwise_init
+struct StartAll(OnceUnary):
+    """Start each heterogeneous child as a fiber, then join them in start order."""
+    var next: Int
+    var stats: ArcPointer[List[Int]]
+    var handles: List[Fiber[Token, Failure]]
+    comptime Arg = Fiber[Token, Failure]
+    comptime Out = IO[List[Token], Failure]
+
+    def call_once(deinit self, var fiber: Fiber[Token, Failure]) -> IO[List[Token], Failure]:
+        self.handles.append(fiber^)
+        if self.next == 6:
+            return IO[List[Token], Failure].pure(List[Token]()).flat_map(JoinAll(self.handles^))
+        return child(self.next, self.stats).start().flat_map(StartAll(self.next + 1, self.stats.copy(), self.handles^))
+
+
+@fieldwise_init
+struct JoinAll(OnceUnary):
+    var handles: List[Fiber[Token, Failure]]
+    comptime Arg = List[Token]
+    comptime Out = IO[List[Token], Failure]
+
+    def call_once(deinit self, var values: List[Token]) -> IO[List[Token], Failure]:
+        if not len(self.handles):
+            return IO[List[Token], Failure].pure(values^)
+        var fiber = self.handles.pop(0)
+        return fiber^.join().flat_map(Collect(values^, self.handles^))
+
+
+@fieldwise_init
+struct Collect(OnceUnary):
+    var values: List[Token]
+    var handles: List[Fiber[Token, Failure]]
+    comptime Arg = Outcome[Token, Failure]
+    comptime Out = IO[List[Token], Failure]
+
+    def call_once(deinit self, var outcome: Outcome[Token, Failure]) -> IO[List[Token], Failure]:
+        check(Bool(outcome) and outcome.value().is_ok(), "each heterogeneous child succeeds")
+        self.values.append(outcome.take()._take_ok())
+        return IO[List[Token], Failure].pure(self.values^).flat_map(JoinAll(self.handles^))
+
+
+def heterogeneous_fibers():
     var stats = new_stats()
-    var nursery = Nursery[Erased](8)
-    var spawn = nursery.spawner()
-    for i in range(6):
-        if i % 2 == 0:
-            check(not spawn.try_spawn(Erased(Countdown(i, i, String("countdown"), stats.copy()))), "admit countdown")
-        else:
-            check(not spawn.try_spawn(Erased(Immediate(i, stats.copy()))), "admit immediate")
-    spawn.close()
-    var result = run(nursery^)
+    var program = child(0, stats).start().flat_map(StartAll(1, stats.copy(), List[Fiber[Token, Failure]]()))
+    var result = run(program^)
     var values = result.take()._take_ok()
     check(len(values) == 6, "every heterogeneous child completes")
     for i in range(6):
-        check(values[i].id == i, "values in admission order")
+        check(values[i].id == i, "values in start order")
     check(stats[][PENDING] == 0 + 2 + 4, "countdown children suspended independently")
     _ = values^
-    check(stats[][MACHINES] == 6 and stats[][TOKENS] == 6, "nursery destroys each child and value once")
+    check(stats[][MACHINES] == 6 and stats[][TOKENS] == 6, "fibers destroy each child and value once")
 
 
 def erased_pair():
@@ -167,7 +210,7 @@ def origin_in_value():
 def main():
     separate_runs()
     unopened_and_moved()
-    heterogeneous_nursery()
+    heterogeneous_fibers()
     erased_pair()
     canceled_after_entry()
     origin_in_value()

@@ -7,8 +7,8 @@ Its native error is `E` or `Never`; the withdrawal is a unit `IO` with the same
 canonical invocation adapters. The [composition engine](async-composition.md)
 owns execution in pure Mojo.
 
-The private [nursery](async-nurseries.md) admits callback machines dynamically and
-joins them through their complete withdrawal.
+[Fibers](async-fibers.md) run callback operations dynamically and join them
+through their complete withdrawal.
 
 ## Ownership and terminal decisions
 
