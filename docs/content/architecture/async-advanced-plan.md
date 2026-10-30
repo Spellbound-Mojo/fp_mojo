@@ -1142,17 +1142,20 @@ by whether `IO` accepted them through `as_unary` before this pass:
 |---|---|---|
 | `fp.algebra` `map`, `flat_map`, `traverse` | Owned unary | Plain functions owned |
 | `fp.iteration` `traverse`, `traverse_void` | Owned unary | Plain functions owned |
-| `fp.iteration` `flat_traverse`, `find_map_effect`, `fold_map_effect` | Owned unary | Still borrowed; `as_unary(f)` with `IO` |
+| `fp.iteration` `flat_traverse`, `find_map_effect`, `fold_map_effect` | Owned unary | Plain functions owned (follow-up) |
 | `fp.iteration` `traverse_filter` | Owned unary | Still borrowed; the audit's `IO` call did not compile even with `as_unary` |
 | `fp.iteration` `fold_effect` | Binary | Still borrowed; not checked with `IO` |
 | `fp.iteration` `traverse_tap`, `filter_effect`, `any_effect`, `all_effect`, `find_effect` | Borrowing | Still borrowed; not checked with `IO` |
 | `fp.algebra` `if_effect` | Thunks | Still borrowed; not checked with `IO` |
 | `fp.algebra` `tail_rec_m` | Owned unary | Already owned |
 
-The built rows are the ones the approved gate names, and `traverse_void`,
-which `Iter` already gives the same owned overloads. The remaining unary rows
-can take the same generated overloads in a later pass; each adds eight
-overloads per entry point.
+The first build covered the rows the approved gate names, and
+`traverse_void`, which `Iter` already gave the same owned overloads. A
+follow-up added `flat_traverse`, `find_map_effect`, and `fold_map_effect`
+through a `thin` kind in `generate_traversal_syntax.py` and
+`generate_effect_syntax.py`: eight by-value overloads per entry point from the
+shared factory signatures, calling the same execution entry as the borrowed
+and library overloads. Free `traverse_void` moved to that kind.
 
 **Probe.**
 
@@ -1191,6 +1194,11 @@ overloads per entry point.
   tooling test, and the `io_family`, `reject_io_borrowed`, `family_sequence`,
   `reject_family_error`, and `reject_family_origin` qualifications (20/20).
   The full suite and gates were not run.
+- Follow-up runs: 54 runtime tests and examples and 111 compile-fail fixtures
+  that use `traverse_void`, `flat_traverse`, `find_map_effect`, or
+  `fold_map_effect`, the generator tooling test, and the `io_family` (now also
+  calling the three new entry points with plain functions) and
+  `family_sequence` qualifications (8/8).
 
 ## Pass 9 proposal
 

@@ -19933,6 +19933,554 @@
      },
      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Out where FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error])",
      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(A, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def find_map_effect[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(R, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def find_map_effect[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out where FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(A, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def find_map_effect[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(R, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def find_map_effect[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out where FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
     }
    ],
    "provider": "iteration/effectful",
@@ -20427,6 +20975,554 @@
       "type": "G.Mapped[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]]]]"
      },
      "signature": "def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]]]] where _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]]]]]], ListFamily.TraverseError[G, V, _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == List[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]"
+     },
+     "signature": "def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]]] and G.Element[NativeUnary[A, R, Never, type_of(function), False].Out] == List[_ListElement[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]"
+     },
+     "signature": "def flat_traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]]] and G.Element[NativeUnary[A, R, Never, type_of(function), False].Out] == List[_ListElement[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]"
+     },
+     "signature": "def flat_traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]]] and G.Element[NativeUnary[A, R, Never, type_of(function), False].Out] == List[_ListElement[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]"
+     },
+     "signature": "def flat_traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]] where _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]]] and G.Element[NativeUnary[A, R, Never, type_of(function), False].Out] == List[_ListElement[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]"
+     },
+     "signature": "def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]]] and G.Element[NativeUnary[A, R, E, type_of(function), True].Out] == List[_ListElement[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]"
+     },
+     "signature": "def flat_traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]]] and G.Element[NativeUnary[A, R, E, type_of(function), True].Out] == List[_ListElement[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]"
+     },
+     "signature": "def flat_traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]]] and G.Element[NativeUnary[A, R, E, type_of(function), True].Out] == List[_ListElement[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]"
+     },
+     "signature": "def flat_traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]] where _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]]] and G.Element[NativeUnary[A, R, E, type_of(function), True].Out] == List[_ListElement[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]",
      "summary": "Traverse effects and flatten one source-family layer inside the effect."
     }
    ],
@@ -21561,6 +22657,610 @@
       "type": "FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Out"
      },
      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Out where FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(A, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def fold_map_effect[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(R, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def fold_map_effect[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out where FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(A, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def fold_map_effect[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(R, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def fold_map_effect[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out where FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], M.Error]",
      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
     }
    ],
@@ -25688,8 +27388,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
      },
-     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -25753,8 +27453,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
      },
-     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -25818,8 +27518,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
      },
-     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -25883,8 +27583,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
      },
-     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -25955,8 +27655,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
      },
-     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -26027,8 +27727,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
      },
-     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -26099,8 +27799,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
      },
-     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -26171,8 +27871,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
      },
-     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     }
    ],
    "provider": "iteration/derived",
@@ -302353,6 +304053,554 @@
      },
      "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Out where FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, V, _NativeUnaryRef[A, R, E, F, True, o]].Error])",
      "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(A, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def find_map_effect[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(R, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def find_map_effect[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Out where FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FindMapContract[G, V, NativeUnary[A, R, Never, type_of(function), False]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def find_map_effect[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(A, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def find_map_effect[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(R, RegisterPassable) and FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def find_map_effect[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Out where FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error], FindMapContract[G, V, NativeUnary[A, R, E, type_of(function), True]].Error])",
+     "summary": "Find the first present Optional produced inside the selected Monad in each live branch."
     }
    ],
    "provider": "iteration/effectful",
@@ -302885,6 +305133,554 @@
       "type": "G.Mapped[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]]]]"
      },
      "signature": "def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Applicative, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]]]] where _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]]]]]], ListFamily.TraverseError[G, V, _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == List[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]"
+     },
+     "signature": "def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]]] and G.Element[NativeUnary[A, R, Never, type_of(function), False].Out] == List[_ListElement[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]"
+     },
+     "signature": "def flat_traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]]] and G.Element[NativeUnary[A, R, Never, type_of(function), False].Out] == List[_ListElement[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]"
+     },
+     "signature": "def flat_traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]]] and G.Element[NativeUnary[A, R, Never, type_of(function), False].Out] == List[_ListElement[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]"
+     },
+     "signature": "def flat_traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]] where _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, Never, type_of(function), False]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, Never, type_of(function), False]]] and G.Element[NativeUnary[A, R, Never, type_of(function), False].Out] == List[_ListElement[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, Never, type_of(function), False]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]"
+     },
+     "signature": "def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]]] and G.Element[NativeUnary[A, R, E, type_of(function), True].Out] == List[_ListElement[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]"
+     },
+     "signature": "def flat_traverse[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]]] and G.Element[NativeUnary[A, R, E, type_of(function), True].Out] == List[_ListElement[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]"
+     },
+     "signature": "def flat_traverse[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]]] and G.Element[NativeUnary[A, R, E, type_of(function), True].Out] == List[_ListElement[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]",
+     "summary": "Traverse effects and flatten one source-family layer inside the effect."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]"
+     },
+     "signature": "def flat_traverse[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]] -> G.Mapped[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]] where _Source[V].Element == A and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]], G.MapError[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, V, NativeUnary[A, R, E, type_of(function), True]]]]]]], ListFamily.TraverseError[G, V, NativeUnary[A, R, E, type_of(function), True]]] and G.Element[NativeUnary[A, R, E, type_of(function), True].Out] == List[_ListElement[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and ListFamily.TargetCompatible[G, V, NativeUnary[A, R, E, type_of(function), True]]",
      "summary": "Traverse effects and flatten one source-family layer inside the effect."
     }
    ],
@@ -304019,6 +306815,610 @@
       "type": "FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Out"
      },
      "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], X: AnyType = _InferError](ref[o] function: F, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Out where FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(A, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def fold_map_effect[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out where not conforms_to(R, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out"
+     },
+     "signature": "def fold_map_effect[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Out where FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, Never, type_of(function), False]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def fold_map_effect[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(A, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def fold_map_effect[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out where not conforms_to(R, RegisterPassable) and FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], M.Error]",
+     "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var A) raises E thin -> R",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "",
+       "name": "source",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "A",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "RegisterPassable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "M",
+       "type": "Monoid",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "X",
+       "type": "AnyType",
+       "variadic": false
+      }
+     ],
+     "raises": true,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out"
+     },
+     "signature": "def fold_map_effect[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error] -> FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Out where FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, V, NativeUnary[A, R, E, type_of(function), True]].Error], M.Error]",
      "summary": "Map each element into the selected Monad and combine its values in order with an explicit Monoid."
     }
    ],
@@ -312968,8 +316368,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
      },
-     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -313033,8 +316433,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
      },
-     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -313098,8 +316498,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
      },
-     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -313163,8 +316563,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]"
      },
-     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]] -> G._Looped[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, Never, type_of(function), False].Out] and G._LoopCompatible[V, NativeUnary[A, R, Never, type_of(function), False], _Discard[G.Element[NativeUnary[A, R, Never, type_of(function), False].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -313235,8 +316635,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
      },
-     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -313307,8 +316707,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
      },
-     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(A, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -313379,8 +316779,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
      },
-     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where not conforms_to(R, RegisterPassable) and _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     },
     {
      "args": [
@@ -313451,8 +316851,8 @@
       "doc": "",
       "type": "G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]"
      },
-     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, R] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
-     "summary": "Copy a plain function into the owned traversal callback; closures stay borrowed."
+     "signature": "def traverse_void[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, V: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](function: def(var A) raises E thin -> R, var source: V) raises _EntryError[X, G._LoopError[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]] -> G._Looped[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]] where _Source[V].Element == A and _CarrierCompatible[G, NativeUnary[A, R, E, type_of(function), True].Out] and G._LoopCompatible[V, NativeUnary[A, R, E, type_of(function), True], _Discard[G.Element[NativeUnary[A, R, E, type_of(function), True].Out]]]",
+     "summary": "Traverse effects without retaining successful outputs."
     }
    ],
    "provider": "iteration/derived",

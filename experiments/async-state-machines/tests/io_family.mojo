@@ -1,8 +1,8 @@
 """IO selects its Async family: Pipeline, tail recursion, traversal, collection, products and attempt."""
 from std.iter import Iterator
 from std.memory import ArcPointer
-from fp.algebra import pure, product, tail_rec_m, map, flat_map, traverse, ListFamily
-from fp.iteration import traverse as collect
+from fp.algebra import pure, product, tail_rec_m, map, flat_map, traverse, ListFamily, IntSumMonoid
+from fp.iteration import traverse as collect, flat_traverse, find_map_effect, fold_map_effect
 from fp.callables import MutableUnary
 from fp.functions import pipeline
 from fp.data import ControlFlow, Continue, Break
@@ -21,6 +21,15 @@ def step(value: Int) -> IO[ControlFlow[Int, Int], Int]:
 
 def twice(value: Int) -> IO[Int, Int]:
     return IO[Int, Int].pure(value * 2)
+
+
+def pair(value: Int) -> IO[List[Int], Int]:
+    var values: List[Int] = [value, value]
+    return IO[List[Int], Int].pure(values^)
+
+
+def above_one(value: Int) -> IO[Optional[Int], Int]:
+    return IO[Optional[Int], Int].pure(Optional(value) if value > 1 else None)
 
 
 def increment(value: Int) -> Int:
@@ -100,6 +109,13 @@ def iteration():
     var failed = run(program^)
     check(pulls[] == 2 and calls[] == 2, "a failed collection stops pulling and calling")
     check(failed.take()._take_err().into_errors().into_list()[0] == 22, "the callback error keeps its exact type and value")
+    var small: List[Int] = [1, 2, 3]
+    var flat = run(flat_traverse[Async[Int]](pair, small.copy()))
+    check(len(flat.take()._take_ok()) == 6, "free flat_traverse owns a plain function")
+    var found = run(find_map_effect[Async[Int]](above_one, small.copy()))
+    check(found.take()._take_ok().value() == 2, "free find_map_effect owns a plain function")
+    var total = run(fold_map_effect[Async[Int], IntSumMonoid](twice, small^))
+    check(total.take()._take_ok() == 12, "free fold_map_effect owns a plain function")
 
 
 def main():

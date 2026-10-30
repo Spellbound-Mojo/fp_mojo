@@ -40,8 +40,9 @@ work the same way. Long runs yield to the host after a fixed number of steps.
 
 An `IO` keeps origins only through `T` and `E`, so the callbacks it stores must
 own their state. `IO`'s methods, `Pipeline`, `tail_rec_m`, the free `map`,
-`flat_map`, and `traverse`, and `fp.iteration`'s `traverse` and `traverse_void`
-copy plain functions and accept library callables that own their state.
+`flat_map`, and `traverse`, and `fp.iteration`'s `traverse`, `traverse_void`,
+`flat_traverse`, `find_map_effect`, and `fold_map_effect` copy plain functions
+and accept library callables that own their state.
 Capturing closures and borrowed callback views are rejected at compile time.
 The other free `fp.iteration` traversals, folds, and searches still borrow
 plain functions, so with `IO` they take an owned library callable, such as
