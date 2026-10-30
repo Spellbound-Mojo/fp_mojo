@@ -1,10 +1,14 @@
 # Advanced IO and async development plan
 
-Status: **proposal for discussion; implementation has not started**. This plan
-continues the completed foundation passes 1–6 from `nightly` commit
-`bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes lightweight fibers,
-stack-safe general sequencing, and generic effect capabilities. Current support
-remains defined by the [async guide](../guides/async-runtime.md).
+Status: **Pass 7a complete; 7b next**. The [representation decisions](#representation-decisions)
+were approved on 2026-10-30. This plan continues the completed foundation passes
+1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
+lightweight fibers, stack-safe general sequencing, and generic effect
+capabilities. Current support remains defined by the
+[async guide](../guides/async-runtime.md).
+
+The plan is directional guidance. Pass evidence about what Mojo 1.2 supports
+and what performs well may revise later passes; record such revisions here.
 
 Concurrent collection operations are explicitly deferred: no async
 `par_traverse`, `par_sequence`, or bounded concurrent collection traversal is
@@ -110,18 +114,46 @@ and a stable typed program boundary. The public result, domain error, and
 retained origins remain native; private scheduling must not depend on the entire
 construction history appearing in the carrier's type.
 
-Pass 7 compares two library representations before committing to either:
+### Representation decisions
 
-| Candidate | Benefit | Required proof or limitation |
-|---|---|---|
-| Native heterogeneous storage behind a stable result/error/origin boundary | Supports runtime-built composition and different child program types through one scheduler | Demonstrate native storage, invocation, destruction, and origin retention; a trait existential is not assumed to be storable or sufficient. |
-| Typed frames with an explicit closed set of alternatives | Keeps every payload and continuation concrete | Show how the program's admitted alternatives are represented; a fixed closed set alone does not establish general open-ended composition. |
+Mojo 1.2 has no existentials (its roadmap lists them as not started) and no
+escaping closures (`closure-declarations.mdx`). A closed set of typed frames
+cannot express runtime-built chains whose intermediate values differ in type.
+The standard library erases types by hand: `_ErasedWriter` in
+`std/format/tstring.mojo` stores an untyped pointer and a capture-free function
+specialized for the original type, which casts the pointer back. Owning erasure
+in the standard library cannot check origins either; `TaskGroup` in
+`std/runtime/_asyncrt.mojo` carries an open TODO (MOCO-771) for that check.
 
-Inspect existing native containers, callable adapters, ADT owners, and execution
-slots before introducing storage. No unchecked cast to an erased value, widened
-origin, invented Send/Sync proof, or copied move-only payload is an acceptable
-shortcut. Compiler rejection of one candidate requires examining the other;
-it does not by itself justify declaring the goal impossible.
+The approved decisions are:
+
+1. **Construction-paired erasure.** One private owner may erase an owned value.
+   Each cast back to the concrete type happens only in a function specialized
+   by the type that created the allocation. The owner has one allocation, runs
+   the destructor exactly once through its stored destroy function, never
+   exposes the raw pointer, and moves move-only payloads without copying them.
+   No widened public origin, invented Send/Sync proof, or copied move-only
+   payload is acceptable.
+2. **Two tiers of origin checking.** Typed recipes remain the origin-checked
+   path. Erased programs, which runtime-built chains, recursion, and fibers of
+   different types require, accept only programs whose state is owned,
+   shared through owned handles, or borrowed from origins that also appear in
+   `T` or `E`; those origins remain in the carrier type. Mojo 1.2 cannot extract the origins a type embeds, so this
+   is a documented precondition rather than a compiler check. Borrowed captures
+   would be dangling after ASAP destruction, not merely unverified. Plan rule 6
+   (scoped borrowing into fibers) is therefore out of reach on 1.2 for erased
+   programs.
+3. **Fibers and stack safety precede generic capability dictionaries.**
+
+Hiding a type does not by itself remove recursion: an erased bind that polls an
+erased source still recurses. The run loop must see the node kinds (pure, bind,
+error handling, mask, finalizer, defer, leaf) and keep an explicit continuation
+stack, boxing intermediate values. Existing typed combinators become leaves with
+their own stack behavior until they are rebuilt on fibers. Iterative disposal
+covers links the runtime owns, not programs captured inside user callbacks.
+
+Currently every `_Slot` registers its own wake-registry node, and wakes walk all
+ancestors. The new engine registers once per fiber, not once per frame.
 
 The chosen representation must support both heterogeneous intermediate values
 and heterogeneous child implementations. A homogeneous list of machines is not
@@ -185,7 +217,12 @@ The proposed ownership rules are:
 6. Captured origins must outlive the owning execution scope. A fresh per-poll
    resource loan cannot escape into a background child. Independent external
    captures retain their origins, and resource owners cannot release while a
-   child still has authorized access.
+   child still has authorized access. Erased fiber programs follow the
+   owned-state precondition in the [representation decisions](#representation-decisions).
+8. A scope settles unobserved child failures, so its children share its exact
+   error type `E`. A `start` with no explicit scope must find a scope with the
+   same `E`; decide in Pass 9 between explicit scopes only and one ambient scope
+   per error type.
 7. Runtime admission is not capped by a nursery's lifetime accepted-child count.
    Retire completed/consumed fiber storage and reuse slots with generation
    protection. Live children, unconsumed results, and retained observer handles
@@ -233,7 +270,7 @@ is `EffectFailure[E]`, which can carry cancellation. Recovery intentionally skip
 canceled failures. Consequently, accepting every such failure in a generic
 raise operation and expecting ordinary raise/handle laws would be incorrect.
 
-Pass 7 must specify an ordinary recoverable error channel separately from the
+Pass 7a must specify an ordinary recoverable error channel separately from the
 complete terminal outcome. Prefer reusing the canonical nonempty error
 collection and outcome owners; do not flatten away cleanup errors or clear a
 cancellation flag to manufacture an instance. Compare a constrained ordinary
@@ -246,6 +283,14 @@ contract, not the name of a stronger Cats Effect instance. The masked
 cancellation/race differences documented in [racing](async-racing.md) must be
 included in this comparison. Any change to existing semantics needs a reviewed
 migration or a separately named compatibility surface.
+
+Working proposal, to verify against the raise/handle and cancellation laws: the
+ordinary error channel is a failure whose `canceled` flag is false, and
+`raise_error` can never set that flag. A failure with `canceled` set belongs to
+the cancellation side of the outcome. Existing recovery already skips such
+failures, so the mapping changes no current semantics. Cats Effect reports a
+finalizer error raised during cancellation and still yields `Canceled`; this
+runtime retains that error in the outcome.
 
 Derived conveniences also require ownership review. For example, a shared
 memoized result needs copying or explicit sharing, and restarting a canceled
@@ -276,8 +321,8 @@ concurrent collection operations or require a second runtime.
 
 ### Embedding and host-service ownership
 
-Define host-service contracts during Pass 7, before adding platform providers
-in Pass 12. An application should be able to supply scheduling and time services
+Define host-service contracts before adding platform providers in Pass 12;
+their only consumers arrive there. An application should be able to supply scheduling and time services
 without adopting a global runtime or surrendering ownership of its event loop.
 Scala Native's development
 [`VirtualThreadScheduler`](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/runtime/VirtualThreadScheduler.scala)
@@ -315,7 +360,7 @@ this architectural reference.
 
 ### Cancellation checks and yielding budgets
 
-In Pass 8, account for actual interpreter transitions instead of treating a root
+In Pass 8b, account for actual interpreter transitions instead of treating a root
 poll as a bounded amount of nested work. Make cancellation-check frequency and
 yield frequency separate policies, following the distinction in Cats Effect's
 [`IORuntimeConfig`](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/IORuntimeConfig.scala).
@@ -335,7 +380,7 @@ well as wall-clock time under stated host conditions.
 
 The [Scala Native memory and threading semantics](https://scala-native.org/en/stable/user/lang.html)
 illustrate why single-thread execution and shared-memory publication need
-separate contracts. Define a profile matrix in Pass 7: thread-confined
+separate contracts. Define a profile matrix before Pass 12: thread-confined
 interpreter state, externally shared notification state, and any future
 cross-thread payload execution. One polling thread does not prove that every
 handle or cancellation token is thread-confined.
@@ -354,7 +399,7 @@ capability boundary rather than silently select an unsafe fallback.
 Scala Native's
 [`Zone`](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/unsafe/Zone.scala)
 is a reference for explicit allocation ownership. Investigate typed frame pools
-or segmented storage only after Pass 8 establishes a correct implementation and
+or segmented storage only after Pass 8a establishes a correct implementation and
 allocation baseline. Reuse canonical allocation and slot owners rather than
 introducing an independent lifetime mechanism.
 
@@ -408,16 +453,18 @@ cross-thread memory correctness.
 
 | Pass | Deliverable | Completion gate |
 |---|---|---|
-| **7 — Contracts and representation proofs** | Decide carrier storage, origins, join ownership, failure accounting, and capability laws. Specify host-service ownership, event-polling contracts, and execution profiles. Compare the two storage candidates with bounded native compile/run probes after plan approval. | A runnable heterogeneous bind/fiber-storage witness with move-only values/errors and independent origins; rejection witnesses for escape/double ownership; a concrete API migration proposal and service/profile matrix. No production migration before review. |
-| **8 — Iterative sequencing and unwinding** | Implement deferred construction and the selected stable carrier; drive continuations, errors, masks, finalizers, and disposal through one iterative engine. Add transition accounting, separate cancellation/yield budgets, controllable test-host stepping, and an allocation baseline. Adapt existing recipes and extension leaves. | Runtime-built deep binds and recursive deferred programs satisfy the stack contract, including cancellation, failure, and unopened disposal; budget checks cover nested work and masked cleanup; existing lifecycle behavior remains qualified. |
+| **7a — Erasure and depth feasibility** | A private construction-paired erasure owner and an erased machine; a runtime-built recursive structure of one stable type; erased dispatch and allocation costs against the typed baseline; the origin result; the ordinary error-law mapping on paper. | Machines of different types run behind one carrier type with move-only values/errors and exact destruction counts at source/package O0/O3; a million-deep runtime chain is built and torn down iteratively under a 1 MiB stack; costs and the origin precondition are recorded here. No production migration. |
+| **7b — Carrier and fiber API proposal** | Specify the `Program[T, E]` node kinds, the leaf boundary for existing typed recipes, join ownership, failure accounting, and the scope error-type rule, using 7a evidence. | A concrete API migration proposal reviewed before Pass 8. |
+| **8a — Iterative sequencing and unwinding** | Implement deferred construction and the erased carrier; drive continuations, errors, masks, finalizers, and disposal through one iterative engine registered once per fiber. The carrier implements `Machine`, so existing drivers and combinators host it unchanged. Record an allocation baseline. | Runtime-built deep binds and recursive deferred programs satisfy the stack contract, including cancellation, failure, and unopened disposal; existing lifecycle behavior remains qualified. |
+| **8b — Budgets and test stepping** | Add transition accounting, separate cancellation/yield budgets, and controllable test-host stepping on the same engine. | Budget checks cover nested work and masked cleanup. |
 | **9 — General lightweight fibers** | Add typed handles, start/join/cancel, completion observers, `cede`, `never`, dynamic scoped ownership, and bounded diagnostic snapshots. Generalize canonical task storage rather than wrapping the homogeneous nursery. | Heterogeneous children progress independently; joining parks; all shutdown paths drain; observed/unobserved errors settle once; sequential spawn/join churn reuses storage; diagnostic handles do not retain payloads or completed graphs. |
 | **10 — Cancellation and spawn capabilities** | Add generic error/defer/cancellation/spawn contracts and provider forwarding; expose `race_pair` with settled ownership rules. Reuse them for existing higher-level operations where contracts match. | Generic clients use minimal capabilities across actual and test providers; law/admission checks pass; no duplicate masking, error, or child-draining policy. |
 | **11 — Coordination and temporal capabilities** | Add generic Ref/Deferred access and time/sleep/timeout contracts over canonical owners. Specify unique identity and clock domains; extend controlled scheduling to event delivery and virtual time. Audit ownership-sensitive derived operations. | Reproducible manual-time and cancellation laws respecting promised event ordering; no polling loop masquerading as suspension; no async collection API additions. |
 | **12 — Complete integration capabilities where supported** | Implement pure-Mojo host-service and external-completion providers, with explicit event-waiting, interruption, shutdown, and blocking/interruptible support boundaries. Separate completion notification from payload transfer and external synchronization. | Every advertised Sync/Async operation has a real provider and tests; owned/borrowed service teardown, wake-before-park, and supported publication contracts pass. Otherwise publish the narrower profile and exact blocked obligation. No C fallback or implicit thread-safety assertion. |
 | **13 — Advanced preview qualification** | Publish the provider/semantic matrix, migration guidance, runnable examples, and retained evidence. Qualify controlled schedule replay and diagnostic overhead; compare lifecycle, storage, and performance with the foundation. Evaluate pooling only against the allocation baseline. | Source/package O0/O3 checks, public generic clients, ownership rejections, bounded-stack, responsiveness, replay, and storage checks pass; any pooling preserves prompt reclamation and exact destruction. Run a separately scheduled overnight qualification before making sustained-load claims. |
 
-Pass 7 is the first implementation step after review. Its scope includes small
-feasibility experiments, not an unreviewed public API migration. Passes 8–11
+Pass 7a is the first implementation step. Its scope is small feasibility
+experiments, not an unreviewed public API migration. Passes 8–11
 form the first useful advanced-runtime milestone. Pass 12 can remain incomplete
 without blocking qualification of that explicitly narrower milestone; it must
 not be counted complete merely because callback syntax exists.
@@ -427,6 +474,55 @@ Each implemented pass gets targeted validation, a commit and push to shared
 work before pushing. Keep this as one living plan instead of creating separate
 pass journals. Retire it or fold completed decisions into current architecture
 documentation once the work is delivered.
+
+## Pass 7a results
+
+Owners: `src/fp/_internal/erased.mojo` (`_Erased`) and
+`src/fp/effects/_async/erased.mojo` (`_ErasedMachine`). Clients:
+`erased_storage` and `erased_depth` under `experiments/async-state-machines/tests/`.
+Probes: `experiments/async-state-machines/probes/erased_cost.mojo` (timings) and
+`erased_borrow.mojo` (compile only).
+
+- **Erased storage works on Mojo 1.2.** `_Erased` reuses the allocation of a
+  native `OwnedPointer`. A destroy function specialized by the stored type
+  rebuilds that owner, which runs the destructor and frees the storage.
+  `_ErasedMachine[T, E]` adds a poll function specialized by the machine type.
+  Machines of three types ran behind one carrier, in a `Nursery`, and inside
+  `both`. Move-only values and errors, moves, unopened disposal, and
+  cancellation destroyed every payload exactly once. Origins in `T` and `E`
+  remained in the carrier.
+- **Lent addresses must carry the owner's origin.** A probe that copied the
+  untracked address out of a local `_Erased` read freed memory: ASAP
+  destruction ended the owner at its last use, before the operation ran.
+  `_Erased.view()` now lends the address with the owner's origin, and operation
+  functions accept `MutOpaquePointer[_]`, as the standard library's
+  `_ErasedWriter` does.
+- **Recursive frames need explicit destructors.** Mojo 1.2 accepts a field of
+  type `Optional[OwnedPointer[Self]]` only when the struct declares `__deinit__`.
+  A destructor that detaches descendants in a loop tore down a million-link
+  chain under a 1 MiB stack. The chain was built at runtime as one type, with
+  erased payloads of two types. A control whose destructor drops its child
+  recursively crashed at the same depth and passed with an unlimited stack.
+- **The origin precondition is unchecked.** `erased_borrow.mojo` erases a machine
+  that borrows a local and returns it. It compiles with `--Werror` and no
+  diagnostic; it is never executed. The same escape through the typed machine
+  is rejected.
+- **Erasure is not the cost.** O3 medians of nine samples, four runs on the
+  session host: typed poll about 1.6 ns, erased poll 4.4–5.0 ns; allocating,
+  polling, and freeing one heap frame 33–38 ns typed and 34–49 ns erased. The
+  current engine's loop iteration takes 2.4–3.4 µs with typed or erased steps
+  alike. Per-slot registration and wait bookkeeping, not erasure, dominate the
+  current per-step cost. Pass 8a should aim for a per-bind cost near the cost of
+  a heap frame, which requires registering once per fiber.
+
+The canonical runner passed all 16 source/package O0/O3 checks for these two
+clients plus the `foundation` and `nurseries` regressions, including
+`erased_depth` under a 1 MiB stack on every route.
+
+Consequences for 7b and 8a: interpreter frames are explicit node structs with
+iterative destructors; every erased operation borrows through `view()`;
+programs captured inside user callbacks are still destroyed by native
+destructors, which is a documented limit.
 
 ## Implementation reference map
 
@@ -490,6 +586,7 @@ upstream examples.
 | Passes | Start in this repository | Existing checks to extend |
 |---|---|---|
 | 7–8 | `src/fp/effects/_async/composition.mojo` (`Bind`, `Loop`), `kernel.mojo` (`_Slot`, `_tick`), `family.mojo`; native adapters in `src/fp/callables/` | `depth`, `loop_lifecycle`, `checkpoints`, `public_generic` |
+| 7a–9 | `src/fp/_internal/erased.mojo` (`_Erased`), `src/fp/effects/_async/erased.mojo` (`_ErasedMachine`) | `erased_storage`, `erased_depth`; probes under `experiments/async-state-machines/probes/` |
 | 7–9, 12 | `src/fp/_internal/waking.mojo` (`_Runtime`, `Signal`, registrations), `src/fp/effects/_async/host.mojo` (`Driver`, `Clock`), `children.mojo`, `nurseries.mojo` | `host_admission`, `scheduler`, `children`, `nurseries`, `instant_clock`, `instant_timers` |
 | 9–11 | `src/fp/effects/outcomes.mojo`, `finalization.mojo`, `protocols.mojo`, `capabilities.mojo`, `coordination.mojo`; resumable owners under `src/fp/effects/_async/` | `async_masking`, `async_finalization`, `selection_policies`, `async_coordination`, `public_generic` |
 | 12 | `src/fp/effects/_async/callbacks.mojo`, `host.mojo`, and the same wake registry | `callbacks`, `callback_origins`, `instant_cleanup` |
@@ -559,14 +656,16 @@ the contract, preserve the existing preview and present the failing witness and
 remaining alternatives. Do not relabel a deeper fixed-depth test or
 `tail_rec_m` alone as general `flat_map` stack safety.
 
-## Decisions to review before implementation
+## Decisions and open questions
 
-The recommended decisions are a stable typed program boundary, iterative
-execution/disposal, single-thread lightweight fibers first, scope-owned running
-work with a consuming result join, and native outcome-preserving capabilities.
-Host-service ownership and execution profiles are defined early; transition
-budgets, fiber diagnostics, and controllable test scheduling accompany their
-respective runtime passes. Real platform providers remain separately qualified,
-and allocation pooling follows evidence rather than preceding a correct baseline.
-The exact carrier/API migration and ordinary-error law mapping depend on the
-Pass 7 evidence. Concurrent collection operations remain deferred throughout.
+Approved: construction-paired private erasure, typed recipes as the
+origin-checked tier with an owned-state precondition for erased programs, and
+fibers with stack safety before generic capability dictionaries. Also retained:
+iterative execution and disposal, single-thread lightweight fibers first,
+scope-owned running work with a consuming result join, and native
+outcome-preserving capabilities. Transition budgets, fiber diagnostics, and
+controllable test scheduling accompany their runtime passes. Host-service
+ownership and execution profiles are specified before Pass 12. Real platform
+providers remain separately qualified, and allocation pooling follows evidence.
+The exact carrier/API migration and the ordinary-error law mapping depend on
+Pass 7a/7b evidence. Concurrent collection operations remain deferred throughout.

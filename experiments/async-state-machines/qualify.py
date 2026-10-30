@@ -78,6 +78,7 @@ POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
 POSITIVE.update({"family_sequence", "family_iteration", "family_origins"})
 POSITIVE.update({"async_recovery", "async_attempt", "outcome_fold", "recovery_owned", "recovery_native"})
+POSITIVE.update({"erased_storage", "erased_depth"})
 
 
 def experiment_inputs():
@@ -155,7 +156,7 @@ def main():
         result = execute_case(case, binary, run.folder / "cases" / name)
         audit = audit_case(case, result, binary, folder=run.folder)
         bounded_stack = None
-        if result["passed"] and not audit and Path(case.source).stem in {"composition", "loop_lifecycle", "depth", "family_iteration"}:
+        if result["passed"] and not audit and Path(case.source).stem in {"composition", "loop_lifecycle", "depth", "family_iteration", "erased_depth"}:
             # Apply the stack limit to execution only, never to the compiler.
             bounded_stack = command(
                 ["bash", "-c", 'ulimit -s 1024\nexec "$1"', "bounded-stack", str(binary)],
