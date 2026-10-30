@@ -1,7 +1,7 @@
 # Deterministic async worker workload
 
-The `workload` qualification client assembles a bounded pipeline from the private
-runtime's existing operations. A producer transfers six move-only requests
+The `workload` qualification client assembles a bounded pipeline from the
+canonical runtime's existing operations. A producer transfers six move-only requests
 through a queue of capacity two. Six nursery children each acquire one of two
 semaphore permits, take a request, and execute a scoped callback operation with
 a timeout and fallback. The scope retains its request through callback withdrawal;
@@ -34,8 +34,7 @@ inventory. A focused run uses `qualify.py --client workload`; its report identif
 the selected scope explicitly. The composed client has a 360-second compile
 budget and retains the 15-second execution limit.
 
-`qualification-workload-1` passed all four selected source/package O0/O3 checks
-and both package builds on pinned Mojo 1.2.0. Every executable completed all 32
-cycles. Input-stability, artifact/diagnostic audits, and documentation checks
-passed. This pass changes the integration client and qualification inventory;
-it does not change runtime implementation.
+The [overnight worker client](async-qualification.md) reuses this cycle while
+also retaining shared queue and semaphore handles across roots. That sustained
+qualification checks allocator-level retained storage separately from the finite
+workload's logical bounds.

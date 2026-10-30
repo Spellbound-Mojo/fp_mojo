@@ -81,8 +81,8 @@ API without a separate review.
   signature policy.
   Borrowed callback views call their native helpers directly: an extra
   function-valued dispatch policy can corrupt Bool results at O0. The
-  [current architecture](mojo12-redesign.md#native-signatures-and-storage)
-  describes the shared boundaries and their regression coverage.
+  [callable architecture](callables.md) describes the shared invocation and
+  storage owners.
 - A consumed scalar forwarded through the generic borrowing bridge can arrive
   as zero at O0. Mandatory inlining of `invoke_borrowed` preserves the payload
   reference and fixes the effectful reduction example through both import routes.
@@ -145,7 +145,7 @@ records the verified production checkpoint, scope and pending migration.
 
 The sections below preserve earlier qualification evidence and the legacy
 restrictions that remain relevant. Their test counts are historical checkpoints,
-not the current suite inventory. The [redesign history](mojo12-redesign.md)
+not the current suite inventory. The [archived redesign history](https://github.com/Spellbound-Mojo/fp_mojo/blob/fe511cb/docs/content/architecture/mojo12-redesign.md)
 records the experiments and the promoted architecture.
 
 ### Rejection diagnostics

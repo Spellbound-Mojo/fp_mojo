@@ -1,7 +1,7 @@
 # Wake-driven execution
 
-The [scheduler plan](async-scheduler-plan.md) is implemented in the private
-state-machine package. `Driver(program, token, clock)` owns a linear task and
+The canonical wake registry and async driver implement cooperative scheduling
+for `fp.effects.async_runtime`. `Driver(program, token, clock)` owns a linear task and
 `poll(budget)` returns `Progress`: completion, runnable status, the earliest
 live deadline, and the number of root polls and timer events performed.
 `finish()` still requires complete draining. `Clock.manual()` and `advance_to()`
@@ -41,16 +41,12 @@ polls plus timer events and alternates ready work with due timers. User polls,
 notification fanout, and heap maintenance are not preempted or bounded by an
 instruction count. All clocks propagate through masks and child contexts.
 
-`run` and `run_pair` delegate to the driver but retain a 1 ms idle-sleep fallback.
+The public `run` and internal `run_pair` delegate to the driver but retain a
+1 ms idle-sleep fallback.
 The host can instead call `poll` after its own event delivery and use the reported
 deadline. Cross-thread task/payload execution remains unqualified.
 
-The million-iteration O0 client takes about 29 seconds in a standalone local
-run with the new bookkeeping. Its execution budget is therefore explicitly
-90 seconds, including the bounded-stack run; other clients retain 15 seconds.
-This is a regression budget adjustment, not a throughput benchmark claim.
-
-## Public Mojo platform investigation
+## Public platform boundary
 
 The pinned Mojo **1.2.0 (2016d0cd)** standard-library sources were inspected at
 the `mojo/v1.2.0` tag. Their public interfaces do not supply the parking/readiness
@@ -80,10 +76,14 @@ independently of a future parking backend.
 
 ## Qualification
 
-`qualification-scheduler-1` passed **148/148 checks** using source imports and
-separate package imports, at O0 and O3 with warnings as errors. Both packages
-compiled, and all 12 bounded-stack executions passed. The matrix includes
-deterministic scheduler tests, linear-driver rejection, and nine existing
-IO, resource, coordination, and fiber regression clients. Documentation checks
-also pass. This qualifies the private foundation; it does not claim a public
+Maintained clients cover notification ordering, FIFO budgets, stale task and
+wait generations, timer replacement, checked time arithmetic, linear-driver
+ownership, masked cleanup and parked nursery behavior. The runner checks source
+and separate-package imports at O0/O3 with warnings as errors and retains raw
+compiler/execution evidence.
+
+The [overnight qualification](async-qualification.md) confirms sustained registry
+and subscription reuse, bounded timer tombstones and retired registrations.
+Its separate performance client verifies zero child polls during idle driving
+with 1, 64 and 512 sleeping children. These results do not qualify a public
 network backend or cross-thread task execution.

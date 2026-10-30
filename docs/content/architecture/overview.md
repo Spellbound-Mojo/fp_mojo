@@ -29,6 +29,7 @@ write `fp.match(...)`.
 | `fp.data` | `Result`, `Ior`, `ControlFlow`, `NonEmptyList` and native-error bridges | `_result`, `result`, `control`, `non_empty_list`, `ior` |
 | `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid interfaces with native instances | `protocols`, `operations`, `filtering`, `instances`, `collections`, `_derived`, `monoids` |
 | `fp.effects` | Reader, State and Writer computations and the OptionalT, ResultT, ReaderT, StateT and WriterT transformers | `protocols`, `reader`, `state`, `writer`, `layers`, `operations`, `_adapt` |
+| `fp.effects.async_runtime` and `.protocols` | Pure-Mojo async recipes, structured ownership, cooperative host driving and extension contracts | Public exports over canonical `_async` owners; [state-machine architecture](async-state-machines.md) |
 | `fp.matching` | `match` over data values, `Optional` and tuples, `rewrite` over `Node` values, `when` guards and `Next` | `matcher`, `clauses`, `_engine`, `_inline` |
 
 `fp._internal.errors` checks error compatibility and propagates errors without

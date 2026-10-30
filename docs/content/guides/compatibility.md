@@ -39,8 +39,7 @@ Cold compilation cost, copied-source delivery, other platforms and private
 experimental suites were not requalified in this checkpoint.
 
 Earlier cold-build and paired-comparison observations remain associated with
-their named commits on the [performance page](../architecture/performance.md#mojo-12-capture-qualification)
-and [API-quality comparison](../architecture/api-quality.md#milestone-comparison).
+their named commits on the [performance page](../architecture/performance.md#mojo-12-capture-qualification).
 Prior functional, installation and measurement checkpoints remain in the
 catalog's qualification history.
 
@@ -124,29 +123,28 @@ Name coverage does not imply arbitrary family support. The catalog distinguishes
 Result-specific operations from capabilities; custom dictionaries and deferred
 families retain their public admission and execution contracts.
 
-## Development sequence
+## Current contracts
 
 The selected workflow, family admission, capability sequencing/filtering,
 Capture pointer support, compilation measurements and clean-install passes are
 complete for the scope above. Current ownership and execution contracts are
-consolidated in the [architecture guide](../architecture/mojo12-redesign.md).
+described in the [architecture overview](../architecture/overview.md),
+[algebra contracts](../architecture/algebra.md), and
+[generic wrapper guide](generic-wrappers.md).
 
-The [API quality roadmap](../architecture/api-quality.md) now orders work around
-ten maintained workflows and concrete Cats/Cats Effect reference examples:
-preferred entry points, consistent ownership, simpler callback binding, generic
-contracts, generator consolidation and milestone qualification. Resource
-composition and IO finalization are existing baseline workflows in that plan.
-
-Each implementation pass includes focused verification, appropriate regression
-gates, documentation, a commit and a push to `nightly`. Verification is run
-locally; adding CI is outside this agreed sequence. Existing positional bindings
-and legacy entry points remain supported during migration. New release versions,
-deprecations and supported-platform claims must follow the demonstrated contract.
+Existing positional bindings and legacy entry points remain supported. New
+release versions, deprecations and supported-platform claims must follow the
+demonstrated contract. The [development guide](../contributing/development.md)
+lists the maintained verification commands.
 
 ## Async preview qualification
 
 The opt-in [async preview](async-runtime.md) adds two reviewed namespaces and
 six executable examples. Its focused source/package O0/O3 checks are recorded
-separately in the async proposal. The complete-corpus reports above retain their
-recorded commit and do not claim a new full-suite run for the preview. Sustained
-async stress and performance qualification remain deferred.
+separately from the complete-corpus reports above, which retain their recorded
+commit and do not claim a new full-suite run for the preview. The
+[async architecture](../architecture/async-state-machines.md) describes the
+maintained public, ownership and origin checks. The completed
+[overnight qualification](../architecture/async-qualification.md#overnight-results)
+adds twelve one-hour source/package O0/O3 stress cases, bounded retained storage
+and separate serial performance diagnostics on pinned Linux x86-64.

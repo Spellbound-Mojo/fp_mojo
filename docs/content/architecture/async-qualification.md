@@ -1,15 +1,15 @@
 # Async overnight qualification
 
-Pass 6 qualifies sustained behavior of the pure-Mojo async preview. Passes 1–5
-established its public contracts and source/package compatibility. This pass
-adds a repeatable Linux qualification protocol; launching a run or passing its
-short calibration does not complete overnight qualification.
+This repeatable Linux qualification protocol checks sustained behavior of the
+pure-Mojo async preview, complementing its deterministic public-contract and
+source/package tests. Launching a run or passing its short calibration does not
+complete overnight qualification.
 
-**Status: Pass 6 completed.** The twelve one-hour source/package O0/O3 stress
+**Status: overnight qualification passed.** The twelve one-hour source/package O0/O3 stress
 cases and both serial O3 performance runs passed on commit `b753ce9`. An
-independent replay of the retained evidence audit also passed. This completes
-the planned qualification for the opt-in preview; it does not change its release
-status or platform scope.
+independent replay of the retained evidence audit also passed. These results
+qualify the tested opt-in preview without changing its release status or
+platform scope.
 
 ## Workloads and storage contracts
 
@@ -32,7 +32,7 @@ separate low-word carry boundary.
 Storage bounds depend on maximum simultaneously retained work. The registry
 keeps reusable slots, signal metadata keeps reusable subscriber entries, and
 timer compaction bounds stale entries relative to live timers. A nursery keeps
-accepted children/results up to its **lifetime admission limit**. This pass does
+accepted children/results up to its **lifetime admission limit**. Qualification does
 not require a nursery to forget results that its contract still owns.
 
 The clients assert logical bounds during execution and complete registration
@@ -163,28 +163,7 @@ workspace. Its final report declares `passed: true` and
 `PASS []`. The results summary is committed so other agents can inspect the
 findings without relying on that workspace path.
 
-## Calibration and evidence retention
-
-The initial source-import O0 calibration on October 29, 2026 (America/New_York) ran each stress client
-for 120 seconds on the pinned Linux toolchain:
-
-| Client | Completed cycles | Early / late median process-tree RSS |
-|---|---:|---:|
-| Metadata reuse | 196,088 | 9,920,512 / 9,920,512 bytes |
-| Persistent callback loop | 145,000 | 10,924,032 / 10,928,128 bytes |
-| Structured workers | 19,641 | 12,791,808 / 12,791,808 bytes |
-
-All clients finished with zero live task/timer registrations. The callback
-client destroyed all 435,004 created payloads and completed 145,000 withdrawals.
-The raw calibration records are retained under
-`.cache/async-stress/calibration-probes/` in the development worktree. The O3
-performance client's 54 observations also passed checksum and idle-work checks;
-those probe timings overlapped compilation and are not the serial baseline.
-All 62 tooling tests and the strict rendered-documentation check passed.
-
-These preliminary results cover one import/optimization route; the completed
-overnight matrix and separate serial measurements above provide the Pass 6
-qualification evidence.
+## Evidence retention
 
 Each fresh output directory retains source and package inputs, executable hashes,
 compilation and execution logs, per-case records, RSS traces and the artifact
@@ -200,5 +179,5 @@ pixi run python experiments/async-state-machines/stress.py \
 Audit from the same immutable checkout. It reconstructs the required matrix,
 checks raw logs and binaries, independently validates work counters and
 performance checksums, and rejects changed inputs or retained artifacts.
-Review the finished report before marking Pass 6 complete. Any failure needs a
+Review the finished report before accepting qualification. Any failure needs a
 retained reproducer and a targeted correction before a fresh qualifying run.

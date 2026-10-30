@@ -87,7 +87,7 @@ precompiled package.
 
 ### Mojo 1.2 boundary prototype
 
-The isolated [boundary prototype](mojo12-redesign.md) was compared with the
+The isolated [boundary prototype](https://github.com/Spellbound-Mojo/fp_mojo/blob/fe511cb/docs/content/architecture/mojo12-redesign.md) was compared with the
 current `nightly` API on October 25, 2026 using Mojo 1.2.0 (2016d0cd), Linux
 x86-64 and an AMD EPYC 9V74 host. The container had a four-CPU quota and 16 GiB
 of memory. Builds ran serially, at O3 with one compiler thread, `--Werror` and

@@ -14,20 +14,18 @@ compiler constraints behind these choices.
 | macOS arm64 | Locked environment available; last runtime verification was on Mojo 1.1.0 |
 
 The [compatibility inventory](compatibility.md) distinguishes selected, legacy
-and pending APIs and records the agreed development sequence.
+and pending APIs and records their qualification evidence.
 
-## Combinator roadmap
+## Combinator support
 
-The [API quality roadmap](../architecture/api-quality.md) defines the next
-development cycle, its Cats/Cats Effect reference workflows and acceptance
-criteria. The table below records the implemented combinator passes.
+The table below records the implemented combinator groups.
 
 These combinators remove wrapper lambdas from container and Result chains.
 Capability operations own execution; fluent methods delegate to them. Native
 origins, callback receiver modes and the distinction between stored and raised
 errors remain part of every operation's contract.
 
-| Pass | Scope | Status |
+| Group | Scope | Status |
 |---|---|---|
 | 1 | Fluent `map2` and `product` on Piped, including Result carriers | Implemented |
 | 2 | `traverse_void` and `traverse_tap` for container and iterator pipelines | Implemented for the [documented source families](../reference/combinators.md#containers-and-capabilities) |

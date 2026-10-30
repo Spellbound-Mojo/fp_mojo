@@ -140,6 +140,8 @@ synchronization and drain in-flight work before release. This architecture has
 no identified fundamental obstacle to host GPU orchestration; GPU execution and
 foreign-thread completion bridges are not implemented or qualified here.
 
-Focused source/package checks at O0/O3 cover the preview. Sustained stress,
-performance, and retained-storage qualification remain deferred to the agreed
-future overnight work.
+Focused source/package checks at O0/O3 cover the preview. The completed
+[overnight qualification](../architecture/async-qualification.md#overnight-results)
+adds twelve one-hour stress cases, retained-storage checks, and separate local
+performance measurements. The runtime remains an opt-in preview on the pinned
+Linux x86-64 toolchain.

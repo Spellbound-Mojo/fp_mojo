@@ -228,8 +228,9 @@ whole value and selects the returned native family or Identity. Custom output
 families use `then[Family]`. Folds delegate to the existing iterator drivers,
 traversal selects its target family, and combinations use the existing
 Applicative product runner. These are signature adapters with no separate
-execution loop. The [redesign](mojo12-redesign.md#further-migration) describes
-admission checks and the source/package verification matrix.
+execution loop. The [generic wrapper guide](../guides/generic-wrappers.md)
+describes admission checks; the [compatibility inventory](../guides/compatibility.md)
+records source/package qualification.
 
 The legacy chain remains available:
 

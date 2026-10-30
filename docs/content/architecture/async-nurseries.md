@@ -1,12 +1,10 @@
 # Dynamic typed nurseries
 
-This pass extends the private [callback and state-machine runtime](async-callbacks.md)
-with runtime admission of children. It retains native Mojo types and origins,
-cooperative polling, and complete draining of entered work.
-
-The later [scheduler pass](async-scheduler.md) replaces the readiness scans
-described at this milestone, and [resumable coordination](async-coordination.md)
-adds notification-based Deferred, Queue, and Semaphore operations.
+`fp.effects.async_runtime.Nursery` owns runtime admission and joining of typed
+children. It preserves native Mojo types and origins, cooperative polling, and
+complete draining of entered work. The [scheduler](async-scheduler.md) selects
+ready children without scanning parked work; [coordination](async-coordination.md)
+provides reusable queues and permits.
 
 ## Contract
 
@@ -30,7 +28,7 @@ failure. Closing normally allows all accepted children to finish. Failure or
 cancellation closes admission and requests cancellation of unfinished children,
 including queued children before entry. Every entered child drains before the
 nursery returns. Dropping an unopened nursery closes retained handles and drops
-only unentered recipes. A linear `Task` owns entered execution as before.
+only unentered recipes. A linear `Driver` owns entered execution.
 
 Children have independent, initially unmasked tokens. The parent's mask controls
 whether its own request is observed. Shared child storage and draining policy
@@ -42,10 +40,8 @@ completion order. Cancellation remains independent of failure.
 
 Each poll admits at most one queued recipe and polls at most one ready child.
 After admission closes and all children finish, each poll collects one terminal
-outcome. At this milestone, selection rotated through children, and readiness
-scans and wait unions cost O(accepted children). The current scheduled path uses
-FIFO ready-child metadata and does not scan parked children. Blocking convenience
-runners still use a 1 ms idle-sleep fallback.
+outcome. The scheduled path uses FIFO ready-child metadata and does not scan
+parked children. Blocking convenience runners still use a 1 ms idle-sleep fallback.
 
 The admission signal revision is read before the queue snapshot. Every accepted
 submission and closure wakes the owner; waiting also includes each active child's
@@ -55,10 +51,10 @@ the shared admission guard.
 
 The contract is cooperative and single-threaded. Native captured origins remain
 part of `P`, the nursery, the submission handle, and the resulting values/errors.
-No origin erasure, C backend, private coroutine primitive, OS event integration,
-or public async API is introduced.
+Execution uses the canonical pure-Mojo runtime; it provides no OS event
+integration or cross-thread payload execution guarantee.
 
-## Acceptance gates
+## Qualification
 
 Qualification covers admission after the owner parks, interleaved producer and
 children, bounded admission with ownership-preserving rejection, retained handles,
@@ -71,27 +67,8 @@ clients remain in the four-way source/package O0/O3 matrix.
 The queue extraction primitive is shared with canonical synchronous coordination;
 its existing clients are included because that internal helper was generalized.
 
-## Qualification results
-
-On Linux x86-64 with Mojo **1.2.0 (2016d0cd)**, the complete gate passed
-**132/132** source/package O0/O3 checks, both package precompilations, and
-**12/12** additional executions under a 1024 KiB stack limit. Input stability,
-diagnostics, executable hashes and artifact audits passed. The documentation
-build and link/export inventory passed as well.
-
-Evidence is retained in
-`.cache/state-machine-foundation/qualification-nurseries-1/report.json`.
-The suite includes 11 positive experiment clients, 15 compiler rejection clients
-and seven existing resource/finalization/coordination clients. No full-repository
-suite, throughput benchmark or cross-thread qualification was run.
-
-Reproduce from the repository root in its pinned Pixi environment:
-
-```sh
-pixi run python experiments/async-state-machines/qualify.py \
-  --output .cache/async-nursery-check --jobs 4
-```
-
-Use a fresh output directory. The scheduler pass now supplies event-driven
-wakeups; OS I/O integration remains future work. This milestone establishes
-dynamic ownership and joining semantics.
+The [overnight worker workload](async-qualification.md) repeatedly exercises
+normal closure, timeout, cleanup failure and parent cancellation. Serial
+performance diagnostics also check idle driving and cancellation with up to
+512 sleeping children. Nursery admission remains a lifetime bound, not a
+reusable concurrency permit.

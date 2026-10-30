@@ -1,9 +1,8 @@
 # Resumable coordination
 
-The private `state_machine` package now provides `Deferred`, bounded `Queue`,
-and `Semaphore` machines. They implement the
-[accepted coordination contract](async-scheduler-plan.md) on the
-[wake-driven scheduler](async-scheduler.md), using pure Mojo.
+`fp.effects.async_runtime` provides `Deferred`, bounded `Queue`, and `Semaphore`
+machines over the [wake-driven scheduler](async-scheduler.md). Their pure-Mojo
+implementation reuses the canonical synchronous coordination state transitions.
 
 ## Shared execution
 
@@ -38,8 +37,8 @@ Canonical Permit destruction also notifies through its existing Ref update.
 Queue and Semaphore construction delegate validation to the synchronous types.
 Methods construct unentered recipes, which may be dropped normally. Entered
 work belongs to a linear `Task` or `Driver` and must drain. All values, captures,
-and errors retain their native types and origins. No public `fp.effects` exports
-or operation signatures change; these async names remain experimental.
+and errors retain their native types and origins. The async names are part of
+the opt-in public preview; synchronous operations keep their existing contracts.
 
 Cancellation before a transition leaves shared state intact. A committed enqueue
 or dequeue survives late cancellation. A dequeued result that is suppressed by
@@ -57,7 +56,7 @@ permit on success, failure, or cancellation.
 The driver bounds scheduling operations, not instructions inside user code or
 destructors. Canonical Ref callbacks and payload destruction are synchronous;
 they must not block or reenter a state guard they already hold. Permit destruction
-uses the existing synchronous release path. This pass qualifies cooperative
+uses the existing synchronous release path. The supported boundary is cooperative
 single-thread execution, not contention between parallel execution threads.
 FIFO buffered values and FIFO scheduler readiness do not imply FIFO waiter
 fairness: notification makes waiters eligible, and the host controls root order.
@@ -83,22 +82,12 @@ From the repository root in the pinned Mojo environment:
 
 ```sh
 pixi run python experiments/async-state-machines/qualify.py \
-  --output .cache/async-coordination-check --jobs 4
+  --output .cache/async-coordination-check --jobs 2
 ```
 
 Use a fresh output directory. OS parking and readiness integration remains
-subject to the [public Mojo platform findings](async-scheduler.md#public-mojo-platform-investigation).
+subject to the [public Mojo platform findings](async-scheduler.md#public-platform-boundary).
 
-## Qualification results
-
-On Linux x86-64 with Mojo **1.2.0 (2016d0cd)**,
-`qualification-coordination-1` passed **172/172 checks**, both package
-precompilations, and all **12** additional bounded-stack executions. Input
-stability and artifact/diagnostic audits passed. The matrix includes 15 positive
-experiment clients, 19 compiler rejection clients, and nine synchronous
-regression clients. Documentation build, links, and export inventory also pass.
-No full-repository suite, throughput benchmark, or cross-thread qualification
-was run.
-
-Evidence is retained in
-`.cache/state-machine-foundation/qualification-coordination-1/report.json`.
+The [overnight results](async-qualification.md#overnight-results) cover sustained
+queue and semaphore reuse, registration retirement, restored permits and bounded
+retained storage across repeated structured worker cycles.

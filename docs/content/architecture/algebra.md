@@ -441,7 +441,7 @@ The selected Pipeline target boundary accepts a Functor with an explicit
 without changing their Identity collapse or requiring casts at ordinary calls.
 Core contracts remain capability-bound; generic wrappers use the full source
 and target family witnesses described in the
-[stored-error design](mojo12-redesign.md#proposed-stored-error-rebinding).
+[generic wrapper guide](../guides/generic-wrappers.md#forward-recovery-and-error-observation).
 
 ### Choice between computations
 

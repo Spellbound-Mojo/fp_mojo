@@ -1,9 +1,9 @@
 # Structured races and timeouts
 
-The private pure-Mojo package implements the
-[structured control contract](async-control-plan.md) with `race_first` and
-`timeout_after`, and cancellation-aware selection with `race` and `timeout_to`.
-These spellings remain experimental until public promotion.
+`fp.effects.async_runtime` exposes first-terminal selection through `race_first`
+and `timeout_after`, and cancellation-aware selection through `race` and
+`timeout_to`. All four operations share the canonical pure-Mojo child and timer
+owners and are part of the opt-in preview.
 
 Race uses the existing child pair's independent tokens, execution slots, FIFO
 selection, and drain tracking. Exactly one ready child is polled per race poll.
@@ -51,9 +51,8 @@ expiry requests cancellation; it does not bound time spent draining masked work.
 Zero-duration timeouts use the same observation-order rule, so an immediately
 terminal program can win the initial left-first tie.
 
-No new public `fp` exports, OS integration, or cross-thread execution guarantees
-are introduced. `_Pair` now separates a request to drain from its default
-failure trigger; existing `both` and scoped pairs retain their policy. Sleep's
+The private `_Pair` separates a request to drain from its default failure
+trigger; `both` and scoped pairs retain their own selection policy. Sleep's
 deadline initialization is shared by ordinary sleep and timeout entry.
 
 ## Validation
@@ -61,7 +60,7 @@ deadline initialization is shared by ordinary sleep and timeout entry.
 `selection_policies` covers both race directions after first-child cancellation,
 protected source success after deadline expiry, late errors, canceled sources,
 fallback admission, parent cancellation, and explicit cancellation under masks.
-The original policy clients now explicitly use `race_first` and `timeout_after`.
+The first-terminal policy clients explicitly use `race_first` and `timeout_after`.
 
 The race client checks 32 terminal-result/order combinations, both cancellation
 directions, suspended losing cleanup, parent cancellation after selection,
@@ -72,29 +71,9 @@ rejections cover mismatched child errors, mismatched fallback types, and escaped
 winner origins. Existing pair, nursery, scope, scheduler, and synchronous tests
 remain in the source/package O0/O3 qualification matrix.
 
-The deeply composed timeout, selection-policy, and borrowed-origin clients have explicit 240-second
-compile budgets; execution retains the 15-second limit. Other budgets are
-unchanged. `qualify.py --client NAME` selects a focused client matrix (repeat
-the option for several clients), and reports the selection explicitly. Omitting
-that option runs the complete inventory.
-
-The initial `qualification-racing-1` run passed 190 of 196 checks, both package
-builds, and all 12 bounded-stack executions. Six compilations reached the original
-120-second limit: all four borrowed-origin builds and both optimized timeout
-builds. No executed client failed. After simplifying the private branch storage
-and recording the larger compile budgets, `qualification-racing-focused-1`
-passed all eight source/package O0/O3 checks for those two clients. Both runs
-passed input-stability checks; original timeout diagnostics remain in the first
-report. Documentation checks pass. The subsequent
-[complete control-pass qualification](async-finalization.md#validation) passed all
-228 checks, both package builds, and 12 bounded-stack executions, covering this
-implementation together with the integration workload and finalization adapters.
-
-The selection-policy pass passed 25 of 28 checks in
-`selection-1`; three new selection-client compilations reached the 120-second
-budget. Its package O0 execution and all legacy and rejection clients passed.
-The original diagnostics remain in that report; the focused rerun uses the
-240-second compile budget above. `selection-2` passed all four source/package
-O0/O3 checks and both package builds, including exact destruction of a move-only
-selected payload. Both reports passed input-stability checks. Runtime execution
-limits are unchanged.
+`qualify.py --client NAME` selects a focused source/package O0/O3 matrix; repeat
+that option for multiple clients. Compile and execution budgets live in the
+runner, and each run retains raw diagnostics and independently audited results.
+The [integration workload](async-workload.md) combines these policies with
+resources, callbacks, queues and permits; [overnight qualification](async-qualification.md)
+adds sustained retirement and retained-storage checks.

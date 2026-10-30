@@ -1,13 +1,13 @@
 # Typed callback registration
 
-This private extension of the [state-machine experiment](async-composition-implementation.md)
-keeps all implementation in Mojo. `callback(register, cleanup)` admits a native
-one-shot callable accepting `Completion[T, E]` and returning `NoneType`. Its exact
-native error is `E` or `Never`; cleanup is a `Machine` returning `NoneType` with
-the same `E`. No production async API is exported.
+`fp.effects.async_runtime.callback(register, cleanup)` owns a one-shot
+registration callable accepting `Completion[T, E]` and returning unit. Its native
+error is `E` or `Never`; cleanup is a unit-returning `Machine` with the same `E`.
+Native functions and library callables use the canonical invocation adapters.
+The [composition engine](async-composition.md) owns execution in pure Mojo.
 
-The subsequent [nursery pass](async-nurseries.md) adds bounded runtime admission
-and joins dynamically accepted callback machines through their withdrawal.
+[Nurseries](async-nurseries.md) admit callback machines dynamically and join them
+through their complete withdrawal.
 
 ## Ownership and terminal decisions
 
@@ -26,7 +26,7 @@ owners' lifetimes. Payload destruction occurs outside the cell guard.
 
 The callback waits on the signal revision captured before examining the cell,
 preserving wakeups during the inspection/parking interval. Polling attempts the
-canonical coordination guard without blocking. This pass qualifies cooperative,
+canonical coordination guard without blocking. The supported boundary is cooperative,
 single-threaded use and deterministic race orderings. It does not claim a
 cross-thread producer contract or provide an OS event source.
 
@@ -57,13 +57,6 @@ as errors. Compiler rejection counts only when the expected diagnostic appears;
 crashes and timeouts fail qualification. Each run retains hashes, commands,
 diagnostics and binaries under its chosen cache directory.
 
-Qualification on Linux x86-64 with Mojo **1.2.0 (2016d0cd)** passed **112/112**
-matrix checks, both package precompilations, and **12/12** executions under a
-1024 KiB stack limit. Input and artifact audits passed. Evidence is retained in
-`.cache/state-machine-foundation/qualification-callbacks-1/report.json`.
-The origin-escape fixture was then simplified to remove an unrelated aliasing
-diagnostic and rechecked in all four configurations; no runtime code changed.
-That focused evidence is in
-`.cache/state-machine-foundation/callback-negative-fix/report.json`.
-The documentation build and link/export inventory also passed. The full
-repository suite and cross-thread callback behavior were not tested.
+The [overnight qualification](async-qualification.md) also exercises sustained
+callback reuse, exact payload destruction and retirement of subscriptions.
+Foreign-thread callback producers require a separately qualified integration.
