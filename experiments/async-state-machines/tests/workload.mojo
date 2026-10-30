@@ -5,7 +5,8 @@ from fp.callables import OnceUnary
 from fp.data import Result, Err, NonEmptyList
 from fp.effects import CancellationToken, IOContext, EffectFailure, ExitCase
 from fp._internal.cells import _lock_metadata
-from state_machine import IO, Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Completion, Callback, Scope, Pure, Timeout, Queue, Semaphore, Clock, Driver, callback, pure, bind, both, timeout_after as timeout_to
+from state_machine import IO, Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Completion, Callback, Scope, Pure, Queue, Semaphore, Clock, Driver, callback, pure, bind
+from foundation import timeout_after as timeout_to
 from fp.effects._async.engine import Fiber
 from foundation import check, success
 from async_coordination import value
@@ -133,7 +134,7 @@ struct Fallback(Machine):
 @fieldwise_init
 struct Start(OnceUnary):
     comptime Arg = Request
-    comptime Out = Timeout[Scope[Pure[Request, Int], Use, Release], Fallback]
+    comptime Out = IO[Int, Int]
     def call_once(deinit self, var request: Request) -> Self.Out:
         var id = request.id
         var host = request.host.copy()

@@ -1,14 +1,13 @@
 """Owned sequencing and fixed-type iteration over the shared execution slots."""
 from std.builtin.rebind import downcast, rebind_var
 from std.os import abort
-from std.utils import Variant
 from fp.callables.protocols import UnaryContract, OnceThunk
 from fp.callables.invoke import call_repeated, RepeatableUnary, _OnceUnaryAvailable
 from fp.callables._binding import _OwnedUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.adt.data import _ChoiceType
 from fp.data.control import _ControlShape
-from fp.data import Result, Ok, Err, ControlFlow, Continue, Break, Left, Right
+from fp.data import Result, Ok, Err, ControlFlow, Continue, Break
 from fp.effects import IOContext, Outcome, EffectFailure
 from fp.effects.outcomes import _capture, _failure_as
 from .kernel import Machine, Step, Wait, _Slot, _tick
@@ -207,15 +206,3 @@ struct Loop[F: UnaryContract & Movable & Deinitable, C: _LoopPolicy = _ControlLo
 
 def loop[S: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var initial: S, var step: F) -> Loop[F] where S == F.Arg:
     return Loop(rebind_var[F.Arg](initial^), step^)
-
-
-@fieldwise_init
-struct _Selected[P: Machine, Q: Machine](Machine):
-    var branch: Variant[Left[Self.P], Right[Self.Q]]
-    comptime Value = Self.P.Value
-    comptime Error = Self.P.Error
-    def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
-        comptime assert Self.P.Value == Self.Q.Value and Self.P.Error == Self.Q.Error
-        if self.branch.isa[Left[Self.P]]():
-            return self.branch[Left[Self.P]].value.poll(context)
-        return rebind_var[Step[Self.Value, Self.Error]](self.branch[Right[Self.Q]].value.poll(rebind[IOContext[Self.Q.Error]](context)))

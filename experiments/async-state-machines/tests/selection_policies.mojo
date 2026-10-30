@@ -4,8 +4,8 @@ from std.memory import ArcPointer
 from std.builtin.rebind import rebind_var
 from fp.data import Left, Right, Result, Err, NonEmptyList
 from fp.effects import IOContext, EffectFailure, CancellationToken
-from state_machine import Machine, Step, Wait, Signal, Driver, Clock, Race, Timeout, pure, run, uncancelable, race, race_first, timeout_to, timeout_after
-from foundation import check, success, Resource
+from state_machine import Machine, Step, Wait, Signal, Driver, Clock, IO, RaceResult, pure, run, uncancelable
+from foundation import check, success, Resource, race, race_first, timeout_to, timeout_after
 
 
 @fieldwise_init
@@ -75,7 +75,7 @@ def canceled_first[left_first: Bool, first_policy: Bool]():
     var second = Signal()
     var a = GatedResult(first.copy(), 2, False)
     var b = uncancelable(GatedResult(second.copy(), 0, False))
-    var program: Race[type_of(a) if left_first else type_of(b), type_of(b) if left_first else type_of(a), 0 if first_policy else 1]
+    var program: IO[RaceResult[GatedResult.Value, GatedResult.Value], GatedResult.Error]
     comptime if left_first:
         comptime if first_policy:
             program = rebind_var[type_of(program)](race_first(a^, b^))
@@ -105,7 +105,7 @@ def deadline[prefer_source: Bool](mode: Int, cancel_parent: Bool):
     var calls = ArcPointer(0)
     var clock = Clock.manual()
     var source = uncancelable(GatedResult(gate.copy(), mode, False))
-    var program: Timeout[type_of(source), Fallback, prefer_source]
+    var program: IO[GatedResult.Value, GatedResult.Error]
     comptime if prefer_source:
         program = rebind_var[type_of(program)](timeout_to(source^, 10, Fallback(calls.copy())))
     else:

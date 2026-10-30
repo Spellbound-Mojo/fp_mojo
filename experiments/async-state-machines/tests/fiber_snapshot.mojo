@@ -124,16 +124,34 @@ struct Sum(OnceUnary):
 
 
 def nested_hosts_not_listed() raises:
+    # The sides of both are fibers of the root, so a fiber one of them starts
+    # is listed, owned by that side.
     var cell = Deferred[Int]()
     var left = IO[Int, Int].never().start().flat_map(One(cell.copy()))
     var driver = Driver(left^.both(IO[Int, Int].pure(2)).map(Sum()), CancellationToken(), Clock(), IORuntimeConfig())
     settle(driver)
-    check(len(driver.fibers()) == 0, "a fiber hosted by an IO inside a leaf is not the root's")
+    var listed = driver.fibers()
+    var owned_by_side = False
+    for index in range(len(listed)):
+        if listed[index].owner != 0:
+            owned_by_side = True
+    check(owned_by_side, "a fiber started by a side of both is the root's, owned by that side")
     fire(cell)
     while not driver.poll().completed:
         pass
     var outcome = driver^.finish()
     check(Bool(outcome) and outcome.value().is_ok() and outcome.take()._take_ok() == 3, "the pair completes")
+
+    # An IO lifted into a leaf hosts its own fibers, which the driver does not list.
+    var inner_cell = Deferred[Int]()
+    var inner = IO[Int, Int].never().start().flat_map(One(inner_cell.copy()))
+    var lifted = Driver(IO[Int, Int].lift(inner^), CancellationToken(), Clock(), IORuntimeConfig())
+    settle(lifted)
+    check(len(lifted.fibers()) == 0, "a fiber hosted by an IO inside a leaf is not the root's")
+    fire(inner_cell)
+    while not lifted.poll().completed:
+        pass
+    _ = lifted^.finish()
 
 
 def main() raises:

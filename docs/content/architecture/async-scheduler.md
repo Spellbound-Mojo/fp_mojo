@@ -16,8 +16,7 @@ must also clear inherited ancestor readiness without losing an independent
 notification. Ready siblings use intrusive FIFO links; removal is O(1), and
 duplicate notifications retain the existing queue position.
 
-Fiber hosts and child groups select ready child IDs directly and count
-unfinished children. They do not rebuild flattened wake lists or scan parked
+Fiber hosts select ready child IDs directly and count unfinished children. They do not rebuild flattened wake lists or scan parked
 children on the scheduled path. Forwarding through bind, loop and callback cleanup uses the child
 registration. The legacy direct-poll path retains wait descriptors. Cancellation
 and error settlement remain canonical, including masked finalization.

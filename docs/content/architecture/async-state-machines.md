@@ -89,8 +89,8 @@ qualified runtime executes cooperatively on one host thread. See the
 [scheduler](async-scheduler.md) for registration and parking details.
 
 `IO` sequencing, iteration, recovery, finalization, and masks run on the run
-loop. Fixed pairs, callback withdrawal, coordination, races, timeouts, and
-resources are leaves. Fibers started with `io.start()` run as execution slots
+loop. Callback withdrawal, coordination, and resources are leaves; pairs, races,
+and timeouts run their sides as fibers. Fibers started with `io.start()` run as execution slots
 of the entered `IO` that hosts them, beside its own program
 (see [fibers](async-fibers.md)); [queue and semaphore](async-coordination.md)
 handles provide reusable coordination. Leaf type depth and retained payload sizes

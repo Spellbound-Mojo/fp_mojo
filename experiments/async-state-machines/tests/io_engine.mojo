@@ -2,7 +2,7 @@
 from std.memory import ArcPointer
 from fp.callables import OnceUnary, OnceThunk
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
-from state_machine import IO, Machine, Step, Wait, Task, run, both
+from state_machine import IO, Machine, Step, Wait, Task, run
 from foundation import check, success, Failure
 
 # Stats slots: 0 callbacks invoked, 1 callbacks dropped unopened, 2 tokens
@@ -180,7 +180,7 @@ def leaves():
     var io = IO[Token, Failure].lift(Countdown(4, 3, stats.copy())).flat_map(Next(stats.copy()))
     check(take_id(run(io^)) == 5, "a suspended leaf resumes the chain")
     check(stats[][POLLS] == 4 and stats[][LEAVES] == 1, "leaf polled until terminal and destroyed once")
-    var pair = run(both(token(1, stats).flat_map(Next(stats.copy())), IO[Token, Failure].lift(Countdown(7, 2, stats.copy()))))
+    var pair = run(token(1, stats).flat_map(Next(stats.copy())).both(IO[Token, Failure].lift(Countdown(7, 2, stats.copy()))))
     var values = pair.take()._take_ok()
     check(values[0].id == 2 and values[1].id == 7, "IO values run inside a typed pair")
 

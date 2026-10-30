@@ -6,8 +6,8 @@ from fp._internal.cells import _lock_metadata
 from fp.effects import CancellationToken, IOContext, ExitCase
 from fp.callables import OnceUnary
 from fp.effects._async.engine import IO, Fiber
-from state_machine import Clock, Driver, Signal, Wait, Step, Sleep, both, Scope, ScopedMachine, CleanupMachine, pure
-from foundation import check, success, Yielding, Waiter
+from state_machine import Clock, Driver, Signal, Wait, Step, Sleep, Scope, ScopedMachine, CleanupMachine, pure
+from foundation import check, success, Yielding, Waiter, both
 
 
 def registry_orderings():
@@ -97,9 +97,15 @@ def deterministic_driver():
     check(Bool(outcome) and outcome.value().is_ok(), "timed success")
     var trace = ArcPointer(List[Int]())
     var fair = Driver(both(Yielding(trace.copy(), 0, 4), Yielding(trace.copy(), 1, 4)))
-    for i in range(10):
+    # A root poll ticks each ready fiber once, in FIFO order.
+    var rounds = 0
+    while not fair.poll(0).completed:
         var step = fair.poll(1)
-        check(step.polls + step.timers == 1 and len(trace[]) == i + 1, "one root poll per budget unit")
+        check(step.polls + step.timers <= 1, "one root poll per budget unit")
+        rounds += 1
+        check(rounds < 100, "fair children finish")
+    check(len(trace[]) == 10, "each child polled until it finishes")
+    for i in range(10):
         check(trace[][i] == i % 2, "ready children rotate FIFO")
     check(fair.poll(0).completed, "completed driver reports without polling")
     _ = fair^.finish()

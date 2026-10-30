@@ -120,8 +120,9 @@ struct Driver[P: Machine](Movable, not Deinitable):
         A bounded diagnostic view, like Cats Effect's fiber dump: each entry
         names an internal slot, its owner's slot, and whether it is runnable,
         suspended, or draining its children. It holds no payloads and no
-        completed fibers. Fibers hosted by an IO inside a leaf, such as a child
-        of both, belong to that IO and are not listed.
+        completed fibers. The sides of both and races are fibers of the root
+        and are listed; an IO lifted into a leaf with IO.lift hosts its own
+        fibers, which are not.
 
         Returns:
             The live fibers in slot order; empty for a root that is not an IO,

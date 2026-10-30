@@ -4,10 +4,10 @@ from std.memory import ArcPointer
 from fp.callables import OnceUnary
 from fp.effects import CancellationToken, IOContext, ExitCase
 from fp._internal.cells import _lock_metadata
-from state_machine import Machine, Step, Wait, Signal, Driver, Clock, Sleep, Pure, Both, Guarantee, Masked, Poll, both, pure, guarantee, uncancelable, uncancelable_with, run
+from state_machine import Machine, Step, Wait, Signal, Driver, Clock, Sleep, Pure, Guarantee, Masked, Poll, IO, pure, guarantee, uncancelable, uncancelable_with, run
 from state_machine.scopes import _ProgramUse
 from state_machine.finalization import _ConstantMask
-from foundation import check, success
+from foundation import check, success, both
 
 
 @fieldwise_init
@@ -27,7 +27,7 @@ struct Active(OnceUnary):
     var calls: ArcPointer[Int]
     var saved: ArcPointer[Optional[Poll[Int]]]
     comptime Arg = Poll[Int]
-    comptime Out = Poll[Int].Applied[Both[Park, Park]]
+    comptime Out = Poll[Int].Applied[IO[Tuple[Park.Value, Park.Value], Int]]
     def call_once(deinit self, var poll: Self.Arg) -> Self.Out:
         self.saved[] = Optional(poll.copy())
         return poll.apply(both(Park(self.calls.copy()), Park(self.calls.copy())))

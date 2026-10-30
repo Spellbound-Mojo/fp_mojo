@@ -3,8 +3,8 @@ from std.memory import ArcPointer
 from fp.effects import IOContext, CancellationToken, Outcome
 from fp.callables import OnceUnary
 from fp.effects._async.engine import IO, Fiber
-from state_machine import ErasedMachine, Machine, Step, Wait, Task, run, both
-from foundation import check, success, failure, Failure, Borrowed
+from state_machine import ErasedMachine, Machine, Step, Wait, Task, run
+from foundation import check, success, failure, Failure, Borrowed, both
 
 # Stats slots: 0 machines destroyed, 1 tokens destroyed, 2 pending polls,
 # 4 failures destroyed (foundation.Failure).

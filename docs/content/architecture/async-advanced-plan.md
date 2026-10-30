@@ -1595,6 +1595,41 @@ capabilities, both providers, the generic entry points, and the law suites.
   `canceled` on it, `public_reject_spawn_sync` rejects `start` on `SyncIO`, and
   `public_reject_raise_type` rejects a raised value of another type.
 
+**10b** was built on 2026-10-30: `race_pair`, and `both`, `race`, `race_first`,
+and the timeouts moved onto fibers as decided.
+
+- **`race_pair`.** It starts both sides as fibers of the running fiber; a leaf
+  waits for the first record to finish, checking the left first so it wins a
+  tie, and the winner is joined through the ordinary join, so the joiner race
+  stays covered. A caller canceled while waiting cancels both and completes
+  only after both finish. Each arm is a `RaceWinner` with the winner's outcome
+  and the loser's handle: Mojo moves neither tuple elements nor single fields
+  out of a value, so the struct offers `take_outcome` and a consuming
+  `into_loser`.
+- **One child policy.** `both`, `race`, and `race_first` start both sides as
+  fibers and wait in one private leaf, `_PairJoin`, whose policy cancels the
+  other side once one finishes (races) or once one ends unsuccessfully
+  (`both`), forwards the parent's request when observed, and combines through
+  the canonical `_winner`, `_loser`, `_finish`, and `_zip_outcomes` only after
+  both finish. Timeouts start the source as a fiber; `_TimeoutJoin` anchors the
+  deadline on its first poll, at wrapper entry, and a bind afterwards keeps the
+  value or runs the fallback. The typed `_Pair`, `Both`, `ScopedBoth`, `Race`,
+  and `Timeout` machines are gone with their composition helper `_Selected`.
+- **Recorded changes.** A root poll ticks every ready fiber once, so a pair no
+  longer polls exactly one child per poll, and both sides enter in the first
+  tick; after an immediate failure the sibling may already have entered, and
+  it is canceled and drained before the pair completes. Scoped pairs, whose
+  children borrowed a resource on every poll, have no fiber form and are
+  removed with their clients' sections.
+- **Clients.** `fiber_race_pair` covers left and right winners, ties, failing
+  winners, and caller cancellation. `racing`, `selection_policies`,
+  `timeouts`, `racing_origins`, `workload`, `async_finalization`, `io_engine`,
+  `callbacks`, `erased_storage`, and `async_masking` pass unchanged through
+  test helpers that lift machines into `IO`; `children`, `scheduler`, and
+  `wakes` state the new tick granularity, and `children` and `origins` drop
+  their scoped-pair sections. The pair rejections now check the public `IO`
+  methods.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:

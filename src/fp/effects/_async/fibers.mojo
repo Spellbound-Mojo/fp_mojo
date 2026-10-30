@@ -434,11 +434,58 @@ struct _Unwrap[T: Movable & Deinitable, E: Movable & Deinitable](OnceUnary, Defa
         pass
 
     def call_once(deinit self, var delivery: _Delivery[Self.E]) -> Outcome[Self.T, Self.E]:
-        var outcome = delivery^.take()
-        if outcome and outcome.value().is_ok():
-            # The child's run loop boxed a value its IO type fixed as T.
-            return Optional(Result[Self.T, EffectFailure[Self.E]](Ok(outcome.take()._take_ok().take[Self.T]())))
-        return _failure_as[Self.T](outcome^)
+        return _typed[Self.T](delivery^.take())
+
+
+def _typed[T: Movable & Deinitable, E: Movable & Deinitable](var outcome: Outcome[_Erased, E]) -> Outcome[T, E]:
+    """A fiber's settled outcome, its success unboxed as the T its IO type fixed."""
+    if outcome and outcome.value().is_ok():
+        return Optional(Result[T, EffectFailure[E]](Ok(outcome.take()._take_ok().take[T]())))
+    return _failure_as[T](outcome^)
+
+
+def _unsuccessful[E: Movable & Deinitable](record: _FiberRecord[E]) -> Bool:
+    """Whether a finished fiber failed or was canceled."""
+    if not record.done or not record.outcome:
+        return False
+    ref outcome = record.outcome.value()
+    return not outcome or outcome.value().is_err()
+
+
+@fieldwise_init
+struct _FirstDone[E: Movable & Deinitable](Machine):
+    """Wait for the first of two fibers to finish: true when the left one did.
+
+    The left fiber wins a tie. A caller canceled while waiting cancels both
+    fibers and completes canceled only after both finish.
+    """
+    comptime Value = Bool
+    comptime Error = Self.E
+    var left: ArcPointer[_FiberRecord[Self.E]]
+    var right: ArcPointer[_FiberRecord[Self.E]]
+    var stopping: Bool
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[Bool, Self.E]:
+        var left_revision = self.left[].signal.revision()
+        var right_revision = self.right[].signal.revision()
+        if not self.stopping and context.canceled():
+            self.stopping = True
+            self.left[].token.cancel()
+            self.right[].token.cancel()
+        if self.stopping:
+            if self.left[].done and self.right[].done:
+                return Step[Bool, Self.E].ready(None)
+        elif self.left[].done:
+            return Step[Bool, Self.E].ready(Optional(Result[Bool, EffectFailure[Self.E]](Ok(True))))
+        elif self.right[].done:
+            return Step[Bool, Self.E].ready(Optional(Result[Bool, EffectFailure[Self.E]](Ok(False))))
+        var either = Wait.changed(self.left[].signal, left_revision)
+        var other = Wait.changed(self.right[].signal, right_revision)
+        # Once draining, the caller's own request must not wake it again.
+        either._interruptible = not self.stopping
+        other._interruptible = not self.stopping
+        either._include(other, context)
+        return Step[Bool, Self.E].pending(either^)
 
 
 @fieldwise_init

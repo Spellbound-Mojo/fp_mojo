@@ -3,7 +3,8 @@ from std.memory import ArcPointer
 from fp.data import Left, Right
 from fp.effects import IOContext, CancellationToken
 from fp._internal.cells import _lock_metadata
-from state_machine import Machine, Step, Wait, Signal, Clock, Driver, Completion, callback, race_first as race, timeout_after as timeout_to, pure, run
+from state_machine import Machine, Step, Wait, Signal, Clock, Driver, Completion, callback, pure, run
+from foundation import race_first as race, timeout_after as timeout_to
 from foundation import check, success, Resource, Failure
 from children import Terminal, Controlled
 from callbacks import Register, Withdraw

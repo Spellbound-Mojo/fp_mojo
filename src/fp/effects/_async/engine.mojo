@@ -26,21 +26,20 @@ from fp.algebra._outcomes import _Materialize
 from fp.iteration._advance import _Source, _source, _next_optional
 from fp._internal.erased import _Erased
 from fp._internal.errors import _ErrorCompatible
-from fp.data import Result, Ok, Err, NonEmptyList
+from fp.data import Result, Ok, Err, NonEmptyList, Left, Right
 from fp.effects import IOContext, Outcome, EffectFailure, ExitCase
-from fp.effects.outcomes import _failure_as, _finish, _ExitState
+from fp.effects.outcomes import _failure_as, _finish, _ExitState, _zip_outcomes
 from fp.effects._io_core import _settle, IOContract, canceled as _cancel_request
 from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn
 from fp.effects.finalization import Poll as _SyncPoll
 from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep
 from .time import Duration, Instant
-from .children import both as _both
-from .racing import RaceResult, race as _race, race_first as _race_first, timeout_after as _timeout_after, timeout_to as _timeout_to
+from .racing import RaceResult, _winner, _loser
 from .io import EvalIO as _EvalIO
 from .callbacks import Callback as _Callback, Completion, _CallbackUnit
 from .erased import _ErasedMachine
 from .finalization import Poll
-from .fibers import FiberInfo, _FiberHost, _FiberRecord, _Inbox, _Fibers, _Spawn, _Claim, _Join, _Delivery, _Unwrap, _CancelFiber, _RequestCancel
+from .fibers import FiberInfo, _FiberHost, _FiberRecord, _Inbox, _Fibers, _Spawn, _Claim, _Join, _Delivery, _Unwrap, _CancelFiber, _RequestCancel, _FirstDone, _typed, _unsuccessful
 
 # Head and frame kinds.
 comptime _EMPTY = 0
@@ -548,6 +547,9 @@ struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
 
     def __init__(out self, *, var _record: ArcPointer[_FiberRecord[Self.E]]):
         self._claim = _Claim[Self.E](_record^)
+
+    def _into_record(deinit self) -> ArcPointer[_FiberRecord[Self.E]]:
+        return self._claim^.keep()
 
     def join(deinit self) -> IO[Outcome[Self.T, Self.E], Self.E]:
         """Wait for the child and its cleanup to finish, then take its outcome.
@@ -1170,6 +1172,27 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         """
         return IO[NoneType, Self.E]._lifted(_Cede[Self.E]())
 
+    def race_pair[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RacePairResult[Self.T, U, Self.E], Self.E]:
+        """Run both as fibers; produce the first one's outcome and the other's handle.
+
+        The counterpart of Cats Effect's racePair. The left side wins a tie.
+        The returned handle is a fiber of the running fiber, so it is joined,
+        canceled, or drained by its owner like any child. If this program is
+        canceled while waiting, both fibers are canceled and finish before it
+        completes.
+
+        Parameters:
+            U: The right side's success type.
+
+        Args:
+            other: The right side, consumed.
+
+        Returns:
+            Left with the left outcome and the right fiber, or Right with the
+            right outcome and the left fiber, each as a RaceWinner.
+        """
+        return self^.start()._bind(_StartRight[Self.T, U, Self.E](other^))
+
     def _fiber_snapshot(self, now: Instant) -> List[FiberInfo]:
         """The live fibers this entered IO hosts; none before entry or any start."""
         if not self._entered:
@@ -1241,7 +1264,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         Returns:
             An IO of both values; failures keep left-before-right error order.
         """
-        return IO[Tuple[Self.T, U], Self.E]._lifted(_both(self^, other^))
+        return self^.start()._bind(_StartPair[Self.T, U, Self.E, _BOTH](other^))
 
     def race[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]:
         """Race this IO against another; the loser is canceled and drained.
@@ -1255,7 +1278,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         Returns:
             An IO of the first outcome that is not cancellation-only, tagged by side.
         """
-        return IO[RaceResult[Self.T, U], Self.E]._lifted(_race(self^, other^))
+        return self^.start()._bind(_StartPair[Self.T, U, Self.E, _RACE](other^))
 
     def race_first[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]:
         """Race by first terminal outcome; the loser is canceled and drained.
@@ -1269,7 +1292,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         Returns:
             An IO of the first terminal outcome, tagged by side.
         """
-        return IO[RaceResult[Self.T, U], Self.E]._lifted(_race_first(self^, other^))
+        return self^.start()._bind(_StartPair[Self.T, U, Self.E, _RACE_FIRST](other^))
 
     def timeout_to(deinit self, duration: Duration, var fallback: Self) -> Self:
         """Fall back after a duration, preferring this IO's drained result.
@@ -1281,7 +1304,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         Returns:
             An IO retaining all errors from both and their cleanup.
         """
-        return Self._lifted(_timeout_to(self^, duration._nanoseconds, fallback^))
+        return self^.start()._bind(_StartTimeout[Self.T, Self.E, True](duration._nanoseconds, fallback^))
 
     def timeout_after(deinit self, duration: Duration, var fallback: Self) -> Self:
         """Fall back by first terminal outcome after a duration.
@@ -1293,7 +1316,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         Returns:
             An IO retaining all errors from both and their cleanup.
         """
-        return Self._lifted(_timeout_after(self^, duration._nanoseconds, fallback^))
+        return self^.start()._bind(_StartTimeout[Self.T, Self.E, False](duration._nanoseconds, fallback^))
 
     def poll(mut self, context: IOContext[Self.E]) -> Step[Self.T, Self.E]:
         """Advance the program; hosts and combinators call this, not applications.
@@ -1328,6 +1351,286 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
             return Step[Self.T, Self.E]._make(Optional(success^), Wait(), protected)
         var failed = _failure_as[Self.T](outcome^)
         return Step[Self.T, Self.E]._make(Optional(failed^), Wait(), protected)
+
+
+struct RaceWinner[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    """The side of a race_pair that finished first, and the other side's fiber.
+
+    Take the outcome, then consume the value for the loser's handle, which is
+    still a child of the running fiber.
+
+    Parameters:
+        T: The winner's success type.
+        U: The loser's success type.
+        E: The shared domain error.
+    """
+    var outcome: Outcome[Self.T, Self.E]
+    """The winner's settled outcome."""
+    var loser: Fiber[Self.U, Self.E]
+    """The fiber that had not finished."""
+
+    def __init__(out self, var outcome: Outcome[Self.T, Self.E], var loser: Fiber[Self.U, Self.E]):
+        """Pair a winner's outcome with the loser's handle.
+
+        Args:
+            outcome: The winner's outcome, consumed.
+            loser: The other fiber, consumed.
+        """
+        self.outcome = outcome^
+        self.loser = loser^
+
+    def take_outcome(mut self) -> Outcome[Self.T, Self.E]:
+        """Move the winner's outcome out, leaving a cancellation-only outcome.
+
+        Returns:
+            The winner's outcome.
+        """
+        var outcome: Outcome[Self.T, Self.E] = None
+        swap(outcome, self.outcome)
+        return outcome^
+
+    def into_loser(deinit self) -> Fiber[Self.U, Self.E]:
+        """Consume this value for the loser's handle.
+
+        Returns:
+            The fiber that had not finished.
+        """
+        return self.loser^
+
+
+comptime RacePairResult[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable] = RaceResult[RaceWinner[T, U, E], RaceWinner[U, T, E]]
+"""What race_pair produces: Left when the left side finished first, else Right.
+
+Parameters:
+    T: The left success type.
+    U: The right success type.
+    E: The shared domain error.
+"""
+
+
+@fieldwise_init
+struct _StartRight[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    var other: IO[Self.U, Self.E]
+    comptime Arg = Fiber[Self.T, Self.E]
+    comptime Out = IO[RacePairResult[Self.T, Self.U, Self.E], Self.E]
+
+    def call_once(deinit self, var left: Fiber[Self.T, Self.E]) -> Self.Out:
+        return self.other^.start()._bind(_AwaitFirst[Self.T, Self.U, Self.E](left^))
+
+
+@fieldwise_init
+struct _AwaitFirst[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    var left: Fiber[Self.T, Self.E]
+    comptime Arg = Fiber[Self.U, Self.E]
+    comptime Out = IO[RacePairResult[Self.T, Self.U, Self.E], Self.E]
+
+    def call_once(deinit self, var right: Fiber[Self.U, Self.E]) -> Self.Out:
+        var first = _FirstDone[Self.E](self.left._claim.record.copy(), right._claim.record.copy(), False)
+        return IO[Bool, Self.E]._lifted(first^)._bind(_JoinFirst[Self.T, Self.U, Self.E](self.left^, right^))
+
+
+@fieldwise_init
+struct _JoinFirst[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    """Join the side that finished first; the other side's handle goes with it."""
+    var left: Fiber[Self.T, Self.E]
+    var right: Fiber[Self.U, Self.E]
+    comptime Arg = Bool
+    comptime Out = IO[RacePairResult[Self.T, Self.U, Self.E], Self.E]
+
+    def call_once(deinit self, var left_first: Bool) -> Self.Out:
+        if left_first:
+            return self.left^.join()._mapped(_LeftFirst[Self.T, Self.U, Self.E](self.right^))
+        return self.right^.join()._mapped(_RightFirst[Self.T, Self.U, Self.E](self.left^))
+
+
+@fieldwise_init
+struct _LeftFirst[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    var right: Fiber[Self.U, Self.E]
+    comptime Arg = Outcome[Self.T, Self.E]
+    comptime Out = RacePairResult[Self.T, Self.U, Self.E]
+
+    def call_once(deinit self, var outcome: Outcome[Self.T, Self.E]) -> Self.Out:
+        return Self.Out(Left(RaceWinner[Self.T, Self.U, Self.E](outcome^, self.right^)))
+
+
+@fieldwise_init
+struct _RightFirst[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    var left: Fiber[Self.T, Self.E]
+    comptime Arg = Outcome[Self.U, Self.E]
+    comptime Out = RacePairResult[Self.T, Self.U, Self.E]
+
+    def call_once(deinit self, var outcome: Outcome[Self.U, Self.E]) -> Self.Out:
+        return Self.Out(Right(RaceWinner[Self.U, Self.T, Self.E](outcome^, self.left^)))
+
+
+# Pair policies over two fibers: first terminal, first non-canceled, or both.
+comptime _RACE_FIRST = 0
+comptime _RACE = 1
+comptime _BOTH = 3
+comptime _PairValue[T: Movable & Deinitable, U: Movable & Deinitable, policy: Int] = Tuple[T, U] if policy == _BOTH else RaceResult[T, U]
+
+
+@fieldwise_init
+struct _StartPair[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable, policy: Int](OnceUnary):
+    var other: IO[Self.U, Self.E]
+    comptime Arg = Fiber[Self.T, Self.E]
+    comptime Out = IO[_PairValue[Self.T, Self.U, Self.policy], Self.E]
+
+    def call_once(deinit self, var left: Fiber[Self.T, Self.E]) -> Self.Out:
+        return self.other^.start()._bind(_AwaitPair[Self.T, Self.U, Self.E, Self.policy](left^))
+
+
+@fieldwise_init
+struct _AwaitPair[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable, policy: Int](OnceUnary):
+    var left: Fiber[Self.T, Self.E]
+    comptime Arg = Fiber[Self.U, Self.E]
+    comptime Out = IO[_PairValue[Self.T, Self.U, Self.policy], Self.E]
+
+    def call_once(deinit self, var right: Fiber[Self.U, Self.E]) -> Self.Out:
+        return Self.Out._lifted(_PairJoin[Self.T, Self.U, Self.E, Self.policy](Optional(self.left^), Optional(right^), -1, False))
+
+
+@fieldwise_init
+struct _PairJoin[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable, policy: Int](Machine):
+    """Wait for two fibers, stopping them by policy, then combine their outcomes.
+
+    Fibers own and drain the children; this leaf only forwards cancellation and
+    combines. A race stops the other side once one finishes; both stops the
+    other side when one ends unsuccessfully. The parent's request is forwarded
+    when observed, and every entered child finishes before the leaf completes.
+    """
+    comptime Value = _PairValue[Self.T, Self.U, Self.policy]
+    comptime Error = Self.E
+    var left: Optional[Fiber[Self.T, Self.E]]
+    var right: Optional[Fiber[Self.U, Self.E]]
+    var winner: Int
+    var stopping: Bool
+
+    def stop(mut self):
+        if not self.stopping:
+            self.stopping = True
+            self.left.value()._claim.record[].token.cancel()
+            self.right.value()._claim.record[].token.cancel()
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[Self.Value, Self.E]:
+        ref left = self.left.value()._claim.record[]
+        ref right = self.right.value()._claim.record[]
+        var left_revision = left.signal.revision()
+        var right_revision = right.signal.revision()
+        if context.canceled():
+            self.stop()
+        if self.winner < 0:
+            if left.done:
+                self.winner = 0
+            elif right.done:
+                self.winner = 1
+            comptime if Self.policy != _BOTH:
+                if self.winner >= 0:
+                    self.stop()
+        comptime if Self.policy == _BOTH:
+            if _unsuccessful(left) or _unsuccessful(right):
+                self.stop()
+        if left.done and right.done:
+            var left_outcome = _typed[Self.T](self.left.take()._into_record()[].outcome.take())
+            var right_outcome = _typed[Self.U](self.right.take()._into_record()[].outcome.take())
+            comptime if Self.policy == _BOTH:
+                return Step[Self.Value, Self.E].ready(rebind_var[Outcome[Self.Value, Self.E]](_zip_outcomes(left_outcome^, right_outcome^)))
+            else:
+                var selected = self.winner
+                comptime if Self.policy == _RACE:
+                    # A cancellation-only winner yields to the other side's drained result.
+                    if selected == 0 and not left_outcome:
+                        selected = 1
+                    elif selected == 1 and not right_outcome:
+                        selected = 0
+                if selected == 0:
+                    return Step[Self.Value, Self.E].ready(rebind_var[Outcome[Self.Value, Self.E]](_finish(_winner[Self.T, Self.U, Self.E, True](left_outcome^), _loser(right_outcome^))))
+                return Step[Self.Value, Self.E].ready(rebind_var[Outcome[Self.Value, Self.E]](_finish(_winner[Self.T, Self.U, Self.E, False](right_outcome^), _loser(left_outcome^))))
+        var either = Wait.changed(left.signal, left_revision)
+        var other = Wait.changed(right.signal, right_revision)
+        # A forwarded request must not wake cleanup that is still draining.
+        either._interruptible = not self.stopping
+        other._interruptible = not self.stopping
+        either._include(other, context)
+        return Step[Self.Value, Self.E].pending(either^)
+
+
+@fieldwise_init
+struct _StartTimeout[T: Movable & Deinitable, E: Movable & Deinitable, prefer_source: Bool](OnceUnary):
+    var nanoseconds: Int
+    var fallback: IO[Self.T, Self.E]
+    comptime Arg = Fiber[Self.T, Self.E]
+    comptime Out = IO[Self.T, Self.E]
+
+    def call_once(deinit self, var source: Fiber[Self.T, Self.E]) -> IO[Self.T, Self.E]:
+        var waiting = IO[RaceResult[Self.T, NoneType], Self.E]._lifted(_TimeoutJoin[Self.T, Self.E, Self.prefer_source](Optional(source^), self.nanoseconds, None, -1, False))
+        return waiting^._bind(_TimeoutBranch[Self.T, Self.E](self.fallback^))
+
+
+@fieldwise_init
+struct _TimeoutJoin[T: Movable & Deinitable, E: Movable & Deinitable, prefer_source: Bool](Machine):
+    """Race a source fiber against a deadline anchored on this leaf's first poll.
+
+    The timer wins only if the deadline passes before the source finishes; the
+    source is then canceled and drained. timeout_to keeps a source outcome that
+    is not cancellation-only even after the timer wins.
+    """
+    comptime Value = RaceResult[Self.T, NoneType]
+    comptime Error = Self.E
+    var source: Optional[Fiber[Self.T, Self.E]]
+    var nanoseconds: Int
+    var deadline: Optional[Instant]
+    var winner: Int
+    var stopping: Bool
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[Self.Value, Self.E]:
+        ref source = self.source.value()._claim.record[]
+        var revision = source.signal.revision()
+        var now = context._clock.now()
+        if not self.deadline:
+            self.deadline = Optional(now._after_nanoseconds(self.nanoseconds))
+        if context.canceled() and not self.stopping:
+            self.stopping = True
+            source.token.cancel()
+        if self.winner < 0:
+            if source.done:
+                self.winner = 0
+            elif now >= self.deadline.value():
+                self.winner = 1
+                if not self.stopping:
+                    self.stopping = True
+                    source.token.cancel()
+        if source.done:
+            var outcome = _typed[Self.T](self.source.take()._into_record()[].outcome.take())
+            var selected = self.winner
+            comptime if Self.prefer_source:
+                if selected == 1 and outcome:
+                    selected = 0
+            var unit: NoneType = None
+            var elapsed: Outcome[NoneType, Self.E] = Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit)))
+            if selected == 0:
+                return Step[Self.Value, Self.E].ready(_finish(_winner[Self.T, NoneType, Self.E, True](outcome^), _loser(elapsed^)))
+            return Step[Self.Value, Self.E].ready(_finish(_winner[Self.T, NoneType, Self.E, False](elapsed^), _loser(outcome^)))
+        var wait = Wait.changed(source.signal, revision)
+        wait._interruptible = not self.stopping
+        if self.winner < 0:
+            var timer = Wait.until(self.deadline.value())
+            timer._interruptible = False
+            wait._include(timer, context)
+        return Step[Self.Value, Self.E].pending(wait^)
+
+
+@fieldwise_init
+struct _TimeoutBranch[T: Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    """Keep the source's value, or run the fallback once the timer won."""
+    var fallback: IO[Self.T, Self.E]
+    comptime Arg = RaceResult[Self.T, NoneType]
+    comptime Out = IO[Self.T, Self.E]
+
+    def call_once(deinit self, var selected: RaceResult[Self.T, NoneType]) -> IO[Self.T, Self.E]:
+        if selected.isa[Left[Self.T]]():
+            return IO[Self.T, Self.E].pure(selected^.unwrap[Left[Self.T]]().into_payload())
+        return self.fallback^
 
 
 comptime _PollOf[E: Movable & Deinitable] = Poll[E]

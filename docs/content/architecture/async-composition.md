@@ -1,8 +1,9 @@
 # Async composition
 
 `IO[T, E]` sequences work through one iterative run loop in
-`src/fp/effects/_async/engine.mojo`. Fixed child groups, races, timers, scopes,
-callbacks, and coordination waits are typed machines that `IO` runs as leaves.
+`src/fp/effects/_async/engine.mojo`. Timers, scopes, callbacks, and coordination
+waits are typed machines that `IO` runs as leaves; pairs, races, and timeouts
+run their sides as [fibers](async-fibers.md).
 The [state-machine contract](async-state-machines.md) defines entered ownership;
 [callbacks](async-callbacks.md) add external completion with owned withdrawal.
 The [advanced plan](async-advanced-plan.md#pass-8a-progress) records how the run
@@ -15,7 +16,7 @@ loop was built and measured.
 | `IO[T, E].pure(value)`, `.delay(f)`, `.defer(f)` | Own a value, evaluate a function, or build an `IO` when the program reaches it |
 | `io.flat_map(f)`, `.map(f)`, `.handle_error_with(h)` | Append a frame; the callback runs once, when the run loop reaches it |
 | `tail_rec_m[Async[E]](initial, step)`, `traverse`, `collect` | Fold on the run loop: each step binds after the previous step's `IO` |
-| `io.both(other)` | Run a typed child pair as a leaf and return its ordered success tuple after both finish |
+| `io.both(other)` | Run both as fibers and return their ordered success tuple after both finish |
 | `IO[T, E].lift(machine)` | Run a custom machine as one leaf |
 
 The public surface is `fp.effects.async_runtime`; the implementation layout
@@ -24,7 +25,8 @@ under `src/fp/effects/_async` is:
 - `engine.mojo`: `IO`, its `Async[E]` family, and the run loop.
 - `kernel.mojo`: waits, shared private execution slots, linear roots and drivers.
 - `composition.mojo`: typed sequencing and iteration machines used inside leaves.
-- `children.mojo`: shared pair lifecycle, ordinary and scoped invocation boundaries.
+- `children.mojo`: child execution slots and scoped polling.
+- `fibers.mojo`: fiber records, hosts, and the leaves joins and pairs wait in.
 - `scopes.mojo` and `resources.mojo`: the resumable acquisition/use/cleanup
   coordinator and the resource plans `Resource` erases.
 
@@ -72,8 +74,8 @@ million-step chains, nested `defer` levels, and tail-recursive loops run under a
 The typed `Bind` and `Loop` machines in `composition.mojo` remain for leaves
 built from typed parts. Each of their nodes performs at most one factory
 invocation or one active-child poll per outer poll, and their static type depth
-is a caller-visible cost. Child groups nest statically: `IO` values inside a pair
-each run their own run loop, so a pair's native depth follows its type.
+is a caller-visible cost. Pair children are fibers of the hosting `IO`, so nested
+pairs add no native depth.
 
 ## Child lifecycle and wake conditions
 

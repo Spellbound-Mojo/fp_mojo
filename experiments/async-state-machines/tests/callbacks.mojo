@@ -3,7 +3,8 @@ from std.memory import ArcPointer
 from fp.callables import OnceUnary
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
 from fp.data import Result, Err, NonEmptyList
-from state_machine import Completion, Machine, Step, Wait, Signal, Task, callback, run, both
+from state_machine import Completion, Machine, Step, Wait, Signal, Task, callback, run
+from foundation import both
 from foundation import check, success, Resource, Failure
 
 

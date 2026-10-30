@@ -2,8 +2,8 @@
 from std.memory import ArcPointer
 from std.time import sleep, monotonic
 from fp.effects import IOContext, CancellationToken
-from state_machine import Machine, Step, Wait, Signal, Task, Sleep, bind, both, run
-from foundation import check, success, failure, Failure, Waiter
+from state_machine import Machine, Step, Wait, Signal, Task, Sleep, bind, run
+from foundation import check, success, failure, Failure, Waiter, both
 from children import Terminal
 from fp.callables import OnceUnary
 from state_machine import Pure, pure
@@ -59,17 +59,21 @@ def main():
         var signal = Signal()
         var task = Task(both(Terminal(signal.copy(), stats.copy(), 0, 0, False), Terminal(signal.copy(), stats.copy(), 1, 0, False)), CancellationToken())
         for _ in range(entered):
-            check(task.tick(), "enter requested child prefix")
+            # After the first tick both fibers are parked; later ticks may find nothing ready.
+            _ = task.tick()
         task.cancel()
         while not task.done():
             check(task.tick(), "drain entered children")
         var outcome = task^.finish()
         check(not outcome, "parent cancellation")
+        # The first tick starts both fibers; canceled before it, neither runs.
         check(stats[][0] == (0 if entered == 0 else 2), "left only runs when entered")
-        check(stats[][1] == (2 if entered == 2 else 0), "unopened sibling skipped")
+        check(stats[][1] == (0 if entered == 0 else 2), "unopened sibling skipped")
     var failed_stats = ArcPointer(List[Int]([0, 0, 0, 0, 0, 0, 0]))
     var failed = run(both(FailNow(failed_stats.copy()), Terminal(Signal(), failed_stats.copy(), 1, 0, False)))
-    check(failed_stats[][1] == 0 and failed.value().is_err(), "immediate failure skips unopened sibling")
+    # Both fibers start in the same root poll, so the sibling may have entered;
+    # the failure cancels it, and the pair completes only after it drains.
+    check(failed.value().is_err(), "immediate failure cancels the sibling and fails the pair")
     var failure_value = failed.take()._take_err()
     check(failure_value.canceled and failure_value.errors.first().code == 91, "unopened sibling cancellation retained")
     var next_calls = ArcPointer(0)
@@ -82,7 +86,8 @@ def main():
     var calls_a = ArcPointer(0)
     var calls_b = ArcPointer(0)
     var masked = Task(Masked(both(Gate(a.copy(), calls_a.copy()), Gate(b.copy(), calls_b.copy()))), CancellationToken())
-    check(masked.tick() and masked.tick(), "masked group enters both children")
+    check(masked.tick(), "masked group enters both children in one tick")
+    _ = masked.tick()
     masked.cancel()
     check(not masked.tick(), "masked parent request is not forwarded")
     a.notify()
@@ -99,7 +104,8 @@ def main():
     var calls = ArcPointer(0)
     var mixed = Task(both(Sleep[Failure](5000000), Gate(signal.copy(), calls.copy())), CancellationToken())
     var start = monotonic()
-    check(mixed.tick() and mixed.tick(), "timer and signal both park")
+    check(mixed.tick(), "timer and signal both park in one tick")
+    _ = mixed.tick()
     signal.notify()
     check(mixed.tick() and calls[] == 2, "signal progresses independently of timer")
     while not mixed.done():

@@ -1,7 +1,7 @@
 # error: cannot implicitly convert
 from fp.effects import Outcome
-from state_machine import both, run
-from foundation import Borrowed
+from state_machine import run
+from foundation import Borrowed, both
 
 def escape() -> Outcome[Tuple[Span[Int, ImmUntrackedOrigin], Span[Int, ImmUntrackedOrigin]], Span[Int, ImmUntrackedOrigin]]:
     var owner = List[Int]([13, 17])

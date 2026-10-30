@@ -7405,6 +7405,12 @@
       "signature": "def race_first[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]:"
      }
     ],
+    "race_pair": [
+     {
+      "sha256": "9fac24e94d8d916991286719adef478fa2697ef6ae53162904fea6ee137846ff",
+      "signature": "def race_pair[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RacePairResult[Self.T, U, Self.E], Self.E]:"
+     }
+    ],
     "raise_error": [
      {
       "sha256": "ba4ec926c37b850876588169a099683ce114fb3700224134442568327833794f",
@@ -7537,12 +7543,40 @@
    },
    "provider": "effects/_async/coordination"
   },
+  "effects.async_runtime.RacePairResult": {
+   "declarations": [
+    "comptime RacePairResult[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable] = RaceResult[RaceWinner[T, U, E], RaceWinner[U, T, E]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/engine"
+  },
   "effects.async_runtime.RaceResult": {
    "declarations": [
     "comptime RaceResult[A: Movable & Deinitable, B: Movable & Deinitable] = Choice[_RaceCases[A, B]]"
    ],
    "kind": "type or alias",
    "provider": "effects/_async/racing"
+  },
+  "effects.async_runtime.RaceWinner": {
+   "declarations": [
+    "struct RaceWinner[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](Movable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "into_loser": [
+     {
+      "sha256": "8baa6dfe08d9006ae1d396e40e0786dc9b7f456fa4eeb94904482664ec143c3f",
+      "signature": "def into_loser(deinit self) -> Fiber[Self.U, Self.E]:"
+     }
+    ],
+    "take_outcome": [
+     {
+      "sha256": "42ac463551dbb8ab8e7a5c46f262065387749ef402367cd73d0f0fdc5c61f251",
+      "signature": "def take_outcome(mut self) -> Outcome[Self.T, Self.E]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/engine"
   },
   "effects.async_runtime.Resource": {
    "declarations": [

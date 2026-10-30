@@ -2,12 +2,13 @@
 
 `IO` exposes first-terminal selection through `race_first` and `timeout_after`,
 and cancellation-aware selection through `race` and `timeout_to`. Each method
-lifts a private race or timeout leaf. All four operations share the canonical pure-Mojo child and timer
-owners and are part of the opt-in preview.
+starts its sides as [fibers](async-fibers.md) of the running fiber and waits in a
+private leaf that only forwards cancellation and combines outcomes; fibers own
+and drain the children. `race_pair` exposes the same start, producing the first
+side's outcome and the other side's fiber. All are part of the opt-in preview.
 
-Race uses the existing child pair's independent tokens, execution slots, FIFO
-selection, and drain tracking. Exactly one ready child is polled per race poll.
-With `race_first`, the first child observed terminal selects the result, whether success, error,
+Each side has its own token, and the host ticks ready fibers in FIFO order, so a
+root poll can advance both sides. With `race_first`, the first child observed terminal selects the result, whether success, error,
 or cancellation. This is first terminal completion, not first successful value.
 Initially ready ties favor the left child; later ties follow scheduler readiness
 order. There is no external timestamp arbitration.
@@ -33,13 +34,11 @@ mask; unlike Cats Effect's masked cancellation-only case, this runtime does not
 turn that explicit outcome into an indefinite wait. Selected failures retain
 their cancellation flag, while cancellation on the discarded side is normalized.
 
-Timeout starts its Sleep deadline when the wrapper is first entered, before the
-timer child gets a poll. The timer competes through the same Race implementation.
-Inside the leaf, a typed bind selects either the original value or the owned
-fallback.
-Its private machine branch uses the standard library Variant directly, avoiding
-reflected data-family admission over entire nested machine types. Public race
-values still use the existing Choice and Left/Right constructors.
+A timeout starts the source as a fiber and anchors its deadline on the leaf's
+first poll, when the wrapper is entered and before the source's first poll. The
+deadline, not a timer fiber, competes with the source; a bind after the leaf
+keeps the source's value or runs the owned fallback. Public race values use the
+existing Choice and Left/Right constructors.
 `timeout_after` preserves the original timer-selection policy: timer victory
 selects fallback after clean draining even if source success survives.
 `timeout_to` instead prefers any source success or failure observed after
@@ -52,9 +51,10 @@ expiry requests cancellation; it does not bound time spent draining masked work.
 Zero-duration timeouts use the same observation-order rule, so an immediately
 terminal program can win the initial left-first tie.
 
-The private `_Pair` separates a request to drain from its default failure
-trigger; `both` and scoped pairs retain their own selection policy. Sleep's
-deadline initialization is shared by ordinary sleep and timeout entry.
+One private pair leaf serves `both`, `race`, and `race_first` by policy: a race
+cancels the other side once one finishes, and `both` cancels it when one side
+ends unsuccessfully. Outcomes combine through the canonical `_winner`, `_loser`,
+`_finish`, and `_zip_outcomes`; there is no other child-draining policy.
 
 ## Validation
 

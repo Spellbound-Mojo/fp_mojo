@@ -1,5 +1,6 @@
 from fp.data import Left
-from state_machine import race, timeout_after as timeout_to, pure, run
+from state_machine import pure, run
+from foundation import race_first as race, timeout_after as timeout_to
 from foundation import Borrowed, check
 
 def exercise[o: ImmOrigin](ref[o] owner: List[Int]):

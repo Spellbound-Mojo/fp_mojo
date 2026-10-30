@@ -6,8 +6,40 @@ from fp.data import Result, Ok, Err, NonEmptyList
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure, ExitCase
 from fp._internal.time import Instant
 from fp._internal.waking import _Clock
-from state_machine import Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Task, Sleep, Scope, run, run_pair
+from state_machine import Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Task, Sleep, Scope, IO, RaceResult, run, run_pair
+from fp._internal.time import Duration
 
+
+
+def both[P: Machine, Q: Machine](var left: P, var right: Q) -> IO[Tuple[P.Value, Q.Value], P.Error] where Q.Error == P.Error:
+    """Run two machines as the fibers of one IO pair; the typed pair machine is retired."""
+    return IO[P.Value, P.Error].lift(left^).both(IO[Q.Value, P.Error].lift(right^))
+
+
+def race_first[P: Machine, Q: Machine](var left: P, var right: Q) -> IO[RaceResult[P.Value, Q.Value], P.Error] where Q.Error == P.Error:
+    """Race two machines as fibers by first terminal outcome; the typed race is retired."""
+    return IO[P.Value, P.Error].lift(left^).race_first(IO[Q.Value, P.Error].lift(right^))
+
+
+def race[P: Machine, Q: Machine](var left: P, var right: Q) -> IO[RaceResult[P.Value, Q.Value], P.Error] where Q.Error == P.Error:
+    """Race two machines as fibers, preferring a side that was not only canceled."""
+    return IO[P.Value, P.Error].lift(left^).race(IO[Q.Value, P.Error].lift(right^))
+
+
+def _nanoseconds(value: Int) -> Duration:
+    var duration = Duration()
+    duration._nanoseconds = value
+    return duration^
+
+
+def timeout_after[P: Machine, Q: Machine](var program: P, nanoseconds: Int, var fallback: Q) -> IO[P.Value, P.Error] where Q.Value == P.Value and Q.Error == P.Error:
+    """Fall back by first terminal outcome after a deadline; the typed timeout is retired."""
+    return IO[P.Value, P.Error].lift(program^).timeout_after(_nanoseconds(nanoseconds), IO[P.Value, P.Error].lift(fallback^))
+
+
+def timeout_to[P: Machine, Q: Machine](var program: P, nanoseconds: Int, var fallback: Q) -> IO[P.Value, P.Error] where Q.Value == P.Value and Q.Error == P.Error:
+    """Fall back after a deadline, preferring the drained source result."""
+    return IO[P.Value, P.Error].lift(program^).timeout_to(_nanoseconds(nanoseconds), IO[P.Value, P.Error].lift(fallback^))
 
 def check(condition: Bool, message: String):
     if not condition:

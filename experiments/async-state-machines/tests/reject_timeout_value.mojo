@@ -1,4 +1,5 @@
-# error: timeout fallback requires the same exact value and error types
-from state_machine import timeout_to, pure
+# error: value passed to 'fallback' cannot be converted from 'IO[String, Int]' to 'IO[Int, Int]'
+from state_machine import IO
+from fp._internal.time import Duration
 def main():
-    _ = timeout_to(pure[Int](1), 10, pure[Int](String("wrong")))
+    _ = IO[Int, Int].pure(1).timeout_to(Duration(), IO[String, Int].pure(String("wrong")))

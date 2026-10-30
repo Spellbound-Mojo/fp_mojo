@@ -62,7 +62,7 @@ SOURCE_MODULES = (
 )
 
 ASYNC_PROVIDERS = (
-    ('effects.async_runtime', 'effects/_async/engine', ('IO', 'Async', 'Fiber')),
+    ('effects.async_runtime', 'effects/_async/engine', ('IO', 'Async', 'Fiber', 'RaceWinner', 'RacePairResult')),
     ('effects.async_runtime', 'effects/_async/fibers', ('FiberInfo', 'FiberStatus')),
     ('effects.async_runtime', 'effects/_async/io_resource', ('Resource',)),
     ('effects.async_runtime', 'effects/_async/coordination', ('Deferred', 'Queue', 'Semaphore')),

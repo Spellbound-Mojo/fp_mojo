@@ -15,8 +15,9 @@ A start reserves a slot in the inbox, builds the child's own run loop with that
 slot as its fiber id, and queues it with a new shared record. The host admits
 queued children into its table after each poll of its own program or a fiber, so
 fibers started by fibers land in the same flat table, owned by the fiber that
-started them. Nested fibers therefore cost no native stack. An `IO` inside a
-lifted leaf, such as a child of `both`, is its own host.
+started them. Nested fibers therefore cost no native stack. The sides of `both`
+and the races are fibers too; an `IO` lifted into a leaf with `IO.lift` is its
+own host.
 
 Each fiber is a canonical execution slot polling its run loop as an erased leaf,
 registered under the host's wake node with tag `i + 1`; the host program's own
@@ -64,7 +65,7 @@ identity, so the join leaf aborts a direct self-join.
 `Driver.fibers()` lists the root `IO`'s live fibers between polls: each entry's
 slot, its owner's slot, and whether it is runnable, suspended, or draining its
 children. It holds no payloads or completed fibers, and fibers hosted by an `IO`
-inside a leaf are not listed. Slots are reused, so an index is not an identity.
+lifted into a leaf are not listed. Slots are reused, so an index is not an identity.
 
 ## Qualification
 

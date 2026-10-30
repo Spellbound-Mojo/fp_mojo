@@ -1,1 +1,1 @@
-children: 32 outcome/order cases; nested loops, sequencing, scoped cancellation and masked cleanup
+children: 32 outcome/order cases over fiber pairs

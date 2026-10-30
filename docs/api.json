@@ -64839,7 +64839,7 @@
     "fibers": [
      {
       "args": [],
-      "description": "A bounded diagnostic view, like Cats Effect's fiber dump: each entry\nnames an internal slot, its owner's slot, and whether it is runnable,\nsuspended, or draining its children. It holds no payloads and no\ncompleted fibers. Fibers hosted by an IO inside a leaf, such as a child\nof both, belong to that IO and are not listed.",
+      "description": "A bounded diagnostic view, like Cats Effect's fiber dump: each entry\nnames an internal slot, its owner's slot, and whether it is runnable,\nsuspended, or draining its children. It holds no payloads and no\ncompleted fibers. The sides of both and races are fibers of the root\nand are listed; an IO lifted into a leaf with IO.lift hosts its own\nfibers, which are not.",
       "error": "",
       "parameters": [],
       "raises": false,
@@ -66414,6 +66414,38 @@
       "summary": "Race by first terminal outcome; the loser is canceled and drained."
      }
     ],
+    "race_pair": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The right side, consumed.",
+        "name": "other",
+        "type": "IO[U, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "The counterpart of Cats Effect's racePair. The left side wins a tie.\nThe returned handle is a fiber of the running fiber, so it is joined,\ncanceled, or drained by its owner like any child. If this program is\ncanceled while waiting, both fibers are canceled and finish before it\ncompletes.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The right side's success type.",
+        "inferred": false,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Left with the left outcome and the right fiber, or Right with the\nright outcome and the left fiber, each as a RaceWinner.",
+       "type": "IO[RacePairResult[Self.T, U, Self.E], Self.E]"
+      },
+      "signature": "def race_pair[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RacePairResult[Self.T, U, Self.E], Self.E]",
+      "summary": "Run both as fibers; produce the first one's outcome and the other's handle."
+     }
+    ],
     "raise_error": [
      {
       "args": [
@@ -66989,6 +67021,40 @@
     "Copyable"
    ]
   },
+  "effects.async_runtime.RacePairResult": {
+   "aliases": [],
+   "description": "",
+   "fields": [],
+   "kind": "alias",
+   "methods": {},
+   "parameters": [
+    {
+     "description": "The left success type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The right success type.",
+     "inferred": false,
+     "name": "U",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The shared domain error.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/_async/engine",
+   "signature": "comptime RacePairResult[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable] = RaceResult[RaceWinner[T, U, E], RaceWinner[U, T, E]]",
+   "summary": "What race_pair produces: Left when the left side finished first, else Right.",
+   "traits": []
+  },
   "effects.async_runtime.RaceResult": {
    "aliases": [],
    "description": "",
@@ -67014,6 +67080,84 @@
    "provider": "effects/_async/racing",
    "signature": "comptime RaceResult[A: Movable & Deinitable, B: Movable & Deinitable] = Choice[_RaceCases[A, B]]",
    "summary": "The canonical Choice of Left[A] or Right[B] selected by a structured race.",
+   "traits": []
+  },
+  "effects.async_runtime.RaceWinner": {
+   "aliases": [],
+   "description": "Take the outcome, then consume the value for the loser's handle, which is\nstill a child of the running fiber.",
+   "fields": [
+    {
+     "description": "The winner's settled outcome.",
+     "name": "outcome",
+     "type": "Optional[Result[T, EffectFailure[E]]]"
+    },
+    {
+     "description": "The fiber that had not finished.",
+     "name": "loser",
+     "type": "Fiber[U, E]"
+    }
+   ],
+   "kind": "struct",
+   "methods": {
+    "into_loser": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The fiber that had not finished.",
+       "type": "Fiber[Self.U, Self.E]"
+      },
+      "signature": "def into_loser(deinit self) -> Fiber[Self.U, Self.E]",
+      "summary": "Consume this value for the loser's handle."
+     }
+    ],
+    "take_outcome": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The winner's outcome.",
+       "type": "Outcome[Self.T, Self.E]"
+      },
+      "signature": "def take_outcome(mut self) -> Outcome[Self.T, Self.E]",
+      "summary": "Move the winner's outcome out, leaving a cancellation-only outcome."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The winner's success type.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The loser's success type.",
+     "inferred": false,
+     "name": "U",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The shared domain error.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/_async/engine",
+   "signature": "struct RaceWinner[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable](Movable)",
+   "summary": "The side of a race_pair that finished first, and the other side's fiber.",
    "traits": []
   },
   "effects.async_runtime.Resource": {
