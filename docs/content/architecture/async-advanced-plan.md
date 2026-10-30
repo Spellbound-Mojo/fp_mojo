@@ -1164,6 +1164,8 @@ thunks (24 overloads); a plain function beside a closure keeps the borrowed
 pair, which `IO` rejects because of the closure. Every free entry point that
 can return an `IO` now takes plain functions.
 
+Follow-up probes on simplifying callback admission, including value-first free functions, are recorded in [native boundaries](native-boundaries.md#callback-admission-simplification-probes).
+
 **Probe.**
 
 - The `Pipeline` spelling, `def(var _NativeOwnedArg[I.Element[V]]) thin -> R`,

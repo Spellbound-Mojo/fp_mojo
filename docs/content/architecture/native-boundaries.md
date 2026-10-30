@@ -905,6 +905,83 @@ audit. Documentation, generated API/export metadata and all 36 tooling tests
 pass. This is still partial Mojo 1.2 qualification: the remaining modules and
 other previously recorded rejection crashes are not counted as successes.
 
+
+### Callback admission simplification probes
+
+Admitting native callbacks directly accounts for 2,930 of the 7,461 public
+definitions in `src` at `2e802fd`; `Pipeline` alone has 1,317. These probes
+ask which overloads Mojo 1.2 actually requires. They ran on scratch copies;
+`src` is unchanged.
+
+**What cannot collapse further.**
+
+- A plain function keeps its exact thin type only in an unconstrained
+  `F: AnyType`: there `F == def(Int) thin -> Int` is true and
+  `conforms_to(F, def(Int) -> Int)` is false, and the reverse for a closure.
+  Once bound to a closure-typed parameter, the two are indistinguishable.
+- The signature cannot be read back from an opaque `F`: a generic body is
+  checked before `F` is known, so `type_of(_result(f))` does not resolve. One
+  generic overload per operation is therefore not possible.
+- An `@implicit` constructor from a function type cannot infer the result
+  type `R`, so a single callback type with implicit conversion does not work.
+
+**Value-first free functions.** With the carrier before the callback
+(`map[I](value, f)`, as in Cats' `Functor[F].map(fa)(f)`), the element type is
+known when the callback is matched. The `Pipeline` spelling
+`def(var _NativeOwnedArg[I.Element[V]]) thin -> R` then resolves, and the
+argument register variants disappear. The callback-first order cannot use it.
+
+**Required forms.** Each was found by removing it and observing a failure:
+
+| Callback | Forms | Evidence |
+|---|---|---|
+| Library callable | one | — |
+| Shared view | one (unary) | unchanged |
+| Closure | pure and raising | The raising form does not infer `Never` for generic code forwarding `F: def(var T) -> U`. |
+| Closure input | inferred, then related in `where` | Spelling the closure input with the value-dependent element (`C: def(var I.Element[V]) ...`) segfaults the compiler on a mismatched callback; inferring `A` and requiring `I.Element[V] == A` rejects it. The same holds for the binary accumulator. |
+| `Pipeline` closure error | fixed: `raises Self.E` and `raises Never` | A single inferred-error closure form segfaults on wrong arity, convention or `mut` (19 rejection fixtures); the fixed forms reject them. |
+| Plain function, pure | memory and register result | A stored pointer such as `var f: def(var Int) thin -> Int` fails with "function type conversions between closures not supported yet" without the register-result form. |
+| Plain function, raising | one result bound | Stored raising pointers work with register and memory results. |
+| Plain function, borrowing, pure | payload with and without `TrivialRegisterPassable` evidence | Without it, the shared borrowing invocation fails at instantiation. |
+
+**Counts per operation.**
+
+| Entry point | Now | Probed minimum |
+|---|---|---|
+| Free unary (`map`, `flat_map`, `traverse`, unary iteration traversals) | 12 | 7, value-first |
+| Free borrowing (`any_effect` and the other borrowing reductions) | 11 | 8, value-first |
+| Free binary (`fold_effect`) | 19 | 6, value-first |
+| `Pipeline.map`, `Pipeline.flat_map` | 9 | 8 |
+| `Iter.traverse` | 16 | 11 |
+| `Piped.map`, per carrier | 4 | 4 |
+| `if_effect` | 33 | not probed |
+
+The surfaces already know their element type, so value-first changes nothing
+for them; only the raising register split and `Iter`'s argument-inferring
+plain-function variants go. `Pipeline`'s size is its number of operations
+times eight forms, so the lever there is generating every surface from one
+callback catalog, not fewer forms.
+
+**Verification.**
+
+- Value-first free probe (`map`, `flat_map`, `traverse`, `any_effect`,
+  `fold_effect`): register and memory payloads and results, raising functions
+  in typed and untyped contexts, pure, raising and `raises Never` closures,
+  library callables, stored pointers, generic forwarding of pure and raising
+  callback types, `Optional`, `Result`, `List` and `IO`, at O0 and O3. `IO`
+  accepts plain functions and rejects closures. Mismatched unary and binary
+  callbacks are rejected. Build time matches the callback-first API (12–13 s
+  for the same client with an empty cache).
+- Surface probe: `Pipeline.map` and `flat_map` at 8 forms and `Iter.traverse`
+  at 11, run against the 161 runtime tests and examples and 128 rejection
+  fixtures that call these methods. All 160 runnable tests pass (the other file is a support module) and all 128 fixtures reject as declared.
+
+**Existing defects found.** An arity-mismatched function passed to the free
+`map` segfaults the compiler on the current callback-first API as well as on
+the value-first probe, as does a consuming callback passed to a borrowing
+reduction (recorded above). Both come from inferring a native error type and
+predate these probes.
+
 ## Callables and argument packs
 
 | Mojo 1.1 behavior | Library consequence | Replacement trigger |
