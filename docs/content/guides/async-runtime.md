@@ -145,3 +145,8 @@ Focused source/package checks at O0/O3 cover the preview. The completed
 adds twelve one-hour stress cases, retained-storage checks, and separate local
 performance measurements. The runtime remains an opt-in preview on the pinned
 Linux x86-64 toolchain.
+
+The proposed [advanced development plan](../architecture/async-advanced-plan.md)
+covers general lightweight fibers, stack-safe sequencing, and generic effect
+capabilities. Those additions are not part of the current preview; concurrent
+collection operations remain deferred.

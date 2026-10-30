@@ -74,6 +74,7 @@ nav:
       - Performance and targets: architecture/performance.md
       - Native Mojo boundaries: architecture/native-boundaries.md
       - Explicit async state machines: architecture/async-state-machines.md
+      - Advanced async development plan: architecture/async-advanced-plan.md
       - Async composition: architecture/async-composition.md
       - Async callback registration: architecture/async-callbacks.md
       - Dynamic async nurseries: architecture/async-nurseries.md
