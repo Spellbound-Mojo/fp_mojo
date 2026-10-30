@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Pass 7a complete; the [Pass 7b proposal](#pass-7b-proposal), built around a public `IO[T, E]`, is a draft for review**. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a is next**. The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -186,7 +186,7 @@ unsafe OS-thread `fp.effects.Fiber` backend.
 | `start(program)` | A deferred effect. On entry, transfer the child into the current owning scope and return a typed fiber handle. Admission and handle publication form one cancellation-safe handoff. |
 | `join` | Suspend the caller without blocking its host thread; transfer the child's complete `Outcome` after all entered child cleanup finishes. Consume one exclusive right to take the result. |
 | `request_cancel` | Request cancellation idempotently without waiting or consuming the result. Host and effect entry points must be distinguished in the final API. |
-| `cancel` | Request cancellation and suspend until termination and cleanup. Do not consume the child's result; retained failures remain available to join or scope settlement. |
+| `cancel` | Request cancellation and suspend until termination and cleanup. Do not consume the child's result; a retained failure remains available to join, or goes to the failure reporter. |
 | `cede` | Yield a runnable fiber so other eligible fibers can progress. |
 | `never` | Remain pending until cancellation can be observed. |
 | `race_pair` | Return the selected outcome and the other child's handle, transferring observation rights while the owning scope still retains execution ownership. Specify cancellation-only selection and parent-cancellation cleanup before exposure. |
@@ -197,33 +197,33 @@ The proposed ownership rules are:
    observation/cancellation rights; dropping it cannot abandon a running child
    or invoke an asynchronous destructor. Scope closure closes admission, cancels
    remaining children, and drains them. Explicit joins allow normal completion
-   before scope exit. Existing nursery normal-close semantics stay unchanged.
+   before scope exit. In the reviewed design the fiber that runs `start` is the
+   owner, and `Nursery` and `Spawner` retire.
 2. Success values and errors may be move-only. `join` cannot return the same
    owned result repeatedly or to several callers. Separate completion observers
    may share terminal status without duplicating the payload. Repeated result
    reads would require an explicitly constrained copying or sharing API.
 3. Canceling a suspended joiner does not destroy its child. If the join right
-   was consumed into that canceled join, result accounting returns to the owning
-   scope. Parent-scope cancellation still cancels all its children.
-4. Child failure is observed through join or scope settlement, rather than
-   automatically failing every sibling. Existing `both` and nursery fail-fast
-   policies remain explicit consumers of the same lifecycle. A joined failure
-   is transferred once; an unobserved failure must reach scope settlement once.
-   Cancellation-only shutdown is not fabricated into an error.
+   was consumed into that canceled join, result accounting returns to the
+   owner. Cancellation of the owner still cancels all its children.
+4. Child failure is observed through join or, if never joined, the runtime's
+   failure reporter, rather than automatically failing every sibling or the
+   owner. Existing `both` fail-fast policy remains an explicit consumer of the
+   same lifecycle. A joined failure is transferred once; an unobserved failure
+   is reported once. Cancellation-only shutdown is not fabricated into an error.
 5. Completion, join publication, parent cancellation, and result observation
    have defined ordering. If cancellation prevents delivery after a result was
    removed from shared storage, transfer its failure accounting back to the
-   scope and destroy any suppressed success exactly once. Do not lose errors
+   owner and destroy any suppressed success exactly once. Do not lose errors
    or report a joined error twice.
 6. Captured origins must outlive the owning execution scope. A fresh per-poll
    resource loan cannot escape into a background child. Independent external
    captures retain their origins, and resource owners cannot release while a
    child still has authorized access. Erased fiber programs follow the
    owned-state precondition in the [representation decisions](#representation-decisions).
-8. A scope settles unobserved child failures, so its children share its exact
-   error type `E`. A `start` with no explicit scope must find a scope with the
-   same `E`; decide in Pass 9 between explicit scopes only and one ambient scope
-   per error type.
+8. Children share their owner's exact error type `E`: an `IO` chain has one
+   `E`, and a program with a different error type runs as a leaf that owns its
+   own children. Unobserved child failures never change the owner's outcome.
 7. Runtime admission is not capped by a nursery's lifetime accepted-child count.
    Retire completed/consumed fiber storage and reuse slots with generation
    protection. Live children, unconsumed results, and retained observer handles
@@ -458,8 +458,8 @@ cross-thread memory correctness.
 | **7b — `IO` and fiber API proposal** | Specify the public `IO[T, E]` surface in Cats Effect vocabulary, callback admission, the private node kinds, join ownership, failure accounting, and the migration from typed recipes, using 7a evidence. | A concrete API migration proposal reviewed before Pass 8. |
 | **8a — Iterative sequencing and unwinding** | Implement `IO[T, E]` over the private node representation; drive continuations, errors, masks, finalizers, and disposal through one iterative engine registered once per fiber. Migrate the public async operations, family, examples, and guide from typed recipes to `IO`. Record an allocation baseline. | Runtime-built deep binds and recursive deferred programs satisfy the stack contract, including cancellation, failure, and unopened disposal; existing lifecycle behavior remains qualified. |
 | **8b — Budgets and test stepping** | Add transition accounting, separate cancellation/yield budgets, and controllable test-host stepping on the same engine. | Budget checks cover nested work and masked cleanup. |
-| **9 — General lightweight fibers** | Add typed handles, start/join/cancel, completion observers, `cede`, `never`, dynamic scoped ownership, and bounded diagnostic snapshots. Generalize canonical task storage rather than wrapping the homogeneous nursery. | Heterogeneous children progress independently; joining parks; all shutdown paths drain; observed/unobserved errors settle once; sequential spawn/join churn reuses storage; diagnostic handles do not retain payloads or completed graphs. |
-| **10 — Cancellation and spawn capabilities** | Add generic error/defer/cancellation/spawn contracts and provider forwarding; expose `race_pair` with settled ownership rules. Reuse them for existing higher-level operations where contracts match. | Generic clients use minimal capabilities across actual and test providers; law/admission checks pass; no duplicate masking, error, or child-draining policy. |
+| **9 — General lightweight fibers** | Add typed handles, start/join/cancel, completion observers, `cede`, `never`, dynamic scoped ownership, and bounded diagnostic snapshots. Generalize canonical task storage rather than wrapping the homogeneous nursery. | Heterogeneous children progress independently; joining parks; all shutdown paths drain; each failure is joined or reported exactly once; sequential spawn/join churn reuses storage; diagnostic handles do not retain payloads or completed graphs. |
+| **10 — Cancellation and spawn capabilities** | Add generic error/defer/cancellation/spawn contracts and provider forwarding; expose `race_pair` with settled ownership rules and a `Supervisor` that owns fibers beyond one program's lifetime. Reuse them for existing higher-level operations where contracts match. | Generic clients use minimal capabilities across actual and test providers; law/admission checks pass; no duplicate masking, error, or child-draining policy. |
 | **11 — Coordination and temporal capabilities** | Add generic Ref/Deferred access and time/sleep/timeout contracts over canonical owners. Specify unique identity and clock domains; extend controlled scheduling to event delivery and virtual time. Audit ownership-sensitive derived operations. | Reproducible manual-time and cancellation laws respecting promised event ordering; no polling loop masquerading as suspension; no async collection API additions. |
 | **12 — Complete integration capabilities where supported** | Implement pure-Mojo host-service and external-completion providers, with explicit event-waiting, interruption, shutdown, and blocking/interruptible support boundaries. Separate completion notification from payload transfer and external synchronization. | Every advertised Sync/Async operation has a real provider and tests; owned/borrowed service teardown, wake-before-park, and supported publication contracts pass. Otherwise publish the narrower profile and exact blocked obligation. No C fallback or implicit thread-safety assertion. |
 | **13 — Advanced preview qualification** | Publish the provider/semantic matrix, migration guidance, runnable examples, and retained evidence. Qualify controlled schedule replay and diagnostic overhead; compare lifecycle, storage, and performance with the foundation. Evaluate pooling only against the allocation baseline. | Source/package O0/O3 checks, public generic clients, ownership rejections, bounded-stack, responsiveness, replay, and storage checks pass; any pooling preserves prompt reclamation and exact destruction. Run a separately scheduled overnight qualification before making sustained-load claims. |
@@ -527,8 +527,8 @@ destructors, which is a documented limit.
 
 ## Pass 7b proposal
 
-Status: **draft for review**. Revised on 2026-10-30: the public async API
-follows Cats Effect. `IO[T, E]` is the one public async effect type, and how
+Status: **reviewed on 2026-10-30**; the [review decisions](#review-decisions)
+are below. The public async API follows Cats Effect. `IO[T, E]` is the one public async effect type, and how
 the runtime represents or executes a program is not part of the public API.
 
 ### Public surface
@@ -541,15 +541,16 @@ an `IO`, and a program's type never records how it was built.
 |---|---|---|
 | `IO[A]` | `IO[T, E]` in `fp.effects.async_runtime` | Movable, not copyable. One value runs once; repeated work comes from a function that builds a new `IO`. `E` is the exact domain error. |
 | `IO.pure`, `IO.delay`, `IO.defer`, `IO.raiseError` | `IO[T, E].pure`, `.delay`, `.defer`, `.raise_error` | `defer` makes recursive programs build lazily. |
-| `IO.async`, `IO.async_` | `IO[T, E].async_`, `.async_with_withdrawal` | Callback registration over the existing completion and withdrawal owner. Names are open. |
+| `IO.async`, `IO.async_` | `IO[T, E].async`, `IO[T, E].async_` | Callback registration over the existing completion owner. `async` also takes the withdrawal, which runs after every entered registration rather than only on cancellation as Cats Effect's finalizer does; `async_` has none. `async` is declared with backticks because it is a Mojo keyword, and called without them. |
 | `flatMap`, `map`, `handleErrorWith`, `attempt` | `flat_map`, `map`, `handle_error_with`, `attempt` | Methods and `Pipeline` stages. `Async[E]` remains the public family; its carrier becomes `IO`, so `tail_rec_m[Async[E]]` returns an `IO`. |
 | `guarantee`, `guaranteeCase`, `onCancel`, `uncancelable`, `IO.canceled` | `guarantee`, `guarantee_case`, `on_cancel`, `IO.uncancelable`, `IO.canceled` | `uncancelable` receives the existing `Poll[E]`. |
 | `start`, `Fiber.join`, `Fiber.cancel` | `start`, `Fiber[T, E].join`, `.cancel`, `.request_cancel` | See the [fiber contract](#fiber-contract). |
 | `IO.cede`, `IO.never`, `IO.sleep` | `IO.cede`, `IO.never`, `IO.sleep` | |
-| `both`, `race`, `racePair`, `timeout`, `timeoutTo` | `both`, `race`, `race_pair`, `timeout`, `timeout_to` | `race_pair` arrives in Pass 10. |
+| `both`, `race`, `racePair`, `timeoutTo` | `both`, `race`, `race_pair`, `timeout_to` | `race_pair` arrives in Pass 10. Cats Effect's raising `timeout` has no counterpart without a universal error type; `timeout_to` and the existing `race_first` and `timeout_after` policies keep their names. |
 | `Deferred`, `Ref`, `Queue`, `Semaphore` | the same names | Existing coordination owners; operations return `IO`. `Ref` arrives in Pass 11. |
 | `Resource[IO, A]` | `Resource[T, E]` | `use` builds an `IO` from a borrowed resource that the result cannot retain. |
-| `unsafeRunSync`, `IORuntime`, `ExecutionContext` | `run`, `Driver`, an `ExecutionContext` contract | The context starts as the cooperative single-thread provider; see [host services](#embedding-and-host-service-ownership). |
+| `unsafeRunSync`, `IORuntime`, `ExecutionContext`, `reportFailure` | `run`, `Driver`, an `ExecutionContext` contract, a failure reporter | The context starts as the cooperative single-thread provider; see [host services](#embedding-and-host-service-ownership). |
+| `Supervisor` | `Supervisor` | Pass 10. |
 
 `Fiber` here is distinct from the existing OS-thread `fp.effects.Fiber`; the
 namespaces separate them. `IO` in `fp.effects.async_runtime` is likewise distinct
@@ -650,15 +651,23 @@ runs `start` owns the child.
   owner; this is the existing rule that no running work is abandoned.
 - A child's success goes into a typed cell shared only by its handle and its
   task. Its failure stays in owner state typed only by `E`, so the owner can
-  settle unobserved failures without knowing `T`.
+  report an unobserved failure without knowing `T`.
 - `join` moves the failure out of owner state, or the success out of the cell.
   Dropping a handle neither stops nor detaches the child; its success is
-  destroyed once the child completes, and its failure joins settlement.
+  destroyed once the child completes, and its failure is reported.
 - If a joiner is canceled after taking the right but before delivery, the
-  failure returns to owner state and a suppressed success is destroyed once.
-- Settlement merges unobserved failures after the fiber's own outcome through
-  `_finish`, in start order. Cancellation-only children contribute nothing.
-- Fiber storage generalizes the nursery's slots with generation-checked reuse,
+  failure returns to owner state to be reported, and a suppressed success is
+  destroyed once.
+- An unjoined child's failure never changes its owner's outcome. As in Cats
+  Effect, where `reportUnhandledFiberErrors` is on by default, it goes to the
+  runtime's failure reporter, a host service beside the `ExecutionContext`. A
+  move-only failure is either joined or reported, never both, so it is reported
+  once it can no longer be joined: when its handle is dropped or its owner
+  finishes. Cats Effect instead reports at completion when no joiner is waiting.
+  The default reporter writes one diagnostic line (the error text when `E` is
+  `Writable`, otherwise its type and error count) and destroys the failure.
+  Hosts can replace the reporter or turn reporting off.
+- Fiber storage generalizes the nursery's child slots with generation-checked reuse,
   so start/join churn does not grow storage. Fiber scheduling reuses the wake
   registry; Pass 9 decides between polling children through their owner and a
   flat runnable set at the root, preferring the flat set so that nested fibers
@@ -692,8 +701,9 @@ This replaces the preview's typed recipe surface:
 - **Removed from the public API:** the recipe type aliases `Pure`, `Bind`, `Loop`,
   `Both`, `Scope`, `RaceFirst`, `Race`, `EvalIO`, `Delay`, `NativeDelay`,
   `Guarantee`, `OnCancel`, `GuaranteeCase`, `Masked`, `Uncancelable`, `Callback`,
-  `Sleep`, `TimeoutAfter`, and `TimeoutTo`; the resource plan types; and
-  `ScopedBoth`. They remain as private leaf implementations where useful.
+  `Sleep`, `TimeoutAfter`, and `TimeoutTo`; the resource plan types;
+  `ScopedBoth`; and `Nursery` and `Spawner`, which `start`/`join` and a later
+  `Supervisor` replace. They remain as private implementations where useful.
 - **Changed:** the free functions (`pure`, `delay`, `both`, `race`, `guarantee`,
   `sleep`, and the rest) return `IO`, or become `IO` methods. Function signatures
   in user code change from recipe types such as `Pure[Int, Int]` to `IO[Int, Int]`.
@@ -707,18 +717,19 @@ old-to-new table in the [async guide](../guides/async-runtime.md), following the
 [documentation process](../contributing/documentation.md). As an opt-in preview,
 the old names are removed rather than deprecated.
 
-### Questions for review
+### Review decisions
 
-1. Should an owner whose own program succeeded fail when an unjoined child
-   failed (proposed), or report child failures separately as Cats Effect does?
-2. Should the removed recipe names go directly (proposed), or through a
-   deprecation release?
-3. Should `Nursery` and `Spawner` retire in favor of `start`/`join` and a later
-   `Supervisor` (proposed), or remain public?
-4. Should a direct self-join abort as a protocol violation (proposed), or be left
-   to diagnostics?
-5. Names for callback registration: `async_` and `async_with_withdrawal`, or
-   others.
+Decided on 2026-10-30:
+
+1. An unjoined child's failure is reported separately, as Cats Effect does, and
+   never changes its owner's outcome.
+2. The old recipe names are removed directly, without a deprecation release.
+3. `Nursery` and `Spawner` retire in favor of `start`/`join` and a later
+   `Supervisor`.
+4. A direct self-join aborts as a protocol violation.
+5. Names follow Cats Effect where it has established ones (`async`, `async_`,
+   `timeout_to`, `race_pair`, `Supervisor`), and otherwise keep this library's
+   existing names (`request_cancel`, `race_first`, `timeout_after`).
 
 ## Implementation reference map
 
@@ -864,6 +875,6 @@ and native outcome-preserving capabilities. Transition budgets, fiber
 diagnostics, and controllable test scheduling accompany their runtime passes.
 Host-service ownership, an `ExecutionContext` contract, and execution profiles
 are specified before Pass 12. Real platform providers remain separately
-qualified, and allocation pooling follows evidence. The questions listed in the
-[Pass 7b proposal](#pass-7b-proposal) remain open. Concurrent collection
+qualified, and allocation pooling follows evidence. The [Pass 7b review decisions](#review-decisions)
+settle failure reporting, removal of the recipe names, and naming. Concurrent collection
 operations remain deferred throughout.
