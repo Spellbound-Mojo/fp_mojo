@@ -69977,7 +69977,7 @@
   },
   "effects.async_runtime.Fiber": {
    "aliases": [],
-   "description": "The counterpart of Cats Effect's Fiber. Join it once to take its outcome, or\ncancel it. Dropping the handle neither stops nor detaches the child: its\nowner cancels and drains every live child before completing.",
+   "description": "The counterpart of Cats Effect's Fiber. Join it once to take its outcome, or\ncancel it. Dropping the handle neither stops nor detaches the child: its\nowner cancels and drains every live child before completing. A failure that\nis never joined goes to the runtime's reporter once the handle, or a join\nthat did not take the outcome, is dropped; a success is destroyed.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -71482,7 +71482,7 @@
   },
   "effects.async_runtime.IORuntimeConfig": {
    "aliases": [],
-   "description": "The counterpart of Cats Effect's IORuntimeConfig. Every run loop under one\nroot draws from one budget of interpreter transitions per root poll and\nyields when it is spent. Bind and recovery handoffs check for cancellation\nevery `cancelation_check_threshold` handoffs; leaves, masked regions and\ncleanup keep their own checkpoints. Native callback bodies, custom polls and\ndestructors are not counted and cannot be preempted.",
+   "description": "The counterpart of Cats Effect's IORuntimeConfig. Every run loop under one\nroot draws from one budget of interpreter transitions per root poll and\nyields when it is spent. Bind and recovery handoffs check for cancellation\nevery `cancelation_check_threshold` handoffs; leaves, masked regions and\ncleanup keep their own checkpoints. Native callback bodies, custom polls and\ndestructors are not counted and cannot be preempted.\n\nA fiber failure that is never joined is reported once its last handle or\njoin is dropped: `reporter` receives one formatted line, the errors when\nthe error type is Writable, otherwise its type name and error count.",
    "fields": [
     {
      "description": "Handoffs between cancellation checks; 1 checks every bind.",
@@ -71493,6 +71493,16 @@
      "description": "Interpreter transitions per root poll before yielding to the host.",
      "name": "auto_yield_threshold",
      "type": "Int"
+    },
+    {
+     "description": "Whether unjoined fiber failures reach the reporter; on by default.",
+     "name": "report_unhandled_fiber_errors",
+     "type": "Bool"
+    },
+    {
+     "description": "The host callback for unhandled fiber failures; standard error by default.",
+     "name": "reporter",
+     "type": "def(String) thin -> None"
     }
    ],
    "kind": "struct",
@@ -71500,7 +71510,7 @@
    "parameters": [],
    "provider": "effects/_async/kernel",
    "signature": "struct IORuntimeConfig(Copyable)",
-   "summary": "How often IO yields to its host and checks for cancellation.",
+   "summary": "How often IO yields to its host and checks for cancellation, and where unhandled fiber failures go.",
    "traits": [
     "Copyable"
    ]

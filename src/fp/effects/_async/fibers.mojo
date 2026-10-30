@@ -13,13 +13,17 @@ fiber's own program is terminal, it cancels its live children and completes only
 after they do, so fibers never outlive their owner. Slots of completed fibers
 are reused.
 """
+from std.builtin.rebind import downcast
 from std.memory import ArcPointer
+from std.os import abort
+from fp.callables import OnceUnary
 from fp.data import Result, Ok
 from fp._internal.erased import _Erased
 from fp._internal.waking import _Event as Signal
 from fp.effects import CancellationToken, IOContext, Outcome, EffectFailure
 from fp.effects.outcomes import _failure_as
-from .kernel import Machine, Step, Wait, _tick
+from fp.effects._io_core import _Reporter
+from .kernel import Machine, Step, Wait, _tick, _report_to_stderr
 from .children import _Child
 from .erased import _ErasedMachine
 
@@ -31,12 +35,69 @@ struct _FiberRecord[E: Movable & Deinitable](Movable):
     # The settled outcome; a success holds the handle's T, erased.
     var outcome: Optional[Outcome[_Erased, Self.E]]
     var done: Bool
+    # Set once the last claim to the outcome is gone; it can no longer be joined.
+    var released: Bool
+    var report: Bool
+    var reporter: _Reporter
 
     def __init__(out self):
         self.token = CancellationToken()
         self.signal = Signal()
         self.outcome = None
         self.done = False
+        self.released = False
+        self.report = True
+        self.reporter = _report_to_stderr
+
+    def identity(self) -> Int:
+        return Int(self.signal._cell.ptr())
+
+    def settle(mut self):
+        """Dispose of an outcome nobody can join: report a failure, drop a success."""
+        if not self.done or not self.released or not self.outcome:
+            return
+        var outcome = self.outcome.take()
+        if not outcome or outcome.value().is_ok() or not self.report:
+            return
+        self.reporter(_describe(outcome.take()._take_err()))
+
+
+def _describe[E: Movable & Deinitable](var failure: EffectFailure[E]) -> String:
+    """One line for an unhandled failure: its errors, or their type and count."""
+    var line = String("unhandled fiber failure: ")
+    var canceled = failure.canceled
+    var errors = failure^.into_errors().into_list()
+    comptime if conforms_to(E, Writable):
+        for index in range(len(errors)):
+            if index:
+                line.write("; ")
+            line.write(rebind[downcast[E, Writable]](errors[index]))
+    else:
+        line.write(len(errors), " error(s) of type ", reflect[E].name())
+    if canceled:
+        line.write(" (canceled)")
+    return line
+
+
+struct _Claim[E: Movable & Deinitable](Movable):
+    """The single right to a fiber's outcome, held by its handle and then by its join.
+
+    Dropping the claim without taking the outcome releases the record: a
+    failure is reported, now or when the child completes, and a success is
+    destroyed once.
+    """
+    var record: ArcPointer[_FiberRecord[Self.E]]
+
+    def __init__(out self, var record: ArcPointer[_FiberRecord[Self.E]]):
+        self.record = record^
+
+    def __deinit__(deinit self):
+        self.record[].released = True
+        self.record[].settle()
+
+    def keep(deinit self) -> ArcPointer[_FiberRecord[Self.E]]:
+        """Consume the claim after taking the outcome; nothing is left to release."""
+        return self.record^
 
 
 @fieldwise_init
@@ -52,6 +113,10 @@ struct _Spawn[E: Movable & Deinitable](Movable):
         var child = _Child[_ErasedMachine[_Erased, Self.E], _Erased, Self.E](self.program^, self.index + 1)
         child.context = IOContext[Self.E](self.record[].token.copy(), False)
         child.attach(context)
+        child.context._fiber = self.record[].identity()
+        if context._budget:
+            self.record[].report = context._budget.value()[].report
+            self.record[].reporter = context._budget.value()[].reporter
         return _FiberEntry[Self.E](child^, self.record^, self.owner, 0, None)
 
 
@@ -161,6 +226,7 @@ struct _Fibers[E: Movable & Deinitable](Movable):
             entry.record[].outcome = Optional(outcome^)
             entry.record[].done = True
             entry.record[].signal.notify()
+            entry.record[].settle()
             self.inbox[].free.append(index)
             var owner = entry.owner
             if owner == 0:
@@ -198,7 +264,9 @@ struct _Fibers[E: Movable & Deinitable](Movable):
                 if selected < 0:
                     return
             ref entry = self.entries[selected].value()
+            var fiber = entry.child.context._fiber
             entry.child.attach(context)
+            entry.child.context._fiber = fiber
             _ = _tick(entry.child.slot, entry.child.context)
             var done = entry.child.slot.done()
             self.admit(context)
@@ -221,27 +289,67 @@ struct _Fibers[E: Movable & Deinitable](Movable):
         return Step[_Erased, Self.E].pending(wait^)
 
 
-@fieldwise_init
-struct _Join[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
-    comptime Value = Outcome[Self.T, Self.E]
+struct _Join[E: Movable & Deinitable](Machine):
+    """Wait for the child, then hand its outcome and the claim to a delivery."""
+    comptime Value = _Delivery[Self.E]
     comptime Error = Self.E
-    var record: ArcPointer[_FiberRecord[Self.E]]
+    var claim: Optional[_Claim[Self.E]]
 
-    def poll(mut self, context: IOContext[Self.E]) -> Step[Outcome[Self.T, Self.E], Self.E]:
-        ref record = self.record[]
+    def __init__(out self, var claim: _Claim[Self.E]):
+        self.claim = Optional(claim^)
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[_Delivery[Self.E], Self.E]:
+        ref record = self.claim.value().record[]
+        if context._fiber and context._fiber == record.identity():
+            abort("a fiber cannot join itself")
         var revision = record.signal.revision()
-        if record.done:
-            var outcome = record.outcome.take()
-            var typed: Outcome[Self.T, Self.E]
-            if outcome and outcome.value().is_ok():
-                # The child's run loop boxed a value its IO type fixed as T.
-                typed = Optional(Result[Self.T, EffectFailure[Self.E]](Ok(outcome.take()._take_ok().take[Self.T]())))
-            else:
-                typed = _failure_as[Self.T](outcome^)
-            return Step[Self.Value, Self.E].ready(Optional(Result[Self.Value, EffectFailure[Self.E]](Ok(typed^))))
+        # A canceled joiner leaves the outcome; dropping its claim reports it.
         if context.canceled():
             return Step[Self.Value, Self.E].ready(None)
+        if record.done:
+            var outcome = record.outcome.take()
+            var delivery = _Delivery[Self.E](self.claim.take(), Optional(outcome^))
+            return Step[Self.Value, Self.E].ready(Optional(Result[Self.Value, EffectFailure[Self.E]](Ok(delivery^))))
         return Step[Self.Value, Self.E].pending(Wait.changed(record.signal, revision))
+
+
+struct _Delivery[E: Movable & Deinitable](Movable):
+    """A joined outcome on its way to the joiner's continuation.
+
+    If cancellation drops it before the join's own frame takes the outcome, the
+    outcome returns to the record and the claim's release reports a failure.
+    """
+    var claim: _Claim[Self.E]
+    var outcome: Optional[Outcome[_Erased, Self.E]]
+
+    def __init__(out self, var claim: _Claim[Self.E], var outcome: Optional[Outcome[_Erased, Self.E]]):
+        self.claim = claim^
+        self.outcome = outcome^
+
+    def __deinit__(deinit self):
+        if self.outcome:
+            self.claim.record[].outcome = self.outcome^
+        # The claim's release settles the record.
+
+    def take(deinit self) -> Outcome[_Erased, Self.E]:
+        _ = self.claim^.keep()
+        return self.outcome.take()
+
+
+struct _Unwrap[T: Movable & Deinitable, E: Movable & Deinitable](OnceUnary, Defaultable):
+    """The join's own frame: the outcome reaches the joiner, typed as T."""
+    comptime Arg = _Delivery[Self.E]
+    comptime Out = Outcome[Self.T, Self.E]
+
+    def __init__(out self):
+        pass
+
+    def call_once(deinit self, var delivery: _Delivery[Self.E]) -> Outcome[Self.T, Self.E]:
+        var outcome = delivery^.take()
+        if outcome and outcome.value().is_ok():
+            # The child's run loop boxed a value its IO type fixed as T.
+            return Optional(Result[Self.T, EffectFailure[Self.E]](Ok(outcome.take()._take_ok().take[Self.T]())))
+        return _failure_as[Self.T](outcome^)
 
 
 @fieldwise_init

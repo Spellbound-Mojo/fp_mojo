@@ -51,22 +51,31 @@ trait _IOContextType:
     comptime NativeError: Movable & Deinitable
 
 
+comptime _Reporter = def(String) thin
+"""A host callback receiving one formatted line per unhandled fiber failure."""
+
+
 struct _Budget(Movable):
     """Interpreter transitions shared by every run loop under one root.
 
     The root refills the slice before each root poll; run loops draw from it and
-    yield when it is spent. The state is confined to the root's polling thread.
+    yield when it is spent. It also carries the root's fiber failure reporting.
+    The state is confined to the root's polling thread.
     """
     var remaining: Int
     var consumed: Int
     var yield_threshold: Int
     var check_threshold: Int
+    var report: Bool
+    var reporter: _Reporter
 
-    def __init__(out self, yield_threshold: Int, check_threshold: Int):
+    def __init__(out self, yield_threshold: Int, check_threshold: Int, report: Bool, reporter: _Reporter):
         self.remaining = yield_threshold
         self.consumed = 0
         self.yield_threshold = yield_threshold
         self.check_threshold = check_threshold
+        self.report = report
+        self.reporter = reporter
 
     def refill(mut self):
         self.remaining = self.yield_threshold
@@ -92,6 +101,8 @@ struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):
     var _runtime: Optional[_Runtime]
     var _parent: Optional[_Ticket]
     var _budget: Optional[ArcPointer[_Budget]]
+    # The running fiber's identity, or 0 outside fibers; for self-join checks.
+    var _fiber: Int
 
     def __init__(out self, var _token: CancellationToken, _masked: Bool):
         self._token = _token^
@@ -101,6 +112,7 @@ struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):
         self._runtime = None
         self._parent = None
         self._budget = None
+        self._fiber = 0
 
     def canceled(self) -> Bool:
         """Check cancellation at this context's current masking level.
@@ -133,6 +145,7 @@ struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):
         self._runtime = parent._runtime.copy()
         self._parent = parent._parent.copy()
         self._budget = parent._budget.copy()
+        self._fiber = parent._fiber
 
 
 comptime IO[E: Movable & Deinitable = Error] = ReaderT[ResultT[OptionalFamily, EffectFailure[E]], IOContext[E]]

@@ -1,10 +1,11 @@
 """Typed resumable work with no coroutine intrinsics or context-switch ABI."""
 from std.memory import OwnedPointer, ArcPointer
 from std.time import sleep
+from std.sys import stderr
 from std.os import abort
 from .time import Duration, Instant
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
-from fp.effects._io_core import _settle, _Budget
+from fp.effects._io_core import _settle, _Budget, _Reporter
 from fp.data import Result, Ok
 from fp._internal.waking import _Event as Signal, _Runtime, _Ticket, _Subscription, _Waker, _Clock as Clock
 
@@ -340,8 +341,13 @@ def _tick[P: Machine](mut slot: _Slot[P, P.Value, P.Error], context: IOContext[P
     return True
 
 
+def _report_to_stderr(line: String):
+    print(line, file=stderr)
+
+
 struct IORuntimeConfig(Copyable):
-    """How often IO yields to its host and checks for cancellation.
+    """How often IO yields to its host and checks for cancellation, and where
+    unhandled fiber failures go.
 
     The counterpart of Cats Effect's IORuntimeConfig. Every run loop under one
     root draws from one budget of interpreter transitions per root poll and
@@ -349,16 +355,27 @@ struct IORuntimeConfig(Copyable):
     every `cancelation_check_threshold` handoffs; leaves, masked regions and
     cleanup keep their own checkpoints. Native callback bodies, custom polls and
     destructors are not counted and cannot be preempted.
+
+    A fiber failure that is never joined is reported once its last handle or
+    join is dropped: `reporter` receives one formatted line, the errors when
+    the error type is Writable, otherwise its type name and error count.
     """
     var cancelation_check_threshold: Int
     """Handoffs between cancellation checks; 1 checks every bind."""
     var auto_yield_threshold: Int
     """Interpreter transitions per root poll before yielding to the host."""
+    var report_unhandled_fiber_errors: Bool
+    """Whether unjoined fiber failures reach the reporter; on by default."""
+    var reporter: def(String) thin
+    """The host callback for unhandled fiber failures; standard error by default."""
 
     def __init__(out self):
-        """The defaults: check every handoff and yield every 1,024 transitions."""
+        """The defaults: check every handoff, yield every 1,024 transitions, and
+        report unhandled fiber failures to standard error."""
         self.cancelation_check_threshold = 1
         self.auto_yield_threshold = 1024
+        self.report_unhandled_fiber_errors = True
+        self.reporter = _report_to_stderr
 
     def __init__(out self, cancelation_check_threshold: Int, auto_yield_threshold: Int) raises:
         """Validate a configuration so that yielding never disables checks.
@@ -378,6 +395,8 @@ struct IORuntimeConfig(Copyable):
             raise Error("auto yield threshold must be a multiple of the cancelation check threshold")
         self.cancelation_check_threshold = cancelation_check_threshold
         self.auto_yield_threshold = auto_yield_threshold
+        self.report_unhandled_fiber_errors = True
+        self.reporter = _report_to_stderr
 
 
 struct Task[P: Machine](Movable, not Deinitable):
@@ -389,7 +408,7 @@ struct Task[P: Machine](Movable, not Deinitable):
         self._slot = _Slot[Self.P, Self.P.Value, Self.P.Error](program^)
         self.context = IOContext[Self.P.Error](token.copy(), False)
         self.context._runtime = Optional(_Runtime())
-        self.context._budget = Optional(ArcPointer(_Budget(config.auto_yield_threshold, config.cancelation_check_threshold)))
+        self.context._budget = Optional(ArcPointer(_Budget(config.auto_yield_threshold, config.cancelation_check_threshold, config.report_unhandled_fiber_errors, config.reporter)))
         self._slot.prepare(self.context)
 
     def done(self) -> Bool:

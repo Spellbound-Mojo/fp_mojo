@@ -40,7 +40,7 @@ from .io import EvalIO as _EvalIO
 from .callbacks import Callback as _Callback, Completion, _CallbackUnit
 from .erased import _ErasedMachine
 from .finalization import Poll
-from .fibers import _FiberRecord, _Inbox, _Fibers, _Spawn, _Join, _CancelFiber, _RequestCancel
+from .fibers import _FiberRecord, _Inbox, _Fibers, _Spawn, _Claim, _Join, _Delivery, _Unwrap, _CancelFiber, _RequestCancel
 
 # Head and frame kinds.
 comptime _EMPTY = 0
@@ -536,16 +536,18 @@ struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
 
     The counterpart of Cats Effect's Fiber. Join it once to take its outcome, or
     cancel it. Dropping the handle neither stops nor detaches the child: its
-    owner cancels and drains every live child before completing.
+    owner cancels and drains every live child before completing. A failure that
+    is never joined goes to the runtime's reporter once the handle, or a join
+    that did not take the outcome, is dropped; a success is destroyed.
 
     Parameters:
         T: The child's success value.
         E: The exact domain error the child shares with its owner.
     """
-    var _record: ArcPointer[_FiberRecord[Self.E]]
+    var _claim: _Claim[Self.E]
 
     def __init__(out self, *, var _record: ArcPointer[_FiberRecord[Self.E]]):
-        self._record = _record^
+        self._claim = _Claim[Self.E](_record^)
 
     def join(deinit self) -> IO[Outcome[Self.T, Self.E], Self.E]:
         """Wait for the child and its cleanup to finish, then take its outcome.
@@ -554,7 +556,7 @@ struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
             An IO producing the child's success, complete failure, or
             cancellation as an Outcome; it parks until the child completes.
         """
-        return IO[Outcome[Self.T, Self.E], Self.E]._lifted(_Join[Self.T, Self.E](self._record^))
+        return IO[_Delivery[Self.E], Self.E]._lifted(_Join[Self.E](self._claim^))._mapped(_Unwrap[Self.T, Self.E]())
 
     def join_with(deinit self, var fallback: IO[Self.T, Self.E]) -> IO[Self.T, Self.E]:
         """Join, continuing with a fallback if the child was canceled.
@@ -593,7 +595,7 @@ struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
         Returns:
             A unit IO completing after the child terminates.
         """
-        return IO[NoneType, Self.E]._lifted(_CancelFiber[Self.E](self._record.copy(), False))
+        return IO[NoneType, Self.E]._lifted(_CancelFiber[Self.E](self._claim.record.copy(), False))
 
     def request_cancel(self) -> IO[NoneType, Self.E]:
         """Request cancellation of the child without waiting.
@@ -601,7 +603,7 @@ struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
         Returns:
             A unit IO completing at once.
         """
-        return IO[NoneType, Self.E]._lifted(_RequestCancel[Self.E](self._record.copy()))
+        return IO[NoneType, Self.E]._lifted(_RequestCancel[Self.E](self._claim.record.copy()))
 
 
 
@@ -1160,6 +1162,15 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
             A unit IO that is runnable again after one yield.
         """
         return IO[NoneType, Self.E]._lifted(_Cede[Self.E]())
+
+    def _fiber_slots(mut self) -> Int:
+        """Fiber table slots this entered IO has reserved; for storage-reuse checks."""
+        if not self._entered:
+            return 0
+        ref loop = self._loop.unsafe_assume_init()[]
+        if not loop.inbox:
+            return 0
+        return loop.inbox.value()[].size
 
     def start(deinit self) -> IO[Fiber[Self.T, Self.E], Self.E]:
         """Start this IO as a fiber owned by the running fiber.

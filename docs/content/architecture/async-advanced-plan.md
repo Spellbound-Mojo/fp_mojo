@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) step 9a built** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) steps 9a and 9b built** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -1214,7 +1214,7 @@ can return an `IO` now takes plain functions.
 
 ## Pass 9 proposal
 
-Status: **approved; 9a built** ([progress](#pass-9-progress)). It implements
+Status: **approved; 9a and 9b built** ([progress](#pass-9-progress)). It implements
 the approved [fiber contract](#fiber-contract) on the Pass 8 engine.
 
 ### Public surface
@@ -1361,8 +1361,40 @@ module imports acyclic.
 - **Measurements.** The `erased_cost` probe at O3 still runs an `IO` loop
   iteration in 35 to 39 ns.
 
-Pending for 9b: failure reporting, dropped handles, the joiner cancellation
-race, self-join detection, and the churn client.
+**9b** was built on 2026-10-30: failure reporting, dropped handles, the joiner
+cancellation race, self-join detection, and the churn client. One decision was
+refined in review: a failure is reported when its last claim is dropped, not
+also when its owner finishes. A Mojo handle is a value that can outlive its
+owner and be joined later; owner completion still drops the handles its
+program holds, so the usual case reports at owner completion.
+
+- **Claims.** A `_Claim` is the single right to an outcome. The handle holds
+  it, `join` moves it into the join leaf, and the leaf moves it with the taken
+  outcome into a `_Delivery`. Dropping a claim releases the record: a failure
+  is reported, at once or when the child completes, and a success is
+  destroyed. Completion settles a released record, so each failure is joined
+  or reported exactly once.
+- **Joiner race.** `join` is the join leaf followed by its own map frame,
+  which takes the outcome out of the delivery. A canceled joiner's leaf takes
+  nothing. If a handoff observes cancellation between the leaf and that frame,
+  dropping the delivery returns the outcome to the record and its claim
+  reports it.
+- **Reporting.** `IORuntimeConfig` gains `report_unhandled_fiber_errors`, on
+  by default, and `reporter`, a `def(String) thin` host function writing to
+  standard error by default. The root budget carries both, and admission
+  copies them into each record. The line lists the errors when `E` is
+  `Writable`, otherwise their count and type name.
+- **Self-join.** `IOContext` carries the running fiber's identity, its record
+  address, through copies, masks and inheritance; fiber slots restore it after
+  each re-attachment. The join leaf aborts on a direct self-join. An abort
+  cannot be qualified in-process, so no client exercises it.
+- **Clients.** `fiber_reporting` reports through a standard-output reporter for
+  a handle dropped after and before the failure, a canceled joiner, and a
+  dropped delivery, and checks that a joined failure, a dropped success
+  (destroyed once), disabled reporting, and a non-`Writable` error type behave
+  as documented. `fiber_churn` runs a million sequential start/join cycles in
+  one fiber slot and at most four wake registrations, also under a 1 MiB
+  stack. A cycle costs about 7.3 µs at O3, including the driver's polls.
 
 ## Implementation reference map
 

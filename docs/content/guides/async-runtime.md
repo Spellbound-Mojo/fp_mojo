@@ -99,6 +99,16 @@ cleanup included. Dropping a handle neither stops nor detaches the child. A
 child the owner never joined does not change the owner's outcome, and a child
 canceled before it first runs runs nothing, not even its finalizers.
 
+Each failure is either joined or reported, exactly once. A failure is reported
+when nothing can join it any more: when its handle is dropped, or a join that
+did not take the outcome, such as a canceled one, is dropped; if the child is
+still running then, it is reported when the child completes. An unjoined
+success is destroyed. The reporter is `IORuntimeConfig.reporter`, a host
+function taking one formatted line: the errors when `E` is `Writable`,
+otherwise their count and type. It writes to standard error by default, and
+`report_unhandled_fiber_errors = False` turns reporting off. A fiber that
+joins its own handle aborts; longer join cycles are not detected.
+
 Fibers run on the host thread. The entered `IO` that starts the first fiber
 hosts every fiber started beneath it, including fibers started by fibers, so
 nesting costs no native stack; each root poll alternates whether that `IO`'s own
@@ -182,6 +192,7 @@ reported deadline.
 | `fa.start`, `fiber.join`, `fiber.cancel` | `io.start()`, `fiber^.join()`, `fiber.cancel()`, `fiber.request_cancel()` | Owners drain unjoined children before completing |
 | `joinWith`, `joinWithNever`, `joinWithUnit` | `join_with`, `join_with_never`, `join_with_unit` | A canceled child runs the fallback, waits, or produces unit |
 | `IORuntimeConfig` | `IORuntimeConfig(cancelation_check_threshold, auto_yield_threshold)` | Same validation; by default checks every bind, where Cats Effect checks every 512, and yields every 1,024 transitions |
+| `reportUnhandledFiberErrors`, `reportFailure` | `IORuntimeConfig.report_unhandled_fiber_errors`, `.reporter` | On by default; reports when the last handle or join is dropped |
 
 Operations use snake_case. Types follow the repository's Mojo class convention.
 `async` is declared with backticks because it is a Mojo keyword, and called as
