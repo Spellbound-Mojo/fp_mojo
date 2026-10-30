@@ -1,1 +1,1 @@
-io engine: sequencing, recovery, deferred construction, leaves, cancellation, exact ownership
+io engine: sequencing, recovery, deferred construction, leaves, cancellation, exact ownership, inline and boxed storage

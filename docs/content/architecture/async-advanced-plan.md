@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a step 1 of 3 complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a step 1 of 3 complete and optimized** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -486,7 +486,8 @@ Probes: `experiments/async-state-machines/probes/erased_cost.mojo` (timings) and
 
 - **Erased storage works on Mojo 1.2.** `_Erased` reuses the allocation of a
   native `OwnedPointer`. A destroy function specialized by the stored type
-  rebuilds that owner, which runs the destructor and frees the storage.
+  rebuilds that owner, which runs the destructor and frees the storage. Pass
+  8a later added inline storage for small trivially movable values.
   `_ErasedMachine[T, E]` adds a poll function specialized by the machine type.
   Machines of three types ran behind one carrier, in a `Nursery`, and inside
   `both`. Move-only values and errors, moves, unopened disposal, and
@@ -495,9 +496,8 @@ Probes: `experiments/async-state-machines/probes/erased_cost.mojo` (timings) and
 - **Lent addresses must carry the owner's origin.** A probe that copied the
   untracked address out of a local `_Erased` read freed memory: ASAP
   destruction ended the owner at its last use, before the operation ran.
-  `_Erased.view()` now lends the address with the owner's origin, and operation
-  functions accept `MutOpaquePointer[_]`, as the standard library's
-  `_ErasedWriter` does.
+  `_Erased.pointer[T]()` now lends the address only with the owner's
+  origin, as the standard library's `_ErasedWriter` does.
 - **Recursive frames need explicit destructors.** Mojo 1.2 accepts a field of
   type `Optional[OwnedPointer[Self]]` only when the struct declares `__deinit__`.
   A destructor that detaches descendants in a loop tore down a million-link
@@ -521,7 +521,7 @@ clients plus the `foundation` and `nurseries` regressions, including
 `erased_depth` under a 1 MiB stack on every route.
 
 Consequences for 7b and 8a: interpreter frames are explicit node structs with
-iterative destructors; every erased operation borrows through `view()`;
+iterative destructors; every erased operation borrows through `pointer[T]()`;
 programs captured inside user callbacks are still destroyed by native
 destructors, which is a documented limit.
 
@@ -575,39 +575,46 @@ owned captures can be admitted safely.
 
 ### Internal representation
 
-The runtime representation is private. An `IO` owns a node tree until it is
-entered, then interpreter state:
+The runtime representation is private. An `IO` is a flat program: one head
+that the run loop evaluates first, and the continuation frames applied after it
+in order. `flat_map`, `map`, and `handle_error_with` append a frame; they never
+nest one program inside another.
 
-| Node | Payload | Evaluation |
+| Head | Payload | Evaluation |
 |---|---|---|
 | Pure | boxed value | Deliver success. |
-| Fail | `EffectFailure[E]` | Deliver failure. Errors are never boxed, because `E` is uniform. |
+| Fail | boxed `EffectFailure[E]` | Deliver failure. Every program in one chain shares `E`. |
 | Leaf | private machine whose value is boxed on completion | Poll through a canonical `_Slot`. |
-| Defer | erased factory | Invoke once through the canonical error capture; continue with its result. |
-| Bind | source node, erased continuation | Push the continuation; evaluate the source. |
-| Recover | source node, erased handler | Push the handler; evaluate the source. |
-| Finalize | source node, finalizer node, mode | Push the finalizer; evaluate the source. Modes cover `guarantee`, `on_cancel`, and `guarantee_case`. |
-| Mask | erased factory receiving `Poll[E]` | Enter a region through the canonical `context._mask()`; push its exit. |
+| Defer | boxed factory | Invoke once; install the program it returns. |
+
+| Frame | Applies to | Behavior |
+|---|---|---|
+| Bind | success | Invoke the continuation after the handoff checkpoint; install the program it returns, or a mapped value. |
+| Recover | failure whose `canceled` flag is false | Invoke the handler; install the program it returns. |
+| Finalize, mask exit | any outcome | Step 2: run a finalizer masked with the exit case, or restore a region's mask. |
 | Start, join, cancel | fiber operations | Pass 9. |
+
+Entering a program moves its head into the run loop and pushes its frames onto
+one stack, so that the first continuation to apply is on top. A callback writes
+the program it builds directly into the run loop through an engine-fixed
+pointer.
 
 Today's typed recipe machines (`both`, `race`, timeouts, scopes, callbacks,
 coordination waits) become private leaf implementations behind the public
 operations. They keep native stack depth proportional to their static type, so
-the stack guarantee covers interpreter nodes. Rebuilding `both` and `race` on
-fibers in Pass 10 brings them under it.
+the stack guarantee covers the run loop's heads and frames. Rebuilding `both`
+and `race` on fibers in Pass 10 brings them under it.
 
-Values cross nodes in `_Erased` boxes. A box is opened only by a function
-specialized at the typed call that consumes it: `flat_map` on `IO[T, E]`
-specializes the continuation's unboxing for `T`, and an `IO`'s own result is
-unboxed as its `T`. The typed public API therefore pairs every cast with the
-type that created the box. Pass 8a adds a consuming `_Erased.take[T]`
-restricted to such functions.
+Values and callbacks cross the run loop in `_Erased` boxes. A trivially movable
+value of at most 24 bytes lives inline; larger values or ones with custom moves
+take one allocation. A box is opened only by a function specialized at the typed
+call that consumes it: `flat_map` on `IO[T, E]` specializes the continuation's
+unboxing for `T`, and an `IO`'s own result is unboxed as its `T`. The typed
+public API therefore pairs every cast with the type that created the box.
 
-Nodes link their children through `OwnedPointer`, and their destructors detach
-descendants into a worklist, as `erased_depth` does. The continuation stack is a
-`List`. Disposing of an unopened or partially run `IO` is therefore iterative,
-except for values captured inside user callbacks, which native destructors still
-release.
+Frames live in `List` storage, with a program's first frame inline. Disposing of
+an unopened or partially run `IO` therefore never recurses, except for values
+captured inside user callbacks, which native destructors still release.
 
 ### Execution
 
@@ -733,35 +740,51 @@ Decided on 2026-10-30:
 
 ## Pass 8a progress
 
-Step 1 of 3, the private engine core, is complete. Step 2 adds finalizers,
-masks, and law clients; step 3 switches the public API to `IO`. The full
-verification gates run after step 3.
+Step 1 of 3, the private engine core, is complete and optimized. Step 2 adds
+finalizers, masks, and law clients; step 3 switches the public API to `IO`. The
+full verification gates run after step 3.
 
-- `src/fp/effects/_async/engine.mojo` implements `IO[T, E]` over pure, fail,
-  leaf, defer, bind, and recover nodes, with an explicit frame stack and a fixed
-  budget of 1,024 transitions per poll. It is not exported publicly yet.
-  `_Erased.take` opens a box only from a function that the typed API specialized
-  for it.
+- `src/fp/effects/_async/engine.mojo` implements `IO[T, E]` as a flat program
+  with pure, fail, leaf, and defer heads and bind and recover frames. The run
+  loop has an explicit frame stack and a fixed budget of 1,024 transitions per
+  poll. It is not exported publicly yet.
 - `io_engine` covers sequencing, `map`, failures skipping later continuations,
   recovery, deferred construction, leaves resuming a chain, `IO` values inside a
-  typed `both`, cancellation while a leaf runs, and unopened disposal, with exact
-  invocation and destruction counts.
+  typed `both`, cancellation while a leaf runs, unopened disposal, and inline,
+  boxed, and custom-move values, with exact invocation and destruction counts.
 - `io_depth` runs these under a 1 MiB stack: a million-bind chain built at
   runtime, a million nested `defer` levels (a million frames), a million
   tail-recursive steps (bounded frames), disposal of an unopened million-step
   chain, a failure crossing a million frames to recovery, and cancellation
   unwinding a million pending frames.
-- Mojo 1.2 crashes compiling a stored function type whose result contains its
-  owner, so callbacks write their node into a lent slot; see
-  [native boundaries](native-boundaries.md#mojo-12-compatibility).
-- **Cost.** At O3 on the session host, the IO loop takes about 1.15 µs per
-  iteration against 2.7 µs for the typed `tail_rec_m` loop. A tail-recursive run
-  keeps a flat 10 MB peak RSS from 100,000 to 4,000,000 steps. Callgrind puts
-  most of the remaining work in moving engine structs through out-of-line
-  `Optional` and `Variant` operations, about 10,900 instructions per step. The
-  same program built with `-g` executes about 2,060 instructions per step and
-  runs about six times faster. Shrinking node and frame storage into fewer
-  slots is the next performance step, ahead of any pooling.
+- Mojo 1.2 crashes compiling a stored function type whose signature contains
+  its owner, so callbacks receive the run loop through an engine-fixed pointer;
+  see [native boundaries](native-boundaries.md#mojo-12-compatibility).
+
+**Performance.** These are O3 medians of nine samples on the session host,
+measured by `experiments/async-state-machines/probes/erased_cost.mojo`:
+
+| Measurement | First engine | Optimized engine | Typed recipes |
+|---|---:|---:|---:|
+| Loop iteration through `flat_map` | 1.15 µs | 39–60 ns | 2.7–3.4 µs |
+| Same loop, raising callback | — | 40–72 ns | — |
+| Runtime-built `map` chain, build and run, per stage | — | 64–84 ns | — |
+| Runtime-built `flat_map` chain, build and run, per stage | — | 67–82 ns | — |
+
+The common bind allocates nothing: values and callbacks of at most 24 bytes live
+inline, and a program's first frame is inline. A tail-recursive run keeps a flat
+10 MB peak RSS from 100,000 to 4,000,000 steps. Callgrind counts about 200
+instructions per loop step, down from about 10,900.
+
+Two Mojo 1.2 code-generation findings shaped the engine. First, `Optional` and
+`Variant` values holding large structs are built and moved out of line unless
+the compiler inlines them; the same first engine ran six times faster when built
+with `-g`. The engine therefore keeps state as kind tags and slots, with
+`MaybeUninit` where a slot may be empty. Second, building a `Result` that holds
+an `IO` cost about 1,000 instructions per step whenever another instantiation
+changed inlining decisions. Callbacks therefore install their program directly:
+non-raising callbacks go through `_unary_once_as[Never]`, and raising ones
+through a `try` that builds the canonical `EffectFailure`.
 
 ## Implementation reference map
 

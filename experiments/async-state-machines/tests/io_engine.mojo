@@ -209,6 +209,68 @@ def unopened_disposal():
     check(stats[][DROPPED] == 2 and stats[][LEAVES] == 1 and stats[][POLLS] == 0, "unopened tree destroyed without running")
 
 
+@fieldwise_init
+struct Wide(Movable):
+    """Larger than the inline box: stored behind one allocation."""
+    var a: Int
+    var b: Int
+    var c: Int
+    var d: Int
+    var stats: ArcPointer[List[Int]]
+
+    def __deinit__(deinit self):
+        self.stats[][TOKENS] += 1
+
+
+struct Pinned(Movable):
+    """A custom move constructor makes this value unsafe to move bitwise."""
+    var id: Int
+    var stats: ArcPointer[List[Int]]
+
+    def __init__(out self, id: Int, stats: ArcPointer[List[Int]]):
+        self.id = id
+        self.stats = stats.copy()
+
+    def __init__(out self, *, deinit move: Self):
+        self.id = move.id
+        self.stats = move.stats^
+        self.stats[][POLLS] += 1
+
+    def __deinit__(deinit self):
+        self.stats[][TOKENS] += 1
+
+
+@fieldwise_init
+struct Widen(OnceUnary):
+    var stats: ArcPointer[List[Int]]
+    comptime Arg = Token
+    comptime Out = IO[Wide, Failure]
+
+    def call_once(deinit self, var token: Token) -> IO[Wide, Failure]:
+        return IO[Wide, Failure].pure(Wide(token.id, 2, 3, 4, self.stats.copy()))
+
+
+@fieldwise_init
+struct Pin(OnceUnary):
+    var stats: ArcPointer[List[Int]]
+    comptime Arg = Wide
+    comptime Out = IO[Pinned, Failure]
+
+    def call_once(deinit self, var wide: Wide) -> IO[Pinned, Failure]:
+        return IO[Pinned, Failure].pure(Pinned(wide.a + wide.b + wide.c + wide.d, self.stats.copy()))
+
+
+def boxed_storage():
+    var stats = new_stats()
+    var io = token(1, stats).flat_map(Widen(stats.copy())).flat_map(Pin(stats.copy()))
+    var outcome = run(io^)
+    var pinned = outcome.take()._take_ok()
+    check(pinned.id == 10, "large and custom-move values cross the engine")
+    check(stats[][POLLS] > 0, "custom moves ran instead of bitwise copies")
+    _ = pinned^
+    check(stats[][TOKENS] == 3, "token, wide and pinned values destroyed once each")
+
+
 def main():
     sequencing()
     failure_skips_continuations()
@@ -217,4 +279,5 @@ def main():
     leaves()
     canceled_at_handoff()
     unopened_disposal()
-    print("io engine: sequencing, recovery, deferred construction, leaves, cancellation, exact ownership")
+    boxed_storage()
+    print("io engine: sequencing, recovery, deferred construction, leaves, cancellation, exact ownership, inline and boxed storage")

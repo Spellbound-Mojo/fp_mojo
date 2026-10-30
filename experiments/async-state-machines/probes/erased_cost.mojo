@@ -73,10 +73,68 @@ struct IOStep(OnceUnary):
         return IO[State, Int].pure(next^).flat_map(IOStep(self.limit))
 
 
+@fieldwise_init
+struct RaisingStep(OnceUnary):
+    """The same loop through a callback that declares the domain error."""
+    var limit: Int
+    comptime Arg = State
+    comptime Out = IO[Int, Int]
+    comptime Error = Int
+    def call_once(deinit self, var value: State) raises Int -> IO[Int, Int]:
+        if value[0] < 0:
+            raise value[0]
+        if value[0] == self.limit:
+            return IO[Int, Int].pure(value[1])
+        var next: State = (value[0] + 1, mix(value[1]))
+        return IO[State, Int].pure(next^).flat_map(RaisingStep(self.limit))
+
+
+@no_inline
+def loop_io_raising(count: Int, seed: Int) -> Int:
+    var initial: State = (0, seed)
+    var outcome = run(IO[State, Int].pure(initial^).flat_map(RaisingStep(count)))
+    return outcome.take()._take_ok()
+
+
 @no_inline
 def loop_io(count: Int, seed: Int) -> Int:
     var initial: State = (0, seed)
     var outcome = run(IO[State, Int].pure(initial^).flat_map(IOStep(count)))
+    return outcome.take()._take_ok()
+
+
+@fieldwise_init
+struct Inc(OnceUnary):
+    comptime Arg = Int
+    comptime Out = Int
+    def call_once(deinit self, var value: Int) -> Int:
+        return value + 1
+
+
+@fieldwise_init
+struct Bump(OnceUnary):
+    comptime Arg = Int
+    comptime Out = IO[Int, Int]
+    def call_once(deinit self, var value: Int) -> IO[Int, Int]:
+        return IO[Int, Int].pure(value + 1)
+
+
+@no_inline
+def chain_maps(count: Int, seed: Int) -> Int:
+    # Build a runtime chain of count maps, then run it.
+    var io = IO[Int, Int].pure(seed)
+    for _ in range(count):
+        io = io^.map(Inc())
+    var outcome = run(io^)
+    return outcome.take()._take_ok()
+
+
+@no_inline
+def chain_binds(count: Int, seed: Int) -> Int:
+    var io = IO[Int, Int].pure(seed)
+    for _ in range(count):
+        io = io^.flat_map(Bump())
+    var outcome = run(io^)
     return outcome.take()._take_ok()
 
 
@@ -173,6 +231,9 @@ def main():
     measure[loop_typed]("typed_loop_iteration", LOOP, loop_expected)
     measure[loop_erased]("erased_loop_iteration", LOOP, loop_expected)
     measure[loop_io]("io_loop_iteration", LOOP, loop_expected)
+    measure[loop_io_raising]("io_raising_loop_iteration", LOOP, loop_expected)
+    measure[chain_maps]("io_map_chain_build_and_run", MICRO, 7 + MICRO)
+    measure[chain_binds]("io_bind_chain_build_and_run", MICRO, 7 + MICRO)
     measure[poll_typed]("typed_poll_dispatch", MICRO, micro_expected)
     measure[poll_erased]("erased_poll_dispatch", MICRO, micro_expected)
     measure[frame_typed]("typed_frame_alloc_poll_free", MICRO, micro_expected)

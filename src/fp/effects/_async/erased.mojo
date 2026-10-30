@@ -5,6 +5,9 @@ from fp.effects import IOContext
 from .kernel import Machine, Step
 
 
+comptime _Poll[T: Movable & Deinitable, E: Movable & Deinitable] = def(mut _Erased, IOContext[E]) thin -> Step[T, E]
+
+
 struct _ErasedMachine[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
     """Poll a machine of hidden type through one carrier type per result and error.
 
@@ -14,16 +17,21 @@ struct _ErasedMachine[T: Movable & Deinitable, E: Movable & Deinitable](Machine)
     comptime Value = Self.T
     comptime Error = Self.E
     var _program: _Erased
-    var _poll: def(MutOpaquePointer[_], IOContext[Self.E]) thin -> Step[Self.T, Self.E]
+    var _poll: _Poll[Self.T, Self.E]
 
     def __init__[P: Machine](out self, var program: P) where P.Value == Self.T and P.Error == Self.E:
-        def poll(address: MutOpaquePointer[_], context: IOContext[Self.E]) -> Step[Self.T, Self.E]:
+        def poll(mut program: _Erased, context: IOContext[Self.E]) -> Step[Self.T, Self.E]:
             comptime assert P.Value == Self.T and P.Error == Self.E
             return rebind_var[Step[Self.T, Self.E]](
-                address.unsafe_bitcast[P]()[].poll(rebind[IOContext[P.Error]](context)))
+                program.pointer[P]()[].poll(rebind[IOContext[P.Error]](context)))
 
         self._program = _Erased(program^)
         self._poll = poll
 
+    def __init__(out self, var program: _Erased, poll: _Poll[Self.T, Self.E]):
+        """Reassemble a carrier from parts an erasing constructor paired."""
+        self._program = program^
+        self._poll = poll
+
     def poll(mut self, context: IOContext[Self.E]) -> Step[Self.T, Self.E]:
-        return self._poll(self._program.view(), context)
+        return self._poll(self._program, context)
