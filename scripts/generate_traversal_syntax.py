@@ -32,20 +32,21 @@ def inferred_collect_methods():
 
 
 def pointer_methods():
-    """Copy thin callbacks into the ordinary owned traversal callback.
+    """Copy plain functions into the ordinary owned traversal callback.
 
-    These operation overloads compete with closure borrows, so pointers enter
-    by value with disjoint ABI evidence, as on Pipeline. The factory's borrowed
-    fallback would tie with a native function name for memory arguments. Opaque
-    generic pointers can use as_unary's existing factory boundary instead.
+    Iter knows its element, so the plain-function forms come from the shared
+    callback catalog with that element: they compete with closure borrows by
+    value, and deferred target families such as IO can keep them.
     """
     out = []
+    element = f'downcast[Self.I.Element, {MD}]'
     for name in ('traverse', 'traverse_void'):
-        for factory in native_factories('owned', ['A'], include_void=False):
-            params = [f'{p}: {bound}' for p, bound in factory.parameters]
-            params += ['//', 'G: Applicative = _InferredApplicative[R]']
-            cb = factory.adapter
-            conditions = [*factory.abi.conditions, 'Self.I.Element == A']
+        for form in admissions('owned', [element], library=False, view=False, names={'X': 'E'}):
+            if form.kind != 'thin':
+                continue
+            params = list(form.parameters) + ['//', 'G: Applicative = _InferredApplicative[R]']
+            cb = form.type
+            conditions = list(form.conditions)
             if name == 'traverse':
                 result = f'G.Collected[Self.I, {cb}]'
                 raised = f'G.CollectError[Self.I, {cb}]'
@@ -59,9 +60,9 @@ def pointer_methods():
                 conditions += ['_CarrierCompatible[G, R]', f'G._LoopCompatible[Self.I, {cb}, {rule}]']
                 binding = 'G, X=X'
             out.append(f'''
-    def {name}[{', '.join(params)}](deinit self, function: {factory.signature}) raises {raised} -> {result} where {' and '.join(conditions)}:
-        """Copy a stored thin callback into the existing traversal owner."""
-        return self^.{name}[{binding}]({cb}(function))
+    def {name}[{', '.join(params)}](deinit self, {form.argument}) raises {raised} -> {result} where {' and '.join(conditions)}:
+        """Copy a plain function into the existing traversal owner."""
+        return self^.{name}[{binding}]({form.build})
 ''')
     return ''.join(out)
 

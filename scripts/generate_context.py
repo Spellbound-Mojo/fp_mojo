@@ -2,7 +2,7 @@
 
 from pathlib import Path
 from itertools import product
-from native_signatures import callback as described_callback
+from native_signatures import admissions, callback as described_callback
 from native_signatures import MD, callable_metadata, Operand, variants, argument as native_argument, callable_protocol, native_adapter
 import re
 from api_docs import parse_signature
@@ -110,13 +110,35 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         )
 
     def native_callbacks(mode, payload, arg, *, second=False, repeatable=False, library=True, result_register=None, view=False):
-        # Known operands project their exact native convention; only the result
-        # needs separate register/memory bounds during callback inference.
-        # Closure borrows and owned thin-pointer storage keep the same adapters.
-        # Library predicates and observers can expose a retained shared receiver.
-        # Owned-operand views remain selected explicitly for origin-indexed chains.
-        for kind in (("library",) if library else ()) + (("view",) if view or (mode == "borrow" and library) else ()) + ("pure", "raising", "never"):
+        # Library and shared-view forms keep their selected-context records;
+        # closures and plain functions come from the shared callback catalog,
+        # with the pipeline's selected error fixed (Self.E and Never).
+        for kind in (("library",) if library else ()) + (("view",) if view or (mode == "borrow" and library) else ()):
             yield callback(mode, kind, payload, arg, second=second, repeatable=repeatable)
+        if mode == "nary":
+            yield from legacy_native_callbacks(mode, payload, arg, second=second, result_register=result_register)
+            return
+        payloads = list(payload) if mode == "binary" else [payload] if mode != "thunk" else []
+        names = ({"C": "G", "R": "S", "X": "Y", "o": "q", "read0": "Q", "read1": "Q1"} if second
+                 else {"read0": "P", "read1": "P1"})
+        for form in admissions(mode, payloads, arg=arg, fixed_error="Self.E", known_closure=True,
+                               library=False, view=False, names=names, result_register=result_register):
+            yield dict(
+                params=[*form.parameters, "//", *form.explicit],
+                argument=form.argument,
+                build=form.build,
+                adapter_type=form.type,
+                prelude="",
+                is_native=True,
+                result=form.result,
+                error=form.error,
+                conditions=list(form.conditions),
+            )
+
+    def legacy_native_callbacks(mode, payload, arg, *, second=False, result_register=None):
+        # N-ary callbacks have no catalog shape; their kinds stay here.
+        for kind in ("pure", "raising", "never"):
+            yield callback(mode, kind, payload, arg, second=second)
         # Read parameters need explicit TrivialRegisterPassable evidence at
         # overload selection; a conditional read-type projection loses it.
         # Infer a thin callback's exact error once, then admit it against E.

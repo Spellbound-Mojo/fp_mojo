@@ -1028,6 +1028,13 @@ their own kind loops.
   carry the documentation. Per operation: 7 overloads for `map`, `flat_map` and
   `traverse` (was 12), 6 for unary traversals and searches (was 7 to 11), 9 for
   borrowing ones (was 11), 6 for `fold_effect` (was 19), 24 for `if_effect` (was 33).
+- `Pipeline` takes its closure and plain-function forms from the catalog with
+  its selected error fixed, keeping its library and view records: `map` and
+  `flat_map` have 8 overloads (was 9), and `context.mojo` has 1,874 methods
+  (was 2,213). `Iter.traverse` and `Iter.traverse_void` take their
+  plain-function forms from the catalog with the known element (`traverse` 11,
+  was 16). `Iter`'s closure, library and view forms and all of `Piped`'s are
+  already the minimum, so they keep their generator-local spelling.
 - The other free functions keep their native overloads and change order only.
   `scripts/value_first.py` holds the order rule; `generate_plain_overloads.py`
   passes every generated module through it, so emitters cannot drift.
