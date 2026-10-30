@@ -512,7 +512,8 @@ def timeout_to[P: Machine, Q: Machine](var program: P, duration: Duration, var f
     Args:
         program: The unopened source, consumed once.
         duration: The checked relative duration anchored on entry.
-        fallback: Owned fallback for timeout or cancellation-only source selection.
+        fallback: Owned fallback used after timer victory and cancellation-only
+            source completion; parent cancellation still prevents its entry.
 
     Returns:
         A structured timeout preserving all subtree errors and cleanup ownership.

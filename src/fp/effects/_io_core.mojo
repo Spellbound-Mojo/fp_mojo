@@ -16,6 +16,7 @@ from .protocols import ReaderAction
 from .reader import ReaderT, _LocalIndependent
 from .layers import ResultT
 from .outcomes import EffectFailure, Outcome, _capture, _finish
+from fp._internal.time import Instant
 from fp._internal.waking import _Event, _Clock, _Runtime, _Ticket
 
 
@@ -89,6 +90,15 @@ struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):
     def request_cancel(self):
         """Request cancellation, even if observation is currently masked."""
         self._token.cancel()
+
+    def now(self) -> Instant:
+        """Read opaque monotonic time from the inherited execution clock.
+
+        Returns:
+            An Instant in this clock origin, suitable for async Wait.until after
+            adding a checked Duration. This does not read wall-clock time.
+        """
+        return self._clock.now()
 
     def _mask(self) -> Self:
         var masked = Self(self._token.copy(), True)

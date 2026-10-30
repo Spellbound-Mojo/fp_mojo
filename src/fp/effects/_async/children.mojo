@@ -149,6 +149,12 @@ def _tick_scoped[P: ScopedMachine, o: ImmOrigin](mut slot: _Slot[P, P.Value, P.E
 
 
 struct ScopedBoth[P: ScopedMachine, Q: ScopedMachine](ScopedMachine):
+    """Own two scoped children borrowing the same resource afresh each poll.
+
+    Parameters:
+        P: The left scoped body, retaining independent external origins.
+        Q: The right body with the same Input and Error as P.
+    """
     comptime Input = Self.P.Input
     comptime Value = Tuple[Self.P.Value, Self.Q.Value]
     comptime Error = Self.P.Error
@@ -159,6 +165,18 @@ struct ScopedBoth[P: ScopedMachine, Q: ScopedMachine](ScopedMachine):
         self._pair = _Pair[Self.P, Self.Q, Self.P.Value, Self.Q.Value, Self.P.Error](left^, right^)
 
     def poll[o: ImmOrigin](mut self, ref[o] value: Self.Input, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
+        """Advance one ready child and retain both through cancellation draining.
+
+        Parameters:
+            o: The fresh immutable resource origin for this poll.
+
+        Args:
+            value: The enclosing resource, borrowed only during this call.
+            context: The inherited execution context.
+
+        Returns:
+            Pending readiness or the fully drained pair outcome.
+        """
         comptime assert Self.P.Error == Self.Q.Error and Self.P.Input == Self.Q.Input
         match self._pair.select(context):
             case 0:
@@ -171,4 +189,17 @@ struct ScopedBoth[P: ScopedMachine, Q: ScopedMachine](ScopedMachine):
 
 
 def scoped_both[P: ScopedMachine, Q: ScopedMachine](var left: P, var right: Q) -> ScopedBoth[P, Q]:
+    """Compose two owned scoped bodies through the shared child scheduler.
+
+    Parameters:
+        P: The left body, whose Input and Error determine the pair.
+        Q: The right body with exactly matching Input and Error.
+
+    Args:
+        left: The unopened left scoped body, consumed once.
+        right: The unopened right scoped body, consumed once.
+
+    Returns:
+        A scoped pair yielding both values after complete child draining.
+    """
     return ScopedBoth(left^, right^)

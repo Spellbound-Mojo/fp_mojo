@@ -23,6 +23,8 @@ public contracts name admission, output families and exact native errors.
 | [`fp.adt`](adt.md) | Algebraic and inductive data types: `Data`, `Cases`, `Node`, `Choice` |
 | [`fp.data`](data.md) | `Result`, `ControlFlow` and the bridges between raised and stored errors |
 | [`fp.algebra`](algebra.md) | Functor, Filterable, Applicative, Monad, Traversable and Monoid, with native instances |
+| [`fp.effects.async_runtime`](effects.async_runtime.md) | Async recipes and structured host execution |
+| [`fp.effects.async_runtime.protocols`](effects.async_runtime.protocols.md) | Cooperative machine and scoped borrowing contracts |
 | [`fp.effects`](effects.md) | Reader, State and Writer, and monad transformers |
 | [`fp.matching`](matching.md) | `match`, `rewrite`, `when` guards and `Next` |
 

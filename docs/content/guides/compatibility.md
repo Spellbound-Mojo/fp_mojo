@@ -142,3 +142,11 @@ gates, documentation, a commit and a push to `nightly`. Verification is run
 locally; adding CI is outside this agreed sequence. Existing positional bindings
 and legacy entry points remain supported during migration. New release versions,
 deprecations and supported-platform claims must follow the demonstrated contract.
+
+## Async preview qualification
+
+The opt-in [async preview](async-runtime.md) adds two reviewed namespaces and
+six executable examples. Its focused source/package O0/O3 checks are recorded
+separately in the async proposal. The complete-corpus reports above retain their
+recorded commit and do not claim a new full-suite run for the preview. Sustained
+async stress and performance qualification remain deferred.

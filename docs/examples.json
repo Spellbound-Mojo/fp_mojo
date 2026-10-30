@@ -356,6 +356,24 @@
     },
     "docs/examples/writer_outputs.mojo": {
       "stdout": "both: quoted 3\nprice: 5\nlog: ready\noptional price: 7\nlog present: False\n"
+    },
+    "docs/examples/async_callback_timeout.mojo": {
+      "stdout": "withdrawn\n-1\n"
+    },
+    "docs/examples/async_error_recovery.mojo": {
+      "stdout": "42\n"
+    },
+    "docs/examples/async_host_cancel.mojo": {
+      "stdout": "released\ncanceled: True\n"
+    },
+    "docs/examples/async_iteration.mojo": {
+      "stdout": "42\n"
+    },
+    "docs/examples/async_resources.mojo": {
+      "stdout": "release: 21\nrelease: 20\n42\n"
+    },
+    "docs/examples/async_sequencing.mojo": {
+      "stdout": "42\n"
     }
   },
   "version": 1

@@ -356,11 +356,22 @@ struct Task[P: Machine](Movable, not Deinitable):
 
 @fieldwise_init
 struct Progress(Copyable):
+    """A snapshot of root completion, readiness, and bounded scheduling work.
+
+    Completion includes every owned child and cleanup. A pending idle root may
+    need external notification or advancement to its earliest deadline. Counts
+    report only the latest Driver.poll call; zero budget makes no progress.
+    """
     var completed: Bool
+    """Whether the complete root can be consumed with finish."""
     var runnable: Bool
+    """Whether polling can currently advance work without host waiting."""
     var deadline: Optional[Instant]
+    """The earliest live deadline, if any, in the inherited clock origin."""
     var polls: Int
+    """Root polls performed during this call."""
     var timers: Int
+    """Due timer events fired during this call."""
 
 
 struct Driver[P: Machine](Movable, not Deinitable):

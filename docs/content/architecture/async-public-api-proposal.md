@@ -1,11 +1,12 @@
 # Proposed public async API
 
 This proposal defines a first public surface for the pure-Mojo runtime already
-implemented under `experiments/async-state-machines/`. It follows the
-[readiness review](async-public-api-review.md). **Status: accepted for staged
-implementation; the imports and additions below are not available public APIs
-yet.** Implemented portions are recorded below; the remaining surface is the
-agreed target rather than a claim of availability.
+implemented under `src/fp/effects/_async`, with focused qualification under
+`experiments/async-state-machines/`. It follows the
+[readiness review](async-public-api-review.md). **Status: implemented as an opt-in preview.** The
+[async guide](../guides/async-runtime.md) and generated references describe the
+available surface. The proposal below retains design rationale and staged
+qualification evidence. Overnight stress remains deferred.
 
 The recommended contract is cooperative execution on one host thread, concrete
 owned machine types, exact typed outcomes, and structured cleanup. Cats and Cats
@@ -35,7 +36,7 @@ from composition and behavior, without emulating Scala syntax or implicits.
 | `tailRecM` | Existing `tail_rec_m[Async[E]](step, initial)` | Iterative execution; native `ControlFlow` replaces the iteration `Either` |
 | `Resource.make(...).flatMap(...).use(...)` | `resource(...).flat_map(...).use(...)` | Same lifecycle intent; fresh scoped loans preserve native ownership |
 | `attempt`, `handleErrorWith` | `attempt`, `handle_error_with` | Handle the complete typed failure; cancellation remains terminal |
-| `race`, `timeoutTo` | `race`, `timeout_to`, subject to the policy gates below | Experimental policies now have distinct names; public promotion still requires qualification |
+| `race`, `timeoutTo` | `race`, `timeout_to`, with the policies below | Distinct public names preserve the earlier first-terminal policies |
 | `Fiber.cancel` | Host `Driver.request_cancel()` followed by polling and `finish()` | Requesting cancellation alone does not join |
 | `Async.async` | `callback(register, withdrawal)` | Withdrawal always runs after entered registration, including success |
 | `Outcome` | Canonical `Outcome[T, E]` | Owns success directly and preserves all errors plus a cancellation flag |
@@ -227,9 +228,9 @@ separate recovery interpreter is proposed.
 |---|---|---|
 | `both(left: M[A, E], right: M[B, E])` | `Tuple[A, B]` | Both succeed, or failure/cancellation requests sibling cancellation and drains both |
 | `race_first(left: M[A, E], right: M[B, E])` | `RaceResult[A, B]` | Preserve the experimental first-terminal policy; cancel and drain the loser before returning |
-| `race(left: M[A, E], right: M[B, E])` | `RaceResult[A, B]` | Cancellation-aware selection described below, implemented experimentally |
+| `race(left: M[A, E], right: M[B, E])` | `RaceResult[A, B]` | Cancellation-aware selection described below |
 | `timeout_after(program: M[T, E], duration, fallback: M[T, E])` | `T` | Preserve the experimental timer-selection policy; after timer victory and clean draining, select fallback |
-| `timeout_to(program: M[T, E], duration, fallback: M[T, E])` | `T` | Proposed source-outcome preference after cancellation and draining; requires a behavior change |
+| `timeout_to(program: M[T, E], duration, fallback: M[T, E])` | `T` | Source-outcome preference after cancellation and draining |
 | `Nursery[P](limit)` | Its recipe yields `List[P.Value]` | Own at most `limit` total accepted children of one exact machine type |
 
 `RaceResult[A, B]` remains the canonical `Choice` with `Left[A]` and `Right[B]`.
@@ -270,8 +271,8 @@ losing cleanup failure, and parent cancellation with short deterministic tests.
 The experimental selection pass keeps explicit cancellation terminal when both
 raced children cancel, even under a mask. Cats Effect can remain suspended in
 that case; the Mojo API deliberately retains its existing explicit-outcome rule.
-Both selection policies share one race implementation and drain mechanism;
-checked duration admission is still separate pending work.
+Both selection policies share one race implementation and drain mechanism.
+Checked duration admission is implemented and qualified in the time pass below.
 
 Observation order remains deterministic: initial ties favor the left child
 (the source for a timeout), and later selection follows scheduler readiness
@@ -489,7 +490,7 @@ examples one fold without introducing a second ADT.
 | Both | Left subtree, then right subtree |
 | Nursery | Admission order, retaining each child's internal order |
 | `race_first` | Selected subtree, then losing subtree; normalize losing cancellation only |
-| Experimental `race` / `timeout_to` | Preserve all subtree errors; qualify selection and cancellation settlement before export |
+| `race` / `timeout_to` | Preserve all subtree errors through selection and cancellation settlement |
 | Callback | Completion error, registration error, withdrawal error |
 
 The application surface should accept checked configuration. Propose
@@ -500,18 +501,17 @@ configuration raises native setup `Error`, separate from the program's exact
 domain error `E`. A rejected poll budget must leave the caller owning its Driver.
 Manual time is nonnegative and monotonic; invalid advances must be checked too.
 
-The experiment currently aborts for invalid budgets, nursery limits, timer
-ranges, and deadline overflow. Those checks need an explicit migration before
-publication. A checked duration alone does not prove that an entry-time absolute
+The original experiment aborted for invalid budgets, nursery limits, timer
+ranges, and deadline overflow. The checked host boundary now rejects invalid
+configuration before changing state. A checked duration alone does not prove that an entry-time absolute
 deadline fits in `Int`: clock range, duration range, and timer admission must be
 designed together. The agreed resolution uses opaque `Instant` for clock
 readings, waits, host deadlines, and manual advances, with a wide pure-Mojo
 counter. Relative conversion preserves the existing 10**18-nanosecond limit.
-The implementation must qualify carry, ordering, and timer completion past
+The time pass qualifies carry, ordering, and timer completion past
 `Int.MAX` without fabricating arbitrary `E`, abandoning an entered root, or
-silently truncating time. This is a focused design and test
-gate. Consuming unfinished execution remains a protocol violation; ordinary
-invalid configuration should not abort a host process. Duplicate callback
+silently truncating time. Consuming unfinished execution remains a protocol
+violation; ordinary invalid configuration raises setup `Error`. Duplicate callback
 completion retains the documented `False` result and is not a protocol violation.
 
 The extension protocol keeps `Machine.Value`, `Machine.Error`, and
@@ -605,8 +605,9 @@ performance evidence.
 
 The canonical execution owner is now the private `fp.effects._async` package.
 The experimental `state_machine` modules forward to it; they contain no second
-scheduler, slot, child, scope, or finalization implementation. Public export
-promotion remains gated on the application-family and configuration work below.
+scheduler, slot, child, scope, or finalization implementation. The public
+namespaces forward to these owners. The records below retain the evidence and
+limitations of each implementation pass.
 
 The IO bridge delegates to canonical `_run_io` with the inherited context.
 `delay` admits existing callable protocols and owned native functions/closures
@@ -777,7 +778,7 @@ Extension steps and waits expose construction operations while keeping scheduler
 storage and cancellation markers private. `Signal` remains the canonical
 readiness source; this host protocol does not add a device execution engine or
 cross-thread callback guarantee. Public namespace registration and
-`IOContext.now()` are the following publication pass.
+`IOContext.now()` are provided by the publication pass.
 
 The time and host boundary is qualified by `time-boundary-1` (36/64) and
 `time-boundary-3` (32/32), covering 68 distinct successful source/package O0/O3
@@ -796,7 +797,50 @@ numeric timestamps and scheduler storage access. Runtime checks remain short and
 deterministic; sustained stress and performance qualification are still deferred.
 The module DAG, reviewed API inventory, and rendered documentation pass.
 
+The opt-in `fp.effects.async_runtime` and `.protocols` namespaces now publish
+the reviewed application and extension contracts. They forward to canonical
+owners, including `Context = IOContext` and its `now() -> Instant` operation.
+Export/provider and reference inventories cover 517 names across 12 modules;
+six new runnable examples bring the documented example total to 125.
+
+`publication-1` passes all 72 source/package O0/O3 routes: 40 successful runtime
+checks and 32 expected compile rejections. Ordinary and generic public clients
+cover selected-family sequencing and iteration, resource admission and reverse
+release, owned native captures, external result origins, error recovery,
+callback timeout and host cancellation. Extension checks cover notification
+before parking and a custom timer past `Int.MAX`. Rejections retain exact native
+error requirements, scoped loan/origin boundaries, opaque time and private
+scheduler storage. All clients import the public surface without private helpers.
+
+Qualification ran against an immutable snapshot while the preceding time pass
+completed. Its input and artifact audits pass. Before integrating the later nightly commits, the candidate source, tooling,
+all test contents and executable examples matched that snapshot byte for byte;
+existing test fixture aliases are materialized in the snapshot and their resolved
+contents match. The copied report and a separate promotion binding are retained under
+`.cache/async-public/`. Updated prose records the completed passes; example
+manifest ordering changes no expected output. This is focused preview evidence,
+not a new complete-corpus, stress, or performance claim. API extraction, module
+dependency checks and the rendered documentation are checked on the final tree.
+
+Before the final push, nightly commits `1ac2421` and `3290205` were
+integrated, preserving the iterator-family correction and the other agent's
+example updates. The only production-source difference from the publication
+snapshot is `fp.iteration.chaining`: borrowed traversal views retain their
+declared family, and discard traversal admits those same views. Async execution
+owners and the new public namespaces remain byte-identical to the 72-route run.
+
+`publication-integration-1` passes all four source/package O0/O3 routes on the
+merged tree. A public `Kleisli[Async[Int]]` client checks both iterator traversal
+forms, empty and successful sources, deferred pulls and calls, reusable views,
+exact construction errors with short-circuiting, and cancellation before entry.
+Input and artifact audits pass, and an independent binding records the single
+upstream source change. Final API extraction, module dependency checks and
+rendered documentation include both agents' changes. Overnight qualification
+remains deferred.
+
 ## Implementation passes after agreement
+
+Passes 1–5 are complete for the opt-in preview. Pass 6 remains deferred.
 
 1. **Behavior and native-signature decisions.** Qualify race/timeout cancellation
    checkpoints, error-recovery capability and laws, resumable resource

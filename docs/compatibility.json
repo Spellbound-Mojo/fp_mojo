@@ -748,6 +748,27 @@
         "docs/examples/job_router.mojo",
         "docs/examples/expression.mojo"
       ]
+    },
+    "effects.async_runtime": {
+      "scope": "Pure-Mojo one-shot async recipes, Async family selection, structured resources and children, checked host inputs and opaque time.",
+      "restrictions": "Opt-in Mojo 1.2 Linux x86-64 preview, one cooperative host thread; no detach, GPU backend, full Cats Effect laws, ABI or performance guarantee. Overnight stress remains deferred.",
+      "evidence": [
+        "docs/content/guides/async-runtime.md",
+        "docs/examples/async_sequencing.mojo",
+        "docs/examples/async_iteration.mojo",
+        "docs/examples/async_resources.mojo",
+        "docs/examples/async_error_recovery.mojo",
+        "docs/examples/async_callback_timeout.mojo",
+        "docs/examples/async_host_cancel.mojo"
+      ]
+    },
+    "effects.async_runtime.protocols": {
+      "scope": "Public Machine, scoped body/cleanup, Step, Wait, Signal, and canonical Context alias.",
+      "restrictions": "Fresh per-poll loans cannot escape. Terminal steps must discharge entered work; notification does not provide device synchronization or cross-thread callback safety.",
+      "evidence": [
+        "docs/content/guides/async-runtime.md",
+        "src/fp/effects/async_runtime/protocols.mojo"
+      ]
     }
   },
   "pipeline": [

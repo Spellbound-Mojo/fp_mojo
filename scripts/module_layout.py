@@ -1,7 +1,7 @@
 """Public packages and declaration providers; paths are relative to src/fp."""
 import re
 
-PUBLIC_PACKAGES = ('callables', 'combinators', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'effects', 'matching')
+PUBLIC_PACKAGES = ('callables', 'combinators', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'effects', 'matching', 'effects.async_runtime', 'effects.async_runtime.protocols')
 
 
 def split_public_name(name, packages=PUBLIC_PACKAGES):
@@ -61,7 +61,29 @@ SOURCE_MODULES = (
     ('matching', 'matching/matcher'),
 )
 
+ASYNC_PROVIDERS = (
+    ('effects.async_runtime', 'effects/_async/application', ('Pure', 'Bind', 'Loop', 'Both', 'Scope', 'RaceFirst', 'Race', 'EvalIO', 'Delay', 'NativeDelay', 'Guarantee', 'OnCancel', 'GuaranteeCase', 'Masked', 'Uncancelable', 'Callback', 'pure', 'both', 'scope', 'race_first', 'race', 'eval_io', 'delay', 'guarantee', 'on_cancel', 'guarantee_case', 'uncancelable', 'uncancelable_with', 'callback', 'Sleep', 'TimeoutAfter', 'TimeoutTo', 'sleep', 'timeout_after', 'timeout_to')),
+    ('effects.async_runtime', 'effects/_async/family', ('Async',)),
+    ('effects.async_runtime', 'effects/_async/resources', ('ResourcePlan', 'AsyncResource', 'Resource', 'ResourceCase', 'ResourceFactory', 'resource', 'resource_case')),
+    ('effects.async_runtime', 'effects/_async/recovery', ('raise_error', 'attempt', 'handle_error_with')),
+    ('effects.async_runtime', 'effects/_async/coordination', ('Deferred', 'Queue', 'Semaphore')),
+    ('effects.async_runtime', 'effects/_async/host', ('Clock', 'Driver', 'Nursery', 'run')),
+    ('effects.async_runtime', 'effects/_async/kernel', ('Progress',)),
+    ('effects.async_runtime', '_internal/time', ('Duration', 'Instant')),
+    ('effects.async_runtime', 'effects/_async/nurseries', ('Spawner',)),
+    ('effects.async_runtime', 'effects/_async/racing', ('RaceResult',)),
+    ('effects.async_runtime', 'effects/_async/finalization', ('Poll',)),
+    ('effects.async_runtime', 'effects/_async/callbacks', ('Completion',)),
+    ('effects.async_runtime', 'effects/_async/children', ('ScopedBoth', 'scoped_both')),
+    ('effects.async_runtime.protocols', 'effects/_async/family', ('Machine',)),
+    ('effects.async_runtime.protocols', 'effects/_async/scopes', ('ScopedMachine', 'CleanupMachine')),
+    ('effects.async_runtime.protocols', 'effects/_async/kernel', ('Step', 'Wait')),
+    ('effects.async_runtime.protocols', '_internal/waking', ('Signal',)),
+    ('effects.async_runtime.protocols', 'effects/async_runtime/protocols', ('Context',)),
+)
+
 def declaration_providers():
+    yield from ASYNC_PROVIDERS
     for package, provider in SOURCE_MODULES:
         yield package, provider, None
     yield 'combinators', 'iteration/adapters', ('map', 'filter', 'filter_not', 'filter_map', 'flat_map', 'flatten')

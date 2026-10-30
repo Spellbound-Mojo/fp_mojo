@@ -16,6 +16,7 @@ EXPERIMENT = Path(__file__).resolve().parent
 ROOT = EXPERIMENT.parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 
+from suite_contract import inventory as suite_inventory
 from fp_tools.artifacts import manifest
 from fp_tools.cases import CompileCase, audit_case, execute_case
 from fp_tools.library import precompile
@@ -66,6 +67,12 @@ POSITIVE.update({"pipeline_attempt", "pipeline_recovery_native"})
 POSITIVE.update({"application_native", "application_aliases", "coordination_family", "resource_generic"})
 POSITIVE.update({"application_errors", "application_owned"})
 POSITIVE.update({"host_admission", "extension_boundary", "duration_admission", "instant_clock", "instant_timers", "instant_cleanup"})
+PUBLIC_EXAMPLES = {"async_sequencing", "async_iteration", "async_resources", "async_error_recovery", "async_callback_timeout", "async_host_cancel"}
+for example in suite_inventory():
+    if example["kind"] == "example" and Path(example["path"]).stem in PUBLIC_EXAMPLES:
+        REGRESSIONS += (example["path"],)
+        REGRESSION_STDOUT[Path(example["path"]).stem] = example["stdout"]
+POSITIVE.update({"public_generic", "public_resources", "public_owned", "public_extension", "public_traversal_view"})
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
@@ -90,6 +97,8 @@ def main():
     clients = sorted((EXPERIMENT / "tests").glob("*.mojo"))
     clients += [ROOT / path for path in REGRESSIONS]
     known = {p.stem for p in clients}
+    if len(known) != len(clients):
+        raise SystemExit("Client stems must be unique to preserve separate evidence")
     if set(args.client) - known:
         parser.error("Unknown clients: " + ", ".join(sorted(set(args.client) - known)))
     if {p.stem for p in clients if p.stem in POSITIVE} != POSITIVE:
@@ -134,8 +143,8 @@ def main():
                 case = CompileCase.from_source(
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
-                    memory_limit_bytes=6 * 1024**3,
-                    werror=True, compiler_threads=1, compile_timeout={"async_masking": 600, "io_bridge": 600, "scheduler": 600, "host_admission": 600, "extension_boundary": 600, "instant_timers": 600, "instant_cleanup": 900, "application_errors": 900, "application_owned": 900, "application_native": 900, "application_aliases": 900, "coordination_family": 900, "resource_generic": 900, "depth": 360, "racing_origins": 240, "timeouts": 600, "selection_policies": 600, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
+                    memory_limit_bytes=(3 if client.stem in PUBLIC_EXAMPLES or client.stem.startswith("public_") else 6) * 1024**3,
+                    werror=True, compiler_threads=1, compile_timeout={"async_masking": 600, "io_bridge": 600, "scheduler": 600, **{name: 900 for name in PUBLIC_EXAMPLES | {"public_generic", "public_resources", "public_owned", "public_extension", "public_traversal_view"}}, "host_admission": 600, "extension_boundary": 600, "instant_timers": 600, "instant_cleanup": 900, "application_errors": 900, "application_owned": 900, "application_native": 900, "application_aliases": 900, "coordination_family": 900, "resource_generic": 900, "depth": 360, "racing_origins": 240, "timeouts": 600, "selection_policies": 600, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 240, "workload": 360}.get(client.stem, 120),
                     execution_timeout=90 if client.stem == "composition" else 15)
                 jobs.append((route, case))
 

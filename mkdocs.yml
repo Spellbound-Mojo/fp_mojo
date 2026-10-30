@@ -102,8 +102,11 @@ nav:
       - fp.data: reference/data.md
       - fp.algebra: reference/algebra.md
       - fp.effects: reference/effects.md
+      - fp.effects.async_runtime: reference/effects.async_runtime.md
+      - fp.effects.async_runtime.protocols: reference/effects.async_runtime.protocols.md
       - fp.matching: reference/matching.md
   - Guides:
+      - Async runtime preview: guides/async-runtime.md
       - Support and limitations: guides/status.md
       - Mojo 1.2 compatibility: guides/compatibility.md
       - Generic wrappers: guides/generic-wrappers.md

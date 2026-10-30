@@ -5139,6 +5139,12 @@
       "signature": "def canceled(self) -> Bool:"
      }
     ],
+    "now": [
+     {
+      "sha256": "90b43c0a4133ed6e8adceb90c6999fb3e4588f9aff0b2c8a3d55e84f35ed34b2",
+      "signature": "def now(self) -> Instant:"
+     }
+    ],
     "request_cancel": [
      {
       "sha256": "12a4cd9d5f35c0870e98620f25468ca81e3790c03931fe323f94cabed8222399",
@@ -6310,6 +6316,970 @@
     }
    ],
    "provider": "effects/projections"
+  },
+  "effects.async_runtime.Async": {
+   "declarations": [
+    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "flat_map": [
+     {
+      "sha256": "af0facfacf5486d5df617ff395d5da212dd57908a6c35dafcda577a68062d19d",
+      "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Bound[V, F]:"
+     }
+    ],
+    "map": [
+     {
+      "sha256": "e488f49bac4b82946241842a155c30a106d960ebb8a9fe88a1dbc5123b7d2668",
+      "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Mapped[V, F]:"
+     }
+    ],
+    "map2_lazy": [
+     {
+      "sha256": "6acc90d1c963aa1bb0c87c187f3ad449c5fd7b3572c41c79629d1ea8ee664839",
+      "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) -> Self.Combined[V, F, R]:"
+     }
+    ],
+    "or_else": [
+     {
+      "sha256": "457c620dc9abe0c4fba60b8192cf2bf422bed785202dee2d10e331c6cd3153fe",
+      "signature": "def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) -> Self.Handled[V, H]:"
+     }
+    ],
+    "pure": [
+     {
+      "sha256": "54092216fe5b666ba05e4c190879fb905b8eeb9abbfb4a0c28d2feaa9a02f936",
+      "signature": "def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/family"
+  },
+  "effects.async_runtime.AsyncResource": {
+   "declarations": [
+    "struct AsyncResource[P: ResourcePlan](_AsyncResourceType):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "flat_map": [
+     {
+      "sha256": "49ca5e516895fea4b6f394b5eeb8899e4e21a6c20b64af92d741a1420e85510a",
+      "signature": "def flat_map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Bound[F] where Self.BindCompatible[F]:"
+     },
+     {
+      "sha256": "6589d2829222ca77b950bc948cc1b2ffdbc59ede945588cedcd331760f2a05eb",
+      "signature": "def flat_map[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Bound[_NativeBorrow[A, R, Never, F, False]] where Self.BindCompatible[_NativeBorrow[A, R, Never, F, False]]:"
+     },
+     {
+      "sha256": "ec4dcf9f195d0df5f47369ef3df0fbbfc1bcefdf804ce3c7a03b2224d353bba5",
+      "signature": "def flat_map[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Bound[_NativeBorrow[A, R, X, F, True]] where Self.BindCompatible[_NativeBorrow[A, R, X, F, True]]:"
+     }
+    ],
+    "map": [
+     {
+      "sha256": "eb5c9ef74c2108c8a355f1b83b736d51ad3aacb0e903f58ca98d15b08c07ff43",
+      "signature": "def map[F: BorrowCallContract & Movable & Deinitable](deinit self, var function: F) -> Self.Mapped[F] where Self.MapCompatible[F]:"
+     },
+     {
+      "sha256": "079cd4079ba83477ddc3c1b2ec6a8bc41a3a34b6178327aa3691c7773a8b877a",
+      "signature": "def map[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Mapped[_NativeBorrow[A, R, Never, F, False]] where Self.MapCompatible[_NativeBorrow[A, R, Never, F, False]]:"
+     },
+     {
+      "sha256": "7b6d0647bb361cd8baaef04dd545e618e9f71dde110c0f1858e748ed9ad97c2b",
+      "signature": "def map[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Mapped[_NativeBorrow[A, R, X, F, True]] where Self.MapCompatible[_NativeBorrow[A, R, X, F, True]]:"
+     }
+    ],
+    "use": [
+     {
+      "sha256": "bf5499cc0009c465922c75d3b5209ee2e689659b3952dd5119834062c1ca6c05",
+      "signature": "def use[U: ScopedMachine](deinit self, var body: U) -> Self.Used[U] where U.Input == Self.Value and U.Error == Self.Error:"
+     },
+     {
+      "sha256": "9bba0b97b07519c9196b4e3f079343d2bd65a7f47657030df209d88465f87efe",
+      "signature": "def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var body: F) -> Self.Use[F] where Self.UseCompatible[F]:"
+     },
+     {
+      "sha256": "da4017740c1289f203913068202fdc5e823efe77b2efd5ee0f38ae162975ceef",
+      "signature": "def use[A: AnyType, R: Movable & Deinitable, //, F: _Borrowing[A, R]](deinit self, var function: F) -> Self.Use[_NativeBorrow[A, R, Never, F, False]] where Self.UseCompatible[_NativeBorrow[A, R, Never, F, False]]:"
+     },
+     {
+      "sha256": "d9670d53c52e2eba2d3241db4a66ff4183285577ea743b845f085f5ef8a2e2ad",
+      "signature": "def use[A: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, F: _RaisingBorrowing[A, R, X]](deinit self, var function: F) -> Self.Use[_NativeBorrow[A, R, X, F, True]] where Self.UseCompatible[_NativeBorrow[A, R, X, F, True]]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/resources"
+  },
+  "effects.async_runtime.Bind": {
+   "declarations": [
+    "comptime Bind[P: Machine, F: UnaryContract & Movable & Deinitable] = Async[P.Error].Bound[P, F]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Both": {
+   "declarations": [
+    "comptime Both[P: Machine, Q: Machine] = _Recipe[_Both[P, Q]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Callback": {
+   "declarations": [
+    "comptime Callback[F: UnaryContract & Movable & Deinitable, C: Machine] = _Recipe[_Callback[F, C]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Clock": {
+   "declarations": [
+    "struct Clock(Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "advance_to": [
+     {
+      "sha256": "7d7d58f0ba36ed5363dccf0f6907aa49bfe09b37941174f1814e790e6df2ce18",
+      "signature": "def advance_to(self, now: Instant) raises:"
+     }
+    ],
+    "manual": [
+     {
+      "sha256": "dbcbd967fd85784cfa81b213313d041e9f8f738e51637b8a623f2e4df2c5e5f5",
+      "signature": "def manual(now: Int = 0) raises -> Self:"
+     }
+    ],
+    "now": [
+     {
+      "sha256": "90b43c0a4133ed6e8adceb90c6999fb3e4588f9aff0b2c8a3d55e84f35ed34b2",
+      "signature": "def now(self) -> Instant:"
+     }
+    ]
+   },
+   "provider": "effects/_async/host"
+  },
+  "effects.async_runtime.Completion": {
+   "declarations": [
+    "struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _CompletionType):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "complete": [
+     {
+      "sha256": "1d118bb2004d5d4728893b77452ab52b4ffe058feae7dbd1436dae7104bc258b",
+      "signature": "def complete(self, var outcome: Outcome[Self.T, Self.E]) -> Bool:"
+     }
+    ]
+   },
+   "provider": "effects/_async/callbacks"
+  },
+  "effects.async_runtime.Deferred": {
+   "declarations": [
+    "struct Deferred[T: Copyable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "complete": [
+     {
+      "sha256": "597097010ea737efc7af19dd9566f8051ef29dfe1561e7c71616dae22c4ed28c",
+      "signature": "def complete[E: Movable & Deinitable](self, var value: Self.T) -> Self.Complete[E]:"
+     }
+    ],
+    "get": [
+     {
+      "sha256": "91c9cabff8c4239fb3fd8a8c691c74df4adb66f3ff5c092aa0ce75adf9dd4d2e",
+      "signature": "def get[E: Movable & Deinitable](self) -> Self.Get[E]:"
+     }
+    ],
+    "try_get": [
+     {
+      "sha256": "5d135110fa715f8cfea04bee849e84c3face2aa2917a79af45cf708526cdd3c6",
+      "signature": "def try_get[E: Movable & Deinitable](self) -> Self.TryGet[E]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/coordination"
+  },
+  "effects.async_runtime.Delay": {
+   "declarations": [
+    "comptime Delay[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable] = EvalIO[DelayContract[F, E].Out]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Driver": {
+   "declarations": [
+    "struct Driver[P: Machine](Movable, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "finish": [
+     {
+      "sha256": "3da358eb93992d37c64f006568bfbf514148c97b29b9939195d01be579f99f79",
+      "signature": "def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:"
+     }
+    ],
+    "poll": [
+     {
+      "sha256": "feb693e682d7f34508942b58211508c5fe4abc52ea5bebb3c03aae9ec1e23f53",
+      "signature": "def poll(mut self) -> Progress:"
+     },
+     {
+      "sha256": "eb1b8d4a84e0573d700681252e2f98d4b8b8c8844f3e3129591c3f4078d8c61a",
+      "signature": "def poll(mut self, budget: Int) raises -> Progress:"
+     }
+    ],
+    "request_cancel": [
+     {
+      "sha256": "12a4cd9d5f35c0870e98620f25468ca81e3790c03931fe323f94cabed8222399",
+      "signature": "def request_cancel(self):"
+     }
+    ]
+   },
+   "provider": "effects/_async/host"
+  },
+  "effects.async_runtime.Duration": {
+   "declarations": [
+    "struct Duration(Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "milliseconds": [
+     {
+      "sha256": "16e9c33378c5a28eca5f48351d8186010a85444816e904f2685fb175ea0e45c8",
+      "signature": "def milliseconds(value: Int) raises -> Self:"
+     }
+    ],
+    "nanoseconds": [
+     {
+      "sha256": "1a8c4950ac576b458b1a6f3ea2f0da8ca6c999bb475a9b9ee70e29d25469e370",
+      "signature": "def nanoseconds(value: Int) raises -> Self:"
+     }
+    ],
+    "seconds": [
+     {
+      "sha256": "2326a43825612b6bc12ed051e7eaa3df10b05036f22bae29331c08c02b98971b",
+      "signature": "def seconds(value: Int) raises -> Self:"
+     }
+    ]
+   },
+   "provider": "_internal/time"
+  },
+  "effects.async_runtime.EvalIO": {
+   "declarations": [
+    "comptime EvalIO[P: ReaderAction] = _Recipe[_EvalIO[P]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Guarantee": {
+   "declarations": [
+    "comptime Guarantee[P: Machine, Q: Machine] = _Recipe[_Guarantee[P, _ProgramUse[Q, ExitCase[P.Error]]]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.GuaranteeCase": {
+   "declarations": [
+    "comptime GuaranteeCase[P: Machine, F: ScopedMachine] = _Recipe[_Guarantee[P, F]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Instant": {
+   "declarations": [
+    "struct Instant(Copyable, Comparable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "after": [
+     {
+      "sha256": "fce9b2ef08506bc44c8fc7a4278a4770593f7316c2a1889f3dcef573f4ef9820",
+      "signature": "def after(self, duration: Duration) -> Self:"
+     }
+    ]
+   },
+   "provider": "_internal/time"
+  },
+  "effects.async_runtime.Loop": {
+   "declarations": [
+    "comptime Loop[F: UnaryContract & Movable & Deinitable] = TailRecContract[Async[downcast[F.Out, _CoreMachine].Error], F].Out"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Masked": {
+   "declarations": [
+    "comptime Masked[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable] = _Recipe[_Masked[F, E]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.NativeDelay": {
+   "declarations": [
+    "comptime NativeDelay[T: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, X: Movable & Deinitable = Never, raising: Bool = False] = Delay[_NativeThunk[T, X, F, raising], E]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Nursery": {
+   "declarations": [
+    "struct Nursery[P: Machine](Machine):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "poll": [
+     {
+      "sha256": "043361233a7f034b0626784c9db7c983a67608b6ee3068f80ce083ba508f48c5",
+      "signature": "def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:"
+     }
+    ],
+    "spawner": [
+     {
+      "sha256": "7cc8c4ce846ee676c612395d5591d487d3afba2285130e20ac56cd23be5fee04",
+      "signature": "def spawner(self) -> Spawner[Self.P]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/host"
+  },
+  "effects.async_runtime.OnCancel": {
+   "declarations": [
+    "comptime OnCancel[P: Machine, Q: Machine] = _Recipe[_Guarantee[P, _ProgramUse[Q, ExitCase[P.Error]], True]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Poll": {
+   "declarations": [
+    "struct Poll[E: Movable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "apply": [
+     {
+      "sha256": "23cfd868c8034b84f58e74a7e3ff0a1426bb72b4356eed34dd34bdd31fe4fe99",
+      "signature": "def apply[P: Machine](self, var program: P) -> _Polled[P, Self.E]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/finalization"
+  },
+  "effects.async_runtime.Progress": {
+   "declarations": [
+    "struct Progress(Copyable):"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/kernel"
+  },
+  "effects.async_runtime.Pure": {
+   "declarations": [
+    "comptime Pure[T: Movable & Deinitable, E: Movable & Deinitable] = _Recipe[_Pure[T, E]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Queue": {
+   "declarations": [
+    "struct Queue[T: Movable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "offer": [
+     {
+      "sha256": "cf5ec5b09471027970e3ea8c83fd1dfd082933cc1707c9dc269c3f60eadb4e50",
+      "signature": "def offer[E: Movable & Deinitable](self, var value: Self.T) -> Self.Offer[E]:"
+     }
+    ],
+    "size": [
+     {
+      "sha256": "05cf7910fd5b6be6ec06e60b1de5e1d77aea0fcaa00260ce1ee9a12d699da196",
+      "signature": "def size[E: Movable & Deinitable](self) -> Self.Size[E]:"
+     }
+    ],
+    "take": [
+     {
+      "sha256": "47a1add13c10757a6049ad627dd5368f275f840a207bdcb082bc30d3647bd25e",
+      "signature": "def take[E: Movable & Deinitable](self) -> Self.Take[E]:"
+     }
+    ],
+    "try_offer": [
+     {
+      "sha256": "2859d7356ff35110d987adc11e1377c9938d11e03f097e8f4686d616e18b4782",
+      "signature": "def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> Self.TryOffer[E]:"
+     }
+    ],
+    "try_take": [
+     {
+      "sha256": "2fa5a5e42e3af78d039d12836b18d399634297c74c2ad5251cb64c7847cf4bd0",
+      "signature": "def try_take[E: Movable & Deinitable](self) -> Self.TryTake[E]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/coordination"
+  },
+  "effects.async_runtime.Race": {
+   "declarations": [
+    "comptime Race[P: Machine, Q: Machine] = _Recipe[_Race[P, Q, 1]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.RaceFirst": {
+   "declarations": [
+    "comptime RaceFirst[P: Machine, Q: Machine] = _Recipe[_Race[P, Q]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.RaceResult": {
+   "declarations": [
+    "comptime RaceResult[A: Movable & Deinitable, B: Movable & Deinitable] = Choice[_RaceCases[A, B]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/racing"
+  },
+  "effects.async_runtime.Resource": {
+   "declarations": [
+    "comptime Resource[A: Machine, C: ScopedMachine] = AsyncResource[_Acquire[A, _ScopedCleanup[C, False, True]]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/resources"
+  },
+  "effects.async_runtime.ResourceCase": {
+   "declarations": [
+    "comptime ResourceCase[A: Machine, C: CleanupMachine] = AsyncResource[_Acquire[A, C]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/resources"
+  },
+  "effects.async_runtime.ResourceFactory": {
+   "declarations": [
+    "comptime ResourceFactory[A: Machine, F: BorrowCallContract & Movable & Deinitable] = Resource[A, _ScopedBuild[F, A.Error]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/resources"
+  },
+  "effects.async_runtime.ResourcePlan": {
+   "declarations": [
+    "trait ResourcePlan(Movable, Deinitable):"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/resources"
+  },
+  "effects.async_runtime.Scope": {
+   "declarations": [
+    "comptime Scope[A: Machine, U: ScopedMachine, C: CleanupMachine] = _Recipe[_Scope[A, U, C]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.ScopedBoth": {
+   "declarations": [
+    "struct ScopedBoth[P: ScopedMachine, Q: ScopedMachine](ScopedMachine):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "poll": [
+     {
+      "sha256": "94836a7a03ea62167f2c854f85876f30326dfda095260af9976a72189f421315",
+      "signature": "def poll[o: ImmOrigin](mut self, ref[o] value: Self.Input, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/children"
+  },
+  "effects.async_runtime.Semaphore": {
+   "declarations": [
+    "struct Semaphore(Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "acquire": [
+     {
+      "sha256": "93d36ffe69b0815f12e3a54c66ae8fad1ad78f7db777c09b6af37b66328592ec",
+      "signature": "def acquire[E: Movable & Deinitable](self) -> Self.Acquire[E]:"
+     }
+    ],
+    "available": [
+     {
+      "sha256": "62da04df08b5828c52602e9e50b2998069bfbee0c90e9db15ed12fabd3bed017",
+      "signature": "def available[E: Movable & Deinitable](self) -> Self.Available[E]:"
+     }
+    ],
+    "with_permit": [
+     {
+      "sha256": "04fee95580ae626608c33029e8bc783fd499227b67e81ae94333597fcaa6face",
+      "signature": "def with_permit[P: Machine](self, var program: P) -> Self.WithPermit[P]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/coordination"
+  },
+  "effects.async_runtime.Sleep": {
+   "declarations": [
+    "comptime Sleep[E: Movable & Deinitable] = _Recipe[_Sleep[E]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Spawner": {
+   "declarations": [
+    "struct Spawner[P: Machine](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "close": [
+     {
+      "sha256": "76a5138e565a72d97b6fa01e13f0a4982be24297cc7ea7e0a03cd050c3b50221",
+      "signature": "def close(self):"
+     }
+    ],
+    "try_spawn": [
+     {
+      "sha256": "d0faeb4bcd78289d3fdf41baae91494a1562d42db3397ca397751ac8d4f1c909",
+      "signature": "def try_spawn(self, var program: Self.P) -> Optional[Self.P]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/nurseries"
+  },
+  "effects.async_runtime.TimeoutAfter": {
+   "declarations": [
+    "comptime TimeoutAfter[P: Machine, Q: Machine] = _Recipe[_Timeout[P, Q]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.TimeoutTo": {
+   "declarations": [
+    "comptime TimeoutTo[P: Machine, Q: Machine] = _Recipe[_Timeout[P, Q, True]]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.Uncancelable": {
+   "declarations": [
+    "comptime Uncancelable[P: Machine] = Masked[_ConstantMask[P], P.Error]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.attempt": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "f40f0959340c1457a8864a5e4ecc84a119a943d9bc32dc9ebf2290dfc2907e18",
+     "signature": "def attempt[P: _Machine](var program: P) -> _Materialize[Async[P.Error], P].Out where _Materialize[Async[P.Error], P].MapCompatible and _Materialize[Async[P.Error], P].HandleCompatible:"
+    }
+   ],
+   "provider": "effects/_async/recovery"
+  },
+  "effects.async_runtime.both": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "fe1edac992eea483c915f9bfcdacc7919d3272dc3a4f03c8ce84eef1cca65363",
+     "signature": "def both[P: Machine, Q: Machine](var left: P, var right: Q) -> Both[P, Q] where P.Error == Q.Error:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.callback": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "57c073f22f8337b06642693b2e546e9aab5d0e9bf9accd429c8357d02a18925d",
+     "signature": "def callback[F: UnaryContract & Movable & Deinitable, C: Machine](var register: F, var withdrawal: C) -> Callback[F, C] where _OnceUnaryAvailable[F] and conforms_to(F.Arg, _CompletionType) and F.Arg == Completion[downcast[F.Arg, _CompletionType].Value, C.Error] and _CallbackUnit[F.Out] and _CallbackUnit[C.Value] and _ErrorCompatible[C.Error, F.Error]:"
+    },
+    {
+     "sha256": "c72b6b821e8b2b267d10b59340385bcbb1d89e59151ca7240bd2a82f53cd75c4",
+     "signature": "def callback[A: Movable & Deinitable, C: Machine, //, F: _Unary[A, NoneType]](var register: F, var withdrawal: C) -> Callback[NativeUnary[A, NoneType, Never, F, False], C] where conforms_to(A, _CompletionType) and A == Completion[downcast[A, _CompletionType].Value, C.Error] and _CallbackUnit[C.Value]:"
+    },
+    {
+     "sha256": "2888fc2fe51abc3988ccb2ffe22a04e98c79181ad09571a795a48342b0a3e115",
+     "signature": "def callback[A: Movable & Deinitable, X: Movable & Deinitable, C: Machine, //, F: _RaisingUnary[A, NoneType, X]](var register: F, var withdrawal: C) -> Callback[NativeUnary[A, NoneType, X, F, True], C] where conforms_to(A, _CompletionType) and A == Completion[downcast[A, _CompletionType].Value, C.Error] and _CallbackUnit[C.Value] and _ErrorCompatible[C.Error, X]:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.delay": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "3cfed1c929699b754a6f9e74d49f24c63d43694bc697b08136ae728c05c0c67e",
+     "signature": "def delay[F: ThunkContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F) -> Delay[F, E] where DelayContract[F, E].Compatible:"
+    },
+    {
+     "sha256": "f1156ac6d1a797e0dc4c2553115b1f4ef24a1abe92ada61fecfb9b44e6059c0c",
+     "signature": "def delay[T: Movable & Deinitable, //, E: Movable & Deinitable, F: _Thunk[T]](var function: F) -> NativeDelay[T, E, F]:"
+    },
+    {
+     "sha256": "971b560736f74515426f0728ddc1659bfb1a27e029a19f73139484867a6baeea",
+     "signature": "def delay[T: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingThunk[T, X]](var function: F) -> NativeDelay[T, E, F, X, True] where _ErrorCompatible[E, X]:"
+    },
+    {
+     "sha256": "104c0c982f4ff5c6bbaa228798e2f0f74a2e0e91cef13b4c149800a681ad1e39",
+     "signature": "def delay[T: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable](ref[o] function: def() thin -> T) -> NativeDelay[T, E, type_of(function), Never, False]:"
+    },
+    {
+     "sha256": "2215d801dc82b619f61e930676748a91160826ac06bfe749d947fce903b2d329",
+     "signature": "def delay[T: RegisterPassable & Deinitable, //, E: Movable & Deinitable](function: def() thin -> T) -> NativeDelay[T, E, type_of(function), Never, False]:"
+    },
+    {
+     "sha256": "e87f147dd79ab22703472c6e38b48e70cee8c2af5f9c39359802f9f8a7627aa2",
+     "signature": "def delay[E: Movable & Deinitable](function: def() thin) -> NativeDelay[type_of(None), E, type_of(function), Never, False]:"
+    },
+    {
+     "sha256": "8b5c873e8a2bb2ad6014e6f105ebf0f3ecd155752c3a4330190f9cc5224bbb30",
+     "signature": "def delay[T: Movable & Deinitable, o: ImmOrigin, X: Movable & Deinitable, //, E: Movable & Deinitable](ref[o] function: def() raises X thin -> T) -> NativeDelay[T, E, type_of(function), X, True] where _ErrorCompatible[E, X]:"
+    },
+    {
+     "sha256": "af37004de9f2204d42dcad30fee65c5a1d02f454a509c65ff12815ce5970af6b",
+     "signature": "def delay[T: RegisterPassable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable](function: def() raises X thin -> T) -> NativeDelay[T, E, type_of(function), X, True] where _ErrorCompatible[E, X]:"
+    },
+    {
+     "sha256": "55ca1920b58f7054ca6201dba11bef3ee7a0e496c580d10daef8c1d8724503e2",
+     "signature": "def delay[X: Movable & Deinitable, //, E: Movable & Deinitable](function: def() raises X thin) -> NativeDelay[type_of(None), E, type_of(function), X, True] where _ErrorCompatible[E, X]:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.eval_io": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "d7a5af492d98e01103552e8785153e026398c9d984c8e264b4d62c0c6d3e345f",
+     "signature": "def eval_io[P: ReaderAction](var program: P) -> EvalIO[P] where IOContract[P].Compatible:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.guarantee": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "c3d5ad22083fb5ba796117c52ffe0a05ba6e1e937746111d7fb47b8d58750427",
+     "signature": "def guarantee[P: Machine, Q: Machine](var program: P, var cleanup: Q) -> Guarantee[P, Q] where P.Error == Q.Error:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.guarantee_case": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "e2f0bd60ba61723074874c8b114d531917c9d7e3db23e8b79124896eb8034051",
+     "signature": "def guarantee_case[P: Machine, F: ScopedMachine](var program: P, var cleanup: F) -> GuaranteeCase[P, F] where F.Input == ExitCase[P.Error] and P.Error == F.Error:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.handle_error_with": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "3deaf6fcabf4944541a9496b3a5bf4c1d644e818114db4fc7f2de543e6caaab0",
+     "signature": "def handle_error_with[P: _Machine, H: UnaryContract & Movable & Deinitable](var program: P, var handler: H) -> Async[P.Error].Handled[P, H] where Async[P.Error]._Handles[P, H]:"
+    },
+    {
+     "sha256": "c27981930dffc966d252a2cf695bb2bf7405f3ce6c596bb7188023228f0dc761",
+     "signature": "def handle_error_with[P: _Machine, R: _Machine, //, H: _Unary[EffectFailure[P.Error], R]](var program: P, var handler: H ) -> Async[P.Error].Handled[P, NativeUnary[EffectFailure[P.Error], R, Never, H, False]] where Async[P.Error]._Handles[P, NativeUnary[EffectFailure[P.Error], R, Never, H, False]]:"
+    },
+    {
+     "sha256": "3f0594e99a434219782c7afcd446d3404aabc1170266735c12daeeeb12e6058f",
+     "signature": "def handle_error_with[P: _Machine, R: _Machine, X: Movable & Deinitable, //, H: _RaisingUnary[EffectFailure[P.Error], R, X]](var program: P, var handler: H ) -> Async[P.Error].Handled[P, NativeUnary[EffectFailure[P.Error], R, X, H, True]] where Async[P.Error]._Handles[P, NativeUnary[EffectFailure[P.Error], R, X, H, True]]:"
+    }
+   ],
+   "provider": "effects/_async/recovery"
+  },
+  "effects.async_runtime.on_cancel": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "f22de706b70a414490b82fd704205cbef7883b549461c719308d093141f254f9",
+     "signature": "def on_cancel[P: Machine, Q: Machine](var program: P, var cleanup: Q) -> OnCancel[P, Q] where P.Error == Q.Error:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.protocols.CleanupMachine": {
+   "declarations": [
+    "trait CleanupMachine(Movable, Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "poll": [
+     {
+      "sha256": "bc0e9608e0f52553886ea7d20a4236f1ddde2bfc75007501f4277d4c7976cade",
+      "signature": "def poll[p: ImmOrigin](mut self, ref[p] value: Self.Input, exit: ExitCase[Self.Error], context: IOContext[Self.Error] ) -> Step[NoneType, Self.Error]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/scopes"
+  },
+  "effects.async_runtime.protocols.Context": {
+   "declarations": [
+    "comptime Context[E: Movable & Deinitable] = IOContext[E]"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/async_runtime/protocols"
+  },
+  "effects.async_runtime.protocols.Machine": {
+   "declarations": [
+    "trait Machine(_Machine, _FamilyCarrier):"
+   ],
+   "kind": "type or alias",
+   "provider": "effects/_async/family"
+  },
+  "effects.async_runtime.protocols.ScopedMachine": {
+   "declarations": [
+    "trait ScopedMachine(Movable, Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "poll": [
+     {
+      "sha256": "253282ca5668ada2473b367e13408b23b33d4ca2d4c5f25f6c27a218eb5d73cc",
+      "signature": "def poll[p: ImmOrigin](mut self, ref[p] value: Self.Input, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/scopes"
+  },
+  "effects.async_runtime.protocols.Signal": {
+   "declarations": [
+    "struct Signal(Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "notify": [
+     {
+      "sha256": "076f80146806982574638bd33190b66c988c7162c5a548260e1dc9e211303f5f",
+      "signature": "def notify(self):"
+     }
+    ],
+    "revision": [
+     {
+      "sha256": "eefe6284cb97202fa726e5e8e7617f839ea992fa78c699bfb82c9fc68cb92cf3",
+      "signature": "def revision(self) -> UInt64:"
+     }
+    ]
+   },
+   "provider": "_internal/waking"
+  },
+  "effects.async_runtime.protocols.Step": {
+   "declarations": [
+    "struct Step[T: Movable & Deinitable, E: Movable & Deinitable](Movable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "pending": [
+     {
+      "sha256": "06b743055f63e3eeefe149cd0a16cdaace04060e5d9fe6f51e1d4e50cf7c4c83",
+      "signature": "def pending(var wait: Wait) -> Self:"
+     }
+    ],
+    "ready": [
+     {
+      "sha256": "3f34a8342c9daffbe5ed8c264c7535cb9408e18ea6c5075cac1a242dd93b3033",
+      "signature": "def ready(var outcome: Outcome[Self.T, Self.E]) -> Self:"
+     }
+    ]
+   },
+   "provider": "effects/_async/kernel"
+  },
+  "effects.async_runtime.protocols.Wait": {
+   "declarations": [
+    "struct Wait(Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "changed": [
+     {
+      "sha256": "caa194b90d23815d2d1895803b6fdad73dc75a270a26a9b9a7c5d36478dc1ca3",
+      "signature": "def changed(signal: Signal, revision: UInt64) -> Self:"
+     }
+    ],
+    "never": [
+     {
+      "sha256": "8579838f8db80a9fe71d75995061b23d62eecfbc52f63c43092e2dede13cd444",
+      "signature": "def never() -> Self:"
+     }
+    ],
+    "until": [
+     {
+      "sha256": "863bc463a4bd209e62d78a5bbdfbcfc825685b5662aa20b9dd9aa43f630d2d1b",
+      "signature": "def until(deadline: Instant) -> Self:"
+     }
+    ]
+   },
+   "provider": "effects/_async/kernel"
+  },
+  "effects.async_runtime.pure": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "e7a3a8a5141322136a923ab35778504be5017cd9b06efbbe871157dea9c58e6a",
+     "signature": "def pure[E: Movable & Deinitable, T: Movable & Deinitable](var value: T) -> Pure[T, E]:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.race": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "bc178f4f94102f691aedb285bdf3c1dace8f93cda161f0f17c76a96cb4c27635",
+     "signature": "def race[P: Machine, Q: Machine](var left: P, var right: Q) -> Race[P, Q] where P.Error == Q.Error:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.race_first": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "2cfda038502328f45b83dcb50eada86ab92ae08ba9db49e51fb936f11c53d464",
+     "signature": "def race_first[P: Machine, Q: Machine](var left: P, var right: Q) -> RaceFirst[P, Q] where P.Error == Q.Error:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.raise_error": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "f6f23bd8b454daae4d2954dc6c099a25a9b73a05d56f9da6004aca4ae1cba8b2",
+     "signature": "def raise_error[E: Movable & Deinitable, T: Movable & Deinitable](var error: E) -> _Recipe[EvalIO[DelayContract[_Raise[E, T], E].Out]]:"
+    }
+   ],
+   "provider": "effects/_async/recovery"
+  },
+  "effects.async_runtime.resource": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "4669a1dbc5a121f844e68f58c95b5510c8d69fdb94728afea7ba6f965ee61861",
+     "signature": "def resource[A: Machine, C: ScopedMachine](var acquire: A, var release: C) -> Resource[A, C] where A.Value == C.Input and A.Error == C.Error:"
+    },
+    {
+     "sha256": "e2d0b5d9cc26a87ecbed7d521699e522720546d485dbf3e3afd2cee8fe60a5b3",
+     "signature": "def resource[A: Machine, F: BorrowCallContract & Movable & Deinitable](var acquire: A, var release: F) -> ResourceFactory[A, F] where F.Payload == A.Value and _OnceBorrowAvailable[F] and _ErrorCompatible[A.Error, F.Failure] and conforms_to(F.Result, Machine) and downcast[F.Result, Machine].Error == A.Error:"
+    },
+    {
+     "sha256": "1e0c55e1365c9bda49f7d6f5a0893c6f256c42d971003f3514ab2df293b4b75e",
+     "signature": "def resource[A: Machine, T: AnyType, R: Machine, //, F: _Borrowing[T, R]](var acquire: A, var release: F) -> ResourceFactory[A, _NativeBorrow[T, R, Never, F, False]] where T == A.Value and R.Error == A.Error:"
+    },
+    {
+     "sha256": "c3157cc633d3898c14c89ba57754253b224454bbcda0d5c6c02a6ee04d170535",
+     "signature": "def resource[A: Machine, T: AnyType, R: Machine, X: Movable & Deinitable, //, F: _RaisingBorrowing[T, R, X]](var acquire: A, var release: F) -> ResourceFactory[A, _NativeBorrow[T, R, X, F, True]] where T == A.Value and R.Error == A.Error and _ErrorCompatible[A.Error, X]:"
+    }
+   ],
+   "provider": "effects/_async/resources"
+  },
+  "effects.async_runtime.resource_case": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "0594d9a54667cc8b4e611050c225418fefa0db05152aa5ed65b324bb992239fb",
+     "signature": "def resource_case[A: Machine, C: CleanupMachine](var acquire: A, var release: C) -> ResourceCase[A, C] where A.Value == C.Input and A.Error == C.Error:"
+    }
+   ],
+   "provider": "effects/_async/resources"
+  },
+  "effects.async_runtime.run": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "5d2cb3b468ec12f6e66788bf9ee97c90538312a8f462b58bc399a7b5503fc9c7",
+     "signature": "def run[P: Machine](var program: P, token: CancellationToken) -> Outcome[P.Value, P.Error]:"
+    },
+    {
+     "sha256": "2aed51184c3927150b11166891c7fcc91a9217b7dc3cb9babdd6582c20e452bb",
+     "signature": "def run[P: Machine](var program: P) -> Outcome[P.Value, P.Error]:"
+    }
+   ],
+   "provider": "effects/_async/host"
+  },
+  "effects.async_runtime.scope": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "4bf89428632a885dcba99e073e9d204e950e4e24fdfb946c0b6b3d4f456aaee6",
+     "signature": "def scope[A: Machine, U: ScopedMachine, C: CleanupMachine](var acquire: A, var use: U, var release: C) -> Scope[A, U, C] where A.Value == U.Input and A.Value == C.Input and A.Error == U.Error and A.Error == C.Error:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.scoped_both": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "3740af6e441aa6f5c5d21c64ae949f39e9d7c85ba0a2cddd05cfa74f86c940fd",
+     "signature": "def scoped_both[P: ScopedMachine, Q: ScopedMachine](var left: P, var right: Q) -> ScopedBoth[P, Q]:"
+    }
+   ],
+   "provider": "effects/_async/children"
+  },
+  "effects.async_runtime.sleep": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "8cd6498057d25d68b0283b23bfdc49cb84b0db56453a79921fb3b4d7e05b2fda",
+     "signature": "def sleep[E: Movable & Deinitable](duration: Duration) -> Sleep[E]:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.timeout_after": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "17bde86dffef071004dd9ebc75b30d6fb22891ec1ea01a50d66aa5e0c97ce506",
+     "signature": "def timeout_after[P: Machine, Q: Machine](var program: P, duration: Duration, var fallback: Q) -> TimeoutAfter[P, Q] where P.Error == Q.Error and P.Value == Q.Value:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.timeout_to": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "3ab00ac0481743a08f86baa66cc51906d8845155c3da9e67eb1f481f3c48ad70",
+     "signature": "def timeout_to[P: Machine, Q: Machine](var program: P, duration: Duration, var fallback: Q) -> TimeoutTo[P, Q] where P.Error == Q.Error and P.Value == Q.Value:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.uncancelable": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "a695feae3f2c3a3cc144e0d5b6451f4e821c39036a648f45cf65aa67eb4d11cd",
+     "signature": "def uncancelable[P: Machine](var program: P) -> Uncancelable[P]:"
+    }
+   ],
+   "provider": "effects/_async/application"
+  },
+  "effects.async_runtime.uncancelable_with": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "e69c9de91469bd2b68daab9f9f05ad60b5b970c96efb8c6d26daa87d2873ec37",
+     "signature": "def uncancelable_with[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](var factory: F) -> Masked[F, E] where _OnceUnaryAvailable[F] and F.Arg == Poll[E] and _ErrorCompatible[E, F.Error] and conforms_to(F.Out, Machine) and downcast[F.Out, Machine].Error == E:"
+    },
+    {
+     "sha256": "7a3c906b5c211b0b505dc5c45cc9191ac93d0f742c2594ec9ee37cdbac12ee33",
+     "signature": "def uncancelable_with[R: Machine, //, E: Movable & Deinitable, F: _Unary[Poll[E], R]](var factory: F) -> Masked[NativeUnary[Poll[E], R, Never, F, False], E] where R.Error == E:"
+    },
+    {
+     "sha256": "887de52ebae39011ec31cc03451d490dc24cc2fd20afc7da5c24cda68b531278",
+     "signature": "def uncancelable_with[R: Machine, X: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[Poll[E], R, X]](var factory: F) -> Masked[NativeUnary[Poll[E], R, X, F, True], E] where R.Error == E and _ErrorCompatible[E, X]:"
+    }
+   ],
+   "provider": "effects/_async/application"
   },
   "effects.canceled": {
    "kind": "function",
@@ -25743,7 +26713,9 @@
   "control",
   "algebra",
   "effects",
-  "matching"
+  "matching",
+  "effects.async_runtime",
+  "effects.async_runtime.protocols"
  ],
  "version": 1
 }
