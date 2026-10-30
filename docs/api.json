@@ -57178,6 +57178,314 @@
     "Ask"
    ]
   },
+  "effects.LiftCancel": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    },
+    {
+     "description": "",
+     "name": "RegionPoll"
+    },
+    {
+     "description": "",
+     "name": "Canceled"
+    },
+    {
+     "description": "",
+     "name": "GuaranteeCompatible"
+    },
+    {
+     "description": "",
+     "name": "Guaranteed"
+    },
+    {
+     "description": "",
+     "name": "OnCanceled"
+    },
+    {
+     "description": "",
+     "name": "CaseCompatible"
+    },
+    {
+     "description": "",
+     "name": "CaseGuaranteed"
+    },
+    {
+     "description": "",
+     "name": "UncancelableCompatible"
+    },
+    {
+     "description": "",
+     "name": "Uncanceled"
+    },
+    {
+     "description": "",
+     "name": "RestoreCompatible"
+    },
+    {
+     "description": "",
+     "name": "Restored"
+    }
+   ],
+   "description": "These layers' programs are base programs, so finalization and masking\nforward to the base: the layer's own absence or stored error is a base\nsuccess, which runs `guarantee` finalizers and is not a cancellation.\nFinalizers are unit programs of the layer whose own result is discarded.\n`guarantee_case` takes the base's case finalizer, which observes the base\nexit. Layers with their own program representation, such as ReaderT,\nStateT and WriterT, are rejected. Like the providers, the dictionary is\nnever a value, which keeps `canceled[LiftCancel[I, C]]()` from matching\nthe synchronous `canceled[E]()`.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "canceled": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's unit carrier.",
+       "type": "Self.Canceled"
+      },
+      "signature": "def canceled() -> Self.Canceled",
+      "summary": "Lift the base's cancellation request."
+     }
+    ],
+    "guarantee": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The finalizer's unit carrier type.",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's guaranteed carrier, a carrier of the destination family.",
+       "type": "Self.Guaranteed[V, Q]"
+      },
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]",
+      "summary": "Run a layer finalizer, masked, after the program on every base exit."
+     }
+    ],
+    "guarantee_case": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The base provider's case finalizer type.",
+        "inferred": false,
+        "name": "F",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's carrier, a carrier of the destination family.",
+       "type": "Self.CaseGuaranteed[V, F]"
+      },
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]",
+      "summary": "Run the base's case finalizer, masked, with the program's base exit."
+     }
+    ],
+    "on_cancel": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The finalizer's unit carrier type.",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's carrier, a carrier of the destination family.",
+       "type": "Self.OnCanceled[V, Q]"
+      },
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]",
+      "summary": "Run a layer finalizer, masked, only if the program is canceled."
+     }
+    ],
+    "restore": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The region's poll, borrowed.",
+        "name": "poll",
+        "type": "Self.RegionPoll",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's carrier, a carrier of the destination family.",
+       "type": "Self.Restored[V]"
+      },
+      "signature": "def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]",
+      "summary": "Run part of a masked region with the cancellation state outside it."
+     }
+    ],
+    "uncancelable": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The region's factory, consumed.",
+        "name": "body",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable taking RegionPoll and returning a layer carrier.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's masked carrier, a carrier of the destination family.",
+       "type": "Self.Uncanceled[F]"
+      },
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]",
+      "summary": "Run a region of layer programs masked; its poll restores the outer state."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "OptionalT or ResultT over C.Family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Cancel capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Cancel",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftCancel[I: Monad & _Lifting, C: Cancel](Cancel, not Deinitable)",
+   "summary": "Lift a selected Cancel capability through OptionalT or ResultT.",
+   "traits": [
+    "Cancel"
+   ]
+  },
   "effects.LiftCensor": {
    "aliases": [
     {
@@ -57355,6 +57663,121 @@
     "Censor",
     "Listen",
     "Tell"
+   ]
+  },
+  "effects.LiftDefer": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "DelayCompatible"
+    },
+    {
+     "description": "",
+     "name": "Delayed"
+    },
+    {
+     "description": "",
+     "name": "DeferCompatible"
+    },
+    {
+     "description": "",
+     "name": "Deferred"
+    }
+   ],
+   "description": "`delay` lifts the base's delayed carrier. `defer` binds the factory after\na unit of the destination family, so the layer builds its program when\nthe program reaches it. I.Base must equal C.Family. Through ReaderT over\nAsync, running a deferred program is rejected like any ReaderT bind there,\nwhich would let the IO keep the borrowed environment; `delay` is admitted.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "defer": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, consumed.",
+        "name": "factory",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable thunk returning a destination carrier.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's carrier running the program F builds.",
+       "type": "Self.Deferred[F]"
+      },
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]",
+      "summary": "Build the destination family's program when the program reaches it."
+     }
+    ],
+    "delay": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable thunk the base admits.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's carrier of the function's value.",
+       "type": "Self.Delayed[F]"
+      },
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]",
+      "summary": "Lift the base's carrier that runs a function when reached."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Defer capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Defer",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftDefer[I: Monad & _Lifting, C: Defer](Defer, not Deinitable)",
+   "summary": "Lift a selected Defer capability through one transformer.",
+   "traits": [
+    "Defer"
    ]
   },
   "effects.LiftListen": {
@@ -57688,6 +58111,554 @@
    "summary": "Select a borrowed projection from the immediate base of a transformer.",
    "traits": [
     "Project"
+   ]
+  },
+  "effects.LiftRaise": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    },
+    {
+     "description": "",
+     "name": "Raised"
+    }
+   ],
+   "description": "The raised value is the base's domain error, not a layer's own failure\nsuch as ResultT's stored error. I.Base must equal C.Family.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "raise_error": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The error, consumed.",
+        "name": "error",
+        "type": "Self.Error",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The success type the carrier declares.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's failing carrier.",
+       "type": "Self.Raised[A]"
+      },
+      "signature": "def raise_error[A: Movable & Deinitable](var error: Self.Error) -> Self.Raised[A]",
+      "summary": "Lift the base's carrier failing with one error."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Raise capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Raise",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftRaise[I: Monad & _Lifting, C: Raise](Raise, not Deinitable)",
+   "summary": "Lift a selected Raise capability through one transformer.",
+   "traits": [
+    "Raise"
+   ]
+  },
+  "effects.LiftSpawn": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    },
+    {
+     "description": "",
+     "name": "RegionPoll"
+    },
+    {
+     "description": "",
+     "name": "Canceled"
+    },
+    {
+     "description": "",
+     "name": "GuaranteeCompatible"
+    },
+    {
+     "description": "",
+     "name": "Guaranteed"
+    },
+    {
+     "description": "",
+     "name": "OnCanceled"
+    },
+    {
+     "description": "",
+     "name": "CaseCompatible"
+    },
+    {
+     "description": "",
+     "name": "CaseGuaranteed"
+    },
+    {
+     "description": "",
+     "name": "UncancelableCompatible"
+    },
+    {
+     "description": "",
+     "name": "Uncanceled"
+    },
+    {
+     "description": "",
+     "name": "RestoreCompatible"
+    },
+    {
+     "description": "",
+     "name": "Restored"
+    },
+    {
+     "description": "",
+     "name": "Handle"
+    },
+    {
+     "description": "",
+     "name": "StartCompatible"
+    },
+    {
+     "description": "",
+     "name": "Started"
+    },
+    {
+     "description": "",
+     "name": "Joined"
+    },
+    {
+     "description": "",
+     "name": "Stopped"
+    },
+    {
+     "description": "",
+     "name": "Forever"
+    },
+    {
+     "description": "",
+     "name": "Ceded"
+    }
+   ],
+   "description": "A layer program starts as a base fiber whose success is the layer's\npayload: a fiber of OptionalT[Async[E]] with success type T is a\nFiber[Optional[T], E], and joining it produces the layer's absence or\nstored error inside a successful outcome. Operations that produce values\nlift the base's carriers; Cancel members delegate to LiftCancel.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "cancel": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The handle, borrowed.",
+        "name": "fiber",
+        "type": "Self.Handle[T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The layer program's success type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's unit carrier.",
+       "type": "Self.Stopped"
+      },
+      "signature": "def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped",
+      "summary": "Cancel a layer fiber and wait for it, lifting the base's carrier."
+     }
+    ],
+    "canceled": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's unit carrier.",
+       "type": "Self.Canceled"
+      },
+      "signature": "def canceled() -> Self.Canceled",
+      "summary": "Delegate to LiftCancel."
+     }
+    ],
+    "cede": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's unit carrier.",
+       "type": "Self.Ceded"
+      },
+      "signature": "def cede() -> Self.Ceded",
+      "summary": "Lift the base's carrier that yields once."
+     }
+    ],
+    "guarantee": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The finalizer's unit carrier type.",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's guaranteed carrier.",
+       "type": "Self.Guaranteed[V, Q]"
+      },
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]",
+      "summary": "Delegate to LiftCancel."
+     }
+    ],
+    "guarantee_case": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The base provider's case finalizer type.",
+        "inferred": false,
+        "name": "F",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's carrier.",
+       "type": "Self.CaseGuaranteed[V, F]"
+      },
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]",
+      "summary": "Delegate to LiftCancel."
+     }
+    ],
+    "join": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The handle, consumed.",
+        "name": "fiber",
+        "type": "Self.Handle[T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The layer program's success type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's carrier of the outcome.",
+       "type": "Self.Joined[T]"
+      },
+      "signature": "def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]",
+      "summary": "Join a layer fiber and lift its base outcome."
+     }
+    ],
+    "never": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The success type the carrier declares.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's carrier.",
+       "type": "Self.Forever[A]"
+      },
+      "signature": "def never[A: Movable & Deinitable]() -> Self.Forever[A]",
+      "summary": "Lift the base's carrier that waits until canceled."
+     }
+    ],
+    "on_cancel": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The finalizer's unit carrier type.",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's carrier.",
+       "type": "Self.OnCanceled[V, Q]"
+      },
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]",
+      "summary": "Delegate to LiftCancel."
+     }
+    ],
+    "restore": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The region's poll, borrowed.",
+        "name": "poll",
+        "type": "Self.RegionPoll",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's carrier.",
+       "type": "Self.Restored[V]"
+      },
+      "signature": "def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]",
+      "summary": "Delegate to LiftCancel."
+     }
+    ],
+    "start": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's carrier of the fiber's handle.",
+       "type": "Self.Started[V]"
+      },
+      "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]",
+      "summary": "Start a layer program as a base fiber and lift its handle."
+     }
+    ],
+    "uncancelable": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The region's factory, consumed.",
+        "name": "body",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable taking RegionPoll and returning a layer carrier.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The base's masked carrier.",
+       "type": "Self.Uncanceled[F]"
+      },
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]",
+      "summary": "Delegate to LiftCancel."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "OptionalT or ResultT over C.Family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Spawn capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Spawn",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftSpawn[I: Monad & _Lifting, C: Spawn](Spawn, not Deinitable)",
+   "summary": "Lift a selected Spawn capability through OptionalT or ResultT.",
+   "traits": [
+    "Cancel",
+    "Spawn"
    ]
   },
   "effects.LiftStateful": {
@@ -329101,7 +330072,7 @@
    "summary": "Typed results, early termination and bridges between raised and stored errors."
   },
   "effects": {
-   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `run_value`, `run_state`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run`, `run_value`, `run_log`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | Writer `run`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then Writer `run` | `(log, value)` |\n| `WriterT[State[S], W]` | Writer `run`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then Writer `run` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.\n\nResource owns native scopes; IOResource composes effectful acquisition, use\nand outcome-aware release through the same lifecycle. IO uses the existing\nReader, Result and Optional families for typed outcomes and cooperative\ncancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over\nshared state. The optional Fiber backend requires explicit unsafe_start and\nits documented thread-safety obligations.",
+   "description": "| Family | Value | Additional operations |\n|---|---|---|\n| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |\n| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `run_value`, `run_state`, `lift`, `get`, `inspect`, `put`, `modify` |\n| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run`, `run_value`, `run_log`, `lift`, `tell`, `listen`, `censor` |\n| `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |\n| `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |\n\n`Reader[R]`, `State[S]` and `Writer[W]` are the transformers over\n`IdentityFamily`; `OptionalT` and `ResultT` over Identity are `OptionalFamily`\nand `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so\n`map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.\nReader and State values are deferred computations: nothing runs until `run`.\n\nAsk/Local and Stateful are compile-time capability dictionaries. Reader and\nState select their own environment or state; LiftAsk, LiftLocal and\nLiftStateful explicitly select a capability from the immediate base. Generic\nprograms use the selected dictionary's Family for algebra operations.\nTell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport\nthose operations through one layer. Listen pairs the payload with an observed\nlog, while censor transforms only the selected computation's output log.\nLiftDefer and LiftRaise lift Defer and Raise through any layer; LiftCancel and\nLiftSpawn forward Cancel and Spawn through OptionalT and ResultT, whose\nprograms are the base's programs.\n\nTransformer order matters. `StateT` over `Result` returns no state on failure;\n`ResultT` over `State` can return a failed `Result` together with the updated\nstate. Neither rolls back external mutation. For `ResultT[State[S], E]`, run\nwith `run[State[S]]`, whose result is `Tuple[Result[A, E], S]`, and lift\nState's operations into the ResultT layer; for `StateT[ResultFamily[E], S]`,\nrun with that StateT, whose result is `Result[Tuple[A, S], E]`.\n\n| Stack | Evaluation order | Final shape |\n|---|---|---|\n| `WriterT[Reader[R], W]` | Writer `run`, then Reader `run` | `(log, value)` |\n| `ReaderT[Writer[W], R]` | Reader `run`, then Writer `run` | `(log, value)` |\n| `WriterT[State[S], W]` | Writer `run`, then State `run` | `((log, value), state)` |\n| `StateT[Writer[W], S]` | State `run`, then Writer `run` | `(log, (value, state))` |\n\n`OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and\n`ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an\nabsence or a stored error skips later callbacks and lazy right operands,\nwithout converting one failure kind into the other. Native exceptions from any\nstage propagate with their exact types instead of becoming `Result` data.\n\nTraversal into a layer delegates to the base's traversal loop with the layer's\naccumulation rule, so the count of pulls and callback calls is the same over\neager, deferred and third-party bases. A deferred computation can be copied or\nreplayed only when its stored inputs and callbacks support it; copying an owner\ndoes not make a consuming callback reusable.\n\nResource owns native scopes; IOResource composes effectful acquisition, use\nand outcome-aware release through the same lifecycle. IO uses the existing\nReader, Result and Optional families for typed outcomes and cooperative\ncancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over\nshared state. The optional Fiber backend requires explicit unsafe_start and\nits documented thread-safety obligations.",
    "summary": "Reader, State and Writer computations and the OptionalT and ResultT layers, over any base Monad."
   },
   "effects.async_runtime": {

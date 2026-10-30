@@ -157,6 +157,27 @@ its admission in `where` clauses, as other capabilities in `fp.effects` do.
 canceled. Generic entry points share the names of the synchronous functions and
 take the dictionary as their first explicit parameter.
 
+Transformer layers forward these capabilities through explicit selections, as
+`LiftAsk` does for `Ask`. `LiftDefer[Layer, C]` and `LiftRaise[Layer, C]` lift
+the base's carriers through any layer; `LiftCancel[Layer, C]` and
+`LiftSpawn[Layer, C]` forward through `OptionalT` and `ResultT`, whose programs
+are the base's programs:
+
+```text
+comptime Opt = OptionalT[Async[Int]]
+var noted = delay[LiftDefer[Opt, Async[Int]]](Note())
+var program = guarantee[LiftCancel[Opt, Async[Int]]](lookup(), noted^)
+```
+
+The layer's own absence or stored error is a base success: it runs `guarantee`
+finalizers and is not a cancellation. Finalizers are the layer's unit programs,
+their results discarded, and `guarantee_case` takes the base's case finalizer.
+A fiber started through `LiftSpawn[OptionalT[Async[E]], Async[E]]` is a
+`Fiber[Optional[T], E]`, and joining it produces absence inside a successful
+`Outcome`. `ReaderT` and `StateT` forward only `Defer` and `Raise`; over `Async`,
+a `ReaderT` bind, and so `defer`, is rejected when run, because the IO would
+keep the borrowed environment.
+
 ## Drive external work and shutdown
 
 `Driver` is a linear root owner. Poll it until `Progress.completed`, then consume
@@ -233,6 +254,7 @@ reported deadline.
 | Earlier selection policies | `race_first`, `timeout_after` | First terminal outcome, or timer-selected fallback after clean draining |
 | `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
 | `MonadCancel`, `GenSpawn`, `Sync` (deferral only) | `Cancel`, `Spawn`, `Defer`, `Raise` dictionaries: `Async[E]`, `SyncIO[E]` | Narrower capabilities stay narrower; the synchronous family has no `Spawn` |
+| `MonadCancel[OptionT[F, *], E]` and the other transformer instances | `LiftDefer`, `LiftRaise`, `LiftCancel`, `LiftSpawn` selections | Cancel and Spawn forward through `OptionalT` and `ResultT` only; case finalizers observe the base exit |
 | `fa.start`, `fiber.join`, `fiber.cancel` | `io.start()`, `fiber^.join()`, `fiber.cancel()`, `fiber.request_cancel()` | Owners drain unjoined children before completing |
 | `Supervisor(await).use(f)`, `supervise` | `Supervisor[E].scoped(f, await_on_release)`, `supervisor.supervise(io)` | Release cancels live supervised fibers unless it awaits them |
 | `racePair` | `io.race_pair(other)` | A `RaceWinner` with the first outcome and the other fiber |

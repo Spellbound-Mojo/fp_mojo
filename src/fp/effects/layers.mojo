@@ -20,7 +20,7 @@ from fp.callables.protocols import BorrowCallContract, UnaryContract, BinaryCont
 from fp.callables.invoke import _OnceBinaryAvailable, _OnceThunkAvailable, RepeatableUnary
 from fp.data._result import Result, Ok, Err
 from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
-from .protocols import Local, Listen, _CarrierOp, _LocalLifting, _CapabilityLifting
+from .protocols import Local, Listen, _CarrierOp, _LocalLifting, _CapabilityLifting, _CarrierLifting
 from ._adapt import _map_as
 from ._transport import _LocalOp, _ListenMapped, _ListenSum
 
@@ -166,7 +166,7 @@ struct _LayerTransport[I: Monad & _CapabilityLifting]:
 
 # Concrete family declarations retain their native capability signatures;
 # the shared representation policy and execution live in _LayerTransport.
-struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):
+struct _OptionalT[M: Monad](Monad, _LocalLifting, _CarrierLifting, ApplicativeError where conforms_to(M, ApplicativeError), ErrorMapping where conforms_to(M, ErrorMapping)):
     """OptionalT over a base other than Identity: a value is M's carrier of Optional[A]."""
     comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].HoistCompatible[V,H]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].Hoisted[V,H]
@@ -227,6 +227,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
         return Self._Errors.or_else(handler^, source^)
 
     comptime Base = Self.M
+    comptime _Wrapped[A: Movable & Deinitable] = Optional[A]
     comptime Element[V: Movable & Deinitable] = OptionalFamily.Element[Self.M.Element[V]]
     comptime CarrierCompatible[V: Movable & Deinitable] = Self.M.CarrierCompatible[V] and OptionalFamily.CarrierCompatible[Self.M.Element[V]]
     # One operation descriptor fixes the callback used by admission and types.
@@ -296,7 +297,7 @@ struct _OptionalT[M: Monad](Monad, _LocalLifting, ApplicativeError where conform
         return Self.M.map(_Present[Self.M.Element[V]](), value^)
 
 
-struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, ErrorMapping, _LocalLifting):
+struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, ErrorMapping, _LocalLifting, _CarrierLifting):
     """ResultT over a base other than Identity: a value is M's carrier of Result[A, E]."""
     comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].HoistCompatible[V,H]
     comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = _LayerTransport[Self].Hoisted[V,H]
@@ -356,6 +357,7 @@ struct _ResultT[M: Monad, E: Movable & Deinitable](Monad, ApplicativeError, Erro
         return Self.M.flat_map(_ResultGuard[Self.M, Self.E, H, False](handler^), source^)
 
     comptime Base = Self.M
+    comptime _Wrapped[A: Movable & Deinitable] = Result[A, Self.E]
     comptime Element[V: Movable & Deinitable] = ResultFamily[Self.E].Element[Self.M.Element[V]]
     comptime CarrierCompatible[V: Movable & Deinitable] = Self.M.CarrierCompatible[V] and ResultFamily[Self.E].CarrierCompatible[Self.M.Element[V]]
     # One operation descriptor fixes the callback used by admission and types.

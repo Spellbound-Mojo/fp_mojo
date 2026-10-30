@@ -1,0 +1,1 @@
+capability lifting: Defer and Raise through OptionalT, ResultT, ReaderT, StateT and WriterT; Cancel and Spawn through OptionalT and ResultT

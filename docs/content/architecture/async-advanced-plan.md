@@ -1652,6 +1652,62 @@ and the timeouts moved onto fibers as decided.
   awaiting release against the canceling default, and joining a supervised
   fiber.
 
+**10d** was built on 2026-10-30: the forwarding audit and the selections it
+admits.
+
+- **ReaderT environment escape.** The audit found a memory-safety bug.
+  `ReaderT` binds and combines run the base operation with continuations that
+  keep a pointer to the borrowed environment. A typed base keeps that origin in
+  the result type, so the environment outlives its uses; `IO[T, E]` erases its
+  callbacks, so a `ReaderT[Async[E], R]` program could run after the
+  environment was freed, and a probe crashed. Decided in review: reject it at
+  compile time. `_ReaderContinue`, `_ReaderRight`, and `_ReaderFoldStep` are
+  borrowed views, which `IO` already refuses as callbacks, so running such a
+  bind over `Async` fails to compile; `ask`, `lift`, `map`, and `run` still
+  work, and programs bind in the base after running the reader.
+  `reject_reader_environment_escape` and `reject_lift_defer_reader` compile
+  without the fix and are rejected with it.
+- **Audit.** Decided scope: all four capabilities through `OptionalT` and
+  `ResultT`; `Defer` and `Raise` through `ReaderT`, `StateT`, and `WriterT`.
+
+  | Layer | `Defer` | `Raise` | `Cancel`, `Spawn` |
+  |---|---|---|---|
+  | `OptionalT`, `ResultT` | `delay` lifted, `defer` bound | lifted | forwarded: programs are base programs |
+  | `ReaderT` | `delay` lifted; `defer` rejected over `Async` with every bind | lifted | excluded: finalizers and fibers would need the environment inside the `IO`, the same escape |
+  | `StateT` | lifted and bound | lifted | excluded: state is lost on failure, and fibers cannot merge state lawfully |
+  | `WriterT` | lifted and bound | lifted | excluded: the log is lost on failure and cancellation |
+
+- **Selections.** `LiftDefer`, `LiftRaise`, `LiftCancel`, and `LiftSpawn` in
+  `fp.effects.capabilities` follow `LiftAsk`: the destination layer, then the
+  base's dictionary, with `I.Base == C.Family`. Operations that produce values
+  lift the base's carrier through the layer's `lift`, which cannot fail over
+  `Async`; `defer` binds the factory after a unit, through the existing
+  `_IgnoreInput`. A private marker, `_CarrierLifting`, names the layers whose
+  carriers are base carriers and their wrapped payload (`Optional[A]`,
+  `Result[A, E]`); `OptionalT` and `ResultT` conform, and `LiftCancel` and
+  `LiftSpawn` check it, because `downcast` does not check conformance.
+  `LiftSpawn` delegates its `Cancel` members to `LiftCancel`. Like the
+  providers, the dictionaries are `not Deinitable`, which keeps
+  `delay[LiftDefer[...]]` from matching the synchronous `delay[E]`.
+- **Recorded differences.** A layer's absence or stored error is a base
+  success. It runs `guarantee` finalizers, as Cats Effect's transformer
+  instances do, but a case finalizer cannot tell it from a success:
+  `ExitCase` never exposes success payloads, so `guarantee_case` takes the
+  base's case finalizer with the base exit. Finalizers for `guarantee` and
+  `on_cancel` are the layer's unit programs, their own absence or error
+  discarded through the base `map`. A fiber of `OptionalT[Async[E]]` with
+  success type `T` is a `Fiber[Optional[T], E]`; joining it produces absence
+  inside a successful `Outcome`, lifted into the layer. `raise_error` raises the
+  base's domain error, not `ResultT`'s stored error. Generic programs that need
+  several capabilities through a layer take one selection per capability, such
+  as `[D: Defer, K: Cancel]`.
+- **Clients.** `capability_lifting` covers `delay`, `defer`, and `raise_error`
+  through every layer over `Async`; one generic program run on `Async` and
+  through `OptionalT`; finalizers on absence and stored errors; `on_cancel` with
+  a lifted cancellation; masked regions; and start, join, cancel, `never`, and
+  `cede` through `OptionalT` and `ResultT`. `reject_lift_cancel_reader` and
+  `reject_lift_spawn_state` reject the excluded layers.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:

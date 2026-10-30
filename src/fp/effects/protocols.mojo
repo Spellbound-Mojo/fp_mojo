@@ -582,6 +582,15 @@ trait _CapabilityLifting(_Lifting):
     comptime Base: Monad
 
 
+trait _CarrierLifting(_CapabilityLifting):
+    """A layer whose carriers are its base's carriers of a wrapped payload.
+
+    Programs pass through to the base unchanged, so base operations that take
+    or build programs, such as finalization and fibers, forward directly.
+    """
+    comptime _Wrapped[A: Movable & Deinitable]: Movable & Deinitable
+
+
 trait _Hoisting(_CapabilityLifting):
     """Transport an admitted base operation through one representation."""
     comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp]: Bool

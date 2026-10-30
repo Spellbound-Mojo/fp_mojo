@@ -21,6 +21,9 @@ programs use the selected dictionary's Family for algebra operations.
 Tell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport
 those operations through one layer. Listen pairs the payload with an observed
 log, while censor transforms only the selected computation's output log.
+LiftDefer and LiftRaise lift Defer and Raise through any layer; LiftCancel and
+LiftSpawn forward Cancel and Spawn through OptionalT and ResultT, whose
+programs are the base's programs.
 
 Transformer order matters. `StateT` over `Result` returns no state on failure;
 `ResultT` over `State` can return a failed `Result` together with the updated
@@ -57,7 +60,7 @@ its documented thread-safety obligations.
 """
 from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
 from .reader import ReaderT, Reader
-from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, TellContract, ask, local, get, put, modify, tell, listen, censor, defer, raise_error, start, join, cancel, never, cede
+from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, LiftDefer, LiftRaise, LiftCancel, LiftSpawn, TellContract, ask, local, get, put, modify, tell, listen, censor, defer, raise_error, start, join, cancel, never, cede
 from .state import StateT, State
 from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT

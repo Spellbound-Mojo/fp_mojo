@@ -5828,6 +5828,51 @@
    },
    "provider": "effects/capabilities"
   },
+  "effects.LiftCancel": {
+   "declarations": [
+    "struct LiftCancel[I: Monad & _Lifting, C: Cancel](Cancel, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "canceled": [
+     {
+      "sha256": "f3aa99e858d6d4061966c304805229031e88685aac4a1aa86e714fcd1ceeea3f",
+      "signature": "def canceled() -> Self.Canceled:"
+     }
+    ],
+    "guarantee": [
+     {
+      "sha256": "79ed2420e9ac1e61216af0b5c8bea244167133fd31d26bca5ef4605ca213bc51",
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:"
+     }
+    ],
+    "guarantee_case": [
+     {
+      "sha256": "7da09899f80251be0b1edf7da8ceead11a69f014517394e58973663bb76a8102",
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:"
+     }
+    ],
+    "on_cancel": [
+     {
+      "sha256": "b0ce8b5894742335988807b8a9794f2d870f96abec90e550660eea7d810c1a21",
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:"
+     }
+    ],
+    "restore": [
+     {
+      "sha256": "85d16a9c6e8547772ae605848c3b65422b471012794412356d052e5f068956b4",
+      "signature": "def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:"
+     }
+    ],
+    "uncancelable": [
+     {
+      "sha256": "a23469a0c8bfdfbfe12044f884a9702f9ca24ad2d5ccd16e5d958f53adabc546",
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:"
+     }
+    ]
+   },
+   "provider": "effects/capabilities"
+  },
   "effects.LiftCensor": {
    "declarations": [
     "struct LiftCensor[I: Monad & _Lifting, C: Censor](Censor):"
@@ -5850,6 +5895,27 @@
      {
       "sha256": "376c2fe2820efe34030c9fb62d36c419e2e379c4663b42ed37054737fbbce660",
       "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told:"
+     }
+    ]
+   },
+   "provider": "effects/capabilities"
+  },
+  "effects.LiftDefer": {
+   "declarations": [
+    "struct LiftDefer[I: Monad & _Lifting, C: Defer](Defer, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "defer": [
+     {
+      "sha256": "046f215740315fe0fdce62951657b482031c5378f9e18617f191c64ea7267ba1",
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]:"
+     }
+    ],
+    "delay": [
+     {
+      "sha256": "cc1d9e923dcacbd3ae9e7e6cb2cdbed0144383acfbe6523ea5b831070ecc11d1",
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:"
      }
     ]
    },
@@ -5911,6 +5977,96 @@
     ]
    },
    "provider": "effects/projections"
+  },
+  "effects.LiftRaise": {
+   "declarations": [
+    "struct LiftRaise[I: Monad & _Lifting, C: Raise](Raise, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "raise_error": [
+     {
+      "sha256": "e6ecf09cdd89a6bbdbd10c6790056dbfc071c595de033bc4e3e166d920e74bd4",
+      "signature": "def raise_error[A: Movable & Deinitable](var error: Self.Error) -> Self.Raised[A]:"
+     }
+    ]
+   },
+   "provider": "effects/capabilities"
+  },
+  "effects.LiftSpawn": {
+   "declarations": [
+    "struct LiftSpawn[I: Monad & _Lifting, C: Spawn](Spawn, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "cancel": [
+     {
+      "sha256": "59855e2d0d3fe580ffadfef33daacb435696e9d794483a55614fb20e4a31c4f1",
+      "signature": "def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped:"
+     }
+    ],
+    "canceled": [
+     {
+      "sha256": "f3aa99e858d6d4061966c304805229031e88685aac4a1aa86e714fcd1ceeea3f",
+      "signature": "def canceled() -> Self.Canceled:"
+     }
+    ],
+    "cede": [
+     {
+      "sha256": "77a860e45d61963f241310f5497f832db84a8be28e34f7b3739128873397027c",
+      "signature": "def cede() -> Self.Ceded:"
+     }
+    ],
+    "guarantee": [
+     {
+      "sha256": "79ed2420e9ac1e61216af0b5c8bea244167133fd31d26bca5ef4605ca213bc51",
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:"
+     }
+    ],
+    "guarantee_case": [
+     {
+      "sha256": "7da09899f80251be0b1edf7da8ceead11a69f014517394e58973663bb76a8102",
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:"
+     }
+    ],
+    "join": [
+     {
+      "sha256": "57583f3b0fad88ab2a52b8e8799f7d93d5411575a0f6ff6fa7ba7e587e2db37b",
+      "signature": "def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]:"
+     }
+    ],
+    "never": [
+     {
+      "sha256": "fde9ac119aa2357f19804ebae7dd6c2840596e7e2e7835be7505444b6c3989d1",
+      "signature": "def never[A: Movable & Deinitable]() -> Self.Forever[A]:"
+     }
+    ],
+    "on_cancel": [
+     {
+      "sha256": "b0ce8b5894742335988807b8a9794f2d870f96abec90e550660eea7d810c1a21",
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:"
+     }
+    ],
+    "restore": [
+     {
+      "sha256": "85d16a9c6e8547772ae605848c3b65422b471012794412356d052e5f068956b4",
+      "signature": "def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:"
+     }
+    ],
+    "start": [
+     {
+      "sha256": "5c225fbed5acc02645a9b6bd98f76437058c1159d2ff4538d54a4a7278394363",
+      "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:"
+     }
+    ],
+    "uncancelable": [
+     {
+      "sha256": "a23469a0c8bfdfbfe12044f884a9702f9ca24ad2d5ccd16e5d958f53adabc546",
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:"
+     }
+    ]
+   },
+   "provider": "effects/capabilities"
   },
   "effects.LiftStateful": {
    "declarations": [

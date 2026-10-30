@@ -5,6 +5,7 @@ that retains the environment, such as a bind over a deferred base, carries the
 environment origin in its type.
 """
 
+from fp.callables._views import _BorrowedView
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
 from fp.algebra.contracts import MapContract, CombineContract
 from std.builtin.rebind import rebind_var, downcast
@@ -121,7 +122,7 @@ struct _ReaderEndpoint[M: Monad, R: AnyType, T: Movable & Deinitable, F: BorrowC
 
 @fieldwise_init
 struct _ReaderContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, R: AnyType, o: ImmOrigin](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
+    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable), _BorrowedView
 ):
     """Call F, then run its computation in the same borrowed environment."""
     var function: Self.F
@@ -148,7 +149,7 @@ struct _ReaderContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, R: A
 
 
 @fieldwise_init
-struct _ReaderRight[I: AnyType, G: ThunkContract & Movable & Deinitable, R: AnyType, o: ImmOrigin](OnceThunk):
+struct _ReaderRight[I: AnyType, G: ThunkContract & Movable & Deinitable, R: AnyType, o: ImmOrigin](OnceThunk, _BorrowedView):
     """Produce the right computation, then run it in the borrowed environment."""
     var right: Self.G
     var env: Pointer[Self.R, Self.o]
@@ -303,7 +304,7 @@ struct _ReaderLoop[M: Monad, R: AnyType, V: Movable & Deinitable, F: UnaryContra
 
 
 @fieldwise_init
-struct _ReaderFoldStep[I: AnyType, R: AnyType, F: BinaryContract & Movable & Deinitable, o: ImmOrigin](MutableBinary):
+struct _ReaderFoldStep[I: AnyType, R: AnyType, F: BinaryContract & Movable & Deinitable, o: ImmOrigin](MutableBinary, _BorrowedView):
     var function: Self.F
     var env: Pointer[Self.R, Self.o]
     comptime First = Self.F.First

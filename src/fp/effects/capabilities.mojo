@@ -1,11 +1,13 @@
-"""Explicit, compile-time selections of environment and state capabilities."""
+"""Explicit, compile-time selections of environment, state, log and effect capabilities."""
 from std.builtin.rebind import downcast
-from fp.algebra.protocols import Monad, _Lifting, _SemigroupBinary
+from fp.algebra.protocols import Monad, _Lifting, _SemigroupBinary, _pure
+from fp.algebra._adapt import _map_as, _flat_map_as
 from fp.callables._binding import _BindSecond
+from fp.callables._transforms import _Fill, _IgnoreInput
 from fp.callables.protocols import BorrowCallContract, UnaryContract, OnceUnary, ThunkContract
 from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing, NativeUnary, as_unary, _Unary, _RaisingUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Spawn, _Hoisting, _CapabilityLifting, _LocalLifting
+from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, _Hoisting, _CapabilityLifting, _CarrierLifting, _LocalLifting
 from ._adapt import _lift_as
 from ._transport import _CensorOp
 
@@ -617,6 +619,450 @@ def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinit
 ) raises I.CensorError[V, NativeUnary[A, R, E, F, True]] -> I.Censored[V, NativeUnary[A, R, E, F, True]] where I.CensorCompatible[V, NativeUnary[A, R, E, F, True]] and A == I.Log.Value and R == I.Log.Value:
     """Scope the selected log with a raising native callback; keep its error."""
     return censor[I](value^, as_unary(f^))
+
+
+struct LiftDefer[I: Monad & _Lifting, C: Defer](Defer, not Deinitable):
+    """Lift a selected Defer capability through one transformer.
+
+    `delay` lifts the base's delayed carrier. `defer` binds the factory after
+    a unit of the destination family, so the layer builds its program when
+    the program reaches it. I.Base must equal C.Family. Through ReaderT over
+    Async, running a deferred program is rejected like any ReaderT bind there,
+    which would let the IO keep the borrowed environment; `delay` is admitted.
+
+    Parameters:
+        I: The destination transformer family.
+        C: The Defer capability of its immediate base.
+    """
+    comptime _Layer = downcast[Self.I, _CapabilityLifting]
+    comptime _Selected = Self._Layer.Base == Self.C.Family
+    comptime _Build[F: ThunkContract & Movable & Deinitable] = _IgnoreInput[NoneType, F]
+    comptime Family = Self.I
+    comptime DelayCompatible[F: ThunkContract & Movable & Deinitable] = Self._Selected and Self.C.DelayCompatible[F] and _ErrorCompatible[Never, Self.I.LiftError[Self.C.Delayed[F]]]
+    comptime Delayed[F: ThunkContract & Movable & Deinitable] = Self.I.Lifted[Self.C.Delayed[F]]
+    comptime DeferCompatible[F: ThunkContract & Movable & Deinitable] = (
+        Self._Selected and Self.I.BindCompatible[Self.I.Pure[NoneType], Self._Build[F]]
+        and _ErrorCompatible[Never, Self.I.BindError[Self.I.Pure[NoneType], Self._Build[F]]])
+    comptime Deferred[F: ThunkContract & Movable & Deinitable] = Self.I.Bound[Self.I.Pure[NoneType], Self._Build[F]]
+
+    @staticmethod
+    def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
+        """Lift the base's carrier that runs a function when reached.
+
+        Parameters:
+            F: A once-callable thunk the base admits.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            The destination family's carrier of the function's value.
+        """
+        comptime assert Self.DelayCompatible[F], "delay: unavailable capability or mismatched base family"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Delayed[F]]]
+        return _lift_as[Never, Self.I](Self.C.delay(function^))
+
+    @staticmethod
+    def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]:
+        """Build the destination family's program when the program reaches it.
+
+        Parameters:
+            F: A once-callable thunk returning a destination carrier.
+
+        Args:
+            factory: The factory, consumed.
+
+        Returns:
+            The destination family's carrier running the program F builds.
+        """
+        comptime assert Self.DeferCompatible[F], "defer: mismatched base family, or the layer cannot bind the factory"
+        comptime assert _ErrorCompatible[Never, Self.I.BindError[Self.I.Pure[NoneType], Self._Build[F]]]
+        return _flat_map_as[Never, Self.I](Self._Build[F](factory^), _pure[Self.I, NoneType](None))
+
+
+struct LiftRaise[I: Monad & _Lifting, C: Raise](Raise, not Deinitable):
+    """Lift a selected Raise capability through one transformer.
+
+    The raised value is the base's domain error, not a layer's own failure
+    such as ResultT's stored error. I.Base must equal C.Family.
+
+    Parameters:
+        I: The destination transformer family.
+        C: The Raise capability of its immediate base.
+    """
+    comptime _Layer = downcast[Self.I, _CapabilityLifting]
+    comptime Family = Self.I
+    comptime Error = Self.C.Error
+    comptime Raised[A: Movable & Deinitable] = Self.I.Lifted[Self.C.Raised[A]]
+
+    @staticmethod
+    def raise_error[A: Movable & Deinitable](var error: Self.Error) -> Self.Raised[A]:
+        """Lift the base's carrier failing with one error.
+
+        Parameters:
+            A: The success type the carrier declares.
+
+        Args:
+            error: The error, consumed.
+
+        Returns:
+            The destination family's failing carrier.
+        """
+        comptime assert Self._Layer.Base == Self.C.Family, "raise_error: mismatched base family"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Raised[A]]], "raise_error: lifting into the layer must not fail"
+        return _lift_as[Never, Self.I](Self.C.raise_error[A](error^))
+
+
+struct LiftCancel[I: Monad & _Lifting, C: Cancel](Cancel, not Deinitable):
+    """Lift a selected Cancel capability through OptionalT or ResultT.
+
+    These layers' programs are base programs, so finalization and masking
+    forward to the base: the layer's own absence or stored error is a base
+    success, which runs `guarantee` finalizers and is not a cancellation.
+    Finalizers are unit programs of the layer whose own result is discarded.
+    `guarantee_case` takes the base's case finalizer, which observes the base
+    exit. Layers with their own program representation, such as ReaderT,
+    StateT and WriterT, are rejected. Like the providers, the dictionary is
+    never a value, which keeps `canceled[LiftCancel[I, C]]()` from matching
+    the synchronous `canceled[E]()`.
+
+    Parameters:
+        I: OptionalT or ResultT over C.Family.
+        C: The Cancel capability of its immediate base.
+    """
+    comptime _Layer = downcast[Self.I, _CarrierLifting]
+    comptime _Base = Self._Layer.Base
+    # downcast does not check conformance; layers with their own representation stop here.
+    comptime _Selected = conforms_to(Self.I, _CarrierLifting) and Self._Base == Self.C.Family
+    comptime _Discard[Q: Movable & Deinitable] = _Fill[Self._Base.Element[Q], NoneType]
+    comptime _Unit[Q: Movable & Deinitable] = Self._Base.Mapped[Q, Self._Discard[Q]]
+    comptime _Finalizes[Q: Movable & Deinitable] = (
+        Self.I.CarrierCompatible[Q] and Self.I.Element[Q] == NoneType
+        and Self._Base.MapCompatible[Q, Self._Discard[Q]] and _ErrorCompatible[Never, Self._Base.MapError[Q, Self._Discard[Q]]])
+    comptime Family = Self.I
+    comptime Error = Self.C.Error
+    comptime RegionPoll = Self.C.RegionPoll
+    comptime Canceled = Self.I.Lifted[Self.C.Canceled]
+    comptime GuaranteeCompatible[V: Movable & Deinitable, Q: Movable & Deinitable] = (
+        Self._Selected and Self.I.CarrierCompatible[V] and Self._Finalizes[Q] and Self.C.GuaranteeCompatible[V, Self._Unit[Q]])
+    comptime Guaranteed[V: Movable & Deinitable, Q: Movable & Deinitable] = Self.C.Guaranteed[V, Self._Unit[Q]]
+    comptime OnCanceled[V: Movable & Deinitable, Q: Movable & Deinitable] = Self.C.OnCanceled[V, Self._Unit[Q]]
+    comptime CaseCompatible[V: Movable & Deinitable, F: Movable & Deinitable] = Self._Selected and Self.I.CarrierCompatible[V] and Self.C.CaseCompatible[V, F]
+    comptime CaseGuaranteed[V: Movable & Deinitable, F: Movable & Deinitable] = Self.C.CaseGuaranteed[V, F]
+    comptime UncancelableCompatible[F: UnaryContract & Movable & Deinitable] = Self._Selected and Self.I.CarrierCompatible[F.Out] and Self.C.UncancelableCompatible[F]
+    comptime Uncanceled[F: UnaryContract & Movable & Deinitable] = Self.C.Uncanceled[F]
+    comptime RestoreCompatible[V: Movable & Deinitable] = Self._Selected and Self.I.CarrierCompatible[V] and Self.C.RestoreCompatible[V]
+    comptime Restored[V: Movable & Deinitable] = Self.C.Restored[V]
+
+    @staticmethod
+    def _unit[Q: Movable & Deinitable](var finalizer: Q) -> Self._Unit[Q]:
+        comptime assert _ErrorCompatible[Never, Self._Base.MapError[Q, Self._Discard[Q]]]
+        return _map_as[Never, Self._Base](Self._Discard[Q](None), finalizer^)
+
+    @staticmethod
+    def canceled() -> Self.Canceled:
+        """Lift the base's cancellation request.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        comptime assert Self._Selected, "canceled: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Canceled]]
+        return _lift_as[Never, Self.I](Self.C.canceled())
+
+    @staticmethod
+    def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:
+        """Run a layer finalizer, masked, after the program on every base exit.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's guaranteed carrier, a carrier of the destination family.
+        """
+        comptime assert Self.GuaranteeCompatible[V, Q], "guarantee: unsupported layer, mismatched base family, program or unit finalizer"
+        return Self.C.guarantee(program^, Self._unit(finalizer^))
+
+    @staticmethod
+    def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:
+        """Run a layer finalizer, masked, only if the program is canceled.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's carrier, a carrier of the destination family.
+        """
+        comptime assert Self.GuaranteeCompatible[V, Q], "on_cancel: unsupported layer, mismatched base family, program or unit finalizer"
+        return Self.C.on_cancel(program^, Self._unit(finalizer^))
+
+    @staticmethod
+    def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:
+        """Run the base's case finalizer, masked, with the program's base exit.
+
+        Parameters:
+            V: The program's carrier type.
+            F: The base provider's case finalizer type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's carrier, a carrier of the destination family.
+        """
+        comptime assert Self.CaseCompatible[V, F], "guarantee_case: unsupported layer, mismatched base family, program or case finalizer"
+        return Self.C.guarantee_case(program^, finalizer^)
+
+    @staticmethod
+    def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:
+        """Run part of a masked region with the cancellation state outside it.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            poll: The region's poll, borrowed.
+            program: The program, consumed.
+
+        Returns:
+            The base's carrier, a carrier of the destination family.
+        """
+        comptime assert Self.RestoreCompatible[V], "restore: unsupported layer, mismatched base family or program"
+        return Self.C.restore(poll, program^)
+
+    @staticmethod
+    def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:
+        """Run a region of layer programs masked; its poll restores the outer state.
+
+        Parameters:
+            F: A once-callable taking RegionPoll and returning a layer carrier.
+
+        Args:
+            body: The region's factory, consumed.
+
+        Returns:
+            The base's masked carrier, a carrier of the destination family.
+        """
+        comptime assert Self.UncancelableCompatible[F], "uncancelable: unsupported layer, mismatched base family or region"
+        return Self.C.uncancelable(body^)
+
+
+struct LiftSpawn[I: Monad & _Lifting, C: Spawn](Spawn, not Deinitable):
+    """Lift a selected Spawn capability through OptionalT or ResultT.
+
+    A layer program starts as a base fiber whose success is the layer's
+    payload: a fiber of OptionalT[Async[E]] with success type T is a
+    Fiber[Optional[T], E], and joining it produces the layer's absence or
+    stored error inside a successful outcome. Operations that produce values
+    lift the base's carriers; Cancel members delegate to LiftCancel.
+
+    Parameters:
+        I: OptionalT or ResultT over C.Family.
+        C: The Spawn capability of its immediate base.
+    """
+    comptime _Canceling = LiftCancel[Self.I, Self.C]
+    comptime _Layer = downcast[Self.I, _CarrierLifting]
+    comptime _Selected = Self._Canceling._Selected
+    comptime Family = Self.I
+    comptime Error = Self.C.Error
+    comptime RegionPoll = Self._Canceling.RegionPoll
+    comptime Canceled = Self._Canceling.Canceled
+    comptime GuaranteeCompatible[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Canceling.GuaranteeCompatible[V, Q]
+    comptime Guaranteed[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Canceling.Guaranteed[V, Q]
+    comptime OnCanceled[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Canceling.OnCanceled[V, Q]
+    comptime CaseCompatible[V: Movable & Deinitable, F: Movable & Deinitable] = Self._Canceling.CaseCompatible[V, F]
+    comptime CaseGuaranteed[V: Movable & Deinitable, F: Movable & Deinitable] = Self._Canceling.CaseGuaranteed[V, F]
+    comptime UncancelableCompatible[F: UnaryContract & Movable & Deinitable] = Self._Canceling.UncancelableCompatible[F]
+    comptime Uncanceled[F: UnaryContract & Movable & Deinitable] = Self._Canceling.Uncanceled[F]
+    comptime RestoreCompatible[V: Movable & Deinitable] = Self._Canceling.RestoreCompatible[V]
+    comptime Restored[V: Movable & Deinitable] = Self._Canceling.Restored[V]
+    comptime Handle[T: Movable & Deinitable] = Self.C.Handle[Self._Layer._Wrapped[T]]
+    comptime StartCompatible[V: Movable & Deinitable] = (
+        Self._Selected and Self.I.CarrierCompatible[V] and Self.C.StartCompatible[V]
+        and _ErrorCompatible[Never, Self.I.LiftError[Self.C.Started[V]]])
+    comptime Started[V: Movable & Deinitable] = Self.I.Lifted[Self.C.Started[V]]
+    comptime Joined[T: Movable & Deinitable] = Self.I.Lifted[Self.C.Joined[Self._Layer._Wrapped[T]]]
+    comptime Stopped = Self.I.Lifted[Self.C.Stopped]
+    comptime Forever[A: Movable & Deinitable] = Self.I.Lifted[Self.C.Forever[A]]
+    comptime Ceded = Self.I.Lifted[Self.C.Ceded]
+
+    @staticmethod
+    def canceled() -> Self.Canceled:
+        """Delegate to LiftCancel.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Canceling.canceled()
+
+    @staticmethod
+    def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:
+        """Delegate to LiftCancel.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's guaranteed carrier.
+        """
+        return Self._Canceling.guarantee(program^, finalizer^)
+
+    @staticmethod
+    def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:
+        """Delegate to LiftCancel.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Canceling.on_cancel(program^, finalizer^)
+
+    @staticmethod
+    def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:
+        """Delegate to LiftCancel.
+
+        Parameters:
+            V: The program's carrier type.
+            F: The base provider's case finalizer type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Canceling.guarantee_case(program^, finalizer^)
+
+    @staticmethod
+    def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:
+        """Delegate to LiftCancel.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            poll: The region's poll, borrowed.
+            program: The program, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Canceling.restore(poll, program^)
+
+    @staticmethod
+    def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:
+        """Delegate to LiftCancel.
+
+        Parameters:
+            F: A once-callable taking RegionPoll and returning a layer carrier.
+
+        Args:
+            body: The region's factory, consumed.
+
+        Returns:
+            The base's masked carrier.
+        """
+        return Self._Canceling.uncancelable(body^)
+
+    @staticmethod
+    def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:
+        """Start a layer program as a base fiber and lift its handle.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            The destination family's carrier of the fiber's handle.
+        """
+        comptime assert Self.StartCompatible[V], "start: unsupported layer, mismatched base family or program"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Started[V]]]
+        return _lift_as[Never, Self.I](Self.C.start(program^))
+
+    @staticmethod
+    def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]:
+        """Join a layer fiber and lift its base outcome.
+
+        Parameters:
+            T: The layer program's success type.
+
+        Args:
+            fiber: The handle, consumed.
+
+        Returns:
+            The destination family's carrier of the outcome.
+        """
+        comptime assert Self._Selected, "join: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Joined[Self._Layer._Wrapped[T]]]]
+        return _lift_as[Never, Self.I](Self.C.join[Self._Layer._Wrapped[T]](fiber^))
+
+    @staticmethod
+    def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped:
+        """Cancel a layer fiber and wait for it, lifting the base's carrier.
+
+        Parameters:
+            T: The layer program's success type.
+
+        Args:
+            fiber: The handle, borrowed.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        comptime assert Self._Selected, "cancel: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Stopped]]
+        return _lift_as[Never, Self.I](Self.C.cancel[Self._Layer._Wrapped[T]](fiber))
+
+    @staticmethod
+    def never[A: Movable & Deinitable]() -> Self.Forever[A]:
+        """Lift the base's carrier that waits until canceled.
+
+        Parameters:
+            A: The success type the carrier declares.
+
+        Returns:
+            The destination family's carrier.
+        """
+        comptime assert Self._Selected, "never: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Forever[A]]]
+        return _lift_as[Never, Self.I](Self.C.never[A]())
+
+    @staticmethod
+    def cede() -> Self.Ceded:
+        """Lift the base's carrier that yields once.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        comptime assert Self._Selected, "cede: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Ceded]]
+        return _lift_as[Never, Self.I](Self.C.cede())
 
 
 def defer[F: ThunkContract & Movable & Deinitable, //, I: Defer](var factory: F) -> I.Deferred[F] where I.DeferCompatible[F]:
