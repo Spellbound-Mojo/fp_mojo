@@ -57679,7 +57679,7 @@
       "error": "",
       "parameters": [
        {
-        "description": "An owned once-callable producing T with error E or none.",
+        "description": "An owned once-callable producing T, or no value when T is\n    NoneType, with error E or none.",
         "inferred": false,
         "name": "F",
         "type": "ThunkContract & Movable & Deinitable",
@@ -57692,7 +57692,7 @@
        "doc": "An IO producing the function's result; its error becomes the failure.",
        "type": "Self"
       },
-      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where F.Out == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]",
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where _DelayValue[F.Out] == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]",
       "summary": "Evaluate a synchronous function when the IO reaches it."
      },
      {
@@ -57791,6 +57791,58 @@
       },
       "signature": "def delay[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable)",
       "summary": "Evaluate a raising native function; its error becomes the failure."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def delay(function: def() thin) -> Self where Self.T == NoneType",
+      "summary": "Evaluate a native function with no return value; the IO produces None."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() raises X thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def delay[X: Movable & Deinitable, //](function: def() raises X thin) -> Self where Self.T == NoneType and _ErrorCompatible[Self.E, X]",
+      "summary": "Evaluate a raising native function with no return value; its error becomes the failure."
      },
      {
       "args": [

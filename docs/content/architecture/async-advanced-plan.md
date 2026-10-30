@@ -962,8 +962,9 @@ implementation.
   keeps its errors and bypasses recovery.
 - `instant_cleanup` and `instant_timers` still exercise the private leaves
   directly.
-- `IO.delay` takes plain functions that return a value. A function with no
-  return value needs an explicit `NoneType` result, as in the examples.
+- `IO[NoneType, E].delay` also takes a plain function with no return value,
+  raising or not. The shared delay adapter maps the missing result to
+  `NoneType`, and the examples' cleanup functions no longer spell it out.
 
 ## Implementation reference map
 

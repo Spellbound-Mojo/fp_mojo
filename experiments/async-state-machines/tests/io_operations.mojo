@@ -88,6 +88,14 @@ def refuse() raises Int -> Int:
     raise 5
 
 
+def nothing():
+    pass
+
+
+def refuse_unit() raises Int:
+    raise 3
+
+
 def built() -> IO[Int, Int]:
     return IO[Int, Int].pure(3)
 
@@ -148,6 +156,10 @@ def construction():
     check(text.take()._take_ok() == "io", "a native movable delay")
     check(error(IO[Int, Int].delay(refuse)) == 5, "a raising native delay fails with its error")
     check(value(IO[Int, Int].defer(built)) == 3, "a native defer builds the IO when reached")
+    check(value(IO[NoneType, Int].delay(nothing).map(ten_after)) == 10, "a native delay with no return value produces None")
+    var stored: def() thin = nothing
+    check(value(IO[NoneType, Int].delay(stored).map(ten_after)) == 10, "a stored no-return thin pointer")
+    check(error(IO[NoneType, Int].delay(refuse_unit).map(ten_after)) == 3, "a raising no-return delay fails with its error")
     var endpoint_calls = ArcPointer(0)
     var bridged = IO[Int, Int].eval_io(Endpoint(endpoint_calls.copy()))
     check(endpoint_calls[] == 0 and value(bridged^) == 42 and endpoint_calls[] == 1, "eval_io runs a synchronous program once when reached")

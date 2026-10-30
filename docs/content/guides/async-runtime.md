@@ -20,7 +20,8 @@ See the [application reference](../reference/effects.async_runtime.md) and
 An `IO[T, E]` describes work that produces `T` or fails with the exact domain
 error `E`. Building one runs nothing, and a value runs once; repeating work
 builds a fresh `IO`, as a function returning `IO` does. `IO.pure` owns an
-evaluated value, `IO.delay` evaluates a function when reached, and `IO.defer`
+evaluated value, `IO.delay` evaluates a function when reached (one with no
+return value gives an `IO[NoneType, E]`), and `IO.defer`
 builds the `IO` when reached, so recursive programs build lazily. `flat_map`,
 `map`, and `handle_error_with` take plain functions or owned library callables.
 `pipeline` selects the `Async[E]` family from an `IO`. Sequencing is

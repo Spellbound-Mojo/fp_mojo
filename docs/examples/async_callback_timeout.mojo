@@ -17,9 +17,8 @@ struct Register(OnceUnary):
         return None
 
 
-def withdrawn() -> NoneType:
+def withdrawn():
     print("withdrawn")
-    return None
 
 
 def success(value: Int) -> Int:

@@ -3,9 +3,8 @@ from fp.effects import CancellationToken, EffectFailure, fold_outcome
 from fp.effects.async_runtime import IO, Clock, Driver, Duration
 
 
-def cleanup() -> NoneType:
+def cleanup():
     print("released")
-    return None
 
 
 def success(value: NoneType) -> Int:

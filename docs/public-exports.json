@@ -6549,8 +6549,8 @@
     ],
     "delay": [
      {
-      "sha256": "5f267e5a22d22557e6eb65627063d68789f3fc73aeeb793d94346f4a6773dede",
-      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where F.Out == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]:"
+      "sha256": "700aeb08c384552561c8dd4c997fdb135051dc9e6d710e2070f76ff808858da0",
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where _DelayValue[F.Out] == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]:"
      },
      {
       "sha256": "de3560450a2c0f4efa57e2839de5c034f1a0b3ad1b1a69a2027e4f7239bb2ab2",
@@ -6563,6 +6563,14 @@
      {
       "sha256": "3f934921a0b4d4c0d43a5718c6ff6a81e7dabd25eb03236c7ce6a9f25c7341ea",
       "signature": "def delay[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable):"
+     },
+     {
+      "sha256": "bf5e1def4c8819820df4b629e35f2c6768e1c5e17f08e3bf082692515bd1a4d7",
+      "signature": "def delay(function: def() thin) -> Self where Self.T == NoneType:"
+     },
+     {
+      "sha256": "1dd0f09aae20a9a88e9f77ed5b87501716b423ce1da7a180f234335a505312c6",
+      "signature": "def delay[X: Movable & Deinitable, //](function: def() raises X thin) -> Self where Self.T == NoneType and _ErrorCompatible[Self.E, X]:"
      },
      {
       "sha256": "9b763a92437151b2da55266cd6ca070cae2ab80ec309164b4a11b99ac71ac1ab",

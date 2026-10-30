@@ -567,13 +567,14 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         return Self(_program=_Program[Self.E](_Head[Self.E](_LEAF, _Erased(_Leaf[Self.E](_Boxed[P, Self.E](machine^))))))
 
     @staticmethod
-    def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where F.Out == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]:
+    def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where _DelayValue[F.Out] == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]:
         """Evaluate a synchronous function when the IO reaches it.
 
         Use defer when the function builds an IO.
 
         Parameters:
-            F: An owned once-callable producing T with error E or none.
+            F: An owned once-callable producing T, or no value when T is
+                NoneType, with error E or none.
 
         Args:
             function: The function, consumed; it runs once, when reached.
@@ -599,6 +600,16 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
     def delay[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable):
         """Evaluate a raising native function; its error becomes the failure."""
         return Self._deferred(_Delay[_NativeThunk[R, X, def() raises X thin -> R, True], Self.E](_NativeThunk[R, X, def() raises X thin -> R, True](function)))
+
+    @staticmethod
+    def delay(function: def() thin) -> Self where Self.T == NoneType:
+        """Evaluate a native function with no return value; the IO produces None."""
+        return Self._deferred(_Delay[_NativeThunk[type_of(None), Never, def() thin, False], Self.E](_NativeThunk[type_of(None), Never, def() thin, False](function)))
+
+    @staticmethod
+    def delay[X: Movable & Deinitable, //](function: def() raises X thin) -> Self where Self.T == NoneType and _ErrorCompatible[Self.E, X]:
+        """Evaluate a raising native function with no return value; its error becomes the failure."""
+        return Self._deferred(_Delay[_NativeThunk[type_of(None), X, def() raises X thin, True], Self.E](_NativeThunk[type_of(None), X, def() raises X thin, True](function)))
 
     @staticmethod
     def delay[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]:
@@ -1075,15 +1086,24 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         return Step[Self.T, Self.E]._make(Optional(failed^), Wait(), protected)
 
 
+# A function with no return value produces the unit value.
+comptime _DelayValue[R: Movable & Deinitable] = NoneType if R == type_of(None) else R
+
+
 @fieldwise_init
 struct _Delay[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](OnceThunk):
     """Evaluate a synchronous function into a pure IO."""
     var function: Self.F
-    comptime Out = IO[Self.F.Out, Self.E]
+    comptime Out = IO[_DelayValue[Self.F.Out], Self.E]
     comptime Error = Self.F.Error
 
     def call_once(deinit self) raises Self.Error -> Self.Out:
-        return Self.Out.pure(_thunk_once_as[Self.Error](self.function^))
+        comptime if Self.F.Out == type_of(None):
+            _ = _thunk_once_as[Self.Error](self.function^)
+            var unit: NoneType = None
+            return rebind_var[Self.Out](IO[NoneType, Self.E].pure(unit))
+        else:
+            return rebind_var[Self.Out](IO[Self.F.Out, Self.E].pure(_thunk_once_as[Self.Error](self.function^)))
 
 
 struct _Cede[E: Movable & Deinitable](Machine, Defaultable):

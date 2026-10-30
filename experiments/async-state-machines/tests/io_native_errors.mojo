@@ -15,7 +15,7 @@ def register(var completion: Completion[Int, Int]) raises Int:
     raise 8
 
 
-def withdraw() raises Int -> NoneType:
+def withdraw() raises Int:
     raise 9
 
 
@@ -32,7 +32,7 @@ def main():
     var pointer_error = pointed.take()._take_err()
     check(pointer_error^.into_errors().into_list()[0] == 7, "stored thin pointer delayed failure")
     var registration: def(var Completion[Int, Int]) raises Int thin = register
-    var cleanup: def() raises Int thin -> NoneType = withdraw
+    var cleanup: def() raises Int thin = withdraw
     var called = run(IO[Int, Int].async(as_unary(registration), IO[NoneType, Int].delay(cleanup)))
     var combined = called.take()._take_err()
     var errors = combined^.into_errors().into_list()
