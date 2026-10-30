@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a step 1 of 3 complete and optimized** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 and 2 of 3 complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -586,12 +586,16 @@ nest one program inside another.
 | Fail | boxed `EffectFailure[E]` | Deliver failure. Every program in one chain shares `E`. |
 | Leaf | private machine whose value is boxed on completion | Poll through a canonical `_Slot`. |
 | Defer | boxed factory | Invoke once; install the program it returns. |
+| Mask | boxed factory receiving `Poll[E]` | Check cancellation, enter a masked region through `context._mask()`, and install the program the factory returns. |
+| Restore | `Poll[E]` and a program | Run the program under the state preceding the poll's region (`poll(fa)` in Cats Effect). |
 
 | Frame | Applies to | Behavior |
 |---|---|---|
 | Bind | success | Invoke the continuation after the handoff checkpoint; install the program it returns, or a mapped value. |
 | Recover | failure whose `canceled` flag is false | Invoke the handler; install the program it returns. |
-| Finalize, mask exit | any outcome | Step 2: run a finalizer masked with the exit case, or restore a region's mask. |
+| Finalize | any outcome | Settle the outcome, then run the cleanup masked with its exact exit. `on_cancel` skips cleanup unless the exit observed cancellation. |
+| Finish | the cleanup's outcome | Restore the context and merge body and cleanup errors through `_finish`, then settle. |
+| Region exit | any outcome | Restore the context in effect before a mask or restore region; leaving a mask protects a success until the next checkpoint. |
 | Start, join, cancel | fiber operations | Pass 9. |
 
 Entering a program moves its head into the run loop and pushes its frames onto
@@ -740,23 +744,43 @@ Decided on 2026-10-30:
 
 ## Pass 8a progress
 
-Step 1 of 3, the private engine core, is complete and optimized. Step 2 adds
-finalizers, masks, and law clients; step 3 switches the public API to `IO`. The
+Steps 1 and 2 of 3 are complete: the private engine core, optimized, and
+finalizers, masks, and law clients. Step 3 switches the public API to `IO`. The
 full verification gates run after step 3.
 
 - `src/fp/effects/_async/engine.mojo` implements `IO[T, E]` as a flat program
-  with pure, fail, leaf, and defer heads and bind and recover frames. The run
-  loop has an explicit frame stack and a fixed budget of 1,024 transitions per
-  poll. It is not exported publicly yet.
+  with pure, fail, leaf, defer, mask, and restore heads and bind, recover,
+  finalize, finish, and region-exit frames. The run loop has an explicit frame
+  stack and a fixed budget of 1,024 transitions per poll. It is not exported
+  publicly yet.
+- Finalizers and masks reuse their canonical owners: `_settle` before cleanup,
+  `ExitCase` and `_ExitState` for the borrowed exit, `context._mask()` for
+  masked cleanup and regions, `Poll` restoration, and `_finish` to merge errors.
+  The run loop keeps the innermost region's context and reselects the effective
+  context only when a region begins or ends, so binds pay no masking cost.
+- A finalizer installed by a continuation that already ran is armed, as in Cats
+  Effect: cancellation observed at the body's first checkpoint runs it. A typed
+  `guarantee` that was never entered still skips its cleanup.
 - `io_engine` covers sequencing, `map`, failures skipping later continuations,
   recovery, deferred construction, leaves resuming a chain, `IO` values inside a
   typed `both`, cancellation while a leaf runs, unopened disposal, and inline,
   boxed, and custom-move values, with exact invocation and destruction counts.
+- `io_finalization` covers cleanup after success and failure, body errors before
+  cleanup errors, innermost cleanup first, the exact exits a `guarantee_case`
+  factory borrows, `on_cancel`, cleanup suspending masked to completion under
+  cancellation, masked success, `Poll` restoration, and the region entry
+  checkpoint.
+- `io_laws` checks left and right identity, associativity, the raise/handle and
+  pure/handle laws, recovery bypassing a failure with `canceled` set,
+  `uncancelable(poll => poll(fa))` against `fa` with and without cancellation,
+  and masked success. The attempt laws follow when `IO` joins the `Async[E]`
+  family in step 3.
 - `io_depth` runs these under a 1 MiB stack: a million-bind chain built at
   runtime, a million nested `defer` levels (a million frames), a million
   tail-recursive steps (bounded frames), disposal of an unopened million-step
-  chain, a failure crossing a million frames to recovery, and cancellation
-  unwinding a million pending frames.
+  chain, a failure crossing a million frames to recovery, cancellation
+  unwinding a million pending frames, and a failure crossing 100,000 nested
+  finalizers.
 - Mojo 1.2 crashes compiling a stored function type whose signature contains
   its owner, so callbacks receive the run loop through an engine-fixed pointer;
   see [native boundaries](native-boundaries.md#mojo-12-compatibility).
@@ -774,7 +798,8 @@ measured by `experiments/async-state-machines/probes/erased_cost.mojo`:
 The common bind allocates nothing: values and callbacks of at most 24 bytes live
 inline, and a program's first frame is inline. A tail-recursive run keeps a flat
 10 MB peak RSS from 100,000 to 4,000,000 steps. Callgrind counts about 200
-instructions per loop step, down from about 10,900.
+instructions per loop step, down from about 10,900; step 2's region tracking
+adds about 17.
 
 Two Mojo 1.2 code-generation findings shaped the engine. First, `Optional` and
 `Variant` values holding large structs are built and moved out of line unless

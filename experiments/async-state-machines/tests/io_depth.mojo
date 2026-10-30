@@ -140,6 +140,22 @@ def deep_cancellation():
     check(not outcome and dropped[][0] == DEPTH, "cancellation unwinds every frame once")
 
 
+comptime FINALIZERS = 100_000
+
+
+def deep_finalizers():
+    # Each guarantee pushes a cleanup frame; unwinding runs them innermost first.
+    var stats = ArcPointer(List[Int]([0, 0, 0, 0, 0]))
+    var io = IO[Int, Failure].raise_error(Failure(3, stats.copy()))
+    for _ in range(FINALIZERS):
+        var unit: NoneType = None
+        io = io^.guarantee(IO[NoneType, Failure].pure(unit))
+    var outcome = run(io^)
+    var failure = outcome.take()._take_err()
+    check(failure^.into_errors().into_list()[0].code == 3, "a failure crosses 100,000 finalizers")
+    check(stats[][4] == 1, "the failure destroyed once")
+
+
 def main():
     runtime_left_chain()
     recursive_frames()
@@ -147,4 +163,5 @@ def main():
     unopened_disposal()
     deep_failure_and_recovery()
     deep_cancellation()
-    print("io depth: runtime-built, recursive and tail-recursive programs, disposal, failure and cancellation a million steps deep")
+    deep_finalizers()
+    print("io depth: runtime-built, recursive and tail-recursive programs, disposal, failure and cancellation a million steps deep, nested finalizers")
