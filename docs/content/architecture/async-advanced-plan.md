@@ -1098,6 +1098,7 @@ Status: **draft for review**. It implements the approved
 | `fa.start` | `io.start()` returning `IO[Fiber[T, E], E]` | The fiber running `start` owns the child. |
 | `fiber.join` | `fiber^.join()` returning `IO[Outcome[T, E], E]` | Consumes the handle; parks until the child and its cleanup finish. |
 | `fiber.cancel` | `fiber.cancel()` returning `IO[NoneType, E]` | Requests cancellation and waits for termination without taking the result. |
+| `joinWith`, `joinWithNever`, `joinWithUnit` | `join_with(fallback)`, `join_with_never()`, `join_with_unit()` | Join, replacing a cancellation-only outcome with the fallback, `IO.never`, or unit. |
 | — | `fiber.request_cancel()` returning `IO[NoneType, E]` | Requests only. |
 | `reportUnhandledFiberErrors`, `reportFailure` | `IORuntimeConfig.report_unhandled_fiber_errors` and a replaceable reporter | Reporting is on by default. |
 | `IO.cede`, `IO.never` | Already present | |
@@ -1136,8 +1137,9 @@ Status: **draft for review**. It implements the approved
   non-generic callback avoids the existentials Mojo 1.2 lacks.
 - **Self-join.** The join leaf compares the current fiber's identity, carried in
   the context, with the handle's, and aborts on a direct self-join.
-- **Diagnostics.** A bounded snapshot lists live fibers by identity, status, and
-  owner, without payloads or completed graphs.
+- **Diagnostics.** A bounded driver snapshot lists live fibers with an internal
+  index, status, and owner, without payloads or completed graphs. `Fiber` has no
+  public identity.
 
 ### Steps
 
@@ -1169,14 +1171,18 @@ Planned clients:
   stack.
 - Rejections: joining a moved handle, and an `E` mismatch.
 
-### Review questions
+### Review decisions
 
-1. Is a reporter callback taking a formatted line, set through `IORuntimeConfig`,
-   acceptable?
-2. Should Cats Effect's `joinWith` and `joinWithNever` arrive in Pass 9 or
-   later?
-3. Should diagnostics expose fiber identities publicly, or only through the
-   driver's snapshot?
+Decided on 2026-10-30:
+
+1. The reporter is a host callback taking a formatted line, set through the
+   runtime configuration.
+2. Cats Effect's `joinWith`, `joinWithNever`, and `joinWithUnit` arrive in
+   Pass 9 as `join_with(fallback)`, `join_with_never()`, and
+   `join_with_unit()`.
+3. As in Cats Effect, `Fiber` has no public identity. Cats Effect identifies
+   fibers only for diagnostics, through `IOFiber`'s string form and the
+   runtime's fiber dump. Here the driver's snapshot is that diagnostic view.
 
 ## Implementation reference map
 
