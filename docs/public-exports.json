@@ -7187,6 +7187,51 @@
    },
    "provider": "_internal/time"
   },
+  "effects.async_runtime.Fiber": {
+   "declarations": [
+    "struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "cancel": [
+     {
+      "sha256": "bf3436b923a1b89cc1fdf6267d83b2e5a0d911bb675575380170690e2a316e12",
+      "signature": "def cancel(self) -> IO[NoneType, Self.E]:"
+     }
+    ],
+    "join": [
+     {
+      "sha256": "2f1dff6fa94e144dde03957663aca729cba7a59e749f2864cea3d7f7fa720743",
+      "signature": "def join(deinit self) -> IO[Outcome[Self.T, Self.E], Self.E]:"
+     }
+    ],
+    "join_with": [
+     {
+      "sha256": "07507183f09461b172abaa8fa907e13530dc1ffa6a5d6dfb934a181cb495dc5a",
+      "signature": "def join_with(deinit self, var fallback: IO[Self.T, Self.E]) -> IO[Self.T, Self.E]:"
+     }
+    ],
+    "join_with_never": [
+     {
+      "sha256": "02e81e3f7714f91297d904454a03d37295e6a14498031cefa9e94dc855b9fead",
+      "signature": "def join_with_never(deinit self) -> IO[Self.T, Self.E]:"
+     }
+    ],
+    "join_with_unit": [
+     {
+      "sha256": "239442bb086a415d0c9e38cd9d4164bc55d04b3d7b318f1158f2b83eee8195ea",
+      "signature": "def join_with_unit(deinit self) -> IO[NoneType, Self.E] where Self.T == NoneType:"
+     }
+    ],
+    "request_cancel": [
+     {
+      "sha256": "a5943639ec71942c290c59905870b6d4c27516ce89c70cd1ca9e91a695802d56",
+      "signature": "def request_cancel(self) -> IO[NoneType, Self.E]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/engine"
+  },
   "effects.async_runtime.IO": {
    "declarations": [
     "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier):"
@@ -7407,6 +7452,12 @@
      {
       "sha256": "b64572bb8435554ac9f1276808551037806f55aeaaf0f920b13d35b436f48079",
       "signature": "def sleep(duration: Duration) -> IO[NoneType, Self.E]:"
+     }
+    ],
+    "start": [
+     {
+      "sha256": "f7b1cf6b03925efa318400b1c3e6d8387a95893e4be37710aa03a0ebe3d56790",
+      "signature": "def start(deinit self) -> IO[Fiber[Self.T, Self.E], Self.E]:"
      }
     ],
     "timeout_after": [

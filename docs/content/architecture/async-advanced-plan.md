@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-proposal) proposal reviewed** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) step 9a built** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -1214,8 +1214,8 @@ can return an `IO` now takes plain functions.
 
 ## Pass 9 proposal
 
-Status: **draft for review**. It implements the approved
-[fiber contract](#fiber-contract) on the Pass 8 engine.
+Status: **approved; 9a built** ([progress](#pass-9-progress)). It implements
+the approved [fiber contract](#fiber-contract) on the Pass 8 engine.
 
 ### Public surface
 
@@ -1309,6 +1309,60 @@ Decided on 2026-10-30:
 3. As in Cats Effect, `Fiber` has no public identity. Cats Effect identifies
    fibers only for diagnostics, through `IOFiber`'s string form and the
    runtime's fiber dump. Here the driver's snapshot is that diagnostic view.
+
+### Pass 9 progress
+
+**9a** was built on 2026-10-30: `io.start()`, `Fiber[T, E]` with `join`,
+`join_with`, `join_with_never`, `join_with_unit`, `cancel`, and
+`request_cancel`, and owner draining. Records, inboxes, host tables, and the
+join and cancel leaves live in `src/fp/effects/_async/fibers.mojo`, below the
+engine; `Fiber`, `start`, and the hosting step live in `engine.mojo`, keeping
+module imports acyclic.
+
+- **Start.** `start` is a deferred head, so it observes cancellation as `defer`
+  does. Its callback reserves a slot in its host's inbox, builds the child's
+  run loop with that fiber id, queues it with a new shared record, and produces
+  the handle. The run loop that runs the first start
+  creates the inbox and the fiber table; its `IO` hosts every fiber started
+  beneath it. Each fiber's run loop carries the host's inbox and its own id, so
+  a fiber's starts reach the same flat table, owned by the starting fiber.
+- **Representation.** The record holds the child's token, a completion signal,
+  and the settled `Outcome[_Erased, E]`. A success stays erased until `join`
+  takes it as `T`, so the host never names `T` and a dropped success is
+  destroyed through its erased owner. This replaces the separate typed success
+  cell of the proposal with the same guarantees.
+- **Scheduling.** A host `IO` runs its own program inline. Each fiber is a
+  canonical execution slot polling its own run loop, registered under the
+  host's wake node with tag `i + 1`; the program's leaves keep tag 0.
+  `next_child` gained a tag to pass over, so fibers queued behind the program's
+  leaf still run. Each poll alternates whether fibers or the program run first,
+  and fibers run while the root budget lasts, once each at most, so a busy
+  program cannot starve its fibers. A leaf that is not ready is no longer
+  polled or counted as a transition.
+- **Draining.** When a fiber's program is terminal, it cancels its live
+  children and holds its outcome until they complete. Completion publishes the
+  outcome, notifies the signal, and releases an owner that was only waiting;
+  the cascade is iterative. The host completes once its program is terminal
+  and its direct children have completed. A child canceled before its first
+  poll runs nothing, through the canonical slot entry checkpoint. Completed
+  slots return to a free list for reuse.
+- **Handles.** `join` parks on the signal and is interruptible. `cancel`
+  requests cancellation and waits uninterruptibly, as Cats Effect's `cancel`
+  does. `join_with` embeds the outcome as Cats Effect's `Outcome.embed` does,
+  clearing the child's cancellation flag on re-raised errors.
+- **Clients.** `fiber_basics` covers interleaved progress at a small yield
+  threshold, a join parked on a value another fiber delivers, `cancel` waiting
+  for suspending cleanup, the `join_with` family, and nested starts.
+  `fiber_drain` covers unjoined running and failed children, a masked child
+  finishing its region, a fiber draining its own children before its join
+  returns, root cancellation while joining, and a `both` child hosting its own
+  fibers. `public_reject_fiber_moved` and `public_reject_fiber_error` reject a
+  join of a moved handle and a child with another error type.
+- **Measurements.** The `erased_cost` probe at O3 still runs an `IO` loop
+  iteration in 35 to 39 ns.
+
+Pending for 9b: failure reporting, dropped handles, the joiner cancellation
+race, self-join detection, and the churn client.
 
 ## Implementation reference map
 

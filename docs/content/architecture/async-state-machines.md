@@ -90,8 +90,10 @@ qualified runtime executes cooperatively on one host thread. See the
 
 `IO` sequencing, iteration, recovery, finalization, and masks run on the run
 loop. Fixed pairs, callback withdrawal, coordination, races, timeouts, and
-resources are leaves. The private [nursery](async-nurseries.md) bounds lifetime
-admissions until fibers replace it; [queue and semaphore](async-coordination.md)
+resources are leaves. Fibers started with `io.start()` run as execution slots
+of the entered `IO` that hosts them, beside its own program
+([progress](async-advanced-plan.md#pass-9-progress)). The private
+[nursery](async-nurseries.md) remains until its clients move to fibers; [queue and semaphore](async-coordination.md)
 handles provide reusable coordination. Leaf type depth and retained payload sizes
 remain caller-visible costs.
 

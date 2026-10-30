@@ -78,6 +78,32 @@ success survives a cancellation requested inside it, and the next checkpoint
 observes the request. `IO.canceled` requests cancellation of the running
 program, and a mask defers observing it.
 
+## Run work beside its owner
+
+`io.start()` is an `IO[Fiber[T, E], E]`: it starts `io` as a fiber that runs
+beside the program that started it, its owner, and returns a handle.
+`fiber^.join()` consumes the handle and parks until the child and its cleanup
+finish, then produces its `Outcome[T, E]`. `join_with(fallback)` produces the
+child's value, fails with its errors, or runs `fallback` if it was canceled;
+`join_with_never()` and `join_with_unit()` wait or produce unit instead.
+`fiber.cancel()` requests cancellation and waits for the child to finish; as
+in Cats Effect, that wait cannot itself be canceled. `fiber.request_cancel()`
+only requests.
+
+A child shares its owner's error type `E`; a program with another error type
+runs as a leaf with its own fibers. Fibers start unmasked with their own
+cancellation, and an owner's cancellation does not reach them directly. Unlike
+Cats Effect, fibers never outlive their owner: when the owner's program
+finishes, it cancels its live children and completes only after they finish,
+cleanup included. Dropping a handle neither stops nor detaches the child. A
+child the owner never joined does not change the owner's outcome, and a child
+canceled before it first runs runs nothing, not even its finalizers.
+
+Fibers run on the host thread. The entered `IO` that starts the first fiber
+hosts every fiber started beneath it, including fibers started by fibers, so
+nesting costs no native stack; each root poll alternates whether that `IO`'s own
+program or its fibers run first, sharing one transition budget.
+
 ## Drive external work and shutdown
 
 `Driver` is a linear root owner. Poll it until `Progress.completed`, then consume
@@ -153,7 +179,8 @@ reported deadline.
 | `both`, `race`, `timeoutTo` | `both`, `race`, `timeout_to` | Cancel and drain; surviving source outcomes can win |
 | Earlier selection policies | `race_first`, `timeout_after` | First terminal outcome, or timer-selected fallback after clean draining |
 | `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
-| `Fiber.cancel` | `request_cancel`, poll, `finish` | Request plus explicit complete draining |
+| `fa.start`, `fiber.join`, `fiber.cancel` | `io.start()`, `fiber^.join()`, `fiber.cancel()`, `fiber.request_cancel()` | Owners drain unjoined children before completing |
+| `joinWith`, `joinWithNever`, `joinWithUnit` | `join_with`, `join_with_never`, `join_with_unit` | A canceled child runs the fallback, waits, or produces unit |
 | `IORuntimeConfig` | `IORuntimeConfig(cancelation_check_threshold, auto_yield_threshold)` | Same validation; by default checks every bind, where Cats Effect checks every 512, and yields every 1,024 transitions |
 
 Operations use snake_case. Types follow the repository's Mojo class convention.
@@ -183,7 +210,7 @@ operation now returns `IO`:
 | `resource_case(acquire, cleanup)`, `use(scoped_body)` | `Resource[T, E].make_case(acquire, cleanup)`, `use_scoped(scoped_body)` |
 | `Deferred`, `Queue`, `Semaphore` operations | the same names, returning `IO` |
 | A custom `Machine` with `Family = Async[E]` | A `Machine`, lifted with `IO[T, E].lift(machine)` |
-| `Nursery`, `Spawner`, `scope`, `ScopedBoth` | Removed; fibers with `start` and `join` follow in Pass 9 |
+| `Nursery`, `Spawner`, `scope`, `ScopedBoth` | Removed; start fibers with `io.start()` and join them |
 
 ## Extension and accelerator boundary
 

@@ -257,15 +257,18 @@ struct _Runtime(Copyable):
         ref state = guard.cell[].slot.value()
         return state.valid(ticket) and state.nodes[ticket.index].queued
 
-    def next_child(self, parent: _Ticket) -> Optional[Int]:
+    def next_child(self, parent: _Ticket, skip: Int = -1) -> Optional[Int]:
+        """The tag of the first ready child, passing over children tagged skip."""
         var guard = _lock_metadata(self._cell)
         ref state = guard.cell[].slot.value()
         if not state.valid(parent):
             return None
-        var first = state.nodes[parent.index].first
-        if first < 0:
+        var index = state.nodes[parent.index].first
+        while index >= 0 and state.nodes[index].tag == skip:
+            index = state.nodes[index].next
+        if index < 0:
             return None
-        return Optional(state.nodes[first].tag)
+        return Optional(state.nodes[index].tag)
 
     def arm(self, ticket: _Ticket, runnable: Bool, deadline: Optional[Instant]):
         var guard = _lock_metadata(self._cell)

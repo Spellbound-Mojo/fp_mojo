@@ -69975,6 +69975,138 @@
     "Copyable"
    ]
   },
+  "effects.async_runtime.Fiber": {
+   "aliases": [],
+   "description": "The counterpart of Cats Effect's Fiber. Join it once to take its outcome, or\ncancel it. Dropping the handle neither stops nor detaches the child: its\nowner cancels and drains every live child before completing.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "cancel": [
+     {
+      "args": [],
+      "description": "The wait itself is not canceled, as in Cats Effect: it ends when the\nchild and its cleanup finish.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO completing after the child terminates.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def cancel(self) -> IO[NoneType, Self.E]",
+      "summary": "Request cancellation and wait for the child to finish, without its result."
+     }
+    ],
+    "join": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the child's success, complete failure, or\ncancellation as an Outcome; it parks until the child completes.",
+       "type": "IO[Outcome[Self.T, Self.E], Self.E]"
+      },
+      "signature": "def join(deinit self) -> IO[Outcome[Self.T, Self.E], Self.E]",
+      "summary": "Wait for the child and its cleanup to finish, then take its outcome."
+     }
+    ],
+    "join_with": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The IO to run instead of a cancellation-only outcome.",
+        "name": "fallback",
+        "type": "IO[Self.T, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the child's value, failing with its errors, or\nrunning the fallback.",
+       "type": "IO[Self.T, Self.E]"
+      },
+      "signature": "def join_with(deinit self, var fallback: IO[Self.T, Self.E]) -> IO[Self.T, Self.E]",
+      "summary": "Join, continuing with a fallback if the child was canceled."
+     }
+    ],
+    "join_with_never": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the child's value or failing with its errors.",
+       "type": "IO[Self.T, Self.E]"
+      },
+      "signature": "def join_with_never(deinit self) -> IO[Self.T, Self.E]",
+      "summary": "Join; a canceled child leaves the joiner waiting until it is canceled."
+     }
+    ],
+    "join_with_unit": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing unit or failing with the child's errors.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def join_with_unit(deinit self) -> IO[NoneType, Self.E] where Self.T == NoneType",
+      "summary": "Join a unit child; a canceled child produces unit."
+     }
+    ],
+    "request_cancel": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO completing at once.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def request_cancel(self) -> IO[NoneType, Self.E]",
+      "summary": "Request cancellation of the child without waiting."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The child's success value.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    },
+    {
+     "description": "The exact domain error the child shares with its owner.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/_async/engine",
+   "signature": "struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable)",
+   "summary": "The handle of an IO started with `start`, owned by the fiber that started it.",
+   "traits": []
+  },
   "effects.async_runtime.IO": {
    "aliases": [
     {
@@ -71189,6 +71321,22 @@
       },
       "signature": "def sleep(duration: Duration) -> IO[NoneType, Self.E]",
       "summary": "Wait cooperatively for a duration measured from entry."
+     }
+    ],
+    "start": [
+     {
+      "args": [],
+      "description": "The counterpart of Cats Effect's start. The child runs beside its owner\nand shares its error type; join or cancel it through the handle. When\nthe owner's program finishes, it cancels its live children and waits\nfor them, so a fiber never outlives its owner. Starting observes\ncancellation, like defer.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the started child's handle.",
+       "type": "IO[Fiber[Self.T, Self.E], Self.E]"
+      },
+      "signature": "def start(deinit self) -> IO[Fiber[Self.T, Self.E], Self.E]",
+      "summary": "Start this IO as a fiber owned by the running fiber."
      }
     ],
     "timeout_after": [

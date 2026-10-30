@@ -12,7 +12,7 @@ shares it.
 """
 from std.builtin.rebind import downcast, rebind_var
 from std.iter import Iterator, IterableOwned
-from std.memory import OwnedPointer, MaybeUninit
+from std.memory import OwnedPointer, MaybeUninit, ArcPointer
 from std.os import abort
 from fp.algebra.protocols import Monad, ErrorRecovery, _FamilyCarrier, _Accumulate, _LiveAccumulator, _AccumulatePair, _start_as
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallContract, OnceUnary, OnceThunk, MutableBinary
@@ -40,6 +40,7 @@ from .io import EvalIO as _EvalIO
 from .callbacks import Callback as _Callback, Completion, _CallbackUnit
 from .erased import _ErasedMachine
 from .finalization import Poll
+from .fibers import _FiberRecord, _Inbox, _Fibers, _Spawn, _Join, _CancelFiber, _RequestCancel
 
 # Head and frame kinds.
 comptime _EMPTY = 0
@@ -248,6 +249,11 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
     # Handoffs left before the next cancellation check, and the interval.
     var until_check: Int
     var check_every: Int
+    # The inbox of the IO hosting this loop's fibers, and the running fiber's
+    # id (0 for the host's own program); a host also owns its fiber table.
+    var inbox: Optional[ArcPointer[_Inbox[Self.E]]]
+    var fiber: Int
+    var fibers: Optional[OwnedPointer[_Fibers[Self.E]]]
 
     def __init__(out self, var program: _Program[Self.E]):
         self.state = _EVALUATE
@@ -262,7 +268,24 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
         self.switched = False
         self.until_check = 1
         self.check_every = 1
+        self.inbox = None
+        self.fiber = 0
+        self.fibers = None
         program^.install_into(self)
+
+    def spawn(mut self, var program: _Program[Self.E], var record: ArcPointer[_FiberRecord[Self.E]]):
+        """Queue a started child for this loop's host, owned by the running fiber."""
+        if not self.inbox:
+            # The first start makes this loop's IO the host of its fibers.
+            var inbox = ArcPointer(_Inbox[Self.E]())
+            self.fibers = Optional(OwnedPointer(_Fibers[Self.E](inbox)))
+            self.inbox = Optional(inbox^)
+        ref inbox = self.inbox.value()[]
+        var index = inbox.reserve()
+        var child = _RunLoop[Self.E](program^)
+        child.inbox = self.inbox.copy()
+        child.fiber = index + 1
+        inbox.pending.append(_Spawn[Self.E](_Leaf[Self.E](_FiberLoop[Self.E](OwnedPointer(child^))), record^, self.fiber, index))
 
     def take_override(mut self) -> Optional[IOContext[Self.E]]:
         var previous: Optional[IOContext[Self.E]] = None
@@ -369,7 +392,10 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
                 # including this transition, so a threshold as small as one
                 # still reaches it. The leaf poll counts only if it spent none.
                 _publish(base, budget + 1)
-                _ = _tick(self.leaf.value(), context)
+                if not _tick(self.leaf.value(), context):
+                    # A leaf that is not ready is not polled and counts nothing.
+                    budget += 1
+                    return Optional(Step[_Erased, Self.E].pending(self.leaf.value().waiting()))
                 if base._budget:
                     budget = min(budget, base._budget.value()[].remaining)
                 if not self.leaf.value().done():
@@ -467,6 +493,135 @@ def _box_step[V: Movable & Deinitable, E: Movable & Deinitable](var step: Step[V
         return Step[_Erased, E]._make(Optional(boxed^), Wait(), protected)
     var failed = _failure_as[_Erased](outcome^)
     return Step[_Erased, E]._make(Optional(failed^), Wait(), protected)
+
+
+
+@fieldwise_init
+struct _FiberLoop[E: Movable & Deinitable](Machine):
+    """A fiber's own run loop, polled as an erased leaf of its host."""
+    comptime Value = _Erased
+    comptime Error = Self.E
+    var loop: OwnedPointer[_RunLoop[Self.E]]
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[_Erased, Self.E]:
+        return self.loop[].run(context)
+
+
+def _supervise[E: Movable & Deinitable](mut loop: _RunLoop[E], context: IOContext[E], var ran: Optional[Step[_Erased, E]] = None) -> Step[_Erased, E]:
+    """Run a host IO's own program and its fibers for one poll.
+
+    Fibers and the program alternate first place, so neither starves the other
+    of the root budget. `ran` is a program step already taken on this poll.
+    """
+    var host = loop.fibers.take()
+    host[].admit(context)
+    var fibers_first = host[].fibers_first and not ran
+    host[].fibers_first = not host[].fibers_first
+    if fibers_first:
+        host[].run_fibers(context)
+    if ran:
+        host[].settle_main(ran.take())
+    elif not host[].main_done():
+        host[].settle_main(loop.run(context))
+        host[].admit(context)
+    if not fibers_first:
+        host[].run_fibers(context)
+    var step = host[].step(context)
+    loop.fibers = Optional(host^)
+    return step^
+
+
+struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
+    """The handle of an IO started with `start`, owned by the fiber that started it.
+
+    The counterpart of Cats Effect's Fiber. Join it once to take its outcome, or
+    cancel it. Dropping the handle neither stops nor detaches the child: its
+    owner cancels and drains every live child before completing.
+
+    Parameters:
+        T: The child's success value.
+        E: The exact domain error the child shares with its owner.
+    """
+    var _record: ArcPointer[_FiberRecord[Self.E]]
+
+    def __init__(out self, *, var _record: ArcPointer[_FiberRecord[Self.E]]):
+        self._record = _record^
+
+    def join(deinit self) -> IO[Outcome[Self.T, Self.E], Self.E]:
+        """Wait for the child and its cleanup to finish, then take its outcome.
+
+        Returns:
+            An IO producing the child's success, complete failure, or
+            cancellation as an Outcome; it parks until the child completes.
+        """
+        return IO[Outcome[Self.T, Self.E], Self.E]._lifted(_Join[Self.T, Self.E](self._record^))
+
+    def join_with(deinit self, var fallback: IO[Self.T, Self.E]) -> IO[Self.T, Self.E]:
+        """Join, continuing with a fallback if the child was canceled.
+
+        Args:
+            fallback: The IO to run instead of a cancellation-only outcome.
+
+        Returns:
+            An IO producing the child's value, failing with its errors, or
+            running the fallback.
+        """
+        return self^.join()._bind(_Embed[Self.T, Self.E](fallback^))
+
+    def join_with_never(deinit self) -> IO[Self.T, Self.E]:
+        """Join; a canceled child leaves the joiner waiting until it is canceled.
+
+        Returns:
+            An IO producing the child's value or failing with its errors.
+        """
+        return self^.join_with(IO[Self.T, Self.E].never())
+
+    def join_with_unit(deinit self) -> IO[NoneType, Self.E] where Self.T == NoneType:
+        """Join a unit child; a canceled child produces unit.
+
+        Returns:
+            An IO producing unit or failing with the child's errors.
+        """
+        return rebind_var[IO[NoneType, Self.E]](self^.join_with(rebind_var[IO[Self.T, Self.E]](IO[NoneType, Self.E].pure(None))))
+
+    def cancel(self) -> IO[NoneType, Self.E]:
+        """Request cancellation and wait for the child to finish, without its result.
+
+        The wait itself is not canceled, as in Cats Effect: it ends when the
+        child and its cleanup finish.
+
+        Returns:
+            A unit IO completing after the child terminates.
+        """
+        return IO[NoneType, Self.E]._lifted(_CancelFiber[Self.E](self._record.copy(), False))
+
+    def request_cancel(self) -> IO[NoneType, Self.E]:
+        """Request cancellation of the child without waiting.
+
+        Returns:
+            A unit IO completing at once.
+        """
+        return IO[NoneType, Self.E]._lifted(_RequestCancel[Self.E](self._record.copy()))
+
+
+
+@fieldwise_init
+struct _Embed[T: Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    """Cats Effect's Outcome.embed: a value, a failure, or the fallback."""
+    comptime Arg = Outcome[Self.T, Self.E]
+    comptime Out = IO[Self.T, Self.E]
+    var fallback: IO[Self.T, Self.E]
+
+    def call_once(deinit self, var outcome: Outcome[Self.T, Self.E]) -> IO[Self.T, Self.E]:
+        if not outcome:
+            return self.fallback^
+        var result = outcome.take()
+        if result.is_ok():
+            return IO[Self.T, Self.E].pure(result^._take_ok())
+        # The child's cancellation flag belongs to the child, not the joiner.
+        var failure = result^._take_err()
+        failure.canceled = False
+        return IO[Self.T, Self.E]._failed(failure^)
 
 
 struct _Boxed[P: Machine, E: Movable & Deinitable](Machine):
@@ -570,6 +725,10 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
             An IO failing with an uncanceled EffectFailure holding the error.
         """
         return Self(_program=_Program[Self.E](_Head[Self.E](_FAIL, _Erased(EffectFailure[Self.E](NonEmptyList(error^), False)))))
+
+    @staticmethod
+    def _failed(var failure: EffectFailure[Self.E]) -> Self:
+        return Self(_program=_Program[Self.E](_Head[Self.E](_FAIL, _Erased(failure^))))
 
     # Public operations state admission in their signatures and delegate to
     # private forms, which generic code calls after its own checks.
@@ -1002,6 +1161,26 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         """
         return IO[NoneType, Self.E]._lifted(_Cede[Self.E]())
 
+    def start(deinit self) -> IO[Fiber[Self.T, Self.E], Self.E]:
+        """Start this IO as a fiber owned by the running fiber.
+
+        The counterpart of Cats Effect's start. The child runs beside its owner
+        and shares its error type; join or cancel it through the handle. When
+        the owner's program finishes, it cancels its live children and waits
+        for them, so a fiber never outlives its owner. Starting observes
+        cancellation, like defer.
+
+        Returns:
+            An IO producing the started child's handle.
+        """
+        def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
+            ref run = _loop_at[Self.E](loop)
+            var record = ArcPointer(_FiberRecord[Self.E]())
+            run.spawn(callable^.take[_Program[Self.E]](), record.copy())
+            run.set_value(_Erased(Fiber[Self.T, Self.E](_record=record^)))
+
+        return IO[Fiber[Self.T, Self.E], Self.E](_program=_Program[Self.E](_Head[Self.E](_DEFER, _Erased(self^._into_program()), invoke)))
+
     @staticmethod
     def never() -> Self:
         """Wait until canceled.
@@ -1103,7 +1282,15 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
             swap(program, self._program)
             self._loop.unsafe_write(OwnedPointer(_RunLoop[Self.E](program^)))
             self._entered = True
-        var step = self._loop.unsafe_assume_init()[].run(context)
+        ref loop = self._loop.unsafe_assume_init()[]
+        var step: Step[_Erased, Self.E]
+        if loop.fibers:
+            step = _supervise(loop, context)
+        else:
+            step = loop.run(context)
+            if loop.fibers:
+                # A fiber started on this poll; this IO hosts its fibers from now on.
+                step = _supervise(loop, context, Optional(step^))
         if not step._completed:
             return Step[Self.T, Self.E].pending(step^._waiting())
         var protected = step._protected_success
