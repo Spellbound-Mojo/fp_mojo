@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-proposal), [8c](#pass-8c-proposal), and [9](#pass-9-proposal) proposals drafted for review** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-proposal) and [8c](#pass-8c-proposal) in progress; [Pass 9](#pass-9-proposal) proposal reviewed** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -969,7 +969,7 @@ implementation.
 
 ## Pass 8b proposal
 
-Status: **draft for review**. Pass 8b finishes Pass 8: transitions become the
+Status: **approved, in progress**. Pass 8b finishes Pass 8: transitions become the
 unit of work, yield and cancellation checks become separate policies, and tests
 can step the same engine one transition at a time.
 
@@ -1038,18 +1038,22 @@ can step the same engine one transition at a time.
 - `io_stepping`: single-steps a small program and checks each transition's
   effect, quiescence against completion, and manual time.
 
-### Review questions
+### Review decisions
 
-1. Name the configuration `IORuntimeConfig`, as Cats Effect does?
-2. Default check interval: 1 keeps today's every-bind checkpoint, which the
-   documented laws assume. 512 is Cats Effect's default: faster loops, later
-   observation. Recommendation: 1, unless the probe shows a measurable cost.
-3. Add `transitions` and `quiescent` to the public `Progress`?
+Decided on 2026-10-30:
+
+1. The configuration is `IORuntimeConfig`, as in Cats Effect.
+2. The default check interval is 1, every bind. The IO loop probe measures its
+   cost at 1 and 512; if the cost is not negligible, the default becomes Cats
+   Effect's 512.
+3. `Progress` gains `transitions` and `quiescent`.
+4. Pass 8c runs in a parallel session, in its own container, while Pass 8b is
+   built; Pass 9 follows Pass 8b.
 
 ## Pass 8c proposal
 
-Status: **draft for review**. The free operations take plain functions for
-`IO`.
+Status: **approved, in progress in a parallel session**. The free operations
+take plain functions for `IO`.
 
 ### Problem
 
