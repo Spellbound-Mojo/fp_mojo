@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) complete; [Pass 10](#pass-10-proposal) proposal drafted** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -1421,6 +1421,118 @@ ones, rewrite the stress harness, and add `Driver.fibers()` for the root `IO`.
   The recorded overnight results predate this rewrite.
 - **Docs.** The nursery architecture page is replaced by
   [async fibers](async-fibers.md).
+
+## Pass 10 proposal
+
+Status: **draft for review**. Pass 10 lets generic code ask for exactly the
+effect capabilities it uses, as Cats Effect's `MonadCancel` and `GenSpawn` do,
+and adds `race_pair` and `Supervisor`.
+
+### Current state
+
+- `Async[E]` is a `Monad` and an `ErrorRecovery`, so generic code reaches
+  `tail_rec_m`, traversals, and `attempt`. Everything else, `defer`,
+  `raise_error`, masks, finalizers, `start`, races, and timers, is a concrete
+  `IO` method that generic code cannot name.
+- `Async[E]` cannot be an `ApplicativeError`. Its `Failure` is
+  `EffectFailure[E]`, which can carry cancellation, and its recovery skips such
+  failures, so `fail` could not satisfy the raise/handle law for every value.
+  The synchronous `IO[E]` reaches `ApplicativeError` through `ResultT`, which
+  does not distinguish failures marked canceled.
+- The synchronous family has free `guarantee`, `on_cancel`, `guarantee_case`,
+  `uncancelable_with`, and `canceled`, with its own `Poll`. The async family has
+  the same operations as `IO` methods, with another `Poll`.
+- Capability traits already follow one pattern: traits such as `Ask` and
+  `Stateful` in `fp.effects.protocols`, generic entry points such as `ask[I]()`
+  and `modify[I](f)` and transformer selections such as `LiftAsk[I, C]` in
+  `fp.effects.capabilities`. Pass 10 follows it.
+
+### Proposal
+
+1. **Capability traits** in `fp.effects.protocols`, each a family dictionary
+   that forwards to the existing owner, never a second engine. The names avoid
+   the concrete `Async`, `Clock`, and `Poll`.
+   - `Defer`: `defer(factory)` and `delay(function)`.
+   - `Raise`: ordinary failure construction. Its raised value is the domain
+     error `E`, and its law relates it to recovery:
+     `raise(e).or_else(h)` equals `h(EffectFailure([e], canceled=False))`.
+     `ApplicativeError` keeps its meaning for families whose failure carries no
+     cancellation.
+   - `Cancel` (Cats Effect's `MonadCancel`): `canceled`, `uncancelable` with the
+     family's own `Poll` type, `on_cancel`, `guarantee`, and `guarantee_case`.
+   - `Spawn` (`GenSpawn`), extending `Cancel`: `start` with the family's `Fiber`
+     type, `never`, `cede`, and `race_pair`. Cats Effect's `Unique` stays out,
+     as the Pass 9 decision on fiber identity requires.
+2. **Providers.** `Async[E]` implements all four. The synchronous `IO[E]`
+   implements `Defer`, `Raise`, and `Cancel` and not `Spawn`; a generic client
+   needing `Spawn` is rejected at its constraint. Qualification adds a minimal
+   test family with only `Defer` and `Raise`, so the rejections of narrower
+   providers are checked, not assumed.
+3. **Generic entry points** in `fp.effects.capabilities`, such as
+   `start[I](program)` and `guarantee_case[I](program, finalizer)`, delegating
+   to the provider. The existing synchronous free functions keep their
+   signatures and become that provider's implementation; one implementation
+   per operation.
+4. **`race_pair`.** `IO.race_pair(left, right)` starts both as fibers of the
+   running fiber and completes when the first finishes, producing that side's
+   `Outcome` and the other side's `Fiber`. The winner's claim is consumed with
+   its outcome; the loser's claim moves into the returned handle, which is
+   joined, canceled, or drained by its owner like any child. If the caller is
+   canceled while waiting, both are canceled and drained before `race_pair`
+   completes, as in Cats Effect.
+5. **`Supervisor`.** `Supervisor[E].resource(await_on_release)` is a
+   `Resource[Supervisor[E], E]`; `supervisor.supervise(io)` starts `io` as a
+   fiber owned by the supervisor instead of the running fiber, so it can outlive
+   the program that started it. Releasing the resource cancels the supervised
+   fibers that are still live, or waits for them, and drains them before
+   release completes. A supervisor is an owner in the fiber table of the host
+   that acquired it.
+6. **Forwarding.** `LiftDefer`, `LiftRaise`, `LiftCancel`, and `LiftSpawn`
+   selections forward through the transformer layers whose contracts allow it.
+   An audit first records, per layer, which capabilities forward lawfully;
+   finalizers through `OptionalT` and `ResultT` must observe the layer's own
+   failure, as Cats Effect's transformer instances do.
+
+### Steps
+
+1. **10a:** `Defer`, `Raise`, `Cancel`, and `Spawn`, both providers, the
+   generic entry points, and the law suites.
+2. **10b:** `race_pair` and its reuse decision below.
+3. **10c:** `Supervisor`.
+4. **10d:** the forwarding audit and the selections it admits.
+
+### Gate and clients
+
+From the delivery table: generic clients use minimal capabilities across actual
+and test providers; law and admission checks pass; no duplicate masking, error,
+or child-draining policy.
+
+- `capability_cancel`: one generic program over `Cancel`, run on the
+  synchronous and async providers with identical outcomes and finalizer order.
+- `capability_spawn`: generic `start`, `join`, and `race_pair` on `Async[E]`.
+- `cancel_laws` and `spawn_laws`: the Cats Effect `MonadCancel` and `GenSpawn`
+  laws that hold, plus the recorded differences: finalizer errors kept in the
+  outcome, owner draining, and masked races.
+- `race_pair` and `supervisor` clients: settled ownership, caller
+  cancellation, release with and without waiting, and exactly-once reporting.
+- Rejections: `Spawn` on the synchronous provider and on the test family, and
+  `Raise` given a value of another error type.
+
+### Review questions
+
+1. **Raise.** A separate `Raise` capability over `E`, as proposed, or a
+   documented narrowing of `ApplicativeError` whose `fail` only accepts
+   uncanceled failures?
+2. **One child policy.** `both`, `race`, and `race_first` run as leaf child
+   groups with their own draining, while `race_pair` and `Supervisor` use
+   fibers. Express the pair operations through fibers, as Cats Effect derives
+   them from `racePair`, so one owner drains children? Recommendation: measure
+   a fiber-based `both` against the leaf first and decide on the cost.
+3. **Supervisor release.** Cancel live fibers by default, as Cats Effect does,
+   or wait for them?
+4. **Naming.** Generic entry points need explicit families, such as
+   `guarantee_case[I](...)`, beside the synchronous free functions of the same
+   name. Keep those names, or prefix the generic ones?
 
 ## Implementation reference map
 
