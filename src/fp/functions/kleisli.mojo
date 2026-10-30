@@ -3,7 +3,7 @@ from std.builtin.rebind import downcast, rebind_var
 from fp.algebra.protocols import Monad, _FamilyCallable as _KleisliValue
 from fp.algebra._primitive_contracts import MapContract, BindContract
 from fp.algebra._admission import _CarrierCompatible
-from fp.callables._views import _UnaryViewable
+from fp.callables._views import _UnaryViewable, _BorrowedView
 from fp.callables.protocols import UnaryContract, Unary, MutableUnary, OnceUnary
 from fp.callables.invoke import call_once, RepeatableUnary
 from fp.callables.native import as_unary, NativeUnary, _Unary, _RaisingUnary
@@ -306,7 +306,7 @@ struct Kleisli[I: Monad, P: _Program](_KleisliValue, OnceUnary, _UnaryViewable w
 
 
 @fieldwise_init
-struct _KleisliView[I: Monad, P: _Program, o: ImmOrigin](Unary, ImplicitlyCopyable):
+struct _KleisliView[I: Monad, P: _Program, o: ImmOrigin](Unary, ImplicitlyCopyable, _BorrowedView):
     var chain: Pointer[Kleisli[Self.I, Self.P], Self.o]
     comptime Arg = Self.P.Owned.Arg
     comptime Out = Self.P.Shared[Self.o].Out

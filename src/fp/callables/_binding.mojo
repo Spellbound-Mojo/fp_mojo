@@ -7,11 +7,12 @@ from std.builtin.rebind import downcast, rebind_var, rebind
 from .invoke import call_once, call_repeated, RepeatableBinary
 from .protocols import OnceThunk, BinaryContract, OnceUnary, MutableUnary, ThunkContract, UnaryContract, BorrowCallContract
 from ._receiver import _borrow_once_as
+from ._views import _BorrowedView
 
 @fieldwise_init
 struct _BoundThunk[B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
                    F: Movable & Deinitable, o: ImmOrigin,
-                   apply: def(F, var B) raises E thin -> R](OnceThunk):
+                   apply: def(F, var B) raises E thin -> R](OnceThunk, _BorrowedView):
     var arguments: Self.B
     var function: Pointer[Self.F, Self.o]
     comptime Out = Self.R
@@ -74,7 +75,7 @@ struct _OwnedUnary[F: UnaryContract & Movable & Deinitable](OnceThunk):
 
 
 @fieldwise_init
-struct _BorrowThunk[F: BorrowCallContract & Movable & Deinitable, o: ImmOrigin](OnceThunk):
+struct _BorrowThunk[F: BorrowCallContract & Movable & Deinitable, o: ImmOrigin](OnceThunk, _BorrowedView):
     var function: Self.F
     var value: Pointer[Self.F.Payload, Self.o]
     comptime Out = Self.F.Result

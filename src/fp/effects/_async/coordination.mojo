@@ -10,9 +10,10 @@ from fp.effects.outcomes import _failure_as
 from fp._internal.cells import _try_lock
 from fp.callables import OnceUnary
 from .kernel import Machine, Step, Wait
-from .family import Machine as _ApplicationMachine, Async, _Recipe
-from .composition import Bind, Pure, pure, bind
+from .family import Machine as _ApplicationMachine, Async
+from .composition import pure
 from .scopes import Scope, CleanupMachine, _ProgramUse
+from .engine import IO
 
 
 def _attempt[P: _RefAction](mut action: Optional[P], context: IOContext[P.SelectedError], notify: Bool) -> Step[P.Value, P.SelectedError]:
@@ -96,18 +97,12 @@ struct Deferred[T: Copyable & Deinitable](Copyable):
     Parameters:
         T: The stored value, copied for successful reads.
     """
-    comptime Complete[E: Movable & Deinitable] = _Once[_RefModify[Optional[Self.T], Bool, E, _Complete[Self.T]]]
-    """The exact unopened machine returned by complete."""
-    comptime TryGet[E: Movable & Deinitable] = _Once[_RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]
-    """The exact unopened machine returned by try_get."""
-    comptime Get[E: Movable & Deinitable] = _Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]]
-    """The exact unopened machine returned by get."""
     var _source: _Deferred[Self.T]
 
     def __init__(out self):
         self._source = _Deferred[Self.T]()
 
-    def complete[E: Movable & Deinitable](self, var value: Self.T) -> Self.Complete[E]:
+    def complete[E: Movable & Deinitable](self, var value: Self.T) -> IO[Bool, E]:
         """Attempt single assignment when the recipe executes.
 
         Parameters:
@@ -117,28 +112,28 @@ struct Deferred[T: Copyable & Deinitable](Copyable):
             value: The owned value, consumed into the unopened recipe.
 
         Returns:
-            A machine yielding whether this assignment won; later assignments leave the stored value intact."""
-        return _Once(self._source.complete[E](value^))
+            An IO yielding whether this assignment won; later assignments leave the stored value intact."""
+        return IO[Bool, E]._lifted(_Once(self._source.complete[E](value^)))
 
-    def try_get[E: Movable & Deinitable](self) -> Self.TryGet[E]:
+    def try_get[E: Movable & Deinitable](self) -> IO[Optional[Self.T], E]:
         """Read the current assignment without waiting.
 
         Parameters:
             E: The selected domain error of the returned recipe.
 
         Returns:
-            A machine yielding an owned optional copy of the value."""
-        return _Once(self._source.try_get[E]())
+            An IO yielding an owned optional copy of the value."""
+        return IO[Optional[Self.T], E]._lifted(_Once(self._source.try_get[E]()))
 
-    def get[E: Movable & Deinitable](self) -> Self.Get[E]:
+    def get[E: Movable & Deinitable](self) -> IO[Self.T, E]:
         """Wait cooperatively for assignment, unless canceled.
 
         Parameters:
             E: The selected domain error of the returned recipe.
 
         Returns:
-            A machine yielding an owned copy after assignment."""
-        return _Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]](self._source.get[E]()._into_attempt(), False)
+            An IO yielding an owned copy after assignment."""
+        return IO[Self.T, E]._lifted(_Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]](self._source.get[E]()._into_attempt(), False))
 
 
 struct _Offer[T: Movable & Deinitable, E: Movable & Deinitable](_ApplicationMachine):
@@ -186,32 +181,22 @@ struct Queue[T: Movable & Deinitable](Copyable):
     Parameters:
         T: The exact owned element type, including external origins.
     """
-    comptime Size[E: Movable & Deinitable] = _Once[_RefInspect[Deque[Self.T], E, _Size[Self.T]]]
-    """The exact unopened machine returned by size."""
-    comptime TryOffer[E: Movable & Deinitable] = _Once[_RefModify[Deque[Self.T], Optional[Self.T], E, _TryOffer[Self.T]]]
-    """The exact unopened machine returned by try_offer."""
-    comptime Offer[E: Movable & Deinitable] = _Offer[Self.T, E]
-    """The exact unopened machine returned by offer."""
-    comptime TryTake[E: Movable & Deinitable] = _Once[_RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]
-    """The exact unopened machine returned by try_take."""
-    comptime Take[E: Movable & Deinitable] = _Await[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]]
-    """The exact unopened machine returned by take."""
     var _source: _Queue[Self.T]
 
     def __init__(out self, capacity: Int) raises:
         self._source = _Queue[Self.T](capacity)
 
-    def size[E: Movable & Deinitable](self) -> Self.Size[E]:
+    def size[E: Movable & Deinitable](self) -> IO[Int, E]:
         """Read the current number of queued values.
 
         Parameters:
             E: The selected domain error of the returned recipe.
 
         Returns:
-            A machine yielding the observed queue size."""
-        return _Once(self._source.size[E]())
+            An IO yielding the observed queue size."""
+        return IO[Int, E]._lifted(_Once(self._source.size[E]()))
 
-    def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> Self.TryOffer[E]:
+    def try_offer[E: Movable & Deinitable](self, var value: Self.T) -> IO[Optional[Self.T], E]:
         """Attempt to enqueue one owned value without waiting.
 
         Parameters:
@@ -221,10 +206,10 @@ struct Queue[T: Movable & Deinitable](Copyable):
             value: The owned value, consumed into the unopened recipe.
 
         Returns:
-            A machine yielding None on admission or the original value when full."""
-        return _Once(self._source.try_offer[E](value^))
+            An IO yielding None on admission or the original value when full."""
+        return IO[Optional[Self.T], E]._lifted(_Once(self._source.try_offer[E](value^)))
 
-    def offer[E: Movable & Deinitable](self, var value: Self.T) -> Self.Offer[E]:
+    def offer[E: Movable & Deinitable](self, var value: Self.T) -> IO[NoneType, E]:
         """Wait cooperatively to enqueue one owned value.
 
         Parameters:
@@ -234,28 +219,28 @@ struct Queue[T: Movable & Deinitable](Copyable):
             value: The owned value, consumed into the unopened recipe.
 
         Returns:
-            A machine yielding NoneType after admission; cancellation destroys a retained input."""
-        return _Offer[Self.T, E](self._source, value^)
+            An IO yielding NoneType after admission; cancellation destroys a retained input."""
+        return IO[NoneType, E]._lifted(_Offer[Self.T, E](self._source, value^))
 
-    def try_take[E: Movable & Deinitable](self) -> Self.TryTake[E]:
+    def try_take[E: Movable & Deinitable](self) -> IO[Optional[Self.T], E]:
         """Attempt to remove the oldest queued value without waiting.
 
         Parameters:
             E: The selected domain error of the returned recipe.
 
         Returns:
-            A machine yielding the owned value if available."""
-        return _Once(self._source.try_take[E]())
+            An IO yielding the owned value if available."""
+        return IO[Optional[Self.T], E]._lifted(_Once(self._source.try_take[E]()))
 
-    def take[E: Movable & Deinitable](self) -> Self.Take[E]:
+    def take[E: Movable & Deinitable](self) -> IO[Self.T, E]:
         """Wait cooperatively for the oldest queued value.
 
         Parameters:
             E: The selected domain error of the returned recipe.
 
         Returns:
-            A machine transferring the removed value; cancellation remains observable."""
-        return _Await[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]](self._source.take[E]()._into_attempt(), True)
+            An IO transferring the removed value; cancellation remains observable."""
+        return IO[Self.T, E]._lifted(_Await[Self.T, _RefModify[Deque[Self.T], Optional[Self.T], E, _TryTake[Self.T]]](self._source.take[E]()._into_attempt(), True))
 
 
 comptime _PermitUse[P: Machine] = _ProgramUse[P, Permit]
@@ -274,54 +259,49 @@ struct _PermitRelease[E: Movable & Deinitable](CleanupMachine):
 struct _WithPermit[P: Machine](OnceUnary):
     var program: Self.P
     comptime Arg = Permit
-    comptime Out = Scope[Pure[Permit, Self.P.Error], _PermitUse[Self.P], _PermitRelease[Self.P.Error]]
+    comptime Out = IO[Self.P.Value, Self.P.Error]
     def call_once(deinit self, var permit: Permit) -> Self.Out:
-        return Scope(pure[Self.P.Error](permit^), _PermitUse(self.program^), _PermitRelease[Self.P.Error]())
+        # The canonical scope retains the permit until the body and release finish.
+        return Self.Out._lifted(Scope(pure[Self.P.Error](permit^), _PermitUse(self.program^), _PermitRelease[Self.P.Error]()))
 
 
 struct Semaphore(Copyable):
     """Cancelable acquisition with canonical owned permits and scoped use."""
-    comptime Available[E: Movable & Deinitable] = _Once[_RefInspect[Int, E, _Copy[Int]]]
-    """The exact unopened machine returned by available."""
-    comptime Acquire[E: Movable & Deinitable] = _Await[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]]
-    """The exact unopened machine returned by acquire."""
-    comptime WithPermit[P: Machine] = _Recipe[Bind[_Await[Permit, _RefModify[Int, Optional[Permit], P.Error, _Reserve]], _WithPermit[P]]]
-    """The exact unopened machine returned by with_permit."""
     var _source: _Semaphore
 
     def __init__(out self, permits: Int) raises:
         self._source = _Semaphore(permits)
 
-    def available[E: Movable & Deinitable](self) -> Self.Available[E]:
+    def available[E: Movable & Deinitable](self) -> IO[Int, E]:
         """Read the current number of available permits.
 
         Parameters:
             E: The selected domain error of the returned recipe.
 
         Returns:
-            A machine yielding the observed permit count."""
-        return _Once(self._source.available[E]())
+            An IO yielding the observed permit count."""
+        return IO[Int, E]._lifted(_Once(self._source.available[E]()))
 
-    def acquire[E: Movable & Deinitable](self) -> Self.Acquire[E]:
+    def acquire[E: Movable & Deinitable](self) -> IO[Permit, E]:
         """Wait cooperatively for an owned canonical permit.
 
         Parameters:
             E: The selected domain error of the returned recipe.
 
         Returns:
-            A machine transferring one permit; cancellation before admission consumes none."""
-        return _Await[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]](self._source.acquire[E]()._into_attempt(), False)
+            An IO transferring one permit; cancellation before admission consumes none."""
+        return IO[Permit, E]._lifted(_Await[Permit, _RefModify[Int, Optional[Permit], E, _Reserve]](self._source.acquire[E]()._into_attempt(), False))
 
-    def with_permit[P: Machine](self, var program: P) -> Self.WithPermit[P]:
+    def with_permit[P: Machine](self, var program: P) -> IO[P.Value, P.Error]:
         """Acquire cancelably, run an owned body, then release through the canonical scope.
 
         Parameters:
-            P: The concrete body machine.
+            P: The body: an IO, or a machine that owns its state.
 
         Args:
             program: The unopened body, consumed once.
 
         Returns:
-            An application recipe retaining the permit until the body and cleanup finish."""
+            An IO retaining the permit until the body and cleanup finish."""
         # Acquire cancelably, then transfer the owned permit into a Scope.
-        return _Recipe(bind(self.acquire[P.Error](), _WithPermit(program^)))
+        return self.acquire[P.Error]()._bind(_WithPermit(program^))

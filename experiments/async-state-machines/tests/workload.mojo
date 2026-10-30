@@ -5,8 +5,7 @@ from fp.callables import OnceUnary
 from fp.data import Result, Err, NonEmptyList
 from fp.effects import CancellationToken, IOContext, EffectFailure, ExitCase
 from fp._internal.cells import _lock_metadata
-from state_machine import Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Completion, Callback, Scope, Pure, Timeout, Nursery, Queue, Semaphore, Clock, Driver, callback, pure, bind, both, timeout_after as timeout_to
-from state_machine.coordination import _Offer
+from state_machine import IO, Machine, ScopedMachine, CleanupMachine, Step, Wait, Signal, Completion, Callback, Scope, Pure, Timeout, Nursery, Queue, Semaphore, Clock, Driver, callback, pure, bind, both, timeout_after as timeout_to
 from foundation import check, success
 from async_coordination import value
 
@@ -145,7 +144,7 @@ struct Producer(Machine):
     var queue: Queue[Request]
     var host: ArcPointer[Host]
     var next: Int
-    var pending: Optional[_Offer[Request, Int]]
+    var pending: Optional[IO[NoneType, Int]]
     comptime Value = NoneType
     comptime Error = Int
     def __init__(out self, queue: Queue[Request], host: ArcPointer[Host]):

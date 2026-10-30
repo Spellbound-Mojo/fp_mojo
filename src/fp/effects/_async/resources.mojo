@@ -270,7 +270,13 @@ def resource[A: Machine, C: ScopedMachine](var acquire: A, var release: C) -> Re
     Returns:
         An unopened resource plan; successful release values are discarded.
     """
-    return resource_case(acquire^, _ScopedCleanup[C, False, True](release^))
+    return AsyncResource(_acquire_release(acquire^, release^))
+
+
+def _acquire_release[A: Machine, C: ScopedMachine](var acquire: A, var release: C) -> _Acquire[A, _ScopedCleanup[C, False, True]]:
+    # The plan of a resource with scoped release; public constructors admit inputs.
+    comptime assert A.Value == C.Input and A.Error == C.Error
+    return _Acquire(acquire^, _ScopedCleanup[C, False, True](release^))
 
 
 comptime Resource[A: Machine, C: ScopedMachine] = AsyncResource[_Acquire[A, _ScopedCleanup[C, False, True]]]

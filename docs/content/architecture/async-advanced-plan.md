@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1, 2, 3a and 3b complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1, 2, 3a, 3b and 3c complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -747,7 +747,7 @@ Decided on 2026-10-30:
 Steps 1 and 2 are complete: the private engine core, optimized, and
 finalizers, masks, and law clients. Step 3 switches the public API to `IO` in
 four parts: the `Async[E]` family (3a, complete), constructors and combinators
-(3b, complete), coordination and resources (3c), and the public exports and documentation
+(3b, complete), coordination and resources (3c, complete), and the public exports and documentation
 (3d). The full verification gates run after step 3.
 
 - `src/fp/effects/_async/engine.mojo` implements `IO[T, E]` as a flat program
@@ -866,6 +866,39 @@ static constructors and methods. Each one reuses an existing owner:
   `cede` yielding once, `never` completing only by cancellation, `canceled`
   with and without a mask, `IO.async` with its withdrawal, `IO.async_`, and
   `eval_io`.
+
+**Step 3c: coordination and resources.**
+
+- `Deferred`, `Queue`, and `Semaphore` operations return `IO`, lifting their
+  existing leaves. `with_permit` takes an `IO`, or any machine that owns its
+  state, and keeps the permit in the canonical `Scope` until the body and its
+  release finish.
+- `Resource[T, E]` erases a typed acquisition plan once, at construction. `use`
+  erases its scoped body to one carrier per resource type, runs the plan's
+  `Scope` as an `IO` leaf, and unboxes the body's value with the type that
+  boxed it. Leaves and scoped bodies share one step-boxing helper.
+- Composition reuses the typed plan owners. `flat_map` joins the resource as the
+  left plan of the canonical `_Join`, `map` reuses `_MapScopeFactory`, and
+  `pure` uses the pure resource factory. `make` and the typed `resource`
+  constructor share one private plan builder: the constructor's admission
+  cannot be proven from a generic caller.
+- Five more adapters that hold a borrowed pointer now carry the borrowed-view
+  marker: the `Kleisli` view, the shared thunk reference, `MutableRef`, and the
+  two binding thunks. Without it, `traverse` borrowed a `Kleisli` chain into a
+  deferred `IO`; `reject_io_kleisli_view` compiles without the marker and is
+  rejected with it. A `Kleisli` chain can only be called repeatedly through
+  its view, so traversal into `IO` takes an owned repeatable callable instead.
+- A plain-function `delay` now infers its result type, as the earlier `delay`
+  did. A stored thin function pointer cannot convert to a signature spelled
+  with `T`, because Mojo 1.2 does not convert between function types.
+- `io_resources` covers a waiting `Deferred` read, a `Queue` take waiting for an
+  offer, `with_permit` releasing its permit, acquire/use/release order,
+  dependent release before its parent, release after a failed body, release
+  errors after body errors, projection, and a pure resource. Internal clients
+  that named the removed coordination machine types use `IO`.
+- `async_coordination`, `coordination_origins`, and `coordination_owned` exceeded
+  the default 120 s compile limit with four builds in parallel. Their limit is
+  now 600 s.
 
 ## Implementation reference map
 

@@ -427,6 +427,19 @@ def _loop_at[E: Movable & Deinitable](loop: MutOpaquePointer[_]) -> ref[loop.ori
     return loop.unsafe_bitcast[_RunLoop[E]]()[]
 
 
+def _box_step[V: Movable & Deinitable, E: Movable & Deinitable](var step: Step[V, E]) -> Step[_Erased, E]:
+    """Box a step's success value; the caller's type fixes V for unboxing."""
+    if not step._completed:
+        return Step[_Erased, E].pending(step^._waiting())
+    var protected = step._protected_success
+    var outcome = step^._outcome()
+    if outcome and outcome.value().is_ok():
+        var boxed: Outcome[_Erased, E] = Optional(Result[_Erased, EffectFailure[E]](Ok(_Erased(outcome.take()._take_ok()))))
+        return Step[_Erased, E]._make(Optional(boxed^), Wait(), protected)
+    var failed = _failure_as[_Erased](outcome^)
+    return Step[_Erased, E]._make(Optional(failed^), Wait(), protected)
+
+
 struct _Boxed[P: Machine, E: Movable & Deinitable](Machine):
     """Present a typed leaf to the run loop with its success value boxed."""
     comptime Value = _Erased
@@ -438,16 +451,19 @@ struct _Boxed[P: Machine, E: Movable & Deinitable](Machine):
 
     def poll(mut self, context: IOContext[Self.E]) -> Step[_Erased, Self.E]:
         comptime assert Self.P.Error == Self.E
-        var step = self.program.poll(rebind[IOContext[Self.P.Error]](context))
-        if not step._completed:
-            return Step[_Erased, Self.E].pending(step^._waiting())
-        var protected = step._protected_success
-        var outcome = rebind_var[Outcome[Self.P.Value, Self.E]](step^._outcome())
-        if outcome and outcome.value().is_ok():
-            var boxed: Outcome[_Erased, Self.E] = Optional(Result[_Erased, EffectFailure[Self.E]](Ok(_Erased(outcome.take()._take_ok()))))
-            return Step[_Erased, Self.E]._make(Optional(boxed^), Wait(), protected)
-        var failed = _failure_as[_Erased](outcome^)
-        return Step[_Erased, Self.E]._make(Optional(failed^), Wait(), protected)
+        return _box_step(rebind_var[Step[Self.P.Value, Self.E]](self.program.poll(rebind[IOContext[Self.P.Error]](context))))
+
+
+struct _Unbox[V: Movable & Deinitable](OnceUnary, Defaultable):
+    """Take a value boxed by a function the same V specialized."""
+    comptime Arg = _Erased
+    comptime Out = Self.V
+
+    def __init__(out self):
+        pass
+
+    def call_once(deinit self, var boxed: _Erased) -> Self.V:
+        return boxed^.take[Self.V]()
 
 
 # Erasure drops the origin a borrowed callback view relies on. IO admits owned
@@ -521,25 +537,27 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         """
         return Self._deferred(_Delay[F, Self.E](function^))
 
+    # The result type is inferred, as for native delay elsewhere: a stored thin
+    # pointer cannot convert to a signature spelled with Self.T.
     @staticmethod
-    def delay(function: def() thin -> Self.T) -> Self where not conforms_to(Self.T, RegisterPassable):
+    def delay[R: Movable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T and not conforms_to(R, RegisterPassable):
         """Evaluate a native function when the IO reaches it."""
-        return Self._deferred(_Delay[_NativeThunk[Self.T, Never, def() thin -> Self.T, False], Self.E](_NativeThunk[Self.T, Never, def() thin -> Self.T, False](function)))
+        return Self._deferred(_Delay[_NativeThunk[R, Never, def() thin -> R, False], Self.E](_NativeThunk[R, Never, def() thin -> R, False](function)))
 
     @staticmethod
-    def delay(function: def() thin -> _NativeOwnedArg[Self.T]) -> Self where conforms_to(Self.T, RegisterPassable):
+    def delay[R: RegisterPassable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T:
         """Evaluate a native function when the IO reaches it."""
-        return Self._deferred(_Delay[_NativeThunk[Self.T, Never, def() thin -> _NativeOwnedArg[Self.T], False], Self.E](_NativeThunk[Self.T, Never, def() thin -> _NativeOwnedArg[Self.T], False](function)))
+        return Self._deferred(_Delay[_NativeThunk[R, Never, def() thin -> R, False], Self.E](_NativeThunk[R, Never, def() thin -> R, False](function)))
 
     @staticmethod
-    def delay[X: Movable & Deinitable, //](function: def() raises X thin -> Self.T) -> Self where _ErrorCompatible[Self.E, X] and not conforms_to(Self.T, RegisterPassable):
+    def delay[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable):
         """Evaluate a raising native function; its error becomes the failure."""
-        return Self._deferred(_Delay[_NativeThunk[Self.T, X, def() raises X thin -> Self.T, True], Self.E](_NativeThunk[Self.T, X, def() raises X thin -> Self.T, True](function)))
+        return Self._deferred(_Delay[_NativeThunk[R, X, def() raises X thin -> R, True], Self.E](_NativeThunk[R, X, def() raises X thin -> R, True](function)))
 
     @staticmethod
-    def delay[X: Movable & Deinitable, //](function: def() raises X thin -> _NativeOwnedArg[Self.T]) -> Self where _ErrorCompatible[Self.E, X] and conforms_to(Self.T, RegisterPassable):
+    def delay[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]:
         """Evaluate a raising native function; its error becomes the failure."""
-        return Self._deferred(_Delay[_NativeThunk[Self.T, X, def() raises X thin -> _NativeOwnedArg[Self.T], True], Self.E](_NativeThunk[Self.T, X, def() raises X thin -> _NativeOwnedArg[Self.T], True](function)))
+        return Self._deferred(_Delay[_NativeThunk[R, X, def() raises X thin -> R, True], Self.E](_NativeThunk[R, X, def() raises X thin -> R, True](function)))
 
     @staticmethod
     def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self where _Defers[Self.E, F] and F.Out == Self:

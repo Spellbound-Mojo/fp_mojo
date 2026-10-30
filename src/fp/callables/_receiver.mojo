@@ -145,7 +145,7 @@ def shared_ref[F: Movable & Deinitable, o: ImmOrigin](ref[o] function: F) -> Sha
 
 
 @fieldwise_init
-struct _SharedThunkRef[F: Thunk, o: ImmOrigin](Thunk, ImplicitlyCopyable):
+struct _SharedThunkRef[F: Thunk, o: ImmOrigin](Thunk, ImplicitlyCopyable, _BorrowedView):
     """Retain a shared factory without copying or consuming its captures."""
     var function: Pointer[Self.F, Self.o]
     comptime Out = Self.F.Out
@@ -257,7 +257,7 @@ def _thunk_repeated_as[E: Movable & Deinitable, F: ThunkContract & Movable & Dei
 
 @fieldwise_init
 struct MutableRef[F: Movable & Deinitable, o: MutOrigin](
-    Movable, Deinitable,
+    Movable, Deinitable, _BorrowedView,
     CallContract where conforms_to(F, CallContract),
     UnaryContract where conforms_to(F, CallContract) and conforms_to(F, UnaryContract),
     MutableUnary where conforms_to(F, CallContract) and conforms_to(F, UnaryContract) and RepeatableUnary[F],
