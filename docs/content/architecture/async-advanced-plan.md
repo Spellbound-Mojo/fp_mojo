@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 and 2 of 3 complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1, 2 and 3a complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -744,9 +744,11 @@ Decided on 2026-10-30:
 
 ## Pass 8a progress
 
-Steps 1 and 2 of 3 are complete: the private engine core, optimized, and
-finalizers, masks, and law clients. Step 3 switches the public API to `IO`. The
-full verification gates run after step 3.
+Steps 1 and 2 are complete: the private engine core, optimized, and
+finalizers, masks, and law clients. Step 3 switches the public API to `IO` in
+four parts: the `Async[E]` family (3a, complete), constructors and combinators
+(3b), coordination and resources (3c), and the public exports and documentation
+(3d). The full verification gates run after step 3.
 
 - `src/fp/effects/_async/engine.mojo` implements `IO[T, E]` as a flat program
   with pure, fail, leaf, defer, mask, and restore heads and bind, recover,
@@ -810,6 +812,36 @@ an `IO` cost about 1,000 instructions per step whenever another instantiation
 changed inlining decisions. Callbacks therefore install their program directly:
 non-raising callbacks go through `_unary_once_as[Never]`, and raising ones
 through a `try` that builds the canonical `EffectFailure`.
+
+**Step 3a: `IO` joins the `Async[E]` family.** The public-ready `Async[E]` is
+defined beside `IO` in `engine.mojo`, with `IO` as its carrier, so `Pipeline`,
+`tail_rec_m`, `traverse`, `collect`, `product`, and `attempt` work on `IO`.
+
+- The family overrides the private fold and loop. Each fold step binds after the
+  step's `IO`, so a fold or loop of any length runs on the run loop in constant
+  native stack, with one allocation for its state.
+- `IO`'s methods and the family share their callback admission. It rejects
+  borrowed callback views (the private `_BorrowedView` marker on the native and
+  library reference adapters): erasure would drop the origin that keeps a
+  borrowed callback alive.
+- Mojo 1.2 closure types cannot be told apart from plain functions by type
+  predicates, so rejection follows the adapter. `Pipeline` stores plain
+  functions as owned callables, which are admitted, and borrows closures, which
+  are rejected. Free `map`, `flat_map`, and `traverse` borrow every native
+  callback, so with `IO` they take `as_unary(f)` or a library callable.
+- `io_family` checks family selection, recovery of a native callback error,
+  `product`, `attempt`, and deferred collection that stops at the first failure.
+  It also runs a 100,000-step `tail_rec_m` and a 100,000-element `traverse`
+  under a 1 MiB stack, about 14 ms together at O3.
+- `reject_io_closure` (a capturing closure through `Pipeline`) and
+  `reject_io_borrowed` (a native function through free `traverse`) check the
+  rejections. Both compile when the admission check is disabled, so the check
+  is what rejects them.
+- The typed recipe family stays private for internal clients. It repeats the
+  IO family's shape predicates until it retires.
+- `family_origins` took 239 s to compile at O3 at the previous commit, against a
+  240 s limit, and timed out beside other builds. Its limit is now 600 s, as for
+  `family_iteration`; this step changed its compile time by about 3%.
 
 ## Implementation reference map
 

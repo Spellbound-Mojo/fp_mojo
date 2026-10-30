@@ -6,6 +6,13 @@ otherwise deferred results. Existing owned callbacks keep their contract.
 """
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallable, Binary
 
+trait _BorrowedView:
+    # Marks callbacks that borrow their receiver or native function through an
+    # origin. Consumers that erase a callback's type reject these views, since
+    # erasure would drop the origin that keeps the borrowed callback alive.
+    pass
+
+
 trait _BinaryViewable(Binary):
     # Fixed-output Binary needs no origin-indexed projection. Opt in only the
     # standard wrappers: borrowing every Binary would change the established

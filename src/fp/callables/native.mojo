@@ -12,7 +12,7 @@ from std.builtin.variadics import TypeList
 from .protocols import CallContract
 from .protocols import Thunk, Unary, Binary, BorrowCallable
 from ._receiver import _MutableBorrow, _SharedUnaryRef, _SharedBorrowRef
-from ._views import _UnaryViewable, _BinaryViewable, _BorrowViewable
+from ._views import _UnaryViewable, _BinaryViewable, _BorrowViewable, _BorrowedView
 from .products import _OptionalCell
 
 
@@ -94,7 +94,7 @@ struct _NativeThunk[R: Movable & Deinitable, E: Movable & Deinitable,
 
 
 @fieldwise_init
-struct _NativeThunkRef[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Thunk, ImplicitlyCopyable):
+struct _NativeThunkRef[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Thunk, ImplicitlyCopyable, _BorrowedView):
     # The borrowed view retains the exact callback origin.
     var function: Pointer[Self.F, Self.o]
     comptime Out = Self.R
@@ -262,7 +262,7 @@ def _call_native_binary[A: Movable & Deinitable, B: Movable & Deinitable, R: Mov
 
 @fieldwise_init
 struct _NativeBinaryRef[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
-                        X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Binary, ImplicitlyCopyable):
+                        X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, o: ImmOrigin](Binary, ImplicitlyCopyable, _BorrowedView):
     """Borrow the native callback with its captures and origins intact."""
     comptime First = Self.A
     comptime Second = Self.B
@@ -732,7 +732,7 @@ struct NativeUnary[A: Movable & Deinitable, R: Movable & Deinitable,
 @fieldwise_init
 struct _NativeUnaryRef[A: Movable & Deinitable, R: Movable & Deinitable,
                        E: Movable & Deinitable, F: Movable & Deinitable,
-                       raising: Bool, origin: ImmOrigin](Unary, ImplicitlyCopyable):
+                       raising: Bool, origin: ImmOrigin](Unary, ImplicitlyCopyable, _BorrowedView):
     # A borrowed native def. Generic forwarding holds a native function by
     # reference and cannot copy it; the call is the same as NativeUnary's.
     var function: Pointer[Self.F, Self.origin]
@@ -1983,7 +1983,7 @@ def _call_native_borrow[P: AnyType, R: Movable & Deinitable, E: Movable & Deinit
 
 @fieldwise_init
 struct _NativeBorrowRef[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable,
-                        F: Movable & Deinitable, raising: Bool, o: ImmOrigin](BorrowCallable, ImplicitlyCopyable):
+                        F: Movable & Deinitable, raising: Bool, o: ImmOrigin](BorrowCallable, ImplicitlyCopyable, _BorrowedView):
     """Borrow a native callback without copying its captures; invocation is shared."""
     comptime Payload = Self.P
     comptime Result = Self.R

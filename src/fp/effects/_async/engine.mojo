@@ -11,11 +11,17 @@ canonical slot; failures keep their exact error type because one IO chain
 shares it.
 """
 from std.builtin.rebind import downcast, rebind_var
+from std.iter import Iterator, IterableOwned
 from std.memory import OwnedPointer, MaybeUninit
 from std.os import abort
-from fp.callables.protocols import UnaryContract, ThunkContract, BorrowCallContract
-from fp.callables.invoke import _OnceUnaryAvailable, _OnceThunkAvailable, _OnceBorrowAvailable
-from fp.callables._receiver import _unary_once_as, _thunk_once_as, _borrow_once_as
+from fp.algebra.protocols import Monad, ErrorRecovery, _Accumulate, _LiveAccumulator, _AccumulatePair, _start_as
+from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallContract, OnceUnary, OnceThunk, MutableBinary
+from fp.callables.invoke import _OnceUnaryAvailable, _OnceBinaryAvailable, _OnceThunkAvailable, _OnceBorrowAvailable, RepeatableUnary, RepeatableBinary
+from fp.callables._receiver import _unary_once_as, _thunk_once_as, _borrow_once_as, _unary_repeated_as, _binary_repeated_as
+from fp.callables._binding import _BindFirst
+from fp.callables._identity import Identity
+from fp.callables._views import _BorrowedView
+from fp.iteration._advance import _Source, _source, _next_optional
 from fp._internal.erased import _Erased
 from fp._internal.errors import _ErrorCompatible
 from fp.data import Result, Ok, Err, NonEmptyList
@@ -24,6 +30,7 @@ from fp.effects.outcomes import _failure_as, _finish, _ExitState
 from fp.effects._io_core import _settle
 from fp.effects.finalization import Poll as _SyncPoll
 from .kernel import Machine, Step, Wait, _Slot, _tick
+from .family import Machine as _FamilyMachine
 from .erased import _ErasedMachine
 from .finalization import Poll
 
@@ -435,11 +442,26 @@ struct _Boxed[P: Machine, E: Movable & Deinitable](Machine):
         return Step[_Erased, Self.E]._make(Optional(failed^), Wait(), protected)
 
 
-struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
+# Erasure drops the origin a borrowed callback view relies on. IO admits owned
+# callbacks only; callable state that embeds a borrow remains the caller's
+# documented precondition, since Mojo 1.2 cannot check it.
+comptime _Admitted[F: AnyType] = not conforms_to(F, _BorrowedView)
+
+comptime _IsIO[V: Movable & Deinitable, E: Movable & Deinitable] = (V == IO[downcast[V, Machine].Value, E]) if conforms_to(V, Machine) else False
+
+# Callback admission shared by IO's methods and its family. Exact argument
+# equality stays with each operation, as the family protocols require.
+comptime _Maps[E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _OnceUnaryAvailable[F] and _ErrorCompatible[E, F.Error] and _Admitted[F]
+comptime _Binds[E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _Maps[E, F] and _IsIO[F.Out, E]
+comptime _Defers[E: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _OnceThunkAvailable[F] and _ErrorCompatible[E, F.Error] and _Admitted[F] and _IsIO[F.Out, E]
+
+
+struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
     """An asynchronous effect producing T or failing with E, run by the private engine.
 
     An IO runs once. Unopened values may be dropped; disposal is iterative.
     """
+    comptime Family = Async[Self.E]
     comptime Value = Self.T
     comptime Error = Self.E
     var _program: _Program[Self.E]
@@ -475,10 +497,16 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
     def lift[P: Machine](var machine: P) -> Self where P.Value == Self.T and P.Error == Self.E:
         return Self(_Program[Self.E](_Head[Self.E](_LEAF, _Erased(_Leaf[Self.E](_Boxed[P, Self.E](machine^))))))
 
+    # Public operations state admission in their signatures and delegate to
+    # these private forms, which generic family code calls after its own checks.
     @staticmethod
-    def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self where _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and F.Out == Self:
+    def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self where _Defers[Self.E, F] and F.Out == Self:
+        return Self._deferred(factory^)
+
+    @staticmethod
+    def _deferred[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self:
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
-            comptime assert _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and F.Out == Self
+            comptime assert _Defers[Self.E, F] and F.Out == Self
             ref run = _loop_at[Self.E](loop)
             # Callbacks install their result directly: a captured Result holding an
             # IO is built and unwrapped out of line when the compiler does not inline it.
@@ -490,13 +518,17 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
                 except error:
                     run.set_failure(EffectFailure[Self.E](NonEmptyList(error^), False))
 
+        comptime assert _Defers[Self.E, F] and F.Out == Self
         return Self(_Program[Self.E](_Head[Self.E](_DEFER, _Erased(factory^), invoke)))
 
-    def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[downcast[F.Out, Machine].Value, Self.E] where F.Arg == Self.T and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error] and F.Out == IO[downcast[F.Out, Machine].Value, Self.E]:
+    def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[downcast[F.Out, Machine].Value, Self.E] where F.Arg == Self.T and _Binds[Self.E, F]:
+        return self^._bind(f^)
+
+    def _bind[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[downcast[F.Out, Machine].Value, Self.E]:
         comptime U = downcast[F.Out, Machine].Value
 
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
-            comptime assert F.Arg == Self.T and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error] and F.Out == IO[U, Self.E]
+            comptime assert F.Arg == Self.T and _Binds[Self.E, F]
             ref run = _loop_at[Self.E](loop)
             var argument = run.take_value().take[Self.T]()
             comptime if F.Error == Never:
@@ -509,13 +541,17 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
                 except error:
                     run.set_failure(EffectFailure[Self.E](NonEmptyList(error^), False))
 
+        comptime assert F.Arg == Self.T and _Binds[Self.E, F]
         var program = self^._into_program()
         program.frames.append(_Frame(_BIND, _Erased(f^), invoke))
         return IO[U, Self.E](program^)
 
-    def map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[F.Out, Self.E] where F.Arg == Self.T and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error]:
+    def map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[F.Out, Self.E] where F.Arg == Self.T and _Maps[Self.E, F]:
+        return self^._mapped(f^)
+
+    def _mapped[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[F.Out, Self.E]:
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
-            comptime assert F.Arg == Self.T and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error]
+            comptime assert F.Arg == Self.T and _Maps[Self.E, F]
             ref run = _loop_at[Self.E](loop)
             var argument = run.take_value().take[Self.T]()
             comptime if F.Error == Never:
@@ -526,13 +562,17 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
                 except error:
                     run.set_failure(EffectFailure[Self.E](NonEmptyList(error^), False))
 
+        comptime assert F.Arg == Self.T and _Maps[Self.E, F]
         var program = self^._into_program()
         program.frames.append(_Frame(_BIND, _Erased(f^), invoke))
         return IO[F.Out, Self.E](program^)
 
-    def handle_error_with[H: UnaryContract & Movable & Deinitable](deinit self, var handler: H) -> Self where H.Arg == EffectFailure[Self.E] and _OnceUnaryAvailable[H] and _ErrorCompatible[Self.E, H.Error] and H.Out == Self:
+    def handle_error_with[H: UnaryContract & Movable & Deinitable](deinit self, var handler: H) -> Self where H.Arg == EffectFailure[Self.E] and _Maps[Self.E, H] and H.Out == Self:
+        return self^._recover(handler^)
+
+    def _recover[H: UnaryContract & Movable & Deinitable](deinit self, var handler: H) -> Self:
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
-            comptime assert H.Arg == EffectFailure[Self.E] and _OnceUnaryAvailable[H] and _ErrorCompatible[Self.E, H.Error] and H.Out == Self
+            comptime assert H.Arg == EffectFailure[Self.E] and _Maps[Self.E, H] and H.Out == Self
             ref run = _loop_at[Self.E](loop)
             var failure = run.failure.take()
             comptime if H.Error == Never:
@@ -543,6 +583,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
                 except error:
                     run.set_failure(EffectFailure[Self.E](NonEmptyList(error^), False))
 
+        comptime assert H.Arg == EffectFailure[Self.E] and _Maps[Self.E, H] and H.Out == Self
         var program = self^._into_program()
         program.frames.append(_Frame(_RECOVER, _Erased(handler^), invoke))
         return Self(program^)
@@ -560,7 +601,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
         """Run the finalizer masked only when the outcome observed cancellation."""
         return self^._finalized(_Finalizer[Self.E](True, Optional(finalizer^._into_program()), _Erased(), _no_cleanup[Self.E]))
 
-    def guarantee_case[F: BorrowCallContract & Movable & Deinitable](deinit self, var factory: F) -> Self where F.Payload == ExitCase[Self.E] and F.Result == IO[NoneType, Self.E] and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure]:
+    def guarantee_case[F: BorrowCallContract & Movable & Deinitable](deinit self, var factory: F) -> Self where F.Payload == ExitCase[Self.E] and F.Result == IO[NoneType, Self.E] and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure] and _Admitted[F]:
         """Build the finalizer from the borrowed exact exit case, then run it masked."""
         def build(var callable: _Erased, exit: ExitCase[Self.E]) -> _Program[Self.E]:
             comptime assert F.Payload == ExitCase[Self.E] and F.Result == IO[NoneType, Self.E] and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure]
@@ -575,10 +616,10 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
         return self^._finalized(_Finalizer[Self.E](False, None, _Erased(factory^), build))
 
     @staticmethod
-    def uncancelable[F: UnaryContract & Movable & Deinitable](var factory: F) -> Self where F.Arg == Poll[Self.E] and F.Out == Self and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error]:
+    def uncancelable[F: UnaryContract & Movable & Deinitable](var factory: F) -> Self where F.Arg == Poll[Self.E] and F.Out == Self and _Maps[Self.E, F]:
         """Build and run a program masked; the Poll handle restores the outer state."""
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
-            comptime assert F.Arg == Poll[Self.E] and F.Out == Self and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error]
+            comptime assert F.Arg == Poll[Self.E] and F.Out == Self and _Maps[Self.E, F]
             ref run = _loop_at[Self.E](loop)
             var poll = run.poll.take()
             comptime if F.Error == Never:
@@ -612,3 +653,236 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
             return Step[Self.T, Self.E]._make(Optional(success^), Wait(), protected)
         var failed = _failure_as[Self.T](outcome^)
         return Step[Self.T, Self.E]._make(Optional(failed^), Wait(), protected)
+
+
+@fieldwise_init
+struct _Combine[F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    """After the left value: build the right IO, then combine the two values."""
+    var function: Self.F
+    var right: Self.R
+    comptime Arg = Self.F.First
+    comptime Out = IO[Self.F.Out, Self.E]
+    comptime Error = Self.R.Error
+
+    def call_once(deinit self, var value: Self.Arg) raises Self.Error -> Self.Out:
+        var right = _thunk_once_as[Self.Error](self.right^)
+        return rebind_var[IO[Self.F.Second, Self.E]](right^)._mapped(_BindFirst(self.function^, value^))
+
+
+@fieldwise_init
+struct _FoldState[V: Movable & Deinitable, P: Movable & Deinitable, F: Movable & Deinitable](Movable):
+    var source: _Source[Self.V]
+    var prepare: Self.P
+    var function: Self.F
+
+
+@fieldwise_init
+struct _Fold[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator, E: Movable & Deinitable](OnceUnary):
+    """One dependent fold step; the next step binds after the step's IO.
+
+    The run loop applies each bind from its frame stack, so a fold of any
+    length uses constant native stack. One allocation holds the fold state.
+    """
+    var state: OwnedPointer[_FoldState[Self.V, Self.P, Self.F]]
+    comptime Arg = Self.K.Acc
+    comptime Out = IO[Self.K.Acc, Self.E]
+    comptime Error = Self.E
+
+    def call_once(deinit self, var acc: Self.Arg) raises Self.Error -> Self.Out:
+        comptime assert RepeatableUnary[Self.P] and RepeatableBinary[Self.F]
+        comptime assert Self.P.Arg == _Source[Self.V].Element and Self.P.Out == Self.F.Second and Self.F.First == Self.Arg and Self.F.Out == Self.Out
+        comptime assert _ErrorCompatible[Self.E, Self.P.Error] and _ErrorCompatible[Self.E, Self.F.Error]
+        if not Self.K.live(acc):
+            return Self.Out.pure(acc^)
+        var item = _next_optional[Self.P.Arg](self.state[].source)
+        if not item:
+            return Self.Out.pure(acc^)
+        var prepared = _unary_repeated_as[Self.E](self.state[].prepare, item.take())
+        var next = _binary_repeated_as[Self.E](self.state[].function, rebind_var[Self.F.First](acc^), rebind_var[Self.F.Second](prepared^))
+        return rebind_var[Self.Out](next^)._bind(Self(self.state^))
+
+
+def _start_fold[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator, E: Movable & Deinitable](var source: V, var prepare: P, var function: F, var initial: K.Acc) raises E -> IO[K.Acc, E]:
+    return _Fold[V, P, F, K, E](OwnedPointer(_FoldState[V, P, F](_source(source^), prepare^, function^))).call_once(initial^)
+
+
+@fieldwise_init
+struct _StartFold[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator, E: Movable & Deinitable](OnceThunk):
+    """Open the source and take the first step when the fold runs."""
+    var source: Self.V
+    var prepare: Self.P
+    var function: Self.F
+    var initial: Self.K.Acc
+    comptime Out = IO[Self.K.Acc, Self.E]
+    comptime Error = Self.E
+
+    def call_once(deinit self) raises Self.Error -> Self.Out:
+        return _start_fold[Self.V, Self.P, Self.F, Self.K, Self.E](self.source^, self.prepare^, self.function^, self.initial^)
+
+
+@fieldwise_init
+struct _CollectStep[F: UnaryContract & Movable & Deinitable, K: _Accumulate, E: Movable & Deinitable](MutableBinary):
+    """Run the callback's IO, then accumulate its value."""
+    var function: Self.F
+    comptime First = Self.K.Acc
+    comptime Second = Self.F.Arg
+    comptime Out = IO[Self.K.Acc, Self.E]
+    comptime Error = Self.F.Error
+
+    def call_mut(mut self, var acc: Self.First, var item: Self.Second) raises Self.Error -> Self.Out:
+        comptime assert RepeatableUnary[Self.F]
+        var next = _unary_repeated_as[Self.Error](self.function, item^)
+        return rebind_var[IO[Self.K.Item, Self.E]](next^)._mapped(_BindFirst(_AccumulatePair[Self.K](), acc^))
+
+
+@fieldwise_init
+struct _StartCollect[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate, E: Movable & Deinitable](OnceThunk):
+    """Start the accumulator and fold when the collection runs."""
+    var source: Self.V
+    var function: Self.F
+    comptime Out = IO[Self.K.Acc, Self.E]
+    comptime Error = Self.E
+
+    def call_once(deinit self) raises Self.Error -> Self.Out:
+        comptime assert _ErrorCompatible[Self.E, Self.K.Error]
+        var start = _start_as[Self.E, Self.K]()
+        return _start_fold[Self.V, Identity[Self.F.Arg], _CollectStep[Self.F, Self.K, Self.E], Self.K, Self.E](self.source^, Identity[Self.F.Arg](), _CollectStep[Self.F, Self.K, Self.E](self.function^), start^)
+
+
+struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):
+    """The sequencing and recovery family of IO.
+
+    Pipeline, tail_rec_m, traverse and attempt select it from an IO. Every
+    operation returns an unopened IO; callbacks run once, when the program
+    reaches them, and their errors become the IO's failure. Folds and loops
+    run on the IO run loop in constant native stack. Callbacks must own their
+    state: borrowed callback views are rejected, so pass a native function or
+    an owned callable.
+
+    Parameters:
+        E: The exact domain error shared by every IO in this family.
+    """
+    comptime Element[V: Movable & Deinitable] = downcast[V, Machine].Value
+    comptime CarrierCompatible[V: Movable & Deinitable] = _IsIO[V, Self.E]
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V] and _Maps[Self.E, F]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V] and _Binds[Self.E, F]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = Self.CarrierCompatible[V] and _OnceBinaryAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F] and _Defers[Self.E, R]
+    comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = IO[F.Out, Self.E]
+    comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
+    comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = IO[downcast[F.Out, Machine].Value, Self.E]
+    comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
+    comptime Pure[A: Movable & Deinitable] = IO[A, Self.E]
+    comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = IO[F.Out, Self.E]
+    comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:
+        """Own an evaluated value in an IO.
+
+        Parameters:
+            A: The exact owned value type, retaining native origins.
+
+        Args:
+            value: The value, consumed once.
+
+        Returns:
+            An IO producing the value.
+        """
+        return IO[A, Self.E].pure(value^)
+
+    @staticmethod
+    def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Mapped[V, F]:
+        """Apply a callback to the success value when the IO reaches it.
+
+        Parameters:
+            V: An IO in this family.
+            F: A once-admitted owned callback with a compatible native error.
+
+        Args:
+            f: The callback, consumed.
+            value: The IO, consumed.
+
+        Returns:
+            An IO whose failure includes the callback's error. Failure and
+            cancellation bypass the callback.
+        """
+        comptime assert Self.MapCompatible[V, F]
+        return rebind_var[IO[Self.Element[V], Self.E]](value^)._mapped(f^)
+
+    @staticmethod
+    def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Bound[V, F]:
+        """Continue with the IO a callback builds from the success value.
+
+        Parameters:
+            V: An IO in this family.
+            F: A once-admitted owned callback returning an IO with the same error.
+
+        Args:
+            f: The callback, consumed; it runs after success and an entry checkpoint.
+            value: The IO, consumed.
+
+        Returns:
+            An IO running both in sequence.
+        """
+        comptime assert Self.BindCompatible[V, F]
+        return rebind_var[IO[Self.Element[V], Self.E]](value^)._bind(f^)
+
+    @staticmethod
+    def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) -> Self.Combined[V, F, R]:
+        """Run the left IO, build and run the right, then combine their values.
+
+        Parameters:
+            V: The left IO in this family.
+            F: The once-admitted combiner of the left and right values.
+            R: The once-admitted factory of the right IO.
+
+        Args:
+            f: The combiner, consumed.
+            left: The left IO, consumed.
+            right: The right factory, run only after left succeeds.
+
+        Returns:
+            Sequential composition; use both for concurrent children.
+        """
+        comptime assert Self.CombineCompatible[V, F, R]
+        return rebind_var[IO[Self.Element[V], Self.E]](left^)._bind(_Combine[F, R, Self.E](f^, right^))
+
+    comptime _FoldCompatible[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = (RepeatableUnary[P] and RepeatableBinary[F] and P.Arg == _Source[V].Element and P.Out == F.Second and F.First == K.Acc and Self.CarrierCompatible[F.Out] and Self.Element[F.Out] == K.Acc and _ErrorCompatible[Self.E, P.Error] and _ErrorCompatible[Self.E, F.Error] and _Admitted[P] and _Admitted[F]) if conforms_to(V, Iterator) or conforms_to(V, IterableOwned) else False
+    comptime _Folded[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = IO[K.Acc, Self.E]
+    comptime _FoldError[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = Never
+    @staticmethod
+    def _fold[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator](var prepare: P, var step: F, var initial: K.Acc, var source: V) -> Self._Folded[V, P, F, K]:
+        comptime assert Self._FoldCompatible[V, P, F, K]
+        return IO[K.Acc, Self.E]._deferred(_StartFold[V, P, F, K, Self.E](source^, prepare^, step^, initial^))
+
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out] and RepeatableUnary[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = (Self.CollectCompatible[V, F] and Self.Element[F.Out] == K.Item and _Source[V].Element == F.Arg and _ErrorCompatible[Self.E, K.Error]) if conforms_to(V, Iterator) or conforms_to(V, IterableOwned) else False
+    comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = IO[K.Acc, Self.E]
+    comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Never
+    @staticmethod
+    def _loop[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate](var f: F, var source: V) -> Self._Looped[V, F, K]:
+        comptime assert Self._LoopCompatible[V, F, K]
+        return IO[K.Acc, Self.E]._deferred(_StartCollect[V, F, K, Self.E](source^, f^))
+
+    comptime Failure = EffectFailure[Self.E]
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime _Handles[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = (Self.Element[V] == Self.Element[H.Out] and H.Arg == Self.Failure and _Maps[Self.E, H]) if Self.CarrierCompatible[V] and Self.CarrierCompatible[H.Out] else False
+    comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = IO[Self.Element[V], Self.E]
+    comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Never
+    @staticmethod
+    def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) -> Self.Handled[V, H]:
+        """Recover an ordinary failure with the IO a handler builds.
+
+        Parameters:
+            V: An IO in this family.
+            H: A once-admitted owned handler of EffectFailure[E], keeping the value type.
+
+        Args:
+            handler: The handler, consumed; cancellation bypasses it.
+            source: The IO, consumed.
+
+        Returns:
+            An IO retaining full ordered errors and the cancellation flag.
+        """
+        comptime assert Self._Handles[V, H]
+        return rebind_var[IO[Self.Element[V], Self.E]](source^)._recover(handler^)

@@ -5,6 +5,7 @@ from fp.callables.protocols import CallContract, UnaryContract, Unary, MutableUn
 from fp.callables.invoke import _OnceBorrowAvailable, RepeatableBorrow, invoke_borrowed_repeated, RepeatableUnary, RepeatableBinary, RepeatableThunk, call_once, call_repeated, invoke_borrowed, invoke_borrowed_once
 from fp.callables.protocols import BorrowMutableCallable as _MutableBorrow
 from fp.callables.invoke import RepeatableBorrow as _RepeatableBorrow, invoke_borrowed_repeated as _borrow_repeated_as
+from fp.callables._views import _BorrowedView
 
 
 @fieldwise_init
@@ -154,7 +155,7 @@ struct _SharedThunkRef[F: Thunk, o: ImmOrigin](Thunk, ImplicitlyCopyable):
 
 
 @fieldwise_init
-struct _SharedBinaryRef[F: Binary, o: ImmOrigin](Binary, ImplicitlyCopyable):
+struct _SharedBinaryRef[F: Binary, o: ImmOrigin](Binary, ImplicitlyCopyable, _BorrowedView):
     """Retain a shared receiver while transferring both operands to its call."""
     var function: Pointer[Self.F, Self.o]
     comptime First = Self.F.First
@@ -166,7 +167,7 @@ struct _SharedBinaryRef[F: Binary, o: ImmOrigin](Binary, ImplicitlyCopyable):
 
 
 @fieldwise_init
-struct _SharedUnaryRef[F: Unary, o: ImmOrigin](Unary, ImplicitlyCopyable):
+struct _SharedUnaryRef[F: Unary, o: ImmOrigin](Unary, ImplicitlyCopyable, _BorrowedView):
     """A retained shared receiver; its output keeps the callback's own origins."""
     var function: Pointer[Self.F, Self.o]
     comptime Arg = Self.F.Arg
@@ -177,7 +178,7 @@ struct _SharedUnaryRef[F: Unary, o: ImmOrigin](Unary, ImplicitlyCopyable):
 
 
 @fieldwise_init
-struct _SharedBorrowRef[F: BorrowCallable, o: ImmOrigin](BorrowCallable, ImplicitlyCopyable):
+struct _SharedBorrowRef[F: BorrowCallable, o: ImmOrigin](BorrowCallable, ImplicitlyCopyable, _BorrowedView):
     """Retain a shared receiver while borrowing each operand for its call."""
     var function: Pointer[Self.F, Self.o]
     comptime Payload = Self.F.Payload
