@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a is next**. The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a step 1 of 3 complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -730,6 +730,38 @@ Decided on 2026-10-30:
 5. Names follow Cats Effect where it has established ones (`async`, `async_`,
    `timeout_to`, `race_pair`, `Supervisor`), and otherwise keep this library's
    existing names (`request_cancel`, `race_first`, `timeout_after`).
+
+## Pass 8a progress
+
+Step 1 of 3, the private engine core, is complete. Step 2 adds finalizers,
+masks, and law clients; step 3 switches the public API to `IO`. The full
+verification gates run after step 3.
+
+- `src/fp/effects/_async/engine.mojo` implements `IO[T, E]` over pure, fail,
+  leaf, defer, bind, and recover nodes, with an explicit frame stack and a fixed
+  budget of 1,024 transitions per poll. It is not exported publicly yet.
+  `_Erased.take` opens a box only from a function that the typed API specialized
+  for it.
+- `io_engine` covers sequencing, `map`, failures skipping later continuations,
+  recovery, deferred construction, leaves resuming a chain, `IO` values inside a
+  typed `both`, cancellation while a leaf runs, and unopened disposal, with exact
+  invocation and destruction counts.
+- `io_depth` runs these under a 1 MiB stack: a million-bind chain built at
+  runtime, a million nested `defer` levels (a million frames), a million
+  tail-recursive steps (bounded frames), disposal of an unopened million-step
+  chain, a failure crossing a million frames to recovery, and cancellation
+  unwinding a million pending frames.
+- Mojo 1.2 crashes compiling a stored function type whose result contains its
+  owner, so callbacks write their node into a lent slot; see
+  [native boundaries](native-boundaries.md#mojo-12-compatibility).
+- **Cost.** At O3 on the session host, the IO loop takes about 1.15 µs per
+  iteration against 2.7 µs for the typed `tail_rec_m` loop. A tail-recursive run
+  keeps a flat 10 MB peak RSS from 100,000 to 4,000,000 steps. Callgrind puts
+  most of the remaining work in moving engine structs through out-of-line
+  `Optional` and `Variant` operations, about 10,900 instructions per step. The
+  same program built with `-g` executes about 2,060 instructions per step and
+  runs about six times faster. Shrinking node and frame storage into fewer
+  slots is the next performance step, ahead of any pooling.
 
 ## Implementation reference map
 

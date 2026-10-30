@@ -31,6 +31,14 @@ struct _Erased(Movable):
     def __deinit__(deinit self):
         self._destroy(self._address)
 
+    def take[T: Movable & Deinitable](deinit self) -> T:
+        """Move the value out and free its storage without destroying it.
+
+        Only a function specialized by the type that created this box may call
+        this. The typed API that builds the box fixes `T` at the same site.
+        """
+        return OwnedPointer[T](unsafe_from_opaque_pointer=self._address).into_inner()
+
     def view(mut self) -> MutOpaquePointer[origin_of(self)]:
         """Lend the address with this owner's origin.
 

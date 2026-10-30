@@ -1,13 +1,14 @@
-"""Pass 7a diagnostic timings: erased dispatch and storage against the typed path."""
+"""Diagnostic timings: erased dispatch, storage and IO steps against the typed path."""
 from std.memory import OwnedPointer, ArcPointer
 from std.time import perf_counter_ns
 from std.os import abort
-from fp.callables import Unary
+from fp.callables import Unary, OnceUnary
 from fp.data import ControlFlow, Continue, Break
 from fp.effects import IOContext, CancellationToken
 from fp.effects._async.kernel import Machine, Step, Wait, run
 from fp.effects._async.composition import Pure, pure, loop
 from fp.effects._async.erased import _ErasedMachine
+from fp.effects._async.engine import IO
 
 
 def check(condition: Bool, message: String):
@@ -56,6 +57,26 @@ def loop_typed(count: Int, seed: Int) -> Int:
 def loop_erased(count: Int, seed: Int) -> Int:
     var initial: State = (0, seed)
     var outcome = run(loop(initial^, ErasedStep(count)))
+    return outcome.take()._take_ok()
+
+
+@fieldwise_init
+struct IOStep(OnceUnary):
+    """The typed loop's arithmetic as IO tail recursion through flat_map."""
+    var limit: Int
+    comptime Arg = State
+    comptime Out = IO[Int, Int]
+    def call_once(deinit self, var value: State) -> IO[Int, Int]:
+        if value[0] == self.limit:
+            return IO[Int, Int].pure(value[1])
+        var next: State = (value[0] + 1, mix(value[1]))
+        return IO[State, Int].pure(next^).flat_map(IOStep(self.limit))
+
+
+@no_inline
+def loop_io(count: Int, seed: Int) -> Int:
+    var initial: State = (0, seed)
+    var outcome = run(IO[State, Int].pure(initial^).flat_map(IOStep(count)))
     return outcome.take()._take_ok()
 
 
@@ -151,6 +172,7 @@ def main():
     var micro_expected = native_loop(MICRO, 7)
     measure[loop_typed]("typed_loop_iteration", LOOP, loop_expected)
     measure[loop_erased]("erased_loop_iteration", LOOP, loop_expected)
+    measure[loop_io]("io_loop_iteration", LOOP, loop_expected)
     measure[poll_typed]("typed_poll_dispatch", MICRO, micro_expected)
     measure[poll_erased]("erased_poll_dispatch", MICRO, micro_expected)
     measure[frame_typed]("typed_frame_alloc_poll_free", MICRO, micro_expected)

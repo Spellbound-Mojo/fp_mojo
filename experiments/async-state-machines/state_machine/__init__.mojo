@@ -10,3 +10,4 @@ from fp.effects._async.coordination import Deferred, Queue, Semaphore
 from fp.effects._async.racing import RaceResult, Race, Timeout, race, race_first, timeout_to, timeout_after
 from fp.effects._async.finalization import Guarantee, Poll, Masked, guarantee, guarantee_case, on_cancel, uncancelable, uncancelable_with
 from fp.effects._async.erased import _ErasedMachine as ErasedMachine
+from fp.effects._async.engine import IO

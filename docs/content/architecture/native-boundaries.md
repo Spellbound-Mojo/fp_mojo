@@ -8,6 +8,14 @@ API without a separate review.
 
 ## Mojo 1.2 compatibility
 
+- A struct that stores a function type whose result contains that struct
+  crashes the compiler: a callback type returning a node that holds the
+  callback is enough. `experiments/async-state-machines/probes/recursive_function_type.mojo`
+  reproduces it without the library. The IO engine's callbacks therefore write
+  their node into a slot that the run loop lends them, with the target type
+  fixed by the engine. Generic structs that recurse only through `OwnedPointer`
+  compile when they declare `__deinit__`.
+
 - An invalid consuming native callback can crash an unbounded borrowing-function
   signature while Mojo infers its native error type. Minimal `def(P) raises E -> R`
   admission reproduces the crash for an owned argument; non-raising signatures
