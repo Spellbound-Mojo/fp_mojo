@@ -1,10 +1,9 @@
-# error: no matching function
+# error: no matching method in call to 'handle_error_with'
 from fp.effects import EffectFailure
-from fp.effects._async.composition import Pure, pure
-from fp.effects._async.recovery import handle_error_with
+from fp.effects._async.engine import IO
 from recovery_support import source
 
-def wrong(var error: EffectFailure[Int]) raises String -> Pure[Int, Int]:
+def wrong(var error: EffectFailure[Int]) raises String -> IO[Int, Int]:
     raise String("foreign error")
 def main():
-    _ = handle_error_with(source(2), wrong)
+    _ = source(2).handle_error_with(wrong)

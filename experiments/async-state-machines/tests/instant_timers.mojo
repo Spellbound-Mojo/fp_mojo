@@ -1,5 +1,6 @@
 from fp.effects import CancellationToken
-from fp.effects._async.application import sleep, both
+from fp.effects._async.kernel import Sleep
+from fp.effects._async.children import both
 from fp.effects._async.host import Clock, Driver
 from fp.effects._async.time import Duration, Instant
 from std.os import abort
@@ -21,7 +22,7 @@ def main() raises:
     var clock = Clock.manual(Int.MAX)
     var tick = Duration.nanoseconds(7)
     var start = clock.now()
-    var driver = Driver(sleep[Int](tick), CancellationToken(), clock)
+    var driver = Driver(Sleep[Int](tick._nanoseconds), CancellationToken(), clock)
     var pending = driver.poll()
     check(not pending.completed and not pending.runnable and pending.deadline.value() == start + tick, "entry past Int.MAX keeps its live deadline")
     advance(clock, pending.deadline.value())
@@ -37,7 +38,7 @@ def main() raises:
     advance(clock, base)
     var near = Duration.nanoseconds(100000000000000000)
     var far = Duration.nanoseconds(900000000000000000)
-    var group = Driver(both(sleep[Int](near), sleep[Int](far)), CancellationToken(), clock)
+    var group = Driver(both(Sleep[Int](near._nanoseconds), Sleep[Int](far._nanoseconds)), CancellationToken(), clock)
     var first = group.poll()
     check(first.deadline.value() == base + near, "heap selects the earlier low-word deadline")
     advance(clock, first.deadline.value())

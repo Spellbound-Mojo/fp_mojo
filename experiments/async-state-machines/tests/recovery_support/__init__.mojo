@@ -1,13 +1,12 @@
 """Shared outcome fixtures for the recovery and materialization clients."""
 from fp.effects import Outcome, EffectFailure, IOContext
 from fp.data import Result, Ok, Err, NonEmptyList
-from fp.effects._async.family import Async, Machine
-from fp.effects._async.kernel import Step
+from fp.effects._async.kernel import Machine, Step
+from fp.effects._async.engine import IO
 
 
 @fieldwise_init
 struct Source(Machine):
-    comptime Family = Async[Int]
     comptime Value = Int
     comptime Error = Int
     var value: Optional[Outcome[Int, Int]]
@@ -18,7 +17,7 @@ struct Source(Machine):
         return .ready(self.value.take())
 
 
-def source(mode: Int, request: Bool = False) -> Source:
+def source(mode: Int, request: Bool = False) -> IO[Int, Int]:
     var outcome: Outcome[Int, Int]
     if mode == 0:
         outcome = Optional(Result[Int, EffectFailure[Int]](Ok(42)))
@@ -28,4 +27,4 @@ def source(mode: Int, request: Bool = False) -> Source:
         var rest: List[Int] = [22]
         var errors = NonEmptyList(11, rest^)
         outcome = Optional(Result[Int, EffectFailure[Int]](Err(EffectFailure(errors^, mode == 3))))
-    return Source(Optional(outcome^), request)
+    return IO[Int, Int].lift(Source(Optional(outcome^), request))

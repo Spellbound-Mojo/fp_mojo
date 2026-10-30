@@ -1,11 +1,10 @@
 # error: no matching method in call to 'use'
-from fp.effects._async.resources import resource
-from fp.effects._async.composition import Pure, pure
+from fp.effects._async.engine import IO
+from fp.effects._async.io_resource import Resource
 
-def release(value: Int) -> Pure[NoneType, Int]:
-    var unit: NoneType = None
-    return pure[Int](unit)
-def wrong(value: Int) raises String -> Pure[Int, Int]:
+def release(value: Int) -> IO[NoneType, Int]:
+    return IO[NoneType, Int].pure(NoneType())
+def wrong(value: Int) raises String -> IO[Int, Int]:
     raise String("foreign error")
 def main():
-    _ = resource(pure[Int](1), release).use(wrong)
+    _ = Resource[Int, Int].make(IO[Int, Int].pure(1), release).use(wrong)

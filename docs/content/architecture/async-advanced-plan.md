@@ -934,6 +934,37 @@ stay public, with `Resource` operations that take them:
   covers loans across a suspension, and release after success, failure, and
   cancellation.
 
+**Review follow-up: the typed recipe family is retired.** `IO` is the only
+carrier of the `Async[E]` family, so the family's admission rules have one
+implementation.
+
+- Removed: the typed `Async` family and its recipe wrapper, the typed
+  application names, and the typed recovery functions. The typed resource
+  wrapper and its constructors are also removed, since `Resource` erases the
+  same plans.
+- The private typed machines that `IO` lifts (`Both`, `Race`, `Timeout`,
+  `Sleep`, `Callback`, `EvalIO`, `Scope`, coordination and finalization leaves)
+  stay as its internal leaves. They implement the plain `Machine` contract,
+  without family metadata, and `IO` declares its family directly.
+- The pure resource factory moved beside `Resource`, which now owns the plan
+  entry points.
+- Internal clients that tested the typed surface were ported to `IO`, or removed
+  where an `IO` client already covers the same behavior. Removed:
+  `family_iteration` (covered by `io_family`); `application_aliases`,
+  `application_native`, and `application_owned` (covered by the public and
+  `io_*` clients); the two application rejection fixtures and two internal
+  resource rejection fixtures (covered by public fixtures); and
+  `resource_generic` (covered by `public_resources` and
+  `public_resource_scoped`). `application_errors` became `io_native_errors`.
+- `async_recovery` checked that the typed bind yielded once before entering a
+  handler. `IO` runs a handler in the same step, so the client now checks the
+  semantic that yield protected: a failure observed with cancellation requested
+  keeps its errors and bypasses recovery.
+- `instant_cleanup` and `instant_timers` still exercise the private leaves
+  directly.
+- `IO.delay` takes plain functions that return a value. A function with no
+  return value needs an explicit `NoneType` result, as in the examples.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:

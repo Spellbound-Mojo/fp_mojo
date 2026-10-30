@@ -6,8 +6,8 @@ from fp.effects import IOContext, ExitCase, EffectFailure
 from fp.effects._async.kernel import Machine, Step, Wait, Driver, Clock
 from fp.effects import CancellationToken
 from fp.effects._async.scopes import CleanupMachine, ScopedMachine
-from fp.effects._async.composition import Pure, pure
-from fp.effects._async.resources import resource_case, ResourceCase
+from fp.effects._async.engine import IO
+from fp.effects._async.io_resource import Resource
 from foundation import check
 
 @fieldwise_init
@@ -44,19 +44,17 @@ struct Release(CleanupMachine):
         var unit: NoneType = None
         return .ready(Optional(Result[NoneType, EffectFailure[Int]](Ok(unit))))
 
-comptime Resource = ResourceCase[Acquire, Release]
-
 @fieldwise_init
 struct Next(BorrowOnceCallable):
     comptime Payload = Int
-    comptime Result = Resource
+    comptime Result = Resource[Int, Int]
     var log: ArcPointer[List[Int]]
     var mode: Int
     comptime Failure = Int
-    def invoke_once(deinit self, ref value: Int) raises Int -> Resource:
+    def invoke_once(deinit self, ref value: Int) raises Int -> Resource[Int, Int]:
         if self.mode == 1:
             raise 90
-        return resource_case(Acquire(value + 10, self.mode == 2), Release(self.log^, True, 0))
+        return Resource[Int, Int].make_case(IO[Int, Int].lift(Acquire(value + 10, self.mode == 2)), Release(self.log^, True, 0))
 
 @fieldwise_init
 struct Body(ScopedMachine):
@@ -75,8 +73,8 @@ struct Body(ScopedMachine):
 def main():
     for mode in range(4):
         var log = ArcPointer(List[Int]())
-        var recipe = resource_case(Acquire(10, False), Release(log.copy(), True, 0)).flat_map(Next(log.copy(), mode))
-        var driver = Driver(recipe^.use(Body(0)), CancellationToken(), Clock.manual(0))
+        var recipe = Resource[Int, Int].make_case(IO[Int, Int].lift(Acquire(10, False)), Release(log.copy(), True, 0)).flat_map(Next(log.copy(), mode))
+        var driver = Driver(recipe^.use_scoped(Body(0)), CancellationToken(), Clock.manual(0))
         check(not driver.poll(1).completed, "successful acquisition yields before body entry")
         if mode == 3:
             driver.cancel()

@@ -6485,7 +6485,7 @@
   },
   "effects.async_runtime.IO": {
    "declarations": [
-    "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):"
+    "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier):"
    ],
    "kind": "type or alias",
    "methods": {

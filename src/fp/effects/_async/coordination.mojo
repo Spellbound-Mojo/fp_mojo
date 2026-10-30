@@ -10,7 +10,6 @@ from fp.effects.outcomes import _failure_as
 from fp._internal.cells import _try_lock
 from fp.callables import OnceUnary
 from .kernel import Machine, Step, Wait
-from .family import Machine as _ApplicationMachine, Async
 from .composition import pure
 from .scopes import Scope, CleanupMachine, _ProgramUse
 from .engine import IO
@@ -26,8 +25,7 @@ def _attempt[P: _RefAction](mut action: Optional[P], context: IOContext[P.Select
     return .ready(action.take()._locked(locked.take(), context, notify))
 
 
-struct _Once[P: _RefAction](_ApplicationMachine):
-    comptime Family = Async[Self.Error]
+struct _Once[P: _RefAction](Machine):
     comptime Value = Self.P.Value
     comptime Error = Self.P.SelectedError
     var action: Optional[Self.P]
@@ -45,8 +43,7 @@ struct _Once[P: _RefAction](_ApplicationMachine):
         return step^
 
 
-struct _Await[A: Movable & Deinitable, P: _RefAction & Copyable](_ApplicationMachine):
-    comptime Family = Async[Self.Error]
+struct _Await[A: Movable & Deinitable, P: _RefAction & Copyable](Machine):
     comptime Value = Self.A
     comptime Error = Self.P.SelectedError
     var template: Self.P
@@ -136,8 +133,7 @@ struct Deferred[T: Copyable & Deinitable](Copyable):
         return IO[Self.T, E]._lifted(_Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]](self._source.get[E]()._into_attempt(), False))
 
 
-struct _Offer[T: Movable & Deinitable, E: Movable & Deinitable](_ApplicationMachine):
-    comptime Family = Async[Self.Error]
+struct _Offer[T: Movable & Deinitable, E: Movable & Deinitable](Machine):
     comptime Value = NoneType
     comptime Error = Self.E
     comptime Attempt = _RefModify[Deque[Self.T], Optional[Self.T], Self.E, _TryOffer[Self.T]]

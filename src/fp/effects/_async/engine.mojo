@@ -14,7 +14,7 @@ from std.builtin.rebind import downcast, rebind_var
 from std.iter import Iterator, IterableOwned
 from std.memory import OwnedPointer, MaybeUninit
 from std.os import abort
-from fp.algebra.protocols import Monad, ErrorRecovery, _Accumulate, _LiveAccumulator, _AccumulatePair, _start_as
+from fp.algebra.protocols import Monad, ErrorRecovery, _FamilyCarrier, _Accumulate, _LiveAccumulator, _AccumulatePair, _start_as
 from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract, BorrowCallContract, OnceUnary, OnceThunk, MutableBinary
 from fp.callables.invoke import _OnceUnaryAvailable, _OnceBinaryAvailable, _OnceThunkAvailable, _OnceBorrowAvailable, RepeatableUnary, RepeatableBinary
 from fp.callables._receiver import _unary_once_as, _thunk_once_as, _borrow_once_as, _unary_repeated_as, _binary_repeated_as
@@ -38,7 +38,6 @@ from .children import both as _both
 from .racing import RaceResult, race as _race, race_first as _race_first, timeout_after as _timeout_after, timeout_to as _timeout_to
 from .io import EvalIO as _EvalIO
 from .callbacks import Callback as _Callback, Completion, _CallbackUnit
-from .family import Machine as _FamilyMachine
 from .erased import _ErasedMachine
 from .finalization import Poll
 
@@ -480,7 +479,7 @@ comptime _Binds[E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable
 comptime _Defers[E: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _OnceThunkAvailable[F] and _ErrorCompatible[E, F.Error] and _Admitted[F] and _IsIO[F.Out, E]
 
 
-struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
+struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier):
     """An asynchronous program producing T or failing with the exact domain error E.
 
     Building an IO runs nothing. A value runs once, when a host drives it;

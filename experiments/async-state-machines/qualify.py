@@ -64,8 +64,8 @@ REGRESSION_STDOUT = {
 }
 POSITIVE.update({"resource_composition", "resource_lifecycle", "resource_owned", "resource_release_factory"})
 POSITIVE.update({"pipeline_attempt", "pipeline_recovery_native"})
-POSITIVE.update({"application_native", "application_aliases", "coordination_family", "resource_generic"})
-POSITIVE.update({"application_errors", "application_owned"})
+POSITIVE.add("coordination_family")
+POSITIVE.add("io_native_errors")
 POSITIVE.update({"host_admission", "extension_boundary", "duration_admission", "instant_clock", "instant_timers", "instant_cleanup"})
 PUBLIC_EXAMPLES = {"async_sequencing", "async_iteration", "async_resources", "async_error_recovery", "async_callback_timeout", "async_host_cancel"}
 for example in suite_inventory():
@@ -76,7 +76,7 @@ POSITIVE.update({"public_generic", "public_resources", "public_owned", "public_e
 POSITIVE.add("checkpoints")
 POSITIVE.add("selection_policies")
 POSITIVE.add("io_bridge")
-POSITIVE.update({"family_sequence", "family_iteration", "family_origins"})
+POSITIVE.update({"family_sequence", "family_origins"})
 POSITIVE.update({"async_recovery", "async_attempt", "outcome_fold", "recovery_owned", "recovery_native"})
 POSITIVE.update({"erased_storage", "erased_depth", "io_engine", "io_depth", "io_finalization", "io_laws"})
 POSITIVE.update({"io_family", "io_operations", "io_resources"})
@@ -146,7 +146,7 @@ def main():
                     str(client.relative_to(ROOT)), level, include=str(include),
                     reject=errors or None, expected_stdout=expected,
                     memory_limit_bytes=(3 if client.stem in PUBLIC_EXAMPLES or client.stem.startswith("public_") else 6) * 1024**3,
-                    werror=True, compiler_threads=1, compile_timeout={"async_masking": 600, "io_bridge": 600, "scheduler": 600, **{name: 900 for name in PUBLIC_EXAMPLES | {"public_generic", "public_resources", "public_owned", "public_extension", "public_traversal_view", "public_resource_scoped"}}, "host_admission": 600, "extension_boundary": 600, "instant_timers": 600, "instant_cleanup": 900, "application_errors": 900, "application_owned": 900, "application_native": 900, "application_aliases": 900, "coordination_family": 900, "resource_generic": 900, "depth": 360, "racing_origins": 240, "timeouts": 600, "selection_policies": 600, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_iteration": 600, "family_origins": 600, "workload": 360, "io_engine": 360, "io_depth": 360, "io_finalization": 360, "io_laws": 360, "io_family": 600, "io_operations": 600, "io_resources": 600, "async_coordination": 600, "coordination_origins": 600, "coordination_owned": 600}.get(client.stem, 120),
+                    werror=True, compiler_threads=1, compile_timeout={"async_masking": 600, "io_bridge": 600, "scheduler": 600, **{name: 900 for name in PUBLIC_EXAMPLES | {"public_generic", "public_resources", "public_owned", "public_extension", "public_traversal_view", "public_resource_scoped"}}, "host_admission": 600, "extension_boundary": 600, "instant_timers": 600, "instant_cleanup": 900, "io_native_errors": 600, "coordination_family": 900, "depth": 360, "racing_origins": 240, "timeouts": 600, "selection_policies": 600, "resource_composition": 900, "resource_lifecycle": 900, "resource_owned": 600, "resource_release_factory": 600, "pipeline_attempt": 600, "pipeline_recovery_native": 900, "outcome_fold": 360, "recovery_native": 900, "async_recovery": 600, "async_attempt": 600, "recovery_owned": 600, "family_sequence": 360, "family_origins": 600, "workload": 360, "io_engine": 360, "io_depth": 360, "io_finalization": 360, "io_laws": 360, "io_family": 600, "io_operations": 600, "io_resources": 600, "async_coordination": 600, "coordination_origins": 600, "coordination_owned": 600}.get(client.stem, 120),
                     execution_timeout={"composition": 90, "io_depth": 120}.get(client.stem, 15))
                 jobs.append((route, case))
 
@@ -157,7 +157,7 @@ def main():
         result = execute_case(case, binary, run.folder / "cases" / name)
         audit = audit_case(case, result, binary, folder=run.folder)
         bounded_stack = None
-        if result["passed"] and not audit and Path(case.source).stem in {"composition", "loop_lifecycle", "depth", "family_iteration", "erased_depth", "io_depth", "io_family"}:
+        if result["passed"] and not audit and Path(case.source).stem in {"composition", "loop_lifecycle", "depth", "erased_depth", "io_depth", "io_family"}:
             # Apply the stack limit to execution only, never to the compiler.
             bounded_stack = command(
                 ["bash", "-c", 'ulimit -s 1024\nexec "$1"', "bounded-stack", str(binary)],

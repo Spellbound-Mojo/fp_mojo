@@ -7,7 +7,7 @@ Composition reuses the typed plan owners: flat_map joins this resource as the
 left plan of the canonical join.
 """
 from std.builtin.rebind import downcast, rebind_var
-from fp.callables.protocols import BorrowCallContract
+from fp.callables.protocols import BorrowCallContract, Unary
 from fp.callables.invoke import _OnceBorrowAvailable
 from fp.callables.native import NativeBorrow
 from fp._internal.erased import _Erased
@@ -15,8 +15,9 @@ from fp._internal.errors import _ErrorCompatible
 from fp.effects import IOContext
 from fp.effects.resources import _MapScopeFactory
 from .kernel import Machine, Step
-from .scopes import ScopedMachine, CleanupMachine
-from .resources import ResourcePlan, _AsyncResourceType, _Acquire, _Join, _ScopedBuild, _PureFactory, _acquire_release
+from .scopes import ScopedMachine, CleanupMachine, _ProgramUse
+from .composition import Pure as _Pure, pure as _pure
+from .resources import ResourcePlan, _AsyncResourceType, _Acquire, _Join, _ScopedBuild, _acquire_release
 from .engine import IO, _IsIO, _Admitted, _box_step, _Unbox
 
 
@@ -135,7 +136,7 @@ struct Resource[T: Movable & Deinitable, E: Movable & Deinitable](ResourcePlan, 
     @staticmethod
     def pure(var value: Self.T) -> Self:
         """Own a value as a resource with nothing to release."""
-        return Self(_PureFactory[Self.T, Self.E]().call(value^)._into_plan())
+        return _PureFactory[Self.T, Self.E]().call(value^)
 
     def use[F: BorrowCallContract & Movable & Deinitable](deinit self, var body: F) -> IO[downcast[F.Result, Machine].Value, Self.E] where _Factory[Self.T, Self.E, F] and _IsIO[F.Result, Self.E]:
         """Acquire, build the body's IO from the borrowed resource, run it, then release.
@@ -211,3 +212,14 @@ struct Resource[T: Movable & Deinitable, E: Movable & Deinitable](ResourcePlan, 
     def map[R: Movable & Deinitable, //](deinit self, f: def(Self.T) thin -> R) -> Resource[R, Self.E]:
         """Project an owned value through a native function."""
         return self^.map(NativeBorrow[Self.T, R, Never, def(Self.T) thin -> R, False](f))
+
+
+@fieldwise_init
+struct _PureFactory[T: Movable & Deinitable, E: Movable & Deinitable](Unary, Defaultable):
+    """Own a value as a resource whose release does nothing; map projects through it."""
+    comptime Arg = Self.T
+    comptime Out = Resource[Self.T, Self.E]
+
+    def call(self, var value: Self.T) -> Self.Out:
+        var unit: NoneType = None
+        return Self.Out(_acquire_release(_pure[Self.E](value^), _ProgramUse[_Pure[NoneType, Self.E], Self.T](_pure[Self.E](unit))))

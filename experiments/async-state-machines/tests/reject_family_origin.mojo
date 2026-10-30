@@ -1,7 +1,7 @@
 # error: lacking evidence to prove correctness
 from fp.algebra import map
 from fp.callables import OnceUnary
-from fp.effects._async.family import Async
+from fp.effects._async.engine import Async
 @fieldwise_init
 struct Keep[o: ImmOrigin](OnceUnary):
     comptime Arg = Span[Int, Self.o]

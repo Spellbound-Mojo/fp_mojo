@@ -58657,10 +58657,9 @@
     }
    ],
    "provider": "effects/_async/engine",
-   "signature": "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine)",
+   "signature": "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier)",
    "summary": "An asynchronous program producing T or failing with the exact domain error E.",
    "traits": [
-    "Machine",
     "Machine",
     "_FamilyCarrier"
    ]

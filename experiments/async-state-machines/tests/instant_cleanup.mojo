@@ -1,7 +1,11 @@
 """Wide manual time cannot truncate masked withdrawal or its captured owners."""
 from std.memory import ArcPointer
 from fp.effects import CancellationToken, Outcome
-from fp.effects._async.application import callback, guarantee, sleep, delay
+from fp.callables import OnceUnary
+from fp.effects._async.callbacks import callback
+from fp.effects._async.finalization import guarantee
+from fp.effects._async.kernel import Sleep
+from fp.effects._async.io import delay
 from fp.effects._async.callbacks import Completion
 from fp.effects._async.host import Clock, Driver
 from fp.effects._async.time import Duration
@@ -16,6 +20,16 @@ struct Guard(Movable):
         self.drops[] += 1
 
 
+@fieldwise_init
+struct Register(OnceUnary):
+    var saved: ArcPointer[Optional[Completion[Int, Int]]]
+    comptime Arg = Completion[Int, Int]
+    comptime Out = NoneType
+    def call_once(deinit self, var done: Completion[Int, Int]) -> NoneType:
+        self.saved[] = Optional(done^)
+        return None
+
+
 def withdrawal_case(fail: Bool) raises:
     var clock = Clock.manual(Int.MAX)
     var span = Duration.nanoseconds(7)
@@ -23,15 +37,13 @@ def withdrawal_case(fail: Bool) raises:
     var drops = ArcPointer(0)
     var calls = ArcPointer(0)
     var guard = Guard(drops.copy())
-    def register(done: Completion[Int, Int]) {saved}:
-        saved[] = Optional(done.copy())
     def release() raises Int {var guard^, calls, fail}:
         calls[] += 1
         check(guard.drops[] == 0, "withdrawal capture lives through the timer")
         if fail:
             raise 42
-    var cleanup = guarantee(sleep[Int](span), delay[Int](release^))
-    var driver = Driver(callback(register, cleanup^), CancellationToken(), clock)
+    var cleanup = guarantee(Sleep[Int](span._nanoseconds), delay[Int](release^))
+    var driver = Driver(callback(Register(saved.copy()), cleanup^), CancellationToken(), clock)
     var entered = driver.poll()
     check(not entered.completed and not entered.runnable and Bool(saved[]), "registration enters and parks")
     driver.request_cancel()

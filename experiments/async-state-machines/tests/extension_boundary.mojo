@@ -3,15 +3,14 @@ from std.memory import ArcPointer
 from fp.effects import IOContext, EffectFailure
 from fp.data import Result, Ok
 from fp.functions import pipeline
-from fp.effects._async.family import Async, Machine
-from fp.effects._async.kernel import Step, Wait, Signal
+from fp.effects._async.engine import IO
+from fp.effects._async.kernel import Machine, Step, Wait, Signal
 from fp.effects._async.host import Driver
 from foundation import check
 
 
 @fieldwise_init
 struct External(Machine):
-    comptime Family = Async[Int]
     comptime Value = Int
     comptime Error = Int
     var signal: Signal
@@ -36,7 +35,7 @@ def add(var value: Int) -> Int:
 def main():
     var signal = Signal()
     var state = ArcPointer(0)
-    var driver = Driver(pipeline(External(signal.copy(), state.copy(), False)).map(add).get())
+    var driver = Driver(pipeline(IO[Int, Int].lift(External(signal.copy(), state.copy(), False))).map(add).get())
     var first = driver.poll()
     check(not first.completed and not first.runnable, "leaf parks through supported wait descriptor")
     state[] = 42

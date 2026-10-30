@@ -2,16 +2,14 @@
 from std.memory import ArcPointer
 from fp.effects import IOContext, EffectFailure
 from fp.data import Result, Ok
-from fp.effects._async.family import Async, Machine
-from fp.effects._async.application import pure, Pure
-from fp.effects._async.kernel import Step, Wait
+from fp.effects._async.composition import pure, Pure
+from fp.effects._async.kernel import Machine, Step, Wait
 from fp.effects._async.host import Driver, Nursery, run
 from foundation import check
 
 
 @fieldwise_init
 struct Source(Machine):
-    comptime Family = Async[Int]
     comptime Value = Int
     comptime Error = Int
     var calls: ArcPointer[Int]

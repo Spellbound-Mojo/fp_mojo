@@ -1,13 +1,12 @@
 """Materialization exposes only recoverable errors as successful Result values."""
 from fp.effects._async.kernel import run
-from fp.effects._async.recovery import attempt
 from foundation import check
 from recovery_support import source
 
 
 def main():
     for mode in range(4):
-        var outcome = run(attempt(source(mode)))
+        var outcome = run(source(mode).attempt())
         if mode == 1:
             check(not outcome, "attempt must not recover cancellation-only")
         elif mode == 3:

@@ -2,7 +2,6 @@
 from fp.effects import CancellationToken, Outcome, IOContext
 from fp._internal.waking import _Clock
 from fp._internal.time import Instant
-from .family import Machine as _FamilyMachine, Async
 from .kernel import Machine, Driver as _Driver, Progress, Step, run as _run
 from .nurseries import Nursery as _Nursery, Spawner
 
@@ -114,7 +113,7 @@ struct Driver[P: Machine](Movable, not Deinitable):
         return self._driver^.finish()
 
 
-struct Nursery[P: Machine](_FamilyMachine):
+struct Nursery[P: Machine](Machine):
     """Own a bounded lifetime total of accepted children of one exact type.
 
     Parameters:
@@ -124,8 +123,6 @@ struct Nursery[P: Machine](_FamilyMachine):
     """Successful child values in admission order."""
     comptime Error = Self.P.Error
     """The exact child domain error."""
-    comptime Family = Async[Self.Error]
-    """The selected family for Pipeline composition."""
     var _nursery: _Nursery[Self.P]
     def __init__(out self, limit: Int) raises:
         """Create an unopened nursery with checked total admission capacity.

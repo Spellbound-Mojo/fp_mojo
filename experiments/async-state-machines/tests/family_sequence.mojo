@@ -1,12 +1,11 @@
-"""Existing algebra and Pipeline dispatch construct concrete async recipes."""
+"""Existing algebra and Pipeline dispatch build IO programs through the Async family."""
 from std.memory import ArcPointer
 from fp.functions import pipeline
 from fp.algebra import pure, map, map2_lazy
-from fp.callables import OnceUnary, OnceThunk, as_binary
+from fp.callables import OnceUnary, OnceThunk, as_binary, as_unary
 from fp.effects import CancellationToken
-from fp.effects._async.family import Async, _Recipe
+from fp.effects._async.engine import Async
 from fp.effects._async.kernel import run
-from fp.effects._async.io import delay
 from foundation import check, Resource
 
 
@@ -60,7 +59,7 @@ def main():
     check(calls[] == 0, "family construction must not call callbacks")
     var result = run(program^)
     check(result.take()._take_ok() == 43 and calls[] == 1, "Pipeline must select Async and sequence callbacks once")
-    var failed = map[Async[Int]](broken, pure[Async[Int]](7))
+    var failed = map[Async[Int]](as_unary(broken), pure[Async[Int]](7))
     var skipped = run(map2_lazy[Async[Int]](as_binary(plus), failed^, RightSide(calls.copy())))
     check(calls[] == 1, "failed left side must skip lazy right factory")
     var failure = skipped.take()._take_err()

@@ -13,7 +13,6 @@ from .kernel import Machine, Step, Wait, _Slot, _tick
 from .scopes import ScopedMachine, CleanupMachine, Scope, _ProgramUse
 from .children import _tick_scoped
 from .composition import Pure, pure
-from .family import Machine as _ApplicationMachine, Async
 
 
 struct _ScopedCleanup[F: ScopedMachine, only_cancel: Bool = False, resource: Bool = False](CleanupMachine):
@@ -99,8 +98,7 @@ struct Poll[E: Movable & Deinitable](Copyable):
 
 
 @fieldwise_init
-struct _Polled[P: Machine, E: Movable & Deinitable](_ApplicationMachine):
-    comptime Family = Async[Self.E]
+struct _Polled[P: Machine, E: Movable & Deinitable](Machine):
     comptime Value = Self.P.Value
     comptime Error = Self.E
     var slot: _Slot[Self.P, Self.P.Value, Self.P.Error]
