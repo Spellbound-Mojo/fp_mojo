@@ -1,0 +1,490 @@
+{
+  "format_version": 1,
+  "source_commit": "b753ce9ec1954422d5126c0e743eede9b2d22660",
+  "run": "overnight-1",
+  "report_sha256": "0eb1c5201a8040e104c4401fd52949ea813913ce4435a1cd046688e7310f000d",
+  "started": "2026-10-29T21:07:58.430214-04:00",
+  "finished": "2026-10-30T03:37:01.794439-04:00",
+  "elapsed_seconds": 23343.63389801979,
+  "host": {
+    "compiler": "Mojo 1.2.0 (2016d0cd)",
+    "platform": "Linux-6.18.55-x86_64-with-glibc2.41",
+    "machine": "x86_64",
+    "cpu": "AMD EPYC 9V74 80-Core Processor",
+    "target": "Effective target configuration:\n  --target-triple x86_64-unknown-linux-gnu\n  --target-cpu znver4\n  --target-features +adx,+aes,+avx,+avx2,+avx512bf16,+avx512bitalg,+avx512bw,+avx512cd,+avx512dq,+avx512f,+avx512ifma,+avx512vbmi,+avx512vbmi2,+avx512vl,+avx512vnni,+avx512vpopcntdq,+bmi,+bmi2,+clflushopt,+clwb,+clzero,+crc32,+cx16,+cx8,+f16c,+fma,+fsgsbase,+fxsr,+gfni,+invpcid,+lzcnt,+mmx,+movbe,+pclmul,+popcnt,+prfchw,+rdpid,+rdrnd,+rdseed,+sahf,+sha,+shstk,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+sse4a,+ssse3,+vaes,+vpclmulqdq,+x87,+xsave,+xsavec,+xsaveopt,+xsaves,-mwaitx,-pku,-rdpru,-wbnoinvd"
+  },
+  "qualification": {
+    "passed": true,
+    "overnight_qualified": true,
+    "independent_reaudit": "PASS; no failures",
+    "compiled_clients": 14,
+    "one_hour_soaks": 12,
+    "serial_performance_runs": 2,
+    "seconds_per_soak": 3600,
+    "maximum_workers": 2,
+    "runtime_memory_limit_bytes": 536870912,
+    "scope": "Pinned Linux x86-64 cooperative host runtime; local performance diagnostics; no release-status change."
+  },
+  "observations": {
+    "metadata-source-O0": {
+      "work": {
+        "cycles": 5777156,
+        "elapsed_ns": 3600000458242,
+        "nodes": 4,
+        "node_capacity": 4,
+        "subscriptions": 2,
+        "subscription_capacity": 2,
+        "timers_peak": 35,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 630,
+        "early_median_bytes": 9863168,
+        "late_median_bytes": 9863168,
+        "peak_bytes": 9863168,
+        "allowance_bytes": 4194304
+      }
+    },
+    "metadata-source-O3": {
+      "work": {
+        "cycles": 205112921,
+        "elapsed_ns": 3600000055434,
+        "nodes": 4,
+        "node_capacity": 4,
+        "subscriptions": 2,
+        "subscription_capacity": 2,
+        "timers_peak": 35,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 630,
+        "early_median_bytes": 9347072,
+        "late_median_bytes": 9347072,
+        "peak_bytes": 9347072,
+        "allowance_bytes": 4194304
+      }
+    },
+    "metadata-package-O0": {
+      "work": {
+        "cycles": 5881110,
+        "elapsed_ns": 3600000340969,
+        "nodes": 4,
+        "node_capacity": 4,
+        "subscriptions": 2,
+        "subscription_capacity": 2,
+        "timers_peak": 35,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 632,
+        "early_median_bytes": 10010624.0,
+        "late_median_bytes": 10010624.0,
+        "peak_bytes": 10010624,
+        "allowance_bytes": 4194304
+      }
+    },
+    "metadata-package-O3": {
+      "work": {
+        "cycles": 209197559,
+        "elapsed_ns": 3600000007570,
+        "nodes": 4,
+        "node_capacity": 4,
+        "subscriptions": 2,
+        "subscription_capacity": 2,
+        "timers_peak": 35,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 632,
+        "early_median_bytes": 9359360.0,
+        "late_median_bytes": 9359360.0,
+        "peak_bytes": 9359360,
+        "allowance_bytes": 4194304
+      }
+    },
+    "lifecycle-source-O0": {
+      "work": {
+        "cycles": 4268653,
+        "elapsed_ns": 3600000712328,
+        "nodes": 11,
+        "node_capacity": 16,
+        "timers_peak": 2,
+        "payloads": 12805963,
+        "drops": 12805963,
+        "withdrawals": 4268653,
+        "polls": 7114421,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 631,
+        "early_median_bytes": 11227136,
+        "late_median_bytes": 11227136,
+        "peak_bytes": 11227136,
+        "allowance_bytes": 4194304
+      }
+    },
+    "lifecycle-source-O3": {
+      "work": {
+        "cycles": 51584524,
+        "elapsed_ns": 3600000197414,
+        "nodes": 11,
+        "node_capacity": 16,
+        "timers_peak": 2,
+        "payloads": 154753576,
+        "drops": 154753576,
+        "withdrawals": 51584524,
+        "polls": 85974206,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 630,
+        "early_median_bytes": 10022912,
+        "late_median_bytes": 10022912,
+        "peak_bytes": 10022912,
+        "allowance_bytes": 4194304
+      }
+    },
+    "lifecycle-package-O0": {
+      "work": {
+        "cycles": 4227645,
+        "elapsed_ns": 3600000393168,
+        "nodes": 11,
+        "node_capacity": 16,
+        "timers_peak": 2,
+        "payloads": 12682939,
+        "drops": 12682939,
+        "withdrawals": 4227645,
+        "polls": 7046075,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 631,
+        "early_median_bytes": 11239424,
+        "late_median_bytes": 11239424,
+        "peak_bytes": 11239424,
+        "allowance_bytes": 4194304
+      }
+    },
+    "lifecycle-package-O3": {
+      "work": {
+        "cycles": 51199148,
+        "elapsed_ns": 3600000103064,
+        "nodes": 11,
+        "node_capacity": 16,
+        "timers_peak": 2,
+        "payloads": 153597449,
+        "drops": 153597449,
+        "withdrawals": 51199148,
+        "polls": 85331913,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 631,
+        "early_median_bytes": 10080256,
+        "late_median_bytes": 10088448,
+        "peak_bytes": 10088448,
+        "allowance_bytes": 4194304
+      }
+    },
+    "workers-source-O0": {
+      "work": {
+        "cycles": 551458,
+        "elapsed_ns": 3600004794827,
+        "queue_capacity": 64,
+        "subscription_capacity": 1,
+        "modes": 4,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 630,
+        "early_median_bytes": 12873728,
+        "late_median_bytes": 12873728,
+        "peak_bytes": 12873728,
+        "allowance_bytes": 4194304
+      }
+    },
+    "workers-source-O3": {
+      "work": {
+        "cycles": 6065177,
+        "elapsed_ns": 3600000175367,
+        "queue_capacity": 64,
+        "subscription_capacity": 1,
+        "modes": 4,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 630,
+        "early_median_bytes": 10891264,
+        "late_median_bytes": 10895360,
+        "peak_bytes": 10895360,
+        "allowance_bytes": 4194304
+      }
+    },
+    "workers-package-O0": {
+      "work": {
+        "cycles": 530104,
+        "elapsed_ns": 3600000760844,
+        "queue_capacity": 64,
+        "subscription_capacity": 1,
+        "modes": 4,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 629,
+        "early_median_bytes": 12906496,
+        "late_median_bytes": 12914688,
+        "peak_bytes": 12914688,
+        "allowance_bytes": 4194304
+      }
+    },
+    "workers-package-O3": {
+      "work": {
+        "cycles": 5836523,
+        "elapsed_ns": 3600000009436,
+        "queue_capacity": 64,
+        "subscription_capacity": 1,
+        "modes": 4,
+        "active": 0,
+        "live_timers": 0
+      },
+      "memory": {
+        "qualified": true,
+        "samples": 628,
+        "early_median_bytes": 10821632,
+        "late_median_bytes": 10821632,
+        "peak_bytes": 10821632,
+        "allowance_bytes": 4194304
+      }
+    },
+    "performance-source-O3": [
+      {
+        "kind": "idle",
+        "size": 1,
+        "samples": 9,
+        "idle_ns": {
+          "min": 1616129,
+          "median": 1921330,
+          "p95": 3783505,
+          "max": 3783505
+        },
+        "cancel_ns": {
+          "min": 5598,
+          "median": 7922,
+          "p95": 14412,
+          "max": 14412
+        }
+      },
+      {
+        "kind": "idle",
+        "size": 64,
+        "samples": 9,
+        "idle_ns": {
+          "min": 1792646,
+          "median": 2216315,
+          "p95": 10360858,
+          "max": 10360858
+        },
+        "cancel_ns": {
+          "min": 150177,
+          "median": 234433,
+          "p95": 463329,
+          "max": 463329
+        }
+      },
+      {
+        "kind": "idle",
+        "size": 512,
+        "samples": 9,
+        "idle_ns": {
+          "min": 2098347,
+          "median": 2464400,
+          "p95": 2787798,
+          "max": 2787798
+        },
+        "cancel_ns": {
+          "min": 1763231,
+          "median": 2087291,
+          "p95": 2368915,
+          "max": 2368915
+        }
+      },
+      {
+        "kind": "sequence",
+        "size": 1024,
+        "samples": 9,
+        "native_ns": {
+          "min": 1402,
+          "median": 1402,
+          "p95": 1423,
+          "max": 1423
+        },
+        "async_ns": {
+          "min": 5025575,
+          "median": 5079697,
+          "p95": 5387852,
+          "max": 5387852
+        }
+      },
+      {
+        "kind": "sequence",
+        "size": 8192,
+        "samples": 9,
+        "native_ns": {
+          "min": 11087,
+          "median": 11217,
+          "p95": 11708,
+          "max": 11708
+        },
+        "async_ns": {
+          "min": 39955706,
+          "median": 41100715,
+          "p95": 70346827,
+          "max": 70346827
+        }
+      },
+      {
+        "kind": "sequence",
+        "size": 65536,
+        "samples": 9,
+        "native_ns": {
+          "min": 88704,
+          "median": 88754,
+          "p95": 90968,
+          "max": 90968
+        },
+        "async_ns": {
+          "min": 369689879,
+          "median": 434321837,
+          "p95": 477254789,
+          "max": 477254789
+        }
+      }
+    ],
+    "performance-package-O3": [
+      {
+        "kind": "idle",
+        "size": 1,
+        "samples": 9,
+        "idle_ns": {
+          "min": 1507605,
+          "median": 1865666,
+          "p95": 2003674,
+          "max": 2003674
+        },
+        "cancel_ns": {
+          "min": 4998,
+          "median": 6309,
+          "p95": 7521,
+          "max": 7521
+        }
+      },
+      {
+        "kind": "idle",
+        "size": 64,
+        "samples": 9,
+        "idle_ns": {
+          "min": 1703201,
+          "median": 1831204,
+          "p95": 1981761,
+          "max": 1981761
+        },
+        "cancel_ns": {
+          "min": 145560,
+          "median": 148584,
+          "p95": 231479,
+          "max": 231479
+        }
+      },
+      {
+        "kind": "idle",
+        "size": 512,
+        "samples": 9,
+        "idle_ns": {
+          "min": 1683911,
+          "median": 1786947,
+          "p95": 2011886,
+          "max": 2011886
+        },
+        "cancel_ns": {
+          "min": 1209976,
+          "median": 1231298,
+          "p95": 1288665,
+          "max": 1288665
+        }
+      },
+      {
+        "kind": "sequence",
+        "size": 1024,
+        "samples": 9,
+        "native_ns": {
+          "min": 1413,
+          "median": 1423,
+          "p95": 1532,
+          "max": 1532
+        },
+        "async_ns": {
+          "min": 6910030,
+          "median": 8967345,
+          "p95": 13453405,
+          "max": 13453405
+        }
+      },
+      {
+        "kind": "sequence",
+        "size": 8192,
+        "samples": 9,
+        "native_ns": {
+          "min": 11097,
+          "median": 11166,
+          "p95": 12468,
+          "max": 12468
+        },
+        "async_ns": {
+          "min": 47310447,
+          "median": 58615952,
+          "p95": 77650717,
+          "max": 77650717
+        }
+      },
+      {
+        "kind": "sequence",
+        "size": 65536,
+        "samples": 9,
+        "native_ns": {
+          "min": 88733,
+          "median": 91498,
+          "p95": 154604,
+          "max": 154604
+        },
+        "async_ns": {
+          "min": 383015963,
+          "median": 424824695,
+          "p95": 442834420,
+          "max": 442834420
+        }
+      }
+    ]
+  }
+}

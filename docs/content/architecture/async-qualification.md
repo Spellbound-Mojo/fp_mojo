@@ -5,6 +5,12 @@ established its public contracts and source/package compatibility. This pass
 adds a repeatable Linux qualification protocol; launching a run or passing its
 short calibration does not complete overnight qualification.
 
+**Status: Pass 6 completed.** The twelve one-hour source/package O0/O3 stress
+cases and both serial O3 performance runs passed on commit `b753ce9`. An
+independent replay of the retained evidence audit also passed. This completes
+the planned qualification for the opt-in preview; it does not change its release
+status or platform scope.
+
 ## Workloads and storage contracts
 
 The clients in `experiments/async-state-machines/stress/` use the canonical
@@ -99,9 +105,67 @@ do not replace the repository's historical macOS benchmark profile, define a
 throughput SLO, or compare Mojo with Cats Effect/JVM or GPU execution. Shared
 host load can affect wall times even though this runner's own workers are joined.
 
-## Evidence and completion
+## Overnight results
 
-The initial source-import O0 calibration on 2026-10-30 ran each stress client
+The run started October 29, 2026 at 9:07 p.m. and finished October 30 at
+3:37 a.m. America/New_York: 6 hours 29 minutes including compilation. All 14
+compiled clients passed their smoke checks before the twelve one-hour stress
+cases ran. There were no crashes, timeouts, exceeded memory budgets, changed
+inputs, failed assertions, or audit failures.
+
+The host was Linux x86-64 on an AMD EPYC 9V74, using Mojo 1.2.0 (`2016d0cd`).
+The [retained results summary](async-qualification-results.json) contains each
+route's counters, memory observations, performance distributions, source commit,
+and the original report's SHA-256.
+
+| Workload, summed across four routes | Completed cycles | Post-warmup RSS range | Largest early-to-late median RSS increase |
+|---|---:|---:|---:|
+| Metadata reuse | 425,968,746 | 8.91–9.55 MiB | 0 bytes |
+| Persistent callback loop | 111,279,970 | 9.56–10.72 MiB | 8 KiB |
+| Structured workers | 12,983,262 | 10.32–12.32 MiB | 8 KiB |
+
+Every stress process ended with zero live task/timer registrations. Across the
+callback runs, all 333,839,927 created payloads were destroyed and all 111,279,970
+withdrawals completed. Registry capacities, subscription reuse, timer tombstone
+bounds, queue capacity and permit restoration satisfied their assertions
+throughout the runs. RSS remained well below the 512 MiB per-process budget.
+These observations support bounded retained storage for the tested workloads;
+they do not prove absence of leaks in every possible client.
+
+After all stress workers joined, each import route supplied nine warmed samples
+per performance configuration. All 108 samples passed independent checksum and
+zero-idle-work checks. Median observations were:
+
+| Measurement | Source import | Package import |
+|---|---:|---:|
+| Async sequence, 1,024 iterations | 5.08 ms | 8.97 ms |
+| Async sequence, 8,192 iterations | 41.10 ms | 58.62 ms |
+| Async sequence, 65,536 iterations | 434.32 ms | 424.82 ms |
+| Idle driver call, 1 sleeping child | 192 ns | 187 ns |
+| Idle driver call, 64 sleeping children | 222 ns | 183 ns |
+| Idle driver call, 512 sleeping children | 246 ns | 179 ns |
+| Cancel and drain 512 sleeping children | 2.09 ms | 1.23 ms |
+
+Idle calls performed no child polls or timer events at any tested population.
+Cancellation cost increased with the children that had to be drained. The typed
+loop cost roughly 5–9 microseconds per iteration, versus roughly 1.4 nanoseconds
+for the native arithmetic loop: very fine-grained async sequencing has substantial
+overhead. These local measurements establish an initial diagnostic baseline,
+not a throughput guarantee. Source/package timing differences and outliers are
+not enough to diagnose a regression on a shared host. Future performance work
+should profile sequencing costs while preserving the qualified ownership and
+cancellation contracts.
+
+The full immutable bundle is retained at
+`/workspace/async-pass6-b753ce9/.cache/async-stress/overnight-1/` in the execution
+workspace. Its final report declares `passed: true` and
+`overnight_qualified: true`; the separate `--audit` invocation returned
+`PASS []`. The results summary is committed so other agents can inspect the
+findings without relying on that workspace path.
+
+## Calibration and evidence retention
+
+The initial source-import O0 calibration on October 29, 2026 (America/New_York) ran each stress client
 for 120 seconds on the pinned Linux toolchain:
 
 | Client | Completed cycles | Early / late median process-tree RSS |
@@ -118,9 +182,9 @@ performance client's 54 observations also passed checksum and idle-work checks;
 those probe timings overlapped compilation and are not the serial baseline.
 All 62 tooling tests and the strict rendered-documentation check passed.
 
-These are preliminary results for one import/optimization route. The full
-source/package O0/O3 overnight matrix and subsequent serial timings are still
-required before Pass 6 is complete.
+These preliminary results cover one import/optimization route; the completed
+overnight matrix and separate serial measurements above provide the Pass 6
+qualification evidence.
 
 Each fresh output directory retains source and package inputs, executable hashes,
 compilation and execution logs, per-case records, RSS traces and the artifact

@@ -6,8 +6,9 @@ implemented under `src/fp/effects/_async`, with focused qualification under
 [readiness review](async-public-api-review.md). **Status: implemented as an opt-in preview.** The
 [async guide](../guides/async-runtime.md) and generated references describe the
 available surface. The proposal below retains design rationale and staged
-qualification evidence. [Pass 6 qualification](async-qualification.md) is now
-in progress.
+qualification evidence. [Pass 6 qualification](async-qualification.md) is complete
+for the pinned Linux preview, including sustained storage and local performance
+measurements.
 
 The recommended contract is cooperative execution on one host thread, concrete
 owned machine types, exact typed outcomes, and structured cleanup. Cats and Cats
@@ -841,9 +842,11 @@ is tracked separately in Pass 6.
 
 ## Implementation passes after agreement
 
-Passes 1–5 are complete for the opt-in preview. Pass 6 is in progress;
-its [qualification protocol](async-qualification.md) separates short calibration
-from sustained storage evidence and local performance diagnostics.
+Passes 1–6 are complete for the opt-in preview. The
+[qualification results](async-qualification.md#overnight-results) record twelve
+successful one-hour source/package O0/O3 stress cases, bounded retained storage,
+and separate serial performance diagnostics. This completes the implementation
+plan without changing the preview's release status or platform scope.
 
 1. **Behavior and native-signature decisions.** Qualify race/timeout cancellation
    checkpoints, error-recovery capability and laws, resumable resource
