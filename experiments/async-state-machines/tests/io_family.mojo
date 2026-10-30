@@ -1,8 +1,8 @@
 """IO selects its Async family: Pipeline, tail recursion, traversal, collection, products and attempt."""
 from std.iter import Iterator
 from std.memory import ArcPointer
-from fp.algebra import pure, product, tail_rec_m, map, flat_map, traverse, ListFamily, IntSumMonoid
-from fp.iteration import traverse as collect, flat_traverse, find_map_effect, fold_map_effect
+from fp.algebra import pure, product, tail_rec_m, map, flat_map, traverse, if_effect, ListFamily, IntSumMonoid
+from fp.iteration import traverse as collect, flat_traverse, find_map_effect, fold_map_effect, traverse_filter, traverse_tap, filter_effect, any_effect, all_effect, find_effect, fold_effect
 from fp.callables import MutableUnary
 from fp.functions import pipeline
 from fp.data import ControlFlow, Continue, Break
@@ -30,6 +30,22 @@ def pair(value: Int) -> IO[List[Int], Int]:
 
 def above_one(value: Int) -> IO[Optional[Int], Int]:
     return IO[Optional[Int], Int].pure(Optional(value) if value > 1 else None)
+
+
+def is_big(value: Int) -> IO[Bool, Int]:
+    return IO[Bool, Int].pure(value > 1)
+
+
+def accumulate(var total: Int, var value: Int) -> IO[Int, Int]:
+    return IO[Int, Int].pure(total + value)
+
+
+def one() -> IO[Int, Int]:
+    return IO[Int, Int].pure(1)
+
+
+def two() -> IO[Int, Int]:
+    return IO[Int, Int].pure(2)
 
 
 def increment(value: Int) -> Int:
@@ -114,8 +130,23 @@ def iteration():
     check(len(flat.take()._take_ok()) == 6, "free flat_traverse owns a plain function")
     var found = run(find_map_effect[Async[Int]](above_one, small.copy()))
     check(found.take()._take_ok().value() == 2, "free find_map_effect owns a plain function")
-    var total = run(fold_map_effect[Async[Int], IntSumMonoid](twice, small^))
+    var total = run(fold_map_effect[Async[Int], IntSumMonoid](twice, small.copy()))
     check(total.take()._take_ok() == 12, "free fold_map_effect owns a plain function")
+    var kept = run(traverse_filter[Async[Int]](above_one, small.copy()))
+    check(len(kept.take()._take_ok()) == 2, "free traverse_filter owns a plain function")
+    var tapped = run(traverse_tap[Async[Int]](twice, small.copy()))
+    check(tapped.take()._take_ok()[2] == 3, "free traverse_tap owns a borrowing plain function")
+    var filtered = run(filter_effect[Async[Int]](is_big, small.copy()))
+    check(len(filtered.take()._take_ok()) == 2, "free filter_effect owns a borrowing plain function")
+    var some = run(any_effect[Async[Int]](is_big, small.copy()))
+    var every = run(all_effect[Async[Int]](is_big, small.copy()))
+    check(some.take()._take_ok() and not every.take()._take_ok(), "free any_effect and all_effect own plain functions")
+    var first = run(find_effect[Async[Int]](is_big, small.copy()))
+    check(first.take()._take_ok().value() == 2, "free find_effect owns a plain function")
+    var folded = run(fold_effect[Async[Int]](accumulate, 10, small^))
+    check(folded.take()._take_ok() == 16, "free fold_effect owns a binary plain function")
+    var chosen = run(if_effect[Async[Int]](one, two, IO[Bool, Int].pure(False)))
+    check(chosen.take()._take_ok() == 2, "free if_effect owns plain factories")
 
 
 def main():
