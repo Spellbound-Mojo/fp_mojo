@@ -24,6 +24,8 @@ part of these passes. Existing validation combinators retain their meaning.
 - One canonical execution engine and one implementation of each lifecycle
   policy. Existing resources, callbacks, races, and coordination must share
   the resulting foundation.
+- Embeddable host services, explicit execution profiles, bounded diagnostic
+  storage, and controllable scheduling for reproducible qualification.
 
 All implementation remains pure Mojo, using supported native mechanisms. No C
 backend, direct FFI integration, compiler coroutine dependency, compiler patch,
@@ -35,11 +37,13 @@ GPU work, concurrent collections, and a wholesale port of the Cats Effect
 standard library are outside this plan. Execution-context and external-completion
 support are a later, separately qualified stage of capability coverage.
 
-## What to learn from Cats Effect on Scala Native
+## What to learn from Scala Native and Cats Effect
 
 Cats Effect is not tied to the JVM. Scala Native compiles ahead of time through
 LLVM and supplies a managed runtime. LLVM compilation alone does not provide
 fiber scheduling, continuation storage, or Mojo ownership proofs.
+Scala Native's runtime and Cats Effect's effect runtime are separate sources of
+architectural ideas; the references below distinguish those layers.
 
 The comparison here uses Cats Effect commit
 [`de84c01f76b2f42fcee9d43aba66c82992add103`](https://github.com/typelevel/cats-effect/commit/de84c01f76b2f42fcee9d43aba66c82992add103).
@@ -261,17 +265,152 @@ Native capability research is library work; compiler or stdlib changes are not
 deliverables. If a provider is unavailable, preserve the usable narrower profile
 and report the precise outstanding capability instead of declaring full parity.
 
+## Runtime services, scheduling, and observability
+
+These additions strengthen the same execution architecture. They do not add
+concurrent collection operations or require a second runtime.
+
+### Embedding and host-service ownership
+
+Define host-service contracts during Pass 7, before adding platform providers
+in Pass 12. An application should be able to supply scheduling and time services
+without adopting a global runtime or surrendering ownership of its event loop.
+Scala Native's development
+[`VirtualThreadScheduler`](https://github.com/scala-native/scala-native/blob/main/nativelib/src/main/scala/scala/scalanative/runtime/VirtualThreadScheduler.scala)
+is a reference for an embeddable scheduling interface, not a dependency or a
+claim about the stable Scala Native API.
+
+Distinguish runtime-owned services from borrowed host services. Initialization
+failure must release only resources acquired by this runtime. Shutdown closes
+admission and drains entered fibers and external registrations before closing
+owned notification or polling services; it must not stop an application's
+borrowed executor, clock, or event loop. All retained service references must
+preserve native origins. A convenience default can assemble these services
+without making a global singleton part of the execution model.
+
+### Event polling and wakeup protocols
+
+Separate waiting for events, processing ready events, interrupting a wait, and
+closing a poller. Cats Effect's
+[`PollingSystem`](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/PollingSystem.scala)
+provides a useful reference. The current nonblocking `Driver` and its reported
+deadline remain the execution boundary; a host provider supplies waiting.
+
+Specify readiness registration and the check-before-park handshake so a wake
+between observing an empty ready queue and entering a wait cannot be lost.
+Reuse signal revisions, registration generations, and wait epochs. Event
+processing must distinguish a fully drained batch, more available events, and
+an interrupted or expired wait. New work or an earlier deadline must trigger
+the provider's wakeup protocol. External callbacks should schedule work rather
+than recursively enter the interpreter.
+
+Use controlled test providers before integrating a real platform poller. Replace
+the current idle-sleep fallback only when a supported pure-Mojo provider can
+meet this contract; no direct epoll/kqueue FFI implementation is authorized by
+this architectural reference.
+
+### Cancellation checks and yielding budgets
+
+In Pass 8, account for actual interpreter transitions instead of treating a root
+poll as a bounded amount of nested work. Make cancellation-check frequency and
+yield frequency separate policies, following the distinction in Cats Effect's
+[`IORuntimeConfig`](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/IORuntimeConfig.scala).
+Validate configuration relationships so yielding cannot accidentally disable
+cancellation checks.
+
+Count continuation execution, unwind steps, and runtime-owned frame retirement.
+Account separately for timer events and scheduler maintenance; do not hide an
+unbounded maintenance operation behind a single cheap-looking step. Where
+maintenance can be incremental, return unfinished work to the run loop.
+Masked finalization may yield without becoming cancelable. Native callbacks,
+custom polls, and user destructors still cannot be instruction-preempted; report
+that boundary explicitly. Measure responsiveness in interpreter transitions as
+well as wall-clock time under stated host conditions.
+
+### Execution profiles and safe publication
+
+The [Scala Native memory and threading semantics](https://scala-native.org/en/stable/user/lang.html)
+illustrate why single-thread execution and shared-memory publication need
+separate contracts. Define a profile matrix in Pass 7: thread-confined
+interpreter state, externally shared notification state, and any future
+cross-thread payload execution. One polling thread does not prove that every
+handle or cancellation token is thread-confined.
+
+Use native compile-time provider selection where it can remove unused services
+without duplicating semantics. Omit synchronization only for state proven to
+remain within its owning thread; preserve existing shared-state contracts.
+For each supported shared boundary, specify ownership transfer, publication
+ordering, the receiving thread's observation, and teardown with in-flight
+producers. Readiness notification alone does not establish payload or device
+memory synchronization. Unsupported profiles must fail at their public
+capability boundary rather than silently select an unsafe fallback.
+
+### Allocation ownership and prompt reclamation
+
+Scala Native's
+[`Zone`](https://github.com/scala-native/scala-native/blob/main/nativelib/src/main/scala/scala/scalanative/unsafe/Zone.scala)
+is a reference for explicit allocation ownership. Investigate typed frame pools
+or segmented storage only after Pass 8 establishes a correct implementation and
+allocation baseline. Reuse canonical allocation and slot owners rather than
+introducing an independent lifetime mechanism.
+
+Keep per-frame retirement: a single root-wide arena must not retain all
+completed work until a long-lived root exits. Separate execution storage from
+retained results and observer metadata so a small surviving handle does not
+pin an entire completed program. Reuse storage only after native payload
+destruction and release of outstanding access rights; preserve alignment,
+origins, generation protection, and exactly-once destruction. Bulk memory
+release is not a substitute for running destructors or draining external work.
+Pass 13 records whether measured allocation cost justifies pooling and retains
+the simpler representation if it does not.
+
+### Logical fiber diagnostics
+
+Add bounded diagnostic snapshots with the fiber implementation in Pass 9,
+informed by [Cats Effect fiber dumps](https://typelevel.org/cats-effect/docs/core/fiber-dumps).
+Native call stacks alone do not explain suspended fibers. Snapshots should
+identify a fiber and its owner, execution phase, wait reason or join target,
+deadline, cancellation/mask state, cleanup phase, and last progress. Optional
+labels and a bounded transition trace can provide context without exposing
+private machine layout.
+
+Diagnostic records must not retain user payloads, callbacks, resource loans,
+or completed execution graphs. Use generation-aware metadata and bounded trace
+storage; distinguish terminal retained results from live execution. Define the
+consistency of a snapshot and measure instrumentation overhead. Diagnostics
+should explain a stalled shutdown or dependency cycle, without promising
+automatic deadlock detection or retaining unbounded histories.
+
+### Controllable test scheduling
+
+Extend manual time into a controllable test host using the same interpreter and
+scheduler mechanisms. The [Cats Effect test runtime](https://typelevel.org/cats-effect/docs/core/test-runtime)
+is the reference for making time and execution progress testable without real
+sleeps. Develop these controls alongside Passes 8–11 and qualify them in Pass 13.
+
+Allow single-step execution, controlled external event delivery, and virtual
+time advancement when runnable work is exhausted. Retain seeds or explicit
+event/choice traces to reproduce start/join/cancel races. Explore only choices
+left unspecified by the contract and permissible external event orderings;
+do not randomize away promised FIFO behavior. Record enough runtime configuration
+and input identity for the existing evidence auditor to replay a failure.
+
+Distinguish quiescence awaiting external input from successful completion or a
+proven deadlock. These checks complement sustained stress, retained-storage
+qualification, and real provider tests; simulated scheduling does not establish
+cross-thread memory correctness.
+
 ## Delivery passes
 
 | Pass | Deliverable | Completion gate |
 |---|---|---|
-| **7 — Contracts and representation proofs** | Decide carrier storage, origins, join ownership, failure accounting, and capability laws. Compare the two storage candidates with bounded native compile/run probes after plan approval. | A runnable heterogeneous bind/fiber-storage witness with move-only values/errors and independent origins; rejection witnesses for escape/double ownership; a concrete API migration proposal. No production migration before review. |
-| **8 — Iterative sequencing and unwinding** | Implement deferred construction and the selected stable carrier; drive continuations, errors, masks, finalizers, and disposal through one iterative engine. Adapt existing recipes and extension leaves. | Runtime-built deep binds and recursive deferred programs satisfy the stack contract, including cancellation, failure, and unopened disposal; existing lifecycle behavior remains qualified. |
-| **9 — General lightweight fibers** | Add typed handles, start/join/cancel, completion observers, `cede`, `never`, and dynamic scoped ownership. Generalize canonical task storage rather than wrapping the homogeneous nursery. | Heterogeneous children progress independently; joining parks; all shutdown paths drain; observed/unobserved errors settle once; sequential spawn/join churn reuses storage. |
+| **7 — Contracts and representation proofs** | Decide carrier storage, origins, join ownership, failure accounting, and capability laws. Specify host-service ownership, event-polling contracts, and execution profiles. Compare the two storage candidates with bounded native compile/run probes after plan approval. | A runnable heterogeneous bind/fiber-storage witness with move-only values/errors and independent origins; rejection witnesses for escape/double ownership; a concrete API migration proposal and service/profile matrix. No production migration before review. |
+| **8 — Iterative sequencing and unwinding** | Implement deferred construction and the selected stable carrier; drive continuations, errors, masks, finalizers, and disposal through one iterative engine. Add transition accounting, separate cancellation/yield budgets, controllable test-host stepping, and an allocation baseline. Adapt existing recipes and extension leaves. | Runtime-built deep binds and recursive deferred programs satisfy the stack contract, including cancellation, failure, and unopened disposal; budget checks cover nested work and masked cleanup; existing lifecycle behavior remains qualified. |
+| **9 — General lightweight fibers** | Add typed handles, start/join/cancel, completion observers, `cede`, `never`, dynamic scoped ownership, and bounded diagnostic snapshots. Generalize canonical task storage rather than wrapping the homogeneous nursery. | Heterogeneous children progress independently; joining parks; all shutdown paths drain; observed/unobserved errors settle once; sequential spawn/join churn reuses storage; diagnostic handles do not retain payloads or completed graphs. |
 | **10 — Cancellation and spawn capabilities** | Add generic error/defer/cancellation/spawn contracts and provider forwarding; expose `race_pair` with settled ownership rules. Reuse them for existing higher-level operations where contracts match. | Generic clients use minimal capabilities across actual and test providers; law/admission checks pass; no duplicate masking, error, or child-draining policy. |
-| **11 — Coordination and temporal capabilities** | Add generic Ref/Deferred access and time/sleep/timeout contracts over canonical owners. Specify unique identity and clock domains. Audit ownership-sensitive derived operations. | Deterministic manual-time and cancellation laws; no polling loop masquerading as suspension; no async collection API additions. |
-| **12 — Complete integration capabilities where supported** | Specify and implement pure-Mojo execution-context and external-completion providers, with explicit blocking/interruptible support boundaries. Separate completion notification from payload transfer and external synchronization. | Every advertised Sync/Async operation has a real provider and tests; otherwise publish the narrower profile and the exact blocked obligation. No C fallback or implicit thread-safety assertion. |
-| **13 — Advanced preview qualification** | Publish the provider/semantic matrix, migration guidance, runnable examples, and retained evidence. Compare new paths with the existing foundation on lifecycle, storage, and performance. | Source/package O0/O3 checks, public generic clients, ownership rejections, bounded-stack and storage checks pass. Run a separately scheduled overnight qualification before making sustained-load claims. |
+| **11 — Coordination and temporal capabilities** | Add generic Ref/Deferred access and time/sleep/timeout contracts over canonical owners. Specify unique identity and clock domains; extend controlled scheduling to event delivery and virtual time. Audit ownership-sensitive derived operations. | Reproducible manual-time and cancellation laws respecting promised event ordering; no polling loop masquerading as suspension; no async collection API additions. |
+| **12 — Complete integration capabilities where supported** | Implement pure-Mojo host-service and external-completion providers, with explicit event-waiting, interruption, shutdown, and blocking/interruptible support boundaries. Separate completion notification from payload transfer and external synchronization. | Every advertised Sync/Async operation has a real provider and tests; owned/borrowed service teardown, wake-before-park, and supported publication contracts pass. Otherwise publish the narrower profile and exact blocked obligation. No C fallback or implicit thread-safety assertion. |
+| **13 — Advanced preview qualification** | Publish the provider/semantic matrix, migration guidance, runnable examples, and retained evidence. Qualify controlled schedule replay and diagnostic overhead; compare lifecycle, storage, and performance with the foundation. Evaluate pooling only against the allocation baseline. | Source/package O0/O3 checks, public generic clients, ownership rejections, bounded-stack, responsiveness, replay, and storage checks pass; any pooling preserves prompt reclamation and exact destruction. Run a separately scheduled overnight qualification before making sustained-load claims. |
 
 Pass 7 is the first implementation step after review. Its scope includes small
 feasibility experiments, not an unreviewed public API migration. Passes 8–11
@@ -303,6 +442,22 @@ checks precede broader matrices; overnight stress is scheduled separately.
   canceled joiners, dropped observers, root exit with live children, child
   failures, masked cleanup, direct self-waits, and stale generation rejection.
   Verify heterogeneous child programs and exact move-only destruction counts.
+- **Scheduling budgets:** verify cancellation checkpoints and yields using
+  actual transitions across differently shaped effect trees. Include nested
+  unwinding, masked cleanup, due timers, and maintenance work. Keep user-code
+  execution costs distinct from interpreter work and quantify both.
+- **Host services and publication:** cover owned versus borrowed services,
+  partial initialization failure, shutdown with pending producers, and wakes
+  before registration, during parking, and after retirement. Check interrupted
+  waits, earlier deadlines, and partially drained event batches. Synchronization
+  tests apply to every advertised shared-state profile; a single-thread run is
+  not evidence for cross-thread publication.
+- **Diagnostics and replay:** snapshot parked, runnable, canceled, and cleaning
+  fibers; verify bounded storage and no payload retention. Reproduce controlled
+  event schedules with recorded configuration and seeds/choices, including
+  canceled joiners and cleanup suspension. Preserve FIFO guarantees and
+  distinguish waiting for external input from completion. Keep these tests on
+  the canonical engine and audit their retained evidence.
 - **Laws and generic clients:** ordinary error/recovery laws, cancellation masks,
   spawn/join/cancel, time, and callback contracts. Compare outcomes and declared
   observable events under controlled schedules; do not equate differing
@@ -313,6 +468,9 @@ checks precede broader matrices; overnight stress is scheduled separately.
   history. Measure allocations, maximum native stack, runnable/idle overhead,
   cancellation latency in scheduler transitions, and compile cost. Establish
   baselines before setting numeric budgets; no JVM/native speed-parity claim.
+  If pooling is justified, compare it with that baseline and verify prompt
+  frame reclamation in long-lived roots, exact destructor counts, alignment,
+  origin preservation, and isolation from retained diagnostic/observer handles.
 - **External work:** duplicate/late completion, registration failure, withdrawal
   failure, producer lifetime, publication ordering, and shutdown with in-flight
   work. Cross-thread tests apply only to an explicitly supported provider.
@@ -328,5 +486,9 @@ remaining alternatives. Do not relabel a deeper fixed-depth test or
 The recommended decisions are a stable typed program boundary, iterative
 execution/disposal, single-thread lightweight fibers first, scope-owned running
 work with a consuming result join, and native outcome-preserving capabilities.
+Host-service ownership and execution profiles are defined early; transition
+budgets, fiber diagnostics, and controllable test scheduling accompany their
+respective runtime passes. Real platform providers remain separately qualified,
+and allocation pooling follows evidence rather than preceding a correct baseline.
 The exact carrier/API migration and ordinary-error law mapping depend on the
 Pass 7 evidence. Concurrent collection operations remain deferred throughout.
