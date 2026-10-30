@@ -5,14 +5,14 @@ from std.time import monotonic, sleep
 from std.math import isfinite, min
 from std.builtin.rebind import downcast, rebind_var
 from fp.algebra.instances import OptionalFamily
-from fp.callables.protocols import OnceThunk, ThunkContract, BorrowCallContract
+from fp.callables.protocols import OnceThunk, ThunkContract, BorrowCallContract, UnaryContract
 from fp.callables.invoke import _OnceThunkAvailable
 from fp.callables._receiver import _OnceBorrowAvailable
 from fp.callables._binding import _OwnedThunk
 from fp.callables.native import _NativeThunk, _Thunk, _RaisingThunk, _NativeBorrow, _Borrowing, _RaisingBorrowing
 from fp.data import Result, Ok, Err
 from fp._internal.errors import _ErrorCompatible
-from .protocols import ReaderAction
+from .protocols import ReaderAction, Defer, Cancel
 from .reader import ReaderT, _LocalIndependent
 from .layers import ResultT
 from .outcomes import EffectFailure, Outcome, _capture, _finish
@@ -224,6 +224,32 @@ struct _IODelay[E: Movable & Deinitable, F: ThunkContract & Movable & Deinitable
         return _settle(Optional(_capture[Self.E](_OwnedThunk(self.function^))), env)
 
 
+@fieldwise_init
+struct _IODefer[E: Movable & Deinitable, F: ThunkContract & Movable & Deinitable](ReaderAction):
+    """Build an IO program when it is reached, then run it in the same context."""
+    var factory: Self.F
+    comptime Program = downcast[Self.F.Out, ReaderAction]
+    comptime Family = IO[Self.E]
+    comptime Value = Self.Program.Value
+    comptime Env = IOContext[Self.E]
+    comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
+    def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
+        if env.canceled():
+            return None
+        comptime assert _ErrorCompatible[Self.E, Self.F.Error] and conforms_to(Self.F.Out, ReaderAction)
+        comptime assert IOContract[Self.Program].Compatible and IOContract[Self.Program].Error == Self.E
+        var built = _capture[Self.E](_OwnedThunk(self.factory^))
+        if built.is_err():
+            return _settle(Optional(Result[Self.Value, EffectFailure[Self.E]](Err(built^._take_err()))), env)
+        return rebind_var[Self.Out[o]](_run_io(rebind_var[Self.Program](built^._take_ok()), rebind[IOContext[IOContract[Self.Program].Error]](env)))
+
+
+comptime _SyncDefers[E: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = (
+    _ErrorCompatible[E, F.Error] and _OnceThunkAvailable[F] and IOContract[downcast[F.Out, ReaderAction]].Compatible
+    and IOContract[downcast[F.Out, ReaderAction]].Error == E) if conforms_to(F.Out, ReaderAction) else False
+"""Whether F builds a synchronous IO program with error E, raising E or nothing."""
+
+
 struct DelayContract[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable]:
     """Name a delayed action in generic and origin-dependent factories.
 
@@ -257,6 +283,22 @@ def delay[F: ThunkContract & Movable & Deinitable, //, E: Movable & Deinitable](
         An IO[E] program yielding F.Out.
     """
     return _IODelay[E, F](function^)
+
+
+def delay[F: ThunkContract & Movable & Deinitable, //, I: Defer](var function: F) -> I.Delayed[F] where I.DelayCompatible[F]:
+    """Run a function when the program reaches it, in any family with Defer.
+
+    Parameters:
+        F: An owned once-callable thunk the family admits.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        function: The function, consumed.
+
+    Returns:
+        The family's carrier producing the function's value.
+    """
+    return I.delay(function^)
 
 
 def delay[T: Movable & Deinitable, //, E: Movable & Deinitable, F: _Thunk[T]](var function: F
@@ -355,6 +397,39 @@ struct _IOMasked[P: ReaderAction](ReaderAction):
         return _settle(_run_io(self.program^, masked), env)
 
 
+def restore[V: Movable & Deinitable, //, I: Cancel](poll: I.RegionPoll, var program: V) -> I.Restored[V] where I.RestoreCompatible[V]:
+    """Run part of a masked region with the cancellation state outside it.
+
+    Parameters:
+        V: The program's carrier type.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        poll: The region's poll, borrowed.
+        program: The program, consumed.
+
+    Returns:
+        The family's restored carrier.
+    """
+    return I.restore(poll, program^)
+
+
+def uncancelable[F: UnaryContract & Movable & Deinitable, //, I: Cancel](var body: F) -> I.Uncanceled[F] where I.UncancelableCompatible[F]:
+    """Run a region masked in any family with Cancel; its Poll restores the outer state.
+
+    Parameters:
+        F: An owned once-callable from the family's Poll to its carrier.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        body: The region's factory, consumed.
+
+    Returns:
+        The family's masked carrier.
+    """
+    return I.uncancelable(body^)
+
+
 def uncancelable[P: ReaderAction](var program: P) -> _IOMasked[P] where IOContract[P].Compatible:
     """Mask cooperative cancellation during an entered program.
 
@@ -383,6 +458,18 @@ struct _IOCancel[E: Movable & Deinitable](ReaderAction):
         env.request_cancel()
         var unit: NoneType = None
         return _settle(Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit))), env)
+
+
+def canceled[I: Cancel]() -> I.Canceled:
+    """Request cancellation of the running program, in any family with Cancel.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Returns:
+        The family's unit carrier; a mask defers observing the request.
+    """
+    return I.canceled()
 
 
 def canceled[E: Movable & Deinitable]() -> _IOCancel[E]:

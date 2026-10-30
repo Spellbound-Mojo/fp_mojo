@@ -55,9 +55,9 @@ cancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over
 shared state. The optional Fiber backend requires explicit unsafe_start and
 its documented thread-safety obligations.
 """
-from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
+from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
 from .reader import ReaderT, Reader
-from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, TellContract, ask, local, get, put, modify, tell, listen, censor
+from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, TellContract, ask, local, get, put, modify, tell, listen, censor, defer, raise_error, start, join, cancel, never, cede
 from .state import StateT, State
 from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
@@ -66,11 +66,12 @@ from .projections import LiftProject, asks, inspect
 from .outcomes import EffectFailure, Outcome, ExitCase, FoldOutcomeContract, fold_outcome
 from .resources import Resource, ResourceContract, resource, pure_resource
 from .io import IO, IOContract, IOContext, CancellationToken, delay, run_io, capture_io, guarantee, uncancelable, canceled, sleep_io, use_resource
+from ._io_core import restore
 from .fibers import Fiber, unsafe_start
 from .coordination import Ref, Deferred, Semaphore, Permit, Queue
 
 from .scoped import ScopedIO, scoped_io
-from .finalization import GuaranteeCaseContract, guarantee_case, on_cancel, Poll, uncancelable_with
+from .finalization import GuaranteeCaseContract, guarantee_case, on_cancel, Poll, uncancelable_with, SyncIO
 from ._io_core import DelayContract
 
 from .effectful_resources import IOResource, IOResourceContract, IOResourceCaseContract, IOResourceFullContract, resource_io, resource_io_case, resource_io_full, resource_io_case_full, eval_resource, lift_resource

@@ -30,7 +30,7 @@ from fp.data import Result, Ok, Err, NonEmptyList
 from fp.effects import IOContext, Outcome, EffectFailure, ExitCase
 from fp.effects.outcomes import _failure_as, _finish, _ExitState
 from fp.effects._io_core import _settle, IOContract, canceled as _cancel_request
-from fp.effects.protocols import ReaderAction
+from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn
 from fp.effects.finalization import Poll as _SyncPoll
 from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep
 from .time import Duration, Instant
@@ -1030,6 +1030,9 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         Returns:
             An IO with the body's outcome; body errors precede cleanup errors.
         """
+        return self^._guarantee_case(factory^)
+
+    def _guarantee_case[F: BorrowCallContract & Movable & Deinitable](deinit self, var factory: F) -> Self:
         def build(var callable: _Erased, exit: ExitCase[Self.E]) -> _Program[Self.E]:
             comptime assert F.Payload == ExitCase[Self.E] and F.Result == IO[NoneType, Self.E] and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure]
             comptime if F.Failure == Never:
@@ -1055,6 +1058,10 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         Returns:
             An IO whose region observes no cancellation except through Poll.
         """
+        return Self._uncancelable(factory^)
+
+    @staticmethod
+    def _uncancelable[F: UnaryContract & Movable & Deinitable](var factory: F) -> Self:
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
             comptime assert F.Arg == Poll[Self.E] and F.Out == Self and _Maps[Self.E, F]
             ref run = _loop_at[Self.E](loop)
@@ -1323,6 +1330,16 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         return Step[Self.T, Self.E]._make(Optional(failed^), Wait(), protected)
 
 
+comptime _PollOf[E: Movable & Deinitable] = Poll[E]
+"""The async Poll type, named outside Async where its member would shadow it."""
+
+comptime _CaseFinalizer[F: Movable & Deinitable, E: Movable & Deinitable] = (
+    downcast[F, BorrowCallContract].Payload == ExitCase[E] and downcast[F, BorrowCallContract].Result == IO[NoneType, E]
+    and _OnceBorrowAvailable[downcast[F, BorrowCallContract & Movable & Deinitable]]
+    and _ErrorCompatible[E, downcast[F, BorrowCallContract].Failure]
+    and _Admitted[F]) if conforms_to(F, BorrowCallContract) else False
+
+
 # A function with no return value produces the unit value.
 comptime _DelayValue[R: Movable & Deinitable] = NoneType if R == type_of(None) else R
 
@@ -1470,7 +1487,7 @@ struct _StartCollect[V: Movable & Deinitable, F: UnaryContract & Movable & Deini
         return _start_fold[Self.V, Identity[Self.F.Arg], _CollectStep[Self.F, Self.K, Self.E], Self.K, Self.E](self.source^, Identity[Self.F.Arg](), _CollectStep[Self.F, Self.K, Self.E](self.function^), start^)
 
 
-struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):
+struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Spawn, not Deinitable):
     """The sequencing and recovery family of IO.
 
     Pipeline, tail_rec_m, traverse and attempt select it from an IO. Every
@@ -1495,6 +1512,247 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):
     comptime Pure[A: Movable & Deinitable] = IO[A, Self.E]
     comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = IO[F.Out, Self.E]
     comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = Never
+
+    # Capabilities: each forwards to IO's own operation.
+    comptime Family = Self
+    comptime DelayCompatible[F: ThunkContract & Movable & Deinitable] = _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]
+    comptime Delayed[F: ThunkContract & Movable & Deinitable] = IO[_DelayValue[F.Out], Self.E]
+    comptime DeferCompatible[F: ThunkContract & Movable & Deinitable] = _Defers[Self.E, F]
+    comptime Deferred[F: ThunkContract & Movable & Deinitable] = IO[downcast[F.Out, Machine].Value, Self.E]
+    comptime Error = Self.E
+    comptime Raised[A: Movable & Deinitable] = IO[A, Self.E]
+    comptime RegionPoll = _PollOf[Self.E]
+    comptime Canceled = IO[NoneType, Self.E]
+    comptime GuaranteeCompatible[V: Movable & Deinitable, Q: Movable & Deinitable] = _IsIO[V, Self.E] and Q == IO[NoneType, Self.E]
+    comptime Guaranteed[V: Movable & Deinitable, Q: Movable & Deinitable] = V
+    comptime OnCanceled[V: Movable & Deinitable, Q: Movable & Deinitable] = V
+    comptime CaseCompatible[V: Movable & Deinitable, F: Movable & Deinitable] = _IsIO[V, Self.E] and _CaseFinalizer[F, Self.E]
+    comptime CaseGuaranteed[V: Movable & Deinitable, F: Movable & Deinitable] = V
+    comptime UncancelableCompatible[F: UnaryContract & Movable & Deinitable] = F.Arg == _PollOf[Self.E] and _IsIO[F.Out, Self.E] and _Maps[Self.E, F]
+    comptime Uncanceled[F: UnaryContract & Movable & Deinitable] = IO[downcast[F.Out, Machine].Value, Self.E]
+    comptime RestoreCompatible[V: Movable & Deinitable] = _IsIO[V, Self.E]
+    comptime Restored[V: Movable & Deinitable] = V
+    comptime Handle[T: Movable & Deinitable] = Fiber[T, Self.E]
+    comptime StartCompatible[V: Movable & Deinitable] = _IsIO[V, Self.E]
+    comptime Started[V: Movable & Deinitable] = IO[Fiber[downcast[V, Machine].Value, Self.E], Self.E]
+    comptime Joined[T: Movable & Deinitable] = IO[Outcome[T, Self.E], Self.E]
+    comptime Stopped = IO[NoneType, Self.E]
+    comptime Forever[A: Movable & Deinitable] = IO[A, Self.E]
+    comptime Ceded = IO[NoneType, Self.E]
+
+    @staticmethod
+    def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
+        """Evaluate a function when the IO reaches it; see IO.delay.
+
+        Parameters:
+            F: An owned once-callable, with error E or none.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            An IO producing the function's value.
+        """
+        comptime assert Self.DelayCompatible[F]
+        return IO[_DelayValue[F.Out], Self.E]._deferred(_Delay[F, Self.E](function^))
+
+    @staticmethod
+    def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]:
+        """Build an IO when it is reached; see IO.defer.
+
+        Parameters:
+            F: An owned once-callable returning an IO with error E.
+
+        Args:
+            factory: The factory, consumed.
+
+        Returns:
+            An IO running the program the factory builds.
+        """
+        comptime assert Self.DeferCompatible[F]
+        return IO[downcast[F.Out, Machine].Value, Self.E]._deferred(factory^)
+
+    @staticmethod
+    def raise_error[A: Movable & Deinitable](var error: Self.E) -> IO[A, Self.E]:
+        """Fail with one ordinary error; see IO.raise_error.
+
+        Parameters:
+            A: The success type.
+
+        Args:
+            error: The error, consumed.
+
+        Returns:
+            An IO failing with an uncanceled failure holding the error.
+        """
+        return IO[A, Self.E].raise_error(error^)
+
+    @staticmethod
+    def canceled() -> IO[NoneType, Self.E]:
+        """Request cancellation of the running program; see IO.canceled.
+
+        Returns:
+            A unit IO.
+        """
+        return IO[NoneType, Self.E].canceled()
+
+    @staticmethod
+    def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> V:
+        """Run a finalizer after the program on every exit; see IO.guarantee.
+
+        Parameters:
+            V: An IO with error E.
+            Q: IO[NoneType, E].
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The guarded IO.
+        """
+        comptime assert Self.GuaranteeCompatible[V, Q]
+        comptime T = downcast[V, Machine].Value
+        return rebind_var[V](rebind_var[IO[T, Self.E]](program^).guarantee(rebind_var[IO[NoneType, Self.E]](finalizer^)))
+
+    @staticmethod
+    def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> V:
+        """Run a finalizer only if the program is canceled; see IO.on_cancel.
+
+        Parameters:
+            V: An IO with error E.
+            Q: IO[NoneType, E].
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The guarded IO.
+        """
+        comptime assert Self.GuaranteeCompatible[V, Q]
+        comptime T = downcast[V, Machine].Value
+        return rebind_var[V](rebind_var[IO[T, Self.E]](program^).on_cancel(rebind_var[IO[NoneType, Self.E]](finalizer^)))
+
+    @staticmethod
+    def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> V:
+        """Run a finalizer built from the exact exit; see IO.guarantee_case.
+
+        Parameters:
+            V: An IO with error E.
+            F: An owned once-callable borrowing ExitCase[E] and returning IO[NoneType, E].
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer factory, consumed.
+
+        Returns:
+            The guarded IO.
+        """
+        comptime assert Self.CaseCompatible[V, F]
+        comptime T = downcast[V, Machine].Value
+        comptime B = downcast[F, BorrowCallContract & Movable & Deinitable]
+        return rebind_var[V](rebind_var[IO[T, Self.E]](program^)._guarantee_case(rebind_var[B](finalizer^)))
+
+    @staticmethod
+    def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:
+        """Run a region masked; see IO.uncancelable.
+
+        Parameters:
+            F: An owned once-callable from Poll[E] to an IO with error E.
+
+        Args:
+            body: The region's factory, consumed.
+
+        Returns:
+            The masked IO.
+        """
+        comptime assert Self.UncancelableCompatible[F]
+        return IO[downcast[F.Out, Machine].Value, Self.E]._uncancelable(body^)
+
+    @staticmethod
+    def restore[V: Movable & Deinitable](poll: _PollOf[Self.E], var program: V) -> V:
+        """Run part of a region with the outer cancellation state; see IO.restore.
+
+        Parameters:
+            V: An IO with error E.
+
+        Args:
+            poll: The region's poll, borrowed.
+            program: The program, consumed.
+
+        Returns:
+            The restored IO.
+        """
+        comptime assert Self.RestoreCompatible[V]
+        return rebind_var[V](rebind_var[IO[downcast[V, Machine].Value, Self.E]](program^).restore(poll))
+
+    @staticmethod
+    def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:
+        """Start the program as a fiber; see IO.start.
+
+        Parameters:
+            V: An IO with error E.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            An IO producing the fiber's handle.
+        """
+        comptime assert Self.StartCompatible[V]
+        return rebind_var[IO[downcast[V, Machine].Value, Self.E]](program^).start()
+
+    @staticmethod
+    def join[T: Movable & Deinitable](var fiber: Fiber[T, Self.E]) -> IO[Outcome[T, Self.E], Self.E]:
+        """Wait for a fiber and take its outcome; see Fiber.join.
+
+        Parameters:
+            T: The fiber's success type.
+
+        Args:
+            fiber: The handle, consumed.
+
+        Returns:
+            An IO producing the fiber's outcome.
+        """
+        return fiber^.join()
+
+    @staticmethod
+    def cancel[T: Movable & Deinitable](fiber: Fiber[T, Self.E]) -> IO[NoneType, Self.E]:
+        """Cancel a fiber and wait for it; see Fiber.cancel.
+
+        Parameters:
+            T: The fiber's success type.
+
+        Args:
+            fiber: The handle, borrowed.
+
+        Returns:
+            A unit IO completing after the fiber terminates.
+        """
+        return fiber.cancel()
+
+    @staticmethod
+    def never[A: Movable & Deinitable]() -> IO[A, Self.E]:
+        """Wait until canceled; see IO.never.
+
+        Parameters:
+            A: The success type.
+
+        Returns:
+            An IO that never produces a value.
+        """
+        return IO[A, Self.E].never()
+
+    @staticmethod
+    def cede() -> IO[NoneType, Self.E]:
+        """Yield once; see IO.cede.
+
+        Returns:
+            A unit IO.
+        """
+        return IO[NoneType, Self.E].cede()
 
     @staticmethod
     def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:

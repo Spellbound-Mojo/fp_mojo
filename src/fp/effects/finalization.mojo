@@ -7,9 +7,12 @@ from fp.callables._binding import _OwnedUnary
 from fp.callables.native import NativeUnary, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.data import Result, Err
-from .protocols import ReaderAction
+from .protocols import ReaderAction, Defer, Raise, Cancel
 from .outcomes import Outcome, EffectFailure, ExitCase, _ExitState, _capture, _finish
-from ._io_core import IO, IOContext, IOContract, _run_io, _settle
+from ._io_core import IO, IOContext, IOContract, _run_io, _settle, _IODelay, _IODefer, _IOCancel, _SyncDefers, canceled
+from fp.callables.protocols import ThunkContract
+from fp.callables.invoke import _OnceThunkAvailable
+from fp.data import NonEmptyList
 from .scoped import _ScopedInputCompatible, ScopedIO, _run_scoped
 
 comptime _FinalizerCompatible[P: ReaderAction, Q: ReaderAction] = IOContract[P].Compatible and IOContract[Q].Compatible and IOContract[P].Error == IOContract[Q].Error
@@ -58,6 +61,24 @@ struct _IOGuarantee[P: ReaderAction, Q: ReaderAction, only_cancel: Bool = False]
         return _finalize[only_cancel=Self.only_cancel](self.program^, _ConstantFinalizer[Self.Q, ExitCase[Self.E]](self.finalizer^), env)
 
 
+def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: Q) -> I.Guaranteed[V, Q] where I.GuaranteeCompatible[V, Q]:
+    """Run a finalizer, masked, after the program on every exit, in any family with Cancel.
+
+    Parameters:
+        V: The program's carrier type.
+        Q: The finalizer's unit carrier type.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        program: The program, consumed.
+        finalizer: The finalizer, consumed.
+
+    Returns:
+        The family's guarded carrier.
+    """
+    return I.guarantee(program^, finalizer^)
+
+
 def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q
 ) -> _IOGuarantee[P, Q] where _FinalizerCompatible[P, Q]:
     """Finalize an entered IO body exactly once, with cancellation masked.
@@ -77,6 +98,24 @@ def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q
         A program with the body's success type and combined failure outcomes.
     """
     return _IOGuarantee(program^, finalizer^)
+
+
+def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: Q) -> I.OnCanceled[V, Q] where I.GuaranteeCompatible[V, Q]:
+    """Run a finalizer, masked, only if the program is canceled, in any family with Cancel.
+
+    Parameters:
+        V: The program's carrier type.
+        Q: The finalizer's unit carrier type.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        program: The program, consumed.
+        finalizer: The finalizer, consumed.
+
+    Returns:
+        The family's guarded carrier.
+    """
+    return I.on_cancel(program^, finalizer^)
 
 
 def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q
@@ -140,6 +179,24 @@ struct GuaranteeCaseContract[P: ReaderAction, F: ScopedIO]:
     """Construction itself cannot raise; deferred cleanup errors enter the outcome."""
     comptime Outcome = IOContract[Self.P].Out
     """The exact host result after execution, including failures or cancellation."""
+
+
+def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: F) -> I.CaseGuaranteed[V, F] where I.CaseCompatible[V, F]:
+    """Run a finalizer built from the exact exit, masked, in any family with Cancel.
+
+    Parameters:
+        V: The program's carrier type.
+        F: The family's finalizer type, built from the exit.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        program: The program, consumed.
+        finalizer: The finalizer, consumed.
+
+    Returns:
+        The family's guarded carrier.
+    """
+    return I.guarantee_case(program^, finalizer^)
 
 
 def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F
@@ -274,3 +331,198 @@ def uncancelable_with[P: Movable & Deinitable, V: Movable & Deinitable, X: Movab
 ) -> _IOMaskBody[NativeUnary[P, V, X, F, True], E] where P == Poll[E] and conforms_to(V, ReaderAction) and IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == E and _ErrorCompatible[E, X]:
     """Adapt a raising native Poll factory, preserving its exact errors."""
     return uncancelable_with[E](NativeUnary[P, V, X, F, True](function^))
+
+
+comptime _SyncFinalizes[E: Movable & Deinitable, V: Movable & Deinitable, Q: Movable & Deinitable] = (
+    _FinalizerCompatible[downcast[V, ReaderAction], downcast[Q, ReaderAction]]
+    and IOContract[downcast[V, ReaderAction]].Error == E) if conforms_to(V, ReaderAction) and conforms_to(Q, ReaderAction) else False
+
+
+comptime _SyncCase[E: Movable & Deinitable, V: Movable & Deinitable, F: Movable & Deinitable] = (
+    _CaseFinalizerCompatible[downcast[V, ReaderAction], downcast[F, ScopedIO]]
+    and IOContract[downcast[V, ReaderAction]].Error == E) if conforms_to(V, ReaderAction) and conforms_to(F, ScopedIO) else False
+
+
+comptime _SyncMasks[E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = (
+    F.Arg == Poll[E] and _OnceUnaryAvailable[F] and _ErrorCompatible[E, F.Error]
+    and IOContract[downcast[F.Out, ReaderAction]].Compatible
+    and IOContract[downcast[F.Out, ReaderAction]].Error == E) if conforms_to(F.Out, ReaderAction) else False
+
+
+struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, not Deinitable):
+    """The capabilities of the synchronous IO[E] family: Defer, Raise and Cancel.
+
+    Generic code names this dictionary to run in IO[E], such as
+    `guarantee[SyncIO[E]](program, cleanup)`. Each operation forwards to the
+    family's existing function. The synchronous family has no fibers, so
+    SyncIO is not a Spawn provider.
+
+    Parameters:
+        E: The exact domain error of the IO[E] family.
+    """
+    comptime Family = IO[Self.E]
+    comptime Error = Self.E
+    comptime DelayCompatible[F: ThunkContract & Movable & Deinitable] = _ErrorCompatible[Self.E, F.Error] and _OnceThunkAvailable[F]
+    comptime Delayed[F: ThunkContract & Movable & Deinitable] = _IODelay[Self.E, F]
+    comptime DeferCompatible[F: ThunkContract & Movable & Deinitable] = _SyncDefers[Self.E, F]
+    comptime Deferred[F: ThunkContract & Movable & Deinitable] = _IODefer[Self.E, F]
+    comptime Raised[A: Movable & Deinitable] = IO[Self.E].Failed[A]
+    comptime RegionPoll = Poll[Self.E]
+    comptime Canceled = _IOCancel[Self.E]
+    comptime GuaranteeCompatible[V: Movable & Deinitable, Q: Movable & Deinitable] = _SyncFinalizes[Self.E, V, Q]
+    comptime Guaranteed[V: Movable & Deinitable, Q: Movable & Deinitable] = _IOGuarantee[downcast[V, ReaderAction], downcast[Q, ReaderAction]]
+    comptime OnCanceled[V: Movable & Deinitable, Q: Movable & Deinitable] = _IOGuarantee[downcast[V, ReaderAction], downcast[Q, ReaderAction], True]
+    comptime CaseCompatible[V: Movable & Deinitable, F: Movable & Deinitable] = _SyncCase[Self.E, V, F]
+    comptime CaseGuaranteed[V: Movable & Deinitable, F: Movable & Deinitable] = _IOGuaranteeCase[downcast[V, ReaderAction], downcast[F, ScopedIO]]
+    comptime UncancelableCompatible[F: UnaryContract & Movable & Deinitable] = _SyncMasks[Self.E, F]
+    comptime Uncanceled[F: UnaryContract & Movable & Deinitable] = _IOMaskBody[F, Self.E]
+    comptime RestoreCompatible[V: Movable & Deinitable] = (IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.E) if conforms_to(V, ReaderAction) else False
+    comptime Restored[V: Movable & Deinitable] = _IOPolled[downcast[V, ReaderAction], Self.E]
+
+    @staticmethod
+    def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
+        """Run a function when reached; see delay.
+
+        Parameters:
+            F: An owned once-callable thunk with error E or none.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            An IO[E] program producing its value.
+        """
+        comptime assert Self.DelayCompatible[F]
+        return _IODelay[Self.E, F](function^)
+
+    @staticmethod
+    def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]:
+        """Build a program when reached, then run it.
+
+        Parameters:
+            F: An owned once-callable returning an IO[E] program.
+
+        Args:
+            factory: The factory, consumed.
+
+        Returns:
+            An IO[E] program running the program the factory builds.
+        """
+        comptime assert Self.DeferCompatible[F]
+        return _IODefer[Self.E, F](factory^)
+
+    @staticmethod
+    def raise_error[A: Movable & Deinitable](var error: Self.E) -> Self.Raised[A]:
+        """Fail with one ordinary error.
+
+        Parameters:
+            A: The success type.
+
+        Args:
+            error: The error, consumed.
+
+        Returns:
+            An IO[E] program failing with an uncanceled failure holding the error.
+        """
+        return IO[Self.E].fail[A](EffectFailure[Self.E](NonEmptyList(error^), False))
+
+    @staticmethod
+    def canceled() -> Self.Canceled:
+        """Request cancellation; see canceled.
+
+        Returns:
+            A unit IO[E] program.
+        """
+        return canceled[Self.E]()
+
+    @staticmethod
+    def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:
+        """Finalize on every exit; see guarantee.
+
+        Parameters:
+            V: An IO[E] program.
+            Q: A unit IO[E] program.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The guarded program.
+        """
+        comptime assert conforms_to(V, ReaderAction) and conforms_to(Q, ReaderAction)
+        comptime assert _FinalizerCompatible[downcast[V, ReaderAction], downcast[Q, ReaderAction]]
+        return guarantee(rebind_var[downcast[V, ReaderAction]](program^), rebind_var[downcast[Q, ReaderAction]](finalizer^))
+
+    @staticmethod
+    def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:
+        """Finalize only on cancellation; see on_cancel.
+
+        Parameters:
+            V: An IO[E] program.
+            Q: A unit IO[E] program.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The guarded program.
+        """
+        comptime assert conforms_to(V, ReaderAction) and conforms_to(Q, ReaderAction)
+        comptime assert _FinalizerCompatible[downcast[V, ReaderAction], downcast[Q, ReaderAction]]
+        return on_cancel(rebind_var[downcast[V, ReaderAction]](program^), rebind_var[downcast[Q, ReaderAction]](finalizer^))
+
+    @staticmethod
+    def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:
+        """Finalize with an effect borrowing the exact exit; see guarantee_case.
+
+        Parameters:
+            V: An IO[E] program.
+            F: A ScopedIO borrowing ExitCase[E].
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The guarded program.
+        """
+        comptime assert conforms_to(V, ReaderAction) and conforms_to(F, ScopedIO)
+        comptime assert _CaseFinalizerCompatible[downcast[V, ReaderAction], downcast[F, ScopedIO]]
+        return guarantee_case(rebind_var[downcast[V, ReaderAction]](program^), rebind_var[downcast[F, ScopedIO]](finalizer^))
+
+    @staticmethod
+    def restore[V: Movable & Deinitable](poll: Poll[Self.E], var program: V) -> Self.Restored[V]:
+        """Run part of a region with the outer cancellation state; see Poll.apply.
+
+        Parameters:
+            V: An IO[E] program.
+
+        Args:
+            poll: The region's poll, borrowed.
+            program: The program, consumed.
+
+        Returns:
+            The restored program.
+        """
+        comptime assert conforms_to(V, ReaderAction)
+        comptime assert IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.E
+        return poll.apply(rebind_var[downcast[V, ReaderAction]](program^))
+
+    @staticmethod
+    def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:
+        """Run a region masked; see uncancelable_with.
+
+        Parameters:
+            F: An owned once-callable from Poll[E] to an IO[E] program.
+
+        Args:
+            body: The region's factory, consumed.
+
+        Returns:
+            The masked program.
+        """
+        comptime assert F.Arg == Poll[Self.E] and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error] and conforms_to(F.Out, ReaderAction)
+        comptime assert IOContract[downcast[F.Out, ReaderAction]].Compatible and IOContract[downcast[F.Out, ReaderAction]].Error == Self.E
+        return uncancelable_with[Self.E](body^)

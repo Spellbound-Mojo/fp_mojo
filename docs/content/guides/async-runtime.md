@@ -121,6 +121,29 @@ its children. It holds no payloads or completed fibers. Slots are reused, so an
 index is not an identity, and fibers hosted by an `IO` inside a leaf are not
 listed.
 
+## Write programs generic over the family
+
+Generic code can ask for only the effect capabilities it uses, as Cats Effect's
+type classes do. Each capability is a compile-time dictionary that forwards to
+an existing operation:
+
+| Capability | Operations | Providers |
+|---|---|---|
+| `Defer` | `delay[I](f)`, `defer[I](factory)` | `Async[E]`, `SyncIO[E]` |
+| `Raise` | `raise_error[I, A](e)` | `Async[E]`, `SyncIO[E]` |
+| `Cancel` (`MonadCancel`) | `canceled[I]()`, `guarantee[I]`, `on_cancel[I]`, `guarantee_case[I]`, `uncancelable[I]`, `restore[I]` | `Async[E]`, `SyncIO[E]` |
+| `Spawn` (`GenSpawn`) | `start[I]`, `join[I, T]`, `cancel[I, T]`, `never[I, A]`, `cede[I]` | `Async[E]` |
+
+`Async[E]` is the dictionary for `IO[T, E]`; `SyncIO[E]` is the dictionary for
+the synchronous `fp.effects.IO[E]`, which has no fibers. A function such as
+`def protect[I: Defer & Cancel](...) -> I.Guaranteed[...] where ...` runs on
+either provider; a provider without a capability is rejected at the call.
+Associated types name each provider's carriers, so a generic signature states
+its admission in `where` clauses, as other capabilities in `fp.effects` do.
+`raise_error` builds a failure that recovery handles, never one marked
+canceled. Generic entry points share the names of the synchronous functions and
+take the dictionary as their first explicit parameter.
+
 ## Drive external work and shutdown
 
 `Driver` is a linear root owner. Poll it until `Progress.completed`, then consume
@@ -196,6 +219,7 @@ reported deadline.
 | `both`, `race`, `timeoutTo` | `both`, `race`, `timeout_to` | Cancel and drain; surviving source outcomes can win |
 | Earlier selection policies | `race_first`, `timeout_after` | First terminal outcome, or timer-selected fallback after clean draining |
 | `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
+| `MonadCancel`, `GenSpawn`, `Sync` (deferral only) | `Cancel`, `Spawn`, `Defer`, `Raise` dictionaries: `Async[E]`, `SyncIO[E]` | Narrower capabilities stay narrower; the synchronous family has no `Spawn` |
 | `fa.start`, `fiber.join`, `fiber.cancel` | `io.start()`, `fiber^.join()`, `fiber.cancel()`, `fiber.request_cancel()` | Owners drain unjoined children before completing |
 | `joinWith`, `joinWithNever`, `joinWithUnit` | `join_with`, `join_with_never`, `join_with_unit` | A canceled child runs the fallback, waits, or produces unit |
 | `IORuntimeConfig` | `IORuntimeConfig(cancelation_check_threshold, auto_yield_threshold)` | Same validation; by default checks every bind, where Cats Effect checks every 512, and yields every 1,024 transitions |

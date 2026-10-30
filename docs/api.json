@@ -60635,6 +60635,297 @@
    "summary": "Read an environment in a selected effect family.",
    "traits": []
   },
+  "effects.Cancel": {
+   "aliases": [
+    {
+     "description": "The family whose carriers this capability builds.",
+     "name": "Family"
+    },
+    {
+     "description": "The domain error type.",
+     "name": "Error"
+    },
+    {
+     "description": "The Poll a masked region receives to restore the outer state.",
+     "name": "RegionPoll"
+    },
+    {
+     "description": "The unit carrier requesting cancellation of the running program.",
+     "name": "Canceled"
+    },
+    {
+     "description": "Whether V is a family carrier and Q a unit carrier of the same error.",
+     "name": "GuaranteeCompatible"
+    },
+    {
+     "description": "The carrier running V, then Q on every exit.",
+     "name": "Guaranteed"
+    },
+    {
+     "description": "The carrier running V, then Q if it was canceled.",
+     "name": "OnCanceled"
+    },
+    {
+     "description": "Whether F builds the finalizer from the exact exit of carrier V.",
+     "name": "CaseCompatible"
+    },
+    {
+     "description": "The carrier running V, then the finalizer F builds from its exit.",
+     "name": "CaseGuaranteed"
+    },
+    {
+     "description": "Whether F takes RegionPoll and returns a family carrier.",
+     "name": "UncancelableCompatible"
+    },
+    {
+     "description": "The carrier running the region F builds, masked.",
+     "name": "Uncanceled"
+    },
+    {
+     "description": "Whether V is a family carrier a region's poll can restore.",
+     "name": "RestoreCompatible"
+    },
+    {
+     "description": "The carrier running V with the cancellation state outside a region.",
+     "name": "Restored"
+    }
+   ],
+   "description": "Finalizers run masked with the exact exit, innermost first; a masked region\ndefers observing cancellation until it ends or restores the outer state\nthrough its poll. Providers forward to their existing owners.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "canceled": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit carrier; a mask defers observing the request.",
+       "type": "Self.Canceled"
+      },
+      "signature": "def canceled() -> Self.Canceled",
+      "summary": "Request cancellation of the running program."
+     }
+    ],
+    "guarantee": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The finalizer's unit carrier type.",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier with the program's value; finalizer errors follow its errors.",
+       "type": "Self.Guaranteed[V, Q]"
+      },
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]",
+      "summary": "Run a finalizer, masked, after the program on every exit."
+     }
+    ],
+    "guarantee_case": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The provider's finalizer type, built from the exit.",
+        "inferred": false,
+        "name": "F",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier with the program's value; finalizer errors follow its errors.",
+       "type": "Self.CaseGuaranteed[V, F]"
+      },
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]",
+      "summary": "Run a finalizer built from the program's exact exit, masked."
+     }
+    ],
+    "on_cancel": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The finalizer's unit carrier type.",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier with the program's outcome and any finalizer errors.",
+       "type": "Self.OnCanceled[V, Q]"
+      },
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]",
+      "summary": "Run a finalizer, masked, only if the program is canceled."
+     }
+    ],
+    "restore": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The region's poll, borrowed.",
+        "name": "poll",
+        "type": "Self.RegionPoll",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier observing cancellation as the code outside the region does.",
+       "type": "Self.Restored[V]"
+      },
+      "signature": "def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]",
+      "summary": "Run part of a masked region with the cancellation state outside it."
+     }
+    ],
+    "uncancelable": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The region's factory, consumed.",
+        "name": "body",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable taking RegionPoll and returning a family carrier.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The region's carrier, masked.",
+       "type": "Self.Uncanceled[F]"
+      },
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]",
+      "summary": "Run a region masked; its poll restores the outer cancellation state."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Cancel",
+   "summary": "Cancellation, masking and finalization, as Cats Effect's MonadCancel.",
+   "traits": []
+  },
   "effects.CancellationToken": {
    "aliases": [],
    "description": "Copies share one flag. Requesting cancellation never kills a thread or\ninterrupts native code. IO observes it at its documented checkpoints.",
@@ -60753,6 +61044,104 @@
     "Listen",
     "Tell"
    ]
+  },
+  "effects.Defer": {
+   "aliases": [
+    {
+     "description": "The family whose carriers this capability builds.",
+     "name": "Family"
+    },
+    {
+     "description": "Whether F is admitted: owned, with an error the family accepts.",
+     "name": "DelayCompatible"
+    },
+    {
+     "description": "The carrier running F when reached.",
+     "name": "Delayed"
+    },
+    {
+     "description": "Whether F is admitted and returns one of the family's carriers.",
+     "name": "DeferCompatible"
+    },
+    {
+     "description": "The carrier running the effect F builds when reached.",
+     "name": "Deferred"
+    }
+   ],
+   "description": "A selected family's dictionary: generic code asks for this capability\ninstead of naming a concrete family. Providers forward to their existing\nconstructors. `delay` runs its function when reached and produces its\nvalue; `defer` builds the effect to run when reached.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "defer": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, consumed.",
+        "name": "factory",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An admitted once-callable thunk returning a family carrier.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier running the effect the factory builds.",
+       "type": "Self.Deferred[F]"
+      },
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]",
+      "summary": "Build an effect when the program reaches it."
+     }
+    ],
+    "delay": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An admitted once-callable thunk.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing the function's value, or failing with its error.",
+       "type": "Self.Delayed[F]"
+      },
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]",
+      "summary": "Run a function when the program reaches it."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Defer",
+   "summary": "Build effects that run nothing until the program reaches them.",
+   "traits": []
   },
   "effects.Deferred": {
    "aliases": [],
@@ -64542,6 +64931,64 @@
     "Copyable"
    ]
   },
+  "effects.Raise": {
+   "aliases": [
+    {
+     "description": "The family whose carriers this capability builds.",
+     "name": "Family"
+    },
+    {
+     "description": "The domain error type.",
+     "name": "Error"
+    },
+    {
+     "description": "The failing carrier for success type A.",
+     "name": "Raised"
+    }
+   ],
+   "description": "Raising never marks the failure canceled, so the family's recovery handles\nit: raising `e` and recovering with `h` runs `h` on a failure holding only\n`e`. Families whose stored failure cannot carry cancellation can be\n`ApplicativeError` instead.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "raise_error": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The error, consumed.",
+        "name": "error",
+        "type": "Self.Error",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The success type the carrier declares.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier failing with an uncanceled failure holding the error.",
+       "type": "Self.Raised[A]"
+      },
+      "signature": "def raise_error[A: Movable & Deinitable](var error: Self.Error) -> Self.Raised[A]",
+      "summary": "Fail with one error."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Raise",
+   "summary": "Fail with one ordinary domain error.",
+   "traits": []
+  },
   "effects.Reader": {
    "aliases": [],
    "description": "",
@@ -66563,6 +67010,186 @@
     "Copyable"
    ]
   },
+  "effects.Spawn": {
+   "aliases": [
+    {
+     "description": "The handle of a started fiber with success type T.",
+     "name": "Handle"
+    },
+    {
+     "description": "Whether V is a family carrier that can be started.",
+     "name": "StartCompatible"
+    },
+    {
+     "description": "The carrier producing the handle of V started as a fiber.",
+     "name": "Started"
+    },
+    {
+     "description": "The carrier producing a fiber's outcome with success type T.",
+     "name": "Joined"
+    },
+    {
+     "description": "The unit carrier that cancels a fiber and waits for it.",
+     "name": "Stopped"
+    },
+    {
+     "description": "The carrier that waits until canceled, with success type A.",
+     "name": "Forever"
+    },
+    {
+     "description": "The unit carrier that yields to other work once.",
+     "name": "Ceded"
+    }
+   ],
+   "description": "A started fiber runs beside the fiber that started it, its owner, which\ndrains it before completing. Joining takes its outcome once.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "cancel": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The handle, borrowed.",
+        "name": "fiber",
+        "type": "Self.Handle[T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The fiber's success type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit carrier completing after the fiber terminates.",
+       "type": "Self.Stopped"
+      },
+      "signature": "def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped",
+      "summary": "Cancel a fiber and wait for it to finish, without its outcome."
+     }
+    ],
+    "cede": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit carrier that is runnable again after one yield.",
+       "type": "Self.Ceded"
+      },
+      "signature": "def cede() -> Self.Ceded",
+      "summary": "Yield to other runnable work once."
+     }
+    ],
+    "join": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The handle, consumed.",
+        "name": "fiber",
+        "type": "Self.Handle[T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The fiber's success type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing the fiber's outcome.",
+       "type": "Self.Joined[T]"
+      },
+      "signature": "def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]",
+      "summary": "Wait for a fiber and its cleanup, then take its outcome."
+     }
+    ],
+    "never": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The success type the carrier declares.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier that never produces a value.",
+       "type": "Self.Forever[A]"
+      },
+      "signature": "def never[A: Movable & Deinitable]() -> Self.Forever[A]",
+      "summary": "Wait until canceled."
+     }
+    ],
+    "start": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's carrier type.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing the fiber's handle.",
+       "type": "Self.Started[V]"
+      },
+      "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]",
+      "summary": "Start the program as a fiber owned by the running fiber."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Spawn(Cancel)",
+   "summary": "Fibers, as Cats Effect's GenSpawn, without public fiber identity.",
+   "traits": [
+    "Cancel"
+   ]
+  },
   "effects.State": {
    "aliases": [],
    "description": "",
@@ -67451,6 +68078,425 @@
    "signature": "trait Stateful",
    "summary": "Read and update a selected state in an effect family.",
    "traits": []
+  },
+  "effects.SyncIO": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    },
+    {
+     "description": "",
+     "name": "DelayCompatible"
+    },
+    {
+     "description": "",
+     "name": "Delayed"
+    },
+    {
+     "description": "",
+     "name": "DeferCompatible"
+    },
+    {
+     "description": "",
+     "name": "Deferred"
+    },
+    {
+     "description": "",
+     "name": "Raised"
+    },
+    {
+     "description": "",
+     "name": "RegionPoll"
+    },
+    {
+     "description": "",
+     "name": "Canceled"
+    },
+    {
+     "description": "",
+     "name": "GuaranteeCompatible"
+    },
+    {
+     "description": "",
+     "name": "Guaranteed"
+    },
+    {
+     "description": "",
+     "name": "OnCanceled"
+    },
+    {
+     "description": "",
+     "name": "CaseCompatible"
+    },
+    {
+     "description": "",
+     "name": "CaseGuaranteed"
+    },
+    {
+     "description": "",
+     "name": "UncancelableCompatible"
+    },
+    {
+     "description": "",
+     "name": "Uncanceled"
+    },
+    {
+     "description": "",
+     "name": "RestoreCompatible"
+    },
+    {
+     "description": "",
+     "name": "Restored"
+    }
+   ],
+   "description": "Generic code names this dictionary to run in IO[E], such as\n`guarantee[SyncIO[E]](program, cleanup)`. Each operation forwards to the\nfamily's existing function. The synchronous family has no fibers, so\nSyncIO is not a Spawn provider.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "canceled": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO[E] program.",
+       "type": "Self.Canceled"
+      },
+      "signature": "def canceled() -> Self.Canceled",
+      "summary": "Request cancellation; see canceled."
+     }
+    ],
+    "defer": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, consumed.",
+        "name": "factory",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable returning an IO[E] program.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] program running the program the factory builds.",
+       "type": "Self.Deferred[F]"
+      },
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]",
+      "summary": "Build a program when reached, then run it."
+     }
+    ],
+    "delay": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable thunk with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] program producing its value.",
+       "type": "Self.Delayed[F]"
+      },
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]",
+      "summary": "Run a function when reached; see delay."
+     }
+    ],
+    "guarantee": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO[E] program.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A unit IO[E] program.",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The guarded program.",
+       "type": "Self.Guaranteed[V, Q]"
+      },
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]",
+      "summary": "Finalize on every exit; see guarantee."
+     }
+    ],
+    "guarantee_case": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO[E] program.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A ScopedIO borrowing ExitCase[E].",
+        "inferred": false,
+        "name": "F",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The guarded program.",
+       "type": "Self.CaseGuaranteed[V, F]"
+      },
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]",
+      "summary": "Finalize with an effect borrowing the exact exit; see guarantee_case."
+     }
+    ],
+    "on_cancel": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO[E] program.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A unit IO[E] program.",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The guarded program.",
+       "type": "Self.OnCanceled[V, Q]"
+      },
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]",
+      "summary": "Finalize only on cancellation; see on_cancel."
+     }
+    ],
+    "raise_error": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The error, consumed.",
+        "name": "error",
+        "type": "Self.E",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The success type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] program failing with an uncanceled failure holding the error.",
+       "type": "Self.Raised[A]"
+      },
+      "signature": "def raise_error[A: Movable & Deinitable](var error: Self.E) -> Self.Raised[A]",
+      "summary": "Fail with one ordinary error."
+     }
+    ],
+    "restore": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The region's poll, borrowed.",
+        "name": "poll",
+        "type": "Poll[Self.E]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO[E] program.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The restored program.",
+       "type": "Self.Restored[V]"
+      },
+      "signature": "def restore[V: Movable & Deinitable](poll: Poll[Self.E], var program: V) -> Self.Restored[V]",
+      "summary": "Run part of a region with the outer cancellation state; see Poll.apply."
+     }
+    ],
+    "uncancelable": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The region's factory, consumed.",
+        "name": "body",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable from Poll[E] to an IO[E] program.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The masked program.",
+       "type": "Self.Uncanceled[F]"
+      },
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]",
+      "summary": "Run a region masked; see uncancelable_with."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The exact domain error of the IO[E] family.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/finalization",
+   "signature": "struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, not Deinitable)",
+   "summary": "The capabilities of the synchronous IO[E] family: Defer, Raise and Cancel.",
+   "traits": [
+    "Cancel",
+    "Defer",
+    "Raise"
+   ]
   },
   "effects.Tell": {
    "aliases": [
@@ -69280,6 +70326,106 @@
     },
     {
      "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "DelayCompatible"
+    },
+    {
+     "description": "",
+     "name": "Delayed"
+    },
+    {
+     "description": "",
+     "name": "DeferCompatible"
+    },
+    {
+     "description": "",
+     "name": "Deferred"
+    },
+    {
+     "description": "",
+     "name": "Error"
+    },
+    {
+     "description": "",
+     "name": "Raised"
+    },
+    {
+     "description": "",
+     "name": "RegionPoll"
+    },
+    {
+     "description": "",
+     "name": "Canceled"
+    },
+    {
+     "description": "",
+     "name": "GuaranteeCompatible"
+    },
+    {
+     "description": "",
+     "name": "Guaranteed"
+    },
+    {
+     "description": "",
+     "name": "OnCanceled"
+    },
+    {
+     "description": "",
+     "name": "CaseCompatible"
+    },
+    {
+     "description": "",
+     "name": "CaseGuaranteed"
+    },
+    {
+     "description": "",
+     "name": "UncancelableCompatible"
+    },
+    {
+     "description": "",
+     "name": "Uncanceled"
+    },
+    {
+     "description": "",
+     "name": "RestoreCompatible"
+    },
+    {
+     "description": "",
+     "name": "Restored"
+    },
+    {
+     "description": "",
+     "name": "Handle"
+    },
+    {
+     "description": "",
+     "name": "StartCompatible"
+    },
+    {
+     "description": "",
+     "name": "Started"
+    },
+    {
+     "description": "",
+     "name": "Joined"
+    },
+    {
+     "description": "",
+     "name": "Stopped"
+    },
+    {
+     "description": "",
+     "name": "Forever"
+    },
+    {
+     "description": "",
+     "name": "Ceded"
+    },
+    {
+     "description": "",
      "name": "CollectCompatible"
     },
     {
@@ -69307,6 +70453,134 @@
    "fields": [],
    "kind": "struct",
    "methods": {
+    "cancel": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The handle, borrowed.",
+        "name": "fiber",
+        "type": "Fiber[T, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The fiber's success type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO completing after the fiber terminates.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def cancel[T: Movable & Deinitable](fiber: Fiber[T, Self.E]) -> IO[NoneType, Self.E]",
+      "summary": "Cancel a fiber and wait for it; see Fiber.cancel."
+     }
+    ],
+    "canceled": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def canceled() -> IO[NoneType, Self.E]",
+      "summary": "Request cancellation of the running program; see IO.canceled."
+     }
+    ],
+    "cede": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def cede() -> IO[NoneType, Self.E]",
+      "summary": "Yield once; see IO.cede."
+     }
+    ],
+    "defer": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The factory, consumed.",
+        "name": "factory",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable returning an IO with error E.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO running the program the factory builds.",
+       "type": "Self.Deferred[F]"
+      },
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]",
+      "summary": "Build an IO when it is reached; see IO.defer."
+     }
+    ],
+    "delay": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable, with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the function's value.",
+       "type": "Self.Delayed[F]"
+      },
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]",
+      "summary": "Evaluate a function when the IO reaches it; see IO.delay."
+     }
+    ],
     "flat_map": [
      {
       "args": [
@@ -69351,6 +70625,130 @@
       },
       "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Bound[V, F]",
       "summary": "Continue with the IO a callback builds from the success value."
+     }
+    ],
+    "guarantee": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO with error E.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "IO[NoneType, E].",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The guarded IO.",
+       "type": "V"
+      },
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> V",
+      "summary": "Run a finalizer after the program on every exit; see IO.guarantee."
+     }
+    ],
+    "guarantee_case": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer factory, consumed.",
+        "name": "finalizer",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO with error E.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "An owned once-callable borrowing ExitCase[E] and returning IO[NoneType, E].",
+        "inferred": false,
+        "name": "F",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The guarded IO.",
+       "type": "V"
+      },
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> V",
+      "summary": "Run a finalizer built from the exact exit; see IO.guarantee_case."
+     }
+    ],
+    "join": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The handle, consumed.",
+        "name": "fiber",
+        "type": "Fiber[T, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The fiber's success type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the fiber's outcome.",
+       "type": "IO[Outcome[T, Self.E], Self.E]"
+      },
+      "signature": "def join[T: Movable & Deinitable](var fiber: Fiber[T, Self.E]) -> IO[Outcome[T, Self.E], Self.E]",
+      "summary": "Wait for a fiber and take its outcome; see Fiber.join."
      }
     ],
     "map": [
@@ -69459,6 +70857,76 @@
       "summary": "Run the left IO, build and run the right, then combine their values."
      }
     ],
+    "never": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The success type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO that never produces a value.",
+       "type": "IO[A, Self.E]"
+      },
+      "signature": "def never[A: Movable & Deinitable]() -> IO[A, Self.E]",
+      "summary": "Wait until canceled; see IO.never."
+     }
+    ],
+    "on_cancel": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The finalizer, consumed.",
+        "name": "finalizer",
+        "type": "Q",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO with error E.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "IO[NoneType, E].",
+        "inferred": false,
+        "name": "Q",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The guarded IO.",
+       "type": "V"
+      },
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> V",
+      "summary": "Run a finalizer only if the program is canceled; see IO.on_cancel."
+     }
+    ],
     "or_else": [
      {
       "args": [
@@ -69536,6 +71004,141 @@
       "signature": "def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]",
       "summary": "Own an evaluated value in an IO."
      }
+    ],
+    "raise_error": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The error, consumed.",
+        "name": "error",
+        "type": "Self.E",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The success type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO failing with an uncanceled failure holding the error.",
+       "type": "IO[A, Self.E]"
+      },
+      "signature": "def raise_error[A: Movable & Deinitable](var error: Self.E) -> IO[A, Self.E]",
+      "summary": "Fail with one ordinary error; see IO.raise_error."
+     }
+    ],
+    "restore": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The region's poll, borrowed.",
+        "name": "poll",
+        "type": "_PollOf[Self.E]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO with error E.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The restored IO.",
+       "type": "V"
+      },
+      "signature": "def restore[V: Movable & Deinitable](poll: _PollOf[Self.E], var program: V) -> V",
+      "summary": "Run part of a region with the outer cancellation state; see IO.restore."
+     }
+    ],
+    "start": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "V",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An IO with error E.",
+        "inferred": false,
+        "name": "V",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the fiber's handle.",
+       "type": "Self.Started[V]"
+      },
+      "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]",
+      "summary": "Start the program as a fiber; see IO.start."
+     }
+    ],
+    "uncancelable": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The region's factory, consumed.",
+        "name": "body",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable from Poll[E] to an IO with error E.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The masked IO.",
+       "type": "Self.Uncanceled[F]"
+      },
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]",
+      "summary": "Run a region masked; see IO.uncancelable."
+     }
     ]
    },
    "parameters": [
@@ -69548,13 +71151,17 @@
     }
    ],
    "provider": "effects/_async/engine",
-   "signature": "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery)",
+   "signature": "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Spawn, not Deinitable)",
    "summary": "The sequencing and recovery family of IO.",
    "traits": [
     "Applicative",
+    "Cancel",
+    "Defer",
     "ErrorRecovery",
     "Functor",
-    "Monad"
+    "Monad",
+    "Raise",
+    "Spawn"
    ]
   },
   "effects.async_runtime.Clock": {
@@ -73035,10 +74642,77 @@
    "provider": "effects/_async/host",
    "summary": ""
   },
+  "effects.cancel": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The handle, borrowed.",
+       "name": "fiber",
+       "type": "I.Handle[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Spawn",
+       "variadic": false
+      },
+      {
+       "description": "The fiber's success type.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's unit carrier completing after the fiber terminates.",
+      "type": "I.Stopped"
+     },
+     "signature": "def cancel[I: Spawn, T: Movable & Deinitable](fiber: I.Handle[T]) -> I.Stopped",
+     "summary": "Cancel a fiber and wait for it to finish, without its outcome."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
   "effects.canceled": {
    "description": "",
    "kind": "function",
    "overloads": [
+    {
+     "args": [],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Cancel",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's unit carrier; a mask defers observing the request.",
+      "type": "I.Canceled"
+     },
+     "signature": "def canceled[I: Cancel]() -> I.Canceled",
+     "summary": "Request cancellation of the running program, in any family with Cancel."
+    },
     {
      "args": [],
      "description": "",
@@ -73101,6 +74775,36 @@
     }
    ],
    "provider": "effects/_io_core",
+   "summary": ""
+  },
+  "effects.cede": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Spawn",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's unit carrier.",
+      "type": "I.Ceded"
+     },
+     "signature": "def cede[I: Spawn]() -> I.Ceded",
+     "summary": "Yield to other runnable work once, in any family with Spawn."
+    }
+   ],
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.censor": {
@@ -73299,6 +75003,51 @@
    "provider": "effects/capabilities",
    "summary": ""
   },
+  "effects.defer": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The factory, consumed.",
+       "name": "factory",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "An owned once-callable returning one of the family's carriers.",
+       "inferred": true,
+       "name": "F",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Defer",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier running the effect the factory builds.",
+      "type": "I.Deferred[F]"
+     },
+     "signature": "def defer[F: ThunkContract & Movable & Deinitable, //, I: Defer](var factory: F) -> I.Deferred[F] where I.DeferCompatible[F]",
+     "summary": "Build an effect when the program reaches it, in any family with Defer."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
   "effects.delay": {
    "description": "",
    "kind": "function",
@@ -73339,6 +75088,43 @@
      },
      "signature": "def delay[F: ThunkContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F) -> _IODelay[E, F] where _ErrorCompatible[E, F.Error] and _OnceThunkAvailable[F]",
      "summary": "Suspend one native callback, capturing its exact error at execution."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The function, consumed.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "An owned once-callable thunk the family admits.",
+       "inferred": true,
+       "name": "F",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Defer",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing the function's value.",
+      "type": "I.Delayed[F]"
+     },
+     "signature": "def delay[F: ThunkContract & Movable & Deinitable, //, I: Defer](var function: F) -> I.Delayed[F] where I.DelayCompatible[F]",
+     "summary": "Run a function when the program reaches it, in any family with Defer."
     },
     {
      "args": [
@@ -74451,6 +76237,57 @@
      "args": [
       {
        "convention": "var",
+       "description": "The program, consumed.",
+       "name": "program",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The finalizer, consumed.",
+       "name": "finalizer",
+       "type": "Q",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The program's carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The finalizer's unit carrier type.",
+       "inferred": true,
+       "name": "Q",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Cancel",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's guarded carrier.",
+      "type": "I.Guaranteed[V, Q]"
+     },
+     "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: Q) -> I.Guaranteed[V, Q] where I.GuaranteeCompatible[V, Q]",
+     "summary": "Run a finalizer, masked, after the program on every exit, in any family with Cancel."
+    },
+    {
+     "args": [
+      {
+       "convention": "var",
        "description": "The body, consumed into the new recipe.",
        "name": "program",
        "type": "P",
@@ -74499,6 +76336,57 @@
    "description": "",
    "kind": "function",
    "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The program, consumed.",
+       "name": "program",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The finalizer, consumed.",
+       "name": "finalizer",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The program's carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The family's finalizer type, built from the exit.",
+       "inferred": true,
+       "name": "F",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Cancel",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's guarded carrier.",
+      "type": "I.CaseGuaranteed[V, F]"
+     },
+     "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: F) -> I.CaseGuaranteed[V, F] where I.CaseCompatible[V, F]",
+     "summary": "Run a finalizer built from the exact exit, masked, in any family with Cancel."
+    },
     {
      "args": [
       {
@@ -75229,6 +77117,51 @@
    "provider": "effects/projections",
    "summary": ""
   },
+  "effects.join": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The handle, consumed.",
+       "name": "fiber",
+       "type": "I.Handle[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Spawn",
+       "variadic": false
+      },
+      {
+       "description": "The fiber's success type.",
+       "inferred": false,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing the fiber's outcome.",
+      "type": "I.Joined[T]"
+     },
+     "signature": "def join[I: Spawn, T: Movable & Deinitable](var fiber: I.Handle[T]) -> I.Joined[T]",
+     "summary": "Wait for a fiber and its cleanup, then take its outcome."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
   "effects.lift": {
    "description": "",
    "kind": "function",
@@ -75707,10 +77640,98 @@
    "provider": "effects/capabilities",
    "summary": ""
   },
+  "effects.never": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Spawn",
+       "variadic": false
+      },
+      {
+       "description": "The success type the carrier declares.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier that never produces a value.",
+      "type": "I.Forever[A]"
+     },
+     "signature": "def never[I: Spawn, A: Movable & Deinitable]() -> I.Forever[A]",
+     "summary": "Wait until canceled, in any family with Spawn."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
   "effects.on_cancel": {
    "description": "",
    "kind": "function",
    "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The program, consumed.",
+       "name": "program",
+       "type": "V",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The finalizer, consumed.",
+       "name": "finalizer",
+       "type": "Q",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The program's carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The finalizer's unit carrier type.",
+       "inferred": true,
+       "name": "Q",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Cancel",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's guarded carrier.",
+      "type": "I.OnCanceled[V, Q]"
+     },
+     "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: Q) -> I.OnCanceled[V, Q] where I.GuaranteeCompatible[V, Q]",
+     "summary": "Run a finalizer, masked, only if the program is canceled, in any family with Cancel."
+    },
     {
      "args": [
       {
@@ -75837,6 +77858,51 @@
      },
      "signature": "def put[I: Stateful](var state: I.StateType) raises I.ModifyError[_Replace[I.StateType]] -> I.Modified[_Replace[I.StateType]] where I.ModifyCompatible[_Replace[I.StateType]]",
      "summary": "Replace the selected state, destroying the previous state on execution."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.raise_error": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The error, consumed.",
+       "name": "error",
+       "type": "I.Error",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Raise",
+       "variadic": false
+      },
+      {
+       "description": "The success type the carrier declares.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier failing with an uncanceled failure holding it.",
+      "type": "I.Raised[A]"
+     },
+     "signature": "def raise_error[I: Raise, A: Movable & Deinitable](var error: I.Error) -> I.Raised[A]",
+     "summary": "Fail with one ordinary error, in any family with Raise."
     }
    ],
    "provider": "effects/capabilities",
@@ -78181,6 +80247,58 @@
    "provider": "effects/effectful_resources",
    "summary": ""
   },
+  "effects.restore": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The region's poll, borrowed.",
+       "name": "poll",
+       "type": "I.RegionPoll",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The program, consumed.",
+       "name": "program",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The program's carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Cancel",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's restored carrier.",
+      "type": "I.Restored[V]"
+     },
+     "signature": "def restore[V: Movable & Deinitable, //, I: Cancel](poll: I.RegionPoll, var program: V) -> I.Restored[V] where I.RestoreCompatible[V]",
+     "summary": "Run part of a masked region with the cancellation state outside it."
+    }
+   ],
+   "provider": "effects/_io_core",
+   "summary": ""
+  },
   "effects.run": {
    "description": "",
    "kind": "function",
@@ -79136,6 +81254,51 @@
    "provider": "effects/_io_core",
    "summary": ""
   },
+  "effects.start": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The program, consumed.",
+       "name": "program",
+       "type": "V",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The program's carrier type.",
+       "inferred": true,
+       "name": "V",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Spawn",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing the fiber's handle.",
+      "type": "I.Started[V]"
+     },
+     "signature": "def start[V: Movable & Deinitable, //, I: Spawn](var program: V) -> I.Started[V] where I.StartCompatible[V]",
+     "summary": "Start a program as a fiber owned by the running fiber, in any family with Spawn."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
   "effects.tell": {
    "description": "",
    "kind": "function",
@@ -79222,6 +81385,43 @@
    "description": "",
    "kind": "function",
    "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The region's factory, consumed.",
+       "name": "body",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "An owned once-callable from the family's Poll to its carrier.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Cancel",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's masked carrier.",
+      "type": "I.Uncanceled[F]"
+     },
+     "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable, //, I: Cancel](var body: F) -> I.Uncanceled[F] where I.UncancelableCompatible[F]",
+     "summary": "Run a region masked in any family with Cancel; its Poll restores the outer state."
+    },
     {
      "args": [
       {

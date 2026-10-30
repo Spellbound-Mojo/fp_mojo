@@ -5653,6 +5653,51 @@
    },
    "provider": "effects/protocols"
   },
+  "effects.Cancel": {
+   "declarations": [
+    "trait Cancel:"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "canceled": [
+     {
+      "sha256": "f3aa99e858d6d4061966c304805229031e88685aac4a1aa86e714fcd1ceeea3f",
+      "signature": "def canceled() -> Self.Canceled:"
+     }
+    ],
+    "guarantee": [
+     {
+      "sha256": "79ed2420e9ac1e61216af0b5c8bea244167133fd31d26bca5ef4605ca213bc51",
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:"
+     }
+    ],
+    "guarantee_case": [
+     {
+      "sha256": "7da09899f80251be0b1edf7da8ceead11a69f014517394e58973663bb76a8102",
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:"
+     }
+    ],
+    "on_cancel": [
+     {
+      "sha256": "b0ce8b5894742335988807b8a9794f2d870f96abec90e550660eea7d810c1a21",
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:"
+     }
+    ],
+    "restore": [
+     {
+      "sha256": "85d16a9c6e8547772ae605848c3b65422b471012794412356d052e5f068956b4",
+      "signature": "def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:"
+     }
+    ],
+    "uncancelable": [
+     {
+      "sha256": "a23469a0c8bfdfbfe12044f884a9702f9ca24ad2d5ccd16e5d958f53adabc546",
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:"
+     }
+    ]
+   },
+   "provider": "effects/protocols"
+  },
   "effects.CancellationToken": {
    "declarations": [
     "struct CancellationToken(Copyable):"
@@ -5684,6 +5729,27 @@
      {
       "sha256": "ba82886a37246aadfc062368cd896f1725ebb02d300ac619e4eab5223b2e0de0",
       "signature": "def censor[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V ) raises Self.CensorError[V, F] -> Self.Censored[V, F]:"
+     }
+    ]
+   },
+   "provider": "effects/protocols"
+  },
+  "effects.Defer": {
+   "declarations": [
+    "trait Defer:"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "defer": [
+     {
+      "sha256": "046f215740315fe0fdce62951657b482031c5378f9e18617f191c64ea7267ba1",
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]:"
+     }
+    ],
+    "delay": [
+     {
+      "sha256": "cc1d9e923dcacbd3ae9e7e6cb2cdbed0144383acfbe6523ea5b831070ecc11d1",
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:"
      }
     ]
    },
@@ -6346,6 +6412,21 @@
    },
    "provider": "effects/coordination"
   },
+  "effects.Raise": {
+   "declarations": [
+    "trait Raise:"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "raise_error": [
+     {
+      "sha256": "e6ecf09cdd89a6bbdbd10c6790056dbfc071c595de033bc4e3e166d920e74bd4",
+      "signature": "def raise_error[A: Movable & Deinitable](var error: Self.Error) -> Self.Raised[A]:"
+     }
+    ]
+   },
+   "provider": "effects/protocols"
+  },
   "effects.Reader": {
    "declarations": [
     "comptime Reader[R: AnyType] = ReaderT[IdentityFamily, R]"
@@ -6650,6 +6731,45 @@
    },
    "provider": "effects/coordination"
   },
+  "effects.Spawn": {
+   "declarations": [
+    "trait Spawn(Cancel):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "cancel": [
+     {
+      "sha256": "59855e2d0d3fe580ffadfef33daacb435696e9d794483a55614fb20e4a31c4f1",
+      "signature": "def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped:"
+     }
+    ],
+    "cede": [
+     {
+      "sha256": "77a860e45d61963f241310f5497f832db84a8be28e34f7b3739128873397027c",
+      "signature": "def cede() -> Self.Ceded:"
+     }
+    ],
+    "join": [
+     {
+      "sha256": "57583f3b0fad88ab2a52b8e8799f7d93d5411575a0f6ff6fa7ba7e587e2db37b",
+      "signature": "def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]:"
+     }
+    ],
+    "never": [
+     {
+      "sha256": "fde9ac119aa2357f19804ebae7dd6c2840596e7e2e7835be7505444b6c3989d1",
+      "signature": "def never[A: Movable & Deinitable]() -> Self.Forever[A]:"
+     }
+    ],
+    "start": [
+     {
+      "sha256": "5c225fbed5acc02645a9b6bd98f76437058c1159d2ff4538d54a4a7278394363",
+      "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:"
+     }
+    ]
+   },
+   "provider": "effects/protocols"
+  },
   "effects.State": {
    "declarations": [
     "comptime State[S: Movable & Deinitable] = StateT[IdentityFamily, S]"
@@ -6780,6 +6900,69 @@
     ]
    },
    "provider": "effects/protocols"
+  },
+  "effects.SyncIO": {
+   "declarations": [
+    "struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "canceled": [
+     {
+      "sha256": "f3aa99e858d6d4061966c304805229031e88685aac4a1aa86e714fcd1ceeea3f",
+      "signature": "def canceled() -> Self.Canceled:"
+     }
+    ],
+    "defer": [
+     {
+      "sha256": "046f215740315fe0fdce62951657b482031c5378f9e18617f191c64ea7267ba1",
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]:"
+     }
+    ],
+    "delay": [
+     {
+      "sha256": "cc1d9e923dcacbd3ae9e7e6cb2cdbed0144383acfbe6523ea5b831070ecc11d1",
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:"
+     }
+    ],
+    "guarantee": [
+     {
+      "sha256": "79ed2420e9ac1e61216af0b5c8bea244167133fd31d26bca5ef4605ca213bc51",
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:"
+     }
+    ],
+    "guarantee_case": [
+     {
+      "sha256": "7da09899f80251be0b1edf7da8ceead11a69f014517394e58973663bb76a8102",
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:"
+     }
+    ],
+    "on_cancel": [
+     {
+      "sha256": "b0ce8b5894742335988807b8a9794f2d870f96abec90e550660eea7d810c1a21",
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:"
+     }
+    ],
+    "raise_error": [
+     {
+      "sha256": "d8445273df914b9a4281e8333c750b55abd9deec1739a7190eb1f62159489b7d",
+      "signature": "def raise_error[A: Movable & Deinitable](var error: Self.E) -> Self.Raised[A]:"
+     }
+    ],
+    "restore": [
+     {
+      "sha256": "34138597a7c41aacdedc027dc5d2b6bf78f3e6b8d7136904a679ca51f98c46d5",
+      "signature": "def restore[V: Movable & Deinitable](poll: Poll[Self.E], var program: V) -> Self.Restored[V]:"
+     }
+    ],
+    "uncancelable": [
+     {
+      "sha256": "a23469a0c8bfdfbfe12044f884a9702f9ca24ad2d5ccd16e5d958f53adabc546",
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:"
+     }
+    ]
+   },
+   "provider": "effects/finalization"
   },
   "effects.Tell": {
    "declarations": [
@@ -7023,14 +7206,62 @@
   },
   "effects.async_runtime.Async": {
    "declarations": [
-    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery):"
+    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Spawn, not Deinitable):"
    ],
    "kind": "type or alias",
    "methods": {
+    "cancel": [
+     {
+      "sha256": "f7d79a89a875042316f34a119ae028098548699c1aff726ff452b724efec1c13",
+      "signature": "def cancel[T: Movable & Deinitable](fiber: Fiber[T, Self.E]) -> IO[NoneType, Self.E]:"
+     }
+    ],
+    "canceled": [
+     {
+      "sha256": "61044faf6849c0eede27d2238263c6fe50c9ffd9007a5439e7cd95a173ff166f",
+      "signature": "def canceled() -> IO[NoneType, Self.E]:"
+     }
+    ],
+    "cede": [
+     {
+      "sha256": "d5e177f5966e95c21455145a5052b82b3ff8306e8cbcb8c2f18eafe59da4922d",
+      "signature": "def cede() -> IO[NoneType, Self.E]:"
+     }
+    ],
+    "defer": [
+     {
+      "sha256": "046f215740315fe0fdce62951657b482031c5378f9e18617f191c64ea7267ba1",
+      "signature": "def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]:"
+     }
+    ],
+    "delay": [
+     {
+      "sha256": "cc1d9e923dcacbd3ae9e7e6cb2cdbed0144383acfbe6523ea5b831070ecc11d1",
+      "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:"
+     }
+    ],
     "flat_map": [
      {
       "sha256": "af0facfacf5486d5df617ff395d5da212dd57908a6c35dafcda577a68062d19d",
       "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Bound[V, F]:"
+     }
+    ],
+    "guarantee": [
+     {
+      "sha256": "a594c8d831cb47038ca89a8589fe9d10507a787f493203d36d8efb7a779a1303",
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> V:"
+     }
+    ],
+    "guarantee_case": [
+     {
+      "sha256": "9197e8525da8cfd4fb06e9e2af1b348ed617ed6af5aa06c4626f2b23ff010ee8",
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> V:"
+     }
+    ],
+    "join": [
+     {
+      "sha256": "607df712967b97f82b1dab1b1c0ff3eb2e3a0694a8e9f272961261335a54aef6",
+      "signature": "def join[T: Movable & Deinitable](var fiber: Fiber[T, Self.E]) -> IO[Outcome[T, Self.E], Self.E]:"
      }
     ],
     "map": [
@@ -7045,6 +7276,18 @@
       "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) -> Self.Combined[V, F, R]:"
      }
     ],
+    "never": [
+     {
+      "sha256": "14edbe31ab70b7fdda1046de53e6a1f038ff69f6aefeb71b789c1a4c2dc31aa8",
+      "signature": "def never[A: Movable & Deinitable]() -> IO[A, Self.E]:"
+     }
+    ],
+    "on_cancel": [
+     {
+      "sha256": "f5df6bd70ca7213c09b311df67661056ba6bccc5ee2586c3b0f1c1e0934d78e9",
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> V:"
+     }
+    ],
     "or_else": [
      {
       "sha256": "457c620dc9abe0c4fba60b8192cf2bf422bed785202dee2d10e331c6cd3153fe",
@@ -7055,6 +7298,30 @@
      {
       "sha256": "54092216fe5b666ba05e4c190879fb905b8eeb9abbfb4a0c28d2feaa9a02f936",
       "signature": "def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:"
+     }
+    ],
+    "raise_error": [
+     {
+      "sha256": "0a697eae1709983c7a2912837699526f57d7dc4027b2fa163a30e5255982dee7",
+      "signature": "def raise_error[A: Movable & Deinitable](var error: Self.E) -> IO[A, Self.E]:"
+     }
+    ],
+    "restore": [
+     {
+      "sha256": "c79cff680dc354db39510acc67c5c7f4845f821611a8d61e94c192542626a0b6",
+      "signature": "def restore[V: Movable & Deinitable](poll: _PollOf[Self.E], var program: V) -> V:"
+     }
+    ],
+    "start": [
+     {
+      "sha256": "5c225fbed5acc02645a9b6bd98f76437058c1159d2ff4538d54a4a7278394363",
+      "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:"
+     }
+    ],
+    "uncancelable": [
+     {
+      "sha256": "a23469a0c8bfdfbfe12044f884a9702f9ca24ad2d5ccd16e5d958f53adabc546",
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:"
      }
     ]
    },
@@ -7858,9 +8125,23 @@
    ],
    "provider": "effects/_async/host"
   },
+  "effects.cancel": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "927c533138973c46b9656dcad44124e79e35700bc76a4efe97e00ced5efc6c0e",
+     "signature": "def cancel[I: Spawn, T: Movable & Deinitable](fiber: I.Handle[T]) -> I.Stopped:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.canceled": {
    "kind": "function",
    "overloads": [
+    {
+     "sha256": "4d19b2bc66490e532867ef13ea05d988258413b964b485c7622db1a0c25def46",
+     "signature": "def canceled[I: Cancel]() -> I.Canceled:"
+    },
     {
      "sha256": "c061b5bc2ac4296365e0f0a289c10bda55f46fe6433319c0065a4ad8f4c41c43",
      "signature": "def canceled[E: Movable & Deinitable]() -> _IOCancel[E]:"
@@ -7877,6 +8158,16 @@
     }
    ],
    "provider": "effects/_io_core"
+  },
+  "effects.cede": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "5ca4d993680e730ceaa081bf91c017eac22250780fa0db9d281a41bc7f04ed17",
+     "signature": "def cede[I: Spawn]() -> I.Ceded:"
+    }
+   ],
+   "provider": "effects/capabilities"
   },
   "effects.censor": {
    "kind": "function",
@@ -7896,12 +8187,26 @@
    ],
    "provider": "effects/capabilities"
   },
+  "effects.defer": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "9f05c2cdff33c869f6b5399886b9782d0dd609f6c011f0ff1681d0141887d9ff",
+     "signature": "def defer[F: ThunkContract & Movable & Deinitable, //, I: Defer](var factory: F) -> I.Deferred[F] where I.DeferCompatible[F]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.delay": {
    "kind": "function",
    "overloads": [
     {
      "sha256": "a1a36f112c979c8831650ae662f7db36afb04db4c39283a9a105b41475d11679",
      "signature": "def delay[F: ThunkContract & Movable & Deinitable, //, E: Movable & Deinitable](var function: F ) -> _IODelay[E, F] where _ErrorCompatible[E, F.Error] and _OnceThunkAvailable[F]:"
+    },
+    {
+     "sha256": "9897cdd8c2d16f76bbd276f3c91be9e72720b917bf65557e1329a77069553bdc",
+     "signature": "def delay[F: ThunkContract & Movable & Deinitable, //, I: Defer](var function: F) -> I.Delayed[F] where I.DelayCompatible[F]:"
     },
     {
      "sha256": "6fa10dbe9db9552fdbcb89bb0fab977db15d8405277b61b72e48826b5f05bd89",
@@ -7980,6 +8285,10 @@
    "kind": "function",
    "overloads": [
     {
+     "sha256": "83127df7e1c5022828da172774aaed8bfb68f3c9ac178f2d08ae91a98ba0f36d",
+     "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: Q) -> I.Guaranteed[V, Q] where I.GuaranteeCompatible[V, Q]:"
+    },
+    {
      "sha256": "dbbc3f71a0c6487937d615f773d58f59796ef9dc25d3f9c29fcb37685ced4872",
      "signature": "def guarantee[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q] where _FinalizerCompatible[P, Q]:"
     }
@@ -7989,6 +8298,10 @@
   "effects.guarantee_case": {
    "kind": "function",
    "overloads": [
+    {
+     "sha256": "aa993a5ded604707120e48d15e721789d46c4b1a4d592ab5cc643c747e2b6171",
+     "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: F) -> I.CaseGuaranteed[V, F] where I.CaseCompatible[V, F]:"
+    },
     {
      "sha256": "3b55a0bae090d700729395ad566e115ee539205385cd30a2714aef67c7c296fb",
      "signature": "def guarantee_case[P: ReaderAction, F: ScopedIO](var program: P, var finalizer: F ) -> _IOGuaranteeCase[P, F] where _CaseFinalizerCompatible[P, F]:"
@@ -8062,6 +8375,16 @@
    ],
    "provider": "effects/projections"
   },
+  "effects.join": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "125490d3a538ec6eee1ada34cbbb9ddfa614101565269c8e86ae7c2146e1a8b8",
+     "signature": "def join[I: Spawn, T: Movable & Deinitable](var fiber: I.Handle[T]) -> I.Joined[T]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.lift": {
    "kind": "function",
    "overloads": [
@@ -8128,9 +8451,23 @@
    ],
    "provider": "effects/capabilities"
   },
+  "effects.never": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "774b8776be2ffe12a96d0b6d2c8d2708697ca87e7b2064154d462af2cccf236a",
+     "signature": "def never[I: Spawn, A: Movable & Deinitable]() -> I.Forever[A]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.on_cancel": {
    "kind": "function",
    "overloads": [
+    {
+     "sha256": "1e118352f1ac3d4d536027701d9660b305c17f61d72226e052b56f0a419ccf06",
+     "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable, //, I: Cancel](var program: V, var finalizer: Q) -> I.OnCanceled[V, Q] where I.GuaranteeCompatible[V, Q]:"
+    },
     {
      "sha256": "fbba9a3f8c5d9f5528dd76b7adc0a2c4ba318e7689506cc3bb1851eddfaf481b",
      "signature": "def on_cancel[P: ReaderAction, Q: ReaderAction](var program: P, var finalizer: Q ) -> _IOGuarantee[P, Q, True] where _FinalizerCompatible[P, Q]:"
@@ -8154,6 +8491,16 @@
     {
      "sha256": "27d7cfb831b0711471a05ca5731cc549af8ad2717711e8a281ed0d47add6ae98",
      "signature": "def put[I: Stateful](var state: I.StateType ) raises I.ModifyError[_Replace[I.StateType]] -> I.Modified[_Replace[I.StateType]] where I.ModifyCompatible[_Replace[I.StateType]]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.raise_error": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "0e7cffe3aad02f371d6fce255a13b6f64262217b42e06f3a95930edb8059b82d",
+     "signature": "def raise_error[I: Raise, A: Movable & Deinitable](var error: I.Error) -> I.Raised[A]:"
     }
    ],
    "provider": "effects/capabilities"
@@ -8320,6 +8667,16 @@
    ],
    "provider": "effects/effectful_resources"
   },
+  "effects.restore": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "5b4a8339bbe4716bb241b606eeb7f50041bba51dfe42b532210804dd834df37c",
+     "signature": "def restore[V: Movable & Deinitable, //, I: Cancel](poll: I.RegionPoll, var program: V) -> I.Restored[V] where I.RestoreCompatible[V]:"
+    }
+   ],
+   "provider": "effects/_io_core"
+  },
   "effects.run": {
    "kind": "function",
    "overloads": [
@@ -8456,6 +8813,16 @@
    ],
    "provider": "effects/_io_core"
   },
+  "effects.start": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "5bb995ab2253b71ca34a92a8ff24681f2446fd1f29e5685e55ef84606e4a6c3f",
+     "signature": "def start[V: Movable & Deinitable, //, I: Spawn](var program: V) -> I.Started[V] where I.StartCompatible[V]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.tell": {
    "kind": "function",
    "overloads": [
@@ -8473,6 +8840,10 @@
   "effects.uncancelable": {
    "kind": "function",
    "overloads": [
+    {
+     "sha256": "4eeb9b186574ae3e30eccda27895927ccc26f5cf57285ec44c20a36001769b9e",
+     "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable, //, I: Cancel](var body: F) -> I.Uncanceled[F] where I.UncancelableCompatible[F]:"
+    },
     {
      "sha256": "4132314308cf31944f22cae3b55f9ba13185a098b76ec854a282a28dc6629ce4",
      "signature": "def uncancelable[P: ReaderAction](var program: P) -> _IOMasked[P] where IOContract[P].Compatible:"

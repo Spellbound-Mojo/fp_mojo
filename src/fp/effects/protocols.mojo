@@ -9,7 +9,7 @@ carriers.
 """
 from std.builtin.rebind import downcast
 from fp.algebra.protocols import Monad, Monoid, _Lifting, _FamilyCarrier
-from fp.callables.protocols import BorrowCallContract, UnaryContract
+from fp.callables.protocols import BorrowCallContract, UnaryContract, ThunkContract
 
 
 trait Project:
@@ -271,6 +271,301 @@ trait Censor(Listen):
 
         Raises:
             The native construction error.
+        """
+        ...
+
+
+trait Defer:
+    """Build effects that run nothing until the program reaches them.
+
+    A selected family's dictionary: generic code asks for this capability
+    instead of naming a concrete family. Providers forward to their existing
+    constructors. `delay` runs its function when reached and produces its
+    value; `defer` builds the effect to run when reached.
+    """
+    comptime Family: Monad
+    """The family whose carriers this capability builds."""
+    comptime DelayCompatible[F: ThunkContract & Movable & Deinitable]: Bool
+    """Whether F is admitted: owned, with an error the family accepts."""
+    comptime Delayed[F: ThunkContract & Movable & Deinitable]: Movable & Deinitable
+    """The carrier running F when reached."""
+    comptime DeferCompatible[F: ThunkContract & Movable & Deinitable]: Bool
+    """Whether F is admitted and returns one of the family's carriers."""
+    comptime Deferred[F: ThunkContract & Movable & Deinitable]: Movable & Deinitable
+    """The carrier running the effect F builds when reached."""
+
+    @staticmethod
+    def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
+        """Run a function when the program reaches it.
+
+        Parameters:
+            F: An admitted once-callable thunk.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            A carrier producing the function's value, or failing with its error.
+        """
+        ...
+
+    @staticmethod
+    def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self.Deferred[F]:
+        """Build an effect when the program reaches it.
+
+        Parameters:
+            F: An admitted once-callable thunk returning a family carrier.
+
+        Args:
+            factory: The factory, consumed.
+
+        Returns:
+            A carrier running the effect the factory builds.
+        """
+        ...
+
+
+trait Raise:
+    """Fail with one ordinary domain error.
+
+    Raising never marks the failure canceled, so the family's recovery handles
+    it: raising `e` and recovering with `h` runs `h` on a failure holding only
+    `e`. Families whose stored failure cannot carry cancellation can be
+    `ApplicativeError` instead.
+    """
+    comptime Family: Monad
+    """The family whose carriers this capability builds."""
+    comptime Error: Movable & Deinitable
+    """The domain error type."""
+    comptime Raised[A: Movable & Deinitable]: Movable & Deinitable
+    """The failing carrier for success type A."""
+
+    @staticmethod
+    def raise_error[A: Movable & Deinitable](var error: Self.Error) -> Self.Raised[A]:
+        """Fail with one error.
+
+        Parameters:
+            A: The success type the carrier declares.
+
+        Args:
+            error: The error, consumed.
+
+        Returns:
+            A carrier failing with an uncanceled failure holding the error.
+        """
+        ...
+
+
+trait Cancel:
+    """Cancellation, masking and finalization, as Cats Effect's MonadCancel.
+
+    Finalizers run masked with the exact exit, innermost first; a masked region
+    defers observing cancellation until it ends or restores the outer state
+    through its poll. Providers forward to their existing owners.
+    """
+    comptime Family: Monad
+    """The family whose carriers this capability builds."""
+    comptime Error: Movable & Deinitable
+    """The domain error type."""
+    comptime RegionPoll: Movable & Deinitable
+    """The Poll a masked region receives to restore the outer state."""
+    comptime Canceled: Movable & Deinitable
+    """The unit carrier requesting cancellation of the running program."""
+    comptime GuaranteeCompatible[V: Movable & Deinitable, Q: Movable & Deinitable]: Bool
+    """Whether V is a family carrier and Q a unit carrier of the same error."""
+    comptime Guaranteed[V: Movable & Deinitable, Q: Movable & Deinitable]: Movable & Deinitable
+    """The carrier running V, then Q on every exit."""
+    comptime OnCanceled[V: Movable & Deinitable, Q: Movable & Deinitable]: Movable & Deinitable
+    """The carrier running V, then Q if it was canceled."""
+    comptime CaseCompatible[V: Movable & Deinitable, F: Movable & Deinitable]: Bool
+    """Whether F builds the finalizer from the exact exit of carrier V."""
+    comptime CaseGuaranteed[V: Movable & Deinitable, F: Movable & Deinitable]: Movable & Deinitable
+    """The carrier running V, then the finalizer F builds from its exit."""
+    comptime UncancelableCompatible[F: UnaryContract & Movable & Deinitable]: Bool
+    """Whether F takes RegionPoll and returns a family carrier."""
+    comptime Uncanceled[F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The carrier running the region F builds, masked."""
+    comptime RestoreCompatible[V: Movable & Deinitable]: Bool
+    """Whether V is a family carrier a region's poll can restore."""
+    comptime Restored[V: Movable & Deinitable]: Movable & Deinitable
+    """The carrier running V with the cancellation state outside a region."""
+
+    @staticmethod
+    def canceled() -> Self.Canceled:
+        """Request cancellation of the running program.
+
+        Returns:
+            A unit carrier; a mask defers observing the request.
+        """
+        ...
+
+    @staticmethod
+    def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:
+        """Run a finalizer, masked, after the program on every exit.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            A carrier with the program's value; finalizer errors follow its errors.
+        """
+        ...
+
+    @staticmethod
+    def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:
+        """Run a finalizer, masked, only if the program is canceled.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            A carrier with the program's outcome and any finalizer errors.
+        """
+        ...
+
+    @staticmethod
+    def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:
+        """Run a finalizer built from the program's exact exit, masked.
+
+        Parameters:
+            V: The program's carrier type.
+            F: The provider's finalizer type, built from the exit.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            A carrier with the program's value; finalizer errors follow its errors.
+        """
+        ...
+
+    @staticmethod
+    def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:
+        """Run part of a masked region with the cancellation state outside it.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            poll: The region's poll, borrowed.
+            program: The program, consumed.
+
+        Returns:
+            A carrier observing cancellation as the code outside the region does.
+        """
+        ...
+
+    @staticmethod
+    def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:
+        """Run a region masked; its poll restores the outer cancellation state.
+
+        Parameters:
+            F: A once-callable taking RegionPoll and returning a family carrier.
+
+        Args:
+            body: The region's factory, consumed.
+
+        Returns:
+            The region's carrier, masked.
+        """
+        ...
+
+
+trait Spawn(Cancel):
+    """Fibers, as Cats Effect's GenSpawn, without public fiber identity.
+
+    A started fiber runs beside the fiber that started it, its owner, which
+    drains it before completing. Joining takes its outcome once.
+    """
+    comptime Handle[T: Movable & Deinitable]: Movable & Deinitable
+    """The handle of a started fiber with success type T."""
+    comptime StartCompatible[V: Movable & Deinitable]: Bool
+    """Whether V is a family carrier that can be started."""
+    comptime Started[V: Movable & Deinitable]: Movable & Deinitable
+    """The carrier producing the handle of V started as a fiber."""
+    comptime Joined[T: Movable & Deinitable]: Movable & Deinitable
+    """The carrier producing a fiber's outcome with success type T."""
+    comptime Stopped: Movable & Deinitable
+    """The unit carrier that cancels a fiber and waits for it."""
+    comptime Forever[A: Movable & Deinitable]: Movable & Deinitable
+    """The carrier that waits until canceled, with success type A."""
+    comptime Ceded: Movable & Deinitable
+    """The unit carrier that yields to other work once."""
+
+    @staticmethod
+    def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:
+        """Start the program as a fiber owned by the running fiber.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            A carrier producing the fiber's handle.
+        """
+        ...
+
+    @staticmethod
+    def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]:
+        """Wait for a fiber and its cleanup, then take its outcome.
+
+        Parameters:
+            T: The fiber's success type.
+
+        Args:
+            fiber: The handle, consumed.
+
+        Returns:
+            A carrier producing the fiber's outcome.
+        """
+        ...
+
+    @staticmethod
+    def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped:
+        """Cancel a fiber and wait for it to finish, without its outcome.
+
+        Parameters:
+            T: The fiber's success type.
+
+        Args:
+            fiber: The handle, borrowed.
+
+        Returns:
+            A unit carrier completing after the fiber terminates.
+        """
+        ...
+
+    @staticmethod
+    def never[A: Movable & Deinitable]() -> Self.Forever[A]:
+        """Wait until canceled.
+
+        Parameters:
+            A: The success type the carrier declares.
+
+        Returns:
+            A carrier that never produces a value.
+        """
+        ...
+
+    @staticmethod
+    def cede() -> Self.Ceded:
+        """Yield to other runnable work once.
+
+        Returns:
+            A unit carrier that is runnable again after one yield.
         """
         ...
 

@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) complete; [Pass 10](#pass-10-proposal) proposal drafted** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1 to 3d complete; full gates pending; [Pass 8b](#pass-8b-progress) complete; [Pass 8c](#pass-8c-progress) built; [Pass 9](#pass-9-progress) complete; [Pass 10](#pass-10-proposal) approved, in progress** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -1426,7 +1426,8 @@ ones, rewrite the stress harness, and add `Driver.fibers()` for the root `IO`.
 
 ## Pass 10 proposal
 
-Status: **draft for review**. Pass 10 lets generic code ask for exactly the
+Status: **approved, in progress** ([review decisions](#pass-10-review-decisions)).
+Pass 10 lets generic code ask for exactly the
 effect capabilities it uses, as Cats Effect's `MonadCancel` and `GenSpawn` do,
 and adds `race_pair` and `Supervisor`.
 
@@ -1535,6 +1536,64 @@ or child-draining policy.
 4. **Naming.** Generic entry points need explicit families, such as
    `guarantee_case[I](...)`, beside the synchronous free functions of the same
    name. Keep those names, or prefix the generic ones?
+
+### Pass 10 review decisions
+
+Decided on 2026-10-30:
+
+1. `Raise` is a separate capability over the domain error `E`;
+   `ApplicativeError` is unchanged.
+2. Before 10b decides whether `both`, `race`, and `race_first` move onto
+   fibers, a probe measures a fiber-based `both` against the leaf.
+3. Releasing a `Supervisor` cancels its live fibers by default, as in Cats
+   Effect; waiting is the option.
+4. Generic entry points keep the operation names, such as
+   `guarantee_case[I](...)`, beside the synchronous free functions.
+5. The pair probe (`probes/pair_cost.mojo`, O3, 100,000 pairs per sample)
+   measured about 6.8 µs per leaf `both` against 10.7 µs for a fiber pair when
+   children finish at once, and about 16 against 15 µs when each child yields
+   once; per-child slot and registration setup dominates both. Decided: 10b
+   moves `both`, `race`, and `race_first` onto fibers, preserving their
+   documented semantics, so fibers are the one child-draining policy.
+6. The synchronous family is an alias over the generic `ReaderT`, below the
+   synchronous finalization module, so it cannot implement the traits without an
+   import cycle. Its provider is a separate dictionary, `SyncIO[E]`, with
+   `Family = IO[E]`; `Async[E]` remains its own provider.
+
+### Pass 10 progress
+
+**10a** was built on 2026-10-30: the `Defer`, `Raise`, `Cancel`, and `Spawn`
+capabilities, both providers, the generic entry points, and the law suites.
+
+- **Traits.** The four traits live in `fp.effects.protocols`, beside `Ask` and
+  `Stateful`: associated carrier types per operation, admission predicates, and
+  static methods. `Cancel` also gained `restore`, which applies a region's
+  poll; the poll identity law needs it. Its associated names avoid the
+  existing types: `RegionPoll` for the poll and `Forever` for `never`'s
+  carrier.
+- **Providers.** `Async[E]` implements all four by forwarding to `IO`'s
+  operations; `guarantee_case` and `uncancelable` gained private bodies the
+  public methods and the provider share. `SyncIO[E]` in `finalization.mojo`
+  forwards to the synchronous functions and adds a deferred recipe, `_IODefer`,
+  for `defer`. Both dictionaries are `not Deinitable`: they are never values,
+  and this keeps `canceled[SyncIO[Int]]()` from matching the synchronous
+  `canceled[E]()`.
+- **Entry points.** Mojo rejects one name imported from two modules, so each
+  generic entry point lives in the module that already owns the synchronous
+  function of that name: `delay`, `canceled`, `uncancelable`, and `restore` in
+  `_io_core.mojo`; `guarantee`, `on_cancel`, and `guarantee_case` in
+  `finalization.mojo`. `defer`, `raise_error`, `start`, `join`, `cancel`,
+  `never`, and `cede` live in `capabilities.mojo`.
+- **Clients.** `capability_cancel` runs one generic program over `Defer`,
+  `Raise`, and `Cancel` on both providers with identical outcomes and
+  finalizer counts. `capability_spawn` covers generic `defer` on both and the
+  spawn operations on `Async`. `cancel_laws` checks poll identity, guarantee,
+  finalizer order, `on_cancel`, and canceled bodies on both, and raise/recover
+  on `Async`. `spawn_laws` checks joined success, failure, and cancellation, a
+  fully masked fiber, and records owner draining. `capability_family` defines
+  a `Defer` and `Raise` test family; `reject_capability_narrow` rejects
+  `canceled` on it, `public_reject_spawn_sync` rejects `start` on `SyncIO`, and
+  `public_reject_raise_type` rejects a raised value of another type.
 
 ## Implementation reference map
 

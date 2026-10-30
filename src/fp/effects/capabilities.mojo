@@ -2,10 +2,10 @@
 from std.builtin.rebind import downcast
 from fp.algebra.protocols import Monad, _Lifting, _SemigroupBinary
 from fp.callables._binding import _BindSecond
-from fp.callables.protocols import BorrowCallContract, UnaryContract, OnceUnary
+from fp.callables.protocols import BorrowCallContract, UnaryContract, OnceUnary, ThunkContract
 from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing, NativeUnary, as_unary, _Unary, _RaisingUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, _Hoisting, _CapabilityLifting, _LocalLifting
+from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Spawn, _Hoisting, _CapabilityLifting, _LocalLifting
 from ._adapt import _lift_as
 from ._transport import _CensorOp
 
@@ -617,3 +617,108 @@ def censor[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinit
 ) raises I.CensorError[V, NativeUnary[A, R, E, F, True]] -> I.Censored[V, NativeUnary[A, R, E, F, True]] where I.CensorCompatible[V, NativeUnary[A, R, E, F, True]] and A == I.Log.Value and R == I.Log.Value:
     """Scope the selected log with a raising native callback; keep its error."""
     return censor[I](as_unary(f^), value^)
+
+
+def defer[F: ThunkContract & Movable & Deinitable, //, I: Defer](var factory: F) -> I.Deferred[F] where I.DeferCompatible[F]:
+    """Build an effect when the program reaches it, in any family with Defer.
+
+    Parameters:
+        F: An owned once-callable returning one of the family's carriers.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        factory: The factory, consumed.
+
+    Returns:
+        The family's carrier running the effect the factory builds.
+    """
+    return I.defer(factory^)
+
+
+def raise_error[I: Raise, A: Movable & Deinitable](var error: I.Error) -> I.Raised[A]:
+    """Fail with one ordinary error, in any family with Raise.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+        A: The success type the carrier declares.
+
+    Args:
+        error: The error, consumed.
+
+    Returns:
+        The family's carrier failing with an uncanceled failure holding it.
+    """
+    return I.raise_error[A](error^)
+
+
+def start[V: Movable & Deinitable, //, I: Spawn](var program: V) -> I.Started[V] where I.StartCompatible[V]:
+    """Start a program as a fiber owned by the running fiber, in any family with Spawn.
+
+    Parameters:
+        V: The program's carrier type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        program: The program, consumed.
+
+    Returns:
+        The family's carrier producing the fiber's handle.
+    """
+    return I.start(program^)
+
+
+def join[I: Spawn, T: Movable & Deinitable](var fiber: I.Handle[T]) -> I.Joined[T]:
+    """Wait for a fiber and its cleanup, then take its outcome.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E].
+        T: The fiber's success type.
+
+    Args:
+        fiber: The handle, consumed.
+
+    Returns:
+        The family's carrier producing the fiber's outcome.
+    """
+    return I.join[T](fiber^)
+
+
+def cancel[I: Spawn, T: Movable & Deinitable](fiber: I.Handle[T]) -> I.Stopped:
+    """Cancel a fiber and wait for it to finish, without its outcome.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E].
+        T: The fiber's success type.
+
+    Args:
+        fiber: The handle, borrowed.
+
+    Returns:
+        The family's unit carrier completing after the fiber terminates.
+    """
+    return I.cancel[T](fiber)
+
+
+def never[I: Spawn, A: Movable & Deinitable]() -> I.Forever[A]:
+    """Wait until canceled, in any family with Spawn.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E].
+        A: The success type the carrier declares.
+
+    Returns:
+        The family's carrier that never produces a value.
+    """
+    return I.never[A]()
+
+
+def cede[I: Spawn]() -> I.Ceded:
+    """Yield to other runnable work once, in any family with Spawn.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E].
+
+    Returns:
+        The family's unit carrier.
+    """
+    return I.cede()
