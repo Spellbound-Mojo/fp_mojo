@@ -7672,6 +7672,31 @@
    },
    "provider": "effects/_async/coordination"
   },
+  "effects.async_runtime.Supervisor": {
+   "declarations": [
+    "struct Supervisor[E: Movable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "scoped": [
+     {
+      "sha256": "35296275e95b16299ba9c731f05f8b1803986f738b2f40886b132b853ab3c337",
+      "signature": "def scoped[F: UnaryContract & Movable & Deinitable](var body: F, await_on_release: Bool = False) -> IO[downcast[F.Out, Machine].Value, Self.E] where F.Arg == Supervisor[Self.E] and _Binds[Self.E, F]:"
+     },
+     {
+      "sha256": "7d3cb64de4dce34c936db29bc18b5fc43824f8bf102eadeb056950f86cacfd72",
+      "signature": "def scoped[U: Movable & Deinitable, //](body: def(var _NativeOwnedArg[Supervisor[Self.E]]) thin -> IO[U, Self.E], await_on_release: Bool = False) -> IO[U, Self.E]:"
+     }
+    ],
+    "supervise": [
+     {
+      "sha256": "cae985a682ca7fbbd9e699755c6762aa832cdff3f84b9a70a136a2dc865f47f2",
+      "signature": "def supervise[T: Movable & Deinitable](self, var program: IO[T, Self.E]) -> IO[Fiber[T, Self.E], Self.E]:"
+     }
+    ]
+   },
+   "provider": "effects/_async/supervisor"
+  },
   "effects.async_runtime.protocols.CleanupMachine": {
    "declarations": [
     "trait CleanupMachine(Movable, Deinitable):"

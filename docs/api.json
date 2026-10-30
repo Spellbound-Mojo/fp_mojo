@@ -67648,6 +67648,137 @@
     "Copyable"
    ]
   },
+  "effects.async_runtime.Supervisor": {
+   "aliases": [],
+   "description": "The counterpart of Cats Effect's Supervisor. Run a body with one through\n`Supervisor[E].scoped(body)` and start fibers with `supervise`. When the\nbody ends, release cancels the supervised fibers that are still live and\nwaits for them; with `await_on_release`, it waits for them to finish\ninstead. Copies share one supervisor. Supervising after release is a\nprotocol violation.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "scoped": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The body, consumed; it runs once, with the supervisor.",
+        "name": "body",
+        "type": "F",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "Wait for live supervised fibers to finish on\n    release instead of canceling them.",
+        "name": "await_on_release",
+        "type": "Bool",
+        "variadic": false
+       }
+      ],
+      "description": "The counterpart of Cats Effect's Supervisor(...).use. Release runs as a\nmasked finalizer on every exit: it cancels the supervised fibers that\nare still live and waits for them, or with await_on_release waits for\nthem to finish.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable from Supervisor[E] to an IO with error E.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO with the body's outcome, completing after release.",
+       "type": "IO[downcast[F.Out, Machine].Value, Self.E]"
+      },
+      "signature": "def scoped[F: UnaryContract & Movable & Deinitable](var body: F, await_on_release: Bool = False) -> IO[downcast[F.Out, Machine].Value, Self.E] where F.Arg == Supervisor[Self.E] and _Binds[Self.E, F]",
+      "summary": "Run a body with a supervisor that is released when the body ends."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "body",
+        "type": "def(var _NativeOwnedArg[Supervisor[Self.E]]) thin -> IO[U, Self.E]",
+        "variadic": false
+       },
+       {
+        "convention": "",
+        "description": "",
+        "name": "await_on_release",
+        "type": "Bool",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "U",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[U, Self.E]"
+      },
+      "signature": "def scoped[U: Movable & Deinitable, //](body: def(var _NativeOwnedArg[Supervisor[Self.E]]) thin -> IO[U, Self.E], await_on_release: Bool = False) -> IO[U, Self.E]",
+      "summary": "Run a native body with a supervisor that is released when it ends."
+     }
+    ],
+    "supervise": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The program, consumed.",
+        "name": "program",
+        "type": "IO[T, Self.E]",
+        "variadic": false
+       }
+      ],
+      "description": "The fiber is not drained when the program that started it finishes; it\nruns until it completes, is canceled, or the supervisor is released.\nStarting observes cancellation, like start.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The program's success type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the fiber's handle.",
+       "type": "IO[Fiber[T, Self.E], Self.E]"
+      },
+      "signature": "def supervise[T: Movable & Deinitable](self, var program: IO[T, Self.E]) -> IO[Fiber[T, Self.E], Self.E]",
+      "summary": "Start a program as a fiber owned by this supervisor."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The domain error shared with the supervised fibers.",
+     "inferred": false,
+     "name": "E",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/_async/supervisor",
+   "signature": "struct Supervisor[E: Movable & Deinitable](Copyable)",
+   "summary": "Owns fibers beyond the program that starts them, until its scope ends.",
+   "traits": [
+    "Copyable"
+   ]
+  },
   "effects.async_runtime.protocols.CleanupMachine": {
    "aliases": [
     {

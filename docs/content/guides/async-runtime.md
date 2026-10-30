@@ -120,6 +120,13 @@ fiber, which stays a child of the running fiber; it is joined, canceled, or
 drained like any other. `both`, `race`, `race_first`, and the timeouts are built
 the same way, so one owner drains every child.
 
+`Supervisor[E].scoped(body)` runs `body` with a `Supervisor` whose
+`supervise(io)` starts fibers owned by the supervisor rather than by the fiber
+that calls it, so they can outlive that fiber. When the body ends, a masked
+release cancels the supervised fibers that are still live and waits for them,
+as Cats Effect does by default; `await_on_release=True` waits for them to
+finish instead. Supervising after release aborts.
+
 `Driver.fibers()` lists the root `IO`'s live fibers between polls, like Cats
 Effect's fiber dump: each `FiberInfo` names an internal slot, its owner's slot
 (0 is the root program), and a `FiberStatus` of runnable, suspended, or draining
@@ -227,6 +234,7 @@ reported deadline.
 | `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
 | `MonadCancel`, `GenSpawn`, `Sync` (deferral only) | `Cancel`, `Spawn`, `Defer`, `Raise` dictionaries: `Async[E]`, `SyncIO[E]` | Narrower capabilities stay narrower; the synchronous family has no `Spawn` |
 | `fa.start`, `fiber.join`, `fiber.cancel` | `io.start()`, `fiber^.join()`, `fiber.cancel()`, `fiber.request_cancel()` | Owners drain unjoined children before completing |
+| `Supervisor(await).use(f)`, `supervise` | `Supervisor[E].scoped(f, await_on_release)`, `supervisor.supervise(io)` | Release cancels live supervised fibers unless it awaits them |
 | `racePair` | `io.race_pair(other)` | A `RaceWinner` with the first outcome and the other fiber |
 | `joinWith`, `joinWithNever`, `joinWithUnit` | `join_with`, `join_with_never`, `join_with_unit` | A canceled child runs the fallback, waits, or produces unit |
 | `IORuntimeConfig` | `IORuntimeConfig(cancelation_check_threshold, auto_yield_threshold)` | Same validation; by default checks every bind, where Cats Effect checks every 512, and yields every 1,024 transitions |

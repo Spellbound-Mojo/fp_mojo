@@ -1532,7 +1532,7 @@ or child-draining policy.
    them from `racePair`, so one owner drains children? Recommendation: measure
    a fiber-based `both` against the leaf first and decide on the cost.
 3. **Supervisor release.** Cancel live fibers by default, as Cats Effect does,
-   or wait for them?
+   or wait for them? (The supervisor became a scoped combinator in 10c.)
 4. **Naming.** Generic entry points need explicit families, such as
    `guarantee_case[I](...)`, beside the synchronous free functions of the same
    name. Keep those names, or prefix the generic ones?
@@ -1629,6 +1629,28 @@ and the timeouts moved onto fibers as decided.
   `wakes` state the new tick granularity, and `children` and `origins` drop
   their scoped-pair sections. The pair rejections now check the public `IO`
   methods.
+
+**10c** was built on 2026-10-30: `Supervisor`.
+
+- **Shape.** A `Resource` cannot host a supervisor: `Resource` runs its
+  acquire, use, and release phases as nested `IO`s inside a scope leaf, and
+  each nested `IO` hosts and drains its own fibers, so a supervisor acquired
+  that way would be drained as acquisition finished. Decided in review:
+  `Supervisor[E].scoped(body, await_on_release=False)` instead, the
+  counterpart of Cats Effect's `Supervisor(...).use`, running on the caller's
+  run loop. It is not composable with `Resource.flat_map`.
+- **Implementation.** A deferred head starts a parked supervisor fiber in the
+  caller's host, owned by the caller; the body is bound to the `Supervisor`,
+  and release is installed as its `guarantee` finalizer. `supervise` queues the
+  program through the supervisor's host inbox with the supervisor fiber as its
+  owner, through `_spawn_into`, which `start` now shares. Release stops the
+  parked program, so the existing owner draining cancels and drains the
+  supervised fibers; awaiting release first waits for them. Supervising after
+  release aborts.
+- **Clients.** `fiber_supervisor` covers a supervised fiber outliving the fiber
+  that started it, release canceling a live fiber and waiting for its cleanup,
+  awaiting release against the canceling default, and joining a supervised
+  fiber.
 
 ## Implementation reference map
 

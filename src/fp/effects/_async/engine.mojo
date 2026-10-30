@@ -272,19 +272,17 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
         self.fibers = None
         program^.install_into(self)
 
-    def spawn(mut self, var program: _Program[Self.E], var record: ArcPointer[_FiberRecord[Self.E]]):
-        """Queue a started child for this loop's host, owned by the running fiber."""
+    def spawn(mut self, var program: _Program[Self.E], var record: ArcPointer[_FiberRecord[Self.E]]) -> Int:
+        """Queue a started child for this loop's host, owned by the running fiber.
+
+        Returns the child's fiber id in that host.
+        """
         if not self.inbox:
             # The first start makes this loop's IO the host of its fibers.
             var inbox = ArcPointer(_Inbox[Self.E]())
             self.fibers = Optional(OwnedPointer(_Fibers[Self.E](inbox)))
             self.inbox = Optional(inbox^)
-        ref inbox = self.inbox.value()[]
-        var index = inbox.reserve()
-        var child = _RunLoop[Self.E](program^)
-        child.inbox = self.inbox.copy()
-        child.fiber = index + 1
-        inbox.pending.append(_Spawn[Self.E](_Leaf[Self.E](_FiberLoop[Self.E](OwnedPointer(child^))), record^, self.fiber, index))
+        return _spawn_into(self.inbox.value(), program^, record^, self.fiber)
 
     def take_override(mut self) -> Optional[IOContext[Self.E]]:
         var previous: Optional[IOContext[Self.E]] = None
@@ -504,6 +502,20 @@ struct _FiberLoop[E: Movable & Deinitable](Machine):
 
     def poll(mut self, context: IOContext[Self.E]) -> Step[_Erased, Self.E]:
         return self.loop[].run(context)
+
+
+def _spawn_into[E: Movable & Deinitable](inbox: ArcPointer[_Inbox[E]], var program: _Program[E], var record: ArcPointer[_FiberRecord[E]], owner: Int) -> Int:
+    """Reserve a slot in a host's inbox and queue a child owned by a given fiber id.
+
+    The child's run loop carries the inbox and its own id, so the fibers it
+    starts reach the same host. Returns the child's fiber id.
+    """
+    var index = inbox[].reserve()
+    var child = _RunLoop[E](program^)
+    child.inbox = Optional(inbox.copy())
+    child.fiber = index + 1
+    inbox[].pending.append(_Spawn[E](_Leaf[E](_FiberLoop[E](OwnedPointer(child^))), record^, owner, index))
+    return index + 1
 
 
 def _supervise[E: Movable & Deinitable](mut loop: _RunLoop[E], context: IOContext[E], var ran: Optional[Step[_Erased, E]] = None) -> Step[_Erased, E]:
@@ -1226,7 +1238,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
             ref run = _loop_at[Self.E](loop)
             var record = ArcPointer(_FiberRecord[Self.E]())
-            run.spawn(callable^.take[_Program[Self.E]](), record.copy())
+            _ = run.spawn(callable^.take[_Program[Self.E]](), record.copy())
             run.set_value(_Erased(Fiber[Self.T, Self.E](_record=record^)))
 
         return IO[Fiber[Self.T, Self.E], Self.E](_program=_Program[Self.E](_Head[Self.E](_DEFER, _Erased(self^._into_program()), invoke)))

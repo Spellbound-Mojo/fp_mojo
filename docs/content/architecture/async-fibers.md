@@ -60,6 +60,17 @@ destroyed. So each failure is joined or reported exactly once. The root's
 record copies them on admission. `IOContext` carries the running fiber's
 identity, so the join leaf aborts a direct self-join.
 
+## Supervisors
+
+`Supervisor[E].scoped(body)` starts a parked supervisor fiber in the calling
+fiber's host, owned by the caller, and runs the body on the caller's run loop.
+`supervise(io)` queues `io` in that host with the supervisor fiber as its owner,
+so the fiber that called `supervise` can finish without draining it. Release is
+the body's finalizer: it stops the parked program, and the host's owner draining
+cancels the supervised fibers and completes the supervisor only after they
+finish; awaiting release first waits for them. A `Resource` cannot host a
+supervisor, because its phases run as nested `IO`s that drain their own fibers.
+
 ## Diagnostics
 
 `Driver.fibers()` lists the root `IO`'s live fibers between polls: each entry's
