@@ -1,6 +1,6 @@
 # Advanced IO and async development plan
 
-Status: **Passes 7a and 7b complete; Pass 8a steps 1, 2 and 3a complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
+Status: **Passes 7a and 7b complete; Pass 8a steps 1, 2, 3a and 3b complete** ([progress](#pass-8a-progress)). The [Pass 7b proposal](#pass-7b-proposal) defines the public `IO[T, E]` surface. The [representation decisions](#representation-decisions)
 were approved on 2026-10-30. This plan continues the completed foundation passes
 1–6 from `nightly` commit `bda929c9bca31ed1b2311b191c9764eaac980f58`. It proposes
 lightweight fibers, stack-safe general sequencing, and generic effect
@@ -747,7 +747,7 @@ Decided on 2026-10-30:
 Steps 1 and 2 are complete: the private engine core, optimized, and
 finalizers, masks, and law clients. Step 3 switches the public API to `IO` in
 four parts: the `Async[E]` family (3a, complete), constructors and combinators
-(3b), coordination and resources (3c), and the public exports and documentation
+(3b, complete), coordination and resources (3c), and the public exports and documentation
 (3d). The full verification gates run after step 3.
 
 - `src/fp/effects/_async/engine.mojo` implements `IO[T, E]` as a flat program
@@ -842,6 +842,30 @@ defined beside `IO` in `engine.mojo`, with `IO` as its carrier, so `Pipeline`,
 - `family_origins` took 239 s to compile at O3 at the previous commit, against a
   240 s limit, and timed out beside other builds. Its limit is now 600 s, as for
   `family_iteration`; this step changed its compile time by about 3%.
+
+**Step 3b: constructors and combinators.** `IO` gains the Cats Effect surface as
+static constructors and methods. Each one reuses an existing owner:
+
+- `both`, `race`, `race_first`, `timeout_to`, `timeout_after`, `sleep`,
+  `IO.async`, `IO.async_`, `eval_io`, and `canceled` lift the existing typed
+  leaves (`Both`, `Race`, `Timeout`, `Sleep`, `Callback`, `EvalIO`, and the
+  synchronous cancellation request) through `IO.lift`, so their semantics do not
+  change. A child `IO` inside one of these leaves runs its own run loop.
+- `attempt` is the canonical `_Materialize` over `Async[E]`.
+- `delay` is a `defer` whose factory returns `pure` of the function's result:
+  two run-loop transitions and no leaf.
+- `cede` and `never` are small private leaves.
+- Plain-function overloads of `delay`, `defer`, `map`, `flat_map`,
+  `handle_error_with`, `uncancelable`, `IO.async`, and `IO.async_` take
+  `thin` function types, which capturing closures do not convert to. They only
+  wrap the function in the canonical owned adapter (`NativeUnary` or
+  `_NativeThunk`) and delegate. Register-passable results take the existing
+  `_NativeOwnedArg` evidence, as `Pipeline` does.
+- `io_operations` covers deferred and single evaluation, native and raising
+  callbacks, `attempt`, `both`, both race policies, both timeouts, `sleep`,
+  `cede` yielding once, `never` completing only by cancellation, `canceled`
+  with and without a mask, `IO.async` with its withdrawal, `IO.async_`, and
+  `eval_io`.
 
 ## Implementation reference map
 

@@ -21,15 +21,23 @@ from fp.callables._receiver import _unary_once_as, _thunk_once_as, _borrow_once_
 from fp.callables._binding import _BindFirst
 from fp.callables._identity import Identity
 from fp.callables._views import _BorrowedView
+from fp.callables.native import NativeUnary, _NativeThunk, _NativeOwnedArg
+from fp.algebra._outcomes import _Materialize
 from fp.iteration._advance import _Source, _source, _next_optional
 from fp._internal.erased import _Erased
 from fp._internal.errors import _ErrorCompatible
 from fp.data import Result, Ok, Err, NonEmptyList
 from fp.effects import IOContext, Outcome, EffectFailure, ExitCase
 from fp.effects.outcomes import _failure_as, _finish, _ExitState
-from fp.effects._io_core import _settle
+from fp.effects._io_core import _settle, IOContract, canceled as _cancel_request
+from fp.effects.protocols import ReaderAction
 from fp.effects.finalization import Poll as _SyncPoll
-from .kernel import Machine, Step, Wait, _Slot, _tick
+from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep
+from .time import Duration
+from .children import both as _both
+from .racing import RaceResult, race as _race, race_first as _race_first, timeout_after as _timeout_after, timeout_to as _timeout_to
+from .io import EvalIO as _EvalIO
+from .callbacks import Callback as _Callback, Completion, _CallbackUnit
 from .family import Machine as _FamilyMachine
 from .erased import _ErasedMachine
 from .finalization import Poll
@@ -493,15 +501,60 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
     def raise_error(var error: Self.E) -> Self:
         return Self(_Program[Self.E](_Head[Self.E](_FAIL, _Erased(EffectFailure[Self.E](NonEmptyList(error^), False)))))
 
+    # Public operations state admission in their signatures and delegate to
+    # private forms, which generic code calls after its own checks.
     @staticmethod
     def lift[P: Machine](var machine: P) -> Self where P.Value == Self.T and P.Error == Self.E:
+        """Run a custom machine as one step of an IO."""
+        return Self._lifted(machine^)
+
+    @staticmethod
+    def _lifted[P: Machine](var machine: P) -> Self:
+        comptime assert P.Value == Self.T and P.Error == Self.E
         return Self(_Program[Self.E](_Head[Self.E](_LEAF, _Erased(_Leaf[Self.E](_Boxed[P, Self.E](machine^))))))
 
-    # Public operations state admission in their signatures and delegate to
-    # these private forms, which generic family code calls after its own checks.
+    @staticmethod
+    def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where F.Out == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]:
+        """Evaluate a synchronous function when the IO reaches it.
+
+        Its error becomes this IO's failure. Use defer when the function builds an IO.
+        """
+        return Self._deferred(_Delay[F, Self.E](function^))
+
+    @staticmethod
+    def delay(function: def() thin -> Self.T) -> Self where not conforms_to(Self.T, RegisterPassable):
+        """Evaluate a native function when the IO reaches it."""
+        return Self._deferred(_Delay[_NativeThunk[Self.T, Never, def() thin -> Self.T, False], Self.E](_NativeThunk[Self.T, Never, def() thin -> Self.T, False](function)))
+
+    @staticmethod
+    def delay(function: def() thin -> _NativeOwnedArg[Self.T]) -> Self where conforms_to(Self.T, RegisterPassable):
+        """Evaluate a native function when the IO reaches it."""
+        return Self._deferred(_Delay[_NativeThunk[Self.T, Never, def() thin -> _NativeOwnedArg[Self.T], False], Self.E](_NativeThunk[Self.T, Never, def() thin -> _NativeOwnedArg[Self.T], False](function)))
+
+    @staticmethod
+    def delay[X: Movable & Deinitable, //](function: def() raises X thin -> Self.T) -> Self where _ErrorCompatible[Self.E, X] and not conforms_to(Self.T, RegisterPassable):
+        """Evaluate a raising native function; its error becomes the failure."""
+        return Self._deferred(_Delay[_NativeThunk[Self.T, X, def() raises X thin -> Self.T, True], Self.E](_NativeThunk[Self.T, X, def() raises X thin -> Self.T, True](function)))
+
+    @staticmethod
+    def delay[X: Movable & Deinitable, //](function: def() raises X thin -> _NativeOwnedArg[Self.T]) -> Self where _ErrorCompatible[Self.E, X] and conforms_to(Self.T, RegisterPassable):
+        """Evaluate a raising native function; its error becomes the failure."""
+        return Self._deferred(_Delay[_NativeThunk[Self.T, X, def() raises X thin -> _NativeOwnedArg[Self.T], True], Self.E](_NativeThunk[Self.T, X, def() raises X thin -> _NativeOwnedArg[Self.T], True](function)))
+
     @staticmethod
     def defer[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self where _Defers[Self.E, F] and F.Out == Self:
+        """Build the IO when it is reached, so recursive programs build lazily."""
         return Self._deferred(factory^)
+
+    @staticmethod
+    def defer(factory: def() thin -> Self) -> Self:
+        """Build the IO with a native function when it is reached."""
+        return Self._deferred(_NativeThunk[Self, Never, def() thin -> Self, False](factory))
+
+    @staticmethod
+    def defer[X: Movable & Deinitable, //](factory: def() raises X thin -> Self) -> Self where _ErrorCompatible[Self.E, X]:
+        """Build the IO with a raising native function; its error becomes the failure."""
+        return Self._deferred(_NativeThunk[Self, X, def() raises X thin -> Self, True](factory))
 
     @staticmethod
     def _deferred[F: ThunkContract & Movable & Deinitable](var factory: F) -> Self:
@@ -522,7 +575,16 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         return Self(_Program[Self.E](_Head[Self.E](_DEFER, _Erased(factory^), invoke)))
 
     def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[downcast[F.Out, Machine].Value, Self.E] where F.Arg == Self.T and _Binds[Self.E, F]:
+        """Continue with the IO a callback builds from the success value."""
         return self^._bind(f^)
+
+    def flat_map[U: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) thin -> IO[U, Self.E]) -> IO[U, Self.E]:
+        """Continue with the IO a native function builds from the success value."""
+        return self^._bind(NativeUnary[Self.T, IO[U, Self.E], Never, def(var _NativeOwnedArg[Self.T]) thin -> IO[U, Self.E], False](f))
+
+    def flat_map[U: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) raises X thin -> IO[U, Self.E]) -> IO[U, Self.E] where _ErrorCompatible[Self.E, X]:
+        """Continue with a raising native function; its error becomes the failure."""
+        return self^._bind(NativeUnary[Self.T, IO[U, Self.E], X, def(var _NativeOwnedArg[Self.T]) raises X thin -> IO[U, Self.E], True](f))
 
     def _bind[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[downcast[F.Out, Machine].Value, Self.E]:
         comptime U = downcast[F.Out, Machine].Value
@@ -547,7 +609,24 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         return IO[U, Self.E](program^)
 
     def map[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[F.Out, Self.E] where F.Arg == Self.T and _Maps[Self.E, F]:
+        """Apply a callback to the success value; failure and cancellation bypass it."""
         return self^._mapped(f^)
+
+    def map[R: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) thin -> R) -> IO[R, Self.E] where not conforms_to(R, RegisterPassable):
+        """Apply a native function to the success value."""
+        return self^._mapped(NativeUnary[Self.T, R, Never, def(var _NativeOwnedArg[Self.T]) thin -> R, False](f))
+
+    def map[R: RegisterPassable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) thin -> R) -> IO[R, Self.E]:
+        """Apply a native function to the success value."""
+        return self^._mapped(NativeUnary[Self.T, R, Never, def(var _NativeOwnedArg[Self.T]) thin -> R, False](f))
+
+    def map[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) raises X thin -> R) -> IO[R, Self.E] where _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable):
+        """Apply a raising native function; its error becomes the failure."""
+        return self^._mapped(NativeUnary[Self.T, R, X, def(var _NativeOwnedArg[Self.T]) raises X thin -> R, True](f))
+
+    def map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) raises X thin -> R) -> IO[R, Self.E] where _ErrorCompatible[Self.E, X]:
+        """Apply a raising native function; its error becomes the failure."""
+        return self^._mapped(NativeUnary[Self.T, R, X, def(var _NativeOwnedArg[Self.T]) raises X thin -> R, True](f))
 
     def _mapped[F: UnaryContract & Movable & Deinitable](deinit self, var f: F) -> IO[F.Out, Self.E]:
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
@@ -568,7 +647,20 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
         return IO[F.Out, Self.E](program^)
 
     def handle_error_with[H: UnaryContract & Movable & Deinitable](deinit self, var handler: H) -> Self where H.Arg == EffectFailure[Self.E] and _Maps[Self.E, H] and H.Out == Self:
+        """Recover an ordinary failure with the IO a handler builds; cancellation bypasses it."""
         return self^._recover(handler^)
+
+    def handle_error_with(deinit self, handler: def(var EffectFailure[Self.E]) thin -> Self) -> Self:
+        """Recover an ordinary failure with a native handler."""
+        return self^._recover(NativeUnary[EffectFailure[Self.E], Self, Never, def(var EffectFailure[Self.E]) thin -> Self, False](handler))
+
+    def handle_error_with[X: Movable & Deinitable, //](deinit self, handler: def(var EffectFailure[Self.E]) raises X thin -> Self) -> Self where _ErrorCompatible[Self.E, X]:
+        """Recover with a raising native handler; its error replaces the failure."""
+        return self^._recover(NativeUnary[EffectFailure[Self.E], Self, X, def(var EffectFailure[Self.E]) raises X thin -> Self, True](handler))
+
+    def attempt(deinit self) -> IO[Result[Self.T, EffectFailure[Self.E]], Self.E]:
+        """Materialize success or an ordinary failure; cancellation stays terminal."""
+        return rebind_var[IO[Result[Self.T, EffectFailure[Self.E]], Self.E]](_Materialize[Async[Self.E], Self].apply[Never](self^))
 
     def _recover[H: UnaryContract & Movable & Deinitable](deinit self, var handler: H) -> Self:
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
@@ -632,9 +724,84 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
 
         return Self(_Program[Self.E](_Head[Self.E](_MASK, _Erased(factory^), invoke)))
 
+    @staticmethod
+    def uncancelable(factory: def(var Poll[Self.E]) thin -> Self) -> Self:
+        """Build and run a program masked with a native factory."""
+        return Self.uncancelable(NativeUnary[Poll[Self.E], Self, Never, def(var Poll[Self.E]) thin -> Self, False](factory))
+
     def restore(deinit self, poll: Poll[Self.E]) -> Self:
         """Run this program under the cancellation state preceding poll's region."""
         return Self(_Program[Self.E](_Head[Self.E](_RESTORE, _Erased(_Restore[Self.E](poll.copy(), self^._into_program())))))
+
+    @staticmethod
+    def `async`[F: UnaryContract & Movable & Deinitable](var register: F, var withdrawal: IO[NoneType, Self.E]) -> Self where F.Arg == Completion[Self.T, Self.E] and _CallbackUnit[F.Out] and _Maps[Self.E, F]:
+        """Register with an external source that completes this IO once.
+
+        The withdrawal runs masked after every entered registration, then the
+        IO settles with the completion and both outcomes' errors.
+        """
+        return Self._lifted(_Callback[F, IO[NoneType, Self.E]](register^, withdrawal^))
+
+    @staticmethod
+    def `async`(register: def(var Completion[Self.T, Self.E]) thin, var withdrawal: IO[NoneType, Self.E]) -> Self:
+        """Register a native function with an external source."""
+        return Self.`async`(NativeUnary[Completion[Self.T, Self.E], type_of(None), Never, def(var Completion[Self.T, Self.E]) thin, False](register), withdrawal^)
+
+    @staticmethod
+    def async_[F: UnaryContract & Movable & Deinitable](var register: F) -> Self where F.Arg == Completion[Self.T, Self.E] and _CallbackUnit[F.Out] and _Maps[Self.E, F]:
+        """Register with an external source that needs no withdrawal."""
+        var unit: NoneType = None
+        return Self.`async`(register^, IO[NoneType, Self.E].pure(unit))
+
+    @staticmethod
+    def async_(register: def(var Completion[Self.T, Self.E]) thin) -> Self:
+        """Register a native function that needs no withdrawal."""
+        return Self.async_(NativeUnary[Completion[Self.T, Self.E], type_of(None), Never, def(var Completion[Self.T, Self.E]) thin, False](register))
+
+    @staticmethod
+    def eval_io[P: ReaderAction](var program: P) -> Self where IOContract[P].Compatible and P.Value == Self.T and IOContract[P].Error == Self.E:
+        """Run a synchronous IO program inside this IO's context when reached."""
+        return Self._lifted(_EvalIO(program^))
+
+    @staticmethod
+    def canceled() -> IO[NoneType, Self.E]:
+        """Request cancellation of the running program; a mask defers its observation."""
+        return IO[NoneType, Self.E]._lifted(_EvalIO(_cancel_request[Self.E]()))
+
+    @staticmethod
+    def cede() -> IO[NoneType, Self.E]:
+        """Yield to other work once, then continue."""
+        return IO[NoneType, Self.E]._lifted(_Cede[Self.E]())
+
+    @staticmethod
+    def never() -> Self:
+        """Wait until canceled; never produces a value."""
+        return Self._lifted(_Never[Self.T, Self.E]())
+
+    @staticmethod
+    def sleep(duration: Duration) -> IO[NoneType, Self.E]:
+        """Wait cooperatively for a checked relative duration from entry; cancelable."""
+        return IO[NoneType, Self.E]._lifted(_Sleep[Self.E](duration._nanoseconds))
+
+    def both[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[Tuple[Self.T, U], Self.E]:
+        """Run both cooperatively and drain both; errors keep left-before-right order."""
+        return IO[Tuple[Self.T, U], Self.E]._lifted(_both(self^, other^))
+
+    def race[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]:
+        """Return the first outcome that is not cancellation-only, then cancel and drain the other."""
+        return IO[RaceResult[Self.T, U], Self.E]._lifted(_race(self^, other^))
+
+    def race_first[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[RaceResult[Self.T, U], Self.E]:
+        """Return the first terminal outcome, then cancel and drain the other."""
+        return IO[RaceResult[Self.T, U], Self.E]._lifted(_race_first(self^, other^))
+
+    def timeout_to(deinit self, duration: Duration, var fallback: Self) -> Self:
+        """After the timer wins, prefer this IO's drained result, else run the fallback."""
+        return Self._lifted(_timeout_to(self^, duration._nanoseconds, fallback^))
+
+    def timeout_after(deinit self, duration: Duration, var fallback: Self) -> Self:
+        """Choose by first terminal outcome; drain this IO before running the fallback."""
+        return Self._lifted(_timeout_after(self^, duration._nanoseconds, fallback^))
 
     def poll(mut self, context: IOContext[Self.E]) -> Step[Self.T, Self.E]:
         if not self._entered:
@@ -653,6 +820,50 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](_FamilyMachine):
             return Step[Self.T, Self.E]._make(Optional(success^), Wait(), protected)
         var failed = _failure_as[Self.T](outcome^)
         return Step[Self.T, Self.E]._make(Optional(failed^), Wait(), protected)
+
+
+@fieldwise_init
+struct _Delay[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](OnceThunk):
+    """Evaluate a synchronous function into a pure IO."""
+    var function: Self.F
+    comptime Out = IO[Self.F.Out, Self.E]
+    comptime Error = Self.F.Error
+
+    def call_once(deinit self) raises Self.Error -> Self.Out:
+        return Self.Out.pure(_thunk_once_as[Self.Error](self.function^))
+
+
+struct _Cede[E: Movable & Deinitable](Machine, Defaultable):
+    """Yield once as runnable, then succeed."""
+    comptime Value = NoneType
+    comptime Error = Self.E
+    var _yielded: Bool
+
+    def __init__(out self):
+        self._yielded = False
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[NoneType, Self.E]:
+        if not self._yielded:
+            self._yielded = True
+            return Step[NoneType, Self.E].pending(Wait())
+        var unit: NoneType = None
+        return Step[NoneType, Self.E].ready(Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit))))
+
+
+struct _Never[T: Movable & Deinitable, E: Movable & Deinitable](Machine, Defaultable):
+    """Wait without a wake source; only cancellation completes it."""
+    comptime Value = Self.T
+    comptime Error = Self.E
+
+    def __init__(out self):
+        pass
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[Self.T, Self.E]:
+        if context.canceled():
+            return Step[Self.T, Self.E].ready(None)
+        var wait = Wait.never()
+        wait._interruptible = not context._masked
+        return Step[Self.T, Self.E].pending(wait^)
 
 
 @fieldwise_init
