@@ -5,7 +5,12 @@ into pipelines, map, filter, and fold over collections, handle failures with
 typed `Result` values, and define algebraic and inductive data types from your
 own structs. Pattern matching checks that every constructor is covered at
 compile time. Functions and closures keep their native ownership conventions
-and error types.
+and error types. Deferred IO, scoped resources and cooperative async tasks let
+you compose effectful work with the same pipeline and algebra operations.
+
+The API draws on [Cats](https://github.com/typelevel/cats) and
+[Cats Effect](https://github.com/typelevel/cats-effect), using snake_case
+operations and Mojo's native types and ownership.
 
 The `nightly` checkout pins Mojo 1.2.0. The published FP Mojo 1.0.0 package
 uses Mojo 1.1.0; see [installation](docs/content/start/installation.md).
@@ -45,13 +50,21 @@ one value at a time through `map` and `filter`.
 
 - **Native values and callbacks.** Use `List`, `Optional`, `Variant`, tuples
   and your own structs with ordinary Mojo functions and closures. Their types
-  remain known to the compiler, without boxing or runtime interpretation.
+  remain known to the compiler through composition.
 - **Ownership and borrowing.** Operations support move-only values and borrowed
   views through Mojo's `var`, read and `mut` conventions. References keep their
   origins, tying borrowed payloads to their owners.
 - **Typed errors.** A callback that `raises ParseError` makes the pipeline, fold
   or match raise `ParseError`. A stored `Err` remains a value until you
   explicitly raise it with `raise_on_err`.
+- **IO and resources.** Describe deferred work, compose it with `map` and
+  `flat_map`, and execute it with `run_io`. Resource scopes and finalizers
+  retain cleanup on success, failure and cooperative cancellation, preserving
+  ordered errors in `Outcome`.
+- **Structured async.** The pure-Mojo runtime uses explicit state machines on
+  one host thread. Sequence tasks, combine concurrent children, race work,
+  wait on timers or callbacks, and coordinate through queues and semaphores.
+  Entered child tasks remain owned until their work and cleanup finish.
 - **Exhaustive pattern matching.** The compiler rejects a match that misses a
   constructor or includes an unreachable clause. It also checks the types
   between pipeline stages and names a stage whose input does not fit.
@@ -65,15 +78,17 @@ one value at a time through `map` and `filter`.
 
 | Package | What it gives you | Highlights |
 |---|---|---|
-| `fp.functions` | Pipelines and composition | `pipe`, `piped`, `flow`, `compose`, `flip`, `partial`, `identity` |
+| `fp.functions` | Pipelines and composition | `pipeline`, `pipe`, `piped`, `flow`, `compose`, `flip`, `partial`, `identity` |
 | `fp.combinators` | Ordinary iterator operations shared with fluent pipelines | `map`, `filter`, `fold_left` |
 | `fp.iteration` | Lazy adapters and terminal folds over iterators and owned collections | `map`, `filter`, `filter_map`, `flat_map`, `flatten`, `scan_left`, `fold_left`, `fold_until`, `reduce`, `find`, `any`, `all`, `collect_list` |
 | `fp.control` | Loops as expressions | `while_loop`, `fori_loop`, carry/output `scan` |
 | `fp.data` | Typed results and error bridges | `Result` with `map`, `flat_map`, `map_err`, `or_else`, `fold`; `attempt`, `raise_on_err`, `collect_results`, `ControlFlow` |
 | `fp.adt` | Algebraic and inductive data types from your own structs | `Data`, `Cases`; `Node` (shared, recursive) and `Choice` (stored in place) |
 | `fp.matching` | Pattern matching | `fp.match` (a `Node`, `Choice`, `Result` or `Optional`, a context, or several values), `fp.rewrite`, `fp.when`, `Next` |
-| `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid | `map`, `filter`, `pure`, `flat_map`, `map2`, `ap`, `traverse`, `sequence`; Identity, Optional, Result and List instances |
-| `fp.effects` | Reader, State and Writer, and monad transformers | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`; `ask`, `local`, `get`, `put`, `modify`, `tell`, `listen`, `censor`, `run` |
+| `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid | `map`, `filter`, `pure`, `flat_map`, `tail_rec_m`, `map2`, `ap`, `traverse`, `sequence`; Identity, Optional, Result and List instances |
+| `fp.effects` | Reader, State, Writer, monad transformers, synchronous IO and resource scopes | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`, `IO`, `Resource`, `IOResource`, `Outcome`; `delay`, `run_io`, `guarantee`, `fold_outcome` |
+| `fp.effects.async_runtime` | Cooperative async execution and structured concurrency (preview) | `Async`, `Driver`, `Nursery`, `AsyncResource`, `Deferred`, `Queue`, `Semaphore`; `both`, `race`, `sleep`, `timeout_to`, `callback`, `eval_io` |
+| `fp.effects.async_runtime.protocols` | Extension contracts for custom async operations and scoped borrowing | `Machine`, `ScopedMachine`, `CleanupMachine`, `Context`, `Step`, `Wait`, `Signal` |
 | `fp.callables` | The calling protocols shared by other components | `Unary`, `Binary`, `Thunk`, `as_unary`, `call_once`, `call_repeated` |
 
 ## See it in action
@@ -297,6 +312,110 @@ a failure: `ResultT[State[S], E]` keeps the state, while
 `StateT[ResultFamily[E], S]` returns only the error. Third-party types can
 provide instances by implementing the same traits.
 
+### Defer IO and keep cleanup in scope
+
+`delay` stores a callback without running it. `pipeline` selects the IO family
+and composes the work; `.run_io()` consumes it and returns an `Outcome`.
+`guarantee` runs its finalizer after an entered body, including cancellation.
+These examples use the Mojo 1.2.0 `nightly` checkout; see
+[getting started](#getting-started).
+
+```mojo
+from fp.functions import pipeline
+from fp.effects import delay, canceled
+
+def read_number() -> Int:
+    print("read")
+    return 21
+
+def twice(value: Int) -> Int:
+    return value * 2
+
+def finish():
+    print("finalize")
+
+def main():
+    var program = pipeline(delay[Error](read_number)).map(twice).guarantee(delay[Error](finish))
+    print("program ready")
+    var outcome = program^.run_io()
+    if outcome:
+        var result = outcome.take()
+        try:
+            print("value:", result^.raise_on_err())
+        except failure:
+            print("errors:", len(failure.errors))
+    var cancellation = pipeline(canceled[Error]()).guarantee(delay[Error](finish)).run_io()
+    print("canceled:", not cancellation)
+```
+
+This prints `program ready`, `read`, `finalize`, `value: 42`, `finalize`, then
+`canceled: True`. Construction performs no work, and both entered programs
+finalize. The [runnable example](docs/examples/io_execution.mojo) is also part
+of the documentation checks.
+
+For acquisition and release, use native `resource` scopes or effectful
+`resource_io` scopes. Dependent resources release in reverse acquisition order;
+cleanup failures are retained alongside the original failure and cancellation
+state. See [IO and finalization](docs/content/reference/effects.md#io-cancellation-and-finalization)
+and [effectful resources](docs/content/reference/effects.md#effectful-resources).
+
+### Sequence asynchronous work
+
+Async recipes use the same `pipeline(...).map(...).flat_map(...)` style.
+`run` drives a self-contained program to completion, and `fold_outcome` handles
+success, the complete failure, or cancellation. Each recipe owns one execution;
+construct a fresh recipe to repeat work.
+
+```mojo
+from fp.effects import EffectFailure, fold_outcome
+from fp.effects.async_runtime import pure, Pure, delay, run
+from fp.functions import pipeline
+
+
+def next_value(value: Int) -> Pure[Int, Int]:
+    return pure[Int](value + 2)
+
+
+def initial() -> Int:
+    return 40
+
+
+def success(value: Int) -> Int:
+    return value
+
+
+def failure(var errors: EffectFailure[Int]) -> Int:
+    print("failed:", errors.errors.first(), "canceled:", errors.canceled)
+    return -100
+
+
+def canceled() -> Int:
+    return -200
+
+
+def main():
+    var program = pipeline(delay[Int](initial)).flat_map(next_value).get()
+    print(fold_outcome(run(program^), success, failure, canceled))
+```
+
+The [runnable example](docs/examples/async_sequencing.mojo) prints `42`.
+`flat_map` sequences work; `both` owns concurrent children. `tail_rec_m` runs
+iterative work while retaining one active iteration. Resources, races, timeouts
+and bounded nurseries retain ownership through cancellation and cleanup.
+Checked `Duration` values and opaque `Instant` timestamps support system and
+manual clocks.
+
+For host integration, use `Driver`: poll until complete, then consume
+`finish()`. After `request_cancel()`, continue polling until cleanup finishes.
+Timeouts also wait for cleanup; they do not impose a hard return deadline.
+`delay` and `eval_io` run synchronous callbacks inside a poll, so callbacks must
+return promptly. Blocking IO is not offloaded.
+
+The [async guide](docs/content/guides/async-runtime.md) includes runnable
+resource, callback, timeout and host-cancellation examples, plus a Cats Effect
+mapping. The preview is qualified on Linux x86-64 with Mojo 1.2.0; GPU execution
+and completion delivery from foreign threads are not implemented.
+
 ## Getting started
 
 FP Mojo is published as `fp_mojo` in the
@@ -324,13 +443,20 @@ pixi run mojo run quickstart.mojo          # prints 42; no -I flag needed
 For a new project, the [installation guide](docs/content/start/installation.md)
 walks through creating the environment, saving the program and running it.
 
-To work from a checkout instead:
+For the IO and async features above, use the `nightly` source checkout with
+Mojo 1.2.0. These additions are not part of the published 1.0.0 package:
 
 ```sh
 git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
 cd fp_mojo
 pixi install --locked
 pixi run mojo run -I src docs/examples/quickstart.mojo   # prints 42
+```
+
+On Linux x86-64, run the async example from that checkout:
+
+```sh
+pixi run mojo run -I src docs/examples/async_sequencing.mojo   # prints 42
 ```
 
 From the checkout, point the compiler at the sources, or at a precompiled
@@ -365,6 +491,9 @@ pixi run docs-serve
 | [Tutorial](docs/content/tutorial/pipelines.md) | Nine runnable lessons covering pipelines, data types, a configuration processor, algebra and effects |
 | [Algebra](docs/content/tutorial/algebra.md) | When to use mapping, applicative combination, monadic bind and traversal |
 | [Effects](docs/content/tutorial/effects.md) | Reader, State and Writer before combining them with monad transformers |
+| [IO and resources](docs/content/reference/effects.md#io-cancellation-and-finalization) | Deferred execution, outcomes, cancellation, finalizers and effectful resource scopes |
+| [Async runtime](docs/content/guides/async-runtime.md) | Typed sequencing, iterative loops, structured children, timers, callbacks and host integration |
+| [Async API reference](docs/content/reference/effects.async_runtime.md) | Application operations and their ownership and cancellation contracts |
 | [Examples](docs/content/examples/index.md) | Every example program, with its output |
 | [Ownership and errors](docs/content/start/ownership.md) | How borrowing, moving and failures work across the library |
 | [API reference](docs/content/reference/index.md) | Every public name, with its contract |
@@ -374,8 +503,14 @@ pixi run docs-serve
 ## Status
 
 The `nightly` checkout targets Mojo 1.2.0; published FP Mojo 1.0.0 targets
-Mojo 1.1. The allocation-free core was also cross-compiled on Mojo 1.1 for
-NVIDIA and AMD GPUs; execution on GPU hardware has not yet been verified. See
+Mojo 1.1. The async runtime remains an opt-in preview qualified on Linux x86-64.
+Source/package checks at O0/O3 and the completed
+[overnight qualification](docs/content/architecture/async-qualification.md#overnight-results)
+cover sustained execution, retained storage and local performance measurements.
+
+The allocation-free core was also cross-compiled on Mojo 1.1 for NVIDIA and AMD
+GPUs; execution on GPU hardware has not yet been verified. That core compilation
+coverage does not extend to IO or the host async runtime. See
 [support and limitations](docs/content/guides/status.md) for supported uses and
 [native boundaries](docs/content/architecture/native-boundaries.md) for the
 compiler constraints that shape the API and the Mojo 1.2 migration.
@@ -383,8 +518,8 @@ compiler constraints that shape the API and the Mojo 1.2 migration.
 ## Development
 
 Tests, examples and benchmarks run as one suite of four executables, built in
-parallel and run together in about two minutes on four cores. Compile-failure
-programs are checked separately:
+parallel. Build time depends on the toolchain, cache and host load.
+Compile-failure programs are checked separately:
 
 ```sh
 pixi run build --format precompiled --output .cache/package-run
@@ -396,7 +531,8 @@ pixi run -e docs docs-check
 Every suite run also prints benchmarks against hand-written loops, as
 diagnostics. See the [development guide](docs/content/contributing/development.md)
 for the full set of gates, the compile-time budget and the project's working
-rules.
+rules. Focused async checks and overnight stress runs use the separate
+[async qualification procedure](docs/content/architecture/async-qualification.md).
 
 ## License
 
