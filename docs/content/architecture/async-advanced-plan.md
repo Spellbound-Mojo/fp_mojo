@@ -2495,7 +2495,7 @@ it into `nightly`.
 
 | Stream | Content | Owns | Depends on |
 |---|---|---|---|
-| **S1 OS layer** | External calls for `pipe`, `fcntl`, `poll`, `read`, `write`, `close`, `clock_gettime`, `nanosleep`, `sysconf`, `getrusage`, and the thread owner extracted from `unsafe_start` | New `src/fp/_internal/os.mojo`; `src/fp/effects/fibers.mojo` | None |
+| **S1 OS layer** (merged) | External calls for `pipe`, `pipe2`, `fcntl`, `poll`, `read`, `write`, `close`, `clock_gettime`, `getrusage`, and the thread owner extracted from `unsafe_start` | New `src/fp/_internal/os.mojo`; `src/fp/effects/fibers.mojo` | None |
 | **S2 Poller** | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
 | **S3 Cross-thread qualification** | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
 | **S4 Concurrent structures** | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
@@ -2537,6 +2537,49 @@ continues.
   in one container. Parallel agents should run in separate cloud sessions,
   each with its own container, or at most two at a time here.
 - The full verification gates (step 3e) run after Wave 3 and after Wave 4.
+
+### Passes 12 and 13 progress
+
+**S1** (Wave 1) was merged on 2026-10-31: the private POSIX layer,
+`fp._internal.os`.
+
+- **Contents.** Owned descriptors (`OwnedFd`, closed exactly once), `Pipe`
+  with a self-pipe constructor and byte-level `wake` and `drain`, `fcntl` flag
+  helpers, `read`, `write`, `close`, `poll` over `PollFd` entries,
+  `clock_gettime` with `realtime_nanoseconds`, `getrusage` for process and
+  thread CPU time, and the thread owner `OSThread`. Failures raise a typed
+  `OSError` carrying the call's name and its `ErrNo`.
+- **One owner per facility.** The standard library already owns monotonic time
+  (`std.time.monotonic()`), the processor count
+  (`std.sys.info.num_logical_cores()`), and sleeping (`std.time.sleep`), so the
+  layer does not wrap `nanosleep` or `sysconf`. `poll` restarts after `EINTR`
+  with the time remaining on `std.time.monotonic()`, the clock `Instant` reads,
+  so poll timeouts and deadlines share one clock. The standard library has no
+  public wall clock, so `CLOCK_REALTIME` is read here.
+- **Threads.** `OSThread[S]` owns the state's `ArcPointer`, passes the body a
+  pointer to it, and releases it only after joining exactly once, by `join` or
+  when dropped; `join` returns the owner. `unsafe_start`'s `Fiber` is its first
+  client, and the blocking pool and the work-stealing workers will use the
+  same owner. `unsafe_start`'s signature, documentation, and errors are
+  unchanged; only the abort text for a failed `pthread_join` now names the OS
+  layer.
+- **Self-pipe.** On Linux `pipe2` sets nonblocking and close-on-exec
+  atomically. Other targets fall back to `pipe` and `fcntl`, which leaves a
+  documented window in which a concurrent fork and exec inherits the ends.
+  Merging repeated wakes into one byte belongs to the S2 poller.
+- **Descriptor lifetime.** Mojo may destroy a value after its last use, and a
+  raw descriptor copied into a `PollFd` does not extend its owner's life. Owners
+  such as the poller therefore keep their `OwnedFd` values as fields.
+- **Platforms.** Linux x86-64 constants and layouts were checked against glibc;
+  the sizes of `struct pollfd` and `struct timespec` are asserted at compile
+  time. macOS values are marked unverified, and `OSThread` is disabled there at
+  compile time.
+- **Qualification.** `os_layer` (new: pipe round trip, `EAGAIN` on empty
+  nonblocking reads, poll readiness and timeout, both clocks, the processor
+  count, `getrusage`, and thread start, join, and owner release), `test_fibers`,
+  and `test_coordination` passed from source and from the package at O0 and
+  O3: 12 of 12. The `EINTR` restarts are untested, since no test raises a
+  signal.
 
 ## Implementation reference map
 
