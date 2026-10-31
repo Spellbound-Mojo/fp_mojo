@@ -2635,7 +2635,7 @@ it into `nightly`.
 | **S5 Engine refactor** (merged) | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
 | **S6 Blocking** | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
 | **S7 Thread-safety research** (merged) | The payload contract, the audit list, and research on compile-time rejection by reflection (13e's research) | Plan and design notes | None |
-| **S8 Race fixes (13c-0)** | The one-shot slot and the closable stack; fiber records, `Completion`, the supervisor, and scopes on them; the budget split; the fiber table without a per-root lock; `_lock` without sleeps (decisions 7–10) | New `_internal` primitives; `fibers.mojo`, `supervisor.mojo`, `callbacks.mojo`, `_io_core.mojo`, `kernel.mojo`, `executor.mojo`, the budget code in `engine.mojo`, the scheduler in `waking.mojo`, `host.mojo`, `_lock` in `coordination.mojo` | Wave 1 |
+| **S8 Race fixes (13c-0)** (merged) | The one-shot slot and the closable stack; fiber records, `Completion`, the supervisor, and scopes on them; the budget split; the fiber table without a per-root lock; `_lock` without sleeps (decisions 7–10) | New `_internal` primitives; `fibers.mojo`, `supervisor.mojo`, `callbacks.mojo`, `_io_core.mojo`, `kernel.mojo`, `executor.mojo`, the budget code in `engine.mojo`, the scheduler in `waking.mojo`, `host.mojo`, `_lock` in `coordination.mojo` | Wave 1 |
 
 ### Waves
 
@@ -3043,6 +3043,104 @@ in the private `fp.effects._async.polling`.
   - At merge it passed 50 more O3 runs on the integrator's machine.
   - The package precompile takes 121–127 s here, over `qualify.py`'s 120 s
     limit, so that limit is now 300 s.
+
+**S8** (Wave 1b, 13c-0) was merged on 2026-10-31: the lock-free race fixes
+of decisions 7–11. S7's three races are closed.
+
+- **One-shot slot** (`fp._internal.oneshot`, after Tokio's `oneshot`). A
+  `UInt8` state word (`CLAIMED`, `FULL`, `CLOSED`, `TAKEN`, `RELEASED`) and
+  the value share one allocation per owner.
+  - Read-modify-writes happen only where parties can race: claim, `put`, and
+    a close or release of an unclaimed slot.
+  - `publish` is a release store, since nobody else writes between a claim
+    and its publication.
+  - `take` and a release after publication are an acquire load and a plain
+    store, since afterwards only the receiver writes.
+  - Losers fail on a read. An uncontended complete and take cost one
+    read-modify-write.
+  - Fiber records publish with `put` in one step, so their receiver never
+    waits, and a `Completion`'s receiver never releases.
+- **Closable stack** (`fp._internal.closable_stack`). An intrusive Treiber
+  stack: the element's allocation embeds its link, so pushes and closes
+  allocate nothing.
+  - Pushes fail fast on the closed marker, and `close` takes every element
+    with one exchange.
+  - An exclusive prune detaches, filters, and splices survivors back. If a
+    close beats the splice, the survivors return as orphans with the close's
+    tag.
+  - Pushes are free of ABA because nothing pops single links and a push never
+    reads the node it links to.
+  - The stress run found a real bug, a failed splice left linked into the
+    closer's nodes. With it fixed, the stack passed 1,000 of 1,000 runs.
+- **Fiber slots** (`fp._internal.fiber_slots`). There is no table and no
+  lock. A free-index stack with a 32-bit ABA tag and a high-water
+  `fetch_add` assigns slots; entries never move and publish each task-state
+  address with release ordering. `Driver.fibers()` scans the slots in order,
+  keeping `FiberInfo`'s contract, and must run between polls on the driving
+  thread. One shared word per root remains for 13c to shard.
+- **On these primitives.**
+  - **Records.** Reporting is fixed at creation, `done` is lock-free, and a
+    dropped delivery disposes of its outcome itself.
+  - **`Completion`.** It uses the one-shot slot, with its public behavior
+    unchanged.
+  - **Supervisor.** Release closes its scope's stack, and a `supervise` that
+    loses returns an already-canceled fiber (decision 7). A
+    `CancellationToken` replaces `_Stop`.
+  - **Scopes.** One count word packs the live and listed counts.
+  - **Budget.** The transition slice belongs to the executor, with a
+    per-task refill hook for 13c, and `registrations` is one atomic on
+    `_Scheduler`.
+  - **Locks.** `_lock` spins and then yields, never sleeping.
+- **Bug fixed in S4's external queue.** `pop` and `_pop_into` made the borrowed
+  guard's last use the expression that reached the deque, so Mojo could
+  release the lock before `popleft` ran. It was a latent data race that
+  `wstp_queues` did not reliably catch. `_CellGuard` now exposes its value
+  only through a reference tied to the guard. `race_oneshot` asserts that the
+  lock is held through a guard's final use, and the development guide records
+  the rule.
+- **Gates** (decision 11; O3, medians against `nightly`). Every realistic gate
+  passed:
+
+  | Case | `nightly` | S8 |
+  |---|---|---|
+  | Fiber pair, no yields | 11.9 µs | 11.7 µs |
+  | Fiber pair, with yields | 17.8 µs | 17.1 µs |
+  | Completion from another thread, round trip | 9.0–9.5 µs | 7.7–9.2 µs |
+  | Join racing completion | 7.0–7.2 µs | 6.4–6.7 µs |
+  | 1,000 starts under a supervisor | 16.2–17.5 µs each | 6.9–7.4 µs each |
+  | Adoption from 4 threads | 215–491 ns | 76–116 ns |
+
+  - **One-shot storm.** It beats the spin lock at 1 to 2 threads, ties at 4,
+    and is about 11% slower at 8 and 16, which the user accepted.
+  - **Stack storm.** It beats the spin lock at every thread count, by 3 to 7
+    times from 4 threads up.
+  - **For 13c.** Creating and adopting a record in isolation costs 10% more,
+    from the slot's own allocation; whole fiber starts are within noise.
+    Embedding the slot in the record would remove it once records are built
+    in place.
+- **Qualification.**
+  - **S8's branch.**
+    - 100 of 100 over 25 clients, from source and package at O0 and O3: the
+      five new race clients (`race_oneshot`, `race_stack`, `race_record`,
+      `race_supervisor`, `race_registrations`), the fiber, supervisor,
+      callback, coordination, budget, and S3 clients, and the synchronous
+      `test_coordination` and `test_fibers`.
+    - 1,600 of 1,600 soak runs.
+    - Two clients that reached into removed internals were adapted:
+      `callbacks`' lock probe became a reentrancy check, and
+      `fiber_reporting` moved to the record API.
+  - **At merge**, rebased onto S2.
+    - Twelve clients (the five race clients, `poller`, `foreign_completion`,
+      `foreign_signal`, `fiber_supervisor`, `fiber_reporting`,
+      `test_control`, and `callbacks`) passed 48 of 48, from source and
+      package at O0 and O3.
+    - 100 O3 runs each of the race clients, `poller`, and the S3 clients
+      passed, except `race_oneshot`, which failed 2 of 100. Its race asserted
+      which fates its threads reached, and that depends on timing: a receiver
+      that runs ahead releases every slot, and one that lags takes them all.
+    - The integrator replaced that assertion with a single-thread sequence
+      that forces each fate, keeping the race's exactly-once checks. It then
+      passed 300 of 300 O3 runs and re-qualified 4 of 4.
 
 ## Implementation reference map
 
