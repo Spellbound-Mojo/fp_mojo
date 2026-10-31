@@ -8,7 +8,10 @@ turn waits for the next one, so the order stays deterministic. The root program
 is a task too; its driver polls it when its turn comes.
 
 The same tasks can later run on a work-stealing pool: a queue entry is the
-right to run a task, and a task's state is reached only through it.
+right to run a task, and a task's state is reached only through it. The
+executor owns its own fields; what wakes on other threads share with it (the
+scheduler, a header's state) is used through immutable borrows of separately
+allocated atomics, since a `mut` borrow is exclusive (see `waking.mojo`).
 """
 from std.memory import ArcPointer
 from fp._internal.waking import _Runtime, _Scheduler, _TaskHeader
