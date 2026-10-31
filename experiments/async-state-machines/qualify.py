@@ -138,7 +138,7 @@ def main():
     builds = []
     for name, include in (("fp", source), ("state_machine", package)):
         built = precompile(package / f"{name}.mojoc", run.folder / f"{name}.log",
-                           source=str(source / name), include=str(include), timeout=120)
+                           source=str(source / name), include=str(include), timeout=300)
         builds.append(built)
         write_json(run.folder / "package-compilations.json", builds)
         if not accepted(built):
