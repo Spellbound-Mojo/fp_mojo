@@ -1,1 +1,1 @@
-fiber snapshot: owners, runnable, suspended and draining fibers, nested hosts excluded
+fiber snapshot: owners, runnable, suspended and draining fibers, fibers started inside leaves

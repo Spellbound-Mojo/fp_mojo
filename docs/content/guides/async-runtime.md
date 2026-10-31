@@ -109,10 +109,10 @@ otherwise their count and type. It writes to standard error by default, and
 `report_unhandled_fiber_errors = False` turns reporting off. A fiber that
 joins its own handle aborts; longer join cycles are not detected.
 
-Fibers run on the host thread. The entered `IO` that starts the first fiber
-hosts every fiber started beneath it, including fibers started by fibers, so
-nesting costs no native stack; each root poll alternates whether that `IO`'s own
-program or its fibers run first, sharing one transition budget.
+Fibers run on the host thread. Each fiber, like the root program, is a task of
+the root's scheduler: it runs when something it waits for wakes it, nesting
+costs no native stack, and each root poll runs the ready tasks in turn, sharing
+one transition budget.
 
 `io.race_pair(other)` starts both as fibers and completes when the first
 finishes, producing a `RaceWinner` with that side's outcome and the other side's
@@ -127,12 +127,12 @@ release cancels the supervised fibers that are still live and waits for them,
 as Cats Effect does by default; `await_on_release=True` waits for them to
 finish instead. Supervising after release aborts.
 
-`Driver.fibers()` lists the root `IO`'s live fibers between polls, like Cats
+`Driver.fibers()` lists the live fibers under the root between polls, like Cats
 Effect's fiber dump: each `FiberInfo` names an internal slot, its owner's slot
 (0 is the root program), and a `FiberStatus` of runnable, suspended, or draining
 its children. It holds no payloads or completed fibers. Slots are reused, so an
-index is not an identity, and fibers hosted by an `IO` lifted into a leaf with
-`IO.lift` are not listed.
+index is not an identity. Fibers started by an `IO` lifted into a leaf with
+`IO.lift` are listed under the fiber running that leaf.
 
 ## Write programs generic over the family
 
@@ -294,7 +294,13 @@ waiter a `Queue`, `Semaphore`, or `Ref` serves first, are unspecified.
 `run` blocks until self-contained work drains, using the existing idle sleep
 fallback. Use `Driver` when the host must deliver events or advance manual time.
 A pending driver with no runnable work may require an external signal or its
-reported deadline.
+reported deadline. A host with its own event loop can pass a notifier, any
+repeatable non-raising `Thunk`, as the last argument of
+`Driver(program, token, clock, config, notifier)`: the driver calls it, possibly
+from the thread that delivered the event, when an event arriving while no poll
+runs makes the program runnable. The notifier must return promptly, must not
+call back into the driver, and must be safe on that thread; it is never called
+after `finish` returns, and `finish` waits for a call in progress.
 
 ## Cats and Cats Effect mapping
 

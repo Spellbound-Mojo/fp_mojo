@@ -62,7 +62,7 @@ def main() raises:
         var progress = driver.poll(64)
         if progress.completed:
             break
-        slots = max(slots, driver.task._slot._program.value()[]._fiber_slots())
+        slots = max(slots, driver.task._executor.fiber_slots())
         nodes = max(nodes, registrations(driver))
     var outcome = driver^.finish()
     check(Bool(outcome) and outcome.value().is_ok(), "the owner completes")

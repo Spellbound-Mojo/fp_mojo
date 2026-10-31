@@ -7,19 +7,26 @@ live deadline, and the number of root polls and timer events performed.
 `finish()` still requires complete draining. `Clock.manual()` and `advance_to()`
 allow deterministic host control; default clocks use public monotonic time.
 
-## Queue ownership
+## Registries and tasks
 
-Execution slots own registrations in a shared metadata hierarchy. A node's own
-readiness is distinct from its ready descendants. This distinction matters when
-a child starts and parks during one enclosing poll: consuming that child's wake
-must also clear inherited ancestor readiness without losing an independent
-notification. Ready siblings use intrusive FIFO links; removal is O(1), and
-duplicate notifications retain the existing queue position.
+Every task, the root program and each fiber, owns a wake registry
+(`_Runtime` in `src/fp/_internal/waking.mojo`): a tree of generation-checked
+nodes behind one lock, one node per execution slot of that task, so wakes for
+different tasks never contend. A node's own readiness is distinct from its
+ready descendants. This distinction matters when a child starts and parks
+during one enclosing poll: consuming that child's wake must also clear
+inherited ancestor readiness without losing an independent notification. Ready
+siblings use intrusive FIFO links; removal is O(1), and duplicate notifications
+retain the existing queue position.
 
-Fiber hosts select ready child IDs directly and count unfinished children. They do not rebuild flattened wake lists or scan parked
-children on the scheduled path. Forwarding through bind, loop and callback cleanup uses the child
-registration. The legacy direct-poll path retains wait descriptors. Cancellation
-and error settlement remain canonical, including masked finalization.
+The registry's root wake hook schedules its task when the root's ready list
+becomes non-empty: an idle task becomes scheduled and is queued, and a running
+task becomes notified. The hook runs under the registry's lock, and a run that
+ends decides under the same lock whether the task is requeued or idle, so a wake
+from any thread is either seen by that decision or finds the task idle. Every
+atomic operation on the scheduling state documents its ordering in the source:
+the hook's compare-and-swap is acquire-release, parking stores with release,
+and the queue's lock orders a task's body between runs.
 
 Signal subscribers retain only metadata handles. Task generation and wait epoch
 checks reject both notifications for retired storage and notifications from a
@@ -28,10 +35,28 @@ under the signal guard. Subscriptions are removed on polling and completion.
 The shared cancellation token emits the same notification on its first request;
 its atomic requested flag remains the source of cancellation state.
 
-Timers use the standard library `BinaryHeap`. Stale generations are discarded
-before reporting a deadline; heap rebuilding bounds retained entries to twice
-the live timer count plus 32. Node and subscriber storage is reused and bounded
-by peak simultaneous registrations. There is no type-erased computation storage.
+## The current-thread executor
+
+All registries under one root share a scheduler: the ready queue, the timer
+heap, the host notifier, and the table of live fibers' metadata. The
+current-thread executor (`src/fp/effects/_async/executor.mojo`) runs the
+root's tasks on the thread that polls it. One root poll is one executor turn:
+it refills the transition budget, then runs queued tasks in FIFO order, each at
+most once, until the budget is spent, the queue is empty, or the next task
+already ran in this turn. Idle tasks cost nothing: a parked fiber is never
+scanned or entered until a wake queues it.
+
+The ready queue is a lock-guarded deque behind a small interface (`_TaskQueue`)
+that a work-stealing worker's local ring and external queue can implement. A
+queue entry is the right to run a task, and only the executor holding it
+touches the task's body, so moving entries between workers moves that right.
+
+Timers use the standard library `BinaryHeap`, shared by the root's registries.
+An entry names its registry node and wait epoch; stale entries are discarded
+before reporting a deadline, and the heap is rebuilt when it holds more than
+twice the live timer count plus 32. Node and subscriber storage is reused and
+bounded by peak simultaneous registrations. Registries never store computation;
+task bodies are owned by their tasks.
 
 ## Driver bounds
 
@@ -43,7 +68,13 @@ instruction count. All clocks propagate through masks and child contexts.
 The public `run` and internal `run_pair` delegate to the driver but retain a
 1 ms idle-sleep fallback.
 The host can instead call `poll` after its own event delivery and use the reported
-deadline. Cross-thread task/payload execution remains unqualified.
+deadline, or give `Driver` a notifier, an erased repeatable callable called when
+an event delivered while no poll runs makes the root runnable. The notifier is
+called only when the ready queue was empty and no poll is running; a poll clears
+its polling flag before reading readiness, both sequentially consistent with the
+queue, so either the poll reports the work or the notifier runs. `finish` stops
+notifications and waits for a call in progress. Cross-thread task and payload
+execution remains unqualified.
 
 ## Public platform boundary
 
