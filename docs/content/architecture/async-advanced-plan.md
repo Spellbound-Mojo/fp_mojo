@@ -2296,56 +2296,226 @@ obligation.
    `SyncIO[E]` inline, since the synchronous family already blocks its thread?
    Recommendation: yes, matching Cats Effect, where both belong to `Sync`.
 
-## Pass 13 proposal (sketch)
+## Pass 13 proposal
 
-A multi-threaded work-stealing runtime, after Cats Effect's work-stealing pool
-and the BEAM's per-processor schedulers. This sketch fixes the direction; a
-full proposal with measurements follows Pass 12, which provides the parking,
-cross-thread wakes, and blocking pool it builds on.
+Pass 13 makes the runtime multi-threaded: fibers run in parallel on a
+work-stealing pool after Cats Effect's, and the single-threaded runtime remains
+as a profile of the same scheduler. Large refactoring is expected; the end
+result is what matters. Nothing has been built.
 
-- **Scheduling.** One compute worker per logical processor by default, as in
-  Cats Effect's work-stealing pool, whose design this pass follows:
-  - Each worker owns a fixed-capacity, lock-free ring buffer with one producer
-    and many consumers; Cats Effect uses 256 entries. When it is full, half of
-    it moves to a shared external queue in batches, which also receives work
-    submitted from outside the pool.
-  - An idle worker looks in its own queue, then the external queue. With
-    permission to search, it steals expired timers, then takes half of another
-    worker's queue, scanning from a random worker. At most half the workers
-    search at once, to limit contention.
-  - A worker with nothing to do parks: in its poller when it has descriptor
-    registrations, otherwise on a condition variable, with a timeout to its
-    next timer. A parked worker is woken only when no worker is searching and
-    not all are active.
-  - Timers live in a heap per worker, changed only by its owner. Other workers
-    may run expired timers when stealing, and cancellation from another thread
-    is counted and cleaned up by the owner later.
-- **Blocking hand-off.** When a fiber starts blocking work on a worker, the
-  worker hands its local queue to a cached or new replacement thread and runs
-  the call inline, as Cats Effect's `prepareForBlocking` does; afterwards the
-  thread waits to be reused and exits after an idle timeout. This replaces
-  Pass 12's separate pool for `blocking` on the compute pool.
-- **Fibers.** A fiber runs on one worker at a time and moves between workers as
-  data. The fiber host table and inbox become per-worker queues; the transition
-  budget becomes per worker; joins, claims, owner draining, and `Supervisor`
-  become concurrent protocols over the existing records.
-- **Payload thread safety.** Everything stored in an `IO`, in fiber state, or
-  moved through a `Completion` must be safe to move to, and be destroyed on,
-  another thread. Fibers share state only through `Ref`, `Deferred`, `Queue`,
-  `Semaphore`, or types their authors synchronize; sharing an `ArcPointer` to
-  unsynchronized mutable data becomes a data race, and the guide says so. The
-  pass audits every shared structure in the runtime, researches compile-time
-  rejection of payloads that are known to be thread-confined, and adopts Send
-  and Sync if Mojo adds them.
-- **Promises.** A fiber's own steps stay ordered. The left-wins tie of
-  `race_pair` and other same-tick promises become best effort under real
-  parallelism and are restated.
-- **Selection.** The runtime is chosen in `IORuntimeConfig`; the
-  single-threaded runtime stays available, and `TestControl` keeps using it so
-  tests stay deterministic.
-- **Measurements first.** Atomic overhead on the run-loop step, local-queue and
-  stealing throughput, wake latency, and comparisons with the single-threaded
-  runtime decide queue sizes and spinning policy before the engine changes.
+### Current state
+
+- **Fibers belong to a host.** The entered `IO` that ran the first `start`
+  hosts every fiber beneath it in one table of slots (`_Fibers` in
+  `fibers.mojo`). Its run loop ticks ready fibers inside its own poll, so a
+  fiber never runs except when its host is polled, and all of them run on the
+  root's thread. An `IO` inside a lifted leaf hosts its own fibers.
+- **Ownership lives in the table.** Each entry counts its live children and
+  holds a finished fiber's outcome until they drain; completion walks owners
+  in the table. `Supervisor` starts fibers into the same table with the
+  supervisor fiber as owner. `Driver.fibers()` snapshots the table.
+- **One wake registry per root.** `_Runtime` in `waking.mojo` is a tree of
+  generation-checked nodes behind one lock: every leaf slot of every fiber
+  registers under its parent, wakes propagate ready flags to the root, and the
+  host dequeues ready children in FIFO order. It also holds the root's timer
+  heap. Every wake and every timer takes the same lock.
+- **Per-root accounting.** `_Budget`, which counts transitions, carries the
+  failure reporter, and counts live `IO.async` registrations, is confined to
+  the root's thread.
+- **Platform.** Mojo 1.2's `Atomic[T]` takes explicit `Ordering` arguments
+  (acquire, release, acquire-release, sequential) and provides `fence`;
+  `ArcPointer` counts references atomically. Threads come from `pthread_create`
+  through external calls, as `unsafe_start` already does. There is no Send or
+  Sync proof.
+
+### Design
+
+1. **Fibers become scheduled tasks.** A fiber is a task with an atomic
+   scheduling state (idle, scheduled, running, notified while running, done),
+   its run loop, and its record. It runs on one worker at a time; between runs
+   its state is an owned value in a queue, so moving it between workers moves
+   ownership and needs no shared mutable access.
+   - **Wakes.** Each fiber has its own wake registry, the existing tree scoped
+     to the fiber's nested leaves, so wakes for different fibers never contend.
+     The registry's root wake hook, Pass 12's hook generalized from a root to
+     any fiber, moves the task from idle to scheduled and pushes it: onto the
+     current worker's queue when woken on a worker, otherwise onto the external
+     queue, then wakes a parked worker if needed. A wake while running sets
+     the notified state, so the worker requeues the fiber instead of parking it.
+   - **Ownership.** Owner draining moves from the host table into fiber records:
+     a record counts its live children atomically, and an owner whose program
+     finished cancels its children and waits on its record's signal until the
+     count is zero. Held outcomes, joins, claims, delivery, and exactly-once
+     reporting keep their protocols, which are already signal-based.
+   - **Supervisor and nested hosts.** A supervised fiber's owner is the
+     supervisor fiber's record. Fibers started inside a lifted `IO` belong to
+     the fiber running it; there is no separate host table anywhere.
+   - **Diagnostics.** Each worker keeps a bounded registry of its live fibers'
+     metadata, without payloads; `Driver.fibers()` merges them.
+2. **One scheduler, two profiles.** The same scheduler runs with one worker on
+   the calling thread, the current-thread profile, or with a pool of workers,
+   the work-stealing profile. The current-thread profile replaces today's host
+   table, keeps a deterministic FIFO order, and serves `TestControl` and
+   `Driver` embedding. There is one implementation of fibers, wakes, timers,
+   and ownership.
+3. **Work-stealing pool**, following Cats Effect's `WorkStealingThreadPool`:
+   - One worker per online logical processor by default, from `sysconf`.
+   - A fixed-capacity, lock-free local ring per worker with one producer and
+     many consumers. When full, half of it moves to the external queue in
+     batches; stealers take half of a victim's queue.
+   - The work-finding order: own queue, external queue, then, with permission
+     to search, expired timers of other workers and half of another worker's
+     queue, scanning from a random worker. At most half the workers search.
+   - Parking in the worker's own poller from Pass 12, on its self-pipe, with
+     the timeout to the worker's next timer; one mechanism serves wakes,
+     descriptors, and timers. A parked worker is woken when work arrives, no
+     worker is searching, and not all are active.
+   - Fairness: the transition budget becomes per worker; a fiber that exhausts
+     it goes to the back of its worker's queue, and a worker checks the
+     external queue periodically so outside submissions are not starved.
+4. **Timers per worker.** A fiber sleeping on a worker registers in that
+   worker's heap, which only its owner changes. Cancellation from another
+   thread marks the node and counts it; the owner removes marked nodes when
+   they reach half the heap. Workers may run other workers' expired timers
+   while searching. The generation checks of the wake registry carry over.
+5. **Blocking hand-off.** `blocking` on a compute worker hands the worker's
+   local queue to a cached or new replacement thread and runs the call inline,
+   as Cats Effect's `prepareForBlocking` does; afterwards the thread offers
+   itself for reuse and exits after an idle timeout. `interruptible` uses the
+   same hand-off with Pass 12's interruption handle. Pass 12's separate
+   blocking pool remains for the current-thread profile.
+6. **Runtime lifecycle.** A `Runtime` value owns the workers: it is created
+   from `IORuntimeConfig`, runs programs, and on shutdown cancels and drains
+   its fibers, then joins its threads. `run(program)` with the work-stealing
+   profile creates a runtime for the call; long-running applications create
+   one and run many programs on it.
+7. **Payload thread safety.** The contract: everything stored in an `IO`, in
+   fiber state, or moved through a `Completion` must be safe to move to, and
+   be destroyed on, another thread, and fibers share mutable state only through
+   `Ref`, `Deferred`, `Queue`, `Semaphore`, or types their authors
+   synchronize. Sharing an `ArcPointer` to unsynchronized mutable data between
+   fibers becomes a data race, and the guide says so prominently, with the
+   current-thread profile as the alternative. The pass audits every shared
+   structure in the runtime (erased boxes, records, signals, registries,
+   coordination cells, completions, tokens, clocks, budgets, reporters),
+   researches compile-time rejection of payloads known to be thread-confined,
+   such as raw pointers found by reflection, and adopts Send and Sync if Mojo
+   adds them.
+8. **Memory ordering.** Every lock-free structure documents the ordering of
+   each atomic operation and why; stress tests exercise each with many threads,
+   and a thread sanitizer runs if the toolchain supports one.
+9. **Promises restated.** A fiber's own steps stay ordered, queues stay FIFO,
+   and every `Deferred` reader receives the value. Under parallel execution,
+   "the left side wins a tie in the same tick" becomes "the first completion
+   observed wins"; the current-thread profile keeps the deterministic tie.
+
+### Steps
+
+1. **13a:** measurements and the concurrent structures in isolation: the local
+   ring, the external queue, the per-worker timer heap, and parking, each with
+   multi-thread stress tests; atomic costs against the 50–60 ns run-loop step.
+2. **13b:** fibers as scheduled tasks on the current-thread profile: per-fiber
+   wake registries, ownership in records, `Supervisor`, diagnostics, and
+   `TestControl`, with the host table removed and every existing client green.
+3. **13c:** the work-stealing pool: workers, stealing, parking in pollers, wakes
+   from any thread, and fibers running in parallel.
+4. **13d:** per-worker timers and polling, the blocking hand-off, and the
+   `Runtime` lifecycle and configuration.
+5. **13e:** the thread-safety contract, the audit, long stress runs, restated
+   promises, and documentation.
+
+### Gate and clients
+
+From the delivery table: fibers run in parallel with the same outcomes, laws,
+and ownership guarantees; the runtime's own structures are race-free under
+stress; throughput and latency are measured against the single-threaded
+runtime; `TestControl` stays deterministic.
+
+- Every existing fiber, capability, law, and coordination client runs on both
+  profiles.
+- `wstp_parallel`: CPU-bound fibers speed up with more workers.
+- `wstp_queues` and `wstp_timers`: the ring, external queue, and timer heap
+  under many threads, including cross-thread timer cancellation.
+- `wstp_wakes`: no lost wake under storms of wakes from workers and foreign
+  threads; parked workers wake for new work.
+- `wstp_ownership`: owner draining, joins, races, and `Supervisor` across
+  workers, with each failure reported exactly once.
+- `wstp_blocking`: a blocking call hands off its worker's queue and other
+  fibers keep running.
+- `wstp_shutdown`: a runtime cancels, drains, and joins its threads, leaving
+  nothing running.
+- Stress and soak runs of randomized spawn, join, cancel, and wake mixes, and a
+  measured comparison with the current-thread profile.
+
+### Review questions
+
+1. **Default profile.** Should `run` use the work-stealing profile by default,
+   as Cats Effect does, once 13e lands? It changes behavior for existing code
+   that shares unsynchronized state between fibers. Recommendation: yes, with
+   the contract documented and the current-thread profile one setting away.
+2. **Runtime ownership.** An explicit `Runtime` value, with `run` creating one
+   per call, or a lazily created process-wide default, as Cats Effect's global
+   runtime? Recommendation: explicit, which avoids the first global singleton
+   and gives shutdown one owner.
+3. **Embedding.** Keep `Driver` for the current-thread profile only, with the
+   work-stealing profile driven through `Runtime`? Recommendation: yes; a host
+   that owns its loop embeds the current-thread profile.
+
+## Passes 12 and 13 together
+
+The two passes share foundations: Pass 12's operating-system layer, poller,
+wake hook, and blocking pool are exactly what Pass 13's workers park in, wake
+through, and hand off to. Planned together, their work splits into streams that
+separate agents can build in parallel, each on its own branch, owning its own
+files, and passing its own targeted qualification before an integrator merges
+it into `nightly`.
+
+### Streams
+
+| Stream | Content | Owns | Depends on |
+|---|---|---|---|
+| **S1 OS layer** | External calls for `pipe`, `fcntl`, `poll`, `read`, `write`, `close`, `clock_gettime`, `nanosleep`, `sysconf`, `getrusage`, and the thread owner extracted from `unsafe_start` | New `src/fp/_internal/os.mojo`; `src/fp/effects/fibers.mojo` | None |
+| **S2 Poller** | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
+| **S3 Cross-thread qualification** | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
+| **S4 Concurrent structures** | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
+| **S5 Engine refactor** | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
+| **S6 Blocking** | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
+| **S7 Thread-safety research** | The payload contract, the audit list, and research on compile-time rejection by reflection (13e's research) | Plan and design notes | None |
+
+### Waves
+
+1. **Wave 1, in parallel:** S1, S3, S4, S5, and S7. They touch disjoint files,
+   except that S3's documentation edits in `waking.mojo` and `callbacks.mojo`
+   merge before S5 reaches them.
+2. **Wave 2, in parallel:** S2 after S1, and S6 after S1 and S3. S6 adds its
+   `IO` methods to `engine.mojo` after S5 merges, as a small rebase.
+3. **Wave 3, integration:** `run` parking in the poller through the wake hook,
+   descriptor readiness, wall-clock time, and the provider matrix (12b and 12d
+   on top of S2 and S5), then the Pass 12 gate.
+4. **Wave 4:** the work-stealing pool (13c and 13d) on S2, S4, S5, and S6, then
+   13e's audit and stress runs and the Pass 13 gate.
+
+S5 is the critical path: it is the largest change and every later wave builds on
+it, so it starts first and is never split between agents. S1, S3, S4, and S7 are
+small and independent enough to finish early, so Wave 2 can start while S5
+continues.
+
+### Working agreement for parallel agents
+
+- Each stream works on its own branch from `nightly`, owns the files listed,
+  and adds rather than edits shared files such as `qualify.py`, `protocols.mojo`,
+  and `capabilities.mojo`.
+- Generated contracts (`public-exports.json`, `api.json`), the export and
+  example counts in `test_docs.py`, and this plan's progress sections are
+  regenerated or written by the integrator at merge time, which removes the
+  most frequent conflicts.
+- Each stream runs targeted qualification of the clients it touches before
+  asking to merge; the integrator rebases, re-runs the overlapping clients, and
+  pushes, one stream at a time.
+- Mojo builds are memory-heavy: two concurrent qualification jobs are the limit
+  in one container. Parallel agents should run in separate cloud sessions,
+  each with its own container, or at most two at a time here.
+- The full verification gates (step 3e) run after Wave 3 and after Wave 4.
 
 ## Implementation reference map
 
