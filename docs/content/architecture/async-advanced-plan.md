@@ -2551,6 +2551,13 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
     A primitive that still fails after tuning uses a lock that spins on reads
     and then yields, built on the shared `_acquire_lock`, with the reason
     recorded.
+12. **Wave 2 alongside S8.** S2 and S6 start while S8 is still running.
+    - S2 shares no files with S8.
+    - S6 builds only on `Completion`'s public behavior and the shared lock
+      helpers, and merges after S8.
+    - The waits in `interruptible`'s handle, its interruptible sleep and its
+      descriptor waits, are built on S2's poller rather than on a second
+      self-pipe mechanism. S6 therefore adds them after S2 merges.
 
 ### Review questions
 
@@ -2593,7 +2600,7 @@ it into `nightly`.
 1. **Wave 1, in parallel:** S1, S3, S4, S5, and S7. They touch disjoint files,
    except that S3's documentation edits in `waking.mojo` and `callbacks.mojo`
    merge before S5 reaches them.
-2. **Wave 1b:** S8, the race fixes, before Wave 2.
+2. **Wave 1b:** S8, the race fixes. Wave 2 starts alongside it (decision 12).
 3. **Wave 2, in parallel:** S2 after S1, and S6 after S1 and S3. S6 adds its
    `IO` methods to `engine.mojo` after S5 merges, as a small rebase.
 4. **Wave 3, integration:** `run` parking in the poller through the wake hook,
