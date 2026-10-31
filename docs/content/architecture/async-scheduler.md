@@ -193,3 +193,94 @@ transfer: yielding after every failed attempt costs 10–25% more than spinning
 without yielding, and 256 spins match spinning. A timer insert and poll costs
 230–300 ns while two threads steal due timers, against 410–460 ns before the
 earliest-deadline hint moved to its own line.
+
+## Polling system
+
+Pass 12b's poller is the private module `fp.effects._async.polling`, after Cats
+Effect's `PollingSystem` (`poll`, `needsPoll`, `interrupt`) and Scala Native's
+interruptible wait. Its one implementation waits in POSIX `poll()` on the
+registered descriptors and a self-pipe from `fp._internal.os`. Nothing in the
+runtime uses it yet: `run` parking, the root wake hook and descriptor waits are
+built on it in Wave 3, and the blocking pool's interruptible waits use it as a
+plain timed park that any thread can interrupt.
+
+- **Ownership.** `_Poller` belongs to one owner thread: one per root now, and
+  one per worker in 13c, as each Cats Effect worker owns its poller. Only the
+  owner calls `poll`, `register`, `deregister` and `readiness`. Other threads
+  hold `_Interrupter` copies, which share the wake state but never borrow the
+  poller, and can only `interrupt` or `close`. The caller owns its descriptors
+  and keeps them open and nonblocking while registered; the poller owns only
+  its pipe.
+- **`poll(timeout)`** waits indefinitely, or up to a timeout, and reports how
+  many registrations became ready, whether an interrupt arrived, whether the
+  timeout expired, and whether the poller is closed. `poll()` counts whole
+  milliseconds, so the poller polls for the whole milliseconds left, rounded
+  down, against `std.time.monotonic()`, and waits the final part under 1 ms with
+  `std.time.sleep` between two nonblocking polls. A wait therefore never ends
+  early, and an interrupt or readiness during that last sleep is delayed by
+  under 1 ms.
+- **`interrupt()`** is safe from any thread. It sets a pending flag and writes
+  one byte to the pipe only when the flag was clear, so repeated interrupts
+  coalesce into one byte and one wake; a coalesced interrupt costs one fence and
+  one load. A `poll` that returns drains the pipe if it was readable, then
+  clears the flag, and the owner re-checks its work before polling again. An
+  interrupter publishes its work, then executes a sequentially consistent fence
+  and reads the flag. The owner clears it with a sequentially consistent
+  compare-exchange followed by a fence. One of them sees the other: the
+  interrupter sees the cleared flag and writes a byte the next poll finds, or
+  the owner's re-check sees the work. Because the pipe is drained only before
+  the flag clears, a late byte causes at most one spurious wake.
+- **Registrations.** `register(fd, interest, signal)` watches a descriptor for
+  read and/or write interest and returns a generation-checked handle. The first
+  poll that sees the descriptor ready records its events, stops watching it,
+  and notifies the `Signal`, so a waiter suspends with
+  `Wait.changed(signal, revision)` like any other external event. Readiness is
+  reported once, because `poll()` is level-triggered and a ready descriptor
+  left armed would return every poll at once. `deregister` removes a
+  registration when its waiter completes or is canceled, and a stale handle
+  changes nothing, as with the wake registries. `needs_poll()` reports armed
+  registrations: an owner without any can park more cheaply, which is the input
+  13c's parking protocol uses. `has_registrations()` also counts reported
+  registrations not yet removed.
+- **Closing.** `close()`, from any thread, wakes a poll in progress. A closed
+  poller rejects new registrations, and the owner's next poll, or the poller's
+  destruction, notifies every registration still armed, which then reports
+  `closed()`. A word next to the flag counts the pipe's users: polls and
+  interrupts in progress. Whoever leaves last after closing wins one
+  compare-exchange and closes both ends, exactly once, so no write can reach a
+  descriptor number the process has reused. Interrupters may outlive the
+  poller; they do nothing once it is closed.
+- **13c.** A fiber that deregisters from another worker must not touch the
+  owner's table. 13c must hand the removal to the owner, for example by marking
+  the registration through a generation-tagged atomic word and counting it, as
+  the timer heap's cross-thread cancellation does, and interrupting the owner,
+  whose next poll drops marked registrations.
+
+The `poller` client runs every cross-thread case on `OSThread`s:
+
+- interrupts racing a park, with randomized delays on both sides, a time
+  bound per round, and no lost wake in 3,000 rounds; clearing the flag before
+  draining the pipe makes it fail on every run;
+- 81,000 interrupts from five threads that leave one byte and one wake;
+- read and write readiness on pipes, including a full pipe that becomes
+  writable;
+- removal on completion and on cancellation, and stale handles rejected after
+  a slot is reused;
+- closing during a poll, on the owner, on drop, and racing interrupts, with
+  the pipe released afterwards;
+- timeouts from 0 to 10 ms, including sub-millisecond deadlines;
+- a 500 ms idle poll that uses almost no thread CPU time
+  (`getrusage(RUSAGE_THREAD)`).
+
+Measurements from `probes/poller_cost.mojo` at O3 on the same 4-core host:
+
+| Operation | ns |
+|---|---|
+| Coalesced `interrupt()` (flag already set) | 6–7 |
+| `poll(0)`, nothing registered | 470–510 |
+| `poll(0)`, 16 armed descriptors | 960–1,120 |
+| `interrupt()` then the `poll(0)` that drains it | 2,050–2,070 |
+| Cross-thread wake round trip between two parked threads | 45,000–47,500 |
+
+The round trip includes two operating-system wakes of parked threads on this
+virtualized host.

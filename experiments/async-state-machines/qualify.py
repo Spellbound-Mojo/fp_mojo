@@ -94,6 +94,7 @@ POSITIVE.update({"foreign_completion", "foreign_signal"})
 POSITIVE.update({"wstp_support", "wstp_queues", "wstp_timers"})
 POSITIVE.add("wstp_parking")
 POSITIVE.add("host_notifier")
+POSITIVE.add("poller")
 
 
 def experiment_inputs():
