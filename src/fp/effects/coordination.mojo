@@ -20,7 +20,7 @@ from fp.callables.invoke import _OnceUnaryAvailable
 from fp.callables.products import _take_pair
 from fp.callables.native import NativeUnary, _Unary, _NativeBorrow, _Borrowing, _RaisingBorrowing
 from fp._internal.errors import _ErrorCompatible
-from fp._internal.cells import _Cell, _Guard, _try_lock, _lock_until_canceled
+from fp._internal.cells import _Cell, _Guard, _try_lock, _lock_until_canceled, _LockWaiter
 from fp._internal.waking import _Event
 
 
@@ -38,9 +38,20 @@ trait _RefAction(ReaderAction):
         ...
 
 
+struct _Canceling[E: Movable & Deinitable, origin: ImmOrigin](_LockWaiter):
+    """A lock waiter that stops when its borrowed context observes cancellation."""
+    var context: Pointer[IOContext[Self.E], Self.origin]
+
+    def __init__(out self, ref[Self.origin] context: IOContext[Self.E]):
+        self.context = Pointer(to=context)
+
+    def canceled(self) -> Bool:
+        return self.context[].canceled()
+
+
 def _lock[T: Movable & Deinitable, E: Movable & Deinitable](cell: ArcPointer[_Cell[T]], context: IOContext[E]) -> Optional[_Guard[T]]:
     """Lock a coordination cell: spin, then yield, observing cancellation between yields."""
-    return _lock_until_canceled(cell, context)
+    return _lock_until_canceled(cell, _Canceling(context))
 
 
 @fieldwise_init

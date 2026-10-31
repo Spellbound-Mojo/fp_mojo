@@ -213,6 +213,9 @@ struct _ClosableStack[T: Movable & Deinitable](Movable):
             var current = self._shared[].head.load[ordering=Ordering.RELAXED]()
             while True:
                 if _closed(current):
+                    # A failed splice linked the last survivor to the nodes
+                    # then on top, which now belong to the closer: cut it.
+                    Self._node(last)[].next = _EMPTY
                     pruned.orphans = Self._drain(first)
                     pruned.orphans.reverse()
                     pruned.tag = UInt8((current >> 1) & 0x7F)
