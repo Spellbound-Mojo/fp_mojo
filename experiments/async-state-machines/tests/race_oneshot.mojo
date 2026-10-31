@@ -156,17 +156,44 @@ def guard_holds_lock():
     check(cell.lock.load() == 0, "the lock is released afterwards")
 
 
+def fates_in_order():
+    """Force each fate on one thread, so coverage never depends on the race's timing."""
+    var taken = _OneShot[Int]()
+    check(not taken.put(1), "a put into a fresh slot publishes")
+    var got = taken.take()
+    check(Bool(got) and got.value() == 1, "the receiver takes a published value")
+    var released = _OneShot[Int]()
+    check(not released.put(2), "a put publishes")
+    var won = released.release()
+    check(Bool(won) and won.value() == 2, "a release after publication wins the value")
+    var early = _OneShot[Int]()
+    check(not early.release(), "a release of an empty slot wins nothing")
+    var back = early.put(3)
+    check(Bool(back) and back.value() == 3, "a sole writer after a release keeps its value")
+    var claimed = _OneShot[Int]()
+    check(not claimed.release(), "a release of an empty slot wins nothing")
+    check(claimed.try_claim(), "a claim after a release succeeds")
+    var kept = claimed.publish(4)
+    check(Bool(kept) and kept.value() == 4, "a publish after a release returns the value to its writer")
+    var closed = _OneShot[Int]()
+    _ = closed.close()
+    check(not closed.try_claim(), "a closed slot refuses claims")
+
+
 def main() raises:
     var scale = 1
     var text = getenv("WSTP_SCALE")
     if text:
         scale = Int(text)
     guard_holds_lock()
+    fates_in_order()
     var fates: List[Int] = [0, 0, 0]
     for _ in range(4):
         var seen = races(20_000 * scale)
         for i in range(3):
             fates[i] += seen[i]
-    check(fates[0] > 0 and fates[1] + fates[2] > 0, "values were taken, and some went to a release or back to their writer")
+    # Which fates the race reaches depends on thread timing: a receiver that runs
+    # ahead releases every slot, one that lags takes them all. The race checks
+    # exactly-once ownership; fates_in_order covers each fate deterministically.
     print("race oneshot: taken", fates[0], "won by release", fates[1], "kept by writer", fates[2], file=stderr)
     print("race oneshot: offers, puts, takes, releases and closes on four threads, each value destroyed once; guards hold their lock")
