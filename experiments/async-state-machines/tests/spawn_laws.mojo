@@ -87,9 +87,9 @@ struct Masked(OnceUnary):
     """A region that ignores its poll."""
     var calls: ArcPointer[Int]
     comptime Arg = Poll[Int]
-    comptime Out = IO[NoneType, Int]
+    comptime Out = IO[Int, Int]
 
-    def call_once(deinit self, var poll: Poll[Int]) -> IO[NoneType, Int]:
+    def call_once(deinit self, var poll: Poll[Int]) -> IO[Int, Int]:
         return cede[I]().flat_map(Then(self.calls^))
 
 
@@ -97,10 +97,12 @@ struct Masked(OnceUnary):
 struct Then(OnceUnary):
     var calls: ArcPointer[Int]
     comptime Arg = NoneType
-    comptime Out = IO[NoneType, Int]
+    comptime Out = IO[Int, Int]
 
-    def call_once(deinit self, var unit: NoneType) -> IO[NoneType, Int]:
-        return IO[NoneType, Int].delay(Bump(self.calls^))
+    def call_once(deinit self, var unit: NoneType) -> IO[Int, Int]:
+        # The whole of fa runs masked; a bind after the region would observe
+        # the cancellation, depending on when the canceler runs.
+        return IO[NoneType, Int].delay(Bump(self.calls^)).map(Seven())
 
 
 @fieldwise_init
@@ -142,11 +144,11 @@ def main():
     check(summary(run(start[I](never[I, Int]()).flat_map(CancelJoin()))) == -2, "a canceled waiting fiber joins as canceled")
     # start(uncancelable(_ => fa)) canceled then joined completes fa.
     calls[] = 0
-    var masked = uncancelable[I](Masked(calls.copy())).map(Seven())
+    var masked = uncancelable[I](Masked(calls.copy()))
     check(summary(run(start[I](masked^).flat_map(CancelJoin()))) == 7 and calls[] == 1, "a fully masked fiber completes despite cancellation")
     # Recorded difference: a fiber never outlives its owner. Cats Effect leaves it running.
     calls[] = 0
-    var dropped = start[I](cede[I]().flat_map(Then(calls.copy())).map(Seven())).map(Drop())
+    var dropped = start[I](cede[I]().flat_map(Then(calls.copy()))).map(Drop())
     check(summary(run(dropped^)) == 1, "the owner's outcome ignores an unjoined child")
     check(calls[] <= 1, "the owner drained its child before completing")
     print("spawn laws: joined success, failure and cancellation, masked fibers, owner draining")
