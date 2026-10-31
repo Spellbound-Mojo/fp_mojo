@@ -149,7 +149,7 @@ polling thread today. Two facts hold throughout:
 
 | Owner | Today | Under parallel execution | Needs |
 |---|---|---|---|
-| `Signal` (`_EventState`, `src/fp/_internal/waking.mojo`) | Revision and subscriber list behind the `_Cell` spin lock; `notify` copies the wakers and wakes them outside the lock. The docstring disclaims cross-thread use. | Notified from workers and foreign threads; fibers subscribe on other workers. | Qualification (S3): ordering, wake before park, and teardown. The structure already has the right shape; the docstring changes once it is qualified. |
+| `Signal` (`_EventState`, `src/fp/_internal/waking.mojo`) | Revision and subscriber list behind the `_Cell` spin lock; `notify` copies the wakers and wakes them outside the lock. | Notified from workers and foreign threads; fibers subscribe on other workers. | Done by S3: `foreign_signal` qualifies ordering, the revision check that catches a notify before the wait, and teardown, and the docstring states the cross-thread contract. Wake before park against a real poller waits for S2. |
 | `_Subscription` | Retires its entry under the signal's lock; aborts on double retirement. | Dropped on any worker. | Nothing beyond `Signal`'s qualification. |
 | `_Runtime` and `_ReadyState` (`waking.mojo`) | One tree of generation-checked nodes and the root's timer heap behind one `_Cell` lock. | Every wake and timer for every fiber would contend for one lock. | Pass 13 design items 1 and 4: a registry per fiber and a timer heap per worker, keeping the generation checks. The root wake hook must run outside the lock, as `Signal.notify` already wakes outside its own. |
 | `_Waker` | Copies the runtime handle, ticket, and epoch; `wake` takes the registry lock and checks the generation. | Called from any thread. | Unchanged; the epoch check already rejects stale wakes. |
@@ -168,9 +168,9 @@ polling thread today. Two facts hold throughout:
 
 | Owner | Today | Under parallel execution | Needs |
 |---|---|---|---|
-| `Completion` and `_CompletionState` (`src/fp/effects/_async/callbacks.mojo`) | Outcome and `closed` behind the `_Cell` lock; `complete` stores under the lock, notifies after unlocking, and destroys a rejected payload on the calling thread. | Completed from foreign and blocking threads; the waiting fiber takes the outcome on any worker. | S3 qualification. The payload rule belongs in the contract: the outcome moves to the waiting fiber's worker, and a rejected one is destroyed on the completing thread. |
+| `Completion` and `_CompletionState` (`src/fp/effects/_async/callbacks.mojo`) | Outcome and `closed` behind the `_Cell` lock; `complete` stores under the lock, notifies after unlocking, and destroys a rejected payload on the calling thread. | Completed from foreign and blocking threads; the waiting fiber takes the outcome on any worker. | Done by S3: `foreign_completion` qualifies it, and the docstring states the payload rule: the outcome moves to the waiting fiber's worker, and a rejected one is destroyed on the completing thread. S3 also found and fixed a rejected payload being destroyed while the lock was held. |
 | `Callback.counted` and `_Budget` (`src/fp/effects/_io_core.mojo`) | `_Budget` holds plain counters (`remaining`, `consumed`, `registrations`) and the reporter, shared through `ArcPointer` by every run loop of a root; documented as confined. `Callback.__deinit__` decrements `registrations`. | **Data race.** Run loops on different workers draw from `remaining`; a `Callback` dropped on any worker decrements `registrations`. | Per Pass 13 design item 3: the transition budget becomes per worker. `registrations`, which tells the root whether external work is pending, must be atomic or move to the runtime, which increments and decrements it with release/acquire. `report` and `reporter` are read-only after construction and can be shared. |
-| `CancellationToken` (`_io_core.mojo`) | An atomic flag set by compare-exchange, then a `Signal` notification. | Canceled from any thread. | S3 qualification only. |
+| `CancellationToken` (`_io_core.mojo`) | An atomic flag set by compare-exchange, then a `Signal` notification. | Canceled from any thread. | Done by S3 (`foreign_signal`). |
 | `IOContext` (`_io_core.mojo`) | Copied per run loop; `_region` is an `ArcPointer[Int]` compared by address only. | Moves with its run loop. | Nothing; `_region` is never mutated. |
 | `_Reporter` and `IORuntimeConfig.reporter` (`src/fp/effects/_async/kernel.mojo`) | A thin function called by `_FiberRecord.settle`; the default prints to `stderr`. | Called from whichever worker settles a record, possibly from two workers at once. | The guide states that a reporter must be callable from any thread, concurrently. Printing to `stderr` is safe, though lines from two reporters may interleave. |
 | `Driver`, `TestControl`, `_Driver` (`host.mojo`, `kernel.mojo`) | Confined to the polling thread; `Driver` is linear. | `Driver` embeds the current-thread profile only (Pass 13 decision 3). | Pass 12's host notifier, called from any thread; the host asserts that it is thread-safe. |
@@ -179,7 +179,7 @@ polling thread today. Two facts hold throughout:
 
 | Owner | Today | Under parallel execution | Needs |
 |---|---|---|---|
-| `Node` (`src/fp/adt/data.mojo`) | Immutable data behind `ArcPointer`. The destructor releases children in a loop when `count() == 1`. | Immutable sharing is safe. A relaxed `count() == 1` followed by moving children out needs an acquire fence to see other threads' last uses, as Rust's `Arc::get_mut` does. When the last two owners drop at once on two threads, both can see a count of 2, and the final release falls back to recursive destruction, which can overflow the stack on deep values. | An acquire fence after the uniqueness check. Recursive destruction under concurrent drops is a stack-safety issue to document or fix, not a race. |
+| `Node` (`src/fp/adt/data.mojo`) | Immutable data behind `ArcPointer`. The destructor releases children in a loop when `count() == 1`. | Immutable sharing is safe. After the relaxed `count() == 1` check, the destructor only reads the node, copying its children into a work list, and each node is then released through `ArcPointer`'s own release decrement and acquire fence, which orders other threads' last uses before destruction. Rust's `Arc::get_mut` needs an extra acquire because it grants mutation; this path does not mutate. When the last two owners drop at once on two threads, both can see a count of 2, and the final release falls back to recursive destruction, which can overflow the stack on deep values. | No fence (integrator review). Recursive destruction under concurrent drops is a stack-safety issue to document or fix, not a race. |
 | `Resource` and the finalization scopes | Hold the program's acquired value and finalizers as payloads. | Transferable when their payloads are. | Covered by the payload contract. |
 
 The three data races marked above (`_FiberRecord`, `_SupervisorState`, and
@@ -348,7 +348,7 @@ in `List` and `Optional`, with known holes and false positives.
    coordination owners are transferable, and shared ones are shareable.
 2. **Fix the three races before 13c,** as part of S5: `_FiberRecord`'s outcome
    and release state, `_SupervisorState` and `_Stop`, and `_Budget.registrations`.
-   Fix `Node`'s uniqueness fence independently. Each fix needs a multi-thread
+   `Node` needs no fence (see the audit). Each fix needs a multi-thread
    stress client in 13e (`wstp_ownership` covers the first two).
 3. **Adopt one compile-time check, narrowly: raw pointers in user structs.** A
    payload type whose field tree reaches a `Pointer` through a struct outside
@@ -383,15 +383,20 @@ in `List` and `Optional`, with known holes and false positives.
    types that hold a borrowed `Pointer` and are erased deliberately (if any)
    conform to the marker with a comment explaining why they are safe.
 
-## Open questions for the integrator
+## Decisions
 
-1. Is the opt-in marker (recommendation 3) a public API change the user
-   approves, and under which name and module?
-2. Does the raw-pointer rejection apply to the synchronous family as well,
-   since `_Erased` is shared, or only to async constructors? One owner suggests
-   both, which is also a behavior change for synchronous code.
-3. Should a fiber that finds a coordination lock held wait on the owner's
-   signal instead of being rescheduled at once? It changes `_attempt` and adds
-   a notification on unlock.
-4. Where can the thread sanitizer run? Design item 8 assumes one, and it does
-   not run for Mojo executables in this container.
+Recorded on 2026-10-31 at merge, in the plan's
+[Pass 13 review decisions](async-advanced-plan.md#pass-13-review-decisions):
+
+1. **Marker.** Recommendation 3 is adopted for 13e, after its measurements,
+   with the public marker trait named `ThreadTransferable` (decision 5).
+2. **Scope.** The check lives in `_Erased` and applies to the synchronous and
+   async families alike, a behavior change for synchronous code whose own
+   structs hold raw pointers (decision 6).
+3. **Held coordination locks.** Deferred to 13c: contention is measured under
+   the work-stealing pool first. Waiting on the owner's signal after a failed
+   `_try_lock`, with a notification on unlock, is the preferred fix if workers
+   are seen busy-polling.
+4. **Thread sanitizer.** Open. It does not run for Mojo executables in this
+   container, so design item 8's sanitizer run needs another host, such as a
+   CI runner, or a toolchain fix.
