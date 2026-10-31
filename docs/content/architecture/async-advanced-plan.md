@@ -2600,6 +2600,30 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
         returns at once only when the request came before it. The guide
         documents this. Wave 3 wires wakes into the poller and lifts the
         limitation.
+14. **Wave 3** (decided on 2026-10-31). It runs as two streams once S6 has
+    merged, followed by the Pass 12 gate:
+    - **S9, poller integration.** 12b and 12d around S2's poller:
+      - `run` parks in the root's poller until the next deadline, an
+        external wake, or a ready descriptor.
+      - The wake hook interrupts a parked poller from any thread, or calls
+        the host notifier.
+      - `await_readable[E]` and `await_writable[E]` on `RawFileDescriptor`.
+      - `SyncIO`'s interruptible waits and its `sleep` park on a bridge from
+        the cancellation token to a poller, instead of observing a request
+        only before the wait or every millisecond.
+      - `_Scheduler`'s cross-thread atomics, about six separate allocations
+        per root today, are packed into one allocation, with lines separated
+        where contention warrants it.
+      - For applications that drive a `Driver` from their own loop:
+        `Driver.poll` also checks the root's poller without waiting whenever
+        descriptors are registered, and a new public `Driver.park(timeout)`
+        waits in the root's poller. `run` itself uses `park`.
+    - **S10, wall-clock time.** `real_time` returns a public `SystemTime`
+      (Rust's name for the wall clock beside its monotonic `Instant`) holding
+      nanoseconds since the Unix epoch, with `real_time[I]()` and
+      `IO.real_time()`, in `Timing` for `Async` and `SyncIO`. Under
+      `TestControl` it starts at the epoch and moves with virtual time.
+    - **The provider matrix** is written last, once both streams are in.
 
 ### Review questions
 
@@ -2633,7 +2657,7 @@ it into `nightly`.
 | **S3 Cross-thread qualification** (merged) | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
 | **S4 Concurrent structures** (merged) | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
 | **S5 Engine refactor** (merged) | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
-| **S6 Blocking** | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
+| **S6 Blocking** (merged) | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
 | **S7 Thread-safety research** (merged) | The payload contract, the audit list, and research on compile-time rejection by reflection (13e's research) | Plan and design notes | None |
 | **S8 Race fixes (13c-0)** (merged) | The one-shot slot and the closable stack; fiber records, `Completion`, the supervisor, and scopes on them; the budget split; the fiber table without a per-root lock; `_lock` without sleeps (decisions 7–10) | New `_internal` primitives; `fibers.mojo`, `supervisor.mojo`, `callbacks.mojo`, `_io_core.mojo`, `kernel.mojo`, `executor.mojo`, the budget code in `engine.mojo`, the scheduler in `waking.mojo`, `host.mojo`, `_lock` in `coordination.mojo` | Wave 1 |
 
@@ -3141,6 +3165,75 @@ of decisions 7–11. S7's three races are closed.
     - The integrator replaced that assertion with a single-thread sequence
       that forces each fate, keeping the race's exactly-once checks. It then
       passed 300 of 300 O3 runs and re-qualified 4 of 4.
+
+**S6** (Wave 2) was merged on 2026-10-31: 12c's blocking pool, `IO.blocking`,
+`IO.interruptible`, and the `Blocking` capability (decisions 12 and 13).
+Wave 2 is complete.
+
+- **Public API, as approved.**
+  - `IO.blocking(f)` takes `IO.delay`'s overload set.
+  - `IO.interruptible(f)` passes the function a borrowed `Interruption`,
+    neither copyable nor movable, with `requested()`,
+    `sleep(duration) -> Bool`, and `await_readable` and `await_writable` on
+    `RawFileDescriptor`.
+  - `BlockingPool(max_workers = 64, idle_timeout = 60 s)` is copyable, and
+    copies share one pool. It has no `close()`: the last copy drains its calls
+    and joins its workers, and a last copy dropped on one of the pool's own
+    workers detaches that worker instead.
+  - `IORuntimeConfig.blocking_pool` shares a pool between roots.
+  - The capability is `Blocking`, with `blocking[I]` and `interruptible[I]`,
+    and `LiftBlocking` through layers. `Async` provides it through the pool
+    and `SyncIO` inline.
+  - The exports grow from 472 to 476.
+- **Design.**
+  - **`blocking`** is an `IO.async_` registration inside `IO.uncancelable`:
+    the worker completes its `Completion`, so cancellation and timeouts wait
+    for it.
+  - **`interruptible`** registers unmasked. Its masked withdrawal cancels the
+    call's token, interrupts the worker running it, and waits for a second
+    registration that the worker completes after the function returns. A late
+    result is rejected and destroyed on the worker.
+  - **The pool.** Jobs travel through S4's external queue. Each worker parks
+    in its own S2 poller, and idle workers publish their interrupters on a
+    list under a lock that spins and then yields. A submitter pushes and then
+    claims an idle entry; a worker publishes and then re-reads the queue.
+    Both pass the list's lock, so no job is lost.
+  - **The root's slot.** A root without a configured pool builds its private
+    pool on the first blocking call, installed with one compare-exchange that
+    a racing loser abandons. `Task.finish` waits for the root's in-flight
+    calls only when a pool exists.
+- **Performance.** The first version built every root's private pool
+  eagerly: a trivial `run()` took about 3.4 µs against 2.85 µs on `nightly`,
+  a regression against decision 11, and the merge was held for it. With the
+  pool created lazily, three rounds of the same probe interleave, `nightly`
+  at 2.81–3.16 µs and S6 at 2.94–3.10 µs. S6's own measurement put the
+  residual at +40 to +75 ns, within the baseline's spread. Fiber pairs and
+  completions from another thread are unchanged.
+- **Additive changes in other streams' files.**
+  - `OSThread.is_current()` and `detach()` in `fp._internal.os`, documented,
+    including when a detached thread's state is released.
+  - The blocking slot on `_Scheduler`, and the install and finish calls in
+    `kernel.mojo`.
+  - `engine.mojo`'s `_DelayValue` became `_CallValue`, the one definition for
+    both.
+- **For Wave 3.** `SyncIO`'s inline handle observes a cancellation request
+  only before its wait starts; the guide documents this.
+- **Qualification.**
+  - S6's branch passed 56 of 56 over 14 clients and the three rejection
+    fixtures (a closure given to `blocking`, an `Interruption` escaping its
+    function, and `Blocking` asked of a family without it), from source and
+    package at O0 and O3.
+  - After the lazy pool it passed 16 of 16.
+  - Soaks passed 200 of 200 for `capability_blocking`, `poller`,
+    `foreign_completion`, and `race_registrations`. `blocking_pool` passed
+    600 of 600 once its thread-count check was made deterministic, since a
+    joined thread can linger in `/proc`.
+  - At merge, squashed onto `nightly` with a tree identical to S6's head,
+    the blocking, capability, and rejection clients passed 40 of 40 together
+    with `foreign_completion`, `race_registrations`, `poller`,
+    `host_notifier`, and `test_control`, from source and package at O0 and
+    O3. `blocking_pool` and `capability_blocking` each passed 100 more O3
+    runs.
 
 ## Implementation reference map
 
