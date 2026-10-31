@@ -2551,6 +2551,20 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
     A primitive that still fails after tuning uses a lock that spins on reads
     and then yields, built on the shared `_acquire_lock`, with the reason
     recorded.
+
+    **Outcome.** S8 tuned both primitives, and every realistic gate passed.
+    - **One-shot slot.** Read-modify-writes per operation, not losers' writes,
+      were the cost; an uncontended complete and take now cost one. It beats
+      the spin lock from 1 to 2 threads and ties at 4.
+    - **Its one loss.** At 8 and 16 threads on 4 cores it is about 11% slower
+      (173 against 155 ns, and 198 against 176), within the spin lock's own
+      run-to-run swing of 98 to 155 ns at 8 threads. On 2026-10-31 the user
+      kept it lock-free everywhere, `Completion` included. A fiber record has a
+      single writer and cannot meet that storm, and a `Completion` meets it
+      only with eight or more simultaneous producers.
+    - **Closable stack.** Intrusive now, it allocates nothing per push and
+      beats the spin lock at every thread count, by 3 to 7 times from 4
+      threads up.
 12. **Wave 2 alongside S8.** S2 and S6 start while S8 is still running.
     - S2 shares no files with S8.
     - S6 builds only on `Completion`'s public behavior and the shared lock
@@ -2558,6 +2572,22 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
     - The waits in `interruptible`'s handle, its interruptible sleep and its
       descriptor waits, are built on S2's poller rather than on a second
       self-pipe mechanism. S6 therefore adds them after S2 merges.
+13. **S6's public API** (approved on 2026-10-31).
+    - **`Interruption`.** The handle, neither copyable nor movable, is borrowed
+      by the function given to `IO.interruptible`. It offers `requested()`,
+      with `sleep` and descriptor waits after S2.
+    - **Entry points.** `IO.blocking` takes `IO.delay`'s overload set.
+    - **Capability.** `Blocking` with `Blocked`, `BlockingCompatible`,
+      `Interrupted`, and `InterruptibleCompatible`; `LiftBlocking`; and the
+      free functions `blocking[I]` and `interruptible[I]`.
+    - **`BlockingPool`.** A copyable pool whose copies share one pool, with at
+      most 64 workers by default and a 60 s idle timeout. It has no `close()`:
+      a pool lives as long as its copies, and when the last copy is dropped it
+      drains its calls and joins its workers.
+    - **Sharing.** One field, `IORuntimeConfig.blocking_pool`. With none
+      given, the root creates a private pool with the defaults, which closes
+      when the root finishes. A bounded pool can deadlock when more calls than
+      its maximum wait on each other; the guide says so.
 
 ### Review questions
 
@@ -2587,7 +2617,7 @@ it into `nightly`.
 | Stream | Content | Owns | Depends on |
 |---|---|---|---|
 | **S1 OS layer** (merged) | External calls for `pipe`, `pipe2`, `fcntl`, `poll`, `read`, `write`, `close`, `clock_gettime`, `getrusage`, and the thread owner extracted from `unsafe_start` | New `src/fp/_internal/os.mojo`; `src/fp/effects/fibers.mojo` | None |
-| **S2 Poller** | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
+| **S2 Poller** (merged) | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
 | **S3 Cross-thread qualification** (merged) | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
 | **S4 Concurrent structures** (merged) | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
 | **S5 Engine refactor** (merged) | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
@@ -2943,6 +2973,64 @@ the current-thread profile, with Pass 12's host notifier. Wave 1 is complete.
     `foreign_signal`, `reject_callback_error`, `fiber_snapshot`,
     `spawn_laws`, `fiber_basics`, `fiber_supervisor`, and `callbacks` passed
     40 of 40 from source and package at O0 and O3.
+
+**S2** (Wave 2) was merged on 2026-10-31: the polling system, 12b's core,
+in the private `fp.effects._async.polling`.
+
+- **Interface.** It follows Cats Effect's `PollingSystem` with one POSIX
+  implementation.
+  - `_Poller.poll(timeout)` belongs to the owner thread. It waits on the
+    registered descriptors and a self-pipe and reports ready registrations,
+    an interrupt, expiry, or closing.
+  - An `_Interrupter` copy offers `interrupt()` and `close()` from any
+    thread, so other threads never borrow the poller itself.
+  - Registrations are generation-checked and report readiness once, through
+    a `Signal`; a stale handle is ignored.
+  - `needs_poll()` and `has_registrations()` tell an owner whether it must
+    park in the poller.
+- **Lost-wake handshake.** Interrupts coalesce into one byte. An interrupter
+  publishes its work, fences, reads the pending flag, and writes the byte
+  only after claiming the flag. The owner drains the pipe, clears the flag,
+  fences, and re-checks its work. Either the interrupter sees the cleared
+  flag, or the owner sees the work. A late byte costs one spurious wake,
+  never a lost one. Clearing before draining failed the race test on every
+  run.
+- **Closing.** A users word, with the closed and released bits and a user
+  count, lets `close()` from any thread wake a poll in progress. The last
+  user releases the pipe exactly once.
+- **Timeouts.** Whole milliseconds go to `poll()` and the remainder to a
+  sleep between two nonblocking polls, so no wait ends early, and a wake can
+  be late by under 1 ms.
+- **Deviations from the brief.**
+  - Readiness is reported once; re-arming means registering again.
+  - Registrations outstanding at close are notified on the owner's next
+    poll.
+  - A deregistration from another worker remains a misuse. The module
+    docstring describes the hand-off 13c must add.
+- **Measurements** (O3, ns):
+
+  | Operation | ns |
+  |---|---|
+  | Coalesced `interrupt()` | 6–7 |
+  | Empty `poll(0)` | 470–510 |
+  | `poll(0)` over 16 descriptors | 960–1,120 |
+  | Interrupt then drain | about 2,060 |
+
+  A wake between threads takes 45–47 µs end to end.
+- **Qualification.**
+  - The `poller` client exercised:
+    - 3,000 randomized interrupt-against-park rounds;
+    - 81,000 coalesced interrupts;
+    - read and write readiness;
+    - deregistration and stale handles;
+    - closing in each position;
+    - sub-millisecond timeouts;
+    - a 500 ms idle poll using under 10 ms of thread CPU.
+  - The client passed 200 O3 runs, and qualification with `os_layer` and
+    `wstp_parking` passed 12 of 12.
+  - At merge it passed 50 more O3 runs on the integrator's machine.
+  - The package precompile takes 121–127 s here, over `qualify.py`'s 120 s
+    limit, so that limit is now 300 s.
 
 ## Implementation reference map
 
