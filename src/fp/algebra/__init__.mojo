@@ -74,6 +74,7 @@ from .monoids import StringMonoid, ListMonoid, IntSumMonoid, IntProductMonoid, S
 from .conditional import if_effect
 
 from .validation import ValidationFamily
+from .accumulate import Accumulate
 
 from .non_empty import NonEmptyListFamily, NonEmptyListSemigroup
 

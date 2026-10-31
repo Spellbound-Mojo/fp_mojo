@@ -1,7 +1,7 @@
 """Thin terminal admission signatures shared by free functions and fluent APIs."""
 from combinator_docs import document_first_methods
 from operation_specs import TERMINALS
-from native_signatures import MD, callback, callable_protocol, callable_metadata, native_adapter, closure
+from native_signatures import MD, callback, callable_protocol, callable_metadata, native_adapter, closure, canonical_monoid, defaulted
 
 START = '# --- terminal syntax (generated) ---\n'
 END = '# --- end terminal syntax ---\n'
@@ -44,12 +44,16 @@ def terminal_methods(mode, carrier=None):
                 callback_result = element
             if mode == 'free': params += [f'V: {MD}']
             if carrier: params += list(carrier.parameters)
-            if name in {'fold_map', 'combine_all'}: explicit.append('M: Monoid')
+            if name == 'fold_map': explicit.append(canonical_monoid(callback_result))
+            if name == 'combine_all':
+                # The source's element selects the default; M.Value must still match it.
+                explicit.append(canonical_monoid(
+                    f"downcast[{'_Source[V]' if mode == 'free' else 'Self.I' if mode != 'piped' else '_Source[Self.Value]'}.Element, {MD}]"))
             if native:
                 # Closures come from the shared catalog; the surface relates the input.
                 form = closure('borrow' if borrowing else 'owned', kind == 'raising',
                                names={'C': 'F', 'X': 'E', 'in0': 'P' if borrowing else 'A'})
-                explicit += list(form.explicit)
+                explicit += defaulted(form.explicit) if name == 'fold_map' else list(form.explicit)
                 error, cb, build, arg = form.error, form.type, form.build, form.argument
             elif kind == 'library':
                 error, cb = metadata.error, 'C' if borrowing else 'F'
@@ -69,6 +73,7 @@ def terminal_methods(mode, carrier=None):
                 source = 'source^' if mode == 'free' else 'self._iterator^'
                 condition = f'_Source[V].Element == {element}' if mode == 'free' else f'Self.I.Element == {element}'
             if numeric and callback_arg: condition += f' and {callback_result} == {numeric_type}'
+            if name == 'fold_map': condition += f' and {callback_result} == M.Value'
             if borrowing: condition += f' and conforms_to({callback_result}, Comparable & {MD})'
             if borrowing and kind == 'library': condition += ' and RepeatableBorrow[C]'
             if name == 'find_map':

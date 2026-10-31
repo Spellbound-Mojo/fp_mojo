@@ -21,14 +21,29 @@ The free operations infer their instances, so most calls name none:
 
 Name a family to choose another policy for the same carrier, such as
 `traverse[ValidationFamily[M]](values^, f)` to accumulate errors instead of
-stopping at the first. Target families come first, so a single bracketed family
+stopping at the first. `traverse[Accumulate](values^, f)` accumulates without
+naming the semigroup: a callback returning `Result[T, List[E]]` selects
+`ValidationFamily[ListMonoid[E]]`, so the outcome is `Ok` of every payload or
+`Err` of every error list in source order. `Accumulate` supports collection
+only (List and other sequence sources, from free functions, Iter, Piped and
+Pipeline); other errors name `ValidationFamily[S]`. Target families come first, so a single bracketed family
 overrides the target; name the source with `S=`. A bare value such as `Int` has
 no family of its own and needs `IdentityFamily`, and an `Optional` read through
 another base Monad names that base, as in `or_else_absent[IdentityFamily]`.
 A value with no recognized family, or whose family lacks the capability (a
 `Result` has no `filter_map`), is rejected with `no matching function`.
 `pure`, `fail`, `empty` and `combine` take no source value and always name
-their family. Generic code whose callback result is a type parameter names its
+their family.
+
+Monoid folds infer the monoid when the combined type has one natural choice:
+`String` and `List` concatenate (`StringMonoid`, `ListMonoid[T]`). So
+`fold_map(values, show)`, `combine_all(strings)`, `fold_map_effect(values, f)`
+and `pipeline(lists).combine_all()` name none. Numbers have two reasonable
+monoids (sum and product) and stay explicit, as in `combine_all[IntSumMonoid]`;
+`sum` and `sum_by` add. A type with no canonical monoid is rejected at the
+call, and an explicit monoid still binds in the same position. `combine` stays
+explicit: inferring its type from the arguments would turn literals such as
+`combine[StringMonoid]("a", "b")` into `StringLiteral`. Generic code whose callback result is a type parameter names its
 families, as before.
 
 The [algebra tutorial](../tutorial/algebra.md) explains when to use `map`,

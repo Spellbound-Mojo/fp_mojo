@@ -6,7 +6,7 @@ once, then operation family projections rebind it after type-changing maps.
 Traversal, callback receivers and native error propagation keep their existing
 owners; only construction and insertion differ between containers here.
 """
-from std.builtin.rebind import rebind_var
+from std.builtin.rebind import rebind_var, downcast
 from std.collections import Array, Deque, LinkedList, StringDict, KeyElement
 from std.collections.dict import DictEntry
 from std.iter import IterableOwned
@@ -16,11 +16,12 @@ from fp._internal.native_collections import _empty_deque_like, _take_string_dict
 from fp.callables.products import _take_pair
 from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary, MutableUnary, BorrowCallable, BinaryContract, ThunkContract
 from fp.callables.invoke import call_repeated, RepeatableUnary
-from .protocols import Functor, RebindingFunctor, Filterable, FunctorFilter, _Accumulate, _map_accumulate, Monad, Traversable, Applicative
+from .protocols import Monoid, Functor, RebindingFunctor, Filterable, FunctorFilter, _Accumulate, _map_accumulate, Monad, Traversable, Applicative
 from ._selection import _Select, _Keep
 from .instances import _ListElement, ListFamily, _NativeFamily, IdentityFamily
 from fp.iteration._advance import _next_optional, _buffer_owned
 from fp.iteration.reductions import _Terminal
+from .monoids import _CanonicalMonoid
 from fp.iteration.adapters import map as _lazy_map
 
 
@@ -304,6 +305,12 @@ comptime _SourceFamily[V: Movable & Deinitable] = (
     _UnrecognizedCarrier if _NativeFamily[V] == IdentityFamily else
     _NativeFamily[V]
 )
+
+# The canonical monoid of an effect's payload, through the effect's source
+# family (see _CanonicalMonoid); an unrecognized effect selects none.
+comptime _CanonicalEffectMonoid[R: Movable & Deinitable]: Monoid = _CanonicalMonoid[
+    downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Functor) else _UnrecognizedCarrier, Functor].Element[R]
+]
 
 
 struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](RebindingFunctor, Filterable, FunctorFilter):

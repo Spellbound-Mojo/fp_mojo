@@ -6,6 +6,9 @@ from fp._internal.errors import _CommonError, _ErrorCompatible
 from std.memory import MaybeUninit
 from std.collections import KeyElement
 from std.os import abort
+from std.builtin.rebind import downcast
+from std.iter import IterableOwned
+from .instances import _ListElement
 
 
 struct StringMonoid(Monoid):
@@ -69,6 +72,37 @@ struct ListMonoid[T: Movable & Deinitable](Monoid):
         left.extend(right^)
         return left^
 
+
+
+struct _NoMonoidValue(Movable):
+    def __init__(out self):
+        pass
+
+
+struct _NoMonoid(Monoid):
+    """The default for a type without a canonical monoid; its Value matches nothing."""
+    comptime Value = _NoMonoidValue
+    comptime Error = Never
+
+    @staticmethod
+    def empty() -> Self.Value:
+        return _NoMonoidValue()
+
+    @staticmethod
+    def combine(var left: Self.Value, var right: Self.Value) -> Self.Value:
+        return left^
+
+
+# A type with one natural monoid selects it: String and List concatenate.
+# Numbers have no canonical choice (sum or product), so they stay explicit;
+# any other type selects _NoMonoid, whose Value matches no callback or source,
+# so the call is rejected and an explicit monoid still binds.
+comptime _CanonicalMonoid[V: Movable & Deinitable]: Monoid = downcast[
+    StringMonoid if V == String else
+    (ListMonoid[_ListElement[V]] if V == List[_ListElement[V]] else _NoMonoid)
+    if conforms_to(V, IterableOwned) else _NoMonoid,
+    Monoid,
+]
 
 struct IntSumMonoid(Monoid):
     """Native Int addition with zero identity; overflow follows native Int arithmetic."""

@@ -56,7 +56,8 @@ this program from the repository root:
 The program prints `42`. `pipeline(21).then(twice).get()` calls `twice` once
 and returns its `Int` result. Add `.then(...)` stages to continue with whole
 values, or use `.map(...)` and `.filter(...)` for selected payloads. For native
-callbacks that raise, select their error once with `.raising[MyError]()`. The
+closures that raise, select their error once with `.raising[MyError]()`;
+a raising plain function selects its own. The
 [pipeline tutorial](tutorial/pipelines.md) builds a longer pipeline and shows
 how a failing stage stops it.
 

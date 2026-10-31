@@ -3,7 +3,7 @@
 from pathlib import Path
 from itertools import product
 from native_signatures import admissions, callback as described_callback
-from native_signatures import MD, callable_metadata, Operand, variants, argument as native_argument, callable_protocol, native_adapter
+from native_signatures import MD, canonical_monoid, canonical_effect_monoid, defaulted, callable_metadata, Operand, variants, argument as native_argument, callable_protocol, native_adapter
 import re
 from api_docs import parse_signature
 from operation_specs import RESULT_OPERATIONS, RESULT_TERMINALS, ERROR_OPERATIONS, error_operations
@@ -534,7 +534,9 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                     expr = operation.invoke("", cb["build"], "self.value^")
                 else:
                     monoid = "M" if name == "fold_map" else ("_IntSum" if numeric == "int" else "_SIMDSum[dtype, size]")
-                    if name == "fold_map": params.insert(params.index("//") + 1, "M: Monoid")
+                    if name == "fold_map":
+                        at = params.index("//") + 1
+                        params[at:] = [canonical_monoid(result)] + defaulted(params[at:])
                     if numeric == "simd": params[params.index("//") + 1:params.index("//") + 1] = ["dtype: DType", "size: SIMDLength"]
                     conditions += [f"{result} == {monoid}.Value", f"RepeatableUnary[{c}]"]
                     if numeric == "simd": conditions += [f"{monoid}.Admitted"]
@@ -544,7 +546,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                     expr = operation.invoke(f"Self.V, {c}, {monoid}, {error}", cb["build"], "self.value^")
                 emit(name, cb, params, cb["argument"], result, error, f"_NativeFamily[{result}]", conditions, expr,
                      "Reduce the consumed source in order through the canonical terminal driver.")
-    for name, monoid, params in (("combine_all", "M", ["M: Monoid"]), ("sum", "_IntSum", []),
+    for name, monoid, params in (("combine_all", "M", [canonical_monoid(element)]), ("sum", "_IntSum", []),
                                  ("sum", "_SIMDSum[dtype, size]", ["dtype: DType", "size: SIMDLength"])):
         result = f"{monoid}.Value"
         emit(name, {}, params, "", result, f"{monoid}.Error", f"_NativeFamily[{result}]",
@@ -569,7 +571,9 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 params += ["//"]
             if not folding:
                 if mapped_fold:
-                    params[params.index("//") + 1:params.index("//") + 1] = ["J: Monad", "M: Monoid"]
+                    # The monoid defaults to the canonical monoid of J's payload.
+                    at = params.index("//") + 1
+                    params[at:] = ["J: Monad", canonical_monoid(f"J.Element[{cb['result']}]")] + defaulted(params[at:])
                 else:
                     params = inferred_target_parameters(cb, capability="Monad")
             c, result = cb["adapter_type"], cb["result"]
@@ -606,7 +610,8 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 inferred = inferred_target(cb, capability="Monad")
                 native_plan = operation.bind(inferred, "Self.V", element, c, cb["build"], cb["result"], monoid="M")
                 native_contract = native_plan.contract
-                emit(name, cb, [p for p in params if p != "J: Monad"], cb["argument"],
+                emit(name, cb, [canonical_effect_monoid(cb["result"]) if p.startswith("M: Monoid") else p
+                                for p in params if p != "J: Monad"], cb["argument"],
                      native_contract + ".Out", native_contract + ".Error", inferred,
                      admission + [native_contract + ".Compatible"],
                      native_plan.invoke(native_contract + ".Error", "self.value^"),
@@ -637,8 +642,8 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     # callback. Both target choices retain its carrier and ownership contract.
     element = "_FoldElement[Self.V]"
     for family, params in (
-        (f"_Binding[_InferredApplicative[{element}]]", ["M: Monoid"]),
-        ("J", ["J: Monad", "M: Monoid"]),
+        (f"_Binding[_InferredApplicative[{element}]]", [canonical_effect_monoid(element)]),
+        ("J", ["J: Monad", canonical_monoid(f"J.Element[{element}]")]),
     ):
         plan = EFFECT_REDUCTIONS["fold_map_effect"].bind(
             family, "Self.V", element, f"Identity[{element}]", f"Identity[{element}]()", element, monoid="M")
@@ -1303,6 +1308,55 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     return "".join(inferred_fold_body if inferred_fold_stage else fold_body if fold_stage else body)
 
 
+def _pipeline_error_rewritten(line, error):
+    """Replace the native error argument of each Pipeline or fold-stage type in a line."""
+    out, i = [], 0
+    for m in re.finditer(r"(?<![\w.])(?:Pipeline|_EffectFoldStage)\[", line):
+        if m.start() < i:
+            continue
+        depth, j, last = 1, m.end(), m.end()
+        while depth:
+            c = line[j]
+            if c == "[":
+                depth += 1
+            elif c == "]":
+                depth -= 1
+            elif c == "," and depth == 1:
+                last = j + 1
+            j += 1
+        if line[last:j - 1].strip() == "Self.E":
+            out.append(line[i:last] + " " + error + "]")
+            i = j
+    return "".join(out) + line[i:]
+
+
+def joined_thin_errors(text):
+    """Let a thin raising callback select the native error when none is selected.
+
+    Thin pointers infer their exact error and reject other signatures normally,
+    so their error joins the selected one through the shared `_CommonError`
+    rule: Never adopts it, any other selected error must be equal. The
+    returned Pipeline carries the joined error to later stages. Native closures
+    keep the selected error: inferring a closure's error crashes Mojo 1.2 on
+    invalid conventions (see the native-boundaries design notes).
+    """
+    out, joined = [], None
+    for line in text.splitlines(keepends=True):
+        if re.match(r"\s*def \w+[\[(]", line):
+            joined = None
+            current = "Self.E"
+            for e in ("X", "Y"):
+                if f"_ErrorCompatible[Self.E, {e}]" in line and f"raises {e} thin" in line:
+                    line = line.replace(f"_ErrorCompatible[Self.E, {e}]", f"_CommonErrorCompatible[{current}, {e}]")
+                    current = f"_CommonError[{current}, {e}]"
+            if current != "Self.E":
+                joined = current
+        if joined:
+            line = _pipeline_error_rewritten(line, joined)
+        out.append(line)
+    return "".join(out)
+
+
 def documented(source):
     """Document generated overload families, preserving handwritten regions."""
     seen = set()
@@ -1467,7 +1521,7 @@ def documented(source):
 def source(path=OUTPUT):
     value = path.read_text()
     for start, end, options in SECTIONS:
-        value = splice_source(value, methods(**options), start, end, HEADER)
+        value = splice_source(value, joined_thin_errors(methods(**options)), start, end, HEADER)
     return documented(value)
 
 

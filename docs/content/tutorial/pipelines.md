@@ -76,7 +76,12 @@ Each stage's input and output types are inferred.
 
 ## Select native errors once
 
-Call `.raising[MyError]()` before native callbacks that can raise that type.
+Call `.raising[MyError]()` before native closures that can raise that type.
+A raising plain function selects its own error when none is selected yet, so
+`pipeline(text).then(parse_cents).then(closure)` needs no `.raising` when
+`parse_cents` is a plain function; later stages see that error and a different
+one is rejected. Closures cannot select it: inferring a closure's error crashes
+Mojo 1.2 on a wrong argument convention.
 The example selects `PriceError` once and keeps it across all ten stages.
 Pure callbacks and callbacks declaring `raises Never` remain non-raising.
 If `parse_cents` raises, later stages do not run and the caller receives the
@@ -106,7 +111,8 @@ independent of the stored Result error. Payload types, origins and permitted
 move-only ownership are preserved.
 
 Use an explicit family when choosing another policy, such as
-`.traverse[ValidationFamily[Policy]](validate)` for error accumulation or
+`.traverse[Accumulate](validate)` to collect every `List` of errors,
+`.traverse[ValidationFamily[Policy]](validate)` for another accumulation, or
 an erased transformer layer. Reader, State, Writer and IO recipes identify
 their family directly; see [effect-family inference](../reference/functions.md#inference-for-effect-recipes). Existing
 explicit family and callback type bindings remain available.

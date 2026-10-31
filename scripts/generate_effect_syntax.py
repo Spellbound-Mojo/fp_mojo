@@ -1,7 +1,7 @@
 """Native boundaries for shared effectful folds and conditional composition."""
 from itertools import product
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure, source_default, split_explicit, error_probe, probed
+from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure, source_default, canonical_effect_monoid, split_explicit, error_probe, probed
 from operation_specs import EFFECT_REDUCTIONS, EffectChoice
 
 START = '# --- effect syntax (generated) ---\n'
@@ -251,7 +251,7 @@ def searches(mode, array=False):
                 # The Monoid cannot be inferred, so it precedes the defaulted target.
                 explicit=factory.explicit if kind=='catalog' else form.explicit if native else ()
                 lead,trail=split_explicit(explicit)
-                params+=[*lead,'//']+(['M: Monoid'] if folding else [])+['G: Monad = '+source_default('Monad', effect), *trail]
+                params+=[*lead,'//']+([canonical_effect_monoid(effect)] if folding else [])+['G: Monad = '+source_default('Monad', effect), *trail]
             else:
                 params+=['//','G: Monad']+(['M: Monoid'] if folding else [])
                 if kind=='catalog':params+=list(factory.explicit)

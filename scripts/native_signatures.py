@@ -125,6 +125,22 @@ def source_default(trait, value="V"):
     return f"downcast[{family} if conforms_to({family}, {trait}) else _UnrecognizedCarrier, {trait}]"
 
 
+
+def canonical_monoid(value, name="M"):
+    """A Monoid parameter defaulting to a value's canonical monoid.
+
+    String and List select concatenation (see _CanonicalMonoid); other types
+    select a monoid whose Value matches nothing, so the surface's own
+    `M.Value` relation rejects the call and an explicit monoid still binds.
+    Callback parameters that follow it take defaults (see `defaulted`).
+    """
+    return f"{name}: Monoid = _CanonicalMonoid[{value}]"
+
+
+def canonical_effect_monoid(effect, name="M"):
+    """A Monoid parameter defaulting to the canonical monoid of an effect's payload."""
+    return f"{name}: Monoid = _CanonicalEffectMonoid[{effect}]"
+
 def callable_protocol(mode, *, repeatable=False):
     """The library protocol for a callback shape, before native admission."""
     shape = CALLBACK_SHAPES[mode]

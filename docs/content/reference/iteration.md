@@ -335,8 +335,8 @@ whose error is a type parameter can still name it with `X=` (`Z=` for
 <!-- example: docs/examples/fluent_effects.mojo -->
 
 Result inference selects ordinary fail-fast Result behavior. Choose
-`.traverse[ValidationFamily[YourSemigroup]](callback)` explicitly to accumulate
-stored errors. A Kleisli chain's declared family takes precedence over its output
+`.traverse[Accumulate](callback)` to accumulate list-valued stored errors, or
+`.traverse[ValidationFamily[YourSemigroup]](callback)` for another policy. A Kleisli chain's declared family takes precedence over its output
 carrier for both terminals, including external families and transformer layers.
 For example, a `ResultT[Reader[Environment], Failure]` chain keeps its stored-error
 short-circuiting even though its underlying carrier is a Reader recipe. Explicit
@@ -470,7 +470,9 @@ still represents effect failure. List branches retain their first match while
 other branches continue. Existing family copying requirements still apply:
 branching searches cannot retain move-only values when the family must copy.
 
-`fold_map_effect` combines values in source order with the explicit Monoid.
+`fold_map_effect` combines values in source order with the Monoid, which
+defaults to the effect payload's canonical monoid (String and List concatenate;
+see [family inference](algebra.md#family-inference)).
 It constructs `M.empty()` before binding the source, even for Reader or State.
 Callbacks and combinations run according to the selected family's timing;
 Reader and State defer them until `run`. Empty input lifts the identity.

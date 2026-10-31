@@ -47,7 +47,7 @@ SOURCE_MODULES = (
     ('iteration', 'iteration/scans'),
     ('control', 'control/loops'),
     ('control', 'control/scan'),
-    *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'error_mapping', 'instances', 'collections', '_primitive_contracts', 'contracts', 'sequencing', '_outcomes', '_derived', '_traversal', 'monoids', 'validation', 'non_empty', 'ior', 'absence', 'looping')),
+    *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'error_mapping', 'instances', 'collections', '_primitive_contracts', 'contracts', 'sequencing', '_outcomes', '_derived', '_traversal', 'monoids', 'validation', 'accumulate', 'non_empty', 'ior', 'absence', 'looping')),
     *(( 'effects', 'effects/' + name) for name in ('protocols', 'reader', 'state', 'writer', 'layers', 'operations', 'capabilities', 'projections', 'outcomes', 'resources', '_io_core', '_native_resource_io', 'scoped', 'finalization', 'effectful_resources', 'fibers', 'coordination')),
     ('data', 'data/_result'),
     ('data', 'data/_attempt'),

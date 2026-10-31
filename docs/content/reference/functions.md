@@ -20,7 +20,10 @@ return their final value directly. For a reusable generic wrapper, follow the
 State and IO recipes and Writer values select their declared family. Bare
 values use Identity: `map` applies its callback to the whole bare value once.
 `pipeline[Family](value)` selects a Functor explicitly. Call `raising[E]()` once
-to select native callback errors.
+to select native callback errors. A raising plain function selects its own
+error when none is selected (Never), and that error carries to later stages;
+any other selected error must match it. Native closures always use the
+selected error.
 Existing explicit payload bindings, such as `pipeline[T=Int](values)`, remain
 available. For a list literal, use `pipeline[Int]([1, 2])` or
 `pipeline[Int]([])`; this avoids an explicit `List[Int](...)` constructor.

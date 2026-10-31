@@ -77,7 +77,8 @@ outcomes. Select the behavior at the boundary where it matters:
 
 - A Result transformation preserves Err; a recovery operation handles it.
 - `.raising[E]()` selects subsequent native callback admission on a Pipeline;
-  it does not catch errors or change the stored Result error type.
+  it does not catch errors or change the stored Result error type. A raising
+  plain function selects its own error when none is selected.
 - `Capture[E]().run(callback)` catches a zero-argument native call immediately.
   Bind owned arguments with `.args(...)`, or mixed conventions with `.borrow`,
   `.mutable` and `.take`, before `.run(callback)`.

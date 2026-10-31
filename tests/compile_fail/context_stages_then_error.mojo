@@ -4,4 +4,4 @@ from fp.functions import pipeline
 struct Fault(Movable):
     var code: Int
 def wrong(var value: Int) raises Fault -> Int: raise Fault(value)
-def main(): _ = pipeline(1).then(wrong).get()
+def main() raises: _ = pipeline(1).raising[String]().then(wrong).get()

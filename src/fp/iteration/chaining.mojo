@@ -44,7 +44,7 @@ from fp.callables.protocols import BorrowCallContract
 
 from fp.callables._identity import Identity as _Same
 from fp.callables.native import NativeUnary, _Unary, _RaisingUnary, _NativeUnaryRef, _Borrowing, _RaisingBorrowing, _NativeBorrowRef
-from fp.iteration.reductions import _fold_map, _find_map, _extremum, _IntSum, _SIMDSum
+from fp.iteration.reductions import _fold_map, _find_map, _extremum, _IntSum, _SIMDSum, _CanonicalMonoid
 from fp.algebra.protocols import Monoid
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from fp.callables.protocols import UnaryContract
@@ -53,7 +53,7 @@ from fp.callables._transforms import _Fill, _Replace, _TupleWith, _ObserveOnce, 
 from fp.iteration.adapters import _Map, _FilterMap
 from fp.iteration.derived import compact as _derived_compact
 from fp.algebra.instances import ListFamily
-from fp.algebra.collections import _SourceFamily, _UnrecognizedCarrier
+from fp.algebra.collections import _SourceFamily, _UnrecognizedCarrier, _CanonicalEffectMonoid
 from fp.callables.protocols import _ErrorProbe, _BorrowErrorProbe, _BinaryErrorProbe
 from fp.algebra.protocols import Applicative
 from fp.iteration.derived import fill as _derived_fill
@@ -2007,7 +2007,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         comptime assert _EntryError[X, FindMapContract[G, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error] == _EntryError[X, FindMapContract[G, Self.I, _ErrorProbe[A, R, E]].Error]
         return _fold_effect[G, Self.I, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]], _EntryError[X, FindMapContract[G, Self.I, _ErrorProbe[A, R, E]].Error]](_SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function))), Optional[_ListElement[G.Element[R]]](), self._iterator^)
 
-    def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, M: Monoid, G: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, F].Error] -> FoldMapContract[G, M, Self.I, F].Out where FoldMapContract[G, M, Self.I, F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], FoldMapContract[G, M, Self.I, F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], M.Error]:
+    def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, M: Monoid = _CanonicalEffectMonoid[F.Out], G: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, F].Error] -> FoldMapContract[G, M, Self.I, F].Out where FoldMapContract[G, M, Self.I, F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], FoldMapContract[G, M, Self.I, F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, F].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid.
 
         Parameters:
@@ -2027,11 +2027,11 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return _fold_map_effect[G, M, Self.I, F, _EntryError[X, FoldMapContract[G, M, Self.I, F].Error]](function^, self._iterator^)
 
-    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(var A) -> R = def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Out where FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]:
+    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid = _CanonicalEffectMonoid[R], G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(var A) -> R = def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Out where FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid."""
         return _fold_map_effect[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o], _EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, Never, F, False, o]].Error]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self._iterator^)
 
-    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error] -> FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Out where FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error], FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error], M.Error]:
+    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid = _CanonicalEffectMonoid[R], G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error] -> FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Out where FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error], FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid."""
         comptime assert _EntryError[X, FoldMapContract[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o]].Error] == _EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error]
         return _fold_map_effect[G, M, Self.I, _NativeUnaryRef[A, R, E, F, True, o], _EntryError[X, FoldMapContract[G, M, Self.I, _ErrorProbe[A, R, E]].Error]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self._iterator^)
@@ -2072,7 +2072,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """Return the first present transformed result, stopping without another pull."""
         return _find_map(function._unary_view(), self._iterator^)
 
-    def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, F: def(var A) -> R](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> M.Value where Self.I.Element == A:
+    def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid = _CanonicalMonoid[R], F: def(var A) -> R = def(var A) -> R](deinit self, ref[o] function: F) raises _CommonError[Never, M.Error] -> M.Value where Self.I.Element == A and R == M.Value:
         """Project and combine in order with a monoid; empty input returns its identity.
 
         Parameters:
@@ -2093,19 +2093,19 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         """
         return _fold_map[M=M](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self._iterator^)
 
-    def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises _CommonError[E, M.Error] -> M.Value where Self.I.Element == A:
+    def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid = _CanonicalMonoid[R], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R](deinit self, ref[o] function: F) raises _CommonError[E, M.Error] -> M.Value where Self.I.Element == A and R == M.Value:
         """Project and combine in order with a monoid; empty input returns its identity."""
         return _fold_map[M=M](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self._iterator^)
 
-    def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg:
+    def fold_map[F: UnaryContract & Movable & Deinitable, //, M: Monoid = _CanonicalMonoid[F.Out]](deinit self, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where Self.I.Element == F.Arg and F.Out == M.Value:
         """Project and combine in order with a monoid; empty input returns its identity."""
         return _fold_map[M=M](function^, self._iterator^)
 
-    def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where Self.I.Element == F._View[o].Arg:
+    def fold_map[F: _UnaryViewable, o: ImmOrigin, //, M: Monoid = _CanonicalMonoid[F._View[o].Out]](deinit self, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where Self.I.Element == F._View[o].Arg and F._View[o].Out == M.Value:
         """Project and combine in order with a monoid; empty input returns its identity."""
         return _fold_map[M=M](function._unary_view(), self._iterator^)
 
-    def combine_all[M: Monoid](deinit self) raises _CommonError[Never, M.Error] -> M.Value where Self.I.Element == M.Value:
+    def combine_all[M: Monoid = _CanonicalMonoid[downcast[Self.I.Element, Movable & Deinitable]]](deinit self) raises _CommonError[Never, M.Error] -> M.Value where Self.I.Element == M.Value:
         """Combine in order with a monoid; empty input returns its identity.
 
         Parameters:

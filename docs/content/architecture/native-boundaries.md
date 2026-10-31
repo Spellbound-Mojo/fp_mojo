@@ -1247,6 +1247,49 @@ otherwise the two must be equal).
   "unset" default that closure forms read as `Error` and thin forms replace.
   Closures still need `Capture[E]` for errors other than `Error`.
 
+Built from these probes:
+
+- **Pipeline.** `generate_context.py` rewrites each thin raising form after
+  generation (`joined_thin_errors`): its admission becomes
+  `_CommonErrorCompatible[Self.E, X]` and its returned Pipeline (or fold stage)
+  carries `_CommonError[Self.E, X]`, the existing shared join. Terminals take
+  the same admission. Overload counts are unchanged. Eight rejection fixtures
+  that asserted the old `.raising` requirement now select a different error
+  and check the mismatch instead.
+- **Capture.** A sentinel default error spelled through a computed alias in
+  closure signatures (`raises _Selected[Self.E]`) breaks generic forwarding:
+  `Capture[E]().run(closure)` with a symbolic `E` no longer matches. Capture
+  therefore keeps `Error` as its default and treats it as unselected for thin
+  functions only: `_DefaultErrorAdmits[Self.E, X]` admits any thin error under
+  `Error`, returning `Result[R, X]`. Closures still raise the selected error.
+  An explicit `Capture[Error]` is consequently as lenient as the default for
+  thin functions; the Result type stays exact.
+
+### Canonical monoids and accumulating traversal
+
+`_CanonicalMonoid[V]` (in `monoids.mojo`) selects `StringMonoid` for String and
+`ListMonoid[T]` for `List[T]`, guarded like `_NativeFamily`; any other type
+selects `_NoMonoid`, whose Value matches nothing, so the surface's existing
+`M.Value` relation rejects the call. `_CanonicalEffectMonoid[R]` applies it to
+an effect's payload through `_SourceFamily`. The generators default the
+existing `M` parameter (`canonical_monoid`, `canonical_effect_monoid` in
+`native_signatures.py`) in `fold_map`, `combine_all`, `fold_map_effect` and
+`combine_all_effect` on every surface; native callback parameters after it
+take the usual trailing defaults. `fold_map` additionally admits only when the
+callback result equals `M.Value`, so a numeric projection without a monoid is
+rejected at the call. Numbers stay explicit by design. `combine` stays
+explicit because inferring `V` from its arguments turns literals into
+`StringLiteral`; `collect_fold` keeps its explicit monoid.
+
+`Accumulate` (in `accumulate.mojo`) is an Applicative target whose collection
+delegates to `ValidationFamily[_ListErrors[F.Out]]`, the policy Piped's
+`par_traverse` already infers. Collection is the only traversal step List and
+the other sequence families use, so no traversal signature changes and generic
+forwarding of `G` is unaffected. Its remaining Applicative members admit
+nothing and delegate to `_UnrecognizedCarrier`. A substituted target such as
+`X if G == Accumulate else G` in every traversal signature was rejected: it
+would not reduce for a symbolic `G`, breaking generic wrappers.
+
 ## Callables and argument packs
 
 | Mojo 1.1 behavior | Library consequence | Replacement trigger |

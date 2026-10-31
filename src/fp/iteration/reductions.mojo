@@ -119,7 +119,7 @@ def _extremum[V: Movable & Deinitable, T: Movable & Deinitable, C: BorrowCallCon
 
 
 # Numeric accumulation has one owner shared with public monoid composition.
-from fp.algebra.monoids import IntSumMonoid as _IntSum, SIMDSumMonoid as _SIMDSum
+from fp.algebra.monoids import IntSumMonoid as _IntSum, SIMDSumMonoid as _SIMDSum, _CanonicalMonoid
 
 
 # --- terminal syntax (generated) ---
@@ -159,7 +159,7 @@ def find_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //](var s
     """Return the first present transformed result, stopping without another pull."""
     return _find_map(function._unary_view(), source^)
 
-def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, F: def(var A) -> R](var source: V, ref[o] function: F) raises _CommonError[Never, M.Error] -> M.Value where _Source[V].Element == A:
+def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid = _CanonicalMonoid[R], F: def(var A) -> R = def(var A) -> R](var source: V, ref[o] function: F) raises _CommonError[Never, M.Error] -> M.Value where _Source[V].Element == A and R == M.Value:
     """Project and combine in order with a monoid; empty input returns its identity.
 
     Parameters:
@@ -182,19 +182,19 @@ def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: 
     """
     return _fold_map[M=M](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), source^)
 
-def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, E: Movable & Deinitable, F: def(var A) raises E -> R](var source: V, ref[o] function: F) raises _CommonError[E, M.Error] -> M.Value where _Source[V].Element == A:
+def fold_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid = _CanonicalMonoid[R], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R](var source: V, ref[o] function: F) raises _CommonError[E, M.Error] -> M.Value where _Source[V].Element == A and R == M.Value:
     """Project and combine in order with a monoid; empty input returns its identity."""
     return _fold_map[M=M](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), source^)
 
-def fold_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid](var source: V, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg:
+def fold_map[F: UnaryContract & Movable & Deinitable, V: Movable & Deinitable, //, M: Monoid = _CanonicalMonoid[F.Out]](var source: V, var function: F) raises _CommonError[F.Error, M.Error] -> M.Value where _Source[V].Element == F.Arg and F.Out == M.Value:
     """Project and combine in order with a monoid; empty input returns its identity."""
     return _fold_map[M=M](function^, source^)
 
-def fold_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid](var source: V, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg:
+def fold_map[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid = _CanonicalMonoid[F._View[o].Out]](var source: V, ref[o] function: F) raises _CommonError[F._View[o].Error, M.Error] -> M.Value where _Source[V].Element == F._View[o].Arg and F._View[o].Out == M.Value:
     """Project and combine in order with a monoid; empty input returns its identity."""
     return _fold_map[M=M](function._unary_view(), source^)
 
-def combine_all[V: Movable & Deinitable, //, M: Monoid](var source: V) raises _CommonError[Never, M.Error] -> M.Value where _Source[V].Element == M.Value:
+def combine_all[V: Movable & Deinitable, //, M: Monoid = _CanonicalMonoid[downcast[_Source[V].Element, Movable & Deinitable]]](var source: V) raises _CommonError[Never, M.Error] -> M.Value where _Source[V].Element == M.Value:
     """Combine in order with a monoid; empty input returns its identity.
 
     Parameters:

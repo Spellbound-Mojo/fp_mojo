@@ -14,7 +14,7 @@ from fp.callables._binding import _BoundThunk
 from fp.callables.native import _NativeOwnedArg
 from fp.data._result import Result
 from fp.data._attempt import attempt_once
-from fp._internal.errors import _ErrorCompatible
+from fp._internal.errors import _DefaultErrorAdmits
 
 from fp.callables.products import _OptionalCell
 
@@ -66,15 +66,15 @@ struct _ArgsZ[E: Movable & Deinitable](Movable):
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def() raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def() raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def() raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -146,15 +146,15 @@ struct _ArgsK[K: Movable & Deinitable, E: Movable & Deinitable](Movable):
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -226,27 +226,27 @@ struct _ArgsR[A: Movable & Deinitable, a: ImmOrigin, E: Movable & Deinitable](Mo
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -342,27 +342,27 @@ struct _ArgsRK[A: Movable & Deinitable, a: ImmOrigin, K: Movable & Deinitable, E
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -434,15 +434,15 @@ struct _ArgsM[A: Movable & Deinitable, a: MutOrigin, E: Movable & Deinitable](Mo
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -514,15 +514,15 @@ struct _ArgsMK[A: Movable & Deinitable, a: MutOrigin, K: Movable & Deinitable, E
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -582,15 +582,15 @@ struct _ArgsO[A: Movable & Deinitable, E: Movable & Deinitable](Movable):
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -662,15 +662,15 @@ struct _ArgsOK[A: Movable & Deinitable, K: Movable & Deinitable, E: Movable & De
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -766,51 +766,51 @@ struct _ArgsRR[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -954,51 +954,51 @@ struct _ArgsRRK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1106,27 +1106,27 @@ struct _ArgsRM[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1222,27 +1222,27 @@ struct _ArgsRMK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1326,27 +1326,27 @@ struct _ArgsRO[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, E
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B]) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B]) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1442,27 +1442,27 @@ struct _ArgsROK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1546,27 +1546,27 @@ struct _ArgsMR[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1662,27 +1662,27 @@ struct _ArgsMRK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1754,15 +1754,15 @@ struct _ArgsMM[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1834,15 +1834,15 @@ struct _ArgsMMK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1902,15 +1902,15 @@ struct _ArgsMO[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, E
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -1982,15 +1982,15 @@ struct _ArgsMOK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -2062,27 +2062,27 @@ struct _ArgsOR[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, E
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -2178,27 +2178,27 @@ struct _ArgsORK[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -2270,15 +2270,15 @@ struct _ArgsOM[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, E
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -2350,15 +2350,15 @@ struct _ArgsOMK[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -2418,15 +2418,15 @@ struct _ArgsOO[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & De
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -2498,15 +2498,15 @@ struct _ArgsOOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & D
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -2650,99 +2650,99 @@ struct _ArgsRRR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -2973,99 +2973,99 @@ struct _ArgsRRRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -3245,51 +3245,51 @@ struct _ArgsRRM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -3424,51 +3424,51 @@ struct _ArgsRRMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -3600,51 +3600,51 @@ struct _ArgsRRO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -3779,51 +3779,51 @@ struct _ArgsRROK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -3955,51 +3955,51 @@ struct _ArgsRMR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2) raises X thin) -> Result[type_of(None), X] where P == Self.A and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2) raises X thin) -> Result[type_of(None), X] where P == Self.A and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -4134,51 +4134,51 @@ struct _ArgsRMRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -4286,27 +4286,27 @@ struct _ArgsRMM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -4393,27 +4393,27 @@ struct _ArgsRMMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -4497,27 +4497,27 @@ struct _ArgsRMO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -4604,27 +4604,27 @@ struct _ArgsRMOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -4732,51 +4732,51 @@ struct _ArgsROR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2) raises X thin) -> Result[type_of(None), X] where P == Self.A and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2) raises X thin) -> Result[type_of(None), X] where P == Self.A and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -4911,51 +4911,51 @@ struct _ArgsRORK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -5063,27 +5063,27 @@ struct _ArgsROM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -5170,27 +5170,27 @@ struct _ArgsROMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -5274,27 +5274,27 @@ struct _ArgsROO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -5381,27 +5381,27 @@ struct _ArgsROOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _ErrorCompatible[Self.E, X]:
+    def run[P: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(P, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P == Self.A and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -5509,51 +5509,51 @@ struct _ArgsMRR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -5688,51 +5688,51 @@ struct _ArgsMRRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -5840,27 +5840,27 @@ struct _ArgsMRM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -5947,27 +5947,27 @@ struct _ArgsMRMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6051,27 +6051,27 @@ struct _ArgsMRO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6158,27 +6158,27 @@ struct _ArgsMROK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6262,27 +6262,27 @@ struct _ArgsMMR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6369,27 +6369,27 @@ struct _ArgsMMRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6461,15 +6461,15 @@ struct _ArgsMMM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6532,15 +6532,15 @@ struct _ArgsMMMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6600,15 +6600,15 @@ struct _ArgsMMO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6671,15 +6671,15 @@ struct _ArgsMMOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6751,27 +6751,27 @@ struct _ArgsMOR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6858,27 +6858,27 @@ struct _ArgsMORK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -6950,15 +6950,15 @@ struct _ArgsMOM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7021,15 +7021,15 @@ struct _ArgsMOMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7089,15 +7089,15 @@ struct _ArgsMOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7160,15 +7160,15 @@ struct _ArgsMOOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(mut Self.A, var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7264,51 +7264,51 @@ struct _ArgsORR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7443,51 +7443,51 @@ struct _ArgsORRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7595,27 +7595,27 @@ struct _ArgsORM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7702,27 +7702,27 @@ struct _ArgsORMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7806,27 +7806,27 @@ struct _ArgsORO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -7913,27 +7913,27 @@ struct _ArgsOROK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.B, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _ErrorCompatible[Self.E, X]:
+    def run[Q: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], Q, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where Q == Self.B and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8017,27 +8017,27 @@ struct _ArgsOMR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8124,27 +8124,27 @@ struct _ArgsOMRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8216,15 +8216,15 @@ struct _ArgsOMM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8287,15 +8287,15 @@ struct _ArgsOMMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8355,15 +8355,15 @@ struct _ArgsOMO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8426,15 +8426,15 @@ struct _ArgsOMOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], mut Self.B, var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8506,27 +8506,27 @@ struct _ArgsOOR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8613,27 +8613,27 @@ struct _ArgsOORK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where not conforms_to(Self.A2, TrivialRegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
-    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _ErrorCompatible[Self.E, X]:
+    def run[P2: TrivialRegisterPassable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], P2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where P2 == Self.A2 and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8705,15 +8705,15 @@ struct _ArgsOOM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8776,15 +8776,15 @@ struct _ArgsOOMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], mut Self.A2, /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8844,15 +8844,15 @@ struct _ArgsOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8918,15 +8918,15 @@ struct _ArgsOOOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], /, var **kwargs: Self.K) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -8986,15 +8986,15 @@ struct _ArgsOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -9057,15 +9057,15 @@ struct _ArgsOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable 
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -9128,15 +9128,15 @@ struct _ArgsOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -9199,15 +9199,15 @@ struct _ArgsOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movabl
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -9270,15 +9270,15 @@ struct _ArgsOOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movab
         return self^._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](deinit self, function: def(var _NativeOwnedArg[Self.A], var _NativeOwnedArg[Self.B], var _NativeOwnedArg[Self.A2], var _NativeOwnedArg[Self.A3], var _NativeOwnedArg[Self.A4], var _NativeOwnedArg[Self.A5], var _NativeOwnedArg[Self.A6], var _NativeOwnedArg[Self.A7]) raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         return self^._run[type_of(None), X, type_of(function), True](function)
 
     @always_inline
@@ -9309,7 +9309,9 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
     `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and
     `capture.kwargs(...)`; it stores no arguments and is reusable after errors.
 
-    Pure functions produce `Result[R, Never]`; raising functions retain E.
+    Pure functions produce `Result[R, Never]`; raising closures retain E.
+    Raising plain functions keep their own error under the default Error
+    context; any other selected E must match it.
     No-value callbacks return `Result[None, E]`. Native callbacks are borrowed
     for the call; library thunk owners are consumed and retain their own error.
     Thunks use consuming, mutable, then shared receiver priority. Pass
@@ -9322,7 +9324,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
     Existing `attempt` entry points remain available for compatibility.
 
     Parameters:
-        E: The native callback error type, selected before inference; Error by default.
+        E: The native closure error type, selected before inference; Error by default.
     """
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def() -> R](self, ref[q] function: F) -> Result[R, Never]:
@@ -9465,7 +9467,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         return _ArgsZ[Self.E]()._run[type_of(None), Never, type_of(function), False](function)
 
     @always_inline
-    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def run[R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         """Call once and retain the exact outcome.
 
         Parameters:
@@ -9481,7 +9483,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         return _ArgsZ[Self.E]()._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where _ErrorCompatible[Self.E, X]:
+    def run[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def() raises X thin -> R) -> Result[R, X] where _DefaultErrorAdmits[Self.E, X]:
         """Call once and retain the exact outcome.
 
         Parameters:
@@ -9497,7 +9499,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         return _ArgsZ[Self.E]()._run[R, X, type_of(function), True](function)
 
     @always_inline
-    def run[X: Movable & Deinitable, //](self, function: def() raises X thin) -> Result[type_of(None), X] where _ErrorCompatible[Self.E, X]:
+    def run[X: Movable & Deinitable, //](self, function: def() raises X thin) -> Result[type_of(None), X] where _DefaultErrorAdmits[Self.E, X]:
         """Call once and retain the exact outcome.
 
         Parameters:
@@ -9724,7 +9726,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, type_of(None), Never, type_of(function), False](function, state^)
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]:
+    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _DefaultErrorAdmits[Self.E, X]:
         """Own explicit state for repeated calls through a plain native function.
 
         Parameters:
@@ -9742,7 +9744,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, X, type_of(function), True](function, state^)
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(A, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(A, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         """Own explicit state for repeated calls through a plain native function.
 
         Parameters:
@@ -9759,7 +9761,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, X, type_of(function), True](function, state^)
-    def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(R, RegisterPassable) and _ErrorCompatible[Self.E, X]:
+    def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where not conforms_to(R, RegisterPassable) and _DefaultErrorAdmits[Self.E, X]:
         """Own explicit state for repeated calls through a plain native function.
 
         Parameters:
@@ -9776,7 +9778,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, X, type_of(function), True](function, state^)
-    def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _ErrorCompatible[Self.E, X]:
+    def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin -> R, var state: S) -> _Stateful[S, A, R, X, type_of(function), True] where _DefaultErrorAdmits[Self.E, X]:
         """Own explicit state for repeated calls through a plain native function.
 
         Parameters:
@@ -9793,7 +9795,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, R, X, type_of(function), True](function, state^)
-    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]:
+    def stateful[S: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _DefaultErrorAdmits[Self.E, X]:
         """Own explicit state for repeated calls through a plain native function.
 
         Parameters:
@@ -9810,7 +9812,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
             A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.
         """
         return _Stateful[S, A, type_of(None), X, type_of(function), True](function, state^)
-    def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _ErrorCompatible[Self.E, X]:
+    def stateful[S: Movable & Deinitable, A: RegisterPassable & Deinitable, X: Movable & Deinitable, //](self, function: def(mut S, var A) raises X thin, var state: S) -> _Stateful[S, A, type_of(None), X, type_of(function), True] where _DefaultErrorAdmits[Self.E, X]:
         """Own explicit state for repeated calls through a plain native function.
 
         Parameters:

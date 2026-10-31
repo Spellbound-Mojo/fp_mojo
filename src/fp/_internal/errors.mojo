@@ -24,6 +24,16 @@ comptime _ErrorCompatible[E: AnyType, Actual: AnyType]: Bool = Actual == Never o
 comptime _CommonErrorCompatible[A: AnyType, B: AnyType]: Bool = (A == B) | (A == Never) | (B == Never)
 
 
+comptime _DefaultErrorAdmits[Selected: AnyType, Actual: AnyType]: Bool = (Selected == Error) | (Actual == Never) | (Actual == Selected)
+"""Capture's default `Error` context admits a thin function's own error.
+
+A thin pointer infers its exact error and rejects other signatures normally, so
+it keeps that error in its Result. Native closures still raise the selected
+error: inferring a closure's error crashes Mojo 1.2 on invalid conventions.
+Any other selected error must match, as `_ErrorCompatible` requires.
+"""
+
+
 def _compatible[E: Movable & Deinitable, Actual: Movable & Deinitable]() -> Bool:
     comptime assert _ErrorCompatible[E, Actual], "callback errors: incompatible native error type; got " + reflect[Actual].name() + "; expected " + reflect[E].name() + "; use an explicit common error mapping"
     return True

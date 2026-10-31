@@ -299,6 +299,10 @@ binds zero to eight consumed operands; `borrow`, `mutable` and `take` bind
 individual operands with their native ownership. Finish with `run(callback)`.
 The callback is borrowed and called once. Pure and explicitly `raises Never`
 callbacks return `Result[R, Never]`, even in a context selecting another error.
+Closures raise the selected error, `Error` by default. Under the default
+context a raising plain function keeps its own error, so
+`Capture().run(parse)` returns `Result[Int, ParseError]`; a context selecting
+another error requires plain functions to match it.
 
 The example binds `7` and `factor=3` with
 `Capture.args(7).kwargs(factor=3).run(scale)`. Expanding a typed dictionary
