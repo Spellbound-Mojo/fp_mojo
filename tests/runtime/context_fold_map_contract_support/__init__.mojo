@@ -16,7 +16,7 @@ def forward[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Mov
 def fluent[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: V
 ) raises FoldMapContract[I, M, V, F].Error -> FoldMapContract[I, M, V, F].Out where FoldMapContract[I, M, V, F].Compatible:
-    return piped(source^).fold_map_effect[I, M](function^).get()
+    return piped(source^).fold_map_effect[M, I](function^).get()
 
 
 def iterator_forward[I: Monad, M: Monoid, V: Iterator, F: UnaryContract & Movable & Deinitable](

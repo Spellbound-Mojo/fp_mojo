@@ -52,6 +52,11 @@ from fp.callables.native import _Thunk, _RaisingThunk
 from fp.algebra.protocols import Functor, Filterable, FunctorFilter, Monad, Traversable, Applicative
 from fp.algebra._derived import _Same
 from fp.algebra.collections import _ArrayFamily, _DequeFamily, _LinkedListFamily, _DictFamily, _StringDictFamily
+from fp.algebra.collections import _SourceFamily, _UnrecognizedCarrier
+from fp.callables.protocols import _BorrowErrorProbe
+from fp.algebra.protocols import _filter_map_as, _map_as
+from fp.algebra.instances import _InferredApplicative, _ViewTarget
+from fp.callables.native import _NativeOwnedArg, NativeUnary
 from fp.algebra.operations import map as _family_map, _ErrorProbe, _map_native
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef, _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from fp.algebra.filtering import filter as _family_filter, filter_not as _family_filter_not, _filter_native
@@ -797,7 +802,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
     # Explicit families use the existing public Functor contract. Native
     # callbacks are borrowed; owned library callback values are consumed.
     def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
-            I: Functor, F: def(var A) -> R](
+            I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], F: def(var A) -> R = def(var A) -> R](
         deinit self, ref[o] function: F
     ) raises I.MapError[Self.Value, _ErrorProbe[A, R, Never]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
         """Map through an explicit family, including third-party containers.
@@ -836,26 +841,26 @@ struct Piped[Value: Movable & Deinitable](Movable):
         return Piped(_map_native[Self.Value, A, R, Never, I, F, False, o](function, self.value^))
 
     def map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
-            I: Functor, E: Movable & Deinitable, F: def(var A) raises E -> R](
+            I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R](
         deinit self, ref[o] function: F
     ) raises I.MapError[Self.Value, _ErrorProbe[A, R, E]] -> Piped[I.Mapped[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and _MapCompatible[I, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
         """Map a raising native callback through an explicit family."""
         return Piped(_map_native[Self.Value, A, R, E, I, F, True, o](function, self.value^))
 
-    def map[F: _UnaryViewable, o: ImmOrigin, //, I: Functor](
+    def map[F: _UnaryViewable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](
         deinit self, ref[o] function: F
     ) raises I.MapError[Self.Value, F._View[o]] -> Piped[I.Mapped[Self.Value, F._View[o]]] where I.Element[Self.Value] == F._View[o].Arg and _MapCompatible[I, Self.Value, F._View[o]]:
         """Map a borrowed callable view through an explicit family."""
         return Piped(_family_map[I](self.value^, function._unary_view()))
 
-    def map[F: UnaryContract & Movable & Deinitable, //, I: Functor](
+    def map[F: UnaryContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](
         deinit self, var function: F
     ) raises I.MapError[Self.Value, F] -> Piped[I.Mapped[Self.Value, F]] where I.Element[Self.Value] == F.Arg and _MapCompatible[I, Self.Value, F]:
         """Map an owned library callback through an explicit family."""
         return Piped(_family_map[I](self.value^, function^))
 
     def filter[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
-               I: Filterable, F: def(P) -> R](
+               I: Filterable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Filterable) else _UnrecognizedCarrier, Filterable], F: def(P) -> R = def(P) -> R](
         deinit self, ref[o] predicate: F
     ) raises I.FilterError[Self.Value, _NativeBorrowRef[P, Bool, Never, F, False, o]] -> Piped[I.Filtered[Self.Value, _NativeBorrowRef[P, Bool, Never, F, False, o]]] where I.Element[Self.Value] == P and R == Bool:
         """Retain accepted payloads through a Filterable family.
@@ -893,24 +898,24 @@ struct Piped[Value: Movable & Deinitable](Movable):
         return Piped(_filter_native[Self.Value, P, Never, I, F, False, o](predicate, self.value^))
 
     def filter[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
-               I: Filterable, E: Movable & Deinitable, F: def(P) raises E -> R](
+               I: Filterable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Filterable) else _UnrecognizedCarrier, Filterable], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R](
         deinit self, ref[o] predicate: F
-    ) raises I.FilterError[Self.Value, _NativeBorrowRef[P, Bool, E, F, True, o]] -> Piped[I.Filtered[Self.Value, _NativeBorrowRef[P, Bool, E, F, True, o]]] where I.Element[Self.Value] == P and R == Bool:
+    ) raises I.FilterError[Self.Value, _BorrowErrorProbe[P, Bool, E]] -> Piped[I.Filtered[Self.Value, _NativeBorrowRef[P, Bool, E, F, True, o]]] where I.Element[Self.Value] == P and R == Bool:
         """Filter with a raising native callback; generic forwarding names E."""
-        return Piped(_filter_native[Self.Value, P, E, I, F, True, o](predicate, self.value^))
+        return Piped(_filter_native[Self.Value, P, E, I, F, True, o, False, I.FilterError[Self.Value, _BorrowErrorProbe[P, Bool, E]]](predicate, self.value^))
 
-    def filter[C: _BorrowViewable, o: ImmOrigin, //, I: Filterable](deinit self, ref[o] predicate: C
+    def filter[C: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Filterable) else _UnrecognizedCarrier, Filterable]](deinit self, ref[o] predicate: C
     ) raises I.FilterError[Self.Value, C._BorrowView[o]] -> Piped[I.Filtered[Self.Value, C._BorrowView[o]]] where I.Element[Self.Value] == C._BorrowView[o].Payload and C._BorrowView[o].Result == Bool:
         """Filter through the selected family with a shared predicate."""
         return Piped(_family_filter[I](self.value^, predicate._borrow_view()))
 
-    def filter[C: BorrowCallContract & Movable & Deinitable, //, I: Filterable](deinit self, var predicate: C
+    def filter[C: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Filterable) else _UnrecognizedCarrier, Filterable]](deinit self, var predicate: C
     ) raises I.FilterError[Self.Value, C] -> Piped[I.Filtered[Self.Value, C]] where I.Element[Self.Value] == C.Payload and C.Result == Bool and RepeatableBorrow[C]:
         """Filter through an explicit family with an owned library predicate."""
         return Piped(_family_filter[I](self.value^, predicate^))
 
     def filter_not[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
-                   I: Filterable, F: def(P) -> R](
+                   I: Filterable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Filterable) else _UnrecognizedCarrier, Filterable], F: def(P) -> R = def(P) -> R](
         deinit self, ref[o] predicate: F
     ) raises I.FilterError[Self.Value, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] -> Piped[I.Filtered[Self.Value, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]]] where I.Element[Self.Value] == P and R == Bool:
         """Retain payloads the predicate rejects, preserving the container.
@@ -946,18 +951,18 @@ struct Piped[Value: Movable & Deinitable](Movable):
         return Piped(_filter_native[Self.Value, P, Never, I, F, False, o, True](predicate, self.value^))
 
     def filter_not[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
-                   I: Filterable, E: Movable & Deinitable, F: def(P) raises E -> R](
+                   I: Filterable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Filterable) else _UnrecognizedCarrier, Filterable], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R](
         deinit self, ref[o] predicate: F
-    ) raises I.FilterError[Self.Value, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] -> Piped[I.Filtered[Self.Value, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]]] where I.Element[Self.Value] == P and R == Bool:
+    ) raises I.FilterError[Self.Value, _Negated[_BorrowErrorProbe[P, Bool, E]]] -> Piped[I.Filtered[Self.Value, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]]] where I.Element[Self.Value] == P and R == Bool:
         """Retain rejected payloads with a raising native predicate; forward E explicitly."""
-        return Piped(_filter_native[Self.Value, P, E, I, F, True, o, True](predicate, self.value^))
+        return Piped(_filter_native[Self.Value, P, E, I, F, True, o, True, I.FilterError[Self.Value, _Negated[_BorrowErrorProbe[P, Bool, E]]]](predicate, self.value^))
 
-    def filter_not[C: _BorrowViewable, o: ImmOrigin, //, I: Filterable](deinit self, ref[o] predicate: C
+    def filter_not[C: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Filterable) else _UnrecognizedCarrier, Filterable]](deinit self, ref[o] predicate: C
     ) raises I.FilterError[Self.Value, _Negated[C._BorrowView[o]]] -> Piped[I.Filtered[Self.Value, _Negated[C._BorrowView[o]]]] where I.Element[Self.Value] == C._BorrowView[o].Payload and C._BorrowView[o].Result == Bool:
         """Filter through the selected family with a shared predicate."""
         return Piped(_family_filter_not[I](self.value^, predicate._borrow_view()))
 
-    def filter_not[C: BorrowCallContract & Movable & Deinitable, //, I: Filterable](deinit self, var predicate: C
+    def filter_not[C: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Filterable) else _UnrecognizedCarrier, Filterable]](deinit self, var predicate: C
     ) raises I.FilterError[Self.Value, _Negated[C]] -> Piped[I.Filtered[Self.Value, _Negated[C]]] where I.Element[Self.Value] == C.Payload and C.Result == Bool and RepeatableBorrow[C]:
         """Retain rejected payloads through an explicit family with an owned predicate."""
         return Piped(_family_filter_not[I](self.value^, predicate^))
@@ -965,7 +970,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
     # --- effect syntax (generated) ---
     # Generated by scripts/generate_effect_syntax.py; execution lives in algebra._effect_combinators.
 
-    def fold_effect[F: BinaryContract & Movable & Deinitable, //, G: Monad, Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, FoldContract[G, Self.Value, F].Error] -> Piped[FoldContract[G, Self.Value, F].Out] where FoldContract[G, Self.Value, F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, F].Error], FoldContract[G, Self.Value, F].Error]:
+    def fold_effect[F: BinaryContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad], Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, FoldContract[G, Self.Value, F].Error] -> Piped[FoldContract[G, Self.Value, F].Out] where FoldContract[G, Self.Value, F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, F].Error], FoldContract[G, Self.Value, F].Error]:
         """Fold in order with an effectful accumulator step; empty input returns the initial value in the effect.
 
         Parameters:
@@ -985,15 +990,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, Self.Value, F, _AllLive[F.First], _EntryError[Z, FoldContract[G, Self.Value, F].Error]](function^, initial^, self.value^))
 
-    def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: def(var A, var B) -> R, Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> Piped[FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out] where FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]:
+    def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(var A, var B) -> R = def(var A, var B) -> R, Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> Piped[FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Out] where FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]:
         """Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."""
         return Piped(_fold_effect[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A], _EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]](_NativeBinaryRef[A, B, R, Never, F, False, o](Pointer(to=function)), initial^, self.value^))
 
-    def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, X: Movable & Deinitable, F: def(var A, var B) raises X -> R, Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> Piped[FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Out] where FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]:
+    def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], X: Movable & Deinitable = Never, F: def(var A, var B) raises X -> R = def(var A, var B) raises X -> R, Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> Piped[FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Out] where FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]:
         """Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."""
         return Piped(_fold_effect[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A], _EntryError[Z, FoldContract[G, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o]].Error]](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), initial^, self.value^))
 
-    def any_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AnyContract[G, Self.Value, C].Error] -> Piped[AnyContract[G, Self.Value, C].Out] where AnyContract[G, Self.Value, C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, C].Error], AnyContract[G, Self.Value, C].Error]:
+    def any_effect[C: BorrowCallable, //, G: Monad = downcast[_SourceFamily[C.Result] if conforms_to(_SourceFamily[C.Result], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AnyContract[G, Self.Value, C].Error] -> Piped[AnyContract[G, Self.Value, C].Out] where AnyContract[G, Self.Value, C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, C].Error], AnyContract[G, Self.Value, C].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result.
 
         Parameters:
@@ -1012,15 +1017,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, Self.Value, _PredicateStep[C], _BoolLive[False], _EntryError[X, AnyContract[G, Self.Value, C].Error]](_PredicateStep[C](function^), False, self.value^))
 
-    def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out] where AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]:
+    def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(P) -> R = def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out] where AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."""
         return Piped(_fold_effect[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False], _EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]](_PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), False, self.value^))
 
-    def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out] where AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]:
+    def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out] where AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."""
         return Piped(_fold_effect[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False], _EntryError[X, AnyContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]](_PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), False, self.value^))
 
-    def all_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AllContract[G, Self.Value, C].Error] -> Piped[AllContract[G, Self.Value, C].Out] where AllContract[G, Self.Value, C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, C].Error], AllContract[G, Self.Value, C].Error]:
+    def all_effect[C: BorrowCallable, //, G: Monad = downcast[_SourceFamily[C.Result] if conforms_to(_SourceFamily[C.Result], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AllContract[G, Self.Value, C].Error] -> Piped[AllContract[G, Self.Value, C].Out] where AllContract[G, Self.Value, C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, C].Error], AllContract[G, Self.Value, C].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result.
 
         Parameters:
@@ -1039,15 +1044,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, Self.Value, _PredicateStep[C], _BoolLive[True], _EntryError[X, AllContract[G, Self.Value, C].Error]](_PredicateStep[C](function^), True, self.value^))
 
-    def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out] where AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]:
+    def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(P) -> R = def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out] where AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."""
         return Piped(_fold_effect[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True], _EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]](_PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), True, self.value^))
 
-    def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out] where AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]:
+    def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out] where AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."""
         return Piped(_fold_effect[G, Self.Value, _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True], _EntryError[X, AllContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]](_PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), True, self.value^))
 
-    def find_effect[C: BorrowCallable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, FindContract[G, Self.Value, C].Error] -> Piped[FindContract[G, Self.Value, C].Out] where FindContract[G, Self.Value, C].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, C].Error], C.Failure] or _ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, C].Error], FindContract[G, Self.Value, C].Error]):
+    def find_effect[C: BorrowCallable, //, G: Monad = downcast[_SourceFamily[C.Result] if conforms_to(_SourceFamily[C.Result], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, FindContract[G, Self.Value, C].Error] -> Piped[FindContract[G, Self.Value, C].Out] where FindContract[G, Self.Value, C].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, C].Error], C.Failure] or _ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, C].Error], FindContract[G, Self.Value, C].Error]):
         """Find the first original element selected by an effectful borrowing predicate in each live branch.
 
         Parameters:
@@ -1066,15 +1071,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, Self.Value, _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]], _EntryError[X, FindContract[G, Self.Value, C].Error]](_SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]](_EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True](function^)), Optional[downcast[C.Payload, Movable & Deinitable]](), self.value^))
 
-    def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out] where FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]):
+    def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(P) -> R = def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Out] where FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error], FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]):
         """Find the first original element selected by an effectful borrowing predicate in each live branch."""
         return Piped(_fold_effect[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]], _EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, Never, F, False, o]].Error]](_SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]](_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function)))), Optional[downcast[P, Movable & Deinitable]](), self.value^))
 
-    def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out] where FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]):
+    def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Out] where FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error], FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]):
         """Find the first original element selected by an effectful borrowing predicate in each live branch."""
         return Piped(_fold_effect[G, Self.Value, _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]], _EntryError[X, FindContract[G, Self.Value, _NativeBorrowRef[P, R, E, F, True, o]].Error]](_SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]](_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function)))), Optional[downcast[P, Movable & Deinitable]](), self.value^))
 
-    def find_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FindMapContract[G, Self.Value, F].Error] -> Piped[FindMapContract[G, Self.Value, F].Out] where FindMapContract[G, Self.Value, F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, F].Error], FindMapContract[G, Self.Value, F].Error]):
+    def find_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FindMapContract[G, Self.Value, F].Error] -> Piped[FindMapContract[G, Self.Value, F].Out] where FindMapContract[G, Self.Value, F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, F].Error], FindMapContract[G, Self.Value, F].Error]):
         """Find the first present Optional produced inside the selected Monad in each live branch.
 
         Parameters:
@@ -1093,21 +1098,21 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, Self.Value, _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]], _EntryError[X, FindMapContract[G, Self.Value, F].Error]](_SearchStep[_ListElement[G.Element[F.Out]], F](function^), Optional[_ListElement[G.Element[F.Out]]](), self.value^))
 
-    def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Out] where FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]):
+    def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(var A) -> R = def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Out] where FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]):
         """Find the first present Optional produced inside the selected Monad in each live branch."""
         return Piped(_fold_effect[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]], _EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]](_SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function))), Optional[_ListElement[G.Element[R]]](), self.value^))
 
-    def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Out] where FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]):
+    def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Out] where FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]):
         """Find the first present Optional produced inside the selected Monad in each live branch."""
         return Piped(_fold_effect[G, Self.Value, _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]], _EntryError[X, FindMapContract[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]](_SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function))), Optional[_ListElement[G.Element[R]]](), self.value^))
 
-    def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, F].Error] -> Piped[FoldMapContract[G, M, Self.Value, F].Out] where FoldMapContract[G, M, Self.Value, F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], FoldMapContract[G, M, Self.Value, F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], M.Error]:
+    def fold_map_effect[F: UnaryContract & Movable & Deinitable, //, M: Monoid, G: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, F].Error] -> Piped[FoldMapContract[G, M, Self.Value, F].Out] where FoldMapContract[G, M, Self.Value, F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], FoldMapContract[G, M, Self.Value, F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, F].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid.
 
         Parameters:
             F: The callback type, retaining its receiver, captures and error contract.
-            G: The target Monad family; it determines dependent sequencing and failure.
             M: The Monoid providing the result type, identity and ordered combination.
+            G: The target Monad family; it determines dependent sequencing and failure.
             X: The exact construction error for generic forwarding; checked without converting errors.
 
         Args:
@@ -1121,15 +1126,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_map_effect[G, M, Self.Value, F, _EntryError[X, FoldMapContract[G, M, Self.Value, F].Error]](function^, self.value^))
 
-    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Out] where FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]:
+    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(var A) -> R = def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Out] where FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid."""
         return Piped(_fold_map_effect[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o], _EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]].Error]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self.value^))
 
-    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Out] where FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]:
+    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, M: Monoid, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Out] where FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid."""
         return Piped(_fold_map_effect[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o], _EntryError[X, FoldMapContract[G, M, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]].Error]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^))
 
-    def fold_effect[F: BinaryContract & Movable & Deinitable, N: Int, //, G: Monad, Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, FoldContract[G, List[F.Second], F].Error] -> Piped[FoldContract[G, List[F.Second], F].Out] where Self.Value == Array[F.Second, N] and FoldContract[G, List[F.Second], F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[F.Second], F].Error], FoldContract[G, List[F.Second], F].Error]:
+    def fold_effect[F: BinaryContract & Movable & Deinitable, N: Int, //, G: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad], Z: AnyType = _InferError](deinit self, var function: F, var initial: F.First) raises _EntryError[Z, FoldContract[G, List[F.Second], F].Error] -> Piped[FoldContract[G, List[F.Second], F].Out] where Self.Value == Array[F.Second, N] and FoldContract[G, List[F.Second], F].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[F.Second], F].Error], FoldContract[G, List[F.Second], F].Error]:
         """Fold in order with an effectful accumulator step; empty input returns the initial value in the effect.
 
         Parameters:
@@ -1150,15 +1155,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, List[F.Second], F, _AllLive[F.First], _EntryError[Z, FoldContract[G, List[F.Second], F].Error]](function^, initial^, _take_array(rebind_var[Array[F.Second, N]](self.value^))))
 
-    def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: def(var A, var B) -> R, Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> Piped[FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Out] where Self.Value == Array[B, N] and FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]:
+    def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(var A, var B) -> R = def(var A, var B) -> R, Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error] -> Piped[FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Out] where Self.Value == Array[B, N] and FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error], FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]:
         """Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."""
         return Piped(_fold_effect[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o], _AllLive[A], _EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, Never, F, False, o]].Error]](_NativeBinaryRef[A, B, R, Never, F, False, o](Pointer(to=function)), initial^, _take_array(rebind_var[Array[B, N]](self.value^))))
 
-    def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, X: Movable & Deinitable, F: def(var A, var B) raises X -> R, Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> Piped[FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Out] where Self.Value == Array[B, N] and FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error]:
+    def fold_effect[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], X: Movable & Deinitable = Never, F: def(var A, var B) raises X -> R = def(var A, var B) raises X -> R, Z: AnyType = _InferError](deinit self, ref[o] function: F, var initial: A) raises _EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error] -> Piped[FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Out] where Self.Value == Array[B, N] and FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Compatible and _ErrorCompatible[_EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error], FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error]:
         """Fold in order with an effectful accumulator step; empty input returns the initial value in the effect."""
         return Piped(_fold_effect[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o], _AllLive[A], _EntryError[Z, FoldContract[G, List[B], _NativeBinaryRef[A, B, R, X, F, True, o]].Error]](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), initial^, _take_array(rebind_var[Array[B, N]](self.value^))))
 
-    def any_effect[C: BorrowCallable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error] -> Piped[AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]:
+    def any_effect[C: BorrowCallable, N: Int, //, G: Monad = downcast[_SourceFamily[C.Result] if conforms_to(_SourceFamily[C.Result], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error] -> Piped[AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result.
 
         Parameters:
@@ -1178,15 +1183,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[False], _EntryError[X, AnyContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]](_PredicateStep[C](function^), False, _take_array(rebind_var[Array[downcast[C.Payload, Movable & Deinitable], N]](self.value^))))
 
-    def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]:
+    def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(P) -> R = def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."""
         return Piped(_fold_effect[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[False], _EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]](_PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), False, _take_array(rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^))))
 
-    def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]:
+    def any_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."""
         return Piped(_fold_effect[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[False], _EntryError[X, AnyContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]](_PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), False, _take_array(rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^))))
 
-    def all_effect[C: BorrowCallable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error] -> Piped[AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]:
+    def all_effect[C: BorrowCallable, N: Int, //, G: Monad = downcast[_SourceFamily[C.Result] if conforms_to(_SourceFamily[C.Result], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error] -> Piped[AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result.
 
         Parameters:
@@ -1206,15 +1211,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, List[downcast[C.Payload, Movable & Deinitable]], _PredicateStep[C], _BoolLive[True], _EntryError[X, AllContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]](_PredicateStep[C](function^), True, _take_array(rebind_var[Array[downcast[C.Payload, Movable & Deinitable], N]](self.value^))))
 
-    def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]:
+    def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(P) -> R = def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."""
         return Piped(_fold_effect[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]], _BoolLive[True], _EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]](_PredicateStep[_NativeBorrowRef[P, R, Never, F, False, o]](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), True, _take_array(rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^))))
 
-    def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]:
+    def all_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Compatible and _ErrorCompatible[_EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]:
         """Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result."""
         return Piped(_fold_effect[G, List[downcast[P, Movable & Deinitable]], _PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]], _BoolLive[True], _EntryError[X, AllContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]](_PredicateStep[_NativeBorrowRef[P, R, E, F, True, o]](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), True, _take_array(rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^))))
 
-    def find_effect[C: BorrowCallable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error] -> Piped[FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], C.Failure] or _ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]):
+    def find_effect[C: BorrowCallable, N: Int, //, G: Monad = downcast[_SourceFamily[C.Result] if conforms_to(_SourceFamily[C.Result], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error] -> Piped[FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Out] where Self.Value == Array[downcast[C.Payload, Movable & Deinitable], N] and FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], C.Failure] or _ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error], FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]):
         """Find the first original element selected by an effectful borrowing predicate in each live branch.
 
         Parameters:
@@ -1234,15 +1239,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, List[downcast[C.Payload, Movable & Deinitable]], _SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]], _FirstPresent[downcast[C.Payload, Movable & Deinitable]], _EntryError[X, FindContract[G, List[downcast[C.Payload, Movable & Deinitable]], C].Error]](_SearchStep[downcast[C.Payload, Movable & Deinitable], _EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True]](_EffectRetain[downcast[C.Payload, Movable & Deinitable], G, C, True](function^)), Optional[downcast[C.Payload, Movable & Deinitable]](), _take_array(rebind_var[Array[downcast[C.Payload, Movable & Deinitable], N]](self.value^))))
 
-    def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]):
+    def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(P) -> R = def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error] -> Piped[FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error], FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]):
         """Find the first original element selected by an effectful borrowing predicate in each live branch."""
         return Piped(_fold_effect[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]], _EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, Never, F, False, o]].Error]](_SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]](_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function)))), Optional[downcast[P, Movable & Deinitable]](), _take_array(rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^))))
 
-    def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]):
+    def find_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error] -> Piped[FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Out] where Self.Value == Array[downcast[P, Movable & Deinitable], N] and FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error], FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]):
         """Find the first original element selected by an effectful borrowing predicate in each live branch."""
         return Piped(_fold_effect[G, List[downcast[P, Movable & Deinitable]], _SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _FirstPresent[downcast[P, Movable & Deinitable]], _EntryError[X, FindContract[G, List[downcast[P, Movable & Deinitable]], _NativeBorrowRef[P, R, E, F, True, o]].Error]](_SearchStep[downcast[P, Movable & Deinitable], _EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]](_EffectRetain[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function)))), Optional[downcast[P, Movable & Deinitable]](), _take_array(rebind_var[Array[downcast[P, Movable & Deinitable], N]](self.value^))))
 
-    def find_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FindMapContract[G, List[F.Arg], F].Error] -> Piped[FindMapContract[G, List[F.Arg], F].Out] where Self.Value == Array[F.Arg, N] and FindMapContract[G, List[F.Arg], F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[F.Arg], F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[F.Arg], F].Error], FindMapContract[G, List[F.Arg], F].Error]):
+    def find_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FindMapContract[G, List[F.Arg], F].Error] -> Piped[FindMapContract[G, List[F.Arg], F].Out] where Self.Value == Array[F.Arg, N] and FindMapContract[G, List[F.Arg], F].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[F.Arg], F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[F.Arg], F].Error], FindMapContract[G, List[F.Arg], F].Error]):
         """Find the first present Optional produced inside the selected Monad in each live branch.
 
         Parameters:
@@ -1262,22 +1267,22 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_effect[G, List[F.Arg], _SearchStep[_ListElement[G.Element[F.Out]], F], _FirstPresent[_ListElement[G.Element[F.Out]]], _EntryError[X, FindMapContract[G, List[F.Arg], F].Error]](_SearchStep[_ListElement[G.Element[F.Out]], F](function^), Optional[_ListElement[G.Element[F.Out]]](), _take_array(rebind_var[Array[F.Arg, N]](self.value^))))
 
-    def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Out] where Self.Value == Array[A, N] and FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]):
+    def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(var A) -> R = def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Out] where Self.Value == Array[A, N] and FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]):
         """Find the first present Optional produced inside the selected Monad in each live branch."""
         return Piped(_fold_effect[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]], _FirstPresent[_ListElement[G.Element[R]]], _EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]](_SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, Never, F, False, o]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function))), Optional[_ListElement[G.Element[R]]](), _take_array(rebind_var[Array[A, N]](self.value^))))
 
-    def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Out] where Self.Value == Array[A, N] and FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]):
+    def find_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Out] where Self.Value == Array[A, N] and FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]):
         """Find the first present Optional produced inside the selected Monad in each live branch."""
         return Piped(_fold_effect[G, List[A], _SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]], _FirstPresent[_ListElement[G.Element[R]]], _EntryError[X, FindMapContract[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]](_SearchStep[_ListElement[G.Element[R]], _NativeUnaryRef[A, R, E, F, True, o]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function))), Optional[_ListElement[G.Element[R]]](), _take_array(rebind_var[Array[A, N]](self.value^))))
 
-    def fold_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Monad, M: Monoid, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error] -> Piped[FoldMapContract[G, M, List[F.Arg], F].Out] where Self.Value == Array[F.Arg, N] and FoldMapContract[G, M, List[F.Arg], F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], FoldMapContract[G, M, List[F.Arg], F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], M.Error]:
+    def fold_map_effect[F: UnaryContract & Movable & Deinitable, N: Int, //, M: Monoid, G: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error] -> Piped[FoldMapContract[G, M, List[F.Arg], F].Out] where Self.Value == Array[F.Arg, N] and FoldMapContract[G, M, List[F.Arg], F].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], F.Error] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], FoldMapContract[G, M, List[F.Arg], F].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid.
 
         Parameters:
             F: The callback type, retaining its receiver, captures and error contract.
             N: The native array length; the source moves through temporary List storage.
-            G: The target Monad family; it determines dependent sequencing and failure.
             M: The Monoid providing the result type, identity and ordered combination.
+            G: The target Monad family; it determines dependent sequencing and failure.
             X: The exact construction error for generic forwarding; checked without converting errors.
 
         Args:
@@ -1291,15 +1296,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_fold_map_effect[G, M, List[F.Arg], F, _EntryError[X, FoldMapContract[G, M, List[F.Arg], F].Error]](function^, _take_array(rebind_var[Array[F.Arg, N]](self.value^))))
 
-    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, M: Monoid, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Out] where Self.Value == Array[A, N] and FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]:
+    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, M: Monoid, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: def(var A) -> R = def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error] -> Piped[FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Out] where Self.Value == Array[A, N] and FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], Never] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid."""
         return Piped(_fold_map_effect[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o], _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, Never, F, False, o]].Error]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), _take_array(rebind_var[Array[A, N]](self.value^))))
 
-    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, G: Monad, M: Monoid, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Out] where Self.Value == Array[A, N] and FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]:
+    def fold_map_effect[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, N: Int, //, M: Monoid, G: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error] -> Piped[FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Out] where Self.Value == Array[A, N] and FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Compatible and (_ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], E] or _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]) and _ErrorCompatible[_EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error], M.Error]:
         """Map each element into the selected Monad and combine its values in order with an explicit Monoid."""
         return Piped(_fold_map_effect[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o], _EntryError[X, FoldMapContract[G, M, List[A], _NativeUnaryRef[A, R, E, F, True, o]].Error]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), _take_array(rebind_var[Array[A, N]](self.value^))))
 
-    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, Self.Value, L, R].Error] -> Piped[IfContract[G, Self.Value, L, R].Out] where IfContract[G, Self.Value, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, Self.Value, L, R].Error], IfContract[G, Self.Value, L, R].Error]:
+    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, Self.Value, L, R].Error] -> Piped[IfContract[G, Self.Value, L, R].Out] where IfContract[G, Self.Value, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, Self.Value, L, R].Error], IfContract[G, Self.Value, L, R].Error]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence.
 
         Parameters:
@@ -1320,194 +1325,37 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_if_effect[G, Self.Value, L, R, _EntryError[X, IfContract[G, Self.Value, L, R].Error]](self.value^, on_true^, on_false^))
 
-    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad, R: def() -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]]] where G.Element[Self.Value] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:
+    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], R: def() -> W = def() -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]]] where G.Element[Self.Value] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, L, _NativeThunkRef[W, Never, R, False, q], _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]]](self.value^, on_true^, _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
 
-    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]]] where G.Element[Self.Value] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:
+    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], D: Movable & Deinitable = Never, R: def() raises D -> W = def() raises D -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]]] where G.Element[Self.Value] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, L, _NativeThunkRef[W, D, R, True, q], _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]]](self.value^, on_true^, _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
 
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, G: Monad, L: def() -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:
+    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], L: def() -> U = def() -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, _NativeThunkRef[U, Never, L, False, o], R, _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]]](self.value^, _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), on_false^))
 
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad, L: def() -> U, R: def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:
+    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], L: def() -> U = def() -> U, R: def() -> W = def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q], _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Never]]]](self.value^, _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
 
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:
+    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], L: def() -> U = def() -> U, D: Movable & Deinitable = Never, R: def() raises D -> W = def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], D]]]](self.value^, _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
 
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:
+    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], Y: Movable & Deinitable = Never, L: def() raises Y -> U = def() raises Y -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, _NativeThunkRef[U, Y, L, True, o], R, _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]]](self.value^, _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), on_false^))
 
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:
+    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], Y: Movable & Deinitable = Never, L: def() raises Y -> U = def() raises Y -> U, R: def() -> W = def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q], _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], Y]]]](self.value^, _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
 
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:
+    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, G: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], Y: Movable & Deinitable = Never, L: def() raises Y -> U = def() raises Y -> U, D: Movable & Deinitable = Never, R: def() raises D -> W = def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> Piped[G.Bound[Self.Value, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]]] where G.Element[Self.Value] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, Self.Value] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:
         """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
         return Piped(_if_effect[G, Self.Value, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, G.BindError[Self.Value, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]]](self.value^, _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error] -> Piped[IfContract[ListFamily, List[Bool], L, R].Out] where Self.Value == List[Bool] and IfContract[ListFamily, List[Bool], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error], IfContract[ListFamily, List[Bool], L, R].Error]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence.
-
-        Parameters:
-            L: The true-branch factory, retaining its native error and receiver mode.
-            R: The false-branch factory, retaining its native error and receiver mode.
-            X: The exact construction error for generic forwarding; checked without converting errors.
-
-        Args:
-            on_true: The branch factory, consumed; invoked only for its selected Bool outcome.
-            on_false: The branch factory, consumed; invoked only for its selected Bool outcome.
-
-        Returns:
-            The selected branch effect; absence or failure in the condition skips both factories.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_if_effect[ListFamily, List[Bool], L, R, _EntryError[X, IfContract[ListFamily, List[Bool], L, R].Error]](rebind_var[List[Bool]](self.value^), on_true^, on_false^))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, R: def() -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], L.Error]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, L, _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == List[Bool] and ListFamily.Element[L.Out] == ListFamily.Element[W] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], L.Error]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, L.Out] and _CarrierCompatible[ListFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ListFamily, List[Bool], L, _NativeThunkRef[W, Never, R, False, q], _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], L.Error]]]](rebind_var[List[Bool]](self.value^), on_true^, _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, L, _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == List[Bool] and ListFamily.Element[L.Out] == ListFamily.Element[W] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], _CommonError[L.Error, D]]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, L.Out] and _CarrierCompatible[ListFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ListFamily, List[Bool], L, _NativeThunkRef[W, D, R, True, q], _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[L.Out, W], _CommonError[L.Error, D]]]]](rebind_var[List[Bool]](self.value^), on_true^, _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, L: def() -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, R.Out], R.Error]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, _NativeThunkRef[U, Never, L, False, o], R]]] where Self.Value == List[Bool] and ListFamily.Element[U] == ListFamily.Element[R.Out] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, R.Out], R.Error]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, U] and _CarrierCompatible[ListFamily, R.Out]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ListFamily, List[Bool], _NativeThunkRef[U, Never, L, False, o], R, _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, R.Out], R.Error]]]](rebind_var[List[Bool]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), on_false^))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, L: def() -> U, R: def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], Never]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == List[Bool] and ListFamily.Element[U] == ListFamily.Element[W] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], Never]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], Never]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, U] and _CarrierCompatible[ListFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ListFamily, List[Bool], _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q], _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], Never]]]](rebind_var[List[Bool]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], D]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == List[Bool] and ListFamily.Element[U] == ListFamily.Element[W] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], D]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], D]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, U] and _CarrierCompatible[ListFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ListFamily, List[Bool], _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], D]]]](rebind_var[List[Bool]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, Y: Movable & Deinitable, L: def() raises Y -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, _NativeThunkRef[U, Y, L, True, o], R]]] where Self.Value == List[Bool] and ListFamily.Element[U] == ListFamily.Element[R.Out] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, R.Out], _CommonError[Y, R.Error]]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, U] and _CarrierCompatible[ListFamily, R.Out]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ListFamily, List[Bool], _NativeThunkRef[U, Y, L, True, o], R, _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, R.Out], _CommonError[Y, R.Error]]]]](rebind_var[List[Bool]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), on_false^))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], Y]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == List[Bool] and ListFamily.Element[U] == ListFamily.Element[W] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], Y]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], Y]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, U] and _CarrierCompatible[ListFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ListFamily, List[Bool], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q], _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], Y]]]](rebind_var[List[Bool]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], _CommonError[Y, D]]]] -> Piped[ListFamily.Bound[List[Bool], _IfEffect[ListFamily, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == List[Bool] and ListFamily.Element[U] == ListFamily.Element[W] and _ErrorCompatible[_EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], _CommonError[Y, D]]]], ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[ListFamily, List[Bool]] and _CarrierCompatible[ListFamily, U] and _CarrierCompatible[ListFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ListFamily, List[Bool], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, ListFamily.BindError[List[Bool], _ErrorProbe[Bool, ListFamily._Joined[U, W], _CommonError[Y, D]]]]](rebind_var[List[Bool]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error] -> Piped[IfContract[OptionalFamily, Optional[Bool], L, R].Out] where Self.Value == Optional[Bool] and IfContract[OptionalFamily, Optional[Bool], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error], IfContract[OptionalFamily, Optional[Bool], L, R].Error]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence.
-
-        Parameters:
-            L: The true-branch factory, retaining its native error and receiver mode.
-            R: The false-branch factory, retaining its native error and receiver mode.
-            X: The exact construction error for generic forwarding; checked without converting errors.
-
-        Args:
-            on_true: The branch factory, consumed; invoked only for its selected Bool outcome.
-            on_false: The branch factory, consumed; invoked only for its selected Bool outcome.
-
-        Returns:
-            The selected branch effect; absence or failure in the condition skips both factories.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], L, R, _EntryError[X, IfContract[OptionalFamily, Optional[Bool], L, R].Error]](rebind_var[Optional[Bool]](self.value^), on_true^, on_false^))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, R: def() -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], L.Error]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, L, _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[L.Out] == OptionalFamily.Element[W] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], L.Error]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, L.Out] and _CarrierCompatible[OptionalFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], L, _NativeThunkRef[W, Never, R, False, q], _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], L.Error]]]](rebind_var[Optional[Bool]](self.value^), on_true^, _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, //, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, L, _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[L.Out] == OptionalFamily.Element[W] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], _CommonError[L.Error, D]]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, L.Out] and _CarrierCompatible[OptionalFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], L, _NativeThunkRef[W, D, R, True, q], _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[L.Out, W], _CommonError[L.Error, D]]]]](rebind_var[Optional[Bool]](self.value^), on_true^, _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, L: def() -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, R.Out], R.Error]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, _NativeThunkRef[U, Never, L, False, o], R]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[U] == OptionalFamily.Element[R.Out] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, R.Out], R.Error]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, U] and _CarrierCompatible[OptionalFamily, R.Out]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], _NativeThunkRef[U, Never, L, False, o], R, _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, R.Out], R.Error]]]](rebind_var[Optional[Bool]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), on_false^))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, L: def() -> U, R: def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], Never]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[U] == OptionalFamily.Element[W] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], Never]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], Never]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, U] and _CarrierCompatible[OptionalFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q], _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], Never]]]](rebind_var[Optional[Bool]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], D]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[U] == OptionalFamily.Element[W] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], D]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], D]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, U] and _CarrierCompatible[OptionalFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], D]]]](rebind_var[Optional[Bool]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, //, Y: Movable & Deinitable, L: def() raises Y -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, _NativeThunkRef[U, Y, L, True, o], R]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[U] == OptionalFamily.Element[R.Out] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, R.Out], _CommonError[Y, R.Error]]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, U] and _CarrierCompatible[OptionalFamily, R.Out]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], _NativeThunkRef[U, Y, L, True, o], R, _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, R.Out], _CommonError[Y, R.Error]]]]](rebind_var[Optional[Bool]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), on_false^))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], Y]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[U] == OptionalFamily.Element[W] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], Y]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], Y]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, U] and _CarrierCompatible[OptionalFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q], _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], Y]]]](rebind_var[Optional[Bool]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], _CommonError[Y, D]]]] -> Piped[OptionalFamily.Bound[Optional[Bool], _IfEffect[OptionalFamily, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == Optional[Bool] and OptionalFamily.Element[U] == OptionalFamily.Element[W] and _ErrorCompatible[_EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], _CommonError[Y, D]]]], OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[OptionalFamily, Optional[Bool]] and _CarrierCompatible[OptionalFamily, U] and _CarrierCompatible[OptionalFamily, W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[OptionalFamily, Optional[Bool], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, OptionalFamily.BindError[Optional[Bool], _ErrorProbe[Bool, OptionalFamily._Joined[U, W], _CommonError[Y, D]]]]](rebind_var[Optional[Bool]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //, X: AnyType = _InferError](deinit self, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error] -> Piped[IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Out] where Self.Value == Result[Bool, Failure] and IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error], IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence.
-
-        Parameters:
-            L: The true-branch factory, retaining its native error and receiver mode.
-            R: The false-branch factory, retaining its native error and receiver mode.
-            Failure: The error payload type retained by Result.
-            X: The exact construction error for generic forwarding; checked without converting errors.
-
-        Args:
-            on_true: The branch factory, consumed; invoked only for its selected Bool outcome.
-            on_false: The branch factory, consumed; invoked only for its selected Bool outcome.
-
-        Returns:
-            The selected branch effect; absence or failure in the condition skips both factories.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], L, R, _EntryError[X, IfContract[ResultFamily[Failure], Result[Bool, Failure], L, R].Error]](rebind_var[Result[Bool, Failure]](self.value^), on_true^, on_false^))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, Failure: Movable & Deinitable, //, R: def() -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], L.Error]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], L, _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[L.Out] == ResultFamily[Failure].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], L.Error]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], L.Out] and _CarrierCompatible[ResultFamily[Failure], W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], L, _NativeThunkRef[W, Never, R, False, q], _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], L.Error]]]](rebind_var[Result[Bool, Failure]](self.value^), on_true^, _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[L: ThunkContract & Movable & Deinitable, W: Movable & Deinitable, q: ImmOrigin, Failure: Movable & Deinitable, //, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, var on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], L, _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[L.Out] == ResultFamily[Failure].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], _CommonError[L.Error, D]]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], L.Out] and _CarrierCompatible[ResultFamily[Failure], W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], L, _NativeThunkRef[W, D, R, True, q], _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[L.Out, W], _CommonError[L.Error, D]]]]](rebind_var[Result[Bool, Failure]](self.value^), on_true^, _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //, L: def() -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, R.Out], R.Error]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], _NativeThunkRef[U, Never, L, False, o], R]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[U] == ResultFamily[Failure].Element[R.Out] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, R.Out], R.Error]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], U] and _CarrierCompatible[ResultFamily[Failure], R.Out]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], _NativeThunkRef[U, Never, L, False, o], R, _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, R.Out], R.Error]]]](rebind_var[Result[Bool, Failure]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), on_false^))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, Failure: Movable & Deinitable, //, L: def() -> U, R: def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], Never]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[U] == ResultFamily[Failure].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], Never]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], Never]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], U] and _CarrierCompatible[ResultFamily[Failure], W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q], _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], Never]]]](rebind_var[Result[Bool, Failure]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, Failure: Movable & Deinitable, //, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], D]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[U] == ResultFamily[Failure].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], D]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], D]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], U] and _CarrierCompatible[ResultFamily[Failure], W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], D]]]](rebind_var[Result[Bool, Failure]](self.value^), _NativeThunkRef[U, Never, L, False, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, R: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //, Y: Movable & Deinitable, L: def() raises Y -> U, X: AnyType = _InferError](deinit self, ref[o] on_true: L, var on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], _NativeThunkRef[U, Y, L, True, o], R]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[U] == ResultFamily[Failure].Element[R.Out] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, R.Out], _CommonError[Y, R.Error]]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], U] and _CarrierCompatible[ResultFamily[Failure], R.Out]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], _NativeThunkRef[U, Y, L, True, o], R, _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, R.Out], _CommonError[Y, R.Error]]]]](rebind_var[Result[Bool, Failure]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), on_false^))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, Failure: Movable & Deinitable, //, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], Y]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[U] == ResultFamily[Failure].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], Y]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], Y]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], U] and _CarrierCompatible[ResultFamily[Failure], W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q], _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], Y]]]](rebind_var[Result[Bool, Failure]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, Never, R, False, q](Pointer(to=on_false))))
-
-    def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, Failure: Movable & Deinitable, //, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](deinit self, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], _CommonError[Y, D]]]] -> Piped[ResultFamily[Failure].Bound[Result[Bool, Failure], _IfEffect[ResultFamily[Failure], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]]] where Self.Value == Result[Bool, Failure] and ResultFamily[Failure].Element[U] == ResultFamily[Failure].Element[W] and _ErrorCompatible[_EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], _CommonError[Y, D]]]], ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[ResultFamily[Failure], Result[Bool, Failure]] and _CarrierCompatible[ResultFamily[Failure], U] and _CarrierCompatible[ResultFamily[Failure], W]:
-        """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""
-        return Piped(_if_effect[ResultFamily[Failure], Result[Bool, Failure], _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q], _EntryError[X, ResultFamily[Failure].BindError[Result[Bool, Failure], _ErrorProbe[Bool, ResultFamily[Failure]._Joined[U, W], _CommonError[Y, D]]]]](rebind_var[Result[Bool, Failure]](self.value^), _NativeThunkRef[U, Y, L, True, o](Pointer(to=on_true)), _NativeThunkRef[W, D, R, True, q](Pointer(to=on_false))))
     # --- end effect syntax ---
 
     # --- container methods (generated) ---
@@ -2259,7 +2107,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         except raised:
             _propagate_error[_EntryError[Z, _AttemptTap[_ErrorMonad[I], Self.Value, _NativeBorrowRef[P, R, X, C, True, o]].Error]](raised^)
 
-    def flat_tap[C: BorrowCallContract & Movable & Deinitable, //, I: Monad](deinit self, var function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, C]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, C]]] where True and C.Payload == I.Element[Self.Value] and _CarrierCompatible[I, C.Result]:
+    def flat_tap[C: BorrowCallContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, var function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, C]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, C]]] where True and C.Payload == I.Element[Self.Value] and _CarrierCompatible[I, C.Result]:
         """Sequence a borrowing effectful callback and retain each original value.
 
         Branches follow bind: no output skips the continuation; each produced
@@ -2281,15 +2129,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, C]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, C]](_EffectRetain[I.Element[Self.Value], I, C](function^), self.value^))
 
-    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, C: def(P) -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o]]]] where True and P == I.Element[Self.Value] and _CarrierCompatible[I, R]:
+    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], C: def(P) -> R = def(P) -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o]]]] where True and P == I.Element[Self.Value] and _CarrierCompatible[I, R]:
         """Sequence a borrowing effectful callback and retain each original value."""
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o]]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o]]](_EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o]](_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function))), self.value^))
 
-    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o]]]] where True and P == I.Element[Self.Value] and _CarrierCompatible[I, R]:
+    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], X: Movable & Deinitable = Never, C: def(P) raises X -> R = def(P) raises X -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o]]]] where True and P == I.Element[Self.Value] and _CarrierCompatible[I, R]:
         """Sequence a borrowing effectful callback and retain each original value."""
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o]]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o]]](_EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o]](_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function))), self.value^))
 
-    def flat_pair_with[C: BorrowCallContract & Movable & Deinitable, //, I: Monad](deinit self, var function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, C, False, True]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, C, False, True]]] where True and C.Payload == I.Element[Self.Value] and _CarrierCompatible[I, C.Result]:
+    def flat_pair_with[C: BorrowCallContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, var function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, C, False, True]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, C, False, True]]] where True and C.Payload == I.Element[Self.Value] and _CarrierCompatible[I, C.Result]:
         """Sequence a borrowing effectful projection and pair each success with its original.
 
         Each successful projection emits (original, projected). Projected values
@@ -2315,15 +2163,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, C, False, True]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, C, False, True]](_EffectRetain[I.Element[Self.Value], I, C, False, True](function^), self.value^))
 
-    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, C: def(P) -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o], False, True]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o], False, True]]] where True and P == I.Element[Self.Value] and _CarrierCompatible[I, R]:
+    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], C: def(P) -> R = def(P) -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o], False, True]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o], False, True]]] where True and P == I.Element[Self.Value] and _CarrierCompatible[I, R]:
         """Sequence a borrowing effectful projection and pair each success with its original."""
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o], False, True]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o], False, True]](_EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, Never, C, False, o], False, True](_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function))), self.value^))
 
-    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o], False, True]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o], False, True]]] where True and P == I.Element[Self.Value] and _CarrierCompatible[I, R]:
+    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], X: Movable & Deinitable = Never, C: def(P) raises X -> R = def(P) raises X -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o], False, True]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o], False, True]]] where True and P == I.Element[Self.Value] and _CarrierCompatible[I, R]:
         """Sequence a borrowing effectful projection and pair each success with its original."""
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o], False, True]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o], False, True]](_EffectRetain[I.Element[Self.Value], I, _NativeBorrowRef[P, R, X, C, True, o], False, True](_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function))), self.value^))
 
-    def followed_by[C: ThunkContract & Movable & Deinitable, //, I: Monad](deinit self, var function: C) raises I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], C]]] -> Piped[I.Bound[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], C]]]] where True and _CarrierCompatible[I, C.Out]:
+    def followed_by[C: ThunkContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, var function: C) raises I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], C]]] -> Piped[I.Bound[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], C]]]] where True and _CarrierCompatible[I, C.Out]:
         """Sequence a zero-argument factory and keep its produced values.
 
         Branches follow bind: no output skips the continuation; each produced
@@ -2345,15 +2193,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_flat_map_as[I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], C]]], I, Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], C]]](_BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], C]](_IgnoreInput[I.Element[Self.Value], C](function^)), self.value^))
 
-    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, C: def() -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]] -> Piped[I.Bound[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]]] where True and _CarrierCompatible[I, R]:
+    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], C: def() -> R = def() -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]] -> Piped[I.Bound[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]]] where True and _CarrierCompatible[I, R]:
         """Sequence a zero-argument factory and keep its produced values."""
         return Piped(_flat_map_as[I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]], I, Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]](_BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))), self.value^))
 
-    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]] -> Piped[I.Bound[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]]] where True and _CarrierCompatible[I, R]:
+    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], X: Movable & Deinitable = Never, C: def() raises X -> R = def() raises X -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]] -> Piped[I.Bound[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]]] where True and _CarrierCompatible[I, R]:
         """Sequence a zero-argument factory and keep its produced values."""
         return Piped(_flat_map_as[I.BindError[Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]], I, Self.Value, _BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]](_BorrowedUnary[I.Element[Self.Value], _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))), self.value^))
 
-    def before[C: ThunkContract & Movable & Deinitable, //, I: Monad](deinit self, var function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], C]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], C]]]] where True and _CarrierCompatible[I, C.Out]:
+    def before[C: ThunkContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, var function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], C]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], C]]]] where True and _CarrierCompatible[I, C.Out]:
         """Sequence a zero-argument factory and retain each original value.
 
         Branches follow bind: no output skips the continuation; each produced
@@ -2375,489 +2223,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], C]]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], C]]](_EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], C]](_IgnoreInput[I.Element[Self.Value], C](function^)), self.value^))
 
-    def before[R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, C: def() -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]]] where True and _CarrierCompatible[I, R]:
+    def before[R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], C: def() -> R = def() -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]]] where True and _CarrierCompatible[I, R]:
         """Sequence a zero-argument factory and retain each original value."""
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]]](_EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))), self.value^))
 
-    def before[R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]]] where True and _CarrierCompatible[I, R]:
+    def before[R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], X: Movable & Deinitable = Never, C: def() raises X -> R = def() raises X -> R](deinit self, ref[o] function: C) raises I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]] -> Piped[I.Bound[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]]] where True and _CarrierCompatible[I, R]:
         """Sequence a zero-argument factory and retain each original value."""
         return Piped(_flat_map_as[I.BindError[Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]], I, Self.Value, _EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]]](_EffectRetain[I.Element[Self.Value], I, _IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[I.Element[Self.Value], _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))), self.value^))
-
-    def flat_tap[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, C]]] where Self.Value == List[T] and C.Payload == T and _CarrierCompatible[ListFamily, C.Result]:
-        """Sequence a borrowing effectful callback and retain each original value.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[C.Failure, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, C]]]
-        return Piped(_flat_map_as[C.Failure, ListFamily, List[T], _EffectRetain[T, ListFamily, C]](_EffectRetain[T, ListFamily, C](function^), rebind_var[List[T]](self.value^)))
-
-    def flat_tap[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, Never, C, False, o]]]] where Self.Value == List[T] and P == T and _CarrierCompatible[ListFamily, R]:
-        """Sequence a borrowing effectful callback and retain each original value."""
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[Never, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, Never, C, False, o]]]]
-        return Piped(_flat_map_as[Never, ListFamily, List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, Never, C, False, o]]](_EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, Never, C, False, o]](_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function))), rebind_var[List[T]](self.value^)))
-
-    def flat_tap[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, X, C, True, o]]]] where Self.Value == List[T] and P == T and _CarrierCompatible[ListFamily, R]:
-        """Sequence a borrowing effectful callback and retain each original value."""
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[X, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, X, C, True, o]]]]
-        return Piped(_flat_map_as[X, ListFamily, List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, X, C, True, o]]](_EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, X, C, True, o]](_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function))), rebind_var[List[T]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, C, False, True]]] where Self.Value == List[T] and C.Payload == T and _CarrierCompatible[ListFamily, C.Result]:
-        """Sequence a borrowing effectful projection and pair each success with its original.
-
-        Each successful projection emits (original, projected). Projected values
-        are moved; only retained originals need Copyable when effects branch.
-
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[C.Failure, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, C, False, True]]]
-        return Piped(_flat_map_as[C.Failure, ListFamily, List[T], _EffectRetain[T, ListFamily, C, False, True]](_EffectRetain[T, ListFamily, C, False, True](function^), rebind_var[List[T]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, Never, C, False, o], False, True]]] where Self.Value == List[T] and P == T and _CarrierCompatible[ListFamily, R]:
-        """Sequence a borrowing effectful projection and pair each success with its original."""
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[Never, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, Never, C, False, o], False, True]]]
-        return Piped(_flat_map_as[Never, ListFamily, List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, Never, C, False, o], False, True]](_EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, Never, C, False, o], False, True](_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function))), rebind_var[List[T]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, X, C, True, o], False, True]]] where Self.Value == List[T] and P == T and _CarrierCompatible[ListFamily, R]:
-        """Sequence a borrowing effectful projection and pair each success with its original."""
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[X, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, X, C, True, o], False, True]]]
-        return Piped(_flat_map_as[X, ListFamily, List[T], _EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, X, C, True, o], False, True]](_EffectRetain[T, ListFamily, _NativeBorrowRef[P, R, X, C, True, o], False, True](_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function))), rebind_var[List[T]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, C: ThunkContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Piped[ListFamily.Bound[List[T], _BorrowedUnary[T, _IgnoreInput[T, C]]]] where Self.Value == List[T] and _CarrierCompatible[ListFamily, C.Out]:
-        """Sequence a zero-argument factory and keep its produced values.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[C.Error, ListFamily.BindError[List[T], _BorrowedUnary[T, _IgnoreInput[T, C]]]]
-        return Piped(_flat_map_as[C.Error, ListFamily, List[T], _BorrowedUnary[T, _IgnoreInput[T, C]]](_BorrowedUnary[T, _IgnoreInput[T, C]](_IgnoreInput[T, C](function^)), rebind_var[List[T]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Piped[ListFamily.Bound[List[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]] where Self.Value == List[T] and _CarrierCompatible[ListFamily, R]:
-        """Sequence a zero-argument factory and keep its produced values."""
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[Never, ListFamily.BindError[List[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]]
-        return Piped(_flat_map_as[Never, ListFamily, List[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]](_BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))), rebind_var[List[T]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[ListFamily.Bound[List[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]] where Self.Value == List[T] and _CarrierCompatible[ListFamily, R]:
-        """Sequence a zero-argument factory and keep its produced values."""
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[X, ListFamily.BindError[List[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]]
-        return Piped(_flat_map_as[X, ListFamily, List[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]](_BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))), rebind_var[List[T]](self.value^)))
-
-    def before[T: Movable & Deinitable, C: ThunkContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, C]]]] where Self.Value == List[T] and _CarrierCompatible[ListFamily, C.Out]:
-        """Sequence a zero-argument factory and retain each original value.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[C.Error, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, C]]]]
-        return Piped(_flat_map_as[C.Error, ListFamily, List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, C]]](_EffectRetain[T, ListFamily, _IgnoreInput[T, C]](_IgnoreInput[T, C](function^)), rebind_var[List[T]](self.value^)))
-
-    def before[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]] where Self.Value == List[T] and _CarrierCompatible[ListFamily, R]:
-        """Sequence a zero-argument factory and retain each original value."""
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[Never, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]]
-        return Piped(_flat_map_as[Never, ListFamily, List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]](_EffectRetain[T, ListFamily, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))), rebind_var[List[T]](self.value^)))
-
-    def before[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[ListFamily.Bound[List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]] where Self.Value == List[T] and _CarrierCompatible[ListFamily, R]:
-        """Sequence a zero-argument factory and retain each original value."""
-        comptime assert Self.Value == List[T]
-        comptime assert _ErrorCompatible[X, ListFamily.BindError[List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]]
-        return Piped(_flat_map_as[X, ListFamily, List[T], _EffectRetain[T, ListFamily, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]](_EffectRetain[T, ListFamily, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))), rebind_var[List[T]](self.value^)))
-
-    def flat_tap[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, C]]] where Self.Value == Optional[T] and C.Payload == T and _CarrierCompatible[OptionalFamily, C.Result]:
-        """Sequence a borrowing effectful callback and retain each original value.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[C.Failure, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, C]]]
-        return Piped(_flat_map_as[C.Failure, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, C]](_EffectRetain[T, OptionalFamily, C](function^), rebind_var[Optional[T]](self.value^)))
-
-    def flat_tap[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, Never, C, False, o]]]] where Self.Value == Optional[T] and P == T and _CarrierCompatible[OptionalFamily, R]:
-        """Sequence a borrowing effectful callback and retain each original value."""
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[Never, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, Never, C, False, o]]]]
-        return Piped(_flat_map_as[Never, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, Never, C, False, o]]](_EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, Never, C, False, o]](_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function))), rebind_var[Optional[T]](self.value^)))
-
-    def flat_tap[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, X, C, True, o]]]] where Self.Value == Optional[T] and P == T and _CarrierCompatible[OptionalFamily, R]:
-        """Sequence a borrowing effectful callback and retain each original value."""
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[X, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, X, C, True, o]]]]
-        return Piped(_flat_map_as[X, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, X, C, True, o]]](_EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, X, C, True, o]](_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function))), rebind_var[Optional[T]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, C, False, True]]] where Self.Value == Optional[T] and C.Payload == T and _CarrierCompatible[OptionalFamily, C.Result]:
-        """Sequence a borrowing effectful projection and pair each success with its original.
-
-        Each successful projection emits (original, projected). Projected values
-        are moved; only retained originals need Copyable when effects branch.
-
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[C.Failure, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, C, False, True]]]
-        return Piped(_flat_map_as[C.Failure, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, C, False, True]](_EffectRetain[T, OptionalFamily, C, False, True](function^), rebind_var[Optional[T]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, Never, C, False, o], False, True]]] where Self.Value == Optional[T] and P == T and _CarrierCompatible[OptionalFamily, R]:
-        """Sequence a borrowing effectful projection and pair each success with its original."""
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[Never, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, Never, C, False, o], False, True]]]
-        return Piped(_flat_map_as[Never, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, Never, C, False, o], False, True]](_EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, Never, C, False, o], False, True](_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function))), rebind_var[Optional[T]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, X, C, True, o], False, True]]] where Self.Value == Optional[T] and P == T and _CarrierCompatible[OptionalFamily, R]:
-        """Sequence a borrowing effectful projection and pair each success with its original."""
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[X, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, X, C, True, o], False, True]]]
-        return Piped(_flat_map_as[X, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, X, C, True, o], False, True]](_EffectRetain[T, OptionalFamily, _NativeBorrowRef[P, R, X, C, True, o], False, True](_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function))), rebind_var[Optional[T]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, C: ThunkContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Piped[OptionalFamily.Bound[Optional[T], _BorrowedUnary[T, _IgnoreInput[T, C]]]] where Self.Value == Optional[T] and _CarrierCompatible[OptionalFamily, C.Out]:
-        """Sequence a zero-argument factory and keep its produced values.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[C.Error, OptionalFamily.BindError[Optional[T], _BorrowedUnary[T, _IgnoreInput[T, C]]]]
-        return Piped(_flat_map_as[C.Error, OptionalFamily, Optional[T], _BorrowedUnary[T, _IgnoreInput[T, C]]](_BorrowedUnary[T, _IgnoreInput[T, C]](_IgnoreInput[T, C](function^)), rebind_var[Optional[T]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Piped[OptionalFamily.Bound[Optional[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]] where Self.Value == Optional[T] and _CarrierCompatible[OptionalFamily, R]:
-        """Sequence a zero-argument factory and keep its produced values."""
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[Never, OptionalFamily.BindError[Optional[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]]
-        return Piped(_flat_map_as[Never, OptionalFamily, Optional[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]](_BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))), rebind_var[Optional[T]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[OptionalFamily.Bound[Optional[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]] where Self.Value == Optional[T] and _CarrierCompatible[OptionalFamily, R]:
-        """Sequence a zero-argument factory and keep its produced values."""
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[X, OptionalFamily.BindError[Optional[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]]
-        return Piped(_flat_map_as[X, OptionalFamily, Optional[T], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]](_BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))), rebind_var[Optional[T]](self.value^)))
-
-    def before[T: Movable & Deinitable, C: ThunkContract & Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, C]]]] where Self.Value == Optional[T] and _CarrierCompatible[OptionalFamily, C.Out]:
-        """Sequence a zero-argument factory and retain each original value.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[C.Error, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, C]]]]
-        return Piped(_flat_map_as[C.Error, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, C]]](_EffectRetain[T, OptionalFamily, _IgnoreInput[T, C]](_IgnoreInput[T, C](function^)), rebind_var[Optional[T]](self.value^)))
-
-    def before[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]] where Self.Value == Optional[T] and _CarrierCompatible[OptionalFamily, R]:
-        """Sequence a zero-argument factory and retain each original value."""
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[Never, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]]
-        return Piped(_flat_map_as[Never, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]](_EffectRetain[T, OptionalFamily, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))), rebind_var[Optional[T]](self.value^)))
-
-    def before[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[OptionalFamily.Bound[Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]] where Self.Value == Optional[T] and _CarrierCompatible[OptionalFamily, R]:
-        """Sequence a zero-argument factory and retain each original value."""
-        comptime assert Self.Value == Optional[T]
-        comptime assert _ErrorCompatible[X, OptionalFamily.BindError[Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]]
-        return Piped(_flat_map_as[X, OptionalFamily, Optional[T], _EffectRetain[T, OptionalFamily, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]](_EffectRetain[T, OptionalFamily, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))), rebind_var[Optional[T]](self.value^)))
-
-    def flat_tap[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], C]]] where Self.Value == Result[T, Failure] and C.Payload == T and _CarrierCompatible[ResultFamily[Failure], C.Result]:
-        """Sequence a borrowing effectful callback and retain each original value.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-            Failure: The stored Result error type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[C.Failure, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], C]]]
-        return Piped(_flat_map_as[C.Failure, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], C]](_EffectRetain[T, ResultFamily[Failure], C](function^), rebind_var[Result[T, Failure]](self.value^)))
-
-    def flat_tap[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, Never, C, False, o]]]] where Self.Value == Result[T, Failure] and P == T and _CarrierCompatible[ResultFamily[Failure], R]:
-        """Sequence a borrowing effectful callback and retain each original value."""
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[Never, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, Never, C, False, o]]]]
-        return Piped(_flat_map_as[Never, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, Never, C, False, o]]](_EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, Never, C, False, o]](_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function))), rebind_var[Result[T, Failure]](self.value^)))
-
-    def flat_tap[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, X, C, True, o]]]] where Self.Value == Result[T, Failure] and P == T and _CarrierCompatible[ResultFamily[Failure], R]:
-        """Sequence a borrowing effectful callback and retain each original value."""
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[X, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, X, C, True, o]]]]
-        return Piped(_flat_map_as[X, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, X, C, True, o]]](_EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, X, C, True, o]](_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function))), rebind_var[Result[T, Failure]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable, //](deinit self, var function: C) raises C.Failure -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], C, False, True]]] where Self.Value == Result[T, Failure] and C.Payload == T and _CarrierCompatible[ResultFamily[Failure], C.Result]:
-        """Sequence a borrowing effectful projection and pair each success with its original.
-
-        Each successful projection emits (original, projected). Projected values
-        are moved; only retained originals need Copyable when effects branch.
-
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-            Failure: The stored Result error type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[C.Failure, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], C, False, True]]]
-        return Piped(_flat_map_as[C.Failure, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], C, False, True]](_EffectRetain[T, ResultFamily[Failure], C, False, True](function^), rebind_var[Result[T, Failure]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, Never, C, False, o], False, True]]] where Self.Value == Result[T, Failure] and P == T and _CarrierCompatible[ResultFamily[Failure], R]:
-        """Sequence a borrowing effectful projection and pair each success with its original."""
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[Never, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, Never, C, False, o], False, True]]]
-        return Piped(_flat_map_as[Never, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, Never, C, False, o], False, True]](_EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, Never, C, False, o], False, True](_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function))), rebind_var[Result[T, Failure]](self.value^)))
-
-    def flat_pair_with[T: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, X, C, True, o], False, True]]] where Self.Value == Result[T, Failure] and P == T and _CarrierCompatible[ResultFamily[Failure], R]:
-        """Sequence a borrowing effectful projection and pair each success with its original."""
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[X, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, X, C, True, o], False, True]]]
-        return Piped(_flat_map_as[X, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, X, C, True, o], False, True]](_EffectRetain[T, ResultFamily[Failure], _NativeBorrowRef[P, R, X, C, True, o], False, True](_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function))), rebind_var[Result[T, Failure]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, C: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, C]]]] where Self.Value == Result[T, Failure] and _CarrierCompatible[ResultFamily[Failure], C.Out]:
-        """Sequence a zero-argument factory and keep its produced values.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-            Failure: The stored Result error type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[C.Error, ResultFamily[Failure].BindError[Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, C]]]]
-        return Piped(_flat_map_as[C.Error, ResultFamily[Failure], Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, C]]](_BorrowedUnary[T, _IgnoreInput[T, C]](_IgnoreInput[T, C](function^)), rebind_var[Result[T, Failure]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]] where Self.Value == Result[T, Failure] and _CarrierCompatible[ResultFamily[Failure], R]:
-        """Sequence a zero-argument factory and keep its produced values."""
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[Never, ResultFamily[Failure].BindError[Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]]
-        return Piped(_flat_map_as[Never, ResultFamily[Failure], Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]](_BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))), rebind_var[Result[T, Failure]](self.value^)))
-
-    def followed_by[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]] where Self.Value == Result[T, Failure] and _CarrierCompatible[ResultFamily[Failure], R]:
-        """Sequence a zero-argument factory and keep its produced values."""
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[X, ResultFamily[Failure].BindError[Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]]
-        return Piped(_flat_map_as[X, ResultFamily[Failure], Result[T, Failure], _BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]](_BorrowedUnary[T, _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))), rebind_var[Result[T, Failure]](self.value^)))
-
-    def before[T: Movable & Deinitable, C: ThunkContract & Movable & Deinitable, Failure: Movable & Deinitable, //](deinit self, var function: C) raises C.Error -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, C]]]] where Self.Value == Result[T, Failure] and _CarrierCompatible[ResultFamily[Failure], C.Out]:
-        """Sequence a zero-argument factory and retain each original value.
-
-        Branches follow bind: no output skips the continuation; each produced
-        success emits one output. Retained values must be Copyable for branching
-        families. Single-use families move them. Native errors keep their types.
-
-        Parameters:
-            T: The source payload type, including origins.
-            C: The callback, with its exact receiver and effect type.
-            Failure: The stored Result error type.
-
-        Args:
-            function: The callback, consumed; repeatable wherever the source can branch.
-
-        Returns:
-            A pipeline holding the family result; deferred families retain callbacks until execution.
-
-        Raises:
-            The exact callback or family construction error.
-        """
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[C.Error, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, C]]]]
-        return Piped(_flat_map_as[C.Error, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, C]]](_EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, C]](_IgnoreInput[T, C](function^)), rebind_var[Result[T, Failure]](self.value^)))
-
-    def before[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]] where Self.Value == Result[T, Failure] and _CarrierCompatible[ResultFamily[Failure], R]:
-        """Sequence a zero-argument factory and retain each original value."""
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[Never, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]]]
-        return Piped(_flat_map_as[Never, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]]](_EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))), rebind_var[Result[T, Failure]](self.value^)))
-
-    def before[T: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> Piped[ResultFamily[Failure].Bound[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]] where Self.Value == Result[T, Failure] and _CarrierCompatible[ResultFamily[Failure], R]:
-        """Sequence a zero-argument factory and retain each original value."""
-        comptime assert Self.Value == Result[T, Failure]
-        comptime assert _ErrorCompatible[X, ResultFamily[Failure].BindError[Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]]]
-        return Piped(_flat_map_as[X, ResultFamily[Failure], Result[T, Failure], _EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]]](_EffectRetain[T, ResultFamily[Failure], _IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))), rebind_var[Result[T, Failure]](self.value^)))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U](
-        deinit self, ref function: F
-    ) -> Piped[List[U]] where Self.Value == List[T]:
-        """Map List payloads immediately, preserving the native container."""
-        comptime assert Self.Value == List[T]
-        return Piped(_family_map[ListFamily](rebind_var[List[T]](self.value^), function))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U](
-        deinit self, ref function: F
-    ) raises E -> Piped[List[U]] where Self.Value == List[T]:
-        """Map List payloads immediately, preserving the native container."""
-        comptime assert Self.Value == List[T]
-        return Piped(_family_map[ListFamily, X=E](rebind_var[List[T]](self.value^), function))
-
-    def map[F: UnaryContract & Movable & Deinitable](
-        deinit self, var function: F
-    ) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.Arg] and RepeatableUnary[F]:
-        """Map List payloads with an owned library callback."""
-        comptime assert Self.Value == List[F.Arg]
-        return Piped(ListFamily.map(function^, rebind_var[List[F.Arg]](self.value^)))
-
-    def map[F: _UnaryViewable, o: ImmOrigin](
-        deinit self, ref[o] function: F
-    ) raises F._View[o].Error -> Piped[List[F._View[o].Out]] where Self.Value == List[F._View[o].Arg]:
-        """Map List payloads with a borrowed callable view."""
-        comptime assert Self.Value == List[F._View[o].Arg]
-        return Piped(_family_map[ListFamily](rebind_var[List[F._View[o].Arg]](self.value^), function._unary_view()))
 
     def map[T: Movable & Deinitable, U: Movable & Deinitable, N: Int, //, F: def(var T) -> U](
         deinit self, ref function: F
@@ -2886,62 +2258,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Map Array payloads with a borrowed callable view."""
         comptime assert Self.Value == Array[F._View[o].Arg, N]
         return Piped(_family_map[_ArrayFamily[N]](rebind_var[Array[F._View[o].Arg, N]](self.value^), function._unary_view()))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U](
-        deinit self, ref function: F
-    ) -> Piped[Deque[U]] where Self.Value == Deque[T]:
-        """Map Deque payloads immediately, preserving the native container."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_family_map[_DequeFamily](rebind_var[Deque[T]](self.value^), function))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U](
-        deinit self, ref function: F
-    ) raises E -> Piped[Deque[U]] where Self.Value == Deque[T]:
-        """Map Deque payloads immediately, preserving the native container."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_family_map[_DequeFamily, X=E](rebind_var[Deque[T]](self.value^), function))
-
-    def map[F: UnaryContract & Movable & Deinitable](
-        deinit self, var function: F
-    ) raises F.Error -> Piped[Deque[F.Out]] where Self.Value == Deque[F.Arg] and _MapCompatible[_DequeFamily, Deque[F.Arg], F]:
-        """Map Deque payloads with an owned library callback."""
-        comptime assert Self.Value == Deque[F.Arg]
-        return Piped(_DequeFamily.map(function^, rebind_var[Deque[F.Arg]](self.value^)))
-
-    def map[F: _UnaryViewable, o: ImmOrigin](
-        deinit self, ref[o] function: F
-    ) raises F._View[o].Error -> Piped[Deque[F._View[o].Out]] where Self.Value == Deque[F._View[o].Arg]:
-        """Map Deque payloads with a borrowed callable view."""
-        comptime assert Self.Value == Deque[F._View[o].Arg]
-        return Piped(_family_map[_DequeFamily](rebind_var[Deque[F._View[o].Arg]](self.value^), function._unary_view()))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U](
-        deinit self, ref function: F
-    ) -> Piped[LinkedList[U]] where Self.Value == LinkedList[T]:
-        """Map LinkedList payloads immediately, preserving the native container."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_family_map[_LinkedListFamily](rebind_var[LinkedList[T]](self.value^), function))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U](
-        deinit self, ref function: F
-    ) raises E -> Piped[LinkedList[U]] where Self.Value == LinkedList[T]:
-        """Map LinkedList payloads immediately, preserving the native container."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_family_map[_LinkedListFamily, X=E](rebind_var[LinkedList[T]](self.value^), function))
-
-    def map[F: UnaryContract & Movable & Deinitable](
-        deinit self, var function: F
-    ) raises F.Error -> Piped[LinkedList[F.Out]] where Self.Value == LinkedList[F.Arg] and _MapCompatible[_LinkedListFamily, LinkedList[F.Arg], F]:
-        """Map LinkedList payloads with an owned library callback."""
-        comptime assert Self.Value == LinkedList[F.Arg]
-        return Piped(_LinkedListFamily.map(function^, rebind_var[LinkedList[F.Arg]](self.value^)))
-
-    def map[F: _UnaryViewable, o: ImmOrigin](
-        deinit self, ref[o] function: F
-    ) raises F._View[o].Error -> Piped[LinkedList[F._View[o].Out]] where Self.Value == LinkedList[F._View[o].Arg]:
-        """Map LinkedList payloads with a borrowed callable view."""
-        comptime assert Self.Value == LinkedList[F._View[o].Arg]
-        return Piped(_family_map[_LinkedListFamily](rebind_var[LinkedList[F._View[o].Arg]](self.value^), function._unary_view()))
 
     def map[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(var T) -> U](
         deinit self, ref function: F
@@ -2999,146 +2315,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[F._View[o].Arg]
         return Piped(_family_map[_StringDictFamily[F._View[o].Arg]](rebind_var[StringDict[F._View[o].Arg]](self.value^), function._unary_view()))
 
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, //, F: def(var T) -> U](
-        deinit self, ref function: F
-    ) -> Piped[Optional[U]] where Self.Value == Optional[T]:
-        """Map Optional payloads immediately, preserving the native container."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(_family_map[OptionalFamily](rebind_var[Optional[T]](self.value^), function))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U](
-        deinit self, ref function: F
-    ) raises E -> Piped[Optional[U]] where Self.Value == Optional[T]:
-        """Map Optional payloads immediately, preserving the native container."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(_family_map[OptionalFamily, X=E](rebind_var[Optional[T]](self.value^), function))
-
-    def map[F: UnaryContract & Movable & Deinitable](
-        deinit self, var function: F
-    ) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.Arg] and _MapCompatible[OptionalFamily, Optional[F.Arg], F]:
-        """Map Optional payloads with an owned library callback."""
-        comptime assert Self.Value == Optional[F.Arg]
-        return Piped(OptionalFamily.map(function^, rebind_var[Optional[F.Arg]](self.value^)))
-
-    def map[F: _UnaryViewable, o: ImmOrigin](
-        deinit self, ref[o] function: F
-    ) raises F._View[o].Error -> Piped[Optional[F._View[o].Out]] where Self.Value == Optional[F._View[o].Arg]:
-        """Map Optional payloads with a borrowed callable view."""
-        comptime assert Self.Value == Optional[F._View[o].Arg]
-        return Piped(_family_map[OptionalFamily](rebind_var[Optional[F._View[o].Arg]](self.value^), function._unary_view()))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable, //, F: def(var T) -> U](
-        deinit self, ref function: F
-    ) -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure]:
-        """Map Result payloads immediately, preserving the native container."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(_family_map[ResultFamily[Failure]](rebind_var[Result[T, Failure]](self.value^), function))
-
-    def map[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var T) raises E -> U](
-        deinit self, ref function: F
-    ) raises E -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure]:
-        """Map Result payloads immediately, preserving the native container."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(_family_map[ResultFamily[Failure], X=E](rebind_var[Result[T, Failure]](self.value^), function))
-
-    def map[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable](
-        deinit self, var function: F
-    ) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.Arg, Failure] and _MapCompatible[ResultFamily[Failure], Result[F.Arg, Failure], F]:
-        """Map Result payloads with an owned library callback."""
-        comptime assert Self.Value == Result[F.Arg, Failure]
-        return Piped(ResultFamily[Failure].map(function^, rebind_var[Result[F.Arg, Failure]](self.value^)))
-
-    def map[F: _UnaryViewable, o: ImmOrigin, Failure: Movable & Deinitable](
-        deinit self, ref[o] function: F
-    ) raises F._View[o].Error -> Piped[Result[F._View[o].Out, Failure]] where Self.Value == Result[F._View[o].Arg, Failure]:
-        """Map Result payloads with a borrowed callable view."""
-        comptime assert Self.Value == Result[F._View[o].Arg, Failure]
-        return Piped(_family_map[ResultFamily[Failure]](rebind_var[Result[F._View[o].Arg, Failure]](self.value^), function._unary_view()))
-
-    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
-        deinit self, ref predicate: F
-    ) -> Piped[List[T]] where R == Bool and Self.Value == List[T]:
-        """Retain accepted List payloads immediately, preserving their container."""
-        comptime assert Self.Value == List[T]
-        return Piped(_family_filter[ListFamily](rebind_var[List[T]](self.value^), predicate))
-
-    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
-        deinit self, ref predicate: F
-    ) raises E -> Piped[List[T]] where R == Bool and Self.Value == List[T]:
-        """Retain accepted List payloads immediately, preserving their container."""
-        comptime assert Self.Value == List[T]
-        return Piped(_family_filter[ListFamily](rebind_var[List[T]](self.value^), predicate))
-
-    def filter[C: BorrowCallContract & Movable & Deinitable](
-        deinit self, var predicate: C
-    ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
-        """Retain accepted List payloads with an owned library predicate."""
-        comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
-        return Piped(_family_filter[ListFamily](rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^), predicate^))
-
-    def filter[C: _BorrowViewable, o: ImmOrigin](
-        deinit self, ref[o] predicate: C
-    ) raises C._BorrowView[o].Failure -> Piped[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool:
-        """Retain accepted List payloads with a shared library predicate."""
-        comptime assert Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
-        return Piped(_family_filter[ListFamily](rebind_var[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
-
-    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
-        deinit self, ref predicate: F
-    ) -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:
-        """Retain accepted Deque payloads immediately, preserving their container."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_family_filter[_DequeFamily](rebind_var[Deque[T]](self.value^), predicate))
-
-    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
-        deinit self, ref predicate: F
-    ) raises E -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:
-        """Retain accepted Deque payloads immediately, preserving their container."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_family_filter[_DequeFamily](rebind_var[Deque[T]](self.value^), predicate))
-
-    def filter[C: BorrowCallContract & Movable & Deinitable](
-        deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
-        """Retain accepted Deque payloads with an owned library predicate."""
-        comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
-        return Piped(_family_filter[_DequeFamily](rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^), predicate^))
-
-    def filter[C: _BorrowViewable, o: ImmOrigin](
-        deinit self, ref[o] predicate: C
-    ) raises C._BorrowView[o].Failure -> Piped[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool:
-        """Retain accepted Deque payloads with a shared library predicate."""
-        comptime assert Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
-        return Piped(_family_filter[_DequeFamily](rebind_var[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
-
-    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
-        deinit self, ref predicate: F
-    ) -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:
-        """Retain accepted LinkedList payloads immediately, preserving their container."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_family_filter[_LinkedListFamily](rebind_var[LinkedList[T]](self.value^), predicate))
-
-    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
-        deinit self, ref predicate: F
-    ) raises E -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:
-        """Retain accepted LinkedList payloads immediately, preserving their container."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_family_filter[_LinkedListFamily](rebind_var[LinkedList[T]](self.value^), predicate))
-
-    def filter[C: BorrowCallContract & Movable & Deinitable](
-        deinit self, var predicate: C
-    ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
-        """Retain accepted LinkedList payloads with an owned library predicate."""
-        comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
-        return Piped(_family_filter[_LinkedListFamily](rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^), predicate^))
-
-    def filter[C: _BorrowViewable, o: ImmOrigin](
-        deinit self, ref[o] predicate: C
-    ) raises C._BorrowView[o].Failure -> Piped[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool:
-        """Retain accepted LinkedList payloads with a shared library predicate."""
-        comptime assert Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
-        return Piped(_family_filter[_LinkedListFamily](rebind_var[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
-
     def filter[T: Movable & Deinitable, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
     ) -> Piped[Dict[K, T, H]] where R == Bool and Self.Value == Dict[K, T, H]:
@@ -3194,118 +2370,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Retain accepted StringDict payloads with a shared library predicate."""
         comptime assert Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
         return Piped(_family_filter[_StringDictFamily[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](rebind_var[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
-
-    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
-        deinit self, ref predicate: F
-    ) -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:
-        """Retain accepted Optional payloads immediately, preserving their container."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(_family_filter[OptionalFamily](rebind_var[Optional[T]](self.value^), predicate))
-
-    def filter[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
-        deinit self, ref predicate: F
-    ) raises E -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:
-        """Retain accepted Optional payloads immediately, preserving their container."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(_family_filter[OptionalFamily](rebind_var[Optional[T]](self.value^), predicate))
-
-    def filter[C: BorrowCallContract & Movable & Deinitable](
-        deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
-        """Retain accepted Optional payloads with an owned library predicate."""
-        comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
-        return Piped(_family_filter[OptionalFamily](rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^), predicate^))
-
-    def filter[C: _BorrowViewable, o: ImmOrigin](
-        deinit self, ref[o] predicate: C
-    ) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool:
-        """Retain accepted Optional payloads with a shared library predicate."""
-        comptime assert Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
-        return Piped(_family_filter[OptionalFamily](rebind_var[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
-
-    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
-        deinit self, ref predicate: F
-    ) -> Piped[List[T]] where R == Bool and Self.Value == List[T]:
-        """Retain rejected List payloads immediately, preserving their container."""
-        comptime assert Self.Value == List[T]
-        return Piped(_family_filter_not[ListFamily](rebind_var[List[T]](self.value^), predicate))
-
-    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
-        deinit self, ref predicate: F
-    ) raises E -> Piped[List[T]] where R == Bool and Self.Value == List[T]:
-        """Retain rejected List payloads immediately, preserving their container."""
-        comptime assert Self.Value == List[T]
-        return Piped(_family_filter_not[ListFamily](rebind_var[List[T]](self.value^), predicate))
-
-    def filter_not[C: BorrowCallContract & Movable & Deinitable](
-        deinit self, var predicate: C
-    ) raises C.Failure -> Piped[List[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
-        """Retain rejected List payloads with an owned library predicate."""
-        comptime assert Self.Value == List[downcast[C.Payload, Movable & Deinitable]]
-        return Piped(_family_filter_not[ListFamily](rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^), predicate^))
-
-    def filter_not[C: _BorrowViewable, o: ImmOrigin](
-        deinit self, ref[o] predicate: C
-    ) raises C._BorrowView[o].Failure -> Piped[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool:
-        """Retain rejected List payloads with a shared library predicate."""
-        comptime assert Self.Value == List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
-        return Piped(_family_filter_not[ListFamily](rebind_var[List[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
-
-    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
-        deinit self, ref predicate: F
-    ) -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:
-        """Retain rejected Deque payloads immediately, preserving their container."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_family_filter_not[_DequeFamily](rebind_var[Deque[T]](self.value^), predicate))
-
-    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
-        deinit self, ref predicate: F
-    ) raises E -> Piped[Deque[T]] where R == Bool and Self.Value == Deque[T]:
-        """Retain rejected Deque payloads immediately, preserving their container."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_family_filter_not[_DequeFamily](rebind_var[Deque[T]](self.value^), predicate))
-
-    def filter_not[C: BorrowCallContract & Movable & Deinitable](
-        deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Deque[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
-        """Retain rejected Deque payloads with an owned library predicate."""
-        comptime assert Self.Value == Deque[downcast[C.Payload, Movable & Deinitable]]
-        return Piped(_family_filter_not[_DequeFamily](rebind_var[Deque[downcast[C.Payload, Movable & Deinitable]]](self.value^), predicate^))
-
-    def filter_not[C: _BorrowViewable, o: ImmOrigin](
-        deinit self, ref[o] predicate: C
-    ) raises C._BorrowView[o].Failure -> Piped[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool:
-        """Retain rejected Deque payloads with a shared library predicate."""
-        comptime assert Self.Value == Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
-        return Piped(_family_filter_not[_DequeFamily](rebind_var[Deque[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
-
-    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
-        deinit self, ref predicate: F
-    ) -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:
-        """Retain rejected LinkedList payloads immediately, preserving their container."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_family_filter_not[_LinkedListFamily](rebind_var[LinkedList[T]](self.value^), predicate))
-
-    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
-        deinit self, ref predicate: F
-    ) raises E -> Piped[LinkedList[T]] where R == Bool and Self.Value == LinkedList[T]:
-        """Retain rejected LinkedList payloads immediately, preserving their container."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_family_filter_not[_LinkedListFamily](rebind_var[LinkedList[T]](self.value^), predicate))
-
-    def filter_not[C: BorrowCallContract & Movable & Deinitable](
-        deinit self, var predicate: C
-    ) raises C.Failure -> Piped[LinkedList[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
-        """Retain rejected LinkedList payloads with an owned library predicate."""
-        comptime assert Self.Value == LinkedList[downcast[C.Payload, Movable & Deinitable]]
-        return Piped(_family_filter_not[_LinkedListFamily](rebind_var[LinkedList[downcast[C.Payload, Movable & Deinitable]]](self.value^), predicate^))
-
-    def filter_not[C: _BorrowViewable, o: ImmOrigin](
-        deinit self, ref[o] predicate: C
-    ) raises C._BorrowView[o].Failure -> Piped[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool:
-        """Retain rejected LinkedList payloads with a shared library predicate."""
-        comptime assert Self.Value == LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
-        return Piped(_family_filter_not[_LinkedListFamily](rebind_var[LinkedList[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
 
     def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable, //, F: def(T) -> R](
         deinit self, ref predicate: F
@@ -3363,39 +2427,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_StringDictFamily[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](rebind_var[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
 
-    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, F: def(T) -> R](
-        deinit self, ref predicate: F
-    ) -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:
-        """Retain rejected Optional payloads immediately, preserving their container."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(_family_filter_not[OptionalFamily](rebind_var[Optional[T]](self.value^), predicate))
-
-    def filter_not[T: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: def(T) raises E -> R](
-        deinit self, ref predicate: F
-    ) raises E -> Piped[Optional[T]] where R == Bool and Self.Value == Optional[T]:
-        """Retain rejected Optional payloads immediately, preserving their container."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(_family_filter_not[OptionalFamily](rebind_var[Optional[T]](self.value^), predicate))
-
-    def filter_not[C: BorrowCallContract & Movable & Deinitable](
-        deinit self, var predicate: C
-    ) raises C.Failure -> Piped[Optional[downcast[C.Payload, Movable & Deinitable]]] where conforms_to(C.Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and C.Result == Bool and RepeatableBorrow[C]:
-        """Retain rejected Optional payloads with an owned library predicate."""
-        comptime assert Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]]
-        return Piped(_family_filter_not[OptionalFamily](rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^), predicate^))
-
-    def filter_not[C: _BorrowViewable, o: ImmOrigin](
-        deinit self, ref[o] predicate: C
-    ) raises C._BorrowView[o].Failure -> Piped[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]] where conforms_to(C._BorrowView[o].Payload, Movable & Deinitable) and Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]] and C._BorrowView[o].Result == Bool:
-        """Retain rejected Optional payloads with a shared library predicate."""
-        comptime assert Self.Value == Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
-        return Piped(_family_filter_not[OptionalFamily](rebind_var[Optional[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
-
-    def fill[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[T, U]] -> Piped[I.Mapped[Self.Value, _Fill[T, U]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, U]]:
+    def fill[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], U]] -> Piped[I.Mapped[Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], U]]] where conforms_to(I.Element[Self.Value], Movable & Deinitable) and _MapCompatible[I, Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], U]]:
         """Replace payloads with value, moving it for a single call or copying for repeated calls.
 
         Parameters:
-            T: The element type, including its native origins.
             U: The constant or result payload type; repeated constants must be Copyable.
             I: The explicit capability family, including its result and error semantics.
 
@@ -3408,13 +2443,12 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_Fill[T, U](value^), self.value^))
+        return Piped(I.map(_Fill[downcast[I.Element[Self.Value], Movable & Deinitable], U](value^), self.value^))
 
-    def replace[T: Copyable & Equatable & Deinitable, //, I: Functor](deinit self, var old: T, var new: T) raises I.MapError[Self.Value, _Replace[T]] -> Piped[I.Mapped[Self.Value, _Replace[T]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Replace[T]]:
+    def replace[I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var old: downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable], var new: downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]) raises I.MapError[Self.Value, _Replace[downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]]] -> Piped[I.Mapped[Self.Value, _Replace[downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]]]] where conforms_to(I.Element[Self.Value], Copyable & Equatable & Deinitable) and _MapCompatible[I, Self.Value, _Replace[downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]]]:
         """Replace equal payloads, moving unmatched values unchanged.
 
         Parameters:
-            T: The element type, including its native origins.
             I: The explicit capability family, including its result and error semantics.
 
         Args:
@@ -3427,13 +2461,12 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_Replace[T](old^, new^), self.value^))
+        return Piped(I.map(_Replace[downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]](old^, new^), self.value^))
 
-    def void[T: Movable & Deinitable, //, I: Functor](deinit self) raises I.MapError[Self.Value, _Fill[T, NoneType]] -> Piped[I.Mapped[Self.Value, _Fill[T, NoneType]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, NoneType]]:
+    def void[I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self) raises I.MapError[Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], NoneType]] -> Piped[I.Mapped[Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], NoneType]]] where conforms_to(I.Element[Self.Value], Movable & Deinitable) and _MapCompatible[I, Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], NoneType]]:
         """Discard payloads while preserving their container shape.
 
         Parameters:
-            T: The element type, including its native origins.
             I: The explicit capability family, including its result and error semantics.
 
         Returns:
@@ -3442,13 +2475,12 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_Fill[T, NoneType](None), self.value^))
+        return Piped(I.map(_Fill[downcast[I.Element[Self.Value], Movable & Deinitable], NoneType](None), self.value^))
 
-    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, True]]:
+    def tuple_left[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, True]]] where conforms_to(I.Element[Self.Value], Movable & Deinitable) and _MapCompatible[I, Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, True]]:
         """Attach value on the left, moving it for a single call or copying for repeated calls.
 
         Parameters:
-            T: The element type, including its native origins.
             U: The constant or result payload type; repeated constants must be Copyable.
             I: The explicit capability family, including its result and error semantics.
 
@@ -3461,13 +2493,12 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_TupleWith[T, U, True](value^), self.value^))
+        return Piped(I.map(_TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, True](value^), self.value^))
 
-    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, //, I: Functor](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, False]]:
+    def tuple_right[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, False]]] where conforms_to(I.Element[Self.Value], Movable & Deinitable) and _MapCompatible[I, Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, False]]:
         """Attach value on the right, moving it for a single call or copying for repeated calls.
 
         Parameters:
-            T: The element type, including its native origins.
             U: The constant or result payload type; repeated constants must be Copyable.
             I: The explicit capability family, including its result and error semantics.
 
@@ -3480,9 +2511,9 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_TupleWith[T, U, False](value^), self.value^))
+        return Piped(I.map(_TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, False](value^), self.value^))
 
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: def(P) -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]]:
+    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], F: def(P) -> R = def(P) -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]]:
         """Borrow each payload for projection and retain it beside the result.
 
         Parameters:
@@ -3503,15 +2534,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), self.value^))
 
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]]:
+    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _ErrorProbe[downcast[P, Movable & Deinitable], Tuple[downcast[P, Movable & Deinitable], R], E]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]]:
         """Borrow each payload for projection and retain it beside the result."""
-        return Piped(I.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), self.value^))
+        comptime assert I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True]] == I.MapError[Self.Value, _ErrorProbe[downcast[P, Movable & Deinitable], Tuple[downcast[P, Movable & Deinitable], R], E]]
+        return Piped(_map_as[I.MapError[Self.Value, _ErrorProbe[downcast[P, Movable & Deinitable], Tuple[downcast[P, Movable & Deinitable], R], E]], I](_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), self.value^))
 
-    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, True]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, True]] and C.Payload == T and RepeatableBorrow[C]:
+    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, True]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, True]] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for projection and retain it beside the result."""
         return Piped(I.map(_Observe[T, C, True](function^), self.value^))
 
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: def(P) -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False]]:
+    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], F: def(P) -> R = def(P) -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False]]:
         """Borrow each payload for inspection and retain it unchanged.
 
         Parameters:
@@ -3532,15 +2564,16 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), self.value^))
 
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]]:
+    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _ErrorProbe[downcast[P, Movable & Deinitable], downcast[P, Movable & Deinitable], E]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]]:
         """Borrow each payload for inspection and retain it unchanged."""
-        return Piped(I.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), self.value^))
+        comptime assert I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False]] == I.MapError[Self.Value, _ErrorProbe[downcast[P, Movable & Deinitable], downcast[P, Movable & Deinitable], E]]
+        return Piped(_map_as[I.MapError[Self.Value, _ErrorProbe[downcast[P, Movable & Deinitable], downcast[P, Movable & Deinitable], E]], I](_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), self.value^))
 
-    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, False]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, False]] and C.Payload == T and RepeatableBorrow[C]:
+    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var function: C) raises I.MapError[Self.Value, _Observe[T, C, False]] -> Piped[I.Mapped[Self.Value, _Observe[T, C, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Observe[T, C, False]] and C.Payload == T and RepeatableBorrow[C]:
         """Borrow each payload for inspection and retain it unchanged."""
         return Piped(I.map(_Observe[T, C, False](function^), self.value^))
 
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: FunctorFilter, F: def(var A) -> R](deinit self, ref[o] function: F) raises I.MapFilterError[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[I.MapFiltered[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A:
+    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter], F: def(var A) -> R = def(var A) -> R](deinit self, ref[o] function: F) raises I.MapFilterError[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[I.MapFiltered[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A:
         """Apply filter_map through the carrier's FunctorFilter capability.
 
         Parameters:
@@ -3561,19 +2594,20 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.filter_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self.value^))
 
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: FunctorFilter, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises I.MapFilterError[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[I.MapFiltered[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A:
+    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R](deinit self, ref[o] function: F) raises I.MapFilterError[Self.Value, _ErrorProbe[A, R, E]] -> Piped[I.MapFiltered[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A:
         """Apply filter_map through the carrier's FunctorFilter capability."""
-        return Piped(I.filter_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^))
+        comptime assert I.MapFilterError[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]] == I.MapFilterError[Self.Value, _ErrorProbe[A, R, E]]
+        return Piped(_filter_map_as[I.MapFilterError[Self.Value, _ErrorProbe[A, R, E]], I](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^))
 
-    def filter_map[F: UnaryContract & Movable & Deinitable, //, I: FunctorFilter](deinit self, var function: F) raises I.MapFilterError[Self.Value, F] -> Piped[I.MapFiltered[Self.Value, F]] where I.Element[Self.Value] == F.Arg:
+    def filter_map[F: UnaryContract & Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter]](deinit self, var function: F) raises I.MapFilterError[Self.Value, F] -> Piped[I.MapFiltered[Self.Value, F]] where I.Element[Self.Value] == F.Arg:
         """Apply filter_map through the carrier's FunctorFilter capability."""
         return Piped(I.filter_map(function^, self.value^))
 
-    def filter_map[F: _UnaryViewable, o: ImmOrigin, //, I: FunctorFilter](deinit self, ref[o] function: F) raises I.MapFilterError[Self.Value, F._View[o]] -> Piped[I.MapFiltered[Self.Value, F._View[o]]] where I.Element[Self.Value] == F._View[o].Arg:
+    def filter_map[F: _UnaryViewable, o: ImmOrigin, //, I: FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter]](deinit self, ref[o] function: F) raises I.MapFilterError[Self.Value, F._View[o]] -> Piped[I.MapFiltered[Self.Value, F._View[o]]] where I.Element[Self.Value] == F._View[o].Arg:
         """Apply filter_map through the carrier's FunctorFilter capability."""
         return Piped(I.filter_map(function._unary_view(), self.value^))
 
-    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: def(var A) -> R](deinit self, ref[o] function: F) raises I.BindError[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[I.Bound[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and _BindCompatible[I, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
+    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], F: def(var A) -> R = def(var A) -> R](deinit self, ref[o] function: F) raises I.BindError[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[I.Bound[Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and _BindCompatible[I, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
         """Apply flat_map through the carrier's Monad capability.
 
         Parameters:
@@ -3594,27 +2628,28 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.flat_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self.value^))
 
-    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises I.BindError[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[I.Bound[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and _BindCompatible[I, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
+    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R](deinit self, ref[o] function: F) raises I.BindError[Self.Value, _ErrorProbe[A, R, E]] -> Piped[I.Bound[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and _BindCompatible[I, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
         """Apply flat_map through the carrier's Monad capability."""
-        return Piped(I.flat_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^))
+        comptime assert I.BindError[Self.Value, _NativeUnaryRef[A, R, E, F, True, o]] == I.BindError[Self.Value, _ErrorProbe[A, R, E]]
+        return Piped(_flat_map_as[I.BindError[Self.Value, _ErrorProbe[A, R, E]], I](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^))
 
-    def flat_map[F: UnaryContract & Movable & Deinitable, //, I: Monad](deinit self, var function: F) raises I.BindError[Self.Value, F] -> Piped[I.Bound[Self.Value, F]] where I.Element[Self.Value] == F.Arg and _BindCompatible[I, Self.Value, F]:
+    def flat_map[F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, var function: F) raises I.BindError[Self.Value, F] -> Piped[I.Bound[Self.Value, F]] where I.Element[Self.Value] == F.Arg and _BindCompatible[I, Self.Value, F]:
         """Apply flat_map through the carrier's Monad capability."""
         return Piped(I.flat_map(function^, self.value^))
 
-    def flat_map[F: _UnaryViewable, o: ImmOrigin, //, I: Monad](deinit self, ref[o] function: F) raises I.BindError[Self.Value, F._View[o]] -> Piped[I.Bound[Self.Value, F._View[o]]] where I.Element[Self.Value] == F._View[o].Arg and _BindCompatible[I, Self.Value, F._View[o]]:
+    def flat_map[F: _UnaryViewable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, ref[o] function: F) raises I.BindError[Self.Value, F._View[o]] -> Piped[I.Bound[Self.Value, F._View[o]]] where I.Element[Self.Value] == F._View[o].Arg and _BindCompatible[I, Self.Value, F._View[o]]:
         """Apply flat_map through the carrier's Monad capability."""
         return Piped(I.flat_map(function._unary_view(), self.value^))
 
-    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Traversable, G: Applicative, F: def(var A) -> R](deinit self, ref[o] function: F) raises I.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[I.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and I.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
+    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], I: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable], F: def(var A) -> R = def(var A) -> R](deinit self, ref[o] function: F) raises I.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[I.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] where I.Element[Self.Value] == A and I.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
         """Apply traverse through the carrier's Traversable capability.
 
         Parameters:
             A: The callback input type, including its native origins.
             R: The native callback result type.
             o: The origin of the borrowed native callback.
-            I: The explicit capability family, including its result and error semantics.
             G: The target Applicative family; it determines effect sequencing and failure.
+            I: The explicit capability family, including its result and error semantics.
             F: The callback type, retaining its receiver, captures and error contract.
 
         Args:
@@ -3628,19 +2663,20 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.traverse[G](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self.value^))
 
-    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Traversable, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises I.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[I.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and I.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
+    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], I: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R](deinit self, ref[o] function: F) raises I.TraverseError[G, Self.Value, _ErrorProbe[A, R, E]] -> Piped[I.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] where I.Element[Self.Value] == A and I.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
         """Apply traverse through the carrier's Traversable capability."""
-        return Piped(I.traverse[G](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^))
+        comptime assert I.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]] == I.TraverseError[G, Self.Value, _ErrorProbe[A, R, E]]
+        return Piped(_traverse_as[I, G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o], I.TraverseError[G, Self.Value, _ErrorProbe[A, R, E]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^))
 
-    def traverse[F: UnaryContract & Movable & Deinitable, //, I: Traversable, G: Applicative](deinit self, var function: F) raises I.TraverseError[G, Self.Value, F] -> Piped[I.Traversed[G, Self.Value, F]] where I.Element[Self.Value] == F.Arg and I.TargetCompatible[G, Self.Value, F]:
+    def traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], I: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable]](deinit self, var function: F) raises I.TraverseError[G, Self.Value, F] -> Piped[I.Traversed[G, Self.Value, F]] where I.Element[Self.Value] == F.Arg and I.TargetCompatible[G, Self.Value, F]:
         """Apply traverse through the carrier's Traversable capability."""
         return Piped(I.traverse[G](function^, self.value^))
 
-    def traverse[F: _UnaryViewable, o: ImmOrigin, //, I: Traversable, G: Applicative](deinit self, ref[o] function: F) raises I.TraverseError[G, Self.Value, F._View[o]] -> Piped[I.Traversed[G, Self.Value, F._View[o]]] where I.Element[Self.Value] == F._View[o].Arg and I.TargetCompatible[G, Self.Value, F._View[o]]:
+    def traverse[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o], I: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable]](deinit self, ref[o] function: F) raises I.TraverseError[G, Self.Value, F._View[o]] -> Piped[I.Traversed[G, Self.Value, F._View[o]]] where I.Element[Self.Value] == F._View[o].Arg and I.TargetCompatible[G, Self.Value, F._View[o]]:
         """Apply traverse through the carrier's Traversable capability."""
         return Piped(I.traverse[G](function._unary_view(), self.value^))
 
-    def compact[I: FunctorFilter](deinit self) raises I.MapFilterError[Self.Value, _Same[I.Element[Self.Value]]] -> Piped[I.MapFiltered[Self.Value, _Same[I.Element[Self.Value]]]]:
+    def compact[I: FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter]](deinit self) raises I.MapFilterError[Self.Value, _Same[I.Element[Self.Value]]] -> Piped[I.MapFiltered[Self.Value, _Same[I.Element[Self.Value]]]]:
         """Derive compact through filter_map, preserving the family's semantics.
 
         Parameters:
@@ -3654,7 +2690,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.filter_map(_Same[I.Element[Self.Value]](), self.value^))
 
-    def flatten[I: Monad](deinit self) raises I.BindError[Self.Value, _Same[I.Element[Self.Value]]] -> Piped[I.Bound[Self.Value, _Same[I.Element[Self.Value]]]] where _BindCompatible[I, Self.Value, _Same[I.Element[Self.Value]]]:
+    def flatten[I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self) raises I.BindError[Self.Value, _Same[I.Element[Self.Value]]] -> Piped[I.Bound[Self.Value, _Same[I.Element[Self.Value]]]] where _BindCompatible[I, Self.Value, _Same[I.Element[Self.Value]]]:
         """Derive flatten through flat_map, preserving the family's semantics.
 
         Parameters:
@@ -3668,12 +2704,12 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.flat_map(_Same[I.Element[Self.Value]](), self.value^))
 
-    def sequence[I: Traversable, G: Applicative](deinit self) raises I.TraverseError[G, Self.Value, _Same[I.Element[Self.Value]]] -> Piped[I.Traversed[G, Self.Value, _Same[I.Element[Self.Value]]]] where I.TargetCompatible[G, Self.Value, _Same[I.Element[Self.Value]]]:
+    def sequence[G: Applicative = _InferredApplicative[downcast[downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable].Element[Self.Value], Movable & Deinitable]], I: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable]](deinit self) raises I.TraverseError[G, Self.Value, _Same[I.Element[Self.Value]]] -> Piped[I.Traversed[G, Self.Value, _Same[I.Element[Self.Value]]]] where I.TargetCompatible[G, Self.Value, _Same[I.Element[Self.Value]]]:
         """Derive sequence through traverse, preserving the family's semantics.
 
         Parameters:
-            I: The explicit capability family, including its result and error semantics.
             G: The target Applicative family; it determines effect sequencing and failure.
+            I: The explicit capability family, including its result and error semantics.
 
         Returns:
             The target effect containing unwrapped payloads; Iter and direct calls gather a List.
@@ -3683,7 +2719,67 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(I.traverse[G](_Same[I.Element[Self.Value]](), self.value^))
 
-    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W, var function: F) raises Map2Contract[I, Self.Value, W, F].Error -> Piped[Map2Contract[I, Self.Value, W, F].Out] where Map2Contract[I, Self.Value, W, F].InputCompatible and Map2Contract[I, Self.Value, W, F].OperationCompatible:
+    def map[R: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) thin -> R) raises I.MapError[Self.Value, _ErrorProbe[NoneType, R, Never]] -> Piped[I.Mapped[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]] where not conforms_to(R, RegisterPassable) and _MapCompatible[I, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]:
+        """Apply map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.MapError[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]] == I.MapError[Self.Value, _ErrorProbe[NoneType, R, Never]]
+        return Piped(_map_as[I.MapError[Self.Value, _ErrorProbe[NoneType, R, Never]], I](NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False](function), self.value^))
+
+    def map[R: RegisterPassable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) thin -> R) raises I.MapError[Self.Value, _ErrorProbe[NoneType, R, Never]] -> Piped[I.Mapped[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]] where _MapCompatible[I, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]:
+        """Apply map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.MapError[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]] == I.MapError[Self.Value, _ErrorProbe[NoneType, R, Never]]
+        return Piped(_map_as[I.MapError[Self.Value, _ErrorProbe[NoneType, R, Never]], I](NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False](function), self.value^))
+
+    def map[R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) raises E thin -> R) raises I.MapError[Self.Value, _ErrorProbe[NoneType, R, E]] -> Piped[I.Mapped[Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]]] where _MapCompatible[I, Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]]:
+        """Apply map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.MapError[Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]] == I.MapError[Self.Value, _ErrorProbe[NoneType, R, E]]
+        return Piped(_map_as[I.MapError[Self.Value, _ErrorProbe[NoneType, R, E]], I](NativeUnary[I.Element[Self.Value], R, E, type_of(function), True](function), self.value^))
+
+    def flat_map[R: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) thin -> R) raises I.BindError[Self.Value, _ErrorProbe[NoneType, R, Never]] -> Piped[I.Bound[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]] where not conforms_to(R, RegisterPassable) and _BindCompatible[I, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]:
+        """Apply flat_map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.BindError[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]] == I.BindError[Self.Value, _ErrorProbe[NoneType, R, Never]]
+        return Piped(_flat_map_as[I.BindError[Self.Value, _ErrorProbe[NoneType, R, Never]], I](NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False](function), self.value^))
+
+    def flat_map[R: RegisterPassable & Deinitable, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) thin -> R) raises I.BindError[Self.Value, _ErrorProbe[NoneType, R, Never]] -> Piped[I.Bound[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]] where _BindCompatible[I, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]:
+        """Apply flat_map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.BindError[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]] == I.BindError[Self.Value, _ErrorProbe[NoneType, R, Never]]
+        return Piped(_flat_map_as[I.BindError[Self.Value, _ErrorProbe[NoneType, R, Never]], I](NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False](function), self.value^))
+
+    def flat_map[R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Monad) else _UnrecognizedCarrier, Monad]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) raises E thin -> R) raises I.BindError[Self.Value, _ErrorProbe[NoneType, R, E]] -> Piped[I.Bound[Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]]] where _BindCompatible[I, Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]]:
+        """Apply flat_map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.BindError[Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]] == I.BindError[Self.Value, _ErrorProbe[NoneType, R, E]]
+        return Piped(_flat_map_as[I.BindError[Self.Value, _ErrorProbe[NoneType, R, E]], I](NativeUnary[I.Element[Self.Value], R, E, type_of(function), True](function), self.value^))
+
+    def filter_map[R: Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) thin -> R) raises I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, Never]] -> Piped[I.MapFiltered[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]] where not conforms_to(R, RegisterPassable):
+        """Apply filter_map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.MapFilterError[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]] == I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, Never]]
+        return Piped(_filter_map_as[I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, Never]], I](NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False](function), self.value^))
+
+    def filter_map[R: RegisterPassable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) thin -> R) raises I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, Never]] -> Piped[I.MapFiltered[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]]:
+        """Apply filter_map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.MapFilterError[Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]] == I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, Never]]
+        return Piped(_filter_map_as[I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, Never]], I](NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False](function), self.value^))
+
+    def filter_map[R: Movable & Deinitable, E: Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) raises E thin -> R) raises I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, E]] -> Piped[I.MapFiltered[Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]]]:
+        """Apply filter_map with a plain function, copied so deferred families can keep it."""
+        comptime assert I.MapFilterError[Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]] == I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, E]]
+        return Piped(_filter_map_as[I.MapFilterError[Self.Value, _ErrorProbe[NoneType, R, E]], I](NativeUnary[I.Element[Self.Value], R, E, type_of(function), True](function), self.value^))
+
+    def traverse[R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], I: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) thin -> R) raises I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, Never]] -> Piped[I.Traversed[G, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]] where not conforms_to(R, RegisterPassable) and I.TargetCompatible[G, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]:
+        """Apply traverse with a plain function, copied so deferred families can keep it."""
+        comptime assert I.TraverseError[G, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]] == I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, Never]]
+        return Piped(_traverse_as[I, G, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False], I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, Never]]](NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False](function), self.value^))
+
+    def traverse[R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R], I: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) thin -> R) raises I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, Never]] -> Piped[I.Traversed[G, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]] where I.TargetCompatible[G, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]]:
+        """Apply traverse with a plain function, copied so deferred families can keep it."""
+        comptime assert I.TraverseError[G, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False]] == I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, Never]]
+        return Piped(_traverse_as[I, G, Self.Value, NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False], I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, Never]]](NativeUnary[I.Element[Self.Value], R, Never, type_of(function), False](function), self.value^))
+
+    def traverse[R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], I: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable]](deinit self, function: def(var _NativeOwnedArg[I.Element[Self.Value]]) raises E thin -> R) raises I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, E]] -> Piped[I.Traversed[G, Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]]] where I.TargetCompatible[G, Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]]:
+        """Apply traverse with a plain function, copied so deferred families can keep it."""
+        comptime assert I.TraverseError[G, Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]] == I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, E]]
+        return Piped(_traverse_as[I, G, Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True], I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, E]]](NativeUnary[I.Element[Self.Value], R, E, type_of(function), True](function), self.value^))
+
+    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var other: W, var function: F) raises Map2Contract[I, Self.Value, W, F].Error -> Piped[Map2Contract[I, Self.Value, W, F].Out] where (Map2Contract[I, Self.Value, W, F].InputCompatible and Map2Contract[I, Self.Value, W, F].OperationCompatible) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
         """Combine two already evaluated carriers, following their Applicative semantics.
 
         Parameters:
@@ -3703,15 +2799,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_map2_as[I, X=Map2Contract[I, Self.Value, W, F].Error](function^, self.value^, other^))
 
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative, F: def(var A, var B) -> R](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]] where I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]:
+    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative], F: def(var A, var B) -> R = def(var A, var B) -> R](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]] where (I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
         """Combine two already evaluated carriers, following their Applicative semantics."""
         return Piped(_map2_as[I, X=I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]](_NativeBinaryRef[A, B, R, Never, F, False, o](Pointer(to=function)), self.value^, other^))
 
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative, X: Movable & Deinitable, F: def(var A, var B) raises X -> R](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]] where I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]:
+    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative], X: Movable & Deinitable = Never, F: def(var A, var B) raises X -> R = def(var A, var B) raises X -> R](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]] where (I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
         """Combine two already evaluated carriers, following their Applicative semantics."""
         return Piped(_map2_as[I, X=I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), self.value^, other^))
 
-    def product[W: Movable & Deinitable, //, I: Applicative](deinit self, var other: W) raises ProductContract[I, Self.Value, W].Error -> Piped[ProductContract[I, Self.Value, W].Out] where ProductContract[I, Self.Value, W].OperationCompatible:
+    def product[W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var other: W) raises ProductContract[I, Self.Value, W].Error -> Piped[ProductContract[I, Self.Value, W].Out] where (ProductContract[I, Self.Value, W].OperationCompatible) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
         """Combine two already evaluated carriers into pairs, following their Applicative semantics.
 
         Parameters:
@@ -3729,7 +2825,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_family_product[I](self.value^, other^))
 
-    def ap[W: Movable & Deinitable, //, I: Applicative](deinit self, var values: W) raises ApContract[I, Self.Value, W].Error -> Piped[ApContract[I, Self.Value, W].Out] where ApContract[I, Self.Value, W].InputCompatible:
+    def ap[W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var values: W) raises ApContract[I, Self.Value, W].Error -> Piped[ApContract[I, Self.Value, W].Out] where (ApContract[I, Self.Value, W].InputCompatible and ApContract[I, Self.Value, W].OperationCompatible) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
         """Apply the callbacks in this carrier to an already evaluated carrier of arguments.
 
         Parameters:
@@ -4109,301 +3205,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Combine 8 operands and call the native callback with separate arguments."""
         return Piped(_map_n_as[ValidationFamily[S], ValidationFamily[S].Pure[_ProductRun[ValidationFamily[S], Self.Value, W0, W1, W2, W3, W4, W5, W6].Payload], ValidationFamily[S].Pure[R], _CommonError[S.Error, X]](_NativeNary8[A0, A1, A2, A3, A4, A5, A6, A7, R, X, F, True, o](Pointer(to=function)), self.value^, others^))
 
-    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[List[F.Out]] where Self.Value == List[F.First] and _CombineCompatible[ListFamily, List[F.First], F, _ValueThunk[List[F.Second]]] and W == List[F.Second]:
-        """Combine two already evaluated carriers, following their Applicative semantics.
-
-        Parameters:
-            F: The callback type, retaining its receiver, captures and error contract.
-            W: The second carrier type, including its origins.
-
-        Args:
-            other: The already evaluated second carrier, consumed. Constructing it is not deferred by this call.
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The combined carrier; Result keeps the first stored error, Optional requires both values, and List produces a Cartesian product in left-major order.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_map2_as[ListFamily, X=F.Error](function^, rebind_var[List[F.First]](self.value^), rebind_var[List[F.Second]](other^)))
-
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, F: def(var A, var B) -> R](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[List[R]] where Self.Value == List[A] and _CombineCompatible[ListFamily, List[A], _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[List[B]]] and W == List[B]:
-        """Combine two already evaluated carriers, following their Applicative semantics."""
-        return Piped(_map2_as[ListFamily, X=Never](_NativeBinaryRef[A, B, R, Never, F, False, o](Pointer(to=function)), rebind_var[List[A]](self.value^), rebind_var[List[B]](other^)))
-
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A, var B) raises X -> R](deinit self, var other: W, ref[o] function: F) raises X -> Piped[List[R]] where Self.Value == List[A] and _CombineCompatible[ListFamily, List[A], _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[List[B]]] and W == List[B]:
-        """Combine two already evaluated carriers, following their Applicative semantics."""
-        return Piped(_map2_as[ListFamily, X=X](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), rebind_var[List[A]](self.value^), rebind_var[List[B]](other^)))
-
-    def product[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var other: List[U]) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T] and _CombineCompatible[ListFamily, List[T], _Pair[ListFamily.Element[List[T]], ListFamily.Element[List[U]]], _ValueThunk[List[U]]]:
-        """Combine two already evaluated carriers into pairs, following their Applicative semantics.
-
-        Parameters:
-            T: The element type, including its native origins.
-            U: The constant or result payload type; repeated constants must be Copyable.
-
-        Args:
-            other: The already evaluated second carrier, consumed. Constructing it is not deferred by this call.
-
-        Returns:
-            The carrier of pairs. List copies elements for its Cartesian product; Result and Optional move their payloads without copying.
-        """
-        return Piped(_map2_as[ListFamily, X=Never](_Pair[ListFamily.Element[List[T]], ListFamily.Element[List[U]]](), rebind_var[List[T]](self.value^), other^))
-
-    def ap[A: Movable & Deinitable](deinit self, var values: List[A]) raises downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Out]] where conforms_to(ListFamily.Element[Self.Value], UnaryContract) and Self.Value == List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]] and A == downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg and _CombineCompatible[ListFamily, List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]], _Apply[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]], _ValueThunk[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg]]]:
-        """Apply the callbacks in this carrier to an already evaluated carrier of arguments.
-
-        Parameters:
-            A: The callback input type, including its native origins.
-
-        Args:
-            values: The already evaluated carrier of callback arguments, consumed.
-
-        Returns:
-            The carrier of callback results. List applies each callback to each value in function-major order; Optional and Result invoke at most once.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_map2_as[ListFamily, X=downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error](_Apply[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]](), rebind_var[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]]](self.value^), rebind_var[List[downcast[ListFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg]](values^)))
-
-    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[Optional[F.Out]] where Self.Value == Optional[F.First] and W == Optional[F.Second]:
-        """Combine two already evaluated carriers, following their Applicative semantics.
-
-        Parameters:
-            F: The callback type, retaining its receiver, captures and error contract.
-            W: The second carrier type, including its origins.
-
-        Args:
-            other: The already evaluated second carrier, consumed. Constructing it is not deferred by this call.
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The combined carrier; Result keeps the first stored error, Optional requires both values, and List produces a Cartesian product in left-major order.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_map2_as[OptionalFamily, X=F.Error](function^, rebind_var[Optional[F.First]](self.value^), rebind_var[Optional[F.Second]](other^)))
-
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, F: def(var A, var B) -> R](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[Optional[R]] where Self.Value == Optional[A] and W == Optional[B]:
-        """Combine two already evaluated carriers, following their Applicative semantics."""
-        return Piped(_map2_as[OptionalFamily, X=Never](_NativeBinaryRef[A, B, R, Never, F, False, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^), rebind_var[Optional[B]](other^)))
-
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A, var B) raises X -> R](deinit self, var other: W, ref[o] function: F) raises X -> Piped[Optional[R]] where Self.Value == Optional[A] and W == Optional[B]:
-        """Combine two already evaluated carriers, following their Applicative semantics."""
-        return Piped(_map2_as[OptionalFamily, X=X](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^), rebind_var[Optional[B]](other^)))
-
-    def product[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var other: Optional[U]) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T]:
-        """Combine two already evaluated carriers into pairs, following their Applicative semantics.
-
-        Parameters:
-            T: The element type, including its native origins.
-            U: The constant or result payload type; repeated constants must be Copyable.
-
-        Args:
-            other: The already evaluated second carrier, consumed. Constructing it is not deferred by this call.
-
-        Returns:
-            The carrier of pairs. List copies elements for its Cartesian product; Result and Optional move their payloads without copying.
-        """
-        return Piped(_family_product[OptionalFamily](rebind_var[Optional[T]](self.value^), other^))
-
-    def ap[A: Movable & Deinitable](deinit self, var values: Optional[A]) raises downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[Optional[downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Out]] where conforms_to(OptionalFamily.Element[Self.Value], UnaryContract) and Self.Value == Optional[downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]] and A == downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg:
-        """Apply the callbacks in this carrier to an already evaluated carrier of arguments.
-
-        Parameters:
-            A: The callback input type, including its native origins.
-
-        Args:
-            values: The already evaluated carrier of callback arguments, consumed.
-
-        Returns:
-            The carrier of callback results. List applies each callback to each value in function-major order; Optional and Result invoke at most once.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_map2_as[OptionalFamily, X=downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Error](_Apply[downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]](), rebind_var[Optional[downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable]]](self.value^), rebind_var[Optional[downcast[OptionalFamily.Element[Self.Value], UnaryContract & Movable & Deinitable].Arg]](values^)))
-
-    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, Failure: Movable & Deinitable, //](deinit self, var other: W, var function: F) raises F.Error -> Piped[Result[F.Out, Failure]] where Self.Value == Result[F.First, Failure] and W == Result[F.Second, Failure]:
-        """Combine two already evaluated carriers, following their Applicative semantics.
-
-        Parameters:
-            F: The callback type, retaining its receiver, captures and error contract.
-            W: The second carrier type, including its origins.
-            Failure: The error payload type retained by Result.
-
-        Args:
-            other: The already evaluated second carrier, consumed. Constructing it is not deferred by this call.
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The combined carrier; Result keeps the first stored error, Optional requires both values, and List produces a Cartesian product in left-major order.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_map2_as[ResultFamily[Failure], X=F.Error](function^, rebind_var[Result[F.First, Failure]](self.value^), rebind_var[Result[F.Second, Failure]](other^)))
-
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, Failure: Movable & Deinitable, //, F: def(var A, var B) -> R](deinit self, var other: W, ref[o] function: F) raises Never -> Piped[Result[R, Failure]] where Self.Value == Result[A, Failure] and W == Result[B, Failure]:
-        """Combine two already evaluated carriers, following their Applicative semantics."""
-        return Piped(_map2_as[ResultFamily[Failure], X=Never](_NativeBinaryRef[A, B, R, Never, F, False, o](Pointer(to=function)), rebind_var[Result[A, Failure]](self.value^), rebind_var[Result[B, Failure]](other^)))
-
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, Failure: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A, var B) raises X -> R](deinit self, var other: W, ref[o] function: F) raises X -> Piped[Result[R, Failure]] where Self.Value == Result[A, Failure] and W == Result[B, Failure]:
-        """Combine two already evaluated carriers, following their Applicative semantics."""
-        return Piped(_map2_as[ResultFamily[Failure], X=X](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), rebind_var[Result[A, Failure]](self.value^), rebind_var[Result[B, Failure]](other^)))
-
-    def product[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var other: Result[U, Failure]) -> Piped[Result[Tuple[T, U], Failure]] where Self.Value == Result[T, Failure]:
-        """Combine two already evaluated carriers into pairs, following their Applicative semantics.
-
-        Parameters:
-            T: The element type, including its native origins.
-            U: The constant or result payload type; repeated constants must be Copyable.
-            Failure: The error payload type retained by Result.
-
-        Args:
-            other: The already evaluated second carrier, consumed. Constructing it is not deferred by this call.
-
-        Returns:
-            The carrier of pairs. List copies elements for its Cartesian product; Result and Optional move their payloads without copying.
-        """
-        return Piped(_family_product[ResultFamily[Failure]](rebind_var[Result[T, Failure]](self.value^), other^))
-
-    def ap[A: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var values: Result[A, Failure]) raises downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable].Error -> Piped[Result[downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable].Out, Failure]] where conforms_to(ResultFamily[Failure].Element[Self.Value], UnaryContract) and Self.Value == Result[downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable], Failure] and A == downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable].Arg:
-        """Apply the callbacks in this carrier to an already evaluated carrier of arguments.
-
-        Parameters:
-            A: The callback input type, including its native origins.
-            Failure: The error payload type retained by Result.
-
-        Args:
-            values: The already evaluated carrier of callback arguments, consumed.
-
-        Returns:
-            The carrier of callback results. List applies each callback to each value in function-major order; Optional and Result invoke at most once.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_map2_as[ResultFamily[Failure], X=downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable].Error](_Apply[downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable]](), rebind_var[Result[downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable], Failure]](self.value^), rebind_var[Result[downcast[ResultFamily[Failure].Element[Self.Value], UnaryContract & Movable & Deinitable].Arg, Failure]](values^)))
-
-    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[U]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _Fill[T, U]]:
-        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == List[T]
-        return Piped(ListFamily.map(_Fill[T, U](value^), rebind_var[List[T]](self.value^)))
-
-    def replace[T: Copyable & Equatable & Deinitable](deinit self, var old: T, var new: T) -> Piped[List[T]] where Self.Value == List[T]:
-        """Replace equal payloads, moving unmatched values unchanged."""
-        comptime assert Self.Value == List[T]
-        return Piped(ListFamily.map(_Replace[T](old^, new^), rebind_var[List[T]](self.value^)))
-
-    def void[T: Movable & Deinitable](deinit self) -> Piped[List[NoneType]] where Self.Value == List[T]:
-        """Discard payloads while preserving their container shape."""
-        comptime assert Self.Value == List[T]
-        return Piped(ListFamily.map(_Fill[T, NoneType](None), rebind_var[List[T]](self.value^)))
-
-    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[U, T]]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _TupleWith[T, U, True]]:
-        """Attach value on the left, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == List[T]
-        return Piped(ListFamily.map(_TupleWith[T, U, True](value^), rebind_var[List[T]](self.value^)))
-
-    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[List[Tuple[T, U]]] where Self.Value == List[T] and _MapCompatible[ListFamily, List[T], _TupleWith[T, U, False]]:
-        """Attach value on the right, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == List[T]
-        return Piped(ListFamily.map(_TupleWith[T, U, False](value^), rebind_var[List[T]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[List[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == List[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == List[downcast[P, Movable & Deinitable]]
-        return Piped(ListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[List[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == List[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == List[downcast[P, Movable & Deinitable]]
-        return Piped(ListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[List[Tuple[T, C.Result]]] where Self.Value == List[T] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == List[T]
-        return Piped(ListFamily.map(_Observe[T, C, True](function^), rebind_var[List[T]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[List[downcast[P, Movable & Deinitable]]] where Self.Value == List[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == List[downcast[P, Movable & Deinitable]]
-        return Piped(ListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[List[downcast[P, Movable & Deinitable]]] where Self.Value == List[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == List[downcast[P, Movable & Deinitable]]
-        return Piped(ListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[List[T]] where Self.Value == List[T] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == List[T]
-        return Piped(ListFamily.map(_Observe[T, C, False](function^), rebind_var[List[T]](self.value^)))
-
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) -> R](deinit self, ref[o] function: F) raises ListFamily.MapFilterError[List[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[ListFamily.MapFiltered[List[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == List[A]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == List[A]
-        return Piped(ListFamily.filter_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[List[A]](self.value^)))
-
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises ListFamily.MapFilterError[List[A], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[ListFamily.MapFiltered[List[A], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == List[A]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == List[A]
-        return Piped(ListFamily.filter_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[List[A]](self.value^)))
-
-    def filter_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises ListFamily.MapFilterError[List[F.Arg], F] -> Piped[ListFamily.MapFiltered[List[F.Arg], F]] where Self.Value == List[F.Arg]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == List[F.Arg]
-        return Piped(ListFamily.filter_map(function^, rebind_var[List[F.Arg]](self.value^)))
-
-    def filter_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises ListFamily.MapFilterError[List[F._View[o].Arg], F._View[o]] -> Piped[ListFamily.MapFiltered[List[F._View[o].Arg], F._View[o]]] where Self.Value == List[F._View[o].Arg]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == List[F._View[o].Arg]
-        return Piped(ListFamily.filter_map(function._unary_view(), rebind_var[List[F._View[o].Arg]](self.value^)))
-
-    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) -> R](deinit self, ref[o] function: F) raises ListFamily.BindError[List[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[ListFamily.Bound[List[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == List[A]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == List[A]
-        return Piped(ListFamily.flat_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[List[A]](self.value^)))
-
-    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises ListFamily.BindError[List[A], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[ListFamily.Bound[List[A], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == List[A]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == List[A]
-        return Piped(ListFamily.flat_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[List[A]](self.value^)))
-
-    def flat_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises ListFamily.BindError[List[F.Arg], F] -> Piped[ListFamily.Bound[List[F.Arg], F]] where Self.Value == List[F.Arg]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == List[F.Arg]
-        return Piped(ListFamily.flat_map(function^, rebind_var[List[F.Arg]](self.value^)))
-
-    def flat_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises ListFamily.BindError[List[F._View[o].Arg], F._View[o]] -> Piped[ListFamily.Bound[List[F._View[o].Arg], F._View[o]]] where Self.Value == List[F._View[o].Arg]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == List[F._View[o].Arg]
-        return Piped(ListFamily.flat_map(function._unary_view(), rebind_var[List[F._View[o].Arg]](self.value^)))
-
-    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(var A) -> R](deinit self, ref[o] function: F) raises ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == List[A] and ListFamily.TargetCompatible[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == List[A]
-        return Piped(ListFamily.traverse[G](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[List[A]](self.value^)))
-
-    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == List[A] and ListFamily.TargetCompatible[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == List[A]
-        return Piped(ListFamily.traverse[G](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[List[A]](self.value^)))
-
-    def traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative](deinit self, var function: F) raises ListFamily.TraverseError[G, List[F.Arg], F] -> Piped[ListFamily.Traversed[G, List[F.Arg], F]] where Self.Value == List[F.Arg] and ListFamily.TargetCompatible[G, List[F.Arg], F]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == List[F.Arg]
-        return Piped(ListFamily.traverse[G](function^, rebind_var[List[F.Arg]](self.value^)))
-
-    def traverse[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative](deinit self, ref[o] function: F) raises ListFamily.TraverseError[G, List[F._View[o].Arg], F._View[o]] -> Piped[ListFamily.Traversed[G, List[F._View[o].Arg], F._View[o]]] where Self.Value == List[F._View[o].Arg] and ListFamily.TargetCompatible[G, List[F._View[o].Arg], F._View[o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == List[F._View[o].Arg]
-        return Piped(ListFamily.traverse[G](function._unary_view(), rebind_var[List[F._View[o].Arg]](self.value^)))
-
     def par_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, S: Semigroup = _ListErrors[R]](deinit self, ref[o] function: F) raises ListFamily.TraverseError[ValidationFamily[S], List[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[ListFamily.Traversed[ValidationFamily[S], List[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == List[A] and ListFamily.TargetCompatible[ValidationFamily[S], List[A], _NativeUnaryRef[A, R, Never, F, False, o]] and _CarrierCompatible[ValidationFamily[S], R]:
         """Apply par_traverse through the carrier's Traversable capability.
 
@@ -4440,21 +3241,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Apply par_traverse through the carrier's Traversable capability."""
         comptime assert Self.Value == List[F._View[o].Arg]
         return Piped(ListFamily.traverse[ValidationFamily[S]](function._unary_view(), rebind_var[List[F._View[o].Arg]](self.value^)))
-
-    def compact[T: Movable & Deinitable, //](deinit self) raises ListFamily.MapFilterError[List[Optional[T]], _Same[Optional[T]]] -> Piped[ListFamily.MapFiltered[List[Optional[T]], _Same[Optional[T]]]] where Self.Value == List[Optional[T]]:
-        """Derive compact through filter_map, preserving the family's semantics."""
-        comptime assert Self.Value == List[Optional[T]]
-        return Piped(ListFamily.filter_map(_Same[Optional[T]](), rebind_var[List[Optional[T]]](self.value^)))
-
-    def flatten[T: Movable & Deinitable, //](deinit self) raises ListFamily.BindError[List[List[T]], _Same[List[T]]] -> Piped[ListFamily.Bound[List[List[T]], _Same[List[T]]]] where Self.Value == List[List[T]]:
-        """Derive flatten through flat_map, preserving the family's semantics."""
-        comptime assert Self.Value == List[List[T]]
-        return Piped(ListFamily.flat_map(_Same[List[T]](), rebind_var[List[List[T]]](self.value^)))
-
-    def sequence[T: Movable & Deinitable, //, G: Applicative](deinit self) raises ListFamily.TraverseError[G, List[T], _Same[T]] -> Piped[ListFamily.Traversed[G, List[T], _Same[T]]] where Self.Value == List[T] and ListFamily.TargetCompatible[G, List[T], _Same[T]]:
-        """Derive sequence through traverse, preserving the family's semantics."""
-        comptime assert Self.Value == List[T]
-        return Piped(ListFamily.traverse[G](_Same[T](), rebind_var[List[T]](self.value^)))
 
     def par_sequence[T: Movable & Deinitable, //, S: Semigroup = _ListErrors[T]](deinit self) raises S.Error -> Piped[ListFamily.Traversed[ValidationFamily[S], List[T], _Same[T]]] where Self.Value == List[T] and ListFamily.TargetCompatible[ValidationFamily[S], List[T], _Same[T]] and _CarrierCompatible[ValidationFamily[S], T]:
         """Derive par_sequence through traverse, preserving the family's semantics.
@@ -4526,166 +3312,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Borrow each payload for inspection and retain it unchanged."""
         comptime assert Self.Value == Array[T, N]
         return Piped(_ArrayFamily[N].map(_Observe[T, C, False](function^), rebind_var[Array[T, N]](self.value^)))
-
-    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[U]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _Fill[T, U]]:
-        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_DequeFamily.map(_Fill[T, U](value^), rebind_var[Deque[T]](self.value^)))
-
-    def replace[T: Copyable & Equatable & Deinitable](deinit self, var old: T, var new: T) -> Piped[Deque[T]] where Self.Value == Deque[T]:
-        """Replace equal payloads, moving unmatched values unchanged."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_DequeFamily.map(_Replace[T](old^, new^), rebind_var[Deque[T]](self.value^)))
-
-    def void[T: Movable & Deinitable](deinit self) -> Piped[Deque[NoneType]] where Self.Value == Deque[T]:
-        """Discard payloads while preserving their container shape."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_DequeFamily.map(_Fill[T, NoneType](None), rebind_var[Deque[T]](self.value^)))
-
-    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[U, T]]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _TupleWith[T, U, True]]:
-        """Attach value on the left, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_DequeFamily.map(_TupleWith[T, U, True](value^), rebind_var[Deque[T]](self.value^)))
-
-    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Deque[Tuple[T, U]]] where Self.Value == Deque[T] and _MapCompatible[_DequeFamily, Deque[T], _TupleWith[T, U, False]]:
-        """Attach value on the right, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_DequeFamily.map(_TupleWith[T, U, False](value^), rebind_var[Deque[T]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[Deque[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
-        return Piped(_DequeFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Deque[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[Deque[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
-        return Piped(_DequeFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Deque[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Deque[Tuple[T, C.Result]]] where Self.Value == Deque[T] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_DequeFamily.map(_Observe[T, C, True](function^), rebind_var[Deque[T]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[Deque[downcast[P, Movable & Deinitable]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
-        return Piped(_DequeFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Deque[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[Deque[downcast[P, Movable & Deinitable]]] where Self.Value == Deque[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Deque[downcast[P, Movable & Deinitable]]
-        return Piped(_DequeFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Deque[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Deque[T]] where Self.Value == Deque[T] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Deque[T]
-        return Piped(_DequeFamily.map(_Observe[T, C, False](function^), rebind_var[Deque[T]](self.value^)))
-
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) -> R](deinit self, ref[o] function: F) raises _DequeFamily.MapFilterError[Deque[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_DequeFamily.MapFiltered[Deque[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Deque[A]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == Deque[A]
-        return Piped(_DequeFamily.filter_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Deque[A]](self.value^)))
-
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises _DequeFamily.MapFilterError[Deque[A], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[_DequeFamily.MapFiltered[Deque[A], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Deque[A]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == Deque[A]
-        return Piped(_DequeFamily.filter_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Deque[A]](self.value^)))
-
-    def filter_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises _DequeFamily.MapFilterError[Deque[F.Arg], F] -> Piped[_DequeFamily.MapFiltered[Deque[F.Arg], F]] where Self.Value == Deque[F.Arg]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == Deque[F.Arg]
-        return Piped(_DequeFamily.filter_map(function^, rebind_var[Deque[F.Arg]](self.value^)))
-
-    def filter_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises _DequeFamily.MapFilterError[Deque[F._View[o].Arg], F._View[o]] -> Piped[_DequeFamily.MapFiltered[Deque[F._View[o].Arg], F._View[o]]] where Self.Value == Deque[F._View[o].Arg]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == Deque[F._View[o].Arg]
-        return Piped(_DequeFamily.filter_map(function._unary_view(), rebind_var[Deque[F._View[o].Arg]](self.value^)))
-
-    def compact[T: Movable & Deinitable, //](deinit self) raises _DequeFamily.MapFilterError[Deque[Optional[T]], _Same[Optional[T]]] -> Piped[_DequeFamily.MapFiltered[Deque[Optional[T]], _Same[Optional[T]]]] where Self.Value == Deque[Optional[T]]:
-        """Derive compact through filter_map, preserving the family's semantics."""
-        comptime assert Self.Value == Deque[Optional[T]]
-        return Piped(_DequeFamily.filter_map(_Same[Optional[T]](), rebind_var[Deque[Optional[T]]](self.value^)))
-
-    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[U]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _Fill[T, U]]:
-        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_LinkedListFamily.map(_Fill[T, U](value^), rebind_var[LinkedList[T]](self.value^)))
-
-    def replace[T: Copyable & Equatable & Deinitable](deinit self, var old: T, var new: T) -> Piped[LinkedList[T]] where Self.Value == LinkedList[T]:
-        """Replace equal payloads, moving unmatched values unchanged."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_LinkedListFamily.map(_Replace[T](old^, new^), rebind_var[LinkedList[T]](self.value^)))
-
-    def void[T: Movable & Deinitable](deinit self) -> Piped[LinkedList[NoneType]] where Self.Value == LinkedList[T]:
-        """Discard payloads while preserving their container shape."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_LinkedListFamily.map(_Fill[T, NoneType](None), rebind_var[LinkedList[T]](self.value^)))
-
-    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[U, T]]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _TupleWith[T, U, True]]:
-        """Attach value on the left, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_LinkedListFamily.map(_TupleWith[T, U, True](value^), rebind_var[LinkedList[T]](self.value^)))
-
-    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[LinkedList[Tuple[T, U]]] where Self.Value == LinkedList[T] and _MapCompatible[_LinkedListFamily, LinkedList[T], _TupleWith[T, U, False]]:
-        """Attach value on the right, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_LinkedListFamily.map(_TupleWith[T, U, False](value^), rebind_var[LinkedList[T]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[LinkedList[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
-        return Piped(_LinkedListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[LinkedList[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[LinkedList[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
-        return Piped(_LinkedListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[LinkedList[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[Tuple[T, C.Result]]] where Self.Value == LinkedList[T] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_LinkedListFamily.map(_Observe[T, C, True](function^), rebind_var[LinkedList[T]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[LinkedList[downcast[P, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
-        return Piped(_LinkedListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[LinkedList[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[LinkedList[downcast[P, Movable & Deinitable]]] where Self.Value == LinkedList[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == LinkedList[downcast[P, Movable & Deinitable]]
-        return Piped(_LinkedListFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[LinkedList[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[LinkedList[T]] where Self.Value == LinkedList[T] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == LinkedList[T]
-        return Piped(_LinkedListFamily.map(_Observe[T, C, False](function^), rebind_var[LinkedList[T]](self.value^)))
-
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) -> R](deinit self, ref[o] function: F) raises _LinkedListFamily.MapFilterError[LinkedList[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[_LinkedListFamily.MapFiltered[LinkedList[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == LinkedList[A]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == LinkedList[A]
-        return Piped(_LinkedListFamily.filter_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[LinkedList[A]](self.value^)))
-
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises _LinkedListFamily.MapFilterError[LinkedList[A], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[_LinkedListFamily.MapFiltered[LinkedList[A], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == LinkedList[A]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == LinkedList[A]
-        return Piped(_LinkedListFamily.filter_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[LinkedList[A]](self.value^)))
-
-    def filter_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises _LinkedListFamily.MapFilterError[LinkedList[F.Arg], F] -> Piped[_LinkedListFamily.MapFiltered[LinkedList[F.Arg], F]] where Self.Value == LinkedList[F.Arg]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == LinkedList[F.Arg]
-        return Piped(_LinkedListFamily.filter_map(function^, rebind_var[LinkedList[F.Arg]](self.value^)))
-
-    def filter_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises _LinkedListFamily.MapFilterError[LinkedList[F._View[o].Arg], F._View[o]] -> Piped[_LinkedListFamily.MapFiltered[LinkedList[F._View[o].Arg], F._View[o]]] where Self.Value == LinkedList[F._View[o].Arg]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == LinkedList[F._View[o].Arg]
-        return Piped(_LinkedListFamily.filter_map(function._unary_view(), rebind_var[LinkedList[F._View[o].Arg]](self.value^)))
-
-    def compact[T: Movable & Deinitable, //](deinit self) raises _LinkedListFamily.MapFilterError[LinkedList[Optional[T]], _Same[Optional[T]]] -> Piped[_LinkedListFamily.MapFiltered[LinkedList[Optional[T]], _Same[Optional[T]]]] where Self.Value == LinkedList[Optional[T]]:
-        """Derive compact through filter_map, preserving the family's semantics."""
-        comptime assert Self.Value == LinkedList[Optional[T]]
-        return Piped(_LinkedListFamily.filter_map(_Same[Optional[T]](), rebind_var[LinkedList[Optional[T]]](self.value^)))
 
     def fill[T: Movable & Deinitable, U: Movable & Deinitable, K: KeyElement & Deinitable, H: Hasher & Defaultable & Deinitable](deinit self, var value: U) -> Piped[Dict[K, U, H]] where Self.Value == Dict[K, T, H] and _MapCompatible[_DictFamily[K, T, H], Dict[K, T, H], _Fill[T, U]]:
         """Replace payloads with value, moving it for a single call or copying for repeated calls."""
@@ -4847,121 +3473,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[Optional[T]]
         return Piped(_StringDictFamily[Optional[T]].filter_map(_Same[Optional[T]](), rebind_var[StringDict[Optional[T]]](self.value^)))
 
-    def fill[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[U]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _Fill[T, U]]:
-        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(OptionalFamily.map(_Fill[T, U](value^), rebind_var[Optional[T]](self.value^)))
-
-    def replace[T: Copyable & Equatable & Deinitable](deinit self, var old: T, var new: T) -> Piped[Optional[T]] where Self.Value == Optional[T]:
-        """Replace equal payloads, moving unmatched values unchanged."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(OptionalFamily.map(_Replace[T](old^, new^), rebind_var[Optional[T]](self.value^)))
-
-    def void[T: Movable & Deinitable](deinit self) -> Piped[Optional[NoneType]] where Self.Value == Optional[T]:
-        """Discard payloads while preserving their container shape."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(OptionalFamily.map(_Fill[T, NoneType](None), rebind_var[Optional[T]](self.value^)))
-
-    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[U, T]]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _TupleWith[T, U, True]]:
-        """Attach value on the left, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(OptionalFamily.map(_TupleWith[T, U, True](value^), rebind_var[Optional[T]](self.value^)))
-
-    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable](deinit self, var value: U) -> Piped[Optional[Tuple[T, U]]] where Self.Value == Optional[T] and _MapCompatible[OptionalFamily, Optional[T], _TupleWith[T, U, False]]:
-        """Attach value on the right, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(OptionalFamily.map(_TupleWith[T, U, False](value^), rebind_var[Optional[T]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[Optional[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
-        return Piped(OptionalFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[Optional[Tuple[downcast[P, Movable & Deinitable], R]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
-        return Piped(OptionalFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Optional[Tuple[T, C.Result]]] where Self.Value == Optional[T] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(OptionalFamily.map(_Observe[T, C, True](function^), rebind_var[Optional[T]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
-        return Piped(OptionalFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[Optional[downcast[P, Movable & Deinitable]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Optional[downcast[P, Movable & Deinitable]]
-        return Piped(OptionalFamily.map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Optional[T]] where Self.Value == Optional[T] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(OptionalFamily.map(_Observe[T, C, False](function^), rebind_var[Optional[T]](self.value^)))
-
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) -> R](deinit self, ref[o] function: F) raises OptionalFamily.MapFilterError[Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[OptionalFamily.MapFiltered[Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Optional[A]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == Optional[A]
-        return Piped(OptionalFamily.filter_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^)))
-
-    def filter_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises OptionalFamily.MapFilterError[Optional[A], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[OptionalFamily.MapFiltered[Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Optional[A]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == Optional[A]
-        return Piped(OptionalFamily.filter_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^)))
-
-    def filter_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises OptionalFamily.MapFilterError[Optional[F.Arg], F] -> Piped[OptionalFamily.MapFiltered[Optional[F.Arg], F]] where Self.Value == Optional[F.Arg]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == Optional[F.Arg]
-        return Piped(OptionalFamily.filter_map(function^, rebind_var[Optional[F.Arg]](self.value^)))
-
-    def filter_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises OptionalFamily.MapFilterError[Optional[F._View[o].Arg], F._View[o]] -> Piped[OptionalFamily.MapFiltered[Optional[F._View[o].Arg], F._View[o]]] where Self.Value == Optional[F._View[o].Arg]:
-        """Apply filter_map through the carrier's FunctorFilter capability."""
-        comptime assert Self.Value == Optional[F._View[o].Arg]
-        return Piped(OptionalFamily.filter_map(function._unary_view(), rebind_var[Optional[F._View[o].Arg]](self.value^)))
-
-    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, F: def(var A) -> R](deinit self, ref[o] function: F) raises OptionalFamily.BindError[Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[OptionalFamily.Bound[Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Optional[A]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == Optional[A]
-        return Piped(OptionalFamily.flat_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^)))
-
-    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises OptionalFamily.BindError[Optional[A], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[OptionalFamily.Bound[Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Optional[A]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == Optional[A]
-        return Piped(OptionalFamily.flat_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^)))
-
-    def flat_map[F: UnaryContract & Movable & Deinitable, //](deinit self, var function: F) raises OptionalFamily.BindError[Optional[F.Arg], F] -> Piped[OptionalFamily.Bound[Optional[F.Arg], F]] where Self.Value == Optional[F.Arg]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == Optional[F.Arg]
-        return Piped(OptionalFamily.flat_map(function^, rebind_var[Optional[F.Arg]](self.value^)))
-
-    def flat_map[F: _UnaryViewable, o: ImmOrigin, //](deinit self, ref[o] function: F) raises OptionalFamily.BindError[Optional[F._View[o].Arg], F._View[o]] -> Piped[OptionalFamily.Bound[Optional[F._View[o].Arg], F._View[o]]] where Self.Value == Optional[F._View[o].Arg]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == Optional[F._View[o].Arg]
-        return Piped(OptionalFamily.flat_map(function._unary_view(), rebind_var[Optional[F._View[o].Arg]](self.value^)))
-
-    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(var A) -> R](deinit self, ref[o] function: F) raises OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Optional[A] and OptionalFamily.TargetCompatible[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == Optional[A]
-        return Piped(OptionalFamily.traverse[G](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^)))
-
-    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Optional[A] and OptionalFamily.TargetCompatible[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == Optional[A]
-        return Piped(OptionalFamily.traverse[G](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^)))
-
-    def traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative](deinit self, var function: F) raises OptionalFamily.TraverseError[G, Optional[F.Arg], F] -> Piped[OptionalFamily.Traversed[G, Optional[F.Arg], F]] where Self.Value == Optional[F.Arg] and OptionalFamily.TargetCompatible[G, Optional[F.Arg], F]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == Optional[F.Arg]
-        return Piped(OptionalFamily.traverse[G](function^, rebind_var[Optional[F.Arg]](self.value^)))
-
-    def traverse[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative](deinit self, ref[o] function: F) raises OptionalFamily.TraverseError[G, Optional[F._View[o].Arg], F._View[o]] -> Piped[OptionalFamily.Traversed[G, Optional[F._View[o].Arg], F._View[o]]] where Self.Value == Optional[F._View[o].Arg] and OptionalFamily.TargetCompatible[G, Optional[F._View[o].Arg], F._View[o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == Optional[F._View[o].Arg]
-        return Piped(OptionalFamily.traverse[G](function._unary_view(), rebind_var[Optional[F._View[o].Arg]](self.value^)))
-
     def par_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, S: Semigroup = _ListErrors[R]](deinit self, ref[o] function: F) raises OptionalFamily.TraverseError[ValidationFamily[S], Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[OptionalFamily.Traversed[ValidationFamily[S], Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Optional[A] and OptionalFamily.TargetCompatible[ValidationFamily[S], Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]] and _CarrierCompatible[ValidationFamily[S], R]:
         """Apply par_traverse through the carrier's Traversable capability."""
         comptime assert Self.Value == Optional[A]
@@ -4982,120 +3493,10 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == Optional[F._View[o].Arg]
         return Piped(OptionalFamily.traverse[ValidationFamily[S]](function._unary_view(), rebind_var[Optional[F._View[o].Arg]](self.value^)))
 
-    def compact[T: Movable & Deinitable, //](deinit self) raises OptionalFamily.MapFilterError[Optional[Optional[T]], _Same[Optional[T]]] -> Piped[OptionalFamily.MapFiltered[Optional[Optional[T]], _Same[Optional[T]]]] where Self.Value == Optional[Optional[T]]:
-        """Derive compact through filter_map, preserving the family's semantics."""
-        comptime assert Self.Value == Optional[Optional[T]]
-        return Piped(OptionalFamily.filter_map(_Same[Optional[T]](), rebind_var[Optional[Optional[T]]](self.value^)))
-
-    def flatten[T: Movable & Deinitable, //](deinit self) raises OptionalFamily.BindError[Optional[Optional[T]], _Same[Optional[T]]] -> Piped[OptionalFamily.Bound[Optional[Optional[T]], _Same[Optional[T]]]] where Self.Value == Optional[Optional[T]]:
-        """Derive flatten through flat_map, preserving the family's semantics."""
-        comptime assert Self.Value == Optional[Optional[T]]
-        return Piped(OptionalFamily.flat_map(_Same[Optional[T]](), rebind_var[Optional[Optional[T]]](self.value^)))
-
-    def sequence[T: Movable & Deinitable, //, G: Applicative](deinit self) raises OptionalFamily.TraverseError[G, Optional[T], _Same[T]] -> Piped[OptionalFamily.Traversed[G, Optional[T], _Same[T]]] where Self.Value == Optional[T] and OptionalFamily.TargetCompatible[G, Optional[T], _Same[T]]:
-        """Derive sequence through traverse, preserving the family's semantics."""
-        comptime assert Self.Value == Optional[T]
-        return Piped(OptionalFamily.traverse[G](_Same[T](), rebind_var[Optional[T]](self.value^)))
-
     def par_sequence[T: Movable & Deinitable, //, S: Semigroup = _ListErrors[T]](deinit self) raises Never -> Piped[OptionalFamily.Traversed[ValidationFamily[S], Optional[T], _Same[T]]] where Self.Value == Optional[T] and OptionalFamily.TargetCompatible[ValidationFamily[S], Optional[T], _Same[T]] and _CarrierCompatible[ValidationFamily[S], T]:
         """Derive par_sequence through traverse, preserving the family's semantics."""
         comptime assert Self.Value == Optional[T]
         return Piped(_traverse_as[OptionalFamily, ValidationFamily[S], Optional[T], _Same[T], Never](_Same[T](), rebind_var[Optional[T]](self.value^)))
-
-    def fill[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[U, Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _Fill[T, U]]:
-        """Replace payloads with value, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(ResultFamily[Failure].map(_Fill[T, U](value^), rebind_var[Result[T, Failure]](self.value^)))
-
-    def replace[T: Copyable & Equatable & Deinitable, Failure: Movable & Deinitable](deinit self, var old: T, var new: T) -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure]:
-        """Replace equal payloads, moving unmatched values unchanged."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(ResultFamily[Failure].map(_Replace[T](old^, new^), rebind_var[Result[T, Failure]](self.value^)))
-
-    def void[T: Movable & Deinitable, Failure: Movable & Deinitable](deinit self) -> Piped[Result[NoneType, Failure]] where Self.Value == Result[T, Failure]:
-        """Discard payloads while preserving their container shape."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(ResultFamily[Failure].map(_Fill[T, NoneType](None), rebind_var[Result[T, Failure]](self.value^)))
-
-    def tuple_left[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[U, T], Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _TupleWith[T, U, True]]:
-        """Attach value on the left, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(ResultFamily[Failure].map(_TupleWith[T, U, True](value^), rebind_var[Result[T, Failure]](self.value^)))
-
-    def tuple_right[T: Movable & Deinitable, U: Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var value: U) -> Piped[Result[Tuple[T, U], Failure]] where Self.Value == Result[T, Failure] and _MapCompatible[ResultFamily[Failure], Result[T, Failure], _TupleWith[T, U, False]]:
-        """Attach value on the right, moving it for a single call or copying for repeated calls."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(ResultFamily[Failure].map(_TupleWith[T, U, False](value^), rebind_var[Result[T, Failure]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[Result[Tuple[downcast[P, Movable & Deinitable], R], Failure]] where Self.Value == Result[downcast[P, Movable & Deinitable], Failure]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Result[downcast[P, Movable & Deinitable], Failure]
-        return Piped(ResultFamily[Failure].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Result[downcast[P, Movable & Deinitable], Failure]](self.value^)))
-
-    def pair_with[P: AnyType, R: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[Result[Tuple[downcast[P, Movable & Deinitable], R], Failure]] where Self.Value == Result[downcast[P, Movable & Deinitable], Failure]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Result[downcast[P, Movable & Deinitable], Failure]
-        return Piped(ResultFamily[Failure].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Result[downcast[P, Movable & Deinitable], Failure]](self.value^)))
-
-    def pair_with[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[Tuple[T, C.Result], Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for projection and retain it beside the result."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(ResultFamily[Failure].map(_Observe[T, C, True](function^), rebind_var[Result[T, Failure]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, //, F: def(P) -> R](deinit self, ref[o] function: F) raises Never -> Piped[Result[downcast[P, Movable & Deinitable], Failure]] where Self.Value == Result[downcast[P, Movable & Deinitable], Failure]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Result[downcast[P, Movable & Deinitable], Failure]
-        return Piped(ResultFamily[Failure].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], False](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Result[downcast[P, Movable & Deinitable], Failure]](self.value^)))
-
-    def tap_each[P: AnyType, R: Movable & Deinitable, Failure: Movable & Deinitable, o: ImmOrigin, //, E: Movable & Deinitable, F: def(P) raises E -> R](deinit self, ref[o] function: F) raises E -> Piped[Result[downcast[P, Movable & Deinitable], Failure]] where Self.Value == Result[downcast[P, Movable & Deinitable], Failure]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Result[downcast[P, Movable & Deinitable], Failure]
-        return Piped(ResultFamily[Failure].map(_Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, E, F, True, o], False](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Result[downcast[P, Movable & Deinitable], Failure]](self.value^)))
-
-    def tap_each[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Piped[Result[T, Failure]] where Self.Value == Result[T, Failure] and C.Payload == T and RepeatableBorrow[C]:
-        """Borrow each payload for inspection and retain it unchanged."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(ResultFamily[Failure].map(_Observe[T, C, False](function^), rebind_var[Result[T, Failure]](self.value^)))
-
-    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, F: def(var A) -> R](deinit self, ref[o] function: F) raises ResultFamily[Failure].BindError[Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[ResultFamily[Failure].Bound[Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Result[A, Failure]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == Result[A, Failure]
-        return Piped(ResultFamily[Failure].flat_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Result[A, Failure]](self.value^)))
-
-    def flat_map[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises ResultFamily[Failure].BindError[Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[ResultFamily[Failure].Bound[Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Result[A, Failure]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == Result[A, Failure]
-        return Piped(ResultFamily[Failure].flat_map(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Result[A, Failure]](self.value^)))
-
-    def flat_map[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable, //](deinit self, var function: F) raises ResultFamily[Failure].BindError[Result[F.Arg, Failure], F] -> Piped[ResultFamily[Failure].Bound[Result[F.Arg, Failure], F]] where Self.Value == Result[F.Arg, Failure]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == Result[F.Arg, Failure]
-        return Piped(ResultFamily[Failure].flat_map(function^, rebind_var[Result[F.Arg, Failure]](self.value^)))
-
-    def flat_map[F: _UnaryViewable, o: ImmOrigin, Failure: Movable & Deinitable, //](deinit self, ref[o] function: F) raises ResultFamily[Failure].BindError[Result[F._View[o].Arg, Failure], F._View[o]] -> Piped[ResultFamily[Failure].Bound[Result[F._View[o].Arg, Failure], F._View[o]]] where Self.Value == Result[F._View[o].Arg, Failure]:
-        """Apply flat_map through the carrier's Monad capability."""
-        comptime assert Self.Value == Result[F._View[o].Arg, Failure]
-        return Piped(ResultFamily[Failure].flat_map(function._unary_view(), rebind_var[Result[F._View[o].Arg, Failure]](self.value^)))
-
-    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, G: Applicative, F: def(var A) -> R](deinit self, ref[o] function: F) raises ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Result[A, Failure] and ResultFamily[Failure].TargetCompatible[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == Result[A, Failure]
-        return Piped(ResultFamily[Failure].traverse[G](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Result[A, Failure]](self.value^)))
-
-    def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F) raises ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]] -> Piped[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]] where Self.Value == Result[A, Failure] and ResultFamily[Failure].TargetCompatible[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == Result[A, Failure]
-        return Piped(ResultFamily[Failure].traverse[G](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Result[A, Failure]](self.value^)))
-
-    def traverse[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable, //, G: Applicative](deinit self, var function: F) raises ResultFamily[Failure].TraverseError[G, Result[F.Arg, Failure], F] -> Piped[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F]] where Self.Value == Result[F.Arg, Failure] and ResultFamily[Failure].TargetCompatible[G, Result[F.Arg, Failure], F]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == Result[F.Arg, Failure]
-        return Piped(ResultFamily[Failure].traverse[G](function^, rebind_var[Result[F.Arg, Failure]](self.value^)))
-
-    def traverse[F: _UnaryViewable, o: ImmOrigin, Failure: Movable & Deinitable, //, G: Applicative](deinit self, ref[o] function: F) raises ResultFamily[Failure].TraverseError[G, Result[F._View[o].Arg, Failure], F._View[o]] -> Piped[ResultFamily[Failure].Traversed[G, Result[F._View[o].Arg, Failure], F._View[o]]] where Self.Value == Result[F._View[o].Arg, Failure] and ResultFamily[Failure].TargetCompatible[G, Result[F._View[o].Arg, Failure], F._View[o]]:
-        """Apply traverse through the carrier's Traversable capability."""
-        comptime assert Self.Value == Result[F._View[o].Arg, Failure]
-        return Piped(ResultFamily[Failure].traverse[G](function._unary_view(), rebind_var[Result[F._View[o].Arg, Failure]](self.value^)))
 
     def par_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, F: def(var A) -> R, //, S: Semigroup = _ListErrors[R]](deinit self, ref[o] function: F) raises ResultFamily[Failure].TraverseError[ValidationFamily[S], Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]] -> Piped[ResultFamily[Failure].Traversed[ValidationFamily[S], Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]] where Self.Value == Result[A, Failure] and ResultFamily[Failure].TargetCompatible[ValidationFamily[S], Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]] and _CarrierCompatible[ValidationFamily[S], R]:
         """Apply par_traverse through the carrier's Traversable capability."""
@@ -5116,16 +3517,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Apply par_traverse through the carrier's Traversable capability."""
         comptime assert Self.Value == Result[F._View[o].Arg, Failure]
         return Piped(ResultFamily[Failure].traverse[ValidationFamily[S]](function._unary_view(), rebind_var[Result[F._View[o].Arg, Failure]](self.value^)))
-
-    def flatten[T: Movable & Deinitable, Failure: Movable & Deinitable, //](deinit self) raises ResultFamily[Failure].BindError[Result[Result[T, Failure], Failure], _Same[Result[T, Failure]]] -> Piped[ResultFamily[Failure].Bound[Result[Result[T, Failure], Failure], _Same[Result[T, Failure]]]] where Self.Value == Result[Result[T, Failure], Failure]:
-        """Derive flatten through flat_map, preserving the family's semantics."""
-        comptime assert Self.Value == Result[Result[T, Failure], Failure]
-        return Piped(ResultFamily[Failure].flat_map(_Same[Result[T, Failure]](), rebind_var[Result[Result[T, Failure], Failure]](self.value^)))
-
-    def sequence[T: Movable & Deinitable, Failure: Movable & Deinitable, //, G: Applicative](deinit self) raises ResultFamily[Failure].TraverseError[G, Result[T, Failure], _Same[T]] -> Piped[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]]] where Self.Value == Result[T, Failure] and ResultFamily[Failure].TargetCompatible[G, Result[T, Failure], _Same[T]]:
-        """Derive sequence through traverse, preserving the family's semantics."""
-        comptime assert Self.Value == Result[T, Failure]
-        return Piped(ResultFamily[Failure].traverse[G](_Same[T](), rebind_var[Result[T, Failure]](self.value^)))
 
     def par_sequence[T: Movable & Deinitable, Failure: Movable & Deinitable, //, S: Semigroup = _ListErrors[T]](deinit self) raises Never -> Piped[ResultFamily[Failure].Traversed[ValidationFamily[S], Result[T, Failure], _Same[T]]] where Self.Value == Result[T, Failure] and ResultFamily[Failure].TargetCompatible[ValidationFamily[S], Result[T, Failure], _Same[T]] and _CarrierCompatible[ValidationFamily[S], T]:
         """Derive par_sequence through traverse, preserving the family's semantics."""
@@ -6182,13 +4573,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         return Piped(_run_terminal(_FoldMapRun[F._View[o], _SIMDSum[dtype, size], F._View[o].Error](function._unary_view()), rebind_var[Optional[F._View[o].Arg]](self.value^)))
 
 
-    def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, S: Traversable, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> Piped[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] where S.Element[Self.Value] == downcast[C.Payload, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, C.Result] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:
+    def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[C.Result], S: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> Piped[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] where S.Element[Self.Value] == downcast[C.Payload, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, C.Result] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:
         """Traverse effects and retain the original payloads on success.
 
         Parameters:
             C: The borrowing library callback type.
-            S: The Traversable source family, preserving its native shape and origins.
             G: The target Applicative family; it determines effect sequencing and failure.
+            S: The Traversable source family, preserving its native shape and origins.
             X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
 
         Args:
@@ -6202,21 +4593,21 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_traverse_as[S, G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C], _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]]](_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C](function^), self.value^))
 
-    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable, G: Applicative, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] -> Piped[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] where S.Element[Self.Value] == downcast[P, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]:
+    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable], F: def(P) -> R = def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] -> Piped[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] where S.Element[Self.Value] == downcast[P, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]:
         """Traverse effects and retain the original payloads on success."""
         return Piped(_traverse_as[S, G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]], _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), self.value^))
 
-    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable, G: Applicative, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] -> Piped[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] where S.Element[Self.Value] == downcast[P, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]:
+    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] -> Piped[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] where S.Element[Self.Value] == downcast[P, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]:
         """Traverse effects and retain the original payloads on success."""
         return Piped(_traverse_as[S, G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]], _EntryError[X, S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), self.value^))
 
-    def flat_traverse[F: UnaryContract & Movable & Deinitable, //, S: Traversable & Monad, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, F], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]] where S.Element[Self.Value] == F.Arg and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]], S.TraverseError[G, Self.Value, F]] and ((G.Element[F.Out] == Result[downcast[G.Element[F.Out], _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, F.Out] and S.TargetCompatible[G, Self.Value, F]:
+    def flat_traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], S: Traversable & Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & Monad) else _UnrecognizedCarrier, Traversable & Monad], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, F], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]] where S.Element[Self.Value] == F.Arg and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]], S.TraverseError[G, Self.Value, F]] and ((G.Element[F.Out] == Result[downcast[G.Element[F.Out], _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, F.Out] and S.TargetCompatible[G, Self.Value, F]:
         """Traverse effects and flatten one source-family layer inside the effect.
 
         Parameters:
             F: The callback type, retaining its receiver, captures and error contract.
-            S: The Traversable source family, preserving its native shape and origins.
             G: The target Applicative family; it determines effect sequencing and failure.
+            S: The Traversable source family, preserving its native shape and origins.
             X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
 
         Args:
@@ -6230,20 +4621,20 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_traverse_then[S, G, Self.Value, F, _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]]](function^, self.value^, _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]()))
 
-    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable & Monad, G: Applicative, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where S.Element[Self.Value] == A and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] and ((G.Element[R] == Result[downcast[G.Element[R], _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
+    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable & Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & Monad) else _UnrecognizedCarrier, Traversable & Monad], F: def(var A) -> R = def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where S.Element[Self.Value] == A and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] and ((G.Element[R] == Result[downcast[G.Element[R], _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
         """Traverse effects and flatten one source-family layer inside the effect."""
         return Piped(_traverse_then[S, G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self.value^, _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]()))
 
-    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable & Monad, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]] where S.Element[Self.Value] == A and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]], S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] and ((G.Element[R] == Result[downcast[G.Element[R], _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
+    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable & Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & Monad) else _UnrecognizedCarrier, Traversable & Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]] where S.Element[Self.Value] == A and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]], S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] and ((G.Element[R] == Result[downcast[G.Element[R], _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
         """Traverse effects and flatten one source-family layer inside the effect."""
         return Piped(_traverse_then[S, G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^, _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]()))
 
-    def flat_sequence[S: Traversable & Monad, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]] where S.Element[Self.Value] == S.Element[Self.Value] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]], S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]]] and ((G.Element[_Same[S.Element[Self.Value]].Out] == Result[downcast[G.Element[_Same[S.Element[Self.Value]].Out], _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, _Same[S.Element[Self.Value]].Out] and S.TargetCompatible[G, Self.Value, _Same[S.Element[Self.Value]]]:
+    def flat_sequence[G: Applicative = _InferredApplicative[downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable].Element[Self.Value]], S: Traversable & Monad = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & Monad) else _UnrecognizedCarrier, Traversable & Monad], X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]] where S.Element[Self.Value] == S.Element[Self.Value] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]], S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]]] and ((G.Element[_Same[S.Element[Self.Value]].Out] == Result[downcast[G.Element[_Same[S.Element[Self.Value]].Out], _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(Self.Value, _ResultType) else True) and _CarrierCompatible[G, _Same[S.Element[Self.Value]].Out] and S.TargetCompatible[G, Self.Value, _Same[S.Element[Self.Value]]]:
         """Traverse effects and flatten one source-family layer inside the effect.
 
         Parameters:
-            S: The Traversable source family, preserving its native shape and origins.
             G: The target Applicative family; it determines effect sequencing and failure.
+            S: The Traversable source family, preserving its native shape and origins.
             X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
 
         Returns:
@@ -6254,13 +4645,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_traverse_then[S, G, Self.Value, _Same[S.Element[Self.Value]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]]](_Same[S.Element[Self.Value]](), self.value^, _FlattenAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]()))
 
-    def traverse_filter[F: UnaryContract & Movable & Deinitable, //, S: Traversable & FunctorFilter, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, F], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]] where S.Element[Self.Value] == F.Arg and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]], S.TraverseError[G, Self.Value, F]] and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and S.TargetCompatible[G, Self.Value, F]:
+    def traverse_filter[F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], S: Traversable & FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & FunctorFilter) else _UnrecognizedCarrier, Traversable & FunctorFilter], X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, F], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]] where S.Element[Self.Value] == F.Arg and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]], S.TraverseError[G, Self.Value, F]] and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and S.TargetCompatible[G, Self.Value, F]:
         """Traverse effects and retain present Optional payloads inside the effect.
 
         Parameters:
             F: The callback type, retaining its receiver, captures and error contract.
-            S: The Traversable source family, preserving its native shape and origins.
             G: The target Applicative family; it determines effect sequencing and failure.
+            S: The Traversable source family, preserving its native shape and origins.
             X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
 
         Args:
@@ -6274,21 +4665,21 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_traverse_then[S, G, Self.Value, F, _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, F], G.MapError[S.Traversed[G, Self.Value, F], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]]]]](function^, self.value^, _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, F]]]()))
 
-    def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable & FunctorFilter, G: Applicative, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where S.Element[Self.Value] == A and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
+    def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable & FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & FunctorFilter) else _UnrecognizedCarrier, Traversable & FunctorFilter], F: def(var A) -> R = def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where S.Element[Self.Value] == A and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]:
         """Traverse effects and retain present Optional payloads inside the effect."""
         return Piped(_traverse_then[S, G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]]]]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self.value^, _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, Never, F, False, o]]]]()))
 
-    def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable & FunctorFilter, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]] where S.Element[Self.Value] == A and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]], S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
+    def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable & FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & FunctorFilter) else _UnrecognizedCarrier, Traversable & FunctorFilter], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]] where S.Element[Self.Value] == A and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]], S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]:
         """Traverse effects and retain present Optional payloads inside the effect."""
         return Piped(_traverse_then[S, G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self.value^, _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _NativeUnaryRef[A, R, E, F, True, o]]]]()))
 
-    def filter_effect[C: BorrowCallContract & Movable & Deinitable, //, S: Traversable & FunctorFilter, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]] where S.Element[Self.Value] == downcast[C.Payload, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]], S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]] and G.Element[C.Result] == Bool and G.Element[_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True].Out]]] and _CarrierCompatible[G, C.Result] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]:
+    def filter_effect[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[C.Result], S: Traversable & FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & FunctorFilter) else _UnrecognizedCarrier, Traversable & FunctorFilter], X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]] where S.Element[Self.Value] == downcast[C.Payload, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]], S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]] and G.Element[C.Result] == Bool and G.Element[_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True].Out]]] and _CarrierCompatible[G, C.Result] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]:
         """Retain elements accepted by an effectful borrowing Bool predicate.
 
         Parameters:
             C: The borrowing library callback type.
-            S: The Traversable source family, preserving its native shape and origins.
             G: The target Applicative family; it determines effect sequencing and failure.
+            S: The Traversable source family, preserving its native shape and origins.
             X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
 
         Args:
@@ -6302,20 +4693,20 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_traverse_then[S, G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]]](_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True](function^), self.value^, _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]()))
 
-    def filter_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable & FunctorFilter, G: Applicative, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]] where S.Element[Self.Value] == downcast[P, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]], S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]] and G.Element[R] == Bool and G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True].Out]]] and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]:
+    def filter_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable & FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & FunctorFilter) else _UnrecognizedCarrier, Traversable & FunctorFilter], F: def(P) -> R = def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]] where S.Element[Self.Value] == downcast[P, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]], S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]] and G.Element[R] == Bool and G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True].Out]]] and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]:
         """Retain elements accepted by an effectful borrowing Bool predicate."""
         return Piped(_traverse_then[S, G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), self.value^, _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]()))
 
-    def filter_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable & FunctorFilter, G: Applicative, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]] where S.Element[Self.Value] == downcast[P, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]], S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]] and G.Element[R] == Bool and G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True].Out]]] and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]:
+    def filter_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable & FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & FunctorFilter) else _UnrecognizedCarrier, Traversable & FunctorFilter], E: Movable & Deinitable = Never, F: def(P) raises E -> R = def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]] where S.Element[Self.Value] == downcast[P, Movable & Deinitable] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]], S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]] and G.Element[R] == Bool and G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True].Out]]] and _CarrierCompatible[G, R] and S.TargetCompatible[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]:
         """Retain elements accepted by an effectful borrowing Bool predicate."""
         return Piped(_traverse_then[S, G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]], _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), self.value^, _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]()))
 
-    def sequence_filter[S: Traversable & FunctorFilter, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]] where S.Element[Self.Value] == S.Element[Self.Value] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]], S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]]] and G.Element[_Same[S.Element[Self.Value]].Out] == Optional[_ListElement[G.Element[_Same[S.Element[Self.Value]].Out]]] and _CarrierCompatible[G, _Same[S.Element[Self.Value]].Out] and S.TargetCompatible[G, Self.Value, _Same[S.Element[Self.Value]]]:
+    def sequence_filter[G: Applicative = _InferredApplicative[downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable) else _UnrecognizedCarrier, Traversable].Element[Self.Value]], S: Traversable & FunctorFilter = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Traversable & FunctorFilter) else _UnrecognizedCarrier, Traversable & FunctorFilter], X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]] -> Piped[G.Mapped[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]] where S.Element[Self.Value] == S.Element[Self.Value] and ((S.Mapped[Self.Value, _Same[S.Element[Self.Value]]] == Self.Value) if conforms_to(Self.Value, _ResultType) else True) and _ErrorCompatible[_EntryError[X, _CommonError[S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]], G.MapError[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]], _CompactAfter[S, G.Element[S.Traversed[G, Self.Value, _Same[S.Element[Self.Value]]]]]]]], S.TraverseError[G, Self.Value, _Same[S.Element[Self.Value]]]] and G.Element[_Same[S.Element[Self.Value]].Out] == Optional[_ListElement[G.Element[_Same[S.Element[Self.Value]].Out]]] and _CarrierCompatible[G, _Same[S.Element[Self.Value]].Out] and S.TargetCompatible[G, Self.Value, _Same[S.Element[Self.Value]]]:
         """Traverse effects and retain present Optional payloads inside the effect.
 
         Parameters:
-            S: The Traversable source family, preserving its native shape and origins.
             G: The target Applicative family; it determines effect sequencing and failure.
+            S: The Traversable source family, preserving its native shape and origins.
             X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
 
         Returns:
@@ -6353,33 +4744,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Traverse effects without retaining successful outputs."""
         return Piped(_traverse_void[List[A], _NativeUnaryRef[A, R, E, F, True, o], G, _EntryError[X, G._LoopError[List[A], _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[List[A]](self.value^)))
 
-    def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, ListFamily.TraverseError[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> Piped[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:
-        """Traverse effects and retain the original payloads on success.
-
-        Parameters:
-            C: The borrowing library callback type.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing the original payloads; Piped preserves source shape and Iter/direct calls gather a List.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_as[ListFamily, G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C], _EntryError[X, ListFamily.TraverseError[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]]](_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C](function^), rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
-
-    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] -> Piped[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] where Self.Value == List[downcast[P, Movable & Deinitable]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]:
-        """Traverse effects and retain the original payloads on success."""
-        return Piped(_traverse_as[ListFamily, G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]], _EntryError[X, ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] -> Piped[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] where Self.Value == List[downcast[P, Movable & Deinitable]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]:
-        """Traverse effects and retain the original payloads on success."""
-        return Piped(_traverse_as[ListFamily, G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]], _EntryError[X, ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^)))
-
     def sequence_void[T: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, G._LoopError[List[T], _Same[T], _Discard[G.Element[_Same[T].Out]]]] -> Piped[G._Looped[List[T], _Same[T], _Discard[G.Element[_Same[T].Out]]]] where Self.Value == List[T] and _CarrierCompatible[G, _Same[T].Out] and G._LoopCompatible[List[T], _Same[T], _Discard[G.Element[_Same[T].Out]]]:
         """Traverse effects without retaining successful outputs.
 
@@ -6395,119 +4759,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
         return Piped(_traverse_void[List[T], _Same[T], G, _EntryError[X, G._LoopError[List[T], _Same[T], _Discard[G.Element[_Same[T].Out]]]]](_Same[T](), rebind_var[List[T]](self.value^)))
-
-    def flat_traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[F.Arg], F], G.MapError[ListFamily.Traversed[G, List[F.Arg], F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[F.Arg], F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]]] where Self.Value == List[F.Arg] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[F.Arg], F], G.MapError[ListFamily.Traversed[G, List[F.Arg], F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]]]], ListFamily.TraverseError[G, List[F.Arg], F]] and G.Element[F.Out] == List[ListFamily.Element[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and ListFamily.TargetCompatible[G, List[F.Arg], F]:
-        """Traverse effects and flatten one source-family layer inside the effect.
-
-        Parameters:
-            F: The callback type, retaining its receiver, captures and error contract.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing the flattened source shape. The callback produces a target effect of the same source family.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[ListFamily, G, List[F.Arg], F, _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[F.Arg], F], G.MapError[ListFamily.Traversed[G, List[F.Arg], F], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]]]]](function^, rebind_var[List[F.Arg]](self.value^), _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]()))
-
-    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where Self.Value == List[A] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]] and G.Element[R] == List[ListFamily.Element[G.Element[R]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]:
-        """Traverse effects and flatten one source-family layer inside the effect."""
-        return Piped(_traverse_then[ListFamily, G, List[A], _NativeUnaryRef[A, R, Never, F, False, o], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[List[A]](self.value^), _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]()))
-
-    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]] where Self.Value == List[A] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]], ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == List[ListFamily.Element[G.Element[R]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]:
-        """Traverse effects and flatten one source-family layer inside the effect."""
-        return Piped(_traverse_then[ListFamily, G, List[A], _NativeUnaryRef[A, R, E, F, True, o], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[List[A]](self.value^), _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]()))
-
-    def flat_sequence[T: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[T], _Same[T]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]] where Self.Value == List[T] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]], ListFamily.TraverseError[G, List[T], _Same[T]]] and G.Element[_Same[T].Out] == List[ListFamily.Element[G.Element[_Same[T].Out]]] and _CarrierCompatible[G, _Same[T].Out] and ListFamily.TargetCompatible[G, List[T], _Same[T]]:
-        """Traverse effects and flatten one source-family layer inside the effect.
-
-        Parameters:
-            T: The element type, including its native origins.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Returns:
-            The target effect containing the source shape after sequencing effects and flattening one source-family layer.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[ListFamily, G, List[T], _Same[T], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]]](_Same[T](), rebind_var[List[T]](self.value^), _FlattenAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]()))
-
-    def traverse_filter[F: UnaryContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[F.Arg], F], G.MapError[ListFamily.Traversed[G, List[F.Arg], F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[F.Arg], F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]]] where Self.Value == List[F.Arg] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[F.Arg], F], G.MapError[ListFamily.Traversed[G, List[F.Arg], F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]]]], ListFamily.TraverseError[G, List[F.Arg], F]] and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and ListFamily.TargetCompatible[G, List[F.Arg], F]:
-        """Traverse effects and retain present Optional payloads inside the effect.
-
-        Parameters:
-            F: The callback type, retaining its receiver, captures and error contract.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing present Optional results in source shape; absence discards an element and target failure follows the effect.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[ListFamily, G, List[F.Arg], F, _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[F.Arg], F], G.MapError[ListFamily.Traversed[G, List[F.Arg], F], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]]]]](function^, rebind_var[List[F.Arg]](self.value^), _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[F.Arg], F]]]()))
-
-    def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where Self.Value == List[A] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]:
-        """Traverse effects and retain present Optional payloads inside the effect."""
-        return Piped(_traverse_then[ListFamily, G, List[A], _NativeUnaryRef[A, R, Never, F, False, o], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[List[A]](self.value^), _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]()))
-
-    def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]] where Self.Value == List[A] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]], ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]:
-        """Traverse effects and retain present Optional payloads inside the effect."""
-        return Piped(_traverse_then[ListFamily, G, List[A], _NativeUnaryRef[A, R, E, F, True, o], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[List[A]](self.value^), _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[A], _NativeUnaryRef[A, R, E, F, True, o]]]]()))
-
-    def filter_effect[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]] where Self.Value == List[downcast[C.Payload, Movable & Deinitable]] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]], ListFamily.TraverseError[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]] and G.Element[C.Result] == Bool and G.Element[_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True].Out]]] and _CarrierCompatible[G, C.Result] and ListFamily.TargetCompatible[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]:
-        """Retain elements accepted by an effectful borrowing Bool predicate.
-
-        Parameters:
-            C: The borrowing library callback type.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing original elements whose effectful Bool predicate succeeds with True; False discards an element and target failure follows the effect.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[ListFamily, G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]]](_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True](function^), rebind_var[List[downcast[C.Payload, Movable & Deinitable]]](self.value^), _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]()))
-
-    def filter_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]] where Self.Value == List[downcast[P, Movable & Deinitable]] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]], ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]] and G.Element[R] == Bool and G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True].Out]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]:
-        """Retain elements accepted by an effectful borrowing Bool predicate."""
-        return Piped(_traverse_then[ListFamily, G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^), _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]()))
-
-    def filter_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]] where Self.Value == List[downcast[P, Movable & Deinitable]] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]], ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]] and G.Element[R] == Bool and G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True].Out]]] and _CarrierCompatible[G, R] and ListFamily.TargetCompatible[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]:
-        """Retain elements accepted by an effectful borrowing Bool predicate."""
-        return Piped(_traverse_then[ListFamily, G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[List[downcast[P, Movable & Deinitable]]](self.value^), _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]()))
-
-    def sequence_filter[T: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]] -> Piped[G.Mapped[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]] where Self.Value == List[T] and _ErrorCompatible[_EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]], ListFamily.TraverseError[G, List[T], _Same[T]]] and G.Element[_Same[T].Out] == Optional[_ListElement[G.Element[_Same[T].Out]]] and _CarrierCompatible[G, _Same[T].Out] and ListFamily.TargetCompatible[G, List[T], _Same[T]]:
-        """Traverse effects and retain present Optional payloads inside the effect.
-
-        Parameters:
-            T: The element type, including its native origins.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Returns:
-            The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[ListFamily, G, List[T], _Same[T], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]], _EntryError[X, _CommonError[ListFamily.TraverseError[G, List[T], _Same[T]], G.MapError[ListFamily.Traversed[G, List[T], _Same[T]], _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]]]]](_Same[T](), rebind_var[List[T]](self.value^), _CompactAfter[ListFamily, G.Element[ListFamily.Traversed[G, List[T], _Same[T]]]]()))
 
     def traverse_void[F: UnaryContract & Movable & Deinitable, N: Int, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, G._LoopError[List[F.Arg], F, _Discard[G.Element[F.Out]]]] -> Piped[G._Looped[List[F.Arg], F, _Discard[G.Element[F.Out]]]] where Self.Value == Array[F.Arg, N] and _CarrierCompatible[G, F.Out] and G._LoopCompatible[List[F.Arg], F, _Discard[G.Element[F.Out]]]:
         """Traverse effects without retaining successful outputs.
@@ -6667,33 +4918,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Traverse effects without retaining successful outputs."""
         return Piped(_traverse_void[Optional[A], _NativeUnaryRef[A, R, E, F, True, o], G, _EntryError[X, G._LoopError[Optional[A], _NativeUnaryRef[A, R, E, F, True, o], _Discard[G.Element[_NativeUnaryRef[A, R, E, F, True, o].Out]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^)))
 
-    def traverse_tap[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, OptionalFamily.TraverseError[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> Piped[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and _CarrierCompatible[G, C.Result] and OptionalFamily.TargetCompatible[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:
-        """Traverse effects and retain the original payloads on success.
-
-        Parameters:
-            C: The borrowing library callback type.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing the original payloads; Piped preserves source shape and Iter/direct calls gather a List.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_as[OptionalFamily, G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C], _EntryError[X, OptionalFamily.TraverseError[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]]](_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C](function^), rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^)))
-
-    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] -> Piped[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]] and _CarrierCompatible[G, R] and OptionalFamily.TargetCompatible[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]:
-        """Traverse effects and retain the original payloads on success."""
-        return Piped(_traverse_as[OptionalFamily, G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]], _EntryError[X, OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
-
-    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] -> Piped[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]] and _CarrierCompatible[G, R] and OptionalFamily.TargetCompatible[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]:
-        """Traverse effects and retain the original payloads on success."""
-        return Piped(_traverse_as[OptionalFamily, G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]], _EntryError[X, OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^)))
-
     def sequence_void[T: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, G._LoopError[Optional[T], _Same[T], _Discard[G.Element[_Same[T].Out]]]] -> Piped[G._Looped[Optional[T], _Same[T], _Discard[G.Element[_Same[T].Out]]]] where Self.Value == Optional[T] and _CarrierCompatible[G, _Same[T].Out] and G._LoopCompatible[Optional[T], _Same[T], _Discard[G.Element[_Same[T].Out]]]:
         """Traverse effects without retaining successful outputs.
 
@@ -6709,119 +4933,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
         return Piped(_traverse_void[Optional[T], _Same[T], G, _EntryError[X, G._LoopError[Optional[T], _Same[T], _Discard[G.Element[_Same[T].Out]]]]](_Same[T](), rebind_var[Optional[T]](self.value^)))
-
-    def flat_traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[F.Arg], F], G.MapError[OptionalFamily.Traversed[G, Optional[F.Arg], F], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[F.Arg], F], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]]] where Self.Value == Optional[F.Arg] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[F.Arg], F], G.MapError[OptionalFamily.Traversed[G, Optional[F.Arg], F], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]]]], OptionalFamily.TraverseError[G, Optional[F.Arg], F]] and G.Element[F.Out] == Optional[OptionalFamily.Element[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and OptionalFamily.TargetCompatible[G, Optional[F.Arg], F]:
-        """Traverse effects and flatten one source-family layer inside the effect.
-
-        Parameters:
-            F: The callback type, retaining its receiver, captures and error contract.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing the flattened source shape. The callback produces a target effect of the same source family.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[OptionalFamily, G, Optional[F.Arg], F, _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[F.Arg], F], G.MapError[OptionalFamily.Traversed[G, Optional[F.Arg], F], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]]]]](function^, rebind_var[Optional[F.Arg]](self.value^), _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]()))
-
-    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where Self.Value == Optional[A] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]] and G.Element[R] == Optional[OptionalFamily.Element[G.Element[R]]] and _CarrierCompatible[G, R] and OptionalFamily.TargetCompatible[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]:
-        """Traverse effects and flatten one source-family layer inside the effect."""
-        return Piped(_traverse_then[OptionalFamily, G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^), _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]()))
-
-    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]] where Self.Value == Optional[A] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]], OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == Optional[OptionalFamily.Element[G.Element[R]]] and _CarrierCompatible[G, R] and OptionalFamily.TargetCompatible[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]:
-        """Traverse effects and flatten one source-family layer inside the effect."""
-        return Piped(_traverse_then[OptionalFamily, G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^), _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]()))
-
-    def flat_sequence[T: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]] where Self.Value == Optional[T] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]], OptionalFamily.TraverseError[G, Optional[T], _Same[T]]] and G.Element[_Same[T].Out] == Optional[OptionalFamily.Element[G.Element[_Same[T].Out]]] and _CarrierCompatible[G, _Same[T].Out] and OptionalFamily.TargetCompatible[G, Optional[T], _Same[T]]:
-        """Traverse effects and flatten one source-family layer inside the effect.
-
-        Parameters:
-            T: The element type, including its native origins.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Returns:
-            The target effect containing the source shape after sequencing effects and flattening one source-family layer.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[OptionalFamily, G, Optional[T], _Same[T], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]]](_Same[T](), rebind_var[Optional[T]](self.value^), _FlattenAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]()))
-
-    def traverse_filter[F: UnaryContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[F.Arg], F], G.MapError[OptionalFamily.Traversed[G, Optional[F.Arg], F], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[F.Arg], F], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]]] where Self.Value == Optional[F.Arg] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[F.Arg], F], G.MapError[OptionalFamily.Traversed[G, Optional[F.Arg], F], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]]]], OptionalFamily.TraverseError[G, Optional[F.Arg], F]] and G.Element[F.Out] == Optional[_ListElement[G.Element[F.Out]]] and _CarrierCompatible[G, F.Out] and OptionalFamily.TargetCompatible[G, Optional[F.Arg], F]:
-        """Traverse effects and retain present Optional payloads inside the effect.
-
-        Parameters:
-            F: The callback type, retaining its receiver, captures and error contract.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing present Optional results in source shape; absence discards an element and target failure follows the effect.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[OptionalFamily, G, Optional[F.Arg], F, _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[F.Arg], F], G.MapError[OptionalFamily.Traversed[G, Optional[F.Arg], F], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]]]]](function^, rebind_var[Optional[F.Arg]](self.value^), _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[F.Arg], F]]]()))
-
-    def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where Self.Value == Optional[A] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and OptionalFamily.TargetCompatible[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]:
-        """Traverse effects and retain present Optional payloads inside the effect."""
-        return Piped(_traverse_then[OptionalFamily, G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^), _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, Never, F, False, o]]]]()))
-
-    def traverse_filter[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]] where Self.Value == Optional[A] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]], OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == Optional[_ListElement[G.Element[R]]] and _CarrierCompatible[G, R] and OptionalFamily.TargetCompatible[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]:
-        """Traverse effects and retain present Optional payloads inside the effect."""
-        return Piped(_traverse_then[OptionalFamily, G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Optional[A]](self.value^), _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[A], _NativeUnaryRef[A, R, E, F, True, o]]]]()))
-
-    def filter_effect[C: BorrowCallContract & Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]] where Self.Value == Optional[downcast[C.Payload, Movable & Deinitable]] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]], OptionalFamily.TraverseError[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]] and G.Element[C.Result] == Bool and G.Element[_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True].Out]]] and _CarrierCompatible[G, C.Result] and OptionalFamily.TargetCompatible[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]:
-        """Retain elements accepted by an effectful borrowing Bool predicate.
-
-        Parameters:
-            C: The borrowing library callback type.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing original elements whose effectful Bool predicate succeeds with True; False discards an element and target failure follows the effect.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[OptionalFamily, G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]]]]](_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True](function^), rebind_var[Optional[downcast[C.Payload, Movable & Deinitable]]](self.value^), _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[C.Payload, Movable & Deinitable]], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C, True]]]]()))
-
-    def filter_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]], OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]] and G.Element[R] == Bool and G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True].Out]]] and _CarrierCompatible[G, R] and OptionalFamily.TargetCompatible[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]:
-        """Retain elements accepted by an effectful borrowing Bool predicate."""
-        return Piped(_traverse_then[OptionalFamily, G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^), _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o], True]]]]()))
-
-    def filter_effect[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]] where Self.Value == Optional[downcast[P, Movable & Deinitable]] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]], OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]] and G.Element[R] == Bool and G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True].Out] == Optional[_ListElement[G.Element[_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True].Out]]] and _CarrierCompatible[G, R] and OptionalFamily.TargetCompatible[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]:
-        """Retain elements accepted by an effectful borrowing Bool predicate."""
-        return Piped(_traverse_then[OptionalFamily, G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], G.MapError[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Optional[downcast[P, Movable & Deinitable]]](self.value^), _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[downcast[P, Movable & Deinitable]], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o], True]]]]()))
-
-    def sequence_filter[T: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]] -> Piped[G.Mapped[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]] where Self.Value == Optional[T] and _ErrorCompatible[_EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]], OptionalFamily.TraverseError[G, Optional[T], _Same[T]]] and G.Element[_Same[T].Out] == Optional[_ListElement[G.Element[_Same[T].Out]]] and _CarrierCompatible[G, _Same[T].Out] and OptionalFamily.TargetCompatible[G, Optional[T], _Same[T]]:
-        """Traverse effects and retain present Optional payloads inside the effect.
-
-        Parameters:
-            T: The element type, including its native origins.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Returns:
-            The target effect containing present Optional payloads in source shape, using identity traverse_filter; effect failure remains distinct from discarded absence.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[OptionalFamily, G, Optional[T], _Same[T], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]], _EntryError[X, _CommonError[OptionalFamily.TraverseError[G, Optional[T], _Same[T]], G.MapError[OptionalFamily.Traversed[G, Optional[T], _Same[T]], _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]]]]](_Same[T](), rebind_var[Optional[T]](self.value^), _CompactAfter[OptionalFamily, G.Element[OptionalFamily.Traversed[G, Optional[T], _Same[T]]]]()))
 
     def traverse_void[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[F.Arg, Failure], Composition[False, 1, F, _EffectVoid[G, F.Out]]]] -> Piped[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], Composition[False, 1, F, _EffectVoid[G, F.Out]]]] where Self.Value == Result[F.Arg, Failure] and _CarrierCompatible[G, F.Out] and ResultFamily[Failure].TargetCompatible[G, Result[F.Arg, Failure], Composition[False, 1, F, _EffectVoid[G, F.Out]]]:
         """Traverse effects without retaining successful outputs.
@@ -6851,34 +4962,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """Traverse effects without retaining successful outputs."""
         return Piped(_traverse_as[ResultFamily[Failure], G, Result[A, Failure], Composition[False, 1, _NativeUnaryRef[A, R, E, F, True, o], _EffectVoid[G, _NativeUnaryRef[A, R, E, F, True, o].Out]], _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[A, Failure], Composition[False, 1, _NativeUnaryRef[A, R, E, F, True, o], _EffectVoid[G, _NativeUnaryRef[A, R, E, F, True, o].Out]]]]](Composition[False, 1, _NativeUnaryRef[A, R, E, F, True, o], _EffectVoid[G, _NativeUnaryRef[A, R, E, F, True, o].Out]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), _EffectVoid[G, _NativeUnaryRef[A, R, E, F, True, o].Out]()), rebind_var[Result[A, Failure]](self.value^)))
 
-    def traverse_tap[C: BorrowCallContract & Movable & Deinitable, Failure: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: C) raises _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[downcast[C.Payload, Movable & Deinitable], Failure], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] -> Piped[ResultFamily[Failure].Traversed[G, Result[downcast[C.Payload, Movable & Deinitable], Failure], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]] where Self.Value == Result[downcast[C.Payload, Movable & Deinitable], Failure] and _CarrierCompatible[G, C.Result] and ResultFamily[Failure].TargetCompatible[G, Result[downcast[C.Payload, Movable & Deinitable], Failure], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]:
-        """Traverse effects and retain the original payloads on success.
-
-        Parameters:
-            C: The borrowing library callback type.
-            Failure: The error payload type retained by Result.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing the original payloads; Piped preserves source shape and Iter/direct calls gather a List.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_as[ResultFamily[Failure], G, Result[downcast[C.Payload, Movable & Deinitable], Failure], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C], _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[downcast[C.Payload, Movable & Deinitable], Failure], _TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C]]]](_TraverseTap[downcast[C.Payload, Movable & Deinitable], G, C](function^), rebind_var[Result[downcast[C.Payload, Movable & Deinitable], Failure]](self.value^)))
-
-    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, G: Applicative, F: def(P) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] -> Piped[ResultFamily[Failure].Traversed[G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]] where Self.Value == Result[downcast[P, Movable & Deinitable], Failure] and _CarrierCompatible[G, R] and ResultFamily[Failure].TargetCompatible[G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]:
-        """Traverse effects and retain the original payloads on success."""
-        return Piped(_traverse_as[ResultFamily[Failure], G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]], _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, Never, F, False, o]](_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=function))), rebind_var[Result[downcast[P, Movable & Deinitable], Failure]](self.value^)))
-
-    def traverse_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, G: Applicative, E: Movable & Deinitable, F: def(P) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] -> Piped[ResultFamily[Failure].Traversed[G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]] where Self.Value == Result[downcast[P, Movable & Deinitable], Failure] and _CarrierCompatible[G, R] and ResultFamily[Failure].TargetCompatible[G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]:
-        """Traverse effects and retain the original payloads on success."""
-        return Piped(_traverse_as[ResultFamily[Failure], G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]], _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[downcast[P, Movable & Deinitable], Failure], _TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]]]]](_TraverseTap[downcast[P, Movable & Deinitable], G, _NativeBorrowRef[P, R, E, F, True, o]](_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=function))), rebind_var[Result[downcast[P, Movable & Deinitable], Failure]](self.value^)))
-
     def sequence_void[T: Movable & Deinitable, Failure: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[T, Failure], Composition[False, 1, _Same[T], _EffectVoid[G, _Same[T].Out]]]] -> Piped[ResultFamily[Failure].Traversed[G, Result[T, Failure], Composition[False, 1, _Same[T], _EffectVoid[G, _Same[T].Out]]]] where Self.Value == Result[T, Failure] and _CarrierCompatible[G, _Same[T].Out] and ResultFamily[Failure].TargetCompatible[G, Result[T, Failure], Composition[False, 1, _Same[T], _EffectVoid[G, _Same[T].Out]]]:
         """Traverse effects without retaining successful outputs.
 
@@ -6895,51 +4978,6 @@ struct Piped[Value: Movable & Deinitable](Movable):
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
         return Piped(_traverse_as[ResultFamily[Failure], G, Result[T, Failure], Composition[False, 1, _Same[T], _EffectVoid[G, _Same[T].Out]], _EntryError[X, ResultFamily[Failure].TraverseError[G, Result[T, Failure], Composition[False, 1, _Same[T], _EffectVoid[G, _Same[T].Out]]]]](Composition[False, 1, _Same[T], _EffectVoid[G, _Same[T].Out]](_Same[T](), _EffectVoid[G, _Same[T].Out]()), rebind_var[Result[T, Failure]](self.value^)))
-
-    def flat_traverse[F: UnaryContract & Movable & Deinitable, Failure: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self, var function: F) raises _EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[F.Arg, Failure], F], G.MapError[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F]]]]]] -> Piped[G.Mapped[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F]]]]] where Self.Value == Result[F.Arg, Failure] and _ErrorCompatible[_EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[F.Arg, Failure], F], G.MapError[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F]]]]]], ResultFamily[Failure].TraverseError[G, Result[F.Arg, Failure], F]] and G.Element[F.Out] == Result[ResultFamily[Failure].Element[G.Element[F.Out]], Failure] and _CarrierCompatible[G, F.Out] and ResultFamily[Failure].TargetCompatible[G, Result[F.Arg, Failure], F]:
-        """Traverse effects and flatten one source-family layer inside the effect.
-
-        Parameters:
-            F: The callback type, retaining its receiver, captures and error contract.
-            Failure: The error payload type retained by Result.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Args:
-            function: The callback, consumed; calls follow the operation's evaluation order.
-
-        Returns:
-            The target effect containing the flattened source shape. The callback produces a target effect of the same source family.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[ResultFamily[Failure], G, Result[F.Arg, Failure], F, _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F]]], _EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[F.Arg, Failure], F], G.MapError[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F]]]]]]](function^, rebind_var[Result[F.Arg, Failure]](self.value^), _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[F.Arg, Failure], F]]]()))
-
-    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, G: Applicative, F: def(var A) -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]] -> Piped[G.Mapped[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]]]]] where Self.Value == Result[A, Failure] and _ErrorCompatible[_EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]], ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]] and G.Element[R] == Result[ResultFamily[Failure].Element[G.Element[R]], Failure] and _CarrierCompatible[G, R] and ResultFamily[Failure].TargetCompatible[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]:
-        """Traverse effects and flatten one source-family layer inside the effect."""
-        return Piped(_traverse_then[ResultFamily[Failure], G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]]], _EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]], G.MapError[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]]]]]]](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), rebind_var[Result[A, Failure]](self.value^), _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, Never, F, False, o]]]]()))
-
-    def flat_traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, Failure: Movable & Deinitable, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](deinit self, ref[o] function: F) raises _EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]]]]]] -> Piped[G.Mapped[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]]]]] where Self.Value == Result[A, Failure] and _ErrorCompatible[_EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]]]]]], ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]] and G.Element[R] == Result[ResultFamily[Failure].Element[G.Element[R]], Failure] and _CarrierCompatible[G, R] and ResultFamily[Failure].TargetCompatible[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]:
-        """Traverse effects and flatten one source-family layer inside the effect."""
-        return Piped(_traverse_then[ResultFamily[Failure], G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]]], _EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]], G.MapError[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]]]]]]](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), rebind_var[Result[A, Failure]](self.value^), _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[A, Failure], _NativeUnaryRef[A, R, E, F, True, o]]]]()))
-
-    def flat_sequence[T: Movable & Deinitable, Failure: Movable & Deinitable, //, G: Applicative, X: AnyType = _InferError](deinit self) raises _EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[T, Failure], _Same[T]], G.MapError[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]]]]]]] -> Piped[G.Mapped[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]]]]]] where Self.Value == Result[T, Failure] and _ErrorCompatible[_EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[T, Failure], _Same[T]], G.MapError[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]]]]]]], ResultFamily[Failure].TraverseError[G, Result[T, Failure], _Same[T]]] and G.Element[_Same[T].Out] == Result[ResultFamily[Failure].Element[G.Element[_Same[T].Out]], Failure] and _CarrierCompatible[G, _Same[T].Out] and ResultFamily[Failure].TargetCompatible[G, Result[T, Failure], _Same[T]]:
-        """Traverse effects and flatten one source-family layer inside the effect.
-
-        Parameters:
-            T: The element type, including its native origins.
-            Failure: The error payload type retained by Result.
-            G: The target Applicative family; it determines effect sequencing and failure.
-            X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
-
-        Returns:
-            The target effect containing the source shape after sequencing effects and flattening one source-family layer.
-
-        Raises:
-            The exact callback, monoid or family error; Never for a non-raising operation.
-        """
-        return Piped(_traverse_then[ResultFamily[Failure], G, Result[T, Failure], _Same[T], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]]]], _EntryError[X, _CommonError[ResultFamily[Failure].TraverseError[G, Result[T, Failure], _Same[T]], G.MapError[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]], _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]]]]]]]](_Same[T](), rebind_var[Result[T, Failure]](self.value^), _FlattenAfter[ResultFamily[Failure], G.Element[ResultFamily[Failure].Traversed[G, Result[T, Failure], _Same[T]]]]()))
 
     # --- end container methods ---
 

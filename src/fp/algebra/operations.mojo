@@ -16,11 +16,11 @@ from fp._internal.errors import _ErrorCompatible
 from .protocols import _SemigroupBinary
 from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure, _map_as, _flat_map_as, _traverse_as
 from .contracts import MapContract, BindContract, TraverseContract, FilterContract, CombineContract
-from .collections import _SourceFamily
+from .collections import _SourceFamily, _UnrecognizedCarrier
 from .instances import _InferredApplicative, _ViewTarget
 
 
-def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, var f: F
+def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Functor) else _UnrecognizedCarrier, Functor]](var value: V, var f: F
 ) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible:
     """Apply `f` to the payload of `value`, keeping the carrier's context: the `Functor` operation.
 
@@ -68,7 +68,7 @@ def pure[A: Movable & Deinitable, //, I: Applicative](var value: A) -> I.Pure[A]
 
 
 def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //,
-              I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: R, var f: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].OperationCompatible:
+              I: Applicative = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Applicative) else _UnrecognizedCarrier, Applicative]](var left: V, var right: R, var f: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].OperationCompatible:
     """Combine the payload of `left` with that of the carrier `right` produces.
 
     `right` runs at most once per combination, and not at all when `left`
@@ -95,7 +95,7 @@ def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
     return I.map2_lazy(f^, left^, right^)
 
 
-def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, var f: F
+def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Monad) else _UnrecognizedCarrier, Monad]](var value: V, var f: F
 ) raises BindContract[I, V, F].Error -> BindContract[I, V, F].Out where BindContract[I, V, F].Compatible:
     """Let `f` choose the next carrier of the same family from the payload of `value`: the `Monad` operation.
 
@@ -129,7 +129,7 @@ def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, /
     return I.flat_map(f^, value^)
 
 
-def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], S: Traversable = downcast[_SourceFamily[V], Traversable]](
+def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], S: Traversable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Traversable) else _UnrecognizedCarrier, Traversable]](
     var source: V, var f: F
 ) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].TargetCompatible:
     """Call an effectful `f` on each element of `source`, in order, and gather the results in one `G` carrier.
@@ -222,7 +222,7 @@ def _map_native[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & D
 # catalog: closures are borrowed in place, plain functions are copied into an
 # owned NativeUnary so deferred families such as IO can keep them.
 # --- native algebra admission (generated) ---
-def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, ref[o] function: F) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where _MapCompatible[I, V, F._View[o]]:
+def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Functor) else _UnrecognizedCarrier, Functor]](var value: V, ref[o] function: F) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where _MapCompatible[I, V, F._View[o]]:
     """Admit a view callback; execution stays with the family."""
     comptime Raised = I.MapError[V, F._View[o]]
     comptime assert I.MapError[V, F._View[o]] == I.MapError[V, F._View[o]]
@@ -231,7 +231,7 @@ def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor
 
 
 @always_inline
-def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, ref[o] function: F) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
+def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Functor) else _UnrecognizedCarrier, Functor], F: def(var A) -> R = def(var A) -> R](var value: V, ref[o] function: F) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
     """Admit a closure callback; execution stays with the family."""
     comptime Raised = I.MapError[V, _ErrorProbe[A, R, Never]]
     comptime assert I.MapError[V, _NativeUnaryRef[A, R, Never, F, False, o]] == I.MapError[V, _ErrorProbe[A, R, Never]]
@@ -240,7 +240,7 @@ def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitabl
 
 
 @always_inline
-def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, I: Functor = downcast[_SourceFamily[V], Functor], X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):
+def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Functor) else _UnrecognizedCarrier, Functor], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):
     """Admit a closure callback that raises; execution stays with the family."""
     comptime Raised = _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]]
     comptime assert I.MapError[V, _NativeUnaryRef[A, R, E, F, True, o]] == I.MapError[V, _ErrorProbe[A, R, E]]
@@ -248,7 +248,7 @@ def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitabl
     return _map_as[Raised, I](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), value^)
 
 
-def map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:
+def map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Functor) else _UnrecognizedCarrier, Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:
     """Admit a thin callback; execution stays with the family."""
     comptime Raised = I.MapError[V, _ErrorProbe[NoneType, R, Never]]
     comptime assert I.MapError[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] == I.MapError[V, _ErrorProbe[NoneType, R, Never]]
@@ -256,7 +256,7 @@ def map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor = downc
     return _map_as[Raised, I](NativeUnary[I.Element[V], R, Never, type_of(function), False](function), value^)
 
 
-def map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:
+def map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Functor) else _UnrecognizedCarrier, Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:
     """Admit a thin callback; execution stays with the family."""
     comptime Raised = I.MapError[V, _ErrorProbe[NoneType, R, Never]]
     comptime assert I.MapError[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] == I.MapError[V, _ErrorProbe[NoneType, R, Never]]
@@ -264,7 +264,7 @@ def map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functo
     return _map_as[Raised, I](NativeUnary[I.Element[V], R, Never, type_of(function), False](function), value^)
 
 
-def map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, E]] -> I.Mapped[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]:
+def map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Functor) else _UnrecognizedCarrier, Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, E]] -> I.Mapped[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]:
     """Admit a thin callback that raises; execution stays with the family."""
     comptime Raised = I.MapError[V, _ErrorProbe[NoneType, R, E]]
     comptime assert I.MapError[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] == I.MapError[V, _ErrorProbe[NoneType, R, E]]
@@ -272,7 +272,7 @@ def map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitabl
     return _map_as[Raised, I](NativeUnary[I.Element[V], R, E, type_of(function), True](function), value^)
 
 
-def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, ref[o] function: F) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where _BindCompatible[I, V, F._View[o]]:
+def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Monad) else _UnrecognizedCarrier, Monad]](var value: V, ref[o] function: F) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where _BindCompatible[I, V, F._View[o]]:
     """Admit a view callback; execution stays with the family."""
     comptime Raised = I.BindError[V, F._View[o]]
     comptime assert I.BindError[V, F._View[o]] == I.BindError[V, F._View[o]]
@@ -281,7 +281,7 @@ def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Mo
 
 
 @always_inline
-def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, ref[o] function: F) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
+def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Monad) else _UnrecognizedCarrier, Monad], F: def(var A) -> R = def(var A) -> R](var value: V, ref[o] function: F) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
     """Admit a closure callback; execution stays with the family."""
     comptime Raised = I.BindError[V, _ErrorProbe[A, R, Never]]
     comptime assert I.BindError[V, _NativeUnaryRef[A, R, Never, F, False, o]] == I.BindError[V, _ErrorProbe[A, R, Never]]
@@ -290,7 +290,7 @@ def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
 
 
 @always_inline
-def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, I: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):
+def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Monad) else _UnrecognizedCarrier, Monad], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):
     """Admit a closure callback that raises; execution stays with the family."""
     comptime Raised = _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]]
     comptime assert I.BindError[V, _NativeUnaryRef[A, R, E, F, True, o]] == I.BindError[V, _ErrorProbe[A, R, E]]
@@ -298,7 +298,7 @@ def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
     return _flat_map_as[Raised, I](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), value^)
 
 
-def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:
+def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Monad) else _UnrecognizedCarrier, Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:
     """Admit a thin callback; execution stays with the family."""
     comptime Raised = I.BindError[V, _ErrorProbe[NoneType, R, Never]]
     comptime assert I.BindError[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] == I.BindError[V, _ErrorProbe[NoneType, R, Never]]
@@ -306,7 +306,7 @@ def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad = do
     return _flat_map_as[Raised, I](NativeUnary[I.Element[V], R, Never, type_of(function), False](function), value^)
 
 
-def flat_map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:
+def flat_map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Monad) else _UnrecognizedCarrier, Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:
     """Admit a thin callback; execution stays with the family."""
     comptime Raised = I.BindError[V, _ErrorProbe[NoneType, R, Never]]
     comptime assert I.BindError[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] == I.BindError[V, _ErrorProbe[NoneType, R, Never]]
@@ -314,7 +314,7 @@ def flat_map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: M
     return _flat_map_as[Raised, I](NativeUnary[I.Element[V], R, Never, type_of(function), False](function), value^)
 
 
-def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, E]] -> I.Bound[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]:
+def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Monad) else _UnrecognizedCarrier, Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, E]] -> I.Bound[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]:
     """Admit a thin callback that raises; execution stays with the family."""
     comptime Raised = I.BindError[V, _ErrorProbe[NoneType, R, E]]
     comptime assert I.BindError[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] == I.BindError[V, _ErrorProbe[NoneType, R, E]]
@@ -322,7 +322,7 @@ def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Dein
     return _flat_map_as[Raised, I](NativeUnary[I.Element[V], R, E, type_of(function), True](function), value^)
 
 
-def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, ref[o] function: F) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.TargetCompatible[G, V, F._View[o]]:
+def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o], S: Traversable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Traversable) else _UnrecognizedCarrier, Traversable]](var source: V, ref[o] function: F) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.TargetCompatible[G, V, F._View[o]]:
     """Admit a view callback; execution stays with the family."""
     comptime Raised = S.TraverseError[G, V, F._View[o]]
     comptime assert S.TraverseError[G, V, F._View[o]] == S.TraverseError[G, V, F._View[o]]
@@ -331,7 +331,7 @@ def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, G: Ap
 
 
 @always_inline
-def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, ref[o] function: F) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
+def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Traversable) else _UnrecognizedCarrier, Traversable], F: def(var A) -> R = def(var A) -> R](var source: V, ref[o] function: F) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, Never, F, False, o]]:
     """Admit a closure callback; execution stays with the family."""
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[A, R, Never]]
     comptime assert S.TraverseError[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] == S.TraverseError[G, V, _ErrorProbe[A, R, Never]]
@@ -340,7 +340,7 @@ def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
 
 
 @always_inline
-def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable], X: AnyType = _InferError](var source: V, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, V, _ErrorProbe[A, R, E]]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):
+def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Traversable) else _UnrecognizedCarrier, Traversable], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R, X: AnyType = _InferError](var source: V, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, V, _ErrorProbe[A, R, E]]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):
     """Admit a closure callback that raises; execution stays with the family."""
     comptime Raised = _EntryError[X, S.TraverseError[G, V, _ErrorProbe[A, R, E]]]
     comptime assert S.TraverseError[G, V, _NativeUnaryRef[A, R, E, F, True, o]] == S.TraverseError[G, V, _ErrorProbe[A, R, E]]
@@ -348,7 +348,7 @@ def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Dein
     return _traverse_as[S, G, V, _NativeUnaryRef[A, R, E, F, True, o], Raised](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), source^)
 
 
-def traverse[V: Movable & Deinitable, R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]:
+def traverse[V: Movable & Deinitable, R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Traversable) else _UnrecognizedCarrier, Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]:
     """Admit a thin callback; execution stays with the family."""
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]]
     comptime assert S.TraverseError[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] == S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]]
@@ -356,7 +356,7 @@ def traverse[V: Movable & Deinitable, R: Movable & Deinitable, //, G: Applicativ
     return _traverse_as[S, G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False], Raised](NativeUnary[S.Element[V], R, Never, type_of(function), False](function), source^)
 
 
-def traverse[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]:
+def traverse[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Traversable) else _UnrecognizedCarrier, Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]:
     """Admit a thin callback; execution stays with the family."""
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]]
     comptime assert S.TraverseError[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] == S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]]
@@ -364,7 +364,7 @@ def traverse[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, G: A
     return _traverse_as[S, G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False], Raised](NativeUnary[S.Element[V], R, Never, type_of(function), False](function), source^)
 
 
-def traverse[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) raises E thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, E]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]]:
+def traverse[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Traversable) else _UnrecognizedCarrier, Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) raises E thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, E]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]]:
     """Admit a thin callback that raises; execution stays with the family."""
     comptime Raised = S.TraverseError[G, V, _ErrorProbe[NoneType, R, E]]
     comptime assert S.TraverseError[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]] == S.TraverseError[G, V, _ErrorProbe[NoneType, R, E]]

@@ -8,7 +8,7 @@ from std.testing import assert_equal
 
 def tg_tap[P: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //,
            F: def(P) raises E -> Optional[R]](ref function: F, var values: List[P]) raises E -> Optional[List[P]]:
-    return piped(values^).traverse_tap[ListFamily, OptionalFamily, E=E, X=E](function).get()
+    return piped(values^).traverse_tap[OptionalFamily, ListFamily, E=E, X=E](function).get()
 
 
 def tg_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //,

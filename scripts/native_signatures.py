@@ -58,13 +58,45 @@ def callable_metadata(mode, owner):
     )
 
 
+def split_explicit(parameters):
+    """Split explicit callback parameters around a defaulted family.
+
+    Mojo rejects a required positional parameter after a defaulted one. A
+    native callback's type and error follow the family, each defaulting to its
+    own bound (an error to Never); inference from the argument still selects
+    the actual types, and generic code can still bind `F=` or `E=`, so a
+    rejected native signature still reports the conversion. A library callable
+    bounded by a trait has no such default and is inferred before the marker.
+    Returns (inferred, trailing).
+    """
+    inferred, trailing = [], []
+    for parameter in parameters:
+        name, bound = parameter.split(': ', 1)
+        if bound.startswith(('def(', '_')):
+            trailing.append(f'{name}: {bound} = {bound}')
+        elif bound == MD:
+            trailing.append(f'{name}: {bound} = Never')
+        else:
+            inferred.append(parameter)
+    return inferred, trailing
+
+
+def defaulted(parameters):
+    """The trailing defaults of native callback parameters (see split_explicit)."""
+    inferred, trailing = split_explicit(parameters)
+    assert not inferred, f'library parameters cannot follow a defaulted family: {inferred}'
+    return trailing
+
+
 def source_default(trait, value="V"):
     """The default capability family of a source value (see _SourceFamily).
 
-    An unrecognized value yields _UnrecognizedCarrier, whose cast satisfies no
-    family admission, so the call is rejected; an explicit family still binds.
+    An unrecognized value, or a family without the capability, yields
+    _UnrecognizedCarrier, whose cast satisfies no family admission, so the call
+    is rejected; an explicit family still binds.
     """
-    return f"downcast[_SourceFamily[{value}], {trait}]"
+    family = f"_SourceFamily[{value}]"
+    return f"downcast[{family} if conforms_to({family}, {trait}) else _UnrecognizedCarrier, {trait}]"
 
 
 def callable_protocol(mode, *, repeatable=False):

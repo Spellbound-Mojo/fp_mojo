@@ -6,6 +6,7 @@ from native_signatures import (
     admissions,
     MD,
     source_default,
+    defaulted,
     native_dispatch,
     NATIVE_INVOCATIONS,
     native_factories,
@@ -362,8 +363,8 @@ def algebra_overloads():
                 hint = ", X: AnyType = _InferError" if form.kind == "closure" and form.raising else ""
             declared = f"_EntryError[X, {raised}]" if hint else raised
             target = "_ViewTarget[F, o]" if form.kind == "view" else f"_InferredApplicative[{form.result}]"
-            # Callback types are inferred so that every family can default.
-            parameters = [f"V: {MD}", *form.parameters, *form.explicit, "//", *(f.replace("{TARGET}", target) for f in families)]
+            # Families default; the callback parameters after them default too.
+            parameters = [f"V: {MD}", *form.parameters, "//", *(f.replace("{TARGET}", target) for f in families), *defaulted(form.explicit)]
             guards = [*form.conditions, admission.format(D=D)]
             if hint:
                 guards.append(f"(X == _InferError or X == {form.error})")

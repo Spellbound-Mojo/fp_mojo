@@ -70,7 +70,7 @@ def check(owner: List[Int]) raises:
     assert_equal(traversed._ok().value, List[Int]([2,3]))
     var gathered = forward_traverse[ListFamily,Accumulating](FamilyContractNext[Stored](), List[Int]([3,4]))
     assert_equal(gathered._ok().value, List[Int]([4,5]))
-    var legacy = piped(List[Int]([1,2])).traverse[ListFamily,Sequential](next).get()
+    var legacy = piped(List[Int]([1,2])).traverse[Sequential, ListFamily](next).get()
     assert_equal(legacy._ok().value, List[Int]([2,3]))
     var selected = pipeline(List[Int]([3,4])).traverse[Accumulating](next).get()
     assert_equal(selected._ok().value, List[Int]([4,5]))
@@ -79,7 +79,7 @@ def check(owner: List[Int]) raises:
     assert_equal(sequence[Sequential, ListFamily](inputs^)._ok().value, List[Int]([7]))
     var inputs2 = List[Result[Int,Stored]]()
     inputs2.append(Ok(8))
-    assert_equal(piped(inputs2^).sequence[ListFamily,Accumulating]().get()._ok().value, List[Int]([8]))
+    assert_equal(piped(inputs2^).sequence[Accumulating, ListFamily]().get()._ok().value, List[Int]([8]))
 
     # Native errors remain independent of the selected stored error.
     var same_origin = False

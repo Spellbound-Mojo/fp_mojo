@@ -1,6 +1,14 @@
 """Admission for fluent applicative combination; execution belongs to families."""
+
+# Mojo 1.1 can erase mismatched embedded origins in a late ResultFamily
+# assertion. A generic call on a held Result compares the other operand's native
+# shape at admission, as the native Result signatures do.
+def _result_boundary(other):
+    error = 'downcast[Self.Value, _ResultType].Error'
+    same = f'(({other} == Result[downcast[{other}, _ResultType].Value, {error}]) if conforms_to({other}, _ResultType) else False)'
+    return f' and ({same} if conforms_to(Self.Value, _ResultType) else True)'
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, native_adapter, closure
+from native_signatures import MD, callable_protocol, native_adapter, closure, source_default, defaulted
 
 
 
@@ -16,13 +24,15 @@ def methods(carrier=None, result=False):
         if independent_carrier: params += [f'W: {MD}']
         if carrier: params+=list(carrier.parameters)
         if not carrier and not result: params += [f'W: {MD}']
-        params += ['//']
-        if not carrier and not result: params += ['I: Applicative']
         error='X' if kind=='raising' else 'Never'
         if native:
             # Closures come from the shared catalog.
             form = closure('binary', kind == 'raising', names={'C': 'F', 'X': error, 'in0': 'A', 'in1': 'B'})
-            params += list(form.explicit)
+        if not carrier and not result:
+            # The family defaults to the held value's; the callback parameters follow.
+            params += ['//', 'I: Applicative = ' + source_default('Applicative', 'Self.Value'), *defaulted(form.explicit if native else ())]
+        else:
+            params += ['//', *(form.explicit if native else ())]
         cb=form.type if native else 'F'
         build=form.build if native else 'function^'
         if result:
@@ -45,6 +55,8 @@ def methods(carrier=None, result=False):
             if not carrier or carrier.name == 'List':
                 condition += ' and ' + (contract + '.OperationCompatible' if contract else
                                        f'_CombineCompatible[{family}, {left}, {cb}, _ValueThunk[{right}]]')
+            if not carrier:
+                condition = f'({condition})' + _result_boundary('W')
             value=f'rebind_var[{left}](self.value^)' if carrier else 'self.value^'
             body=f'return Piped(_map2_as[{family}, X={raised}]({build}, {value}, other^))'
             output=f'Piped[{output}]'
@@ -61,13 +73,13 @@ def methods(carrier=None, result=False):
         params=[f'U: {MD}']; right='Result[U, Self.E]';output='Result[Tuple[Self.T, U], Self.E]';where=''
         body='return self^.map2(other^, _Pair[Self.T, U]())';raised=''
     else:
-        params=[f'T: {MD}',f'U: {MD}',*carrier.parameters] if carrier else [f'W: {MD}','//','I: Applicative']
+        params=[f'T: {MD}',f'U: {MD}',*carrier.parameters] if carrier else [f'W: {MD}','//','I: Applicative = ' + source_default('Applicative', 'Self.Value')]
         left=carrier.value('T') if carrier else 'Self.Value';right=carrier.value('U') if carrier else 'W'
         family=carrier.instance('T') if carrier else 'I'
         cb=f'_Pair[{family}.Element[{left}], {family}.Element[{right}]]'
         contract = f'ProductContract[I, {left}, {right}]' if not carrier else None
         output='Piped['+(carrier.value('Tuple[T, U]') if carrier else contract + '.Out')+']'
-        where=f' where Self.Value == {left}' if carrier else f' where {contract}.OperationCompatible'
+        where=f' where Self.Value == {left}' if carrier else f' where ({contract}.OperationCompatible)' + _result_boundary('W')
         if carrier and carrier.name == 'List':
             where += f' and _CombineCompatible[{family}, {left}, {cb}, _ValueThunk[{right}]]'
         value=f'rebind_var[{left}](self.value^)' if carrier else 'self.value^'
@@ -107,12 +119,13 @@ def ap_method(carrier=None, result=False):
         body = f'return Piped(_map2_as[{family}, X={raised}](_Apply[{function}](), rebind_var[{left}](self.value^), rebind_var[{carrier.value(function + ".Arg")}](values^)))'
     else:
         contract = 'ApContract[I, Self.Value, W]'
-        params = [f'W: {MD}', '//', 'I: Applicative']
+        params = [f'W: {MD}', '//', 'I: Applicative = ' + source_default('Applicative', 'Self.Value')]
         right = 'W'
         cb = f'_Apply[{contract}.Function]'
         output = f'Piped[{contract}.Out]'
         raised = contract + '.Error'
-        condition = contract + '.InputCompatible'
+        # Admission checks repetition and copying too, as the native carriers did.
+        condition = f'({contract}.InputCompatible and {contract}.OperationCompatible)' + _result_boundary('W')
         body = f'return Piped(_map2_as[I, X={raised}]({cb}(), self.value^, values^))'
     parameters = '[' + ', '.join(params) + ']' if params else ''
     return f'''

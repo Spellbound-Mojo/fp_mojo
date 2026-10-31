@@ -8,7 +8,7 @@ from fp.callables.invoke import RepeatableUnary
 from fp.callables._receiver import _unary_repeated_as
 from fp.callables.native import NativeUnary, _Unary, _RaisingUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible
-from .collections import _SourceFamily
+from .collections import _SourceFamily, _UnrecognizedCarrier
 from .protocols import Monad, _LiveAccumulator, _map_as
 from .contracts import _EffectFold
 from ._primitive_contracts import MapContract
@@ -81,7 +81,7 @@ struct TailRecContract[I: Monad, F: UnaryContract & Movable & Deinitable]:
     """The family's carrier of the final Break payload."""
 
 
-def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[F.Out], Monad]](
+def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[F.Out] if conforms_to(_SourceFamily[F.Out], Monad) else _UnrecognizedCarrier, Monad]](
     var initial: A, var step: F
 ) raises TailRecContract[I, F].Error -> TailRecContract[I, F].Out where A == F.Arg and TailRecContract[I, F].Compatible:
     """Repeat effectful steps until Break, using constant native call-stack space.
@@ -115,7 +115,7 @@ def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
     return _map_as[C.Error, I](C._Finish(), folded^)
 
 
-def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: _Unary[A, R], //, I: Monad = downcast[_SourceFamily[R], Monad]](var initial: A0, var step: F
+def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: _Unary[A, R] = _Unary[A, R]](var initial: A0, var step: F
 ) raises TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error -> TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, Never, F, False]].Compatible:
     """Loop with an owned native consuming function or closure."""
     # initial has its own type parameter: a closure input fixed by an earlier
@@ -123,7 +123,7 @@ def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & D
     return tail_rec_m[I](rebind_var[A](initial^), NativeUnary[A, R, Never, F, False](step^))
 
 
-def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //, I: Monad = downcast[_SourceFamily[R], Monad]](var initial: A0, var step: F
+def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[R] if conforms_to(_SourceFamily[R], Monad) else _UnrecognizedCarrier, Monad], F: _RaisingUnary[A, R, E] = _RaisingUnary[A, R, E]](var initial: A0, var step: F
 ) raises TailRecContract[I, NativeUnary[A, R, E, F, True]].Error -> TailRecContract[I, NativeUnary[A, R, E, F, True]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, E, F, True]].Compatible:
     """Loop with an owned native consuming function or closure."""
     # initial has its own type parameter: a closure input fixed by an earlier

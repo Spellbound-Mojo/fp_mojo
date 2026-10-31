@@ -11,21 +11,21 @@ def txg_flat[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Dein
              F: def(var A) raises E -> Optional[List[B]]](
     ref function: F, var source: List[A]
 ) raises E -> Optional[List[B]]:
-    return piped(source^).flat_traverse[ListFamily, OptionalFamily, E=E, X=E](function).get()
+    return piped(source^).flat_traverse[OptionalFamily, ListFamily, E=E, X=E](function).get()
 
 
 def txg_select[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //,
                F: def(var A) raises E -> Optional[Optional[B]]](
     ref function: F, var source: List[A]
 ) raises E -> Optional[List[B]]:
-    return traverse_filter[OptionalFamily, X=E](source^, function)
+    return traverse_filter[OptionalFamily, E=E, X=E](source^, function)
 
 
 def txg_filter[A: Movable & Deinitable, E: Movable & Deinitable, //,
                F: def(A) raises E -> Optional[Bool]](
     ref function: F, var source: List[A]
 ) raises E -> Optional[List[A]]:
-    return filter_effect[OptionalFamily, X=E](source^, function)
+    return filter_effect[OptionalFamily, E=E, X=E](source^, function)
 
 
 @fieldwise_init
@@ -94,7 +94,7 @@ def txg_origins(left: List[Int], right: List[Int]) raises:
     def nested(value: Left) -> Optional[Result[Left, Right]]:
         return Optional(Result[Left, Right](Ok(value)))
     var source = Result[Left, Right](Err(Span(right)))
-    var preserved = piped(source^).flat_traverse[ResultFamily[Right], OptionalFamily](nested).get()
+    var preserved = piped(source^).flat_traverse[OptionalFamily, ResultFamily[Right]](nested).get()
     var stored = preserved.take()
     assert_equal(stored^._take_err()[1], 22)
 
@@ -152,7 +152,7 @@ def txg_custom() raises:
     def present(value: Int) -> Optional[Optional[Int]]: return Optional(Optional(value))
     var values: List[Int] = [1, 2]
     var code = 0
-    try: _ = piped(values^).traverse_filter[TXGSource, OptionalFamily](present).get()
+    try: _ = piped(values^).traverse_filter[OptionalFamily, TXGSource](present).get()
     except error:
         comptime assert type_of(error) == TXGFailure
         code = error.code

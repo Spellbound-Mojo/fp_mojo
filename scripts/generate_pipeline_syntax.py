@@ -5,9 +5,10 @@ Operation templates own forwarding signatures; Mojo owns all execution. Keeping
 this separate from the stage-count generator makes adding a derived operation
 independent of the supported container count.
 """
+import re
 from dataclasses import dataclass
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, native_adapter, callback, closure
+from native_signatures import MD, callable_protocol, native_adapter, callback, closure, source_default, admissions, defaulted
 
 START = '    # --- container methods (generated) ---\n'
 END = '    # --- end container methods ---\n'
@@ -45,6 +46,16 @@ CARRIERS = (
     Carrier('Optional', 'Optional[{element}]', 'OptionalFamily', capabilities=frozenset({'map', 'filter', 'filter_map', 'fold', 'flat_map', 'traverse', 'combine'})),
     Carrier('Result', 'Result[{element}, Failure]', 'ResultFamily[Failure]', (f'Failure: {MD}',), frozenset({'map', 'flat_map', 'traverse', 'combine'})),
 )
+
+# Carriers whose family _SourceFamily recognizes use the generic methods, whose
+# family defaults to the carrier's; the others keep native carrier methods.
+COLLAPSED = frozenset({'List', 'Optional', 'Deque', 'LinkedList', 'Result'})
+
+
+def piped_family(trait, name='I'):
+    """The Piped capability parameter, defaulting to the held value's family."""
+    return f'{name}: {trait} = {source_default(trait, "Self.Value")}'
+
 
 # Explicit element selection shares the native carrier shapes above. Non-empty
 # lists use their existing family, whose filtering may change the carrier.
@@ -137,33 +148,78 @@ def container_methods():
     from generate_traversal_syntax import methods as traversal_methods
     from generate_applicative_syntax import methods as combine_methods
     from generate_nary_syntax import methods as nary_methods
+    # A collapsed carrier keeps only the methods without a generic twin: the
+    # parallel traversals, discarding traversals and the terminals.
+    native = tuple(c for c in CARRIERS if c.name not in COLLAPSED)
     out = []
     out.append(error_methods())
     out.append(sequencing_methods())
-    for carrier in CARRIERS:
+    for carrier in native:
         if 'flat_map' in carrier.capabilities:
             out.append(sequencing_methods(carrier))
-    for carrier in CARRIERS:
+    for carrier in native:
         if 'map' in carrier.capabilities:
             out.append(map_methods(carrier))
     for name, description in (('filter', 'Retain accepted'), ('filter_not', 'Retain rejected')):
-        for carrier in CARRIERS:
+        for carrier in native:
             if 'filter' in carrier.capabilities:
                 out.append(filter_methods(carrier, name, description))
-    out.extend((transform_methods(), observe_methods(), algebra_methods(), combine_methods(), nary_methods(explicit=True), nary_methods(), nary_methods(parallel=True)))
-    for carrier in CARRIERS:
+    out.extend((transform_methods(), observe_methods(), algebra_methods(), plain_methods(), combine_methods(), nary_methods(explicit=True), nary_methods(), nary_methods(parallel=True)))
+    for carrier in native:
         if "combine" in carrier.capabilities:
             out.append(combine_methods(carrier))
     for carrier in CARRIERS:
-        if 'map' in carrier.capabilities:
+        if 'map' not in carrier.capabilities:
+            continue
+        if carrier.name in COLLAPSED:
+            out.append(algebra_methods(carrier, parallel_only=True))
+        else:
             out.extend((transform_methods(carrier), observe_methods(carrier), algebra_methods(carrier)))
     for carrier in CARRIERS:
         if 'fold' in carrier.capabilities:
             out.append(terminal_methods('piped', carrier))
     out.append(traversal_methods('piped'))
     for carrier in CARRIERS:
-        out.append(traversal_methods('piped', carrier))
+        out.append(traversal_methods('piped', carrier, discard_only=carrier.name in COLLAPSED))
     return document_first_methods(''.join(out) + '\n')
+
+
+def plain_methods():
+    """Owned plain-function forms of the generic capability methods.
+
+    A plain function is copied into an owned NativeUnary, so a deferred family
+    such as IO can keep it, as the free operations do. Each error is named
+    through the probe so a defaulted family's error reduces.
+    """
+    out = []
+    for name, trait, result_alias, error_alias, admission in (
+        ('map', 'Functor', 'Mapped', 'MapError', '_MapCompatible[I, Self.Value, {D}]'),
+        ('flat_map', 'Monad', 'Bound', 'BindError', '_BindCompatible[I, Self.Value, {D}]'),
+        ('filter_map', 'FunctorFilter', 'MapFiltered', 'MapFilterError', ''),
+        ('traverse', 'Traversable', 'Traversed', 'TraverseError', 'I.TargetCompatible[G, Self.Value, {D}]'),
+    ):
+        traverse = name == 'traverse'
+        for form in admissions('owned', ['I.Element[Self.Value]'], library=False, view=False,
+                               names={'X': 'E', 'C': 'F', 'in0': 'A'}):
+            if form.kind != 'thin':
+                continue
+            D = form.type
+            families = ([f'G: Applicative = _InferredApplicative[{form.result}]'] if traverse else []) + [piped_family(trait)]
+            shape = 'G, Self.Value, {}' if traverse else 'Self.Value, {}'
+            probe = f'_ErrorProbe[NoneType, {form.result}, {form.error}]'
+            raised = f'I.{error_alias}[{shape.format(probe)}]'
+            result = f'I.{result_alias}[{shape.format(D)}]'
+            guards = [*form.conditions] + ([admission.format(D=D)] if admission else [])
+            where = f' where {" and ".join(guards)}' if guards else ''
+            entry = (f'_traverse_as[I, G, Self.Value, {D}, {raised}]' if traverse else
+                     {'map': '_map_as', 'flat_map': '_flat_map_as', 'filter_map': '_filter_map_as'}[name] + f'[{raised}, I]')
+            out.append(f'''
+    def {name}[{', '.join([*form.parameters, '//', *families])}](deinit self, {form.argument}) raises {raised} -> Piped[{result}]{where}:
+        """Apply {name} with a plain function, copied so deferred families can keep it."""
+        comptime assert I.{error_alias}[{shape.format(D)}] == {raised}
+        return Piped({entry}({form.build}, self.value^))
+''')
+    return ''.join(out)
 
 
 # Each transformation has one callback implementation. These are only native
@@ -185,11 +241,19 @@ TRANSFORMS = (
 def transform_methods(carrier=None):
     out = []
     for name, bound, extra, argument, element, callback, args, doc in TRANSFORMS:
-        params = [bound, *extra, *(carrier.parameters if carrier else ('//', 'I: Functor'))]
+        if not carrier:
+            # The element comes from the defaulted family; a separate T could
+            # only be related in where, which Mojo does not infer from.
+            traits = bound.split(': ', 1)[1]
+            payload = f'downcast[I.Element[Self.Value], {traits}]'
+            argument, element, callback = (re.sub(r'\bT\b', payload, x) for x in (argument, element, callback))
+            bound = None
+        params = [*([bound] if bound else []), *extra, *(carrier.parameters if carrier else ('//', piped_family('Functor')))]
+        if params[0] == '//': params = params[1:]
         source = carrier.value('T') if carrier else 'Self.Value'
         family = carrier.instance('T') if carrier else 'I'
         result = carrier.value(element) if carrier else f'I.Mapped[Self.Value, {callback}]'
-        condition = f'Self.Value == {source}' if carrier else 'I.Element[Self.Value] == T'
+        condition = f'Self.Value == {source}' if carrier else f'conforms_to(I.Element[Self.Value], {traits})'
         if not carrier: condition += f' and _MapCompatible[I, Self.Value, {callback}]'
         elif name in ('fill', 'tuple_left', 'tuple_right'):
             # The callback's shared receiver exists only for Copyable constants.
@@ -220,14 +284,16 @@ def observe_methods(carrier=None):
             element = f'Tuple[{payload}, {projected}]' if paired == 'True' else payload
             params = ['P: AnyType' if native else f'T: {MD}']
             if native:
-                params += [f'R: {MD}', *(carrier.parameters if carrier else ()), 'o: ImmOrigin', '//']
-                if not carrier:
-                    params.append('I: Functor')
+                params += [f'R: {MD}', *(carrier.parameters if carrier else ()), 'o: ImmOrigin']
                 form = closure('borrow', kind == 'raising', names={'C': 'F', 'X': 'E', 'in0': 'P'})
-                params += list(form.explicit)
+                if carrier:
+                    params += ['//', *form.explicit]
+                else:
+                    # The family defaults; the callback parameters follow it.
+                    params += ['//', piped_family('Functor'), *defaulted(form.explicit)]
                 error, bridge, arg, build = form.error, form.type, form.argument, form.build
             else:
-                params += [f'C: {callable_protocol("borrow")} & {MD}', *(carrier.parameters if carrier else ('//', 'I: Functor'))]
+                params += [f'C: {callable_protocol("borrow")} & {MD}', *(carrier.parameters if carrier else ('//', piped_family('Functor')))]
                 error, bridge, arg, build = 'C.Failure', 'C', 'var function: C', 'function^'
             source = carrier.value(payload) if carrier else 'Self.Value'
             family = carrier.instance(payload) if carrier else 'I'
@@ -240,15 +306,23 @@ def observe_methods(carrier=None):
                 condition += ' and C.Payload == T and RepeatableBorrow[C]'
             nominal = f'        comptime assert Self.Value == {source}\n' if carrier else ''
             value = f'rebind_var[{source}](self.value^)' if carrier else 'self.value^'
+            call = f'{family}.map({callback}({build}), {value})'
+            if not carrier and kind == 'raising':
+                # A defaulted family's error must reduce in the raises clause:
+                # name it through the probe, as the free map does.
+                probe = f'_ErrorProbe[{payload}, {element}, {error}]'
+                effect = f'I.MapError[Self.Value, {probe}]'
+                nominal = f'        comptime assert I.MapError[Self.Value, {callback}] == {effect}\n'
+                call = f'_map_as[{effect}, I]({callback}({build}), {value})'
             out.append(f'''
     def {name}[{', '.join(params)}](deinit self, {arg}) raises {effect} -> Piped[{result}] where {condition}:
         """Borrow each payload for {'projection and retain it beside the result' if paired == 'True' else 'inspection and retain it unchanged'}."""
-{nominal}        return Piped({family}.map({callback}({build}), {value}))
+{nominal}        return Piped({call})
 ''')
     return ''.join(out)
 
 
-def algebra_methods(carrier=None, *, iteration=False):
+def algebra_methods(carrier=None, *, iteration=False, parallel_only=False):
     """Expose the existing capability operations, with one native bridge shape."""
     out = []
     for name, trait, result_alias, error_alias in (
@@ -258,6 +332,7 @@ def algebra_methods(carrier=None, *, iteration=False):
         ('par_traverse', 'Traversable', 'Traversed', 'TraverseError'),
     ):
         parallel = name == 'par_traverse'
+        if parallel_only and not parallel: continue
         if iteration and not parallel: continue
         if parallel and not carrier and not iteration: continue
         operation = 'traverse' if parallel else name
@@ -279,6 +354,16 @@ def algebra_methods(carrier=None, *, iteration=False):
             if native:
                 form = closure('owned', kind == 'raising', names={'C': 'F', 'X': 'E', 'in0': 'A'})
                 params += list(form.explicit)
+            generic = not carrier and not iteration and not parallel
+            if generic:
+                # Families default: the source to the held value's, a traverse
+                # target to the callback result's. Callback parameters follow.
+                fixed = [p for p in params if p == '//' or p.startswith(('I:', 'G:'))]
+                explicit = list(form.explicit) if native else []
+                params = [p for p in params if p not in fixed and p not in explicit]
+                target = ('_ViewTarget[F, o]' if kind == 'view' else
+                          f'_InferredApplicative[{"R" if native else "F.Out"}]')
+                params += ['//'] + ([f'G: Applicative = {target}'] if operation == 'traverse' else []) + [piped_family(trait)] + defaulted(explicit)
             if parallel:
                 params = [p for p in params if p != '//' and not p.startswith('S:')] + ['//', f'S: Semigroup = _ListErrors[{target}]']
             elem = 'A' if native else 'F._View[o].Arg' if kind == 'view' else 'F.Arg'
@@ -301,6 +386,15 @@ def algebra_methods(carrier=None, *, iteration=False):
             value = f'rebind_var[{source}](self.value^)' if carrier else 'self._iterator^' if iteration else 'self.value^'
             call = f'{family}.{operation}' + (f'[{target_family}]' if operation == 'traverse' else '')
             expr = f'{call}({build}, {value})'
+            if generic and kind == 'raising':
+                # Name a defaulted family's error through the probe so it reduces.
+                probe_args = args.replace(callback, '_ErrorProbe[A, R, E]')
+                actual = raised
+                raised = f'{family}.{error_alias}[{probe_args}]'
+                nominal = f'        comptime assert {actual} == {raised}\n'
+                bridge = {'filter_map': f'_filter_map_as[{raised}, I]', 'flat_map': f'_flat_map_as[{raised}, I]',
+                          'traverse': f'_traverse_as[I, G, Self.Value, {callback}, {raised}]'}[operation]
+                expr = f'{bridge}({build}, {value})'
             result = result if iteration else f'Piped[{result}]'
             expr = expr if iteration else f'Piped({expr})'
             out.append(f'''
@@ -315,12 +409,19 @@ def algebra_methods(carrier=None, *, iteration=False):
         ('par_sequence', 'Traversable', 'traverse', 'Traversed', 'TraverseError'),
     ):
         parallel = name == 'par_sequence'
+        if parallel_only and not parallel: continue
         if iteration and not parallel: continue
         if parallel and not carrier and not iteration: continue
         if carrier and operation not in carrier.capabilities:
             continue
-        params = ([f'T: {MD}', *carrier.parameters, '//'] if carrier else [] if iteration else ['I: '+trait])
-        if name == 'sequence': params.append('G: Applicative')
+        params = ([f'T: {MD}', *carrier.parameters, '//'] if carrier else [] if iteration else [piped_family(trait)])
+        if name == 'sequence':
+            if carrier or iteration:
+                params.append('G: Applicative')
+            else:
+                # Target first: it defaults to the family of the held elements.
+                element = f'downcast[{source_default("Traversable", "Self.Value")}.Element[Self.Value], {MD}]'
+                params.insert(0, f'G: Applicative = _InferredApplicative[{element}]')
         elem = ('Optional[T]' if name == 'compact' else carrier.value('T') if name == 'flatten' else 'T') if carrier else 'I.Element[Self.Value]'
         if iteration: elem = f'downcast[Self.I.Element, {MD}]'
         if parallel: params.append(f'S: Semigroup = _ListErrors[{elem}]')

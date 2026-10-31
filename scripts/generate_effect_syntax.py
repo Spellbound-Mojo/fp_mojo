@@ -1,7 +1,7 @@
 """Native boundaries for shared effectful folds and conditional composition."""
 from itertools import product
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure, source_default
+from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure, source_default, split_explicit
 from operation_specs import EFFECT_REDUCTIONS, EffectChoice
 
 START = '# --- effect syntax (generated) ---\n'
@@ -66,10 +66,12 @@ def folds(mode, array=False):
                 initial = 'initial^' if acc == 'A' else f'rebind_var[{acc}](initial^)'
             if mode == 'free': params += [f'V: {MD}']
             if array: params += ['N: Int']
-            if mode == 'free':
-                # Value-first calls infer the target Monad from the callback's
-                # result, so the callback types precede it in the inferred region.
-                params += list(factory.explicit) + ['//', 'G: Monad = ' + source_default('Monad', effect)]
+            if mode in ('free', 'piped'):
+                # The target Monad defaults to the callback result's family; the
+                # callback parameters after it default to their own bounds.
+                explicit = factory.explicit if kind == 'catalog' else form.explicit if native else ()
+                lead, trail = split_explicit(explicit)
+                params += [*lead, '//', 'G: Monad = ' + source_default('Monad', effect), *trail]
             else:
                 params += ['//', 'G: Monad']
                 if kind == 'catalog': params += list(factory.explicit)
@@ -146,9 +148,11 @@ def conditional(mode, family=None):
         if mode == 'free': params += [f'V: {MD}']
         if family == 'Result': params += [f'Failure: {MD}']
         g = f'ResultFamily[Self.E]' if mode == 'result' else f'ResultFamily[Failure]' if family == 'Result' else family+'Family' if family else 'G'
-        if mode == 'free':
-            # The condition's family is the default, so the factories are inferred.
-            params += explicit + ['//', 'G: Monad = ' + source_default('Monad'), 'X: AnyType = _InferError']
+        if mode in ('free', 'piped') and not family:
+            # The condition's family is the default; the factory parameters follow it.
+            source_value = 'V' if mode == 'free' else 'Self.Value'
+            lead, trail = split_explicit(explicit)
+            params += [*lead, '//', 'G: Monad = ' + source_default('Monad', source_value), *trail, 'X: AnyType = _InferError']
         else:
             params += ['//']
             if not family and mode != 'result': params += ['G: Monad']
@@ -189,8 +193,8 @@ def methods(mode):
     if mode == 'conditional': return conditional('free')
     out = folds(mode) + searches(mode)
     if mode == 'piped':
+        # Native carriers infer their family through the generic conditional.
         out += folds(mode, True) + searches(mode, True) + conditional(mode)
-        for family in ('List', 'Optional', 'Result'): out += conditional(mode, family)
     return out
 
 
@@ -222,9 +226,11 @@ def searches(mode, array=False):
                 effect=metadata.result;fe=metadata.error
             if mode=='free':params+=[f'V: {MD}']
             if array:params+=['N: Int']
-            if mode=='free':
+            if mode in ('free','piped'):
                 # The Monoid cannot be inferred, so it precedes the defaulted target.
-                params+=list(factory.explicit)+['//']+(['M: Monoid'] if folding else [])+['G: Monad = '+source_default('Monad', effect)]
+                explicit=factory.explicit if kind=='catalog' else form.explicit if native else ()
+                lead,trail=split_explicit(explicit)
+                params+=[*lead,'//']+(['M: Monoid'] if folding else [])+['G: Monad = '+source_default('Monad', effect), *trail]
             else:
                 params+=['//','G: Monad']+(['M: Monoid'] if folding else [])
                 if kind=='catalog':params+=list(factory.explicit)

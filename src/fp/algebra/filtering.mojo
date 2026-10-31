@@ -6,14 +6,14 @@ from fp.callables.protocols import BorrowCallContract, BorrowCallable, Unary, Un
 from fp._internal.errors import _ErrorCompatible, _propagate_error
 from fp.callables.native import _Borrowing, _RaisingBorrowing, _NativeBorrowRef
 from .protocols import Filterable, FunctorFilter, _Accumulate, _filter_map_as
-from .collections import _SourceFamily
+from .collections import _SourceFamily, _UnrecognizedCarrier
 from ._primitive_contracts import FilterContract
 from fp.callables.invoke import RepeatableBorrow
 from fp.callables.native import _Unary, _RaisingUnary, _NativeUnaryRef
 from fp.callables._identity import Identity
 
 
-def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:
+def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Filterable) else _UnrecognizedCarrier, Filterable]](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:
     """Filter a carrier through an explicit family, preserving its context.
 
     Native functions and closures are accepted directly and borrowed. A library
@@ -43,25 +43,25 @@ def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable
     return _filter_with[V, P, I, False](predicate^, value^)
 
 
-def filter[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o]].Error -> FilterContract[I, V, P._BorrowView[o]].Out where FilterContract[I, V, P._BorrowView[o]].Compatible:
+def filter[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Filterable) else _UnrecognizedCarrier, Filterable]](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o]].Error -> FilterContract[I, V, P._BorrowView[o]].Out where FilterContract[I, V, P._BorrowView[o]].Compatible:
     """Filter through an explicit family while retaining a shared predicate."""
     return filter[I](value^, predicate._borrow_view())
 
 
-def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, F: _Borrowing[P, R], //,
-           I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] where I.Element[V] == P and R == Bool:
+def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
+           I: Filterable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Filterable) else _UnrecognizedCarrier, Filterable], F: _Borrowing[P, R] = _Borrowing[P, R]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] where I.Element[V] == P and R == Bool:
     """Filter with a borrowed native predicate; its captures stay in place."""
     return _filter_native[V, P, Never, I, F, False, o](predicate, value^)
 
 
-def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], //,
-           I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _BorrowErrorProbe[P, Bool, E]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, E, F, True, o]] where I.Element[V] == P and R == Bool:
+def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
+           I: Filterable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Filterable) else _UnrecognizedCarrier, Filterable], E: Movable & Deinitable = Never, F: _RaisingBorrowing[P, R, E] = _RaisingBorrowing[P, R, E]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _BorrowErrorProbe[P, Bool, E]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, E, F, True, o]] where I.Element[V] == P and R == Bool:
     """Filter with a raising native predicate; generic forwarding names E explicitly."""
     comptime assert I.FilterError[V, _NativeBorrowRef[P, Bool, E, F, True, o]] == I.FilterError[V, _BorrowErrorProbe[P, Bool, E]]
     return _filter_native[V, P, E, I, F, True, o, False, I.FilterError[V, _BorrowErrorProbe[P, Bool, E]]](predicate, value^)
 
 
-def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:
+def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Filterable) else _UnrecognizedCarrier, Filterable]](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:
     """Retain payloads the predicate rejects, through an explicit family.
 
     This derives from the family's filter operation. Each predicate result is
@@ -89,19 +89,19 @@ def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinit
     return _filter_with[V, P, I, True](predicate^, value^)
 
 
-def filter_not[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o], True].Error -> FilterContract[I, V, P._BorrowView[o], True].Out where FilterContract[I, V, P._BorrowView[o], True].Compatible:
+def filter_not[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Filterable) else _UnrecognizedCarrier, Filterable]](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o], True].Error -> FilterContract[I, V, P._BorrowView[o], True].Out where FilterContract[I, V, P._BorrowView[o], True].Compatible:
     """Filter through an explicit family while retaining a shared predicate."""
     return filter_not[I](value^, predicate._borrow_view())
 
 
-def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, F: _Borrowing[P, R], //,
-               I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] where I.Element[V] == P and R == Bool:
+def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
+               I: Filterable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Filterable) else _UnrecognizedCarrier, Filterable], F: _Borrowing[P, R] = _Borrowing[P, R]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] where I.Element[V] == P and R == Bool:
     """Retain rejected payloads with a borrowed native predicate."""
     return _filter_native[V, P, Never, I, F, False, o, True](predicate, value^)
 
 
-def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], //,
-               I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_BorrowErrorProbe[P, Bool, E]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] where I.Element[V] == P and R == Bool:
+def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
+               I: Filterable = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Filterable) else _UnrecognizedCarrier, Filterable], E: Movable & Deinitable = Never, F: _RaisingBorrowing[P, R, E] = _RaisingBorrowing[P, R, E]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_BorrowErrorProbe[P, Bool, E]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] where I.Element[V] == P and R == Bool:
     """Retain rejected payloads with a raising native predicate; forward E explicitly."""
     comptime assert I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] == I.FilterError[V, _Negated[_BorrowErrorProbe[P, Bool, E]]]
     return _filter_native[V, P, E, I, F, True, o, True, I.FilterError[V, _Negated[_BorrowErrorProbe[P, Bool, E]]]](predicate, value^)
@@ -143,7 +143,7 @@ def _filter_native[V: Movable & Deinitable, T: AnyType, E: Movable & Deinitable,
         _propagate_error[Raised](error^)
 
 
-def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](
+def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter]](
     var value: V, var function: F
 ) raises I.MapFilterError[V, F] -> I.MapFiltered[V, F]:
     """Transform through a FunctorFilter family and retain present Optional results.
@@ -171,14 +171,14 @@ def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable,
     return I.filter_map(function^, value^)
 
 
-def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //,
-               I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _NativeUnaryRef[A, R, Never, F, False, o]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A:
+def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
+               I: FunctorFilter = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter], F: _Unary[A, R] = _Unary[A, R]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _NativeUnaryRef[A, R, Never, F, False, o]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A:
     """Transform and select with a borrowed non-raising native callback."""
     return I.filter_map(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), value^)
 
 
-def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //,
-               I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _ErrorProbe[A, R, E]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A:
+def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
+               I: FunctorFilter = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter], E: Movable & Deinitable = Never, F: _RaisingUnary[A, R, E] = _RaisingUnary[A, R, E]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _ErrorProbe[A, R, E]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A:
     """Transform and select with a borrowed native callback, retaining its exact error."""
     comptime D = _NativeUnaryRef[A, R, E, F, True, o]
     comptime Raised = I.MapFilterError[V, _ErrorProbe[A, R, E]]
@@ -186,7 +186,7 @@ def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & De
     return _filter_map_as[Raised, I](D(Pointer(to=function)), value^)
 
 
-def compact[V: Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V
+def compact[V: Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], FunctorFilter) else _UnrecognizedCarrier, FunctorFilter]](var value: V
 ) raises I.MapFilterError[V, Identity[I.Element[V]]] -> I.MapFiltered[V, Identity[I.Element[V]]]:
     """Unwrap present Optional payloads through the family's filter_map operation.
 

@@ -352,22 +352,25 @@ result types, evaluation and errors. A custom Functor needs only `map` for the
 mapping conveniences; a FunctorFilter needs only its `filter_map` primitive
 for `compact`. No per-combinator container implementation is needed.
 
-Custom traversal names both families:
-`.traverse[SourceFamily, EffectFamily](transform)` and
-`.sequence[SourceFamily, EffectFamily]()`. The native List, Optional and Result
-forms infer the source family. Generic callback forwarding can select a family,
+Piped methods infer the held value's family, as the free operations do, and a
+traversal infers its target from the callback result or the held elements:
+`piped(values^).traverse(transform)`, `.sequence()`. The target comes first,
+so `.traverse[ValidationFamily[M]](transform)` selects another policy and a
+custom source is named second or by keyword:
+`.traverse[EffectFamily, SourceFamily](transform)`,
+`.sequence[EffectFamily, SourceFamily]()`. Generic callback forwarding can select a family,
 as in `.pair_with[ListFamily](project)`, or name inferred callback parameters,
 as in `.sum_by[A=T, R=Int, E=E](project)` for a generic raising function.
 
 `traverse_tap` uses the same source selection as `traverse`. A generic raising
-wrapper can use `.traverse_tap[ListFamily, OptionalFamily, E=E, X=E](inspect)`.
+wrapper can use `.traverse_tap[OptionalFamily, ListFamily, E=E, X=E](inspect)`.
 `X` supplies exact error evidence when Mojo cannot reduce a generic family
 error expression; it must match the actual error and never converts or erases
 it. Generic Result-source `traverse_void` can use all-keyword parameters
 `G=OptionalFamily, A=A, R=R, Failure=S, E=E, X=E`, where `R` names the complete
 callback result type, such as `Optional[Int]`.
-The new traversal methods use the same explicit source/target order and `E`/`X`
-error evidence. For example, `.flat_traverse[ListFamily, OptionalFamily, E=E, X=E](transform)`
+The new traversal methods use the same target/source order and `E`/`X`
+error evidence. For example, `.flat_traverse[OptionalFamily, ListFamily, E=E, X=E](transform)`
 forwards a generic raising callback. `flat_traverse` requires the callback's
 successful payload to belong to the same source family; Result's stored error
 type, including its origins, must agree at both levels.

@@ -13,7 +13,7 @@ def check(anchor: List[Int], local: List[Int]):
     comptime Expected = ExpectedView
     comptime Family = ResultFamily[Expected]
     def next(var value: Int) {actual} -> Result[Int, Actual]: return Err(actual)
-    _ = piped(List[Int]([1])).traverse[ListFamily, Family](next).get()
+    _ = piped(List[Int]([1])).traverse[Family, ListFamily](next).get()
 def main():
     var anchor: List[Int] = [1]
     var local: List[Int] = [2]

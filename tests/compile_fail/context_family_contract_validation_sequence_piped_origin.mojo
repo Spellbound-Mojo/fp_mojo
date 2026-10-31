@@ -14,7 +14,7 @@ def check(anchor: List[Int], local: List[Int]):
     comptime Family = ValidationFamily[ListMonoid[ExpectedView]]
     var source = List[Result[Int, Actual]]()
     source.append(Result[Int, Actual](Err(List[ActualView]([actual]))))
-    _ = piped(source^).sequence[ListFamily, Family]().get()
+    _ = piped(source^).sequence[Family, ListFamily]().get()
 def main():
     var anchor: List[Int] = [1]
     var local: List[Int] = [2]

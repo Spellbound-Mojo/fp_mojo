@@ -73,7 +73,7 @@ def main() raises:
     var callback_error = piped(Result[Int, String](Ok(2))).traverse_void[ResultFamily[String]](tv_counted).get()
     assert_true(callback_error.is_err())
     assert_equal(source_calls[], 1)
-    var custom = piped(Two(2, 4)).traverse_tap[TwoFamily, CellFamily](tv_cell).get().take()
+    var custom = piped(Two(2, 4)).traverse_tap[CellFamily, TwoFamily](tv_cell).get().take()
     assert_equal(custom.first, 2)
     assert_equal(custom.second, 4)
     var pulls = 0

@@ -1113,10 +1113,21 @@ defaulted, on every surface: `traverse[G, S]`, `Piped.traverse[G, I]`.
   `scripts/native_signatures.py` spells it for generators.
 - **Target** families default to `_InferredApplicative[R]` from the callback
   result, or `_ViewTarget[F, o]` for a view, as `Iter` and `Pipeline` already did.
-- Callback type parameters move into the inferred region, ahead of `//`,
-  because Mojo rejects a required positional parameter after a defaulted one.
-  Keyword binding of an inferred parameter is rejected, so callers that bound
-  a callback's `E=` drop it; Mojo infers it from the callback.
+- Mojo rejects a required positional parameter after a defaulted one, so a
+  native callback's explicit parameters follow the families and default to
+  their own bounds (an error to `Never`), as `Pipeline` already did:
+  `I: Functor = ..., E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R`.
+  Inference from the argument still selects the actual types. They keep their
+  names and positions, so generic code can bind `E=` and `F=`, and binding
+  `F=` before an invalid native signature still reports the conversion
+  instead of crashing (see [known compiler defects](#known-compiler-defects)).
+  A library callable bounded by a trait has no such default and is inferred
+  before `//`. `split_explicit()` in `scripts/native_signatures.py` does the split.
+  Moving the callback parameters into the inferred region instead was tried
+  and rejected: an inferred parameter cannot be bound by keyword.
+- A family default falls back to `_UnrecognizedCarrier` when the recognized
+  family lacks the capability (`Result` has no `filter_map`), so the call is
+  rejected rather than bound to a cast family.
 
 Probed and found while implementing:
 
@@ -1153,6 +1164,27 @@ explicit or inferred targets alike, a raising plain function to the other
 operations, and a raising borrowing closure to `traverse_tap`, `filter_effect`,
 `any_effect`, `all_effect` and `find_effect`, needs its error named with `X=`;
 their contract errors do not reduce from the callback. This predates inference.
+
+Phase 4: `Piped` methods default their families the same way, with targets
+first, and List, Optional, Deque, LinkedList and Result no longer have native
+copies of the methods that have a generic twin. Array, Dict, StringDict and
+Validation keep theirs, as do the parallel traversals, discarding traversals
+and terminals, which have no generic form. `pipeline.mojo` has 660 methods
+(was 918). Found while collapsing:
+
+- The generic transforms (`fill`, `replace`, `void`, `tuple_left`,
+  `tuple_right`) named their element only in `where`, which Mojo does not
+  infer from; they spell it as `I.Element[Self.Value]`.
+- Generic `map2`, `product` and `ap` compare a held Result's stored error type
+  with the other operand's at admission, as the native Result methods did, so
+  mismatched error origins stay rejected. Generic `ap` also checks
+  `ApContract.OperationCompatible`, so a copy requirement is rejected at the
+  call rather than during instantiation.
+- Generic `map`, `flat_map`, `filter_map` and `traverse` take owned plain
+  functions, copied into `NativeUnary` like the free operations, so a deferred
+  family can keep them.
+- Unrecognized carriers report `invalid call ... lacking evidence` or
+  `violated constraint` instead of `no matching method`.
 
 ## Callables and argument packs
 

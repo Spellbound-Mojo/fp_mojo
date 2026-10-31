@@ -1,5 +1,5 @@
 """Fluent sequencing admission; bind, mapping and receiver adapters own execution."""
-from native_signatures import callback
+from native_signatures import callback, source_default, defaulted
 from operation_specs import SEQUENCING
 
 MD = 'Movable & Deinitable'
@@ -17,9 +17,12 @@ def methods(carrier=None, *, iteration=False):
             cb = callback(operation.mode, kind)
             params = ([f'T: {MD}'] if carrier else []) + cb.parameters
             if carrier: params += list(carrier.parameters)
-            if params: params += ['//']
-            if not carrier and not iteration: params += ['I: Monad']
-            params += cb.explicit
+            if not carrier and not iteration:
+                # The Monad defaults to the held value's; the callback parameters follow.
+                params += ['//', 'I: Monad = ' + source_default('Monad', 'Self.Value'), *defaulted(cb.explicit)]
+            else:
+                if params: params += ['//']
+                params += cb.explicit
             elem = 'T' if carrier else f'downcast[Self.I.Element, {MD}]' if iteration else 'I.Element[Self.Value]'
             family = carrier.instance(elem) if carrier else '_IteratorMap' if iteration else 'I'
             source = carrier.value(elem) if carrier else 'Self.I' if iteration else 'Self.Value'

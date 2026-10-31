@@ -10,7 +10,7 @@ def i6g_find[P:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitabl
 
 
 def i6g_map[A:Movable & Deinitable,B:Movable & Deinitable,E:Movable & Deinitable,//,F:def(var A) raises E -> Optional[Optional[B]]](ref function:F,var values:List[A]) raises E ->Optional[Optional[B]]:
-    return find_map_effect[G=OptionalFamily,X=E](values^,function)
+    return find_map_effect[G=OptionalFamily,A=A,E=E,X=E](values^,function)
 
 
 def i6g_fold[A:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitable,//,F:def(var A) raises E -> R](ref function:F,var values:List[A]) raises E ->Optional[String] where R==Optional[String] and OptionalFamily.Element[R]==String and OptionalFamily.CarrierCompatible[R]:
