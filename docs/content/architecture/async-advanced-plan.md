@@ -2468,6 +2468,25 @@ Decided on 2026-10-31, as recommended below:
 4. Wave 1 of the combined plan starts in separate cloud sessions, one per
    stream, with this session as integrator.
 
+Decided on 2026-10-31, after S7's research
+([Async payload thread safety](async-thread-safety.md)):
+
+5. **Payload check and marker.** 13e adopts one compile-time check, once it
+   has measured the elaboration cost and listed the library types the check
+   rejects. A payload is rejected when its field tree reaches a raw or
+   borrowed `Pointer` through a struct outside the standard library, unless
+   that struct conforms to a public marker trait named `ThreadTransferable`.
+   The marker is the author's explicit claim, and it gives way to Mojo's `Send`
+   and `Sync` if they arrive. `ArcPointer` is not rejected by default. An
+   opt-in `assert_thread_transferable[T]()` covers shared ownership, and the
+   library's synchronized owners conform to the marker.
+6. **Scope.** The check lives once in the canonical erasure owner,
+   `_Erased.__init__`, so it applies to the synchronous and async families
+   alike. Besides threads, it closes the borrowed-pointer gap that erasure
+   cannot check today (`erased_borrow.mojo`). This is a behavior change:
+   synchronous programs whose own structs hold raw pointers must conform to
+   the marker.
+
 ### Review questions
 
 1. **Default profile.** Should `run` use the work-stealing profile by default,
@@ -2501,7 +2520,7 @@ it into `nightly`.
 | **S4 Concurrent structures** | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
 | **S5 Engine refactor** | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
 | **S6 Blocking** | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
-| **S7 Thread-safety research** | The payload contract, the audit list, and research on compile-time rejection by reflection (13e's research) | Plan and design notes | None |
+| **S7 Thread-safety research** (merged) | The payload contract, the audit list, and research on compile-time rejection by reflection (13e's research) | Plan and design notes | None |
 
 ### Waves
 
@@ -2632,6 +2651,38 @@ continues.
   After the fix, `callbacks`, `foreign_completion`, `foreign_signal`, and
   `test_control` passed 16 of 16 from source and package at O0 and O3; the
   run's input check flagged only the plan and guide prose edited during it.
+
+**S7** (Wave 1) was merged on 2026-10-31: the payload thread-safety research,
+published as [Async payload thread safety](async-thread-safety.md).
+
+- **Contract.** It proposes the guide's wording, following Rust's `Send` and
+  `Sync`:
+  - What must be safe to move between threads: everything stored in an `IO`,
+    fiber state, `Completion` payloads, blocking functions and their results,
+    and the values in `Ref`, `Deferred`, and `Queue`.
+  - How fibers may share mutable state: through the synchronized owners,
+    through types their authors synchronize, or through `ArcPointer` to
+    immutable data.
+  - What silently becomes a data race. The `thread_arc_race` probe lost about
+    40% of 200,000 increments through a shared `ArcPointer[Int]`.
+- **Audit.** It covers every runtime structure shared between threads and
+  finds three races that only parallel execution exposes: `_FiberRecord`'s
+  outcome and release state, `_SupervisorState` and `_Stop`, and
+  `_Budget.registrations`. S5 was asked to fold the first two into its record
+  rewrite; the budget goes with 13c's per-worker budgets. The integrator's
+  review struck one finding: `Node`'s teardown only reads before releasing
+  through `ArcPointer`'s own fenced drop, so it needs no extra fence.
+- **Compile-time checks.** Reflection can walk field trees and find raw
+  pointers and `ArcPointer` in user structs, `List`, and `Optional`. It cannot
+  see pointer targets, origins, `Variant`, `Tuple`, or `Dict` values, or
+  anything inside an erased `IO`. Mojo 1.2 has no `Send` or `Sync`; Modular's
+  async design lists one as planned, without a date. Decisions 5 and 6 above
+  adopt the narrow raw-pointer check with the `ThreadTransferable` marker for
+  13e.
+- **Open.** Coordination locks found held are retried at once. Whether to wait
+  on the owner's signal instead is decided in 13c, from measurements. The
+  thread sanitizer does not run for Mojo executables in this container, so
+  design item 8's sanitizer run needs another host or a toolchain fix.
 
 ## Implementation reference map
 
