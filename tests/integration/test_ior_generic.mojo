@@ -20,7 +20,7 @@ def ig_family_bind[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable
 def ig_family_traverse[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var f: F, var source: V
 ) raises S.TraverseError[G, V, F] -> S.Traversed[G, V, F] where S.Element[V] == F.Arg and S.TargetCompatible[G, V, F]:
-    return traverse[S, G](source^, f^)
+    return traverse[G, S](source^, f^)
 
 @fieldwise_init
 struct IGNext(Unary, Copyable, Defaultable):

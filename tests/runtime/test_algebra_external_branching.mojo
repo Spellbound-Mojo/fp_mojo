@@ -50,7 +50,7 @@ def main() raises:
             var pulls=0
             var calls=ArcPointer(Int(0))
             var steps=ArcPointer(Int(0))
-            var computation=traverse[ListFamily,OptionalT[S]](Counted(Pointer(to=pulls),0,count),Produce(calls,steps,stop_all))
+            var computation=traverse[OptionalT[S], ListFamily](Counted(Pointer(to=pulls),0,count),Produce(calls,steps,stop_all))
             assert_equal(pulls,0)
             assert_equal(calls[],0)
             assert_equal(steps[],0)

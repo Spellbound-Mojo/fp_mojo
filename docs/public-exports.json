@@ -1192,8 +1192,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "a683599a25ae1985b75c9acfe3fd3b842b5c50d531f62dc4c08ebee380157fd9",
-     "signature": "def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W ) raises ApContract[I, V, W].Error -> ApContract[I, V, W].Out where ApContract[I, V, W].OperationCompatible:"
+     "sha256": "5c1e72d3aaad0351aa9b5a70b3436484f0a644da9052076a768bc58213ead22a",
+     "signature": "def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var functions: V, var values: W ) raises ApContract[I, V, W].Error -> ApContract[I, V, W].Out where ApContract[I, V, W].OperationCompatible:"
     }
    ],
    "provider": "algebra/_derived"
@@ -1212,8 +1212,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "35dd2b821d699f32bdfcd40c563abd97b4b88c1f6d5598d7249b807fdf976100",
-     "signature": "def compact[V: Movable & Deinitable, //, I: FunctorFilter](var value: V ) raises I.MapFilterError[V, Identity[I.Element[V]]] -> I.MapFiltered[V, Identity[I.Element[V]]]:"
+     "sha256": "d5c6961caecd2da1c2833cb7cd92ab264bbe5890e6cabe4b48752bc894f2de28",
+     "signature": "def compact[V: Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V ) raises I.MapFilterError[V, Identity[I.Element[V]]] -> I.MapFiltered[V, Identity[I.Element[V]]]:"
     }
    ],
    "provider": "algebra/filtering"
@@ -1242,20 +1242,20 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "bc306aacae318261b1ae180a88d1e170b3fd48d58e7f1c75b10b180c3463f845",
-     "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:"
+     "sha256": "9ce312dffb96d598d1c1677e8e552d9191240f2d3fed8ebec263853d899e41f3",
+     "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible:"
     },
     {
-     "sha256": "c1aecad28c2d1166002d83f7377e1f96c0a63043f5c47711c4156e091b7fea33",
-     "signature": "def filter[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o]].Error -> FilterContract[I, V, P._BorrowView[o]].Out where FilterContract[I, V, P._BorrowView[o]].Compatible:"
+     "sha256": "138e1cdaa9def463d5e20e2386a9a3d310ca3a31a01e0b1f53117c9fa1e24275",
+     "signature": "def filter[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o]].Error -> FilterContract[I, V, P._BorrowView[o]].Out where FilterContract[I, V, P._BorrowView[o]].Compatible:"
     },
     {
-     "sha256": "45ab7f54484bca36f74a612ce02cb4628e4a9fde525d348bbe095295d7755e92",
-     "signature": "def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Filterable, F: _Borrowing[P, R]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] where I.Element[V] == P and R == Bool:"
+     "sha256": "9d64b077d8b4398744859c378a14013343f95912a7e869cd0a0d072d5404b2ec",
+     "signature": "def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, F: _Borrowing[P, R], //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] where I.Element[V] == P and R == Bool:"
     },
     {
-     "sha256": "cefa27011816ec627c4b68233e215af42f5a407fb1e82a7ffeee9d857aec00f7",
-     "signature": "def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Filterable, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _NativeBorrowRef[P, Bool, E, F, True, o]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, E, F, True, o]] where I.Element[V] == P and R == Bool:"
+     "sha256": "41120e82b1edd5164a223a5dc3bf00b5ef83c53133cb55c0d273859cb17de20a",
+     "signature": "def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _BorrowErrorProbe[P, Bool, E]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, E, F, True, o]] where I.Element[V] == P and R == Bool:"
     }
    ],
    "provider": "algebra/filtering"
@@ -1264,16 +1264,16 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "1a11bf5b52236ed34da2d27d0402c9546378b3e8383d19cd81ee4463c62b5486",
-     "signature": "def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: FunctorFilter]( var value: V, var function: F ) raises I.MapFilterError[V, F] -> I.MapFiltered[V, F]:"
+     "sha256": "08aa8e2a9f434acf6cffcbdbb6e65cab9727971d70d6f8a32f33660355281458",
+     "signature": "def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]]( var value: V, var function: F ) raises I.MapFilterError[V, F] -> I.MapFiltered[V, F]:"
     },
     {
-     "sha256": "6fb52a212eba87a0a8eb48d0fd7b0aecfd49c38fa3ed2b9b9897f094623aec96",
-     "signature": "def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: FunctorFilter, F: _Unary[A, R]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _NativeUnaryRef[A, R, Never, F, False, o]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A:"
+     "sha256": "c9f3e3bbc8ba3eddb5ffe96fb0bc46266d932425dc0555f5852887f443481c2e",
+     "signature": "def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _NativeUnaryRef[A, R, Never, F, False, o]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A:"
     },
     {
-     "sha256": "860bb3f856a88dfbd0da6159186cf851d710690ded6e5a212aca1616360cc45c",
-     "signature": "def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: FunctorFilter, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _NativeUnaryRef[A, R, E, F, True, o]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A:"
+     "sha256": "d2c9d041a72949ad0b765e4b300ea923b9bf200abe96b88337285b01ca212f18",
+     "signature": "def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _ErrorProbe[A, R, E]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A:"
     }
    ],
    "provider": "algebra/filtering"
@@ -1282,20 +1282,20 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "ba9ba10b237a58940cfc9a6f3ab8970f93e8bf6975202144c7fe1dbc7b27f106",
-     "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:"
+     "sha256": "d7495fbedcc094a0a211c5b926167a071c7fa14211962d60698f4675ea34eb58",
+     "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible:"
     },
     {
-     "sha256": "04f12d4c7d41fc948ec6f9b07c84324630b9ea825fbe71093845787632682633",
-     "signature": "def filter_not[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o], True].Error -> FilterContract[I, V, P._BorrowView[o], True].Out where FilterContract[I, V, P._BorrowView[o], True].Compatible:"
+     "sha256": "865ffe418c0e54ed6a3c0355a2c5b9d354dadb313f0b9ac2a37ee8271458a207",
+     "signature": "def filter_not[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o], True].Error -> FilterContract[I, V, P._BorrowView[o], True].Out where FilterContract[I, V, P._BorrowView[o], True].Compatible:"
     },
     {
-     "sha256": "06182be7d6dd000b143fb91cf8d428dacc1562551343ed1df3a78ecf0ba6daee",
-     "signature": "def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Filterable, F: _Borrowing[P, R]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] where I.Element[V] == P and R == Bool:"
+     "sha256": "b4f1ef506f3978f20719f5f67c3110dbed675f50b77ae6bd822181d9d67eeefd",
+     "signature": "def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, F: _Borrowing[P, R], //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] where I.Element[V] == P and R == Bool:"
     },
     {
-     "sha256": "15685215ee974cb99d48a7359649b390b49989b5ed19accfea18804d52a3b43c",
-     "signature": "def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Filterable, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] where I.Element[V] == P and R == Bool:"
+     "sha256": "eb9105682aefbb2d1aa823ae3f18700b4b06dec08c4242f7296ddd57eb03b9b4",
+     "signature": "def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_BorrowErrorProbe[P, Bool, E]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] where I.Element[V] == P and R == Bool:"
     }
    ],
    "provider": "algebra/filtering"
@@ -1304,32 +1304,32 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "76fbb43076ed169ddc3e2c768c17f87bfba2d26e9ae718cb0e3e06f37a590165",
-     "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var value: V, var f: F ) raises BindContract[I, V, F].Error -> BindContract[I, V, F].Out where BindContract[I, V, F].Compatible:"
+     "sha256": "99c840b5a8d1e4c885cfae99a214259c9f5a672a361f52e4d0d3e1843f7aea4d",
+     "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, var f: F ) raises BindContract[I, V, F].Error -> BindContract[I, V, F].Out where BindContract[I, V, F].Compatible:"
     },
     {
-     "sha256": "ea96e62156361bb41244881487340fb55283fcc63c0f7cc5fff6e99df4c096df",
-     "signature": "def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad](var value: V, ref[o] function: F) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where _BindCompatible[I, V, F._View[o]]:"
+     "sha256": "d1b270cb3e65dbbab776a29ca7648f3071f3f35f1ccb318eb120551d7703a21a",
+     "signature": "def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, ref[o] function: F) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where _BindCompatible[I, V, F._View[o]]:"
     },
     {
-     "sha256": "c13108c6e7f61b640095dacb1e13d02bb2b9a35026d4c15f527938d189fbdf81",
-     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: def(var A) -> R](var value: V, ref[o] function: F) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:"
+     "sha256": "0a4a1ae564f075c756b0dc6b4458df692fbac867c697cc5665b94b20b5c8e354",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, ref[o] function: F) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:"
     },
     {
-     "sha256": "715282fb89cdde1fced74c4eff3f19d5050656146c76e894721469792e94979e",
-     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):"
+     "sha256": "c68cb68dc311c21fb99b06366dd32b52a459d3dfe633778f1af9c2b12e5b00e0",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, I: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):"
     },
     {
-     "sha256": "c6cc646fe54e3f17e30aa28e1ecde01a3b95f5146b07b35ecd122adc217fcc82",
-     "signature": "def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:"
+     "sha256": "22535830bcab3d6cd919794dc888a9e78adbf76665bfce972cef29874e93372a",
+     "signature": "def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:"
     },
     {
-     "sha256": "9385b73e0f4591d3213b3b6ae3aeee96063a051e7e97b1e70eb7dc5dd63b83a2",
-     "signature": "def flat_map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:"
+     "sha256": "adb3cb73d6b4524543b76187474752457a1e23e6da37ff57fc536037538b189a",
+     "signature": "def flat_map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:"
     },
     {
-     "sha256": "da3dc20acb32b515d96c70bf60eeacb0271f573c9acffead9672041ffb8163f1",
-     "signature": "def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, E]] -> I.Bound[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]:"
+     "sha256": "4496ce661347814302ac3267d463de801d00b52f42fb4b29dfa936740336f599",
+     "signature": "def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, E]] -> I.Bound[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]:"
     }
    ],
    "provider": "algebra/operations"
@@ -1338,8 +1338,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "07066fd30425de0549dcfd11528bf431530508efd3765a5641a19cd59469a4a8",
-     "signature": "def flatten[V: Movable & Deinitable, //, I: Monad](var nested: V ) raises I.BindError[V, _Same[I.Element[V]]] -> I.Bound[V, _Same[I.Element[V]]] where _BindCompatible[I, V, _Same[I.Element[V]]]:"
+     "sha256": "56971db2f0120cec1b111807bae8578eda67db11c1cd1f599652f0f9d468f4ca",
+     "signature": "def flatten[V: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var nested: V ) raises I.BindError[V, _Same[I.Element[V]]] -> I.Bound[V, _Same[I.Element[V]]] where _BindCompatible[I, V, _Same[I.Element[V]]]:"
     }
    ],
    "provider": "algebra/_derived"
@@ -1348,16 +1348,16 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "b8b9abe2cd8b5b0d867d225895b699c9d7447768acbc9da7ee2350fe4cec881c",
-     "signature": "def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad]( var fallback: F, var source: V ) raises AbsenceContract[I, V, F, False].Error -> AbsenceContract[I, V, F, False].Out where AbsenceContract[I, V, F, False].Compatible:"
+     "sha256": "eadc1104c3c790d238ba4315cddadc67759f4cadff3a3d5a89a3918a2dd2218f",
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]]( var fallback: F, var source: V ) raises AbsenceContract[I, V, F, False].Error -> AbsenceContract[I, V, F, False].Out where AbsenceContract[I, V, F, False].Compatible:"
     },
     {
-     "sha256": "074d0982d6b93151bf4afb15bad6d0b75d14b68a07c33c5d836693326fce5f97",
-     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Thunk[R]](var fallback: F, var source: V ) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Compatible:"
+     "sha256": "9cad2252e12ec0172a2cb053dd57a61bc6e877937f7a1fa3ecb9c55ce39113aa",
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, F: _Thunk[R], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V ) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Compatible:"
     },
     {
-     "sha256": "2c5c365a50b0fe62770f29a2c59fd335c94e1e82af3b7b567a9fc9a97dedc744",
-     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingThunk[R, E]](var fallback: F, var source: V ) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Compatible:"
+     "sha256": "c2f0cb27ea7401dd9bd9da36a224f51b272d9f7a394e2bbdacf8a9e7b4aac1d3",
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingThunk[R, E], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V ) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Compatible:"
     }
    ],
    "provider": "algebra/absence"
@@ -1366,100 +1366,100 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "66c0875436eb36d01d6252760bd70e92a94d1b056fd272c4cf0bc4ba46e86993",
-     "signature": "def if_effect[V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]:"
+     "sha256": "307f9e64f5f5416096358c7e8ec2e111c4905a922dbc7af61921b3d91b252f9c",
+     "signature": "def if_effect[V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]:"
     },
     {
-     "sha256": "3bb1756782764fe2eb337420a5a6cd72939ac7cde9659c21c63eec8bd6438fca",
-     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, R: def() -> W, X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "7b7ae177f25d58576cfbab34f118d9c14f5200798a3f4fc954c65427c406566a",
+     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "cf34b15e36e2bfe4ac4c3d799203cd81d7f0e5d74b8c980bcde7dc6a9f2b201f",
-     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "0cf18724d0ad90acdc721c0a7b678e7675c21a717e587f9883a2e260baf31098",
+     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "3bb4444526e49960ef13e536192cf49c1a1fe86421a6faacdd504e2b468dff7e",
-     "signature": "def if_effect[W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "55a1635c9b2ad2c64d875c513779b4daef751e1482bdeda752809215be39138b",
+     "signature": "def if_effect[W: Movable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "ced55e4be31ccbf67cfc77400b552628c8304dcc3efe43c51312abf90ebcea86",
-     "signature": "def if_effect[W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "47df21c6367b0797791eac4bb69b69f7c21bb85640efee251fb24878d2d50c2c",
+     "signature": "def if_effect[W: RegisterPassable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "1b4d579069274199be041ef45fcaa19f94f3f07ef64971310bd435175bdcf550",
-     "signature": "def if_effect[W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "d3df82bff3d8128820c93440db558747d3fa468b09b15b74edf162f72e6839dc",
+     "signature": "def if_effect[W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "06500bbd5d55f1a4d85db02d3024c5944f843b4d93cf3582c9908375e8b98aaf",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "6f7e3cbaa6200cc53fb05cb6ea18bde41a67a2dffc423f5be269801c20b80d8e",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, L: def() -> U, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "63a77a8ea9bd06b7ee824c6042a202bc1e532feeac96314970fc5127a7f0ed0c",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, R: def() -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "2c3caab1d82b7b41f88ac45e4f973222f6a84c28a629e4340e4390dba8992b3b",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: def() -> U, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "be7a9bb71147d15abf5d8ba140f57ed41d9fc5eaa77f65f6eb7076b1755fffd7",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "9edf5536c08df75c0c36cbcca3568e9d591b8be38c2e71c29c7b9d9f6490aedd",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "00ad45255b70c5a5bf7654623f946aae11bba7cc6941261d82c7674fee00dbc6",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "fab1efb661c24e755fcdabeb57295b6f7b9a5402be9cbe74da5f255d0370d6a1",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "39ea5540b4f29bd140db12e12e76155d89dbba6682bcb2b7f685e50b0594322f",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "f071698b2db8bd9c5f460e2849e63276237b6113b6ce865a5e575908e57064fe",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "f12636a4278ef18a0eb9d2a2e5c72699d1bcb5c9c507f8ae44692574fbfa1e76",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "9248f135713b2ac36aea1ee701d5fca28aec14a037520cac97d9d8993630955d",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "1a7964f87db095bd4d4f4004290b747d3fb77b8417e70709548729fb24085de8",
-     "signature": "def if_effect[U: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "37e58dcd13dccc9bf0f7a38d118756b5e70dc9c4a45be34e7214ce0556777986",
+     "signature": "def if_effect[U: Movable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "766d12ff69d331b22e8f17a4f29e181f5ea306bc3f3dcf2692bb79f06b507a3c",
-     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "24f527a2c1512c6001f82c21d37b7d342ab74e35c96c98251f123c253678c38f",
+     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "cdc043b8b190075cf42302770ed45c7ed574a368e5df5e491eb0c9d1902d1e25",
-     "signature": "def if_effect[U: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "8ae051d292e86efb6255799b4649f24773c5eb2af218174ca4d01e16a866daa4",
+     "signature": "def if_effect[U: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "4f036e1d8fa3daded2de2c780a2321127b0bb201ac6802900b9b09e7f8be0e27",
-     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "6eeaf64e13e797ad5909e7f740977a8d547463ec93d667ec80915228d2c9c2ba",
+     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "ab3d197f0016a343437afb0052dd0b86c20b1d937f1c0f389542d4c38d9cfa59",
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "1805807a46824bfcbdd22402b0387905da2123bb28165422931c964d707f4166",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "1dd995ba82cd2e44ec17a2f77af2098193edf2a4bbe3e67097a0f3e9f72d61dd",
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "8d1168be0cae567ce13b58f37546e5320e40c597253b0da89cb7d80676bd8977",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "c4058862f29cb27bded32490b4e5024e1a6a1b1bbf2d531a84a30e5646ecaa6c",
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "f3b7a2c750962b2eba7b03e552dc10e5af5a36141150583310b51d72c84a5d21",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "c3f729bb5a330ef308b4af8203529dc11b8bab4baccc7f00136f1e5b69481c01",
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "69352871b341e9694a664013fc68d168759a6a9cf2b43996cb356a8a1eba17a1",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "a11676798e9a38ecf32bf6da06b1a05aa198ab26c60d920f65fd669b921c3455",
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "988a3d706602e1c8991664f402aae7e08e9a76209dbee9976fdf9bf7bb53c109",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "6681367b82ca62b3691027bf347b12d58c8363fcab7548f93d67dc02d6258446",
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "624f5e03c401447169fc99ce42bd57fc48ea61bedec910599534a78d6329adc5",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "7d6e091d39546efaedcedac2dd41313c74680ccf57eb6ef6a74155afd189d5d1",
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "5a10e44dd7b4c0d11ef4429d9b8299db96da03b46b95ec8bd6843a643a2c9616",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "1bf050661094bc48786737ad8284d67f368eb9f0175a08a61ccf3a196a28edb6",
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "403b8b068814646922957705836fb7b0193c73e1f56616d738958cc06acd4cb4",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     }
    ],
    "provider": "algebra/conditional"
@@ -1468,32 +1468,32 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "1937c6160d878df6f36035f7ec2b76ad8050c6abb0cde780ad118b1848435f5e",
-     "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor](var value: V, var f: F ) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible:"
+     "sha256": "c1198f65421d625943d350e70d8f7e1e1e6619487db67205a0008affe244f76c",
+     "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, var f: F ) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible:"
     },
     {
-     "sha256": "7192ffa78612a5d8635226de3b66829ef1c592efcd40c340904462367762bbcf",
-     "signature": "def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor](var value: V, ref[o] function: F) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where _MapCompatible[I, V, F._View[o]]:"
+     "sha256": "9073bf161dba90c282512c56812da4e1b807c8fcc72436371454e77936415f18",
+     "signature": "def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, ref[o] function: F) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where _MapCompatible[I, V, F._View[o]]:"
     },
     {
-     "sha256": "bd5015bec8ababc677393c91eefb9b166db75236119d2fe7cf86cc4f16e9ea0f",
-     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: def(var A) -> R](var value: V, ref[o] function: F) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:"
+     "sha256": "29686d5c4e30c8d4ef2feb9268d42b628f9a2c5fc6fc45641ec2a94e1e9eb310",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, ref[o] function: F) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]:"
     },
     {
-     "sha256": "d07bd33ba2605e51ccdca65cb1fcc3fe59fcb4db1b670dab81bf73a3b6237970",
-     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):"
+     "sha256": "c91b2acf832ba63bb478498413dbfc802968bc85d3d8f3d0e663bcd904f56bc2",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, I: Functor = downcast[_SourceFamily[V], Functor], X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):"
     },
     {
-     "sha256": "b7591677c5503a1ded3f7c08ee38bb8cb04affc2d10b76784adb3bf01058741f",
-     "signature": "def map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:"
+     "sha256": "6157dba959f5c50a6470dbaaddcd35c944fc071603030a66f76d2f4467db2a7a",
+     "signature": "def map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:"
     },
     {
-     "sha256": "699b82d4de4b4f13f7e78d4ac7161f347334bd73de115d41498e5c0958799b8a",
-     "signature": "def map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:"
+     "sha256": "389dce1a0031295fed5c36b973a4363c28183518273cb7033f4cd83dde2c03c9",
+     "signature": "def map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]:"
     },
     {
-     "sha256": "9c7dc32dd33a1ea338fa6edc551acb7520451d2f3a2c92fba28b42cd055523fe",
-     "signature": "def map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, E]] -> I.Mapped[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]:"
+     "sha256": "d4919bd9ef6538a42afec7c73d3d4f3a3602093152986bbd5cc61753ece84442",
+     "signature": "def map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, E]] -> I.Mapped[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]:"
     }
    ],
    "provider": "algebra/operations"
@@ -1502,8 +1502,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "37cd8545c1f66f8e4fabb3b2217b9e7ff9adbeb6af688908d3186e3859f660ee",
-     "signature": "def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative]( var f: F, var left: V, var right: W ) raises Map2Contract[I, V, W, F].Error -> Map2Contract[I, V, W, F].Out where Map2Contract[I, V, W, F].OperationCompatible:"
+     "sha256": "94e67b4bd23f228119715c8c399d2769be43d51c693cb2c2773b9014ee207c22",
+     "signature": "def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]]( var f: F, var left: V, var right: W ) raises Map2Contract[I, V, W, F].Error -> Map2Contract[I, V, W, F].Out where Map2Contract[I, V, W, F].OperationCompatible:"
     }
    ],
    "provider": "algebra/_derived"
@@ -1512,8 +1512,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "8b8c453f23af08feaa40a04cea896f2ba0a75aab516e9d346ea99a8240506afb",
-     "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, I: Applicative](var left: V, var right: R, var f: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].OperationCompatible:"
+     "sha256": "934a42796f81b618bbdf669c2e1b3f10196370336d1a63000316bcf63c6fd88b",
+     "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: R, var f: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].OperationCompatible:"
     }
    ],
    "provider": "algebra/operations"
@@ -1522,16 +1522,16 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "caa1f37c8e80e6b404646f2e9d59f93df37f33b38fcd6339ea413293085f8c1b",
-     "signature": "def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad]( var fallback: F, var source: V ) raises AbsenceContract[I, V, F].Error -> AbsenceContract[I, V, F].Out where AbsenceContract[I, V, F].Compatible:"
+     "sha256": "e1a2767bd80691097176bbe7c71f6fc3f442826c5281c34dd217493f306209ce",
+     "signature": "def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]]( var fallback: F, var source: V ) raises AbsenceContract[I, V, F].Error -> AbsenceContract[I, V, F].Out where AbsenceContract[I, V, F].Compatible:"
     },
     {
-     "sha256": "f6c7b04e17e15edcd279e4ee1f89a91875d31aa22d73d3032e73b30bf7395917",
-     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Thunk[R]](var fallback: F, var source: V ) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Compatible:"
+     "sha256": "1e2690bbd2ed295dfc0e1b56c31780441f33498d30cd1252a219a9f5aa8575cb",
+     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, F: _Thunk[R], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V ) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Compatible:"
     },
     {
-     "sha256": "521f783e165cb4eff03794af9674ef1b313a4ad2a8e97bdc227aab6e69499aee",
-     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingThunk[R, E]](var fallback: F, var source: V ) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Compatible:"
+     "sha256": "6a69329ee0739072c5beb2d5899baf0a9d7e4edd6ebe5cb93c13d00693cd832b",
+     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingThunk[R, E], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V ) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Compatible:"
     }
    ],
    "provider": "algebra/absence"
@@ -1540,8 +1540,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "26b7622c4e79337dd1789c2eadb3bbd178d83674b7918710652d9049861d2f79",
-     "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W ) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible:"
+     "sha256": "20b1d1cb9bb1061ab19855e516125a8795de6c843aa6bdce5d2012ce10010ccb",
+     "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W ) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible:"
     }
    ],
    "provider": "algebra/_derived"
@@ -1550,8 +1550,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "1117f5ceee593750e8209121539e2a2bc87ec7d97bb56345549d5dbf36ee9732",
-     "signature": "def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W ) raises ProductLeftContract[I, V, W].Error -> ProductLeftContract[I, V, W].Out where ProductLeftContract[I, V, W].Compatible:"
+     "sha256": "42e479540399fd9729db724a2531a0ce50eb2ca6d4e6c63aadaa01d9687f14c8",
+     "signature": "def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W ) raises ProductLeftContract[I, V, W].Error -> ProductLeftContract[I, V, W].Out where ProductLeftContract[I, V, W].Compatible:"
     }
    ],
    "provider": "algebra/_derived"
@@ -1560,8 +1560,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "7941827143101609646732941684c2408bed335e6141dde7de888b6a2913c4f6",
-     "signature": "def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W ) raises ProductRightContract[I, V, W].Error -> ProductRightContract[I, V, W].Out where ProductRightContract[I, V, W].Compatible:"
+     "sha256": "d7a2472bd8bab251eeadbc01c5a7f9f8262dcfe2495ee698802a224b7fef0a93",
+     "signature": "def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W ) raises ProductRightContract[I, V, W].Error -> ProductRightContract[I, V, W].Out where ProductRightContract[I, V, W].Compatible:"
     }
    ],
    "provider": "algebra/_derived"
@@ -1580,8 +1580,8 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "d178f8c8b599e026014d930d839a703b9fbf0927a2c39f396a6727be2cccf2cb",
-     "signature": "def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V ) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]] where S.TargetCompatible[G, V, _Same[S.Element[V]]]:"
+     "sha256": "9a81937dab012d3d3bfc61959fa1aa1d25b960ba0f250354917b61cbfb944b90",
+     "signature": "def sequence[V: Movable & Deinitable, //, G: Applicative = _InferredApplicative[downcast[_SourceFamily[V], Traversable].Element[V]], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V ) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]] where S.TargetCompatible[G, V, _Same[S.Element[V]]]:"
     }
    ],
    "provider": "algebra/_derived"
@@ -1590,16 +1590,16 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "02c1588ea1920bc22d8aac5d468878b041088b8ac80246220270392ca3178b47",
-     "signature": "def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad]( var initial: A, var step: F ) raises TailRecContract[I, F].Error -> TailRecContract[I, F].Out where A == F.Arg and TailRecContract[I, F].Compatible:"
+     "sha256": "9c50ed129b8c7224f2c68f276346aaf10c8c2def9ca3cd7ca8cb046894da85d2",
+     "signature": "def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[F.Out], Monad]]( var initial: A, var step: F ) raises TailRecContract[I, F].Error -> TailRecContract[I, F].Out where A == F.Arg and TailRecContract[I, F].Compatible:"
     },
     {
-     "sha256": "508966f92c6e0f2c074a3164c565db4c669cbfc29d5d6ee65163da5902894938",
-     "signature": "def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Unary[A, R]](var initial: A0, var step: F ) raises TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error -> TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, Never, F, False]].Compatible:"
+     "sha256": "e4db940e5a04651c7192cf0bb60e68a217cfc06864701eb60034be79fb6c7c2b",
+     "signature": "def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: _Unary[A, R], //, I: Monad = downcast[_SourceFamily[R], Monad]](var initial: A0, var step: F ) raises TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error -> TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, Never, F, False]].Compatible:"
     },
     {
-     "sha256": "a5e455cbb6e278c6751186d0ecf01cea0fb6a416b4cc0309fb33883508829907",
-     "signature": "def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingUnary[A, R, E]](var initial: A0, var step: F ) raises TailRecContract[I, NativeUnary[A, R, E, F, True]].Error -> TailRecContract[I, NativeUnary[A, R, E, F, True]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, E, F, True]].Compatible:"
+     "sha256": "b4faa6085b2de3d08aea0d3adcfb6403f73e3a85c97ebcffe00c8ceb2985533f",
+     "signature": "def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //, I: Monad = downcast[_SourceFamily[R], Monad]](var initial: A0, var step: F ) raises TailRecContract[I, NativeUnary[A, R, E, F, True]].Error -> TailRecContract[I, NativeUnary[A, R, E, F, True]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, E, F, True]].Compatible:"
     }
    ],
    "provider": "algebra/looping"
@@ -1608,32 +1608,32 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "c37ed38a182e19f2a01e8e1d725b03c00d68b0d6807d0edcdb5434fc210b0819",
-     "signature": "def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative]( var source: V, var f: F ) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].TargetCompatible:"
+     "sha256": "2cd4e8dfa3e48d28274d3ba3039af6784b66b88c21c9b703ab2efabaca62daca",
+     "signature": "def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], S: Traversable = downcast[_SourceFamily[V], Traversable]]( var source: V, var f: F ) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].TargetCompatible:"
     },
     {
-     "sha256": "b38dcfda5d54cd30e724e9662221bfdd8ca1dd9b6ceb3be868ff213df4096082",
-     "signature": "def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative](var source: V, ref[o] function: F) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.TargetCompatible[G, V, F._View[o]]:"
+     "sha256": "1dcf269e04083c9bc2bf691208ff0eec8bc6b84d59ab6962890de2216d744667",
+     "signature": "def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, ref[o] function: F) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.TargetCompatible[G, V, F._View[o]]:"
     },
     {
-     "sha256": "7a0a434aeb8fe5cc8062a6abdf16c8d9754c2c11b224b0c9c69d8fe1ccb0ce60",
-     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable, G: Applicative, F: def(var A) -> R](var source: V, ref[o] function: F) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, Never, F, False, o]]:"
+     "sha256": "eaa5d5ec0012c24e697313568f36fb3e23c973a5d8a32e59735d8a900fa9ff2d",
+     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, ref[o] function: F) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, Never, F, False, o]]:"
     },
     {
-     "sha256": "c032125165046da3abbb48ba03d27f376d0e3de7a93ff0b8e944ad0edd8f0700",
-     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](var source: V, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, V, _ErrorProbe[A, R, E]]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):"
+     "sha256": "6e6ad9b942b45e281cbecf2330164a5e1047fa9bc00d647e8e8bc1289b1dac19",
+     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable], X: AnyType = _InferError](var source: V, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, V, _ErrorProbe[A, R, E]]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E):"
     },
     {
-     "sha256": "b84cc9161bcbd34a4b404a5706dbe7021039ce96e1b805a2fed1fcff3cecbecc",
-     "signature": "def traverse[V: Movable & Deinitable, R: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]:"
+     "sha256": "1bb017dacceaf9c2653512276dbc34a6382141eb8456ecf9736356ee32696948",
+     "signature": "def traverse[V: Movable & Deinitable, R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]:"
     },
     {
-     "sha256": "f7522ba326d7e22ba4bcb315b37d5c6de4878dc90344a65b6c473c7d2cf88ff4",
-     "signature": "def traverse[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, S: Traversable, G: Applicative](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]:"
+     "sha256": "45acb3ed709472ad1f4aadf70a5cc49dfd1bfe6fd4e619041f9538da58e4425e",
+     "signature": "def traverse[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]:"
     },
     {
-     "sha256": "8632be8d96268c474771bac5362c14a0280914afa06e790b90558b90d0dcc2a6",
-     "signature": "def traverse[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) raises E thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, E]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]]:"
+     "sha256": "98d9f46e1c629584e0deb0abaea5c437598668999bcf7865f04bcaac4e2ff1df",
+     "signature": "def traverse[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) raises E thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, E]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]]:"
     }
    ],
    "provider": "algebra/operations"
@@ -2907,100 +2907,100 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "66c0875436eb36d01d6252760bd70e92a94d1b056fd272c4cf0bc4ba46e86993",
-     "signature": "def if_effect[V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]:"
+     "sha256": "307f9e64f5f5416096358c7e8ec2e111c4905a922dbc7af61921b3d91b252f9c",
+     "signature": "def if_effect[V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]:"
     },
     {
-     "sha256": "3bb1756782764fe2eb337420a5a6cd72939ac7cde9659c21c63eec8bd6438fca",
-     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, R: def() -> W, X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "7b7ae177f25d58576cfbab34f118d9c14f5200798a3f4fc954c65427c406566a",
+     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "cf34b15e36e2bfe4ac4c3d799203cd81d7f0e5d74b8c980bcde7dc6a9f2b201f",
-     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "0cf18724d0ad90acdc721c0a7b678e7675c21a717e587f9883a2e260baf31098",
+     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "3bb4444526e49960ef13e536192cf49c1a1fe86421a6faacdd504e2b468dff7e",
-     "signature": "def if_effect[W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "55a1635c9b2ad2c64d875c513779b4daef751e1482bdeda752809215be39138b",
+     "signature": "def if_effect[W: Movable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "ced55e4be31ccbf67cfc77400b552628c8304dcc3efe43c51312abf90ebcea86",
-     "signature": "def if_effect[W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "47df21c6367b0797791eac4bb69b69f7c21bb85640efee251fb24878d2d50c2c",
+     "signature": "def if_effect[W: RegisterPassable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "1b4d579069274199be041ef45fcaa19f94f3f07ef64971310bd435175bdcf550",
-     "signature": "def if_effect[W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
+     "sha256": "d3df82bff3d8128820c93440db558747d3fa468b09b15b74edf162f72e6839dc",
+     "signature": "def if_effect[W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "06500bbd5d55f1a4d85db02d3024c5944f843b4d93cf3582c9908375e8b98aaf",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "6f7e3cbaa6200cc53fb05cb6ea18bde41a67a2dffc423f5be269801c20b80d8e",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, L: def() -> U, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "63a77a8ea9bd06b7ee824c6042a202bc1e532feeac96314970fc5127a7f0ed0c",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, R: def() -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "2c3caab1d82b7b41f88ac45e4f973222f6a84c28a629e4340e4390dba8992b3b",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: def() -> U, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "be7a9bb71147d15abf5d8ba140f57ed41d9fc5eaa77f65f6eb7076b1755fffd7",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "9edf5536c08df75c0c36cbcca3568e9d591b8be38c2e71c29c7b9d9f6490aedd",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "00ad45255b70c5a5bf7654623f946aae11bba7cc6941261d82c7674fee00dbc6",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "fab1efb661c24e755fcdabeb57295b6f7b9a5402be9cbe74da5f255d0370d6a1",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "39ea5540b4f29bd140db12e12e76155d89dbba6682bcb2b7f685e50b0594322f",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "f071698b2db8bd9c5f460e2849e63276237b6113b6ce865a5e575908e57064fe",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "f12636a4278ef18a0eb9d2a2e5c72699d1bcb5c9c507f8ae44692574fbfa1e76",
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "9248f135713b2ac36aea1ee701d5fca28aec14a037520cac97d9d8993630955d",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "1a7964f87db095bd4d4f4004290b747d3fb77b8417e70709548729fb24085de8",
-     "signature": "def if_effect[U: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "37e58dcd13dccc9bf0f7a38d118756b5e70dc9c4a45be34e7214ce0556777986",
+     "signature": "def if_effect[U: Movable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "766d12ff69d331b22e8f17a4f29e181f5ea306bc3f3dcf2692bb79f06b507a3c",
-     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "24f527a2c1512c6001f82c21d37b7d342ab74e35c96c98251f123c253678c38f",
+     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "cdc043b8b190075cf42302770ed45c7ed574a368e5df5e491eb0c9d1902d1e25",
-     "signature": "def if_effect[U: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "8ae051d292e86efb6255799b4649f24773c5eb2af218174ca4d01e16a866daa4",
+     "signature": "def if_effect[U: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "4f036e1d8fa3daded2de2c780a2321127b0bb201ac6802900b9b09e7f8be0e27",
-     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "6eeaf64e13e797ad5909e7f740977a8d547463ec93d667ec80915228d2c9c2ba",
+     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "ab3d197f0016a343437afb0052dd0b86c20b1d937f1c0f389542d4c38d9cfa59",
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "1805807a46824bfcbdd22402b0387905da2123bb28165422931c964d707f4166",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "1dd995ba82cd2e44ec17a2f77af2098193edf2a4bbe3e67097a0f3e9f72d61dd",
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "8d1168be0cae567ce13b58f37546e5320e40c597253b0da89cb7d80676bd8977",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "c4058862f29cb27bded32490b4e5024e1a6a1b1bbf2d531a84a30e5646ecaa6c",
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "f3b7a2c750962b2eba7b03e552dc10e5af5a36141150583310b51d72c84a5d21",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "c3f729bb5a330ef308b4af8203529dc11b8bab4baccc7f00136f1e5b69481c01",
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "69352871b341e9694a664013fc68d168759a6a9cf2b43996cb356a8a1eba17a1",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "a11676798e9a38ecf32bf6da06b1a05aa198ab26c60d920f65fd669b921c3455",
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
+     "sha256": "988a3d706602e1c8991664f402aae7e08e9a76209dbee9976fdf9bf7bb53c109",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]:"
     },
     {
-     "sha256": "6681367b82ca62b3691027bf347b12d58c8363fcab7548f93d67dc02d6258446",
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "624f5e03c401447169fc99ce42bd57fc48ea61bedec910599534a78d6329adc5",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "7d6e091d39546efaedcedac2dd41313c74680ccf57eb6ef6a74155afd189d5d1",
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "5a10e44dd7b4c0d11ef4429d9b8299db96da03b46b95ec8bd6843a643a2c9616",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     },
     {
-     "sha256": "1bf050661094bc48786737ad8284d67f368eb9f0175a08a61ccf3a196a28edb6",
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
+     "sha256": "403b8b068814646922957705836fb7b0193c73e1f56616d738958cc06acd4cb4",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]:"
     }
    ],
    "provider": "algebra/conditional"

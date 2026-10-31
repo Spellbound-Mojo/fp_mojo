@@ -35,7 +35,7 @@ def check[M:Monad]() raises where TraverseContract[ListFamily,WriterT[M,WCMoveLo
         var values=List[Owner]()
         for value in range(1,4):values.append(Owner(value,inputs))
         var code=0
-        try:_=traverse[ListFamily,I](values^,Produce[M](Owner(10,captures),calls,logs,fail))
+        try:_=traverse[I, ListFamily](values^,Produce[M](Owner(10,captures),calls,logs,fail))
         except error:
             comptime assert type_of(error)==Int
             code=rebind_var[Int](error^)

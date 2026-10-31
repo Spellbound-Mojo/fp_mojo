@@ -16,7 +16,7 @@ from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorComp
 from fp.callables._receiver import _unary_repeated_as
 from ._branches import _OptionalGuard, _ResultGuard, _TraverseBranch
 from ._result_accumulation import _result_map2, _result_loop, _ResultLoopCompatible, _FirstError
-from .filtering import _Select, _Keep
+from ._selection import _Select, _Keep
 from .protocols import _FamilyCallable
 from fp.callables._views import _UnaryViewable
 from .protocols import (_FamilyCarrier, _NativeFoldCompatible, _LiveAccumulator, _pure, Functor, Applicative, ApplicativeError, ErrorMapping, Monad, Traversable, Filterable, FunctorFilter, _Lifting, _Accumulate, _Present, _Item, _iterator,

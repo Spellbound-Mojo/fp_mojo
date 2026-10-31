@@ -10,7 +10,7 @@ def compatible[o: ImmOrigin](ref[o] value: Int) raises:
     comptime assert I.RunCompatible[I.Mapped[I.Collected[List[Int], F], Length]]
     comptime assert I.RunCompatible[I.Bound[I.Collected[List[Int], F], Continue]]
     comptime assert not I.RunCompatible[I.Collected[List[Int], Once]]
-    var single = traverse[OptionalFamily, I](Optional(7), Once())
+    var single = traverse[I, OptionalFamily](Optional(7), Once())
     var result = run[I](single^, 8)
     assert_equal(result[0].value(), 7)
     assert_equal(result[1], 8)

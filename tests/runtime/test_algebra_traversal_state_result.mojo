@@ -34,9 +34,9 @@ def check[retain:Bool, o:MutOrigin](ref[o] pulls:Int) raises where Base[retain].
             pulls=0
             var trace=ArcPointer(List[Int]())
             comptime assert I.CollectCompatible[Counted[origin_of(pulls)],Produce[retain]]
-            var computation:type_of(traverse[ListFamily,I](Counted(Pointer(to=pulls),0,count),Produce[retain](trace,failure)))
+            var computation:type_of(traverse[I, ListFamily](Counted(Pointer(to=pulls),0,count),Produce[retain](trace,failure)))
             try:
-                computation=traverse[ListFamily,I](Counted(Pointer(to=pulls),0,count),Produce[retain](trace,failure))
+                computation=traverse[I, ListFamily](Counted(Pointer(to=pulls),0,count),Produce[retain](trace,failure))
             except error:
                 comptime assert type_of(error)==Never
                 _propagate_error[Never](error^)

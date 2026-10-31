@@ -32,7 +32,7 @@ def forward_map[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable 
 def forward_pair[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) raises I.CombineError[V,F,R] -> I.Combined[V,F,R] where I.CombineCompatible[V,F,R]:
     return map2_lazy[I](left^, right^, f^)
 def forward_traverse[S: Traversable, G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var source: V) raises S.TraverseError[G,V,F] -> S.Traversed[G,V,F] where S.Element[V] == F.Arg and S.TargetCompatible[G,V,F]:
-    return traverse[S,G](source^, f^)
+    return traverse[G, S](source^, f^)
 def forward_result[T: Movable & Deinitable, E: Movable & Deinitable, F: OnceUnary](var source: Result[T,E], var f: F) raises F.Error -> Result[F.Out,E] where F.Arg == T:
     return map[ResultFamily[E]](source^, f^)
 
@@ -76,7 +76,7 @@ def check(owner: List[Int]) raises:
     assert_equal(selected._ok().value, List[Int]([4,5]))
     var inputs = List[Result[Int,Stored]]()
     inputs.append(Ok(7))
-    assert_equal(sequence[ListFamily,Sequential](inputs^)._ok().value, List[Int]([7]))
+    assert_equal(sequence[Sequential, ListFamily](inputs^)._ok().value, List[Int]([7]))
     var inputs2 = List[Result[Int,Stored]]()
     inputs2.append(Ok(8))
     assert_equal(piped(inputs2^).sequence[ListFamily,Accumulating]().get()._ok().value, List[Int]([8]))

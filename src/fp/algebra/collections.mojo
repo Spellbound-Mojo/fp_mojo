@@ -17,9 +17,8 @@ from fp.callables.products import _take_pair
 from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary, MutableUnary, BorrowCallable
 from fp.callables.invoke import call_repeated, RepeatableUnary
 from .protocols import Functor, RebindingFunctor, Filterable, FunctorFilter, _Accumulate, _map_accumulate
-from .filtering import _Select, _Keep
+from ._selection import _Select, _Keep
 from .instances import _ListElement, ListFamily, _NativeFamily, IdentityFamily
-from .protocols import _FamilyCarrier
 from fp.iteration._advance import _next_optional, _buffer_owned
 from fp.iteration.reductions import _Terminal
 from fp.iteration.adapters import map as _lazy_map
@@ -227,18 +226,19 @@ struct _DictInsert[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hashe
         return acc^
 
 
-# Piped's default capability family: the native carriers _NativeFamily
-# recognizes plus the std sequences above. Effect carriers and bare values get
-# _NoContainerFamily, which conforms to no capability, so a defaulted family
-# admits nothing and an explicit family still binds.
-struct _NoContainerFamily:
+# The default family of a source value, for operations that take the value
+# first: what _NativeFamily recognizes (declared effect families, Result, List,
+# Optional) plus the std sequences above. Other values get _UnrecognizedCarrier,
+# which conforms to no capability, so a defaulted family admits no call and an
+# explicit family still binds.
+struct _UnrecognizedCarrier:
     pass
 
 
-comptime _ContainerFamily[V: Movable & Deinitable] = (
+comptime _SourceFamily[V: Movable & Deinitable] = (
     _DequeFamily if conforms_to(V, IterableOwned) and V == Deque[_ListElement[V]] else
     _LinkedListFamily if conforms_to(V, IterableOwned) and V == LinkedList[_ListElement[V]] else
-    _NoContainerFamily if conforms_to(V, _FamilyCarrier) or _NativeFamily[V] == IdentityFamily else
+    _UnrecognizedCarrier if _NativeFamily[V] == IdentityFamily else
     _NativeFamily[V]
 )
 

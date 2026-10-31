@@ -6,6 +6,9 @@ from fp.callables._transforms import _ValueThunk as _Value, _Pair, _KeepOperand,
 from .contracts import ApContract, ProductContract, ProductLeftContract, ProductRightContract, Map2Contract, _Function
 from .protocols import Applicative, Monad, Traversable, _map2_lazy_as
 from fp._internal.errors import _ErrorCompatible
+from std.builtin.rebind import downcast
+from .collections import _SourceFamily
+from .instances import _InferredApplicative
 
 
 def _map2_as[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable,
@@ -22,7 +25,7 @@ def _map2_as[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract
 comptime _Same[T: Movable & Deinitable] = Identity[T]
 
 
-def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative](
+def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](
     var f: F, var left: V, var right: W
 ) raises Map2Contract[I, V, W, F].Error -> Map2Contract[I, V, W, F].Out where Map2Contract[I, V, W, F].OperationCompatible:
     """Combine two carriers with `f`, where the right one is already computed.
@@ -33,7 +36,7 @@ def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & M
         V: The left carrier's type.
         W: The right carrier's type.
         F: The combiner's type: a library `Binary` value.
-        I: The instance.
+        I: The instance; defaults to the first carrier's family.
 
     Args:
         f: The combiner, consumed.
@@ -49,14 +52,14 @@ def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & M
     return _map2_as[I, X=Map2Contract[I, V, W, F].Error](f^, left^, right^)
 
 
-def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W
+def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var functions: V, var values: W
 ) raises ApContract[I, V, W].Error -> ApContract[I, V, W].Out where ApContract[I, V, W].OperationCompatible:
     """Apply the callbacks a carrier holds to the values another carrier holds.
 
     Parameters:
         V: The type of the carrier of callbacks, which are library `Unary` values.
         W: The type of the carrier of values.
-        I: The instance.
+        I: The instance; defaults to the first carrier's family.
 
     Args:
         functions: The carrier of callbacks, consumed.
@@ -72,13 +75,13 @@ def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var
     return map2[I](_Apply[_Function[I, V]](), functions^, values^)
 
 
-def flatten[V: Movable & Deinitable, //, I: Monad](var nested: V
+def flatten[V: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var nested: V
 ) raises I.BindError[V, _Same[I.Element[V]]] -> I.Bound[V, _Same[I.Element[V]]] where _BindCompatible[I, V, _Same[I.Element[V]]]:
     """Remove one level of the same context: `flat_map` with the identity.
 
     Parameters:
         V: The nested carrier's type, such as `Optional[Optional[A]]`.
-        I: The instance.
+        I: The instance; defaults to the first carrier's family.
 
     Args:
         nested: The nested carrier, consumed.
@@ -92,14 +95,14 @@ def flatten[V: Movable & Deinitable, //, I: Monad](var nested: V
     return I.flat_map(Identity[I.Element[V]](), nested^)
 
 
-def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V
+def sequence[V: Movable & Deinitable, //, G: Applicative = _InferredApplicative[downcast[_SourceFamily[V], Traversable].Element[V]], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V
 ) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]] where S.TargetCompatible[G, V, _Same[S.Element[V]]]:
     """Turn a source of `G` carriers into one `G` carrier of the source: `traverse` with the identity.
 
     Parameters:
         V: The source's type, such as `List[Optional[A]]`.
-        S: The source's instance.
-        G: The carriers' instance.
+        G: The carriers' instance; defaults to the family of the source's elements.
+        S: The source's instance; defaults to the source's family.
 
     Args:
         source: The source, consumed.
@@ -114,14 +117,14 @@ def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var so
     return S.traverse[G](Identity[S.Element[V]](), source^)
 
 
-def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W
+def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W
 ) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible:
     """Combine already computed operands into pairs through map2.
 
     Parameters:
         V: The left carrier type, including origins.
         W: The right carrier type, including origins.
-        I: The Applicative family, which defines combination and errors.
+        I: The Applicative family, which defines combination and errors; defaults to the first carrier's family.
 
     Args:
         left: The first carrier, consumed.
@@ -136,7 +139,7 @@ def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative
     return map2[I](_Pair[I.Element[V], I.Element[W]](), left^, right^)
 
 
-def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W
+def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W
 ) raises ProductLeftContract[I, V, W].Error -> ProductLeftContract[I, V, W].Out where ProductLeftContract[I, V, W].Compatible:
     """Combine existing effects and keep the left payload on success.
 
@@ -147,7 +150,7 @@ def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicati
     Parameters:
         V: The complete left carrier type, including origins.
         W: The complete right carrier type, including origins.
-        I: The Applicative family owning combination and errors.
+        I: The Applicative family owning combination and errors; defaults to the first carrier's family.
 
     Args:
         left: The first carrier, consumed.
@@ -162,7 +165,7 @@ def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicati
     return map2[I](_KeepOperand[I.Element[V], I.Element[W], True](), left^, right^)
 
 
-def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W
+def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W
 ) raises ProductRightContract[I, V, W].Error -> ProductRightContract[I, V, W].Out where ProductRightContract[I, V, W].Compatible:
     """Combine existing effects and keep the right payload on success.
 
@@ -172,7 +175,7 @@ def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicati
     Parameters:
         V: The complete left carrier type, including origins.
         W: The complete right carrier type, including origins.
-        I: The Applicative family owning combination and errors.
+        I: The Applicative family owning combination and errors; defaults to the first carrier's family.
 
     Args:
         left: The first carrier, consumed; its successful payload is discarded.

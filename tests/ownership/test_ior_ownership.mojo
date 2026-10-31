@@ -157,7 +157,7 @@ def main() raises:
     assert_equal(drops[], [1, 1, 1, 0, 0])
     drops[] = [0, 0, 0, 0, 0]
     calls[] = 0
-    var collected = traverse[ListFamily, IOV](List[Int]([0, 1, 2, 3]), IOVisit(calls, drops))
+    var collected = traverse[IOV, ListFamily](List[Int]([0, 1, 2, 3]), IOVisit(calls, drops))
     assert_equal(calls[], 4)
     assert_equal(drops[], [1, 1, 0, 1, 0])
     assert_equal(collected[Left[IOE]].value.first().id, 2)

@@ -713,7 +713,7 @@ errors and callback owners are moved without implicit copies. Native callbacks
 and shared Kleisli chains are borrowed for the call.
 
 For an explicit source family, use the existing
-`traverse[SourceFamily, ValidationFamily[ErrorCombiner]]` operation. Custom
+`traverse[ValidationFamily[ErrorCombiner], SourceFamily]` operation. Custom
 sources need only their existing Traversable implementation. `map_n`,
 `traverse` with `ResultFamily`, and dependent `flat_map` keep their usual
 short circuit behavior.

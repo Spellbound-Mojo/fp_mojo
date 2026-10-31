@@ -155,7 +155,7 @@ def k_callback_admission() raises:
     assert_equal(flat_map[ResultFamily[String]](Result[Int, String](Ok(5)), chain).raise_on_err(), 12)
     var gathered = piped(List[Int]([1, 2])).traverse[ResultFamily[String]](chain).get()
     assert_equal(gathered^.raise_on_err(), [4, 6])
-    assert_equal(traverse[ListFamily, ResultFamily[String]](List[Int]([2, 3]), chain).raise_on_err(), [6, 8])
+    assert_equal(traverse[ResultFamily[String], ListFamily](List[Int]([2, 3]), chain).raise_on_err(), [6, 8])
     assert_equal(iterated(range(2)).traverse[ResultFamily[String]](chain).raise_on_err(), [2, 4])
     assert_equal(iterator_traverse[ResultFamily[String]](range(2), chain).raise_on_err(), [2, 4])
     var mapped = map[OptionalFamily](Optional(6), chain)

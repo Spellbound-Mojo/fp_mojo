@@ -88,7 +88,7 @@ def check_derived_and_laws() raises:
     var nested:List[List[Int]]=[L(1,2),L(3)]
     assert_equal(flatten[ListFamily](nested^),L(1,2,3))
     var options:List[Optional[Int]]=[Optional(1),Optional(2)]
-    assert_equal(sequence[ListFamily,OptionalFamily](options^).value(),L(1,2))
+    assert_equal(sequence[OptionalFamily, ListFamily](options^).value(),L(1,2))
     assert_equal(empty[StringMonoid](),String())
     assert_equal(combine[StringMonoid](String("a"),String("b")),String("ab"))
     assert_equal(combine[ListMonoid[Int]](L(1,2),L(3)),L(1,2,3))

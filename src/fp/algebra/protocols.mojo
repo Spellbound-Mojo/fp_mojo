@@ -721,6 +721,15 @@ def _map_as[E: Movable & Deinitable, M: Functor, V: Movable & Deinitable, F: Una
         _propagate_error[E](error^)
 
 
+def _filter_map_as[E: Movable & Deinitable, M: FunctorFilter, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
+    var f: F, var value: V
+) raises E -> M.MapFiltered[V, F] where _ErrorCompatible[E, M.MapFilterError[V, F]]:
+    try:
+        return M.filter_map(f^, value^)
+    except error:
+        _propagate_error[E](error^)
+
+
 def _flat_map_as[E: Movable & Deinitable, M: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var f: F, var value: V
 ) raises E -> M.Bound[V, F] where _ErrorCompatible[E, M.BindError[V, F]]:

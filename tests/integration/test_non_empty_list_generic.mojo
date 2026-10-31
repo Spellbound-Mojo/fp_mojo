@@ -37,7 +37,7 @@ def main() raises:
     singleton.first()[0] = 7
     _ = singleton^
     assert_equal(mutable_values[0], 7)
-    var effect = traverse[NonEmptyListFamily, Reader[Int]](NonEmptyList(1, List[Int]([2])), nelg_produce)
+    var effect = traverse[Reader[Int], NonEmptyListFamily](NonEmptyList(1, List[Int]([2])), nelg_produce)
     var result = run[Reader[Int]](effect^, 42)
     assert_equal(result^.into_list(), [1, 2])
     print("non-empty list generic: ok")

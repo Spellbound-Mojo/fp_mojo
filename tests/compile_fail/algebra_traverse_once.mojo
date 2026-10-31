@@ -12,4 +12,4 @@ struct Once(OnceUnary,Defaultable):
 
 def main() raises:
     var values:List[Int]=[1,2]
-    _=run[State[Int]](traverse[ListFamily,State[Int]](values^,Once()),0)
+    _=run[State[Int]](traverse[State[Int], ListFamily](values^,Once()),0)

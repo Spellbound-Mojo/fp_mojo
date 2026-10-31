@@ -8,7 +8,7 @@ def escape[o:ImmOrigin](ref[o] owner:Int)->Optional[Pointer[Int,o]]:
     var local_value=3
     var environment=0
     comptime R=Reader[Int]
-    var pending=sequence[OptionalFamily,R](Optional(R.pure(read_pointer(local_value))))
+    var pending=sequence[R, OptionalFamily](Optional(R.pure(read_pointer(local_value))))
     return run[R](pending^,environment)
 
 def main():

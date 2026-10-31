@@ -206,10 +206,10 @@ def main() raises:
     var mapped = map[TwoFamily](Two(1, 2), as_unary(increment))
     assert_equal(mapped.first, 2)
     assert_equal(mapped.second, 3)
-    var traversed = traverse[TwoFamily, CellFamily](Two(1, 2), as_unary(as_cell))
+    var traversed = traverse[CellFamily, TwoFamily](Two(1, 2), as_unary(as_cell))
     assert_equal(traversed.value.first, 101)
     assert_equal(traversed.value.second, 102)
-    var collected = traverse[ListFamily, CellFamily]([1, 2, 3], as_unary(as_cell))
+    var collected = traverse[CellFamily, ListFamily]([1, 2, 3], as_unary(as_cell))
     assert_equal(collected.value, [101, 102, 103])
     assert_equal(combine[CountMonoid](empty[CountMonoid](), 5), 5)
     var environment = 21

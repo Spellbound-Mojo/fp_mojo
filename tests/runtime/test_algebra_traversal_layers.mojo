@@ -28,7 +28,7 @@ def logged(var item:Int)->type_of(writer[W,Int](Tuple(String(),0))):
 def main() raises:
     for count in [0,2,5]:
         var pulls=0
-        var computation=traverse[ListFamily,OptionalT[R]](Counted(Pointer(to=pulls),0,count),as_unary(option))
+        var computation=traverse[OptionalT[R], ListFamily](Counted(Pointer(to=pulls),0,count),as_unary(option))
         assert_equal(pulls,0)
         var environment=10
         var output=run[R](computation^,environment)
@@ -38,7 +38,7 @@ def main() raises:
             assert_equal(output.take(),List[Int]() if count==0 else ints(11,12))
     for count in [0,3]:
         var pulls=0
-        var output=run_writer[W](traverse[ListFamily,W](Counted(Pointer(to=pulls),0,count),as_unary(logged)))
+        var output=run_writer[W](traverse[W, ListFamily](Counted(Pointer(to=pulls),0,count),as_unary(logged)))
         assert_equal(output[0],"" if count==0 else "123")
         assert_equal(output[1],List[Int]() if count==0 else ints(2,4,6))
         assert_equal(pulls,count+1)

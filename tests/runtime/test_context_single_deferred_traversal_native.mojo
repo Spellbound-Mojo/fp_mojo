@@ -23,7 +23,7 @@ def main() raises:
     var output=Optional[Int]()
     var construction_error=0
     try:
-        var free=traverse[OptionalFamily,R](Optional(3),read)
+        var free=traverse[R, OptionalFamily](Optional(3),read)
         free_output=run[R](free^,env)
         var selected=pipeline(Optional(3)).raising[Int]().traverse[R](read).get()
         output=run[R](selected^,env)
@@ -37,7 +37,7 @@ def main() raises:
     var result=run[S](legacy^,10)
     assert_equal(result[0].take(),5)
     assert_equal(result[1],10)
-    var seq=sequence[OptionalFamily,R](Optional(R.pure(9)))
+    var seq=sequence[R, OptionalFamily](Optional(R.pure(9)))
     var seq_result=run[R](seq^,env)
     assert_equal(seq_result.take(),9)
     var result_seq=pipeline(Result[R.Pure[Int],String](Ok(R.pure(7)))).sequence[R]().get()

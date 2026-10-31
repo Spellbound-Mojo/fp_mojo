@@ -58,6 +58,15 @@ def callable_metadata(mode, owner):
     )
 
 
+def source_default(trait, value="V"):
+    """The default capability family of a source value (see _SourceFamily).
+
+    An unrecognized value yields _UnrecognizedCarrier, whose cast satisfies no
+    family admission, so the call is rejected; an explicit family still binds.
+    """
+    return f"downcast[_SourceFamily[{value}], {trait}]"
+
+
 def callable_protocol(mode, *, repeatable=False):
     """The library protocol for a callback shape, before native admission."""
     shape = CALLBACK_SHAPES[mode]

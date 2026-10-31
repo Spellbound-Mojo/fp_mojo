@@ -76,7 +76,7 @@ def collected[library:Bool](n:Int,seed:Int)->Int:
             source.append(code+index+batch)
         var result:List[Int]
         comptime if library:
-            result=traverse[ListFamily,IdentityApplicative](source^,Mix())
+            result=traverse[IdentityApplicative, ListFamily](source^,Mix())
         else:
             result=List[Int]()
             for item in source^:

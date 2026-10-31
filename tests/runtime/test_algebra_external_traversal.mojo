@@ -61,7 +61,7 @@ def check[kind:Int]() raises:
             log+=String(item)
         var pulls=0
         comptime if kind==0:
-            var reader=traverse[ListFamily,R](Counted(Pointer(to=pulls),0,count),as_unary(read_box))
+            var reader=traverse[R, ListFamily](Counted(Pointer(to=pulls),0,count),as_unary(read_box))
             assert_equal(pulls,0)
             var environment=10
             var read_output=run[R](reader^,environment)
@@ -69,7 +69,7 @@ def check[kind:Int]() raises:
             assert_equal(read_output.value,reads)
             assert_equal(pulls,count+1)
         elif kind==1:
-            var computation=traverse[ListFamily,S](Counted(Pointer(to=pulls),0,count),as_unary(state_box))
+            var computation=traverse[S, ListFamily](Counted(Pointer(to=pulls),0,count),as_unary(state_box))
             assert_equal(pulls,0)
             var state_output=run[S](computation^,10)
             comptime assert type_of(state_output)==Box[Tuple[List[Int],Int]]
@@ -77,14 +77,14 @@ def check[kind:Int]() raises:
             assert_equal(state_output.value[1],state)
             assert_equal(pulls,count+1)
         elif kind==2:
-            var optional=traverse[ListFamily,OptionalT[BoxMonad]](Counted(Pointer(to=pulls),0,count),as_unary(optional_box))
+            var optional=traverse[OptionalT[BoxMonad], ListFamily](Counted(Pointer(to=pulls),0,count),as_unary(optional_box))
             comptime assert type_of(optional)==Box[Optional[List[Int]]]
             assert_equal(Bool(optional.value),count!=5)
             if optional.value:
                 assert_equal(optional.value.value(),values)
             assert_equal(pulls,3 if count==5 else count+1)
         elif kind==3:
-            var result=traverse[ListFamily,ResultT[BoxMonad,Int]](Counted(Pointer(to=pulls),0,count),as_unary(result_box))
+            var result=traverse[ResultT[BoxMonad,Int], ListFamily](Counted(Pointer(to=pulls),0,count),as_unary(result_box))
             comptime assert type_of(result)==Box[Result[List[Int],Int]]
             assert_equal(result.value.is_err(),count==5)
             var stored=0
@@ -98,7 +98,7 @@ def check[kind:Int]() raises:
             assert_equal(stored,37 if count==5 else 0)
             assert_equal(pulls,3 if count==5 else count+1)
         elif kind==4:
-            var written=run_writer[W](traverse[ListFamily,W](Counted(Pointer(to=pulls),0,count),as_unary(writer_box)))
+            var written=run_writer[W](traverse[W, ListFamily](Counted(Pointer(to=pulls),0,count),as_unary(writer_box)))
             comptime assert type_of(written)==Box[Tuple[String,List[Int]]]
             assert_equal(written.value[0],log)
             assert_equal(written.value[1],values)

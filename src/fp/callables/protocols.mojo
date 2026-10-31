@@ -298,3 +298,10 @@ struct _ErrorProbe[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable 
     comptime Arg = Self.A
     comptime Out = Self.R
     comptime Error = Self.E
+
+
+# The borrowing counterpart, for predicates and other borrowing callbacks.
+struct _BorrowErrorProbe[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable](BorrowCallContract):
+    comptime Payload = Self.P
+    comptime Result = Self.R
+    comptime Failure = Self.E

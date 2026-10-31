@@ -1,7 +1,7 @@
 """Native boundaries for shared effectful folds and conditional composition."""
 from itertools import product
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure
+from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure, source_default
 from operation_specs import EFFECT_REDUCTIONS, EffectChoice
 
 START = '# --- effect syntax (generated) ---\n'
@@ -140,10 +140,14 @@ def conditional(mode, family=None):
                 args += [form.argument]
         if mode == 'free': params += [f'V: {MD}']
         if family == 'Result': params += [f'Failure: {MD}']
-        params += ['//']
         g = f'ResultFamily[Self.E]' if mode == 'result' else f'ResultFamily[Failure]' if family == 'Result' else family+'Family' if family else 'G'
-        if not family and mode != 'result': params += ['G: Monad']
-        params += explicit + ['X: AnyType = _InferError']
+        if mode == 'free':
+            # The condition's family is the default, so the factories are inferred.
+            params += explicit + ['//', 'G: Monad = ' + source_default('Monad'), 'X: AnyType = _InferError']
+        else:
+            params += ['//']
+            if not family and mode != 'result': params += ['G: Monad']
+            params += explicit + ['X: AnyType = _InferError']
         source = 'V' if mode == 'free' else 'Result[Self.T, Self.E]' if mode == 'result' else f'Result[Bool, Failure]' if family == 'Result' else f'{family}[Bool]' if family else 'Self.Value'
         value = 'condition^' if mode == 'free' else 'self^' if mode == 'result' else f'rebind_var[{source}](self.value^)' if family else 'self.value^'
         # Spell native error evidence directly, as the algebra entry points do.

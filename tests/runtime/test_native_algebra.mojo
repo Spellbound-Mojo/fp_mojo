@@ -64,9 +64,9 @@ def instances() raises:
     assert_false(Bool(flat_map[OptionalFamily](Optional(-1), positive)))
     assert_equal(flat_map[ResultFamily[String]](Result[Int, String](Ok(8)), halve).raise_on_err(), 4)
     var valid: List[Int] = [1, 2]
-    assert_equal(len(traverse[ListFamily, OptionalFamily](valid^, positive).value()), 2)
+    assert_equal(len(traverse[OptionalFamily, ListFamily](valid^, positive).value()), 2)
     var invalid: List[Int] = [1, -2]
-    assert_false(Bool(traverse[ListFamily, OptionalFamily](invalid^, positive)))
+    assert_false(Bool(traverse[OptionalFamily, ListFamily](invalid^, positive)))
     # Closures keep their captures; the callback is borrowed, not copied.
     var calls = 0
     def counted(value: Int) {mut calls} -> Int:

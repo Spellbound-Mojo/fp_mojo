@@ -45,7 +45,7 @@ def check[is_state:Bool,is_result:Bool]() raises:
                 comptime Pending=TraverseContract[S,I,V,Produce[I]].Out
                 var pending=Optional[Pending]()
                 try:
-                    pending=Optional(traverse[S,I](source^,Produce[I](Owner(10,captures),calls,fail)))
+                    pending=Optional(traverse[I, S](source^,Produce[I](Owner(10,captures),calls,fail)))
                 except error:
                     comptime assert type_of(error)==Int
                     caught=rebind_var[Int](error^)

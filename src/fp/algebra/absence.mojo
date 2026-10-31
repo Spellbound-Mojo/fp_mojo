@@ -4,6 +4,8 @@ from fp.callables.protocols import ThunkContract, OnceUnary, MutableUnary
 from fp.callables.invoke import RepeatableThunk, _OnceThunkAvailable
 from fp.callables._receiver import _thunk_once_as, _ThunkView
 from fp.callables.native import _NativeThunk, _Thunk, _RaisingThunk
+from .collections import _SourceFamily
+from std.builtin.rebind import downcast
 from .protocols import Monad, _pure, _flat_map_as
 from .instances import OptionalFamily
 from ._primitive_contracts import BindContract
@@ -81,7 +83,7 @@ def _fallback[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & De
     return _flat_map_as[C.Error, I](C.Continuation(function^), source^)
 
 
-def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad](
+def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](
     var fallback: F, var source: V
 ) raises AbsenceContract[I, V, F].Error -> AbsenceContract[I, V, F].Out where AbsenceContract[I, V, F].Compatible:
     """Use a lazy effectful fallback only for an absent Optional payload.
@@ -95,7 +97,7 @@ def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinita
     Parameters:
         V: The base carrier of Optional[A].
         F: A factory returning a base carrier of Optional[A].
-        I: The base Monad, not the OptionalT layer over it.
+        I: The base Monad, not the OptionalT layer over it; defaults to the source's family.
 
     Args:
         fallback: The factory, consumed; skipped on presence or base failure.
@@ -110,7 +112,7 @@ def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinita
     return _fallback[I, V, F, True](fallback^, source^)
 
 
-def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad](
+def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](
     var fallback: F, var source: V
 ) raises AbsenceContract[I, V, F, False].Error -> AbsenceContract[I, V, F, False].Out where AbsenceContract[I, V, F, False].Compatible:
     """Remove Optional by keeping a present value or running a lazy base effect.
@@ -121,7 +123,7 @@ def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Dei
     Parameters:
         V: The base carrier of Optional[A].
         F: A factory returning a base carrier of A.
-        I: The base Monad.
+        I: The base Monad; defaults to the source's family.
 
     Args:
         fallback: The factory, consumed; called only on an absent payload.
@@ -136,25 +138,25 @@ def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Dei
     return _fallback[I, V, F, False](fallback^, source^)
 
 
-def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Thunk[R]](var fallback: F, var source: V
+def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, F: _Thunk[R], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V
 ) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Compatible:
     """Select a fallback supplied as an owned native function or closure."""
     return or_else_absent[I](_NativeThunk[R, Never, F, False](fallback^), source^)
 
 
-def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingThunk[R, E]](var fallback: F, var source: V
+def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingThunk[R, E], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V
 ) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Compatible:
     """Select a fallback supplied as an owned native function or closure."""
     return or_else_absent[I](_NativeThunk[R, E, F, True](fallback^), source^)
 
 
-def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Thunk[R]](var fallback: F, var source: V
+def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, F: _Thunk[R], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V
 ) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Compatible:
     """Select a fallback supplied as an owned native function or closure."""
     return get_or_else_effect[I](_NativeThunk[R, Never, F, False](fallback^), source^)
 
 
-def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingThunk[R, E]](var fallback: F, var source: V
+def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingThunk[R, E], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V
 ) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Compatible:
     """Select a fallback supplied as an owned native function or closure."""
     return get_or_else_effect[I](_NativeThunk[R, E, F, True](fallback^), source^)

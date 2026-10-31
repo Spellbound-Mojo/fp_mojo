@@ -14,7 +14,7 @@ def check(anchor: List[Int], local: List[Int]):
     comptime Family = ResultFamily[Expected]
     var source = List[Result[Int, Actual]]()
     source.append(Result[Int, Actual](Err(actual)))
-    _ = sequence[ListFamily, Family](source^)
+    _ = sequence[Family, ListFamily](source^)
 def main():
     var anchor: List[Int] = [1]
     var local: List[Int] = [2]

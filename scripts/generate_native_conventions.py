@@ -5,6 +5,7 @@ from pathlib import Path
 from native_signatures import (
     admissions,
     MD,
+    source_default,
     native_dispatch,
     NATIVE_INVOCATIONS,
     native_factories,
@@ -322,14 +323,16 @@ def scoped_pointers():
     return "".join(out)
 
 
-# Each operation: family parameters, explicit binding, carrier argument,
-# element, error and result families, family admission and shared entry.
+# Each operation: family parameters (target first, each defaulted), carrier
+# argument, element, error and result families, family admission and shared
+# entry. A source family defaults to the carrier's; a target family to the
+# callback result's ({R}), or a view's declared family ({VIEW}).
 ALGEBRA_OPERATIONS = (
-    ("map", "I: Functor", "I", "value", "I.Element[V]", "I.MapError[V, {D}]", "I.Mapped[V, {D}]",
+    ("map", ("I: Functor = " + source_default("Functor"),), "value", "I.Element[V]", "I.MapError[V, {D}]", "I.Mapped[V, {D}]",
      "_MapCompatible[I, V, {D}]", "_map_as[{Raised}, I]"),
-    ("flat_map", "I: Monad", "I", "value", "I.Element[V]", "I.BindError[V, {D}]", "I.Bound[V, {D}]",
+    ("flat_map", ("I: Monad = " + source_default("Monad"),), "value", "I.Element[V]", "I.BindError[V, {D}]", "I.Bound[V, {D}]",
      "_BindCompatible[I, V, {D}]", "_flat_map_as[{Raised}, I]"),
-    ("traverse", "S: Traversable, G: Applicative", "S, G", "source", "S.Element[V]", "S.TraverseError[G, V, {D}]",
+    ("traverse", ("G: Applicative = {TARGET}", "S: Traversable = " + source_default("Traversable")), "source", "S.Element[V]", "S.TraverseError[G, V, {D}]",
      "S.Traversed[G, V, {D}]", "S.TargetCompatible[G, V, {D}]", "_traverse_as[S, G, V, {D}, {Raised}]"),
 )
 
@@ -343,7 +346,7 @@ def algebra_overloads():
     forwarding a raising closure may name its error with `X=`.
     """
     out = []
-    for name, family, explicit, carrier, element, error, result, admission, entry in ALGEBRA_OPERATIONS:
+    for name, families, carrier, element, error, result, admission, entry in ALGEBRA_OPERATIONS:
         for form in admissions("owned", [element], library=False, names={"X": "E", "C": "F", "in0": "A"}):
             D = form.type
             if form.kind == "view":
@@ -358,7 +361,9 @@ def algebra_overloads():
                 raised = error.format(D=f"_ErrorProbe[{probe_input}, {form.result}, {form.error}]")
                 hint = ", X: AnyType = _InferError" if form.kind == "closure" and form.raising else ""
             declared = f"_EntryError[X, {raised}]" if hint else raised
-            parameters = [f"V: {MD}", *form.parameters, "//", family, *form.explicit]
+            target = "_ViewTarget[F, o]" if form.kind == "view" else f"_InferredApplicative[{form.result}]"
+            # Callback types are inferred so that every family can default.
+            parameters = [f"V: {MD}", *form.parameters, *form.explicit, "//", *(f.replace("{TARGET}", target) for f in families)]
             guards = [*form.conditions, admission.format(D=D)]
             if hint:
                 guards.append(f"(X == _InferError or X == {form.error})")

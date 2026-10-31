@@ -111,7 +111,7 @@ def filter_methods(carrier, name, description):
     for raising in (False, True):
         parameters = [f'T: {MD}', f'R: {MD}', *carrier.parameters, '//']
         parameters += closure('borrow', raising, names={'C': 'F', 'X': 'E', 'in0': 'T'}).explicit
-        operation = f'_family_{name}[{family}' + (', E=E]' if raising else ']')
+        operation = f'_family_{name}[{family}' + ']'
         out.append(forward(name, parameters, 'ref predicate: F', source, source,
                            operation, 'predicate', f'{description} {carrier.name} payloads immediately, preserving their container.',
                            'E' if raising else '', f'R == Bool and Self.Value == {source}'))

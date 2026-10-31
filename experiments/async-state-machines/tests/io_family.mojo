@@ -115,7 +115,7 @@ def iteration():
     var values = List[Int]()
     for index in range(DEPTH):
         values.append(index)
-    var mapped = run(traverse[ListFamily, Async[Int]](values^, twice))
+    var mapped = run(traverse[Async[Int], ListFamily](values^, twice))
     var list = mapped.take()._take_ok()
     check(len(list) == DEPTH and list[0] == 0 and list[DEPTH - 1] == 2 * (DEPTH - 1), "traversal keeps source order")
     var pulls = ArcPointer(0)

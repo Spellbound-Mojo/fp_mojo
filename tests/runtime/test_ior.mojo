@@ -102,20 +102,20 @@ def main() raises:
             if b != 1: issues += "b"
             ir_check(accumulated, a != 0 and b != 0, issues, 5)
     calls[] = 0
-    var seq = traverse[ListFamily, IS](List[Int]([1, -2, 3, -4]), IRVisit(calls))
+    var seq = traverse[IS, ListFamily](List[Int]([1, -2, 3, -4]), IRVisit(calls))
     assert_equal(calls[], 2)
     assert_equal(seq[Left[String]].value, "1-2")
     calls[] = 0
-    var acc = traverse[ListFamily, IV](List[Int]([1, -2, 3, -4]), IRVisit(calls))
+    var acc = traverse[IV, ListFamily](List[Int]([1, -2, 3, -4]), IRVisit(calls))
     assert_equal(calls[], 4)
     assert_equal(acc[Left[String]].value, "1-23-4")
-    var success = traverse[ListFamily, IV](List[Int]([1, 2]), IRVisit(calls))
+    var success = traverse[IV, ListFamily](List[Int]([1, 2]), IRVisit(calls))
     assert_equal(success[Both[String, List[Int]]].left, "12")
     assert_equal(success[Both[String, List[Int]]].right, [10, 20])
-    var empty = traverse[ListFamily, IV](List[Int](), IRVisit(calls))
+    var empty = traverse[IV, ListFamily](List[Int](), IRVisit(calls))
     assert_equal(empty[Right[List[Int]]].value, List[Int]())
     comptime NE = IorValidationFamily[NonEmptyListSemigroup[Int]]
-    var nonempty = traverse[ListFamily, NE](List[Int]([1, -2, 3]), ir_nonempty)
+    var nonempty = traverse[NE, ListFamily](List[Int]([1, -2, 3]), ir_nonempty)
     assert_equal(nonempty[Left[NonEmptyList[Int]]].value.copy().into_list(), [1, -2, 3])
     var piped_value = piped(IR(Both(String("warning"), 5))).map[IS](ir_twice).get()
     ir_check(piped_value, True, "warning", 10)
@@ -132,7 +132,7 @@ def main() raises:
     calls[] = 0
     var iterator = iter(List[Int]([99, 1, 2]))
     _ = iterator.__next__()
-    var continued = traverse[ListFamily, IV](iterator^, IRVisit(calls))
+    var continued = traverse[IV, ListFamily](iterator^, IRVisit(calls))
     assert_equal(calls[], 2)
     assert_equal(continued[Both[String, List[Int]]].right, [10, 20])
     assert_equal(continued[Both[String, List[Int]]].left, "12")

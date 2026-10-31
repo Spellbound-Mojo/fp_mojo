@@ -1097,7 +1097,51 @@ explicit families still bound. Raising plain functions need the `_ErrorProbe`
 bridge used by `_map_native`. A carrier without a family must fall back to a
 family that admits no element, so it fails overload resolution instead of
 reporting an internal family error. `_NativeFamily` does not recognize `Dict`
-and `StringDict`. Decision: adopted, with family inference under discussion.
+and `StringDict`. Decision: adopted, after family inference (next section).
+
+### Family inference
+
+Decision: operations infer their families, and an explicit family is an
+override. Target families come first and source families second, both
+defaulted, on every surface: `traverse[G, S]`, `Piped.traverse[G, I]`.
+
+- **Source** families default to `_SourceFamily[V]` (`fp.algebra.collections`):
+  what `_NativeFamily` recognizes (declared effect families, `Result`, `List`,
+  `Optional`) plus `Deque` and `LinkedList`. Other values get
+  `_UnrecognizedCarrier`, which conforms to no capability. The default is
+  `downcast[_SourceFamily[V], Trait]`; `source_default()` in
+  `scripts/native_signatures.py` spells it for generators.
+- **Target** families default to `_InferredApplicative[R]` from the callback
+  result, or `_ViewTarget[F, o]` for a view, as `Iter` and `Pipeline` already did.
+- Callback type parameters move into the inferred region, ahead of `//`,
+  because Mojo rejects a required positional parameter after a defaulted one.
+  Keyword binding of an inferred parameter is rejected, so callers that bound
+  a callback's `E=` drop it; Mojo infers it from the callback.
+
+Probed and found while implementing:
+
+- A guard rejecting the unrecognized default by name
+  (`conforms_to(_SourceFamily[V], T) or S != default`) cannot be proven for a
+  generic caller that passes its own symbolic families, so it is not used. An
+  unrecognized carrier fails the operation's own family constraint instead:
+  `invalid call ... lacking evidence`, with a note naming `_UnrecognizedCarrier`
+  or the family's missing capability. Wrong callback inputs and bare callback
+  results still report `no matching function`.
+- Plain functions whose signature names the defaulted family
+  (`def(var _NativeOwnedArg[S.Element[V]]) thin -> R`) resolve.
+- A defaulted family's error alias does not reduce for raising plain functions,
+  the case `_ErrorProbe` solves for `map`. The explicit-family `filter`,
+  `filter_map` and Piped generic forms had the same gap. Raising forms name the
+  error through `_ErrorProbe` or `_BorrowErrorProbe` (for borrowing predicates)
+  and execute through `_filter_map_as` or `_filter_native`'s `Raised`.
+- A plain function that consumes its argument (`def f(var x: Int)`) binds the
+  borrowed-closure form, which `fp.effects.IO` rejects; a borrowing plain
+  function binds the owned form. This predates inference.
+
+Implementation, phase 2: the free `fp.algebra` operations listed in the
+[algebra reference](../reference/algebra.md#family-inference) default their
+families; `pure`, `fail`, `empty` and `combine` have no source value and keep
+explicit families.
 
 ## Callables and argument packs
 

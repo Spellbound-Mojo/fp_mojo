@@ -85,7 +85,7 @@ class GeneratedOverloadTests(unittest.TestCase):
         filtered = syntax.filter_methods(carrier, 'filter_not', 'Retain rejected')
         self.assertIn('Piped[Example[U, N]]', mapped)
         self.assertIn('_family_map[ExampleFamily[N], X=E]', mapped)
-        self.assertIn('_family_filter_not[ExampleFamily[N], E=E]', filtered)
+        self.assertIn('_family_filter_not[ExampleFamily[N]](', filtered)
         self.assertIn('where R == Bool and Self.Value == Example[T, N]', filtered)
         self.assertIn('C.Failure', filtered)
         self.assertIn('_Fill[T, U]', syntax.transform_methods(carrier))

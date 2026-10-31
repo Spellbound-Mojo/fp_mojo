@@ -72,7 +72,7 @@ def main() raises:
     calls[] = 0
     var raised = False
     try:
-        _ = traverse[ListFamily, IorValidationFamily[StringMonoid]](List[Int]([0, 1, 2, 3]), IEVisit(calls))
+        _ = traverse[IorValidationFamily[StringMonoid], ListFamily](List[Int]([0, 1, 2, 3]), IEVisit(calls))
     except error:
         raised = True
         assert_equal(error, "visit")

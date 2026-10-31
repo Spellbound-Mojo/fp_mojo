@@ -58,7 +58,7 @@ def main() raises:
     _ = joined^
     assert_equal(drops[], 12)
     var calls = ArcPointer(0)
-    var failed = traverse[NonEmptyListFamily, ValidationFamily[NonEmptyListSemigroup[NELOwner]]](
+    var failed = traverse[ValidationFamily[NonEmptyListSemigroup[NELOwner]], NonEmptyListFamily](
         NonEmptyList(1, List[Int]([2, 3])), NELValidate(drops, calls))
     assert_equal(calls[], 3)
     assert_equal(len(failed._err().value), 3)

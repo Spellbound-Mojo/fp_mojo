@@ -23,7 +23,7 @@ def check[stage:Int]() raises:
     var pulls=0
     var code=0
     try:
-        _=traverse[ListFamily,M](Counted(Pointer(to=pulls),0,5),Produce(calls))
+        _=traverse[M, ListFamily](Counted(Pointer(to=pulls),0,5),Produce(calls))
     except error:
         comptime assert type_of(error)==Int
         code=rebind[Int](error)

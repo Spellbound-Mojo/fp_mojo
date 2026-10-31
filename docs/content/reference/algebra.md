@@ -4,9 +4,32 @@ For a reusable generic wrapper, follow the [contract-forwarding guide](../guides
 
 `fp.algebra` provides Functor, Filterable, FunctorFilter, Applicative, ErrorRecovery, ApplicativeError, Monad, Traversable, Semigroup and Monoid
 interfaces. Their instances let you write generic operations over native values
-such as `Optional`, `Result` and `List`; select the instance at each call. When
-working with a single known type, you can also use its methods directly, such
-as `Result.map`.
+such as `Optional`, `Result` and `List`. When working with a single known type,
+you can also use its methods directly, such as `Result.map`.
+
+## Family inference
+
+The free operations infer their instances, so most calls name none:
+`map(values^, f)`, `filter(values^, predicate)`, `traverse(values^, f)`.
+
+| Family | Inferred from | Operations |
+|---|---|---|
+| Source | The value's type: `List`, `Optional`, `Result`, `Deque`, `LinkedList`, or an effect that declares its family | `map`, `flat_map`, `filter`, `filter_not`, `filter_map`, `compact`, `flatten`, `map2_lazy`, `product`, `product_l`, `product_r`, `ap`, `if_effect`, `or_else_absent`, `get_or_else_effect` |
+| Source | The step's result | `tail_rec_m` |
+| Target and source | The callback's result, then the source value | `traverse` (`G`, then `S`) |
+| Target and source | The source's elements, then the source value | `sequence` (`G`, then `S`) |
+
+Name a family to choose another policy for the same carrier, such as
+`traverse[ValidationFamily[M]](values^, f)` to accumulate errors instead of
+stopping at the first. Target families come first, so a single bracketed family
+overrides the target; name the source with `S=`. A bare value such as `Int` has
+no family of its own and needs `IdentityFamily`, and an `Optional` read through
+another base Monad names that base, as in `or_else_absent[IdentityFamily]`.
+A value with no recognized family is rejected with
+`invalid call ... lacking evidence`, whose note names `_UnrecognizedCarrier`.
+`pure`, `fail`, `empty` and `combine` take no source value and always name
+their family. Generic code whose callback result is a type parameter names its
+families, as before.
 
 The [algebra tutorial](../tutorial/algebra.md) explains when to use `map`,
 `map2`, `ap`, `flat_map`, `traverse` and `sequence` through optional order values.
@@ -483,9 +506,9 @@ always derive the full carrier proof from an equality like `R == Optional[A]`;
 use the public predicate alongside the operation's payload and error constraints.
 Ordinary calls infer their concrete carrier types as before.
 
-`filter[ListFamily](values^, predicate)` and
-`filter[OptionalFamily](value^, predicate)` retain accepted original payloads.
-`filter_not[Family](value^, predicate)` retains rejected payloads through the
+`filter(values^, predicate)` retains accepted original payloads of a list,
+an `Optional` or another Filterable carrier.
+`filter_not(value^, predicate)` retains rejected payloads through the
 same Filterable primitive. The predicate borrows each payload, returns Bool,
 and may raise a typed error. Owned `BorrowMutableCallable` and `BorrowCallable`
 values are both accepted; repeated invocation prefers the mutable receiver.
@@ -499,8 +522,8 @@ admission. The same partial works in inferred Piped container calls and lazy
 filtering; each native invocation keeps its documented bound-argument copies.
 
 
-`filter_map[Family](values^, transform)` uses `FunctorFilter` to transform
-payloads and retain present Optional results. `compact[Family](values^)`
+`filter_map(values^, transform)` uses `FunctorFilter` to transform
+payloads and retain present Optional results. `compact(values^)`
 derives from this primitive with the identity callback. This capability can
 change payload types; it is separate from `Filterable`, which retains original
 payloads. ListFamily and OptionalFamily implement both. The fluent native
@@ -597,7 +620,7 @@ native Optional, or the base of OptionalT. Present values and base failures
 skip the factory; earlier state and output are retained. A branching base calls
 a repeatable factory for each absent branch.
 
-`tail_rec_m[Family](initial, step)` repeatedly runs a step returning an effect
+`tail_rec_m(initial, step)` repeatedly runs a step returning an effect
 of `ControlFlow[B, A]`. Continue supplies the next state; Break supplies the
 result. The existing effectful fold gives built-in families constant call-stack
 usage in the number of steps, with no recursive callback chain. Family failure,
@@ -632,10 +655,11 @@ addition must not be reassociated using the Monoid laws.
 
 <!-- example: docs/examples/algebra_core.mojo -->
 
-`map[I](..., twice)` doubles `3` to `6` as a bare value, inside an `Optional`
-and inside a `Result`, and doubles `[1, 2, 3]` to `2 4 6`; each result keeps its
-native type. `flat_map[OptionalFamily](Optional(-1), positive)` lets `positive`
-return an absent value. `traverse[ListFamily, OptionalFamily](..., positive)`
+`map(..., twice)` doubles `3` to `6` as a bare value (with `IdentityFamily`),
+inside an `Optional` and inside a `Result`, and doubles `[1, 2, 3]` to `2 4 6`;
+each result keeps its native type. `flat_map(Optional(-1), positive)` lets
+`positive` return an absent value. `traverse(..., positive)` infers the
+Optional target from `positive` and
 returns a present list of three values for `[1, 2, 3]`, and an absent value
 for `[1, -2, 3]`, stopping at `-2`.
 

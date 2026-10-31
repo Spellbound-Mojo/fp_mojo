@@ -812,7 +812,7 @@ independently, so a consuming callback remains valid for a single Result. Mappin
 Generic forwarding signatures must now carry the corresponding predicates.
 For example, a wrapper around `map[I](value^, f^)` returning `I.Mapped[V, F]`
 needs `where I.Element[V] == F.Arg and I.MapCompatible[V, F]`; a wrapper around
-`traverse[S, G]` needs `where S.Element[V] == F.Arg and S.TargetCompatible[G, V, F]`. Bind uses the same
+`traverse[G, S]` needs `where S.Element[V] == F.Arg and S.TargetCompatible[G, V, F]`. Bind uses the same
 input equality with `I.BindCompatible[V, F]`. The generic integration test
 exercises these public contracts through source and precompiled imports.
 Concrete families that use the defaults keep their existing behavior.

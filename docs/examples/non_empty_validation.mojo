@@ -31,5 +31,5 @@ def main():
     var checked = piped(positive(-1)).par_map_n[Errors]((positive(-2),), total).get()
     _ = checked^.fold_owned(show_total, show_errors)
     var values = NonEmptyList(2, List[Int]([3, 4]))
-    var valid = traverse[NonEmptyListFamily, ValidationFamily[Errors]](values^, positive)
+    var valid = traverse[ValidationFamily[Errors], NonEmptyListFamily](values^, positive)
     _ = valid^.fold_owned(show_values, show_errors)
