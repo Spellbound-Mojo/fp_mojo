@@ -2526,6 +2526,68 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
 10. **Measure first.** S8 begins with a probe comparing the one-shot slot and
     the stack with their locked versions: uncontended, contended, and with
     more threads than cores.
+11. **Performance gates** (decided after S8's first measurements). In a storm
+    where every thread completes one slot, S8's first lock-free one-shot was
+    20–30% slower than a spin lock, because every losing thread wrote the
+    contended cache line. The lock-free design is kept, as the better final
+    architecture:
+    - it needs fewer atomic writes per operation;
+    - a worker never waits on a descheduled thread, but parks its fiber;
+    - a re-entrant completion simply loses instead of deadlocking.
+
+    Its implementation must meet these gates:
+    - **Read before writing.** A party that can see it has lost leaves after
+      one plain read, and only a plausible winner performs a read-modify-write.
+    - **Placement.** Contended words sit on their own cache lines.
+    - **Allocation.** Operations allocate nothing; a node or slot is allocated
+      at most once per owner.
+    - **Realistic benchmarks.** The fiber pair, the run-loop step, a completion
+      from another thread, a join racing a completion, and many fibers starting
+      under one scope must show no regression beyond run-to-run noise against
+      `nightly`.
+    - **Contended microbenchmarks.** Each must be at least as fast as its
+      spin-lock baseline, from 1 to 16 threads.
+
+    A primitive that still fails after tuning uses a lock that spins on reads
+    and then yields, built on the shared `_acquire_lock`, with the reason
+    recorded.
+
+    **Outcome.** S8 tuned both primitives, and every realistic gate passed.
+    - **One-shot slot.** Read-modify-writes per operation, not losers' writes,
+      were the cost; an uncontended complete and take now cost one. It beats
+      the spin lock from 1 to 2 threads and ties at 4.
+    - **Its one loss.** At 8 and 16 threads on 4 cores it is about 11% slower
+      (173 against 155 ns, and 198 against 176), within the spin lock's own
+      run-to-run swing of 98 to 155 ns at 8 threads. On 2026-10-31 the user
+      kept it lock-free everywhere, `Completion` included. A fiber record has a
+      single writer and cannot meet that storm, and a `Completion` meets it
+      only with eight or more simultaneous producers.
+    - **Closable stack.** Intrusive now, it allocates nothing per push and
+      beats the spin lock at every thread count, by 3 to 7 times from 4
+      threads up.
+12. **Wave 2 alongside S8.** S2 and S6 start while S8 is still running.
+    - S2 shares no files with S8.
+    - S6 builds only on `Completion`'s public behavior and the shared lock
+      helpers, and merges after S8.
+    - The waits in `interruptible`'s handle, its interruptible sleep and its
+      descriptor waits, are built on S2's poller rather than on a second
+      self-pipe mechanism. S6 therefore adds them after S2 merges.
+13. **S6's public API** (approved on 2026-10-31).
+    - **`Interruption`.** The handle, neither copyable nor movable, is borrowed
+      by the function given to `IO.interruptible`. It offers `requested()`,
+      with `sleep` and descriptor waits after S2.
+    - **Entry points.** `IO.blocking` takes `IO.delay`'s overload set.
+    - **Capability.** `Blocking` with `Blocked`, `BlockingCompatible`,
+      `Interrupted`, and `InterruptibleCompatible`; `LiftBlocking`; and the
+      free functions `blocking[I]` and `interruptible[I]`.
+    - **`BlockingPool`.** A copyable pool whose copies share one pool, with at
+      most 64 workers by default and a 60 s idle timeout. It has no `close()`:
+      a pool lives as long as its copies, and when the last copy is dropped it
+      drains its calls and joins its workers.
+    - **Sharing.** One field, `IORuntimeConfig.blocking_pool`. With none
+      given, the root creates a private pool with the defaults, which closes
+      when the root finishes. A bounded pool can deadlock when more calls than
+      its maximum wait on each other; the guide says so.
 
 ### Review questions
 
@@ -2568,7 +2630,7 @@ it into `nightly`.
 1. **Wave 1, in parallel:** S1, S3, S4, S5, and S7. They touch disjoint files,
    except that S3's documentation edits in `waking.mojo` and `callbacks.mojo`
    merge before S5 reaches them.
-2. **Wave 1b:** S8, the race fixes, before Wave 2.
+2. **Wave 1b:** S8, the race fixes. Wave 2 starts alongside it (decision 12).
 3. **Wave 2, in parallel:** S2 after S1, and S6 after S1 and S3. S6 adds its
    `IO` methods to `engine.mojo` after S5 merges, as a small rebase.
 4. **Wave 3, integration:** `run` parking in the poller through the wake hook,
