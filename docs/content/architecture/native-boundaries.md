@@ -1218,6 +1218,35 @@ inferred `traverse_void` pass) are gone; `Iter.traverse` has 7 overloads (was
 folds default their target like the free functions, and `fold_map_effect`
 takes its Monoid first, `[M, G]`.
 
+### Native error inference probes
+
+Probed on Mojo 1.2.0 (2016d0cd) whether Pipeline and Capture can infer the
+native error from a callback instead of requiring `.raising[E]()` or
+`Capture[E]`, joining it with the current error (Never joins anything;
+otherwise the two must be equal).
+
+- **Closures: blocked.** A method with `C: def(Self.V) raises X -> R` and `X`
+  inferred accepts valid raising and pure closures and infers `X` correctly.
+  Any closure with the wrong argument convention or arity crashes the compiler
+  in `CallParamInf::inferForCall` instead of being rejected. This is the
+  existing [inferred-error defect](#rejection-diagnostics). It still crashes
+  when overloads cover every convention (`read`, `var`, `mut`), even if a
+  matching candidate exists, and with `X` defaulted to Never after `//`. A
+  zero-argument Capture closure given one argument crashes the same way. An
+  error-type mismatch alone is rejected normally. Closure forms therefore keep
+  their selected error.
+- **Thin functions: buildable.** Thin forms (`def(var Self.V) raises X thin -> R`)
+  already infer `X` and reject wrong conventions normally. Returning
+  `Pipeline[J, R, _Join[Self.E, X]]` with
+  `_Join = downcast[X if E == Never else E, ...]` and admitting
+  `X == Never or Self.E == Never or X == Self.E` compiles, runs, and rejects a
+  second, different error with `violated constraint`. Later closure stages see
+  the joined error, so `pipeline(text).then(parse).map(closure)` needs no
+  `.raising` when `parse` is a raising plain function.
+- **Capture** defaults its error to `Error`, not Never, so a join needs an
+  "unset" default that closure forms read as `Error` and thin forms replace.
+  Closures still need `Capture[E]` for errors other than `Error`.
+
 ## Callables and argument packs
 
 | Mojo 1.1 behavior | Library consequence | Replacement trigger |
