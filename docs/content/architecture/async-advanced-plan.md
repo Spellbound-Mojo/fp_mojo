@@ -2558,6 +2558,22 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
     - The waits in `interruptible`'s handle, its interruptible sleep and its
       descriptor waits, are built on S2's poller rather than on a second
       self-pipe mechanism. S6 therefore adds them after S2 merges.
+13. **S6's public API** (approved on 2026-10-31).
+    - **`Interruption`.** The handle, neither copyable nor movable, is borrowed
+      by the function given to `IO.interruptible`. It offers `requested()`,
+      with `sleep` and descriptor waits after S2.
+    - **Entry points.** `IO.blocking` takes `IO.delay`'s overload set.
+    - **Capability.** `Blocking` with `Blocked`, `BlockingCompatible`,
+      `Interrupted`, and `InterruptibleCompatible`; `LiftBlocking`; and the
+      free functions `blocking[I]` and `interruptible[I]`.
+    - **`BlockingPool`.** A copyable pool whose copies share one pool, with at
+      most 64 workers by default and a 60 s idle timeout. It has no `close()`:
+      a pool lives as long as its copies, and when the last copy is dropped it
+      drains its calls and joins its workers.
+    - **Sharing.** One field, `IORuntimeConfig.blocking_pool`. With none
+      given, the root creates a private pool with the defaults, which closes
+      when the root finishes. A bounded pool can deadlock when more calls than
+      its maximum wait on each other; the guide says so.
 
 ### Review questions
 
