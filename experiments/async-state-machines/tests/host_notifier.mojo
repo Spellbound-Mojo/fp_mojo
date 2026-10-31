@@ -68,9 +68,8 @@ def main():
     check(calls[] == 1, "the woken poll does not notify")
     _ = run(second.complete[Int](3))
     check(calls[] == 2, "a second external wake notifies again")
-    var progress = driver.poll()
-    while not progress.completed:
-        progress = driver.poll()
+    while not driver.poll().completed:
+        pass
     var outcome = driver^.finish()
     check(Bool(outcome) and outcome.take()._take_ok() == 5, "the program completes")
     check(calls[] == 2, "finishing does not notify")
