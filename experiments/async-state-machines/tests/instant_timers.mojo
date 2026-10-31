@@ -1,6 +1,6 @@
 from fp.effects import CancellationToken
 from fp.effects._async.kernel import Sleep
-from fp.effects._async.children import both
+from foundation import both
 from fp.effects._async.host import Clock, Driver
 from fp.effects._async.time import Duration, Instant
 from std.os import abort
