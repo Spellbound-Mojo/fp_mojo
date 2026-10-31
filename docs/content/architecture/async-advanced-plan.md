@@ -2588,6 +2588,18 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
       given, the root creates a private pool with the defaults, which closes
       when the root finishes. A bounded pool can deadlock when more calls than
       its maximum wait on each other; the guide says so.
+    - **`Interruption`'s waits** (approved later the same day).
+      - `sleep(duration) -> Bool`, `await_readable(fd, timeout)` and
+        `await_writable(fd, timeout)` take the standard library's
+        `RawFileDescriptor`, as the later IO-level descriptor waits will.
+      - They return True when the duration elapsed or the descriptor is ready,
+        and False when the cancellation request or the timeout ended the wait;
+        `requested()` tells those two apart.
+      - **For Wave 3.** `SyncIO`'s inline handle does not yet observe a
+        request made while it waits: the wait ends at its own time, and
+        returns at once only when the request came before it. The guide
+        documents this. Wave 3 wires wakes into the poller and lifts the
+        limitation.
 
 ### Review questions
 
