@@ -2487,6 +2487,46 @@ Decided on 2026-10-31, after S7's research
    synchronous programs whose own structs hold raw pointers must conform to
    the marker.
 
+Decided on 2026-10-31, after Wave 1, for the races S7 found:
+
+7. **Supervising after release.** A `supervise` that loses a race with the
+   supervisor's release returns a fiber that is already canceled, and its
+   program never runs. This replaces the documented abort, which parallel
+   execution would make nondeterministic, and matches "starting observes
+   cancellation". It is a behavior change.
+8. **Stream S8 (13c-0).** The race fixes run as their own stream in a separate
+   session, before Wave 2.
+9. **Lock-free terminal state.** Uncontended, a lock costs one atomic
+   read-modify-write, as a lock-free step does. The risks of locks are
+   elsewhere:
+   - a lock shared by every worker serializes them;
+   - a preempted holder stalls everyone who needs the lock;
+   - user code can run under a lock;
+   - `_lock` sleeps for 1 ms when contended.
+
+   Cats Effect is lock-free on its hot paths. BEAM uses fine-grained locks
+   but keeps them uncontended through ownership. S8 therefore builds:
+   - **A one-shot slot.** An atomic state word over a slot with a single
+     owner: one thread writes the value and publishes it, and whoever wins
+     the next atomic step owns it exclusively. Fiber records and `Completion`
+     share it, which gives exactly-once destruction of move-only outcomes
+     without a lock.
+   - **A closable lock-free stack.** Starts push with a compare-exchange
+     unless the stack is closed, and release closes it with one exchange.
+     The supervisor and the scopes' child lists share it.
+   - **Sharding instead of synchronizing.** The transition slice belongs to
+     the executor, the external-registration count is one atomic on the
+     scheduler, and fiber start and end take no per-root lock.
+
+   `_lock` spins and then yields instead of sleeping. Wake registries keep
+   their locks, as do `Ref`, `Queue`, and `Semaphore`: Cats Effect's
+   lock-free `Ref` retries a pure function over copyable state, which would
+   change our public contract for move-only state. 13c measures them under
+   the pool.
+10. **Measure first.** S8 begins with a probe comparing the one-shot slot and
+    the stack with their locked versions: uncontended, contended, and with
+    more threads than cores.
+
 ### Review questions
 
 1. **Default profile.** Should `run` use the work-stealing profile by default,
@@ -2521,18 +2561,20 @@ it into `nightly`.
 | **S5 Engine refactor** (merged) | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
 | **S6 Blocking** | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
 | **S7 Thread-safety research** (merged) | The payload contract, the audit list, and research on compile-time rejection by reflection (13e's research) | Plan and design notes | None |
+| **S8 Race fixes (13c-0)** | The one-shot slot and the closable stack; fiber records, `Completion`, the supervisor, and scopes on them; the budget split; the fiber table without a per-root lock; `_lock` without sleeps (decisions 7–10) | New `_internal` primitives; `fibers.mojo`, `supervisor.mojo`, `callbacks.mojo`, `_io_core.mojo`, `kernel.mojo`, `executor.mojo`, the budget code in `engine.mojo`, the scheduler in `waking.mojo`, `host.mojo`, `_lock` in `coordination.mojo` | Wave 1 |
 
 ### Waves
 
 1. **Wave 1, in parallel:** S1, S3, S4, S5, and S7. They touch disjoint files,
    except that S3's documentation edits in `waking.mojo` and `callbacks.mojo`
    merge before S5 reaches them.
-2. **Wave 2, in parallel:** S2 after S1, and S6 after S1 and S3. S6 adds its
+2. **Wave 1b:** S8, the race fixes, before Wave 2.
+3. **Wave 2, in parallel:** S2 after S1, and S6 after S1 and S3. S6 adds its
    `IO` methods to `engine.mojo` after S5 merges, as a small rebase.
-3. **Wave 3, integration:** `run` parking in the poller through the wake hook,
+4. **Wave 3, integration:** `run` parking in the poller through the wake hook,
    descriptor readiness, wall-clock time, and the provider matrix (12b and 12d
    on top of S2 and S5), then the Pass 12 gate.
-4. **Wave 4:** the work-stealing pool (13c and 13d) on S2, S4, S5, and S6, then
+5. **Wave 4:** the work-stealing pool (13c and 13d) on S2, S4, S5, and S6, then
    13e's audit and stress runs and the Pass 13 gate.
 
 S5 is the critical path: it is the largest change and every later wave builds on
