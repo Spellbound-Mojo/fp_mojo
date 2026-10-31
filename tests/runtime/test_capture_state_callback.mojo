@@ -35,7 +35,7 @@ def main() raises:
     comptime assert conforms_to(type_of(account), MutableUnary)
     comptime assert type_of(account).Error == Never
     comptime assert type_of(account).Out == Result[Int, Int]
-    var mapped = pipeline[Int]([3, 8, -2]).map(mut_ref(account)).get()
+    var mapped = pipeline[List[Int]]([3, 8, -2]).map(mut_ref(account)).get()
     assert_equal(len(mapped), 3)
     assert_equal(mapped[0].copy().get_or(0), 7)
     assert_equal(mapped[1].copy().swap().get_or(0), -1)
@@ -43,7 +43,7 @@ def main() raises:
     assert_equal(account.state(), 1)
 
     var checked = Capture[Int]().stateful(debit, 10)
-    var traversed = pipeline[Int]([3, 8, 100]).traverse(mut_ref(checked)).get()
+    var traversed = pipeline[List[Int]]([3, 8, 100]).traverse(mut_ref(checked)).get()
     comptime assert type_of(traversed) == Result[List[Int], Int]
     assert_equal(traversed^.swap().get_or(0), -1)
     assert_equal(checked.state(), -1)
@@ -62,7 +62,7 @@ def main() raises:
 
     var pure = Capture[String]().stateful(add, 0)
     comptime assert type_of(pure).Out == Result[Int, Never]
-    var total = pipeline[Int]([1, 2, 3]).traverse(mut_ref(pure)).get()
+    var total = pipeline[List[Int]]([1, 2, 3]).traverse(mut_ref(pure)).get()
     assert_equal(total^.get_or(List[Int]()), [1, 3, 6])
     assert_equal(pure^.into_state(), 6)
     var never = Capture[Int]().stateful(add_never, 0)
@@ -74,7 +74,7 @@ def main() raises:
     assert_equal(notification.state(), 4)
 
     var chain = flow(mut_ref(account), describe)
-    assert_equal(pipeline[Int]([2, -3]).map(chain^).get(), ["declined", "accepted"])
+    assert_equal(pipeline[List[Int]]([2, -3]).map(chain^).get(), ["declined", "accepted"])
     assert_equal(account.state(), 2)
     var transferred = Capture[Int]().stateful(debit, 10)
     var owned_results = iterated(range(1, 3)).map(transferred^).to_list()

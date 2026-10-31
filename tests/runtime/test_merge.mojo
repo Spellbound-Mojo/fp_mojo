@@ -33,7 +33,7 @@ def main() raises:
     assert_equal(merge(render, as_unary(increment))(2), (String("2"), 3))
     var reusable = merge(partial(scaled, 3), partial(scaled, 4))
     comptime assert type_of(reusable).Fs.length == 3
-    assert_equal(pipeline[Int]([1, 2]).map(reusable).get(), [(3, 4), (6, 8)])
+    assert_equal(pipeline[List[Int]]([1, 2]).map(reusable).get(), [(3, 4), (6, 8)])
     assert_equal(reusable(3), (9, 12))
     var composed = merge(render, increment).then(tupled(report))
     comptime assert type_of(composed).Fs.length == 4

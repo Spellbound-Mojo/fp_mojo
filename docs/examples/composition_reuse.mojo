@@ -36,7 +36,7 @@ def main() raises:
     print("fallback:", pipeline(-2).then(validate).get_or(String("unavailable")))
 
     var price = flow(add_one, partial(scale, 3))
-    print("mixed:", pipeline[Int]([1, 2]).map(price).get())
+    print("mixed:", pipeline[List[Int]]([1, 2]).map(price).get())
     var mirrored = compose(partial(scale, 3), add_one)
     print("mirrored:", mirrored(2))
     var combine = flow(add, partial(scale, 2))

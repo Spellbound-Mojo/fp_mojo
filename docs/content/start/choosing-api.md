@@ -59,9 +59,10 @@ finishes before the next starts. Use `iterated(values^)` for a lazy chain:
 callbacks run as the consumer pulls values, and early stopping avoids reading
 the rest of the source. An existing iterator continues from its current position.
 
-List literals need their element type, as in `pipeline[Int]([1, 2])`. For an
-Array or another supported native sequence, `.elements()` selects element
-operations explicitly. `.then(function)` always handles the entire current
+List literals need their element type, as in `pipeline[List[Int]]([1, 2])`. List, Optional,
+Result, Deque, LinkedList and NonEmptyList select their element family from the
+value; any other value is one Identity payload. For an Array, `.elements()`
+selects element operations. `.then(function)` always handles the entire current
 value once; `.map(function)` follows the selected family.
 
 Moving a named value uses `^`. Use `.copy()` explicitly when the original must

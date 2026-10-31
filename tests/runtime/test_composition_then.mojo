@@ -41,7 +41,7 @@ def main() raises:
     var thunk = flow(seven, partial(scale, 2)).then(plus)
     assert_equal(thunk(), 15)
     var unary = flow(plus, partial(scale, 2)).then(plus)
-    assert_equal(pipeline[Int]([1, 2]).map(unary).get(), [5, 7])
+    assert_equal(pipeline[List[Int]]([1, 2]).map(unary).get(), [5, 7])
     var deep = flow(add, partial(scale, 2)).then(plus).then(plus).then(plus).then(plus).then(plus).then(plus).then(plus).then(plus).then(plus).then(plus)
     comptime assert type_of(deep).Fs.length == 12
     assert_equal(deep(2, 3), 20)

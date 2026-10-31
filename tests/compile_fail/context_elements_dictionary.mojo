@@ -1,4 +1,4 @@
-# error: no matching method in call to 'elements'
+# error: invalid call to 'elements'
 from fp.functions import pipeline
 def main():
     # Dictionary value selection remains the explicit pipeline_values operation.

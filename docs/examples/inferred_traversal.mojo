@@ -13,10 +13,10 @@ def total(var values: List[Int]) -> Int:
     return result
 
 def main() raises:
-    var amount = pipeline[String](["12", "3"]).traverse(parse).map(total).get_or(0)
+    var amount = pipeline[List[String]](["12", "3"]).traverse(parse).map(total).get_or(0)
     assert_equal(amount, 15)
     print("total:", amount)
-    var reason = pipeline[String](["12", "bad", "3"]).traverse(parse).swap().get_or("")
+    var reason = pipeline[List[String]](["12", "bad", "3"]).traverse(parse).swap().get_or("")
     assert_equal(reason, "invalid quantity")
     print("error:", reason)
     var available = List[Optional[Int]]([Optional(2), Optional(4)])

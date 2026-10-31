@@ -70,7 +70,7 @@ def view[T: Copyable & Deinitable](mut state: T, var fail: Bool) raises T -> T:
 def external(owner: List[Int]) -> List[Result[Span[Int, origin_of(owner)], Span[Int, origin_of(owner)]]]:
     comptime V = Span[Int, origin_of(owner)]
     var callback = Capture[V]().stateful(view[V], Span(owner))
-    return pipeline[Bool]([False, True]).map(callback^).get()
+    return pipeline[List[Bool]]([False, True]).map(callback^).get()
 
 
 def main() raises:

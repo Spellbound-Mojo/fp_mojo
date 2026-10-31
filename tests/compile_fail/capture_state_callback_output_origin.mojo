@@ -15,7 +15,7 @@ def view[T: Copyable & Deinitable](mut state: T, var fail: Bool) raises T -> T:
 def captured(values: List[Int]) -> Span[Int, origin_of(values)]:
     comptime V = Span[Int, origin_of(values)]
     var callback = Capture[V]().stateful(view[V], Span(values))
-    var outputs = pipeline[Bool]([False]).map(callback^).get()
+    var outputs = pipeline[List[Bool]]([False]).map(callback^).get()
     return outputs.pop().get_or(Span(values))
 def wrong(owner: List[Int]) -> Span[Int, origin_of(owner)]:
     var local: List[Int] = [1]

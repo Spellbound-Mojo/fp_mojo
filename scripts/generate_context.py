@@ -29,14 +29,11 @@ class Carrier:
         return self.family.format(element=element)
 
 
-# Explicit element selection. Non-empty lists use their existing family, whose
-# filtering may change the carrier.
+# Explicit element selection for Array only: FamilyOf recognizes every other
+# sequence, but Mojo cannot read an Array's length from a generic type, so
+# its family is selected here, where the signature infers N.
 SEQUENCE_CARRIERS = (
-    Carrier('List', 'List[{element}]', 'ListFamily'),
     Carrier('Array', 'Array[{element}, N]', '_ArrayFamily[N]', ('N: Int',)),
-    Carrier('Deque', 'Deque[{element}]', '_DequeFamily'),
-    Carrier('LinkedList', 'LinkedList[{element}]', '_LinkedListFamily'),
-    Carrier('NonEmptyList', 'NonEmptyList[{element}]', 'NonEmptyListFamily'),
 )
 
 # Each transformation has one callback implementation; these are only native
@@ -85,7 +82,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         source, family = carrier.value('T'), carrier.instance('T')
         params = [f'T: {MD}', *carrier.parameters]
         body.append(f'\n    def elements[{", ".join(params)}](deinit self) -> Pipeline[{family}, Self.V, Self.E] where Self.V == {source}:\n'
-                    '        """Select native sequence element operations without naming a family."""\n'
+                    '        """Select Array element operations without naming a family."""\n'
                     f'        return Pipeline[{family}, Self.V, Self.E](self.value^)\n')
 
     def callback(mode, kind, payload, arg, second=False, repeatable=False):

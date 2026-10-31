@@ -73,7 +73,7 @@ def retained() raises:
 
 
 def external(owner: List[Int]) -> Span[Int,origin_of(owner)]:
-    return pipeline[Int]([1]).fold_left(Tail[origin_of(owner)](),Span(owner)).get()
+    return pipeline[List[Int]]([1]).fold_left(Tail[origin_of(owner)](),Span(owner)).get()
 
 
 def main() raises:

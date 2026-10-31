@@ -298,6 +298,13 @@
    },
    "provider": "algebra/protocols"
   },
+  "algebra.FamilyOf": {
+   "declarations": [
+    "comptime FamilyOf[V: Movable & Deinitable]: Functor = _NativeFamily[V, _SequenceFamily[V]]"
+   ],
+   "kind": "type or alias",
+   "provider": "algebra/collections"
+  },
   "algebra.Filterable": {
    "declarations": [
     "trait Filterable:"
@@ -9242,24 +9249,8 @@
     ],
     "elements": [
      {
-      "sha256": "65362dada213e00ba0847b1dcd1ec4b101b5201616460a7f04f2f9357ef36c45",
-      "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[ListFamily, Self.V, Self.E] where Self.V == List[T]:"
-     },
-     {
       "sha256": "5def1d0ab4a304415ec8307977dfaa453bf10c16636d480072fa6a18d16add8d",
       "signature": "def elements[T: Movable & Deinitable, N: Int](deinit self) -> Pipeline[_ArrayFamily[N], Self.V, Self.E] where Self.V == Array[T, N]:"
-     },
-     {
-      "sha256": "f784477afee7bae1fc199e8f475067a64fd955b3b9cda00ac611a370647e868b",
-      "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[_DequeFamily, Self.V, Self.E] where Self.V == Deque[T]:"
-     },
-     {
-      "sha256": "a30b956dc10e1396a2df109f57753d4b325429317a97a6b7f4031bba8cef15f4",
-      "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[_LinkedListFamily, Self.V, Self.E] where Self.V == LinkedList[T]:"
-     },
-     {
-      "sha256": "636e29e1d9c5647fd8e01ec1fecbf570199179d2d37644f2a7e0f41ebd63d655",
-      "signature": "def elements[T: Movable & Deinitable](deinit self) -> Pipeline[NonEmptyListFamily, Self.V, Self.E] where Self.V == NonEmptyList[T]:"
      }
     ],
     "ensure": [
@@ -18182,24 +18173,12 @@
    "kind": "function",
    "overloads": [
     {
-     "sha256": "48fe9ad517e741b811f9c5cc9516d21a7a3b3618b1555b88aa02eb99c907f053",
-     "signature": "def pipeline[T: Movable & Deinitable](var value: List[T]) -> Pipeline[ListFamily, List[T]]:"
-    },
-    {
-     "sha256": "21650499faec5cf524c240ee93f6517ab06851f7db349fdc9b41ac193ee552b6",
-     "signature": "def pipeline[T: Movable & Deinitable](var value: Optional[T]) -> Pipeline[OptionalFamily, Optional[T]]:"
-    },
-    {
-     "sha256": "39da2bd11bb884b24dcc75b6ef79d7f6faef8251532e50bae0a9cac9a63eefc5",
-     "signature": "def pipeline[T: Movable & Deinitable, E: Movable & Deinitable](var value: Result[T, E]) -> Pipeline[ResultFamily[E], Result[T, E]]:"
-    },
-    {
      "sha256": "89ef1047707f465a5c25704d43106ec2c2802545d44b81b1df551480671100fa",
      "signature": "def pipeline[V: Movable & Deinitable, //, I: Functor](var value: V) -> Pipeline[I, V]:"
     },
     {
-     "sha256": "a3706f9405a753d27cdafdc04aa2a3ba3b513d6d7a6693555f46a22f0a54fc11",
-     "signature": "def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[_NativeFamily[V], V] where _NativeFamily[V] == IdentityFamily or conforms_to(V, _FamilyCarrier):"
+     "sha256": "b646035eb530d22b1a33531a439538ecd956f4d1d4665a74fc29b67164b13fa4",
+     "signature": "def pipeline[V: Movable & Deinitable](var value: V) -> Pipeline[FamilyOf[V], V]:"
     }
    ],
    "provider": "functions/context"

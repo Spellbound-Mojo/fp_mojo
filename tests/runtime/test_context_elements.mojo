@@ -48,24 +48,24 @@ def main() raises:
     var queue = Deque[Int]()
     queue.append(-1)
     queue.append(42)
-    var labels = pipeline(queue^).elements().filter(ce_positive).map(ce_label).get()
+    var labels = pipeline(queue^).filter(ce_positive).map(ce_label).get()
     comptime assert type_of(labels) == Deque[String]
     assert_equal(labels.pop(), "42")
     var linked = LinkedList[Int]()
     linked.append(3)
     linked.append(42)
-    var linked_lengths = pipeline(linked^).elements().map(ce_label).map(ce_size).get()
+    var linked_lengths = pipeline(linked^).map(ce_label).map(ce_size).get()
     comptime assert type_of(linked_lengths) == LinkedList[Int]
     assert_equal(List(linked_lengths), [1, 2])
 
-    var nonempty = pipeline(NonEmptyList(3)).elements().map(ce_label).get()
+    var nonempty = pipeline(NonEmptyList(3)).map(ce_label).get()
     comptime assert type_of(nonempty) == NonEmptyList[String]
     assert_equal(nonempty.first(), "3")
-    var filtered = pipeline(NonEmptyList(-1)).elements().filter(ce_positive).get()
+    var filtered = pipeline(NonEmptyList(-1)).filter(ce_positive).get()
     comptime assert type_of(filtered) == List[Int]
     assert_equal(len(filtered), 0)
     var list: List[Int] = [3]
-    assert_equal(pipeline(list^).elements().elements().map(ce_label).get(), List[String](["3"]))
+    assert_equal(pipeline(list^).map(ce_label).get(), List[String](["3"]))
 
     var bad: Array[Int, 2] = [7, -9]
     var code = 0

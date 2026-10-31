@@ -99,7 +99,7 @@ def filter_shapes() raises:
     deque.append(3)
     deque.append(-1)
     deque.append(4)
-    var kept_deque = pipeline(deque^).elements().filter(filter_positive).get()
+    var kept_deque = pipeline(deque^).filter(filter_positive).get()
     comptime assert type_of(kept_deque) == Deque[Int]
     assert_equal(kept_deque._min_capacity, 4)
     assert_equal(kept_deque._shrink, False)
@@ -109,7 +109,7 @@ def filter_shapes() raises:
     var linked = LinkedList[Int]()
     linked.append(-1)
     linked.append(7)
-    var kept_linked = pipeline(linked^).elements().filter(filter_positive).get()
+    var kept_linked = pipeline(linked^).filter(filter_positive).get()
     comptime assert type_of(kept_linked) == LinkedList[Int]
     assert_equal(collect_list(kept_linked^), [7])
     var dict = Dict[String, Int, default_comp_time_hasher]()
@@ -170,10 +170,10 @@ def filter_library_and_deferred() raises:
     assert_equal(lazy_calls, 2)
     var deque = Deque[Int]()
     deque.append(1)
-    assert_equal(collect_list(pipeline(deque^).elements().filter(ContainerFilterPredicate(calls)).get()), [1])
+    assert_equal(collect_list(pipeline(deque^).filter(ContainerFilterPredicate(calls)).get()), [1])
     var linked = LinkedList[Int]()
     linked.append(1)
-    assert_equal(collect_list(pipeline(linked^).elements().filter(ContainerFilterPredicate(calls)).get()), [1])
+    assert_equal(collect_list(pipeline(linked^).filter(ContainerFilterPredicate(calls)).get()), [1])
     var dict = Dict[String, Int]()
     dict["a"] = 1
     var kept_dict = pipeline_values(dict^).filter(ContainerFilterPredicate(calls)).get()
@@ -289,7 +289,7 @@ def filter_errors() raises:
     deque.append(ContainerMapItem(2, drops))
     deque.append(ContainerMapItem(3, drops))
     try:
-        _ = pipeline(deque^).elements().raising[ContainerFilterFailure]().filter(fail).get()
+        _ = pipeline(deque^).raising[ContainerFilterFailure]().filter(fail).get()
     except error:
         comptime assert type_of(error) == ContainerFilterFailure
     assert_equal(drops[], 3)
@@ -298,7 +298,7 @@ def filter_errors() raises:
     linked.append(ContainerMapItem(1, drops))
     linked.append(ContainerMapItem(2, drops))
     try:
-        _ = pipeline(linked^).elements().raising[ContainerFilterFailure]().filter(fail).get()
+        _ = pipeline(linked^).raising[ContainerFilterFailure]().filter(fail).get()
     except error:
         comptime assert type_of(error) == ContainerFilterFailure
     assert_equal(drops[], 2)

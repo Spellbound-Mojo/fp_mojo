@@ -11,6 +11,6 @@ def step(mut state: Int, var value: Int) raises Int -> Int:
 
 def wrong() -> List[Result[Int, String]]:
     var callback = Capture[Int]().stateful(step, 0)
-    return pipeline[Int]([-1]).map(callback^).get()
+    return pipeline[List[Int]]([-1]).map(callback^).get()
 def main():
     _ = wrong()

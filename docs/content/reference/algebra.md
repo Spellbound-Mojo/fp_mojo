@@ -313,8 +313,8 @@ Their carriers may have several concrete representations; membership does not
 require equality with `Pure[A]`. See [effect admission](effects.md).
 
 `ArrayFamily[N]`, `DequeFamily` and `LinkedListFamily` select element operations
-on native sequences. Ordinary fluent code uses
-`pipeline(values^).elements().map(text)`; generic code can name the family
+on native sequences. Ordinary fluent code uses `pipeline(values^).map(text)` for Deque and
+LinkedList and `pipeline(array^).elements().map(text)` for Array; generic code can name the family
 explicitly, as in `pipeline[ArrayFamily[2]](values^).map(text)`. Both forms
 preserve the Array length while changing its element type. DequeFamily and
 LinkedListFamily also support filter and filter_map; ArrayFamily supports map.
@@ -324,7 +324,7 @@ Pipeline's native collection methods.
 
 Selection is explicit: `pipeline(array^)` treats the whole Array as an
 Identity payload until `.elements()` selects ArrayFamily. List, Deque,
-LinkedList and NonEmptyList also support `.elements()`. Dict and
+LinkedList and NonEmptyList are recognized from their type. Dict and
 StringDict values are selected with `pipeline_values(dictionary^)`. The adapter
 infers the initial payload, key and hasher types and rebinds the payload after
 a type-changing operation.

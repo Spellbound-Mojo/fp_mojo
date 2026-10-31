@@ -90,7 +90,7 @@ struct Project[o: ImmOrigin](MutableUnary):
 
 def external(owner: List[Int]) -> List[Span[Int, origin_of(owner)]]:
     var callback = Project(Span(owner), 0)
-    return pipeline[Int]([0, 1]).map(mut_ref(callback)).get()
+    return pipeline[List[Int]]([0, 1]).map(mut_ref(callback)).get()
 
 
 def main() raises:

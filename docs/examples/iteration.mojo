@@ -99,5 +99,5 @@ def main() raises:
     print("changing weights:", iterated(range(1, 4)).scan_left(IncreasingWeight(1), 0).collect_list())
     print("weighted fold:", iterated(range(1, 4)).fold_left(IncreasingWeight(1), 0))
     var step_weight = IncreasingWeight(1)
-    print("pipeline fold:", pipeline[Int]([1,2,3]).fold_left(mut_ref(step_weight),0).get())
+    print("pipeline fold:", pipeline[List[Int]]([1,2,3]).fold_left(mut_ref(step_weight),0).get())
     print("next weight:", step_weight.weight)

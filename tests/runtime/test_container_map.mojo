@@ -102,7 +102,7 @@ def container_shapes() raises:
     deque.append(4)
     deque.append(1)
     deque.append(2)
-    var mapped_deque = pipeline(deque^).elements().map(as_unary(container_text)).get()
+    var mapped_deque = pipeline(deque^).map(as_unary(container_text)).get()
     comptime assert type_of(mapped_deque) == Deque[String]
     assert_equal(mapped_deque._min_capacity, 4)
     assert_equal(mapped_deque._shrink, False)
@@ -111,7 +111,7 @@ def container_shapes() raises:
     var linked = LinkedList[Int]()
     linked.append(3)
     linked.append(1)
-    var mapped_linked = pipeline(linked^).elements().map(container_text).get()
+    var mapped_linked = pipeline(linked^).map(container_text).get()
     comptime assert type_of(mapped_linked) == LinkedList[String]
     assert_equal(collect_list(mapped_linked^), ["3", "1"])
     var dict = Dict[String, Int, default_comp_time_hasher]()
@@ -235,7 +235,7 @@ def container_more_cleanup() raises:
     deque.append(ContainerMapItem(2, drops))
     caught = False
     try:
-        _ = pipeline(deque^).elements().map(container_checked).get()
+        _ = pipeline(deque^).map(container_checked).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         caught = True
@@ -247,7 +247,7 @@ def container_more_cleanup() raises:
     linked.append(ContainerMapItem(2, drops))
     caught = False
     try:
-        _ = pipeline(linked^).elements().map(as_unary(container_checked)).get()
+        _ = pipeline(linked^).map(as_unary(container_checked)).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         caught = True
