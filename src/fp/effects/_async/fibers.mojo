@@ -29,7 +29,7 @@ from fp.callables import OnceUnary
 from fp.data import Result, Ok
 from fp._internal.erased import _Erased
 from fp._internal.oneshot import _OneShot
-from fp._internal.closable_stack import _ClosableStack
+from fp._internal.closable_stack import _ClosableStack, _StackLink, _Linked
 from fp._internal.waking import _Event as Signal, _Runtime, _TaskHeader, _FiberView
 from fp.effects import CancellationToken, IOContext, Outcome, EffectFailure
 from fp.effects.outcomes import _failure_as
@@ -138,6 +138,11 @@ struct _FiberRecord[E: Movable & Deinitable](Movable):
     unchanged. `done` is a lock-free acquire load: a reader that sees it also
     sees everything the child wrote before completing.
     """
+    # The record's place on its owner scope's stack (`_Child`): written only
+    # by the stack's protocol, never through the record's own methods. First,
+    # so that adoption, which copies the handle, writes the line that holds
+    # the reference count it already touches.
+    var link: _StackLink[_Child[Self.E]]
     var token: CancellationToken
     var signal: Signal
     # The settled outcome; a success holds the handle's T, erased.
@@ -146,6 +151,7 @@ struct _FiberRecord[E: Movable & Deinitable](Movable):
     var reporter: _Reporter
 
     def __init__(out self, report: Bool = True, reporter: _Reporter = _report_to_stderr):
+        self.link = _StackLink[_Child[Self.E]]()
         self.token = CancellationToken()
         self.signal = Signal()
         self.outcome = _OneShot[Outcome[_Erased, Self.E]]()
@@ -238,23 +244,45 @@ comptime _CLOSE_KEEP = UInt8(1)
 """Closed by a supervisor awaiting its children on release: they run to completion."""
 
 
-def _live[E: Movable & Deinitable](record: ArcPointer[_FiberRecord[E]]) -> Bool:
-    return not record[].done()
+struct _Child[E: Movable & Deinitable](_Linked):
+    """A scope's handle to a child's record; the record itself is the stack's node."""
+    var record: ArcPointer[_FiberRecord[Self.E]]
+
+    def __init__(out self, var record: ArcPointer[_FiberRecord[Self.E]]):
+        self.record = record^
+
+    def _link_address(self) -> Int:
+        return Int(Pointer(to=self.record[].link))
+
+
+def _live[E: Movable & Deinitable](child: _Child[E]) -> Bool:
+    return not child.record[].done()
+
+
+comptime _LIVE_MASK = 0xFFFFFFFF
+"""The low half of a scope's count word: live children."""
+comptime _LISTED_ONE = 1 << 32
+"""One listed child, in the high half of the count word."""
 
 
 struct _ScopeCounts(Movable):
     """A scope's atomics, in their own allocation.
 
-    `live` changes with ACQUIRE_RELEASE and is read with ACQUIRE (see
-    `_Scope`). `fiber` is diagnostic metadata, a slot number that orders no
-    other data, so it is read and written RELAXED; it is atomic because a
+    `children` packs two counts in one word, so an adoption changes both with
+    one `fetch_add`: the live children in the low 32 bits, and in the high 32
+    bits the children listed on the stack, an upper bound that decides when to
+    prune (the stack keeps no length, so pushes contend on its head alone).
+    Live never drops below zero, so changing the low half never borrows from
+    the high one. It changes with ACQUIRE_RELEASE and is read with ACQUIRE
+    (see `_Scope`). `fiber` is diagnostic metadata, a slot number that orders
+    no other data, so it is read and written RELAXED; it is atomic because a
     supervisor's scope is reached from every fiber that supervises.
     """
-    var live: Atomic[Int]
+    var children: Atomic[Int]
     var fiber: Atomic[Int]
 
     def __init__(out self):
-        self.live = Atomic(0)
+        self.children = Atomic(0)
         self.fiber = Atomic(-1)
 
 
@@ -277,12 +305,12 @@ struct _Scope[E: Movable & Deinitable](Movable):
     """
     var counts: ArcPointer[_ScopeCounts]
     var signal: Signal
-    var children: _ClosableStack[ArcPointer[_FiberRecord[Self.E]]]
+    var children: _ClosableStack[_Child[Self.E]]
 
     def __init__(out self):
         self.counts = ArcPointer(_ScopeCounts())
         self.signal = Signal()
-        self.children = _ClosableStack[ArcPointer[_FiberRecord[Self.E]]]()
+        self.children = _ClosableStack[_Child[Self.E]]()
 
     def fiber(self) -> Int:
         """The diagnostic slot of the fiber whose run loop owns this scope, or -1 until known."""
@@ -302,7 +330,7 @@ struct _Scope[E: Movable & Deinitable](Movable):
     def count(self) -> Int:
         # Acquire pairs with a completing child's decrement, so its published
         # outcome is visible once the count reads zero.
-        return self.counts[].live.load[ordering=Ordering.ACQUIRE]()
+        return self.counts[].children.load[ordering=Ordering.ACQUIRE]() & _LIVE_MASK
 
     def adopt(self, record: ArcPointer[_FiberRecord[Self.E]]) -> Bool:
         """Count and list a child; false when the scope is closed and the child must not run.
@@ -311,25 +339,28 @@ struct _Scope[E: Movable & Deinitable](Movable):
         push sees the child; a refused child is uncounted again.
         """
         # Acquire-release, as every change of the count (see child_completed).
-        _ = self.counts[].live.fetch_add[ordering=Ordering.ACQUIRE_RELEASE](1)
-        if self.children.push(record.copy()):
+        var counts = self.counts[].children.fetch_add[ordering=Ordering.ACQUIRE_RELEASE](_LISTED_ONE + 1) + _LISTED_ONE + 1
+        if self.children.push(_Child[Self.E](record.copy())):
+            _ = self.counts[].children.fetch_sub[ordering=Ordering.RELAXED](_LISTED_ONE)
             self.child_completed()
             return False
-        if self.children.length() > 2 * self.count() + 8:
+        if counts >> 32 > 2 * (counts & _LIVE_MASK) + 8:
             var pruned = self.children.prune[_live[Self.E]]()
+            # RELAXED: the listed half orders nothing.
+            _ = self.counts[].children.fetch_sub[ordering=Ordering.RELAXED](pruned.removed * _LISTED_ONE)
             if pruned.tag == _CLOSE_CANCEL:
                 for index in range(len(pruned.orphans)):
-                    pruned.orphans[index][].token.cancel()
+                    pruned.orphans[index].record[].token.cancel()
         return True
 
     def child_completed(self):
         """A child completed: the last one wakes a draining owner."""
         # Acquire-release orders the child's published outcome before the
         # owner's acquire load of the count.
-        if self.counts[].live.fetch_sub[ordering=Ordering.ACQUIRE_RELEASE](1) == 1:
+        if (self.counts[].children.fetch_sub[ordering=Ordering.ACQUIRE_RELEASE](1) & _LIVE_MASK) == 1:
             self.signal.notify()
 
-    def close(self, tag: UInt8) -> List[ArcPointer[_FiberRecord[Self.E]]]:
+    def close(self, tag: UInt8) -> List[_Child[Self.E]]:
         """Refuse later children and return the listed ones, oldest first."""
         return self.children.close(tag)
 
@@ -337,8 +368,8 @@ struct _Scope[E: Movable & Deinitable](Movable):
         """Close the scope and request cancellation of every live child."""
         var children = self.close(_CLOSE_CANCEL)
         for index in range(len(children)):
-            if not children[index][].done():
-                children[index][].token.cancel()
+            if not children[index].record[].done():
+                children[index].record[].token.cancel()
 
 
 struct _Spawn[E: Movable & Deinitable](Movable):

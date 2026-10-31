@@ -13,7 +13,11 @@ others.
   exactly one offer wins. Reported per round (one decision and one take).
 - Stack: every thread pushes its share into one stack, then the main thread
   closes it. Reported per push. The uncontended line pushes 64 elements and
-  closes, per element.
+  closes, per element. Both versions push copies of preallocated
+  `ArcPointer`s, as a scope adopts records: the locked one appends them to a
+  `List`, the lock-free one links the box itself (`_Linked`).
+- `cas-first` is the one-shot with offers that compare-exchange without
+  reading first, to measure what the fail-fast read costs or saves.
 
 Slot and stack allocation is outside the timed region. Wall times on a shared
 host vary; compare only runs taken back to back.
@@ -22,9 +26,10 @@ from std.atomic import Atomic, Ordering
 from std.memory import ArcPointer
 from std.time import perf_counter_ns, sleep
 from std.os import abort
+from std.sys import argv
 from fp._internal.cells import _Cell, _lock_cell, _try_acquire_lock, _release_lock
-from fp._internal.oneshot import _OneShot
-from fp._internal.closable_stack import _ClosableStack
+from fp._internal.oneshot import _OneShot, _CLAIMED
+from fp._internal.closable_stack import _ClosableStack, _StackLink, _Linked
 from fp.effects import unsafe_start, Fiber, IO, IOContext, Outcome, ReaderAction
 
 comptime ROUNDS = 100_000
@@ -33,6 +38,8 @@ comptime PUSHES = 400_000
 comptime LOCK_FREE = 0
 comptime SPIN_LOCK = 1
 comptime SLEEP_LOCK = 2
+comptime CAS_FIRST = 3
+"""The one-shot, but every offer compare-exchanges without reading first."""
 
 
 def check(condition: Bool, message: String):
@@ -102,11 +109,42 @@ def offer(shot: _OneShot[Int], value: Int) -> Bool:
     return True
 
 
+def offer_cas_first(shot: _OneShot[Int], value: Int) -> Bool:
+    """An offer that skips the fail-fast read, to measure what the read saves."""
+    var expected = UInt8(0)
+    if not shot._cell[].state.compare_exchange[failure_ordering=Ordering.RELAXED, success_ordering=Ordering.RELAXED](expected, _CLAIMED):
+        return False
+    _ = shot.publish(value)
+    return True
+
+
+struct Box(Movable):
+    """A stack element's allocation, as a fiber record is: it embeds its link."""
+    var link: _StackLink[Element]
+    var value: Int
+
+    def __init__(out self, value: Int):
+        self.link = _StackLink[Element]()
+        self.value = value
+
+
+struct Element(_Linked):
+    var box: ArcPointer[Box]
+
+    def __init__(out self, var box: ArcPointer[Box]):
+        self.box = box^
+
+    def _link_address(self) -> Int:
+        return Int(Pointer(to=self.box[].link))
+
+
 struct Rig(Movable):
     var shots: List[_OneShot[Int]]
     var locked: List[LockedShot]
-    var stack: _ClosableStack[Int]
-    var list: ArcPointer[_Cell[List[Int]]]
+    var stack: _ClosableStack[Element]
+    # Both stacks receive copies of preallocated handles, as scopes adopt records.
+    var boxes: List[ArcPointer[Box]]
+    var list: ArcPointer[_Cell[List[ArcPointer[Box]]]]
     var ready: Atomic[Int]
     var go: Atomic[Int]
 
@@ -114,12 +152,16 @@ struct Rig(Movable):
         self.shots = List[_OneShot[Int]]()
         self.locked = List[LockedShot]()
         for _ in range(rounds):
-            if mode == LOCK_FREE:
+            if mode == LOCK_FREE or mode == CAS_FIRST:
                 self.shots.append(_OneShot[Int]())
             else:
                 self.locked.append(LockedShot())
-        self.stack = _ClosableStack[Int]()
-        self.list = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(List[Int]())))
+        self.stack = _ClosableStack[Element]()
+        self.boxes = List[ArcPointer[Box]]()
+        if rounds == 0:
+            for i in range(PUSHES):
+                self.boxes.append(ArcPointer(Box(i)))
+        self.list = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(List[ArcPointer[Box]]())))
         self.ready = Atomic(0)
         self.go = Atomic(0)
 
@@ -133,7 +175,7 @@ def shot_role(rig: Rig, mode: Int, receiver: Bool, rounds: Int, me: Int) -> Tupl
             var began = Int(perf_counter_ns())
             while True:
                 var taken: Optional[Int]
-                if mode == LOCK_FREE:
+                if mode == LOCK_FREE or mode == CAS_FIRST:
                     taken = rig.shots[r].take()
                 elif mode == SPIN_LOCK:
                     taken = rig.locked[r].take[False]()
@@ -148,6 +190,8 @@ def shot_role(rig: Rig, mode: Int, receiver: Bool, rounds: Int, me: Int) -> Tupl
         else:
             if mode == LOCK_FREE:
                 _ = offer(rig.shots[r], me)
+            elif mode == CAS_FIRST:
+                _ = offer_cas_first(rig.shots[r], me)
             elif mode == SPIN_LOCK:
                 _ = rig.locked[r].put[False](me)
             else:
@@ -156,12 +200,13 @@ def shot_role(rig: Rig, mode: Int, receiver: Bool, rounds: Int, me: Int) -> Tupl
 
 
 def stack_role(rig: Rig, mode: Int, pushes: Int, me: Int):
+    """Push this thread's share of the boxes, `me` being its first index."""
     for i in range(pushes):
         if mode == LOCK_FREE:
-            _ = rig.stack.push(me + i)
+            _ = rig.stack.push(Element(rig.boxes[me + i].copy()))
         else:
             var guard = _lock_cell(rig.list[])
-            guard.value().append(me + i)
+            guard.value().append(rig.boxes[me + i].copy())
             _ = guard^
 
 
@@ -198,7 +243,7 @@ def timed(kind: Int, mode: Int, threads: Int) raises -> Tuple[Int, Int, Int]:
     var workers = List[Fiber[Worker]]()
     # The main thread is the receiver; threads - 1 helpers offer or push.
     for i in range(threads - 1):
-        workers.append(unsafe_start(Worker(rig.copy(), kind, mode, False, count, (i + 1) * 1_000_000)))
+        workers.append(unsafe_start(Worker(rig.copy(), kind, mode, False, count, (i + 1) * (1_000_000 if kind == 0 else count))))
     while rig[].ready.load() < threads - 1:
         sleep(0.0001)
     var start = perf_counter_ns()
@@ -207,7 +252,7 @@ def timed(kind: Int, mode: Int, threads: Int) raises -> Tuple[Int, Int, Int]:
         if threads == 1:
             # Uncontended: offer, then take, each round.
             for r in range(ROUNDS):
-                if mode == LOCK_FREE:
+                if mode == LOCK_FREE or mode == CAS_FIRST:
                     _ = offer(rig[].shots[r], r)
                     check(Bool(rig[].shots[r].take()), "uncontended take")
                 elif mode == SPIN_LOCK:
@@ -236,22 +281,25 @@ def timed(kind: Int, mode: Int, threads: Int) raises -> Tuple[Int, Int, Int]:
 
 def stack_uncontended(mode: Int) -> Float64:
     comptime batches = 20_000
+    var boxes = List[ArcPointer[Box]]()
+    for i in range(64):
+        boxes.append(ArcPointer(Box(i)))
     var start = perf_counter_ns()
     var total = 0
-    for b in range(batches):
+    for _ in range(batches):
         if mode == LOCK_FREE:
-            var stack = _ClosableStack[Int]()
+            var stack = _ClosableStack[Element]()
             for i in range(64):
-                _ = stack.push(b + i)
+                _ = stack.push(Element(boxes[i].copy()))
             total += len(stack.close())
         else:
-            var cell = _Cell(Atomic(UInt8(0)), Optional(List[Int]()))
+            var cell = _Cell(Atomic(UInt8(0)), Optional(List[ArcPointer[Box]]()))
             for i in range(64):
                 var guard = _lock_cell(cell)
-                guard.value().append(b + i)
+                guard.value().append(boxes[i].copy())
                 _ = guard^
             var guard = _lock_cell(cell)
-            var taken = List[Int]()
+            var taken = List[ArcPointer[Box]]()
             swap(taken, guard.value())
             _ = guard^
             total += len(taken)
@@ -259,30 +307,43 @@ def stack_uncontended(mode: Int) -> Float64:
     return Float64(Int(perf_counter_ns() - start)) / Float64(batches * 64)
 
 
-def median(var samples: List[Int]) -> Int:
+comptime RUNS = 5
+
+
+def spread(var samples: List[Float64]) -> String:
+    """The median with the min-max spread of the samples."""
     sort(samples)
-    return samples[len(samples) // 2]
+    return String(samples[len(samples) // 2], " [", samples[0], "-", samples[len(samples) - 1], "]")
 
 
 def main() raises:
-    var names: List[String] = ["lock-free", "spin lock", "sleep lock"]
+    # An argument of "stack" or "shot" runs only that part.
+    var part = String(argv()[1]) if len(argv()) > 1 else String("all")
+    var names: List[String] = ["lock-free", "spin lock", "sleep lock", "cas-first"]
     for threads in [1, 2, 4, 8, 16]:
-        for mode in range(3):
-            var samples = List[Int]()
+        if part == "stack":
+            break
+        for mode in range(4):
+            var samples = List[Float64]()
             var longest = 0
             var slow = 0
-            for _ in range(3):
+            for _ in range(RUNS):
                 var run = timed(0, mode, threads)
-                samples.append(run[0])
+                samples.append(Float64(run[0]) / Float64(ROUNDS))
                 longest = max(longest, run[1])
                 slow += run[2]
-            print("one-shot", names[mode], "threads=" + String(threads), "ns_per_round=" + String(Float64(median(samples^)) / Float64(ROUNDS)),
+            print("one-shot", names[mode], "threads=" + String(threads), "ns_per_round=" + spread(samples^),
                   "longest_round_us=" + String(longest // 1000), "rounds_over_100us=" + String(slow))
+    if part == "shot":
+        return
     for mode in range(2):
-        print("stack", names[mode], "threads=1 ns_per_push_and_close=" + String(stack_uncontended(mode)))
+        var samples = List[Float64]()
+        for _ in range(RUNS):
+            samples.append(stack_uncontended(mode))
+        print("stack", names[mode], "threads=1 ns_per_push_and_close=" + spread(samples^))
     for threads in [2, 4, 8, 16]:
         for mode in range(2):
-            var samples = List[Int]()
-            for _ in range(3):
-                samples.append(timed(1, mode, threads)[0])
-            print("stack", names[mode], "threads=" + String(threads), "ns_per_push=" + String(Float64(median(samples^)) / Float64((PUSHES // threads) * threads)))
+            var samples = List[Float64]()
+            for _ in range(RUNS):
+                samples.append(Float64(timed(1, mode, threads)[0]) / Float64((PUSHES // threads) * threads))
+            print("stack", names[mode], "threads=" + String(threads), "ns_per_push=" + spread(samples^))

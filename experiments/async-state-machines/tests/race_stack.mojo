@@ -3,7 +3,8 @@
 Three pusher threads push their own elements, and two of them also prune now
 and then; a fourth thread prunes in a loop. Prunes keep even ids and drop odd
 ones. The main thread closes the stack at a random moment, with a random tag.
-Every element is a `Tracked` value:
+Every element is a `Tracked` value in a box that embeds its stack link, as a
+fiber record does, behind its only handle:
 
 - a push refused by the closed stack returns the element to its pusher;
 - the close returns every listed element, oldest first;
@@ -20,7 +21,7 @@ from std.memory import ArcPointer
 from std.os import getenv
 from std.time import monotonic
 from std.sys import stderr
-from fp._internal.closable_stack import _ClosableStack
+from fp._internal.closable_stack import _ClosableStack, _StackLink, _Linked
 from fp.effects import Fiber
 from fp.effects._async.scheduling.random import _Random
 from wstp_support import check, Ledger, Tracked, WstpJob, WstpThread, wstp_start
@@ -28,12 +29,42 @@ from wstp_support import check, Ledger, Tracked, WstpJob, WstpThread, wstp_start
 comptime PUSHERS = 3
 
 
-def keep_even(item: Tracked) -> Bool:
-    return item.id % 2 == 0
+struct ItemBox(Movable):
+    """An element's allocation, embedding its stack link, as a fiber record does."""
+    var link: _StackLink[Item]
+    var id: Int
+    var tracked: Optional[Tracked]
+
+    def __init__(out self, var tracked: Tracked):
+        self.link = _StackLink[Item]()
+        self.id = tracked.id
+        self.tracked = Optional(tracked^)
+
+
+struct Item(_Linked):
+    """The only handle to one `Tracked` element's box."""
+    var box: ArcPointer[ItemBox]
+
+    def __init__(out self, var tracked: Tracked):
+        self.box = ArcPointer(ItemBox(tracked^))
+
+    def _link_address(self) -> Int:
+        return Int(Pointer(to=self.box[].link))
+
+    def id(self) -> Int:
+        return self.box[].id
+
+    def into_tracked(deinit self) -> Tracked:
+        var box = self.box^
+        return box[].tracked.take()
+
+
+def keep_even(item: Item) -> Bool:
+    return item.id() % 2 == 0
 
 
 struct Rig(Movable):
-    var stack: _ClosableStack[Tracked]
+    var stack: _ClosableStack[Item]
     var tag: Atomic[Int]
     var stop: Atomic[Int]
     var refused: Atomic[Int]
@@ -41,7 +72,7 @@ struct Rig(Movable):
     var bad_tags: Atomic[Int]
 
     def __init__(out self):
-        self.stack = _ClosableStack[Tracked]()
+        self.stack = _ClosableStack[Item]()
         self.tag = Atomic(-1)
         self.stop = Atomic(0)
         self.refused = Atomic(0)
@@ -58,8 +89,8 @@ def prune_once(rig: ArcPointer[Rig], ledger: Ledger):
             _ = rig[].bad_tags.fetch_add(1)
     while pruned.orphans:
         var orphan = pruned.orphans.pop()
-        check(orphan.id % 2 == 0, "orphans are survivors")
-        ledger.receive(orphan^)
+        check(orphan.id() % 2 == 0, "orphans are survivors")
+        ledger.receive(orphan^.into_tracked())
 
 
 @fieldwise_init
@@ -74,10 +105,10 @@ struct Pusher(WstpJob):
         self.ledger.arrive_and_wait()
         for i in range(self.count):
             var id = i * PUSHERS + self.index
-            var refused = self.rig[].stack.push(self.ledger.make(id))
+            var refused = self.rig[].stack.push(Item(self.ledger.make(id)))
             if refused:
                 _ = self.rig[].refused.fetch_add(1)
-                self.ledger.receive(refused.take())
+                self.ledger.receive(refused.take().into_tracked())
             if self.index > 0 and random.below(64) == 0:
                 prune_once(self.rig, self.ledger)
 
@@ -112,7 +143,7 @@ def round(per_pusher: Int, seed: UInt64, closes: Bool) raises -> Tuple[Int, Int]
         rig[].tag.store[ordering=Ordering.RELEASE](tag)
         var closed = rig[].stack.close(UInt8(tag))
         while closed:
-            ledger.receive(closed.pop())
+            ledger.receive(closed.pop().into_tracked())
         check(rig[].stack.is_closed() and not rig[].stack.close(), "a stack closes once")
     while pushers:
         _ = pushers.pop().join()

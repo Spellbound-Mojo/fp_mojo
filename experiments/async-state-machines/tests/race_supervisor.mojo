@@ -21,7 +21,7 @@ from std.sys import stderr
 from fp.callables import OnceUnary
 from fp.effects import Fiber as Thread, Outcome
 from fp.effects.async_runtime import IO, Fiber, Supervisor, run
-from fp.effects._async.fibers import _FiberRecord, _Scope, _CLOSE_CANCEL, _CLOSE_KEEP
+from fp.effects._async.fibers import _FiberRecord, _Scope, _Child, _CLOSE_CANCEL, _CLOSE_KEEP
 from fp._internal.erased import _Erased
 from fp.effects._async.scheduling.random import _Random
 from wstp_support import check, WstpJob, WstpThread, wstp_start
@@ -97,7 +97,7 @@ def scope_round(per_thread: Int, seed: UInt64, tag: UInt8) raises -> Tuple[Int, 
     var end = Int(monotonic()) + random.below(3_000_000)
     while Int(monotonic()) < end:
         pass
-    var closed = List[Record]()
+    var closed = List[_Child[Int]]()
     if tag == _CLOSE_CANCEL:
         rig[].scope.cancel_children()
     else:
