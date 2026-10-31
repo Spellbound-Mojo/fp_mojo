@@ -89,6 +89,7 @@ POSITIVE.add("capability_lifting")
 POSITIVE.add("capability_concurrent")
 POSITIVE.add("capability_temporal")
 POSITIVE.add("test_control")
+POSITIVE.add("os_layer")
 
 
 def experiment_inputs():

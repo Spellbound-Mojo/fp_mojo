@@ -1,0 +1,6 @@
+pipe round trip: ok
+nonblocking reads: ok
+poll readiness and timeout: ok
+clocks and nanosleep: ok
+processor count and getrusage: ok
+threads through the shared owner: ok

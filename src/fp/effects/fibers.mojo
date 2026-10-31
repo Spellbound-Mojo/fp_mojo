@@ -1,10 +1,8 @@
 """Typed, owned OS-thread fibers for Linux; cancellation remains cooperative."""
-from std.ffi import external_call
 from std.atomic import Atomic
 from std.memory import ArcPointer
-from std.os import abort
-from std.sys.info import CompilationTarget, is_64bit
 from std.time import sleep
+from fp._internal.os import OSThread, threads_supported
 from .io import IO, IOContext, IOContract, CancellationToken, _run_io, _settle
 from .outcomes import Outcome
 from .protocols import ReaderAction
@@ -18,7 +16,7 @@ struct _FiberState[P: ReaderAction](Movable):
     var context: IOContext[IOContract[Self.P].Error]
 
 
-def _worker[P: ReaderAction, o: MutOrigin](state: Pointer[_FiberState[P], o]) abi("C") -> OptionalPointer[NoneType, MutUntrackedOrigin]:
+def _worker[P: ReaderAction](state: Pointer[_FiberState[P], MutAnyOrigin]) abi("C") -> OptionalPointer[NoneType, MutUntrackedOrigin]:
     comptime assert IOContract[P].Compatible
     var program = state[].program.take()
     var context = state[].context.copy()
@@ -26,14 +24,6 @@ def _worker[P: ReaderAction, o: MutOrigin](state: Pointer[_FiberState[P], o]) ab
     state[].result = Optional(result^)
     state[].done.store(1)
     return None
-
-
-def _join(handle: UInt64):
-    # The owner cannot free the state until the worker has stopped. A failed
-    # join violates this invariant; continuing would risk use after free.
-    var status = external_call["pthread_join", Int32](handle, OptionalPointer[NoneType, MutUntrackedOrigin]())
-    if status != 0:
-        abort("fp.effects: pthread_join failed")
 
 
 @fieldwise_init
@@ -48,18 +38,13 @@ struct Fiber[P: ReaderAction](Movable):
     Parameters:
         P: A compatible IO recipe and its captured owners.
     """
-    var _state: ArcPointer[_FiberState[Self.P]]
-    var _handle: Optional[UInt64]
+    var _thread: OSThread[_FiberState[Self.P]]
     var _token: CancellationToken
 
     def __deinit__(deinit self):
-        if self._handle:
-            self._token.cancel()
-            _join(self._handle.value())
-        # Foreign code retains a pointer invisible to Mojo's origin analysis.
-        # Unused fields may be destroyed before this destructor's body: make
-        # the allocation's final use explicit after joining the worker.
-        _ = self._state^
+        self._token.cancel()
+        # The thread owner joins before releasing the shared state.
+        _ = self._thread^.join()
 
     def request_cancel(self):
         """Request cancellation without waiting for the worker to stop."""
@@ -71,7 +56,7 @@ struct Fiber[P: ReaderAction](Movable):
         Returns:
             True when the worker has published its final outcome.
         """
-        return self._state[].done.load() != 0
+        return self._thread.state().done.load() != 0
 
     def join(deinit self) -> IOContract[Self.P].Out:
         """Wait synchronously and consume the worker's exact outcome.
@@ -79,8 +64,8 @@ struct Fiber[P: ReaderAction](Movable):
         Returns:
             Its success, accumulated exact errors, or cancellation.
         """
-        _join(self._handle.take())
-        return self._state[].result.take()
+        var state = self._thread^.join()
+        return state[].result.take()
 
     def cancel(deinit self) -> IOContract[Self.P].Out:
         """Request cancellation, wait for finalization, and return its outcome.
@@ -140,16 +125,14 @@ def unsafe_start[P: ReaderAction](var program: P) raises -> Fiber[P] where IOCon
         Error if the platform is unsupported or pthread_create fails. Failure
         destroys the unopened program without running its finalizers.
     """
-    comptime if CompilationTarget.is_linux() and is_64bit():
+    comptime if threads_supported:
         var token = CancellationToken()
         var state = ArcPointer(_FiberState[P](Optional(program^), Optional[IOContract[P].Out](), Atomic(UInt8(0)), IOContext[IOContract[P].Error](token.copy(), False)))
-        var handle = UInt64(0)
-        # POSIX retains this exact typed pointer. ArcPointer keeps its allocation
-        # stable; Fiber keeps the owner alive until pthread_join. Only the worker
-        # touches program/result before join; done and cancellation are atomic.
-        var status = external_call["pthread_create", Int32](Pointer(to=handle), OptionalPointer[NoneType, ImmUntrackedOrigin](), _worker[P, origin_of(state[])], Pointer(to=state[]))
-        if status != 0:
+        # Only the worker touches program/result before join; done and
+        # cancellation are atomic. The thread owner joins before release.
+        try:
+            return Fiber[P](OSThread(state^, _worker[P]), token^)
+        except:
             raise Error("fp.effects: pthread_create failed")
-        return Fiber[P](state^, Optional(handle), token^)
     else:
         raise Error("fp.effects: fibers currently require 64-bit Linux")
