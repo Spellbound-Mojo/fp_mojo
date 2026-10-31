@@ -91,6 +91,7 @@ POSITIVE.add("capability_temporal")
 POSITIVE.add("test_control")
 POSITIVE.add("os_layer")
 POSITIVE.update({"foreign_completion", "foreign_signal"})
+POSITIVE.update({"wstp_support", "wstp_queues", "wstp_timers"})
 
 
 def experiment_inputs():
