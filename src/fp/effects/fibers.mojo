@@ -38,13 +38,17 @@ struct Fiber[P: ReaderAction](Movable):
     Parameters:
         P: A compatible IO recipe and its captured owners.
     """
-    var _thread: OSThread[_FiberState[Self.P]]
+    var _state: ArcPointer[_FiberState[Self.P]]
+    var _thread: OSThread
     var _token: CancellationToken
 
     def __deinit__(deinit self):
         self._token.cancel()
-        # The thread owner joins before releasing the shared state.
-        _ = self._thread^.join()
+        self._thread^.join()
+        # Foreign code retains a pointer invisible to Mojo's origin analysis.
+        # Unused fields may be destroyed before this destructor's body: make
+        # the allocation's final use explicit after joining the worker.
+        _ = self._state^
 
     def request_cancel(self):
         """Request cancellation without waiting for the worker to stop."""
@@ -56,7 +60,7 @@ struct Fiber[P: ReaderAction](Movable):
         Returns:
             True when the worker has published its final outcome.
         """
-        return self._thread.state().done.load() != 0
+        return self._state[].done.load() != 0
 
     def join(deinit self) -> IOContract[Self.P].Out:
         """Wait synchronously and consume the worker's exact outcome.
@@ -64,8 +68,8 @@ struct Fiber[P: ReaderAction](Movable):
         Returns:
             Its success, accumulated exact errors, or cancellation.
         """
-        var state = self._thread^.join()
-        return state[].result.take()
+        self._thread^.join()
+        return self._state[].result.take()
 
     def cancel(deinit self) -> IOContract[Self.P].Out:
         """Request cancellation, wait for finalization, and return its outcome.
@@ -128,10 +132,12 @@ def unsafe_start[P: ReaderAction](var program: P) raises -> Fiber[P] where IOCon
     comptime if threads_supported:
         var token = CancellationToken()
         var state = ArcPointer(_FiberState[P](Optional(program^), Optional[IOContract[P].Out](), Atomic(UInt8(0)), IOContext[IOContract[P].Error](token.copy(), False)))
-        # Only the worker touches program/result before join; done and
-        # cancellation are atomic. The thread owner joins before release.
+        # POSIX retains this exact typed pointer. ArcPointer keeps its allocation
+        # stable; Fiber keeps the owner alive until the join. Only the worker
+        # touches program/result before join; done and cancellation are atomic.
         try:
-            return Fiber[P](OSThread(state^, _worker[P]), token^)
+            var thread = OSThread(_worker[P], Pointer[_FiberState[P], MutAnyOrigin](to=state[]))
+            return Fiber[P](state^, thread^, token^)
         except:
             raise Error("fp.effects: pthread_create failed")
     else:

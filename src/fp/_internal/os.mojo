@@ -13,7 +13,6 @@ unverified until macOS is qualified. Using a Linux-only facility on another
 target is a compile-time error.
 """
 from std.ffi import ErrNo, c_int, external_call, get_errno
-from std.memory import ArcPointer
 from std.os import abort
 from std.sys.info import CompilationTarget, is_64bit, platform_map, size_of
 
@@ -693,65 +692,47 @@ comptime ThreadEntry[S: AnyType] = def(Pointer[S, MutAnyOrigin]) abi("C") thin -
 """A C-ABI thread body receiving the shared state; it must not raise."""
 
 
-struct OSThread[S: Movable & Deinitable](Movable):
-    """An owned, joinable OS thread sharing one allocation with its body.
+struct OSThread(Movable):
+    """An owned, joinable OS thread, joined exactly once: explicitly or when dropped.
 
-    The owner keeps the shared state alive until the thread is joined, and
-    joins before releasing it whether it is joined explicitly or dropped. Only
-    the body and the owner may touch the state, and the caller synchronizes
-    them: Mojo has no Send or Sync proof, so the caller must also ensure that
-    everything the state holds may be used and destroyed on another thread.
-
-    Parameters:
-        S: The state shared by the owner and the thread body.
+    The thread runs a C-ABI body on a pointer that POSIX retains outside
+    Mojo's origin analysis. The caller keeps the pointee alive and at one
+    address, such as inside an ArcPointer, until the thread is joined, and
+    makes that owner's final use explicit after the join, since Mojo may
+    destroy a value after its last visible use. Mojo has no Send or Sync
+    proof: the caller also ensures that everything the pointee holds may be
+    used and destroyed on another thread, and synchronizes shared access.
     """
 
-    var _state: ArcPointer[Self.S]
     var _handle: UInt64
 
-    def __init__(out self, var state: ArcPointer[Self.S], entry: ThreadEntry[Self.S]) raises OSError:
-        """Start a thread running `entry` on a pointer to the shared state.
+    def __init__[S: AnyType](out self, entry: ThreadEntry[S], state: Pointer[S, MutAnyOrigin]) raises OSError:
+        """Start a thread running `entry(state)`.
+
+        Parameters:
+            S: The state the body receives.
 
         Args:
-            state: The shared state; its allocation stays at one address.
-            entry: The thread body.
+            entry: The thread body, which must not raise.
+            state: The pointer passed to the body; it must stay valid until
+                the thread is joined.
 
         Raises:
             OSError: The error number pthread_create returned, such as EAGAIN.
-                The state is released without running the body.
+                No thread was started.
         """
         comptime assert threads_supported, "OS threads are qualified only on 64-bit Linux"
         self._handle = 0
-        # POSIX retains this exact pointer. ArcPointer keeps its allocation
-        # stable and this owner keeps it alive until pthread_join returns.
-        var pointer = Pointer[Self.S, MutAnyOrigin](to=state[])
-        var status = external_call["pthread_create", c_int](Pointer(to=self._handle), OptionalPointer[NoneType, ImmUntrackedOrigin](), entry, pointer)
+        var status = external_call["pthread_create", c_int](Pointer(to=self._handle), OptionalPointer[NoneType, ImmUntrackedOrigin](), entry, state)
         if status != 0:
             raise OSError("pthread_create", ErrNo(status))
-        self._state = state^
 
     def __deinit__(deinit self):
         _join(self._handle)
-        # Foreign code holds a pointer invisible to Mojo's origin analysis:
-        # release the allocation only after the join above.
-        _ = self._state^
 
-    def state(ref self) -> ref[self._state] Self.S:
-        """Borrow the shared state; the caller synchronizes with the body.
-
-        Returns:
-            The state.
-        """
-        return self._state[]
-
-    def join(deinit self) -> ArcPointer[Self.S]:
-        """Wait for the body to return.
-
-        Returns:
-            The shared state, no longer used by the thread.
-        """
+    def join(deinit self):
+        """Wait for the body to return; afterwards the thread holds no pointer."""
         _join(self._handle)
-        return self._state^
 
 
 def _join(handle: UInt64):

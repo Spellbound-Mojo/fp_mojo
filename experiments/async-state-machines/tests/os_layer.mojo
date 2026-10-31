@@ -156,23 +156,28 @@ def body(state: Pointer[Work, MutAnyOrigin]) abi("C") -> OptionalPointer[NoneTyp
     return None
 
 
+def start(state: ArcPointer[Work]) raises -> OSThread:
+    return OSThread(body, Pointer[Work, MutAnyOrigin](to=state[]))
+
+
 def threads() raises:
     var shared = ArcPointer(Atomic[Int64](0))
-    var workers = List[OSThread[Work]]()
+    var states = List[ArcPointer[Work]]()
+    var workers = List[OSThread]()
     for _ in range(4):
-        workers.append(OSThread(ArcPointer(Work(shared.copy(), 10_000, Atomic[Int64](0))), body))
-    var joined = 0
+        states.append(ArcPointer(Work(shared.copy(), 10_000, Atomic[Int64](0))))
+        workers.append(start(states[len(states) - 1]))
     while len(workers) > 0:
-        var state = workers.pop().join()
+        workers.pop().join()
+    for state in states:
         check(state[].finished.load() == 1, "join waits for the body")
-        joined += 1
-    check(joined == 4 and shared[].load() == 40_000, "every thread ran to completion")
-    # Dropping an unjoined owner joins it before releasing the state.
+    check(shared[].load() == 40_000, "every thread ran to completion")
+    # Dropping an unjoined owner joins it; the state outlives the thread.
     var observed = ArcPointer(Atomic[Int64](0))
-    var dropped = OSThread(ArcPointer(Work(observed.copy(), 1, Atomic[Int64](0))), body)
-    check(dropped.state().steps == 1, "the owner borrows the shared state")
+    var state = ArcPointer(Work(observed.copy(), 1, Atomic[Int64](0)))
+    var dropped = start(state)
     _ = dropped^
-    check(observed[].load() == 1, "dropping joins the thread")
+    check(state[].finished.load() == 1 and observed[].load() == 1, "dropping joins the thread")
     print("threads through the shared owner: ok")
 
 
