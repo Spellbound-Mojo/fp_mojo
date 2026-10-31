@@ -5957,6 +5957,129 @@
    },
    "provider": "effects/capabilities"
   },
+  "effects.LiftConcurrent": {
+   "declarations": [
+    "struct LiftConcurrent[I: Monad & _Lifting, C: Concurrent](Concurrent, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "cancel": [
+     {
+      "sha256": "59855e2d0d3fe580ffadfef33daacb435696e9d794483a55614fb20e4a31c4f1",
+      "signature": "def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped:"
+     }
+    ],
+    "canceled": [
+     {
+      "sha256": "f3aa99e858d6d4061966c304805229031e88685aac4a1aa86e714fcd1ceeea3f",
+      "signature": "def canceled() -> Self.Canceled:"
+     }
+    ],
+    "cede": [
+     {
+      "sha256": "77a860e45d61963f241310f5497f832db84a8be28e34f7b3739128873397027c",
+      "signature": "def cede() -> Self.Ceded:"
+     }
+    ],
+    "complete_deferred": [
+     {
+      "sha256": "542a6479d49a50fed031138220f669829c9001fcc1e493b4b1c4c20aabb76d67",
+      "signature": "def complete_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T], var value: T) -> Self.DeferredCompleted:"
+     }
+    ],
+    "get_deferred": [
+     {
+      "sha256": "b25b0eac165845f7690ddb245f41caca5efa2c28cdff968521ac48ccba9cd24d",
+      "signature": "def get_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T]) -> Self.DeferredRead[T]:"
+     }
+    ],
+    "get_ref": [
+     {
+      "sha256": "bd88450f6987acfbb6cf32c254cb7e5e6e73bfb20116379961bd33af0d11778b",
+      "signature": "def get_ref[T: Copyable & Deinitable](cell: Self.RefHandle[T]) -> Self.RefRead[T]:"
+     }
+    ],
+    "guarantee": [
+     {
+      "sha256": "79ed2420e9ac1e61216af0b5c8bea244167133fd31d26bca5ef4605ca213bc51",
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:"
+     }
+    ],
+    "guarantee_case": [
+     {
+      "sha256": "7da09899f80251be0b1edf7da8ceead11a69f014517394e58973663bb76a8102",
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:"
+     }
+    ],
+    "join": [
+     {
+      "sha256": "57583f3b0fad88ab2a52b8e8799f7d93d5411575a0f6ff6fa7ba7e587e2db37b",
+      "signature": "def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]:"
+     }
+    ],
+    "make_deferred": [
+     {
+      "sha256": "3566bdb7d5bc653f09a42298e2593600ef3bb86c91fe1fe52f5ba94a32fd6fea",
+      "signature": "def make_deferred[T: Copyable & Deinitable]() -> Self.DeferredMade[T]:"
+     }
+    ],
+    "make_ref": [
+     {
+      "sha256": "abb131bd2972aaac7d9fc75ae4b1ca5a533838d7647d8ddbbfebf253a4ed0422",
+      "signature": "def make_ref[T: Movable & Deinitable](var value: T) -> Self.RefMade[T]:"
+     }
+    ],
+    "modify_ref": [
+     {
+      "sha256": "2e1b9a8a7681318b999a3b495971c2693d78aededa29b358d5980becb39fef80",
+      "signature": "def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefModified[T, A, F]:"
+     }
+    ],
+    "never": [
+     {
+      "sha256": "fde9ac119aa2357f19804ebae7dd6c2840596e7e2e7835be7505444b6c3989d1",
+      "signature": "def never[A: Movable & Deinitable]() -> Self.Forever[A]:"
+     }
+    ],
+    "on_cancel": [
+     {
+      "sha256": "b0ce8b5894742335988807b8a9794f2d870f96abec90e550660eea7d810c1a21",
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:"
+     }
+    ],
+    "restore": [
+     {
+      "sha256": "85d16a9c6e8547772ae605848c3b65422b471012794412356d052e5f068956b4",
+      "signature": "def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:"
+     }
+    ],
+    "set_ref": [
+     {
+      "sha256": "f7f6d78c0fffa01426c08b71b20bd1d3b72143f0ecfb4ffea8acf53d0e64cee9",
+      "signature": "def set_ref[T: Movable & Deinitable](cell: Self.RefHandle[T], var value: T) -> Self.RefWritten:"
+     }
+    ],
+    "start": [
+     {
+      "sha256": "5c225fbed5acc02645a9b6bd98f76437058c1159d2ff4538d54a4a7278394363",
+      "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:"
+     }
+    ],
+    "uncancelable": [
+     {
+      "sha256": "a23469a0c8bfdfbfe12044f884a9702f9ca24ad2d5ccd16e5d958f53adabc546",
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:"
+     }
+    ],
+    "update_ref": [
+     {
+      "sha256": "58e7bcc9e49d66bef2a1c809426ef4c66e703e63f7bfcf2ed4251e2ae2f82304",
+      "signature": "def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefUpdated[T, F]:"
+     }
+    ]
+   },
+   "provider": "effects/capabilities"
+  },
   "effects.LiftDefer": {
    "declarations": [
     "struct LiftDefer[I: Monad & _Lifting, C: Defer](Defer, not Deinitable):"
@@ -6156,6 +6279,198 @@
      {
       "sha256": "376c2fe2820efe34030c9fb62d36c419e2e379c4663b42ed37054737fbbce660",
       "signature": "def tell(var log: Self.Log.Value) raises Self.TellError -> Self.Told:"
+     }
+    ]
+   },
+   "provider": "effects/capabilities"
+  },
+  "effects.LiftTemporal": {
+   "declarations": [
+    "struct LiftTemporal[I: Monad & _Lifting, C: Temporal](Temporal, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "and_wait": [
+     {
+      "sha256": "74ff6f467440056a3cca4932ff6dd32ba59a7a5bf2688954190f82567ae01a65",
+      "signature": "def and_wait[V: Movable & Deinitable](var program: V, duration: Duration) -> Self.Waited[V]:"
+     }
+    ],
+    "cancel": [
+     {
+      "sha256": "59855e2d0d3fe580ffadfef33daacb435696e9d794483a55614fb20e4a31c4f1",
+      "signature": "def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped:"
+     }
+    ],
+    "canceled": [
+     {
+      "sha256": "f3aa99e858d6d4061966c304805229031e88685aac4a1aa86e714fcd1ceeea3f",
+      "signature": "def canceled() -> Self.Canceled:"
+     }
+    ],
+    "cede": [
+     {
+      "sha256": "77a860e45d61963f241310f5497f832db84a8be28e34f7b3739128873397027c",
+      "signature": "def cede() -> Self.Ceded:"
+     }
+    ],
+    "complete_deferred": [
+     {
+      "sha256": "542a6479d49a50fed031138220f669829c9001fcc1e493b4b1c4c20aabb76d67",
+      "signature": "def complete_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T], var value: T) -> Self.DeferredCompleted:"
+     }
+    ],
+    "delay_by": [
+     {
+      "sha256": "74e39b25295e076d7f606bed9c00d252d184f7c8b3fd404abba60e61c5efb1e6",
+      "signature": "def delay_by[V: Movable & Deinitable](var program: V, duration: Duration) -> Self.DelayedBy[V]:"
+     }
+    ],
+    "get_deferred": [
+     {
+      "sha256": "b25b0eac165845f7690ddb245f41caca5efa2c28cdff968521ac48ccba9cd24d",
+      "signature": "def get_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T]) -> Self.DeferredRead[T]:"
+     }
+    ],
+    "get_ref": [
+     {
+      "sha256": "bd88450f6987acfbb6cf32c254cb7e5e6e73bfb20116379961bd33af0d11778b",
+      "signature": "def get_ref[T: Copyable & Deinitable](cell: Self.RefHandle[T]) -> Self.RefRead[T]:"
+     }
+    ],
+    "guarantee": [
+     {
+      "sha256": "79ed2420e9ac1e61216af0b5c8bea244167133fd31d26bca5ef4605ca213bc51",
+      "signature": "def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:"
+     }
+    ],
+    "guarantee_case": [
+     {
+      "sha256": "7da09899f80251be0b1edf7da8ceead11a69f014517394e58973663bb76a8102",
+      "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:"
+     }
+    ],
+    "join": [
+     {
+      "sha256": "57583f3b0fad88ab2a52b8e8799f7d93d5411575a0f6ff6fa7ba7e587e2db37b",
+      "signature": "def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]:"
+     }
+    ],
+    "make_deferred": [
+     {
+      "sha256": "3566bdb7d5bc653f09a42298e2593600ef3bb86c91fe1fe52f5ba94a32fd6fea",
+      "signature": "def make_deferred[T: Copyable & Deinitable]() -> Self.DeferredMade[T]:"
+     }
+    ],
+    "make_ref": [
+     {
+      "sha256": "abb131bd2972aaac7d9fc75ae4b1ca5a533838d7647d8ddbbfebf253a4ed0422",
+      "signature": "def make_ref[T: Movable & Deinitable](var value: T) -> Self.RefMade[T]:"
+     }
+    ],
+    "modify_ref": [
+     {
+      "sha256": "2e1b9a8a7681318b999a3b495971c2693d78aededa29b358d5980becb39fef80",
+      "signature": "def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefModified[T, A, F]:"
+     }
+    ],
+    "monotonic": [
+     {
+      "sha256": "c92690d957e88b094afff5e9c3c46b6ffe23ad24db2ef62ab8fcbd5a557e6f19",
+      "signature": "def monotonic() -> Self.Monotonic:"
+     }
+    ],
+    "never": [
+     {
+      "sha256": "fde9ac119aa2357f19804ebae7dd6c2840596e7e2e7835be7505444b6c3989d1",
+      "signature": "def never[A: Movable & Deinitable]() -> Self.Forever[A]:"
+     }
+    ],
+    "on_cancel": [
+     {
+      "sha256": "b0ce8b5894742335988807b8a9794f2d870f96abec90e550660eea7d810c1a21",
+      "signature": "def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:"
+     }
+    ],
+    "restore": [
+     {
+      "sha256": "85d16a9c6e8547772ae605848c3b65422b471012794412356d052e5f068956b4",
+      "signature": "def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:"
+     }
+    ],
+    "set_ref": [
+     {
+      "sha256": "f7f6d78c0fffa01426c08b71b20bd1d3b72143f0ecfb4ffea8acf53d0e64cee9",
+      "signature": "def set_ref[T: Movable & Deinitable](cell: Self.RefHandle[T], var value: T) -> Self.RefWritten:"
+     }
+    ],
+    "sleep": [
+     {
+      "sha256": "820b96b63cda41c6104cca6ce1230d15ea9a5f3ccee40e33ee3a0c05a015fedb",
+      "signature": "def sleep(duration: Duration) -> Self.Slept:"
+     }
+    ],
+    "start": [
+     {
+      "sha256": "5c225fbed5acc02645a9b6bd98f76437058c1159d2ff4538d54a4a7278394363",
+      "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:"
+     }
+    ],
+    "timed": [
+     {
+      "sha256": "9ce96d5239fc1beda3ccf52a3b1dc73568a254c5c6fb5107c0eaccc7d9da33e9",
+      "signature": "def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:"
+     }
+    ],
+    "timeout": [
+     {
+      "sha256": "d3100edeef550eea9dac3aae27a737a48dabb69290b8ed948356040e6cf46fbe",
+      "signature": "def timeout[V: Movable & Deinitable](var program: V, duration: Duration, var error: Self.Error) -> Self.TimedOut[V]:"
+     }
+    ],
+    "timeout_after": [
+     {
+      "sha256": "71d2a8a93ea93b82f3f4b96de867f2517e2aa6f1fbf8d56b3a3820b2b89a42a0",
+      "signature": "def timeout_after[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> Self.TimedOut[V]:"
+     }
+    ],
+    "timeout_to": [
+     {
+      "sha256": "b2bd61a077474b371a839d66ea940494b9747a47f856734caed67db387ba1283",
+      "signature": "def timeout_to[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> Self.TimedOut[V]:"
+     }
+    ],
+    "uncancelable": [
+     {
+      "sha256": "a23469a0c8bfdfbfe12044f884a9702f9ca24ad2d5ccd16e5d958f53adabc546",
+      "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:"
+     }
+    ],
+    "update_ref": [
+     {
+      "sha256": "58e7bcc9e49d66bef2a1c809426ef4c66e703e63f7bfcf2ed4251e2ae2f82304",
+      "signature": "def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefUpdated[T, F]:"
+     }
+    ]
+   },
+   "provider": "effects/capabilities"
+  },
+  "effects.LiftTiming": {
+   "declarations": [
+    "struct LiftTiming[I: Monad & _Lifting, C: Timing](Timing, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "monotonic": [
+     {
+      "sha256": "c92690d957e88b094afff5e9c3c46b6ffe23ad24db2ef62ab8fcbd5a557e6f19",
+      "signature": "def monotonic() -> Self.Monotonic:"
+     }
+    ],
+    "timed": [
+     {
+      "sha256": "9ce96d5239fc1beda3ccf52a3b1dc73568a254c5c6fb5107c0eaccc7d9da33e9",
+      "signature": "def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:"
      }
     ]
    },
@@ -6792,7 +7107,7 @@
   },
   "effects.SyncIO": {
    "declarations": [
-    "struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, not Deinitable):"
+    "struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, not Deinitable):"
    ],
    "kind": "type or alias",
    "methods": {
@@ -6826,6 +7141,12 @@
       "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:"
      }
     ],
+    "monotonic": [
+     {
+      "sha256": "a3c53f8eb059a01bbce463280439bbe3f5743dc1b37ea56a8adbc5cda7f486d7",
+      "signature": "def monotonic() -> _IOMonotonic[Self.E]:"
+     }
+    ],
     "on_cancel": [
      {
       "sha256": "b0ce8b5894742335988807b8a9794f2d870f96abec90e550660eea7d810c1a21",
@@ -6842,6 +7163,12 @@
      {
       "sha256": "34138597a7c41aacdedc027dc5d2b6bf78f3e6b8d7136904a679ca51f98c46d5",
       "signature": "def restore[V: Movable & Deinitable](poll: Poll[Self.E], var program: V) -> Self.Restored[V]:"
+     }
+    ],
+    "timed": [
+     {
+      "sha256": "9ce96d5239fc1beda3ccf52a3b1dc73568a254c5c6fb5107c0eaccc7d9da33e9",
+      "signature": "def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:"
      }
     ],
     "uncancelable": [
@@ -6874,6 +7201,72 @@
    ],
    "kind": "type or alias",
    "provider": "effects/capabilities"
+  },
+  "effects.Temporal": {
+   "declarations": [
+    "trait Temporal(Concurrent, Timing):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "and_wait": [
+     {
+      "sha256": "74ff6f467440056a3cca4932ff6dd32ba59a7a5bf2688954190f82567ae01a65",
+      "signature": "def and_wait[V: Movable & Deinitable](var program: V, duration: Duration) -> Self.Waited[V]:"
+     }
+    ],
+    "delay_by": [
+     {
+      "sha256": "74e39b25295e076d7f606bed9c00d252d184f7c8b3fd404abba60e61c5efb1e6",
+      "signature": "def delay_by[V: Movable & Deinitable](var program: V, duration: Duration) -> Self.DelayedBy[V]:"
+     }
+    ],
+    "sleep": [
+     {
+      "sha256": "820b96b63cda41c6104cca6ce1230d15ea9a5f3ccee40e33ee3a0c05a015fedb",
+      "signature": "def sleep(duration: Duration) -> Self.Slept:"
+     }
+    ],
+    "timeout": [
+     {
+      "sha256": "d3100edeef550eea9dac3aae27a737a48dabb69290b8ed948356040e6cf46fbe",
+      "signature": "def timeout[V: Movable & Deinitable](var program: V, duration: Duration, var error: Self.Error) -> Self.TimedOut[V]:"
+     }
+    ],
+    "timeout_after": [
+     {
+      "sha256": "71d2a8a93ea93b82f3f4b96de867f2517e2aa6f1fbf8d56b3a3820b2b89a42a0",
+      "signature": "def timeout_after[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> Self.TimedOut[V]:"
+     }
+    ],
+    "timeout_to": [
+     {
+      "sha256": "b2bd61a077474b371a839d66ea940494b9747a47f856734caed67db387ba1283",
+      "signature": "def timeout_to[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> Self.TimedOut[V]:"
+     }
+    ]
+   },
+   "provider": "effects/protocols"
+  },
+  "effects.Timing": {
+   "declarations": [
+    "trait Timing:"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "monotonic": [
+     {
+      "sha256": "c92690d957e88b094afff5e9c3c46b6ffe23ad24db2ef62ab8fcbd5a557e6f19",
+      "signature": "def monotonic() -> Self.Monotonic:"
+     }
+    ],
+    "timed": [
+     {
+      "sha256": "9ce96d5239fc1beda3ccf52a3b1dc73568a254c5c6fb5107c0eaccc7d9da33e9",
+      "signature": "def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:"
+     }
+    ]
+   },
+   "provider": "effects/protocols"
   },
   "effects.Writer": {
    "declarations": [
@@ -7017,6 +7410,16 @@
    ],
    "provider": "effects/operations"
   },
+  "effects.and_wait": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "cfffa34f0664f6c45d0ad5307be08bfeed084420a63c051ec6de2a23c3913e08",
+     "signature": "def and_wait[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration) -> I.Waited[V] where I.TemporalCompatible[V]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.ask": {
    "kind": "function",
    "overloads": [
@@ -7095,10 +7498,16 @@
   },
   "effects.async_runtime.Async": {
    "declarations": [
-    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Concurrent, not Deinitable):"
+    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Temporal, not Deinitable):"
    ],
    "kind": "type or alias",
    "methods": {
+    "and_wait": [
+     {
+      "sha256": "7ed89724c3b596cb794b2874b6a98eb60c9f8a092673ba3429daec3e7d6de18d",
+      "signature": "def and_wait[V: Movable & Deinitable](var program: V, duration: Duration) -> V:"
+     }
+    ],
     "cancel": [
      {
       "sha256": "f7d79a89a875042316f34a119ae028098548699c1aff726ff452b724efec1c13",
@@ -7133,6 +7542,12 @@
      {
       "sha256": "cc1d9e923dcacbd3ae9e7e6cb2cdbed0144383acfbe6523ea5b831070ecc11d1",
       "signature": "def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:"
+     }
+    ],
+    "delay_by": [
+     {
+      "sha256": "0adfb10f22b22963294bb4ae08a4638c87a6ab3cdc0c8687d42261e6f631c2c3",
+      "signature": "def delay_by[V: Movable & Deinitable](var program: V, duration: Duration) -> V:"
      }
     ],
     "flat_map": [
@@ -7201,6 +7616,12 @@
       "signature": "def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Ref[T], var function: F) -> IO[A, Self.E]:"
      }
     ],
+    "monotonic": [
+     {
+      "sha256": "11252ab0b088a396c1bd8001389f28e258528a4640f5ea1c0f8a52b348a2f841",
+      "signature": "def monotonic() -> IO[Instant, Self.E]:"
+     }
+    ],
     "never": [
      {
       "sha256": "14edbe31ab70b7fdda1046de53e6a1f038ff69f6aefeb71b789c1a4c2dc31aa8",
@@ -7243,10 +7664,40 @@
       "signature": "def set_ref[T: Movable & Deinitable](cell: Ref[T], var value: T) -> IO[NoneType, Self.E]:"
      }
     ],
+    "sleep": [
+     {
+      "sha256": "b64572bb8435554ac9f1276808551037806f55aeaaf0f920b13d35b436f48079",
+      "signature": "def sleep(duration: Duration) -> IO[NoneType, Self.E]:"
+     }
+    ],
     "start": [
      {
       "sha256": "5c225fbed5acc02645a9b6bd98f76437058c1159d2ff4538d54a4a7278394363",
       "signature": "def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:"
+     }
+    ],
+    "timed": [
+     {
+      "sha256": "9ce96d5239fc1beda3ccf52a3b1dc73568a254c5c6fb5107c0eaccc7d9da33e9",
+      "signature": "def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:"
+     }
+    ],
+    "timeout": [
+     {
+      "sha256": "a0025b4fd592581f7e2b30e714c662f6906e5d6d381f21d8f36ffe72df025cfd",
+      "signature": "def timeout[V: Movable & Deinitable](var program: V, duration: Duration, var error: Self.E) -> V:"
+     }
+    ],
+    "timeout_after": [
+     {
+      "sha256": "7bdbf5134bef1676b801b62b0ec5a7808ee6b94bf975a15bee2aafe0e24689c0",
+      "signature": "def timeout_after[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> V:"
+     }
+    ],
+    "timeout_to": [
+     {
+      "sha256": "7a30be3703b673ebb4ac39cd19edee7e5d7d297dd56aa59033a8062b1ec9f007",
+      "signature": "def timeout_to[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> V:"
      }
     ],
     "uncancelable": [
@@ -7393,6 +7844,12 @@
       "sha256": "2326a43825612b6bc12ed051e7eaa3df10b05036f22bae29331c08c02b98971b",
       "signature": "def seconds(value: Int) raises -> Self:"
      }
+    ],
+    "to_nanoseconds": [
+     {
+      "sha256": "9b427b25fd64a0385b63ac8b8e75a996486d639da032ce01b29a394e109778fe",
+      "signature": "def to_nanoseconds(self) -> Int:"
+     }
     ]
    },
    "provider": "_internal/time"
@@ -7488,6 +7945,12 @@
    ],
    "kind": "type or alias",
    "methods": {
+    "and_wait": [
+     {
+      "sha256": "18db511ee7942e724a212f6e774b5e7510f2d4ad0eb378582d4d0cf20fcc7740",
+      "signature": "def and_wait(deinit self, duration: Duration) -> Self:"
+     }
+    ],
     "async": [
      {
       "sha256": "b76639244a0b308af629a2e9745482b405820e271b796c2b6439aa091eff0f1d",
@@ -7576,6 +8039,12 @@
       "signature": "def delay[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]:"
      }
     ],
+    "delay_by": [
+     {
+      "sha256": "43b8fa6887d29e6a03933e62d9b1e13100badc80eabd3c9f70221b3b960fa879",
+      "signature": "def delay_by(deinit self, duration: Duration) -> Self:"
+     }
+    ],
     "eval_io": [
      {
       "sha256": "c319a4859fdb41234043c8d0c9540b2c80c8f869891ecc21cf648ec14171865a",
@@ -7650,6 +8119,12 @@
       "signature": "def map[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](deinit self, f: def(var _NativeOwnedArg[Self.T]) raises X thin -> R) -> IO[R, Self.E] where _ErrorCompatible[Self.E, X]:"
      }
     ],
+    "monotonic": [
+     {
+      "sha256": "11252ab0b088a396c1bd8001389f28e258528a4640f5ea1c0f8a52b348a2f841",
+      "signature": "def monotonic() -> IO[Instant, Self.E]:"
+     }
+    ],
     "never": [
      {
       "sha256": "8579838f8db80a9fe71d75995061b23d62eecfbc52f63c43092e2dede13cd444",
@@ -7716,6 +8191,18 @@
       "signature": "def start(deinit self) -> IO[Fiber[Self.T, Self.E], Self.E]:"
      }
     ],
+    "timed": [
+     {
+      "sha256": "0ef04f19266a4ba64c75e31e33fe9ce13ef3f140055e4054f39ce6fcb091173f",
+      "signature": "def timed(deinit self) -> IO[Tuple[Duration, Self.T], Self.E]:"
+     }
+    ],
+    "timeout": [
+     {
+      "sha256": "5f0f0d29bbdd66bb6d7e3efa95ba65618a6fd39036c2109ca6aac34437260b6c",
+      "signature": "def timeout(deinit self, duration: Duration, var error: Self.E) -> Self:"
+     }
+    ],
     "timeout_after": [
      {
       "sha256": "8c430975c23153decab3ba78ca3c55d67887c6565ccffe1b471c02deb0cf94f9",
@@ -7758,6 +8245,12 @@
      {
       "sha256": "fce9b2ef08506bc44c8fc7a4278a4770593f7316c2a1889f3dcef573f4ef9820",
       "signature": "def after(self, duration: Duration) -> Self:"
+     }
+    ],
+    "since": [
+     {
+      "sha256": "8b5ec7b507a6b373b320497087014619ba73f2bec208a209ded145c3e3077da8",
+      "signature": "def since(self, earlier: Self) -> Duration:"
      }
     ]
    },
@@ -8306,6 +8799,16 @@
    ],
    "provider": "effects/_io_core"
   },
+  "effects.delay_by": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "b427092f67a5d83e32db53e859abd2a7ec39401c834c523578003b6997fea43b",
+     "signature": "def delay_by[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration) -> I.DelayedBy[V] where I.TemporalCompatible[V]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.eval_resource": {
    "kind": "function",
    "overloads": [
@@ -8588,6 +9091,16 @@
     {
      "sha256": "199b1adc5a1fa34f273a7f43c9db7ce01b54c287abc9c5e2bf9db4f7f5920139",
      "signature": "def modify_ref[T: Movable & Deinitable, //, I: Concurrent, A: Movable & Deinitable](cell: I.RefHandle[T], function: def(var _NativeOwnedArg[T]) thin -> Tuple[T, A] ) -> I.RefModified[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]] where I.ModifyCompatible[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.monotonic": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "5a57165e0b086e093f853792e2f3e9ebe12525f95de91b615d70c24294ec24a8",
+     "signature": "def monotonic[I: Timing]() -> I.Monotonic:"
     }
    ],
    "provider": "effects/capabilities"
@@ -8954,6 +9467,16 @@
    ],
    "provider": "effects/capabilities"
   },
+  "effects.sleep": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "a839d61680878393eea7773b13ecff48743a75c03e29b2cf8632a21efcd52c16",
+     "signature": "def sleep[I: Temporal](duration: Duration) -> I.Slept:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.sleep_io": {
    "kind": "function",
    "overloads": [
@@ -8984,6 +9507,46 @@
     {
      "sha256": "0af23d62083d61e72943edbfa6d197aeb413e6edaa551a3fbc1135d4fd80a8a1",
      "signature": "def tell[V: Movable & Deinitable, //, I: Censor](var log: I.Log.Value, var value: V ) raises TellContract[I, V].Error -> TellContract[I, V].Out where TellContract[I, V].Compatible:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.timed": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "8a7135c8192c97195d22b057a25f31c6e9c3b57261d64c96892a97a62e761dd9",
+     "signature": "def timed[V: Movable & Deinitable, //, I: Timing](var program: V) -> I.Timed[V] where I.TimedCompatible[V]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.timeout": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "f0ccdb4e1036f956b0c0026bc67962a565c940be86b83588bda157d24507d0b9",
+     "signature": "def timeout[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration, var error: I.Error) -> I.TimedOut[V] where I.TemporalCompatible[V]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.timeout_after": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "7ba5d39735c3bfb3ff77f7169130f6377fa7978a2dfca3a36f8da78b5f28d968",
+     "signature": "def timeout_after[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration, var fallback: V) -> I.TimedOut[V] where I.TemporalCompatible[V]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.timeout_to": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "05de2de4c89f6c1f4c4c03624ef162578fd716e2d7fdce980e79bfea96b3112e",
+     "signature": "def timeout_to[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration, var fallback: V) -> I.TimedOut[V] where I.TemporalCompatible[V]:"
     }
    ],
    "provider": "effects/capabilities"

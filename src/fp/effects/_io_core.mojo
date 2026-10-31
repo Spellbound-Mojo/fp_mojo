@@ -503,10 +503,26 @@ struct _IOSleep[E: Movable & Deinitable](ReaderAction):
         return _settle(Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit))), env)
 
 
+struct _IOMonotonic[E: Movable & Deinitable](ReaderAction, Defaultable):
+    """Read the context's clock once, for the synchronous Timing provider."""
+    comptime Family = IO[Self.E]
+    comptime Env = IOContext[Self.E]
+    comptime Value = Instant
+    comptime Out[o: ImmOrigin] = Outcome[Instant, Self.E]
+
+    def __init__(out self):
+        pass
+
+    def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
+        return _settle(Optional(Result[Instant, EffectFailure[Self.E]](Ok(env.now()))), env)
+
+
 def sleep_io[E: Movable & Deinitable](seconds: Float64) raises -> _IOSleep[E]:
     """Describe a synchronous, cooperatively cancelable wait.
 
-    Uses the monotonic clock and sleeps in intervals of at most one millisecond.
+    Uses the system monotonic clock, even when the context inherits a manual
+    one, and blocks the thread in intervals of at most one millisecond. Inside
+    an async IO through `IO.eval_io`, it blocks the cooperative host as well.
     Actual scheduling and cancellation latency depend on the operating system.
 
     Parameters:

@@ -1943,6 +1943,48 @@ capability.
 - **Remaining.** Forwarding `Concurrent` through `OptionalT` and `ResultT`
   arrives with 11b, as the steps order it.
 
+**11b** was built on 2026-10-31: `Timing`, `Temporal`, the clock domains, and
+forwarding through the layers.
+
+- **`IO` operations.** `IO.monotonic()` reads the root's clock through a leaf
+  that calls `IOContext.now`. `timed`, `timeout`, `delay_by`, and `and_wait`
+  join `sleep`, `timeout_to`, and `timeout_after`; `timeout` is `timeout_to`
+  with a raised error. To make readings usable, `Instant.since` measures the
+  `Duration` between two readings, clamped to zero and to the largest
+  supported duration, and `Duration.to_nanoseconds` reads one.
+- **One implementation of each derived operation.** `fp.effects._timing`
+  derives `timed`, `delay_by`, and `and_wait` through a family and its clock
+  reading or sleep, as Cats Effect does. `IO`, `Async`, `SyncIO`, and the
+  layer selections all use it, so through `OptionalT` a layer's absence has
+  no duration and skips the sleep after it, as Cats Effect's `OptionT` does.
+  Each dictionary names a small private clock or sleep source rather than
+  itself: a `Timing` member defined through the dictionary's own `Timing`
+  conformance is a recursive declaration in Mojo 1.2, which `mojo doc`
+  reports even when builds pass.
+- **Capabilities.** `Timing` (`monotonic`, `timed`) is provided by `Async[E]`
+  and by `SyncIO[E]`, through a recipe that reads the context's clock.
+  `Temporal`, extending `Concurrent` and `Timing`, is provided by `Async[E]`
+  only. Entry points: `monotonic`, `timed`, `sleep`, `timeout_to`,
+  `timeout_after`, `timeout`, `delay_by`, and `and_wait`.
+- **Clock domains.** Recorded in the guide: one clock per root, `Instant`
+  compared only within it, no wall-clock reading, and `sleep_io` measuring
+  the system clock and blocking the host under `IO.eval_io`.
+- **Forwarding.** `LiftConcurrent` and `LiftTemporal` forward through
+  `OptionalT` and `ResultT`, checked by `_CarrierLifting`: handles are the
+  base's, creation and reads are lifted, and timeouts forward the layer's
+  programs. `LiftTiming` works through every layer, like `LiftDefer`; over
+  `Async`, running a timed `ReaderT` program is rejected with every `ReaderT`
+  bind. `LiftTemporal` reads the same lifted clock as `LiftTiming` through
+  that clock source.
+- **Clients.** `capability_temporal` drives programs on a manual clock,
+  advancing it to each next deadline: `sleep(a)` then `sleep(b)` takes
+  `a + b`; `timeout_to(never, d, f)` runs `f` after `d`; an earlier value
+  wins; `timeout_after`, `timeout`, `delay_by`, and `and_wait`; a canceled
+  sleep completes without advancing time; `monotonic` never decreases;
+  `SyncIO` timing; and forwarding through `OptionalT`, `StateT`, and
+  `WriterT`. `public_reject_temporal_sync` and `reject_lift_temporal_state`
+  reject `Temporal` on `SyncIO` and through `StateT`.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:

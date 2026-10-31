@@ -10,6 +10,7 @@ carriers.
 from std.builtin.rebind import downcast
 from fp.algebra.protocols import Monad, Monoid, _Lifting, _FamilyCarrier
 from fp.callables.protocols import BorrowCallContract, UnaryContract, ThunkContract
+from fp._internal.time import Duration
 
 
 trait Project:
@@ -724,6 +725,163 @@ trait Concurrent(Spawn):
 
         Returns:
             A carrier producing a copy of the value.
+        """
+        ...
+
+
+trait Timing:
+    """Read monotonic time, as Cats Effect's Clock.
+
+    Readings come from the clock the running program inherits: the system
+    monotonic clock, or a manual clock that moves only when its owner advances
+    it. Instant values compare only within that clock. No wall-clock reading
+    is provided.
+    """
+    comptime Family: Monad
+    """The family whose carriers this capability builds."""
+    comptime Monotonic: Movable & Deinitable
+    """The carrier producing the current Instant."""
+    comptime TimedCompatible[V: Movable & Deinitable]: Bool
+    """Whether V is a family carrier that can be timed."""
+    comptime Timed[V: Movable & Deinitable]: Movable & Deinitable
+    """The carrier producing the elapsed Duration with V's value."""
+
+    @staticmethod
+    def monotonic() -> Self.Monotonic:
+        """Read the inherited clock when the program reaches it.
+
+        Returns:
+            A carrier producing the current Instant.
+        """
+        ...
+
+    @staticmethod
+    def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:
+        """Run a program and measure it on the inherited clock.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            A carrier producing (elapsed Duration, value); a failure has no duration.
+        """
+        ...
+
+
+trait Temporal(Concurrent, Timing):
+    """Sleeping and timeouts, as Cats Effect's GenTemporal.
+
+    Durations are measured on the inherited clock. A sleep suspends on a
+    timer rather than polling, and a manual clock completes it only when
+    advanced. A timeout cancels the program and waits for it to finish before
+    the fallback runs.
+    """
+    comptime Slept: Movable & Deinitable
+    """The unit carrier that waits for a duration."""
+    comptime TemporalCompatible[V: Movable & Deinitable]: Bool
+    """Whether V is a family carrier that sleeps and timeouts can run."""
+    comptime TimedOut[V: Movable & Deinitable]: Movable & Deinitable
+    """The carrier running V with a deadline."""
+    comptime DelayedBy[V: Movable & Deinitable]: Movable & Deinitable
+    """The carrier running V after a sleep."""
+    comptime Waited[V: Movable & Deinitable]: Movable & Deinitable
+    """The carrier running V, then sleeping, with V's value."""
+
+    @staticmethod
+    def sleep(duration: Duration) -> Self.Slept:
+        """Wait for a duration measured from when the program reaches it.
+
+        Args:
+            duration: The duration.
+
+        Returns:
+            A unit carrier.
+        """
+        ...
+
+    @staticmethod
+    def timeout_to[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> Self.TimedOut[V]:
+        """Fall back after a duration, preferring the program's drained result.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The deadline, measured from entry.
+            fallback: Runs if the deadline passes first, consumed.
+
+        Returns:
+            A carrier with the program's or the fallback's outcome.
+        """
+        ...
+
+    @staticmethod
+    def timeout_after[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> Self.TimedOut[V]:
+        """Fall back after a duration by first terminal outcome.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The deadline, measured from entry.
+            fallback: Runs if the deadline passes first, consumed.
+
+        Returns:
+            A carrier with the program's or the fallback's outcome.
+        """
+        ...
+
+    @staticmethod
+    def timeout[V: Movable & Deinitable](var program: V, duration: Duration, var error: Self.Error) -> Self.TimedOut[V]:
+        """Fail with an error after a duration, preferring the program's drained result.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The deadline, measured from entry.
+            error: The domain error raised on timeout, consumed.
+
+        Returns:
+            A carrier with the program's outcome or the error.
+        """
+        ...
+
+    @staticmethod
+    def delay_by[V: Movable & Deinitable](var program: V, duration: Duration) -> Self.DelayedBy[V]:
+        """Sleep, then run the program.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The sleep before it.
+
+        Returns:
+            A carrier with the program's outcome.
+        """
+        ...
+
+    @staticmethod
+    def and_wait[V: Movable & Deinitable](var program: V, duration: Duration) -> Self.Waited[V]:
+        """Run the program, then sleep, keeping its value.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The sleep after it.
+
+        Returns:
+            A carrier with the program's value after the sleep.
         """
         ...
 

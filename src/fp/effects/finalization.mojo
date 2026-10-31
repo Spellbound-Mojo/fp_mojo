@@ -7,9 +7,10 @@ from fp.callables._binding import _OwnedUnary
 from fp.callables.native import NativeUnary, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.data import Result, Err
-from .protocols import ReaderAction, Defer, Raise, Cancel
+from .protocols import ReaderAction, Defer, Raise, Cancel, Timing
+from ._timing import _ClockSource, _timed, _TimedOf, _TimesCompatible
 from .outcomes import Outcome, EffectFailure, ExitCase, _ExitState, _capture, _finish
-from ._io_core import IO, IOContext, IOContract, _run_io, _settle, _IODelay, _IODefer, _IOCancel, _SyncDefers, canceled
+from ._io_core import IO, IOContext, IOContract, _run_io, _settle, _IODelay, _IODefer, _IOCancel, _SyncDefers, _IOMonotonic, canceled
 from fp.callables.protocols import ThunkContract
 from fp.callables.invoke import _OnceThunkAvailable
 from fp.data import NonEmptyList
@@ -349,8 +350,18 @@ comptime _SyncMasks[E: Movable & Deinitable, F: UnaryContract & Movable & Deinit
     and IOContract[downcast[F.Out, ReaderAction]].Error == E) if conforms_to(F.Out, ReaderAction) else False
 
 
-struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, not Deinitable):
-    """The capabilities of the synchronous IO[E] family: Defer, Raise and Cancel.
+struct _SyncClock[E: Movable & Deinitable](_ClockSource, not Deinitable):
+    """The synchronous family's clock reading, for the shared timed."""
+    comptime Family = IO[Self.E]
+    comptime Reading = _IOMonotonic[Self.E]
+
+    @staticmethod
+    def read() -> _IOMonotonic[Self.E]:
+        return _IOMonotonic[Self.E]()
+
+
+struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, not Deinitable):
+    """The capabilities of the synchronous IO[E] family: Defer, Raise, Cancel and Timing.
 
     Generic code names this dictionary to run in IO[E], such as
     `guarantee[SyncIO[E]](program, cleanup)`. Each operation forwards to the
@@ -378,6 +389,9 @@ struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, not Deinitable):
     comptime Uncanceled[F: UnaryContract & Movable & Deinitable] = _IOMaskBody[F, Self.E]
     comptime RestoreCompatible[V: Movable & Deinitable] = (IOContract[downcast[V, ReaderAction]].Compatible and IOContract[downcast[V, ReaderAction]].Error == Self.E) if conforms_to(V, ReaderAction) else False
     comptime Restored[V: Movable & Deinitable] = _IOPolled[downcast[V, ReaderAction], Self.E]
+    comptime Monotonic = _IOMonotonic[Self.E]
+    comptime TimedCompatible[V: Movable & Deinitable] = _TimesCompatible[_SyncClock[Self.E], V]
+    comptime Timed[V: Movable & Deinitable] = _TimedOf[_SyncClock[Self.E], V]
 
     @staticmethod
     def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
@@ -526,3 +540,28 @@ struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, not Deinitable):
         comptime assert F.Arg == Poll[Self.E] and _OnceUnaryAvailable[F] and _ErrorCompatible[Self.E, F.Error] and conforms_to(F.Out, ReaderAction)
         comptime assert IOContract[downcast[F.Out, ReaderAction]].Compatible and IOContract[downcast[F.Out, ReaderAction]].Error == Self.E
         return uncancelable_with[Self.E](body^)
+
+    @staticmethod
+    def monotonic() -> _IOMonotonic[Self.E]:
+        """Read the context's clock when the program reaches it.
+
+        Returns:
+            A program producing the current Instant.
+        """
+        return _SyncClock[Self.E].read()
+
+    @staticmethod
+    def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:
+        """Run a program and measure it on the context's clock.
+
+        Parameters:
+            V: A synchronous IO program with error E.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            A program producing the elapsed Duration with the value.
+        """
+        comptime assert Self.TimedCompatible[V], "timed: the program must be a synchronous IO with error E"
+        return _timed[_SyncClock[Self.E], V](program^)

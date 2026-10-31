@@ -30,7 +30,8 @@ from fp.data import Result, Ok, Err, NonEmptyList, Left, Right
 from fp.effects import IOContext, Outcome, EffectFailure, ExitCase
 from fp.effects.outcomes import _failure_as, _finish, _ExitState, _zip_outcomes
 from fp.effects._io_core import _settle, IOContract, canceled as _cancel_request
-from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn, Concurrent
+from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn, Concurrent, Temporal
+from fp.effects._timing import _SleepSource, _timed, _delay_by, _and_wait
 from fp.effects.finalization import Poll as _SyncPoll
 from fp.effects.coordination import Ref as _Ref, Deferred as _Deferred, _RefInspect, _Copy
 from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep
@@ -1498,6 +1499,59 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         """
         return IO[NoneType, Self.E]._lifted(_Sleep[Self.E](duration._nanoseconds))
 
+    @staticmethod
+    def monotonic() -> IO[Instant, Self.E]:
+        """Read the inherited clock when the IO reaches it, as Cats Effect's IO.monotonic.
+
+        Returns:
+            An IO producing the current Instant: system monotonic time, or a
+            manual clock's time, which moves only when its owner advances it.
+        """
+        return IO[Instant, Self.E]._lifted(_Monotonic[Self.E]())
+
+    def timed(deinit self) -> IO[Tuple[Duration, Self.T], Self.E]:
+        """Run this IO and measure it on the inherited clock.
+
+        Returns:
+            An IO producing the elapsed Duration with the value; a failure or
+            cancellation has no duration.
+        """
+        return _timed[_AsyncClock[Self.E], Self](self^)
+
+    def timeout(deinit self, duration: Duration, var error: Self.E) -> Self:
+        """Fail with an error after a duration, preferring this IO's drained result.
+
+        Args:
+            duration: The checked relative duration, anchored on entry.
+            error: The domain error raised if the timer wins, consumed.
+
+        Returns:
+            An IO with this IO's outcome or the error; see timeout_to.
+        """
+        return self^.timeout_to(duration, Self.raise_error(error^))
+
+    def delay_by(deinit self, duration: Duration) -> Self:
+        """Sleep for a duration, then run this IO.
+
+        Args:
+            duration: The checked relative duration.
+
+        Returns:
+            An IO with this IO's outcome after the sleep.
+        """
+        return _delay_by[_AsyncClock[Self.E], Self](self^, duration)
+
+    def and_wait(deinit self, duration: Duration) -> Self:
+        """Run this IO, then sleep for a duration, keeping its value.
+
+        Args:
+            duration: The checked relative duration.
+
+        Returns:
+            An IO with this IO's value after the sleep; a failure does not sleep.
+        """
+        return _and_wait[_AsyncClock[Self.E], Self](self^, duration)
+
     def both[U: Movable & Deinitable](deinit self, var other: IO[U, Self.E]) -> IO[Tuple[Self.T, U], Self.E]:
         """Run this IO and another concurrently, draining both.
 
@@ -1926,6 +1980,33 @@ struct _Cede[E: Movable & Deinitable](Machine, Defaultable):
         return Step[NoneType, Self.E].ready(Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit))))
 
 
+struct _AsyncClock[E: Movable & Deinitable](_SleepSource, not Deinitable):
+    """IO's clock reading and sleep, for the shared derived time operations."""
+    comptime Family = Async[Self.E]
+    comptime Reading = IO[Instant, Self.E]
+    comptime Slept = IO[NoneType, Self.E]
+
+    @staticmethod
+    def read() -> IO[Instant, Self.E]:
+        return IO[Instant, Self.E].monotonic()
+
+    @staticmethod
+    def sleep(duration: Duration) -> IO[NoneType, Self.E]:
+        return IO[NoneType, Self.E].sleep(duration)
+
+
+struct _Monotonic[E: Movable & Deinitable](Machine, Defaultable):
+    """Read the inherited clock once."""
+    comptime Value = Instant
+    comptime Error = Self.E
+
+    def __init__(out self):
+        pass
+
+    def poll(mut self, context: IOContext[Self.E]) -> Step[Instant, Self.E]:
+        return Step[Instant, Self.E].ready(Optional(Result[Instant, EffectFailure[Self.E]](Ok(context.now()))))
+
+
 struct _Never[T: Movable & Deinitable, E: Movable & Deinitable](Machine, Defaultable):
     """Wait without a wake source; only cancellation completes it."""
     comptime Value = Self.T
@@ -2036,7 +2117,7 @@ struct _StartCollect[V: Movable & Deinitable, F: UnaryContract & Movable & Deini
         return _start_fold[Self.V, Identity[Self.F.Arg], _CollectStep[Self.F, Self.K, Self.E], Self.K, Self.E](self.source^, Identity[Self.F.Arg](), _CollectStep[Self.F, Self.K, Self.E](self.function^), start^)
 
 
-struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Concurrent, not Deinitable):
+struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Temporal, not Deinitable):
     """The sequencing and recovery family of IO.
 
     Pipeline, tail_rec_m, traverse and attempt select it from an IO. Every
@@ -2100,6 +2181,14 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Concur
     comptime RefModified[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = IO[A, Self.E]
     comptime DeferredCompleted = IO[Bool, Self.E]
     comptime DeferredRead[T: Copyable & Deinitable] = IO[T, Self.E]
+    comptime Monotonic = IO[Instant, Self.E]
+    comptime TimedCompatible[V: Movable & Deinitable] = _IsIO[V, Self.E]
+    comptime Timed[V: Movable & Deinitable] = IO[Tuple[Duration, downcast[V, Machine].Value], Self.E]
+    comptime Slept = IO[NoneType, Self.E]
+    comptime TemporalCompatible[V: Movable & Deinitable] = _IsIO[V, Self.E]
+    comptime TimedOut[V: Movable & Deinitable] = V
+    comptime DelayedBy[V: Movable & Deinitable] = V
+    comptime Waited[V: Movable & Deinitable] = V
 
     @staticmethod
     def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
@@ -2440,6 +2529,136 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Concur
             An IO producing a copy of the value.
         """
         return deferred.get[Self.E]()
+
+    @staticmethod
+    def monotonic() -> IO[Instant, Self.E]:
+        """Read the inherited clock; see IO.monotonic.
+
+        Returns:
+            An IO producing the current Instant.
+        """
+        return IO[Instant, Self.E].monotonic()
+
+    @staticmethod
+    def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:
+        """Measure a program; see IO.timed.
+
+        Parameters:
+            V: An IO with error E.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            An IO producing the elapsed Duration with the value.
+        """
+        comptime assert Self.TimedCompatible[V], "timed: the program must be an IO with error E"
+        return rebind_var[IO[downcast[V, Machine].Value, Self.E]](program^).timed()
+
+    @staticmethod
+    def sleep(duration: Duration) -> IO[NoneType, Self.E]:
+        """Wait for a duration; see IO.sleep.
+
+        Args:
+            duration: The checked relative duration.
+
+        Returns:
+            A unit IO.
+        """
+        return IO[NoneType, Self.E].sleep(duration)
+
+    @staticmethod
+    def timeout_to[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> V:
+        """Fall back after a duration; see IO.timeout_to.
+
+        Parameters:
+            V: An IO with error E.
+
+        Args:
+            program: The program, consumed.
+            duration: The checked relative duration.
+            fallback: The fallback, consumed.
+
+        Returns:
+            An IO with the program's or the fallback's outcome.
+        """
+        comptime assert Self.TemporalCompatible[V], "timeout_to: the program must be an IO with error E"
+        comptime P = IO[downcast[V, Machine].Value, Self.E]
+        return rebind_var[V](rebind_var[P](program^).timeout_to(duration, rebind_var[P](fallback^)))
+
+    @staticmethod
+    def timeout_after[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> V:
+        """Fall back by first terminal outcome; see IO.timeout_after.
+
+        Parameters:
+            V: An IO with error E.
+
+        Args:
+            program: The program, consumed.
+            duration: The checked relative duration.
+            fallback: The fallback, consumed.
+
+        Returns:
+            An IO with the program's or the fallback's outcome.
+        """
+        comptime assert Self.TemporalCompatible[V], "timeout_after: the program must be an IO with error E"
+        comptime P = IO[downcast[V, Machine].Value, Self.E]
+        return rebind_var[V](rebind_var[P](program^).timeout_after(duration, rebind_var[P](fallback^)))
+
+    @staticmethod
+    def timeout[V: Movable & Deinitable](var program: V, duration: Duration, var error: Self.E) -> V:
+        """Fail with an error after a duration; see IO.timeout.
+
+        Parameters:
+            V: An IO with error E.
+
+        Args:
+            program: The program, consumed.
+            duration: The checked relative duration.
+            error: The domain error raised on timeout, consumed.
+
+        Returns:
+            An IO with the program's outcome or the error.
+        """
+        comptime assert Self.TemporalCompatible[V], "timeout: the program must be an IO with error E"
+        comptime P = IO[downcast[V, Machine].Value, Self.E]
+        return rebind_var[V](rebind_var[P](program^).timeout(duration, error^))
+
+    @staticmethod
+    def delay_by[V: Movable & Deinitable](var program: V, duration: Duration) -> V:
+        """Sleep, then run the program; see IO.delay_by.
+
+        Parameters:
+            V: An IO with error E.
+
+        Args:
+            program: The program, consumed.
+            duration: The checked relative duration.
+
+        Returns:
+            An IO with the program's outcome.
+        """
+        comptime assert Self.TemporalCompatible[V], "delay_by: the program must be an IO with error E"
+        comptime P = IO[downcast[V, Machine].Value, Self.E]
+        return rebind_var[V](rebind_var[P](program^).delay_by(duration))
+
+    @staticmethod
+    def and_wait[V: Movable & Deinitable](var program: V, duration: Duration) -> V:
+        """Run the program, then sleep; see IO.and_wait.
+
+        Parameters:
+            V: An IO with error E.
+
+        Args:
+            program: The program, consumed.
+            duration: The checked relative duration.
+
+        Returns:
+            An IO with the program's value after the sleep.
+        """
+        comptime assert Self.TemporalCompatible[V], "and_wait: the program must be an IO with error E"
+        comptime P = IO[downcast[V, Machine].Value, Self.E]
+        return rebind_var[V](rebind_var[P](program^).and_wait(duration))
 
     @staticmethod
     def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:

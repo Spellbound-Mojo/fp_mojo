@@ -7,8 +7,10 @@ from fp.callables._transforms import _Fill, _IgnoreInput
 from fp.callables.protocols import BorrowCallContract, UnaryContract, OnceUnary, ThunkContract
 from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing, NativeUnary, as_unary, _Unary, _RaisingUnary, _NativeOwnedArg
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, _Hoisting, _CapabilityLifting, _CarrierLifting, _LocalLifting
+from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, Timing, Temporal, _Hoisting, _CapabilityLifting, _CarrierLifting, _LocalLifting
 from ._adapt import _lift_as
+from ._timing import _LiftedClock, _LiftedSleep, _timed, _TimedOf, _TimesCompatible, _delay_by, _DelayedOf, _DelaysCompatible, _and_wait, _WaitedOf, _WaitsCompatible
+from fp._internal.time import Duration
 from ._transport import _CensorOp
 
 
@@ -1065,6 +1067,872 @@ struct LiftSpawn[I: Monad & _Lifting, C: Spawn](Spawn, not Deinitable):
         return _lift_as[Never, Self.I](Self.C.cede())
 
 
+struct LiftConcurrent[I: Monad & _Lifting, C: Concurrent](Concurrent, not Deinitable):
+    """Lift a selected Concurrent capability through OptionalT or ResultT.
+
+    The handles are the base's: a cell made through the layer is the base's
+    cell, shared with base programs. Creation, reads, writes, and updates lift
+    the base's carriers, so each produces the layer's success. Spawn and Cancel
+    members delegate to LiftSpawn, which admits only layers whose programs are
+    base programs.
+
+    Parameters:
+        I: OptionalT or ResultT over C.Family.
+        C: The Concurrent capability of its immediate base.
+    """
+    comptime _Spawning = LiftSpawn[Self.I, Self.C]
+    comptime _Selected = Self._Spawning._Selected
+    comptime _Lifts[V: Movable & Deinitable] = _ErrorCompatible[Never, Self.I.LiftError[V]]
+    comptime Family = Self.I
+    comptime Error = Self.C.Error
+    comptime RegionPoll = Self._Spawning.RegionPoll
+    comptime Canceled = Self._Spawning.Canceled
+    comptime Stopped = Self._Spawning.Stopped
+    comptime Ceded = Self._Spawning.Ceded
+    comptime GuaranteeCompatible[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Spawning.GuaranteeCompatible[V, Q]
+    comptime Guaranteed[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Spawning.Guaranteed[V, Q]
+    comptime OnCanceled[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Spawning.OnCanceled[V, Q]
+    comptime CaseCompatible[V: Movable & Deinitable, F: Movable & Deinitable] = Self._Spawning.CaseCompatible[V, F]
+    comptime CaseGuaranteed[V: Movable & Deinitable, F: Movable & Deinitable] = Self._Spawning.CaseGuaranteed[V, F]
+    comptime UncancelableCompatible[F: UnaryContract & Movable & Deinitable] = Self._Spawning.UncancelableCompatible[F]
+    comptime Uncanceled[F: UnaryContract & Movable & Deinitable] = Self._Spawning.Uncanceled[F]
+    comptime RestoreCompatible[V: Movable & Deinitable] = Self._Spawning.RestoreCompatible[V]
+    comptime Restored[V: Movable & Deinitable] = Self._Spawning.Restored[V]
+    comptime Handle[T: Movable & Deinitable] = Self._Spawning.Handle[T]
+    comptime StartCompatible[V: Movable & Deinitable] = Self._Spawning.StartCompatible[V]
+    comptime Started[V: Movable & Deinitable] = Self._Spawning.Started[V]
+    comptime Joined[T: Movable & Deinitable] = Self._Spawning.Joined[T]
+    comptime Forever[A: Movable & Deinitable] = Self._Spawning.Forever[A]
+    comptime RefHandle[T: Movable & Deinitable] = Self.C.RefHandle[T]
+    comptime DeferredHandle[T: Copyable & Deinitable] = Self.C.DeferredHandle[T]
+    comptime RefMade[T: Movable & Deinitable] = Self.I.Lifted[Self.C.RefMade[T]]
+    comptime DeferredMade[T: Copyable & Deinitable] = Self.I.Lifted[Self.C.DeferredMade[T]]
+    comptime RefRead[T: Copyable & Deinitable] = Self.I.Lifted[Self.C.RefRead[T]]
+    comptime RefWritten = Self.I.Lifted[Self.C.RefWritten]
+    comptime UpdateCompatible[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._Selected and Self.C.UpdateCompatible[T, F] and Self._Lifts[Self.C.RefUpdated[T, F]]
+    comptime RefUpdated[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.I.Lifted[Self.C.RefUpdated[T, F]]
+    comptime ModifyCompatible[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._Selected and Self.C.ModifyCompatible[T, A, F] and Self._Lifts[Self.C.RefModified[T, A, F]]
+    comptime RefModified[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.I.Lifted[Self.C.RefModified[T, A, F]]
+    comptime DeferredCompleted = Self.I.Lifted[Self.C.DeferredCompleted]
+    comptime DeferredRead[T: Copyable & Deinitable] = Self.I.Lifted[Self.C.DeferredRead[T]]
+
+    @staticmethod
+    def canceled() -> Self.Canceled:
+        """Delegate to LiftSpawn.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Spawning.canceled()
+
+    @staticmethod
+    def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's guaranteed carrier.
+        """
+        return Self._Spawning.guarantee(program^, finalizer^)
+
+    @staticmethod
+    def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Spawning.on_cancel(program^, finalizer^)
+
+    @staticmethod
+    def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            V: The program's carrier type.
+            F: The base provider's case finalizer type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Spawning.guarantee_case(program^, finalizer^)
+
+    @staticmethod
+    def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            poll: The region's poll, borrowed.
+            program: The program, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Spawning.restore(poll, program^)
+
+    @staticmethod
+    def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            F: A once-callable taking RegionPoll and returning a layer carrier.
+
+        Args:
+            body: The region's factory, consumed.
+
+        Returns:
+            The base's masked carrier.
+        """
+        return Self._Spawning.uncancelable(body^)
+
+    @staticmethod
+    def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            The destination family's carrier of the fiber's handle.
+        """
+        return Self._Spawning.start(program^)
+
+    @staticmethod
+    def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            T: The layer program's success type.
+
+        Args:
+            fiber: The handle, consumed.
+
+        Returns:
+            The destination family's carrier of the outcome.
+        """
+        return Self._Spawning.join[T](fiber^)
+
+    @staticmethod
+    def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            T: The layer program's success type.
+
+        Args:
+            fiber: The handle, borrowed.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Spawning.cancel[T](fiber)
+
+    @staticmethod
+    def never[A: Movable & Deinitable]() -> Self.Forever[A]:
+        """Delegate to LiftSpawn.
+
+        Parameters:
+            A: The success type the carrier declares.
+
+        Returns:
+            The destination family's carrier.
+        """
+        return Self._Spawning.never[A]()
+
+    @staticmethod
+    def cede() -> Self.Ceded:
+        """Delegate to LiftSpawn.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Spawning.cede()
+
+    @staticmethod
+    def make_ref[T: Movable & Deinitable](var value: T) -> Self.RefMade[T]:
+        """Lift the base's carrier that creates a cell.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            value: The initial state, consumed.
+
+        Returns:
+            The destination family's carrier of the new cell.
+        """
+        comptime assert Self._Selected, "make_ref: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.RefMade[T]]]
+        return _lift_as[Never, Self.I](Self.C.make_ref(value^))
+
+    @staticmethod
+    def make_deferred[T: Copyable & Deinitable]() -> Self.DeferredMade[T]:
+        """Lift the base's carrier that creates a deferred value.
+
+        Parameters:
+            T: The value type.
+
+        Returns:
+            The destination family's carrier of the new deferred value.
+        """
+        comptime assert Self._Selected, "make_deferred: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.DeferredMade[T]]]
+        return _lift_as[Never, Self.I](Self.C.make_deferred[T]())
+
+    @staticmethod
+    def get_ref[T: Copyable & Deinitable](cell: Self.RefHandle[T]) -> Self.RefRead[T]:
+        """Lift the base's carrier that copies a cell's state.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            cell: The cell, borrowed.
+
+        Returns:
+            The destination family's carrier of the copy.
+        """
+        comptime assert Self._Selected, "get_ref: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.RefRead[T]]]
+        return _lift_as[Never, Self.I](Self.C.get_ref[T](cell))
+
+    @staticmethod
+    def set_ref[T: Movable & Deinitable](cell: Self.RefHandle[T], var value: T) -> Self.RefWritten:
+        """Lift the base's carrier that replaces a cell's state.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            cell: The cell, borrowed.
+            value: The replacement, consumed.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        comptime assert Self._Selected, "set_ref: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.RefWritten]]
+        return _lift_as[Never, Self.I](Self.C.set_ref[T](cell, value^))
+
+    @staticmethod
+    def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefUpdated[T, F]:
+        """Lift the base's carrier that transforms a cell's state.
+
+        Parameters:
+            T: The state type.
+            F: A non-raising transformation from T to T.
+
+        Args:
+            cell: The cell, borrowed.
+            function: The transformation, consumed.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        comptime assert Self.UpdateCompatible[T, F], "update_ref: unsupported layer, mismatched base family or transformation"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.RefUpdated[T, F]]]
+        return _lift_as[Never, Self.I](Self.C.update_ref[T, F](cell, function^))
+
+    @staticmethod
+    def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefModified[T, A, F]:
+        """Lift the base's carrier that replaces a cell's state and produces a result.
+
+        Parameters:
+            T: The state type.
+            A: The result type.
+            F: A non-raising transformation from T to (T, A).
+
+        Args:
+            cell: The cell, borrowed.
+            function: The transformation, consumed.
+
+        Returns:
+            The destination family's carrier of A.
+        """
+        comptime assert Self.ModifyCompatible[T, A, F], "modify_ref: unsupported layer, mismatched base family or transformation"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.RefModified[T, A, F]]]
+        return _lift_as[Never, Self.I](Self.C.modify_ref[T, A, F](cell, function^))
+
+    @staticmethod
+    def complete_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T], var value: T) -> Self.DeferredCompleted:
+        """Lift the base's carrier that completes a deferred value.
+
+        Parameters:
+            T: The value type.
+
+        Args:
+            deferred: The deferred value, borrowed.
+            value: The value, consumed.
+
+        Returns:
+            The destination family's carrier of whether this completion won.
+        """
+        comptime assert Self._Selected, "complete_deferred: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.DeferredCompleted]]
+        return _lift_as[Never, Self.I](Self.C.complete_deferred[T](deferred, value^))
+
+    @staticmethod
+    def get_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T]) -> Self.DeferredRead[T]:
+        """Lift the base's carrier that waits for a deferred value.
+
+        Parameters:
+            T: The value type.
+
+        Args:
+            deferred: The deferred value, borrowed.
+
+        Returns:
+            The destination family's carrier of the value.
+        """
+        comptime assert Self._Selected, "get_deferred: mismatched base family, or a layer whose programs are not base programs"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.DeferredRead[T]]]
+        return _lift_as[Never, Self.I](Self.C.get_deferred[T](deferred))
+
+
+struct LiftTiming[I: Monad & _Lifting, C: Timing](Timing, not Deinitable):
+    """Lift a selected Timing capability through one transformer.
+
+    `monotonic` lifts the base's reading. `timed` binds through the
+    destination family, as Cats Effect derives it, so a layer's absence or
+    stored error skips the second reading. I.Base must equal C.Family. Through
+    ReaderT over Async, running a timed program is rejected like any ReaderT
+    bind there.
+
+    Parameters:
+        I: The destination transformer family.
+        C: The Timing capability of its immediate base.
+    """
+    comptime _Layer = downcast[Self.I, _CapabilityLifting]
+    comptime _Source = _LiftedClock[Self.I, Self.C]
+    comptime _Selected = Self._Layer.Base == Self.C.Family and _ErrorCompatible[Never, Self.I.LiftError[Self.C.Monotonic]]
+    comptime Family = Self.I
+    comptime Monotonic = Self._Source.Reading
+    comptime TimedCompatible[V: Movable & Deinitable] = Self._Selected and _TimesCompatible[Self._Source, V]
+    comptime Timed[V: Movable & Deinitable] = _TimedOf[Self._Source, V]
+
+    @staticmethod
+    def monotonic() -> Self.Monotonic:
+        """Lift the base's clock reading.
+
+        Returns:
+            The destination family's carrier of the current Instant.
+        """
+        comptime assert Self._Selected, "monotonic: mismatched base family"
+        return Self._Source.read()
+
+    @staticmethod
+    def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:
+        """Measure a layer program with the lifted clock reading.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            The destination family's carrier of the duration and value.
+        """
+        comptime assert Self.TimedCompatible[V], "timed: mismatched base family, or the layer cannot bind the program"
+        return _timed[Self._Source, V](program^)
+
+
+struct LiftTemporal[I: Monad & _Lifting, C: Temporal](Temporal, not Deinitable):
+    """Lift a selected Temporal capability through OptionalT or ResultT.
+
+    `sleep` lifts the base's. Timeouts forward the layer's programs, which are
+    base programs, so a layer's absence or stored error is a base success that
+    beats the deadline; `timeout` raises the base's domain error. `delay_by`
+    and `and_wait` bind through the destination family, as Cats Effect derives
+    them, so a layer's absence skips the sleep after it. Concurrent members
+    delegate to LiftConcurrent; Timing members read the same lifted clock as
+    LiftTiming.
+
+    Parameters:
+        I: OptionalT or ResultT over C.Family.
+        C: The Temporal capability of its immediate base.
+    """
+    comptime _Concurrent = LiftConcurrent[Self.I, Self.C]
+    comptime _Selected = Self._Concurrent._Selected
+    comptime Family = Self.I
+    comptime Error = Self.C.Error
+    comptime RegionPoll = Self._Concurrent.RegionPoll
+    comptime Canceled = Self._Concurrent.Canceled
+    comptime Stopped = Self._Concurrent.Stopped
+    comptime Ceded = Self._Concurrent.Ceded
+    comptime RefWritten = Self._Concurrent.RefWritten
+    comptime DeferredCompleted = Self._Concurrent.DeferredCompleted
+    comptime GuaranteeCompatible[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Concurrent.GuaranteeCompatible[V, Q]
+    comptime Guaranteed[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Concurrent.Guaranteed[V, Q]
+    comptime OnCanceled[V: Movable & Deinitable, Q: Movable & Deinitable] = Self._Concurrent.OnCanceled[V, Q]
+    comptime CaseCompatible[V: Movable & Deinitable, F: Movable & Deinitable] = Self._Concurrent.CaseCompatible[V, F]
+    comptime CaseGuaranteed[V: Movable & Deinitable, F: Movable & Deinitable] = Self._Concurrent.CaseGuaranteed[V, F]
+    comptime UncancelableCompatible[F: UnaryContract & Movable & Deinitable] = Self._Concurrent.UncancelableCompatible[F]
+    comptime Uncanceled[F: UnaryContract & Movable & Deinitable] = Self._Concurrent.Uncanceled[F]
+    comptime RestoreCompatible[V: Movable & Deinitable] = Self._Concurrent.RestoreCompatible[V]
+    comptime Restored[V: Movable & Deinitable] = Self._Concurrent.Restored[V]
+    comptime Handle[T: Movable & Deinitable] = Self._Concurrent.Handle[T]
+    comptime StartCompatible[V: Movable & Deinitable] = Self._Concurrent.StartCompatible[V]
+    comptime Started[V: Movable & Deinitable] = Self._Concurrent.Started[V]
+    comptime Joined[T: Movable & Deinitable] = Self._Concurrent.Joined[T]
+    comptime Forever[A: Movable & Deinitable] = Self._Concurrent.Forever[A]
+    comptime RefHandle[T: Movable & Deinitable] = Self._Concurrent.RefHandle[T]
+    comptime DeferredHandle[T: Copyable & Deinitable] = Self._Concurrent.DeferredHandle[T]
+    comptime RefMade[T: Movable & Deinitable] = Self._Concurrent.RefMade[T]
+    comptime DeferredMade[T: Copyable & Deinitable] = Self._Concurrent.DeferredMade[T]
+    comptime RefRead[T: Copyable & Deinitable] = Self._Concurrent.RefRead[T]
+    comptime UpdateCompatible[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._Concurrent.UpdateCompatible[T, F]
+    comptime RefUpdated[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._Concurrent.RefUpdated[T, F]
+    comptime ModifyCompatible[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._Concurrent.ModifyCompatible[T, A, F]
+    comptime RefModified[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self._Concurrent.RefModified[T, A, F]
+    comptime DeferredRead[T: Copyable & Deinitable] = Self._Concurrent.DeferredRead[T]
+    comptime _Source = _LiftedSleep[Self.I, Self.C]
+    comptime Monotonic = Self._Source.Reading
+    comptime TimedCompatible[V: Movable & Deinitable] = Self._Selected and _TimesCompatible[Self._Source, V]
+    comptime Timed[V: Movable & Deinitable] = _TimedOf[Self._Source, V]
+    comptime Slept = Self._Source.Slept
+    comptime TemporalCompatible[V: Movable & Deinitable] = (
+        Self._Selected and Self.I.CarrierCompatible[V] and Self.C.TemporalCompatible[V]
+        and _ErrorCompatible[Never, Self.I.LiftError[Self.C.Slept]]
+        and _DelaysCompatible[Self._Source, V] and _WaitsCompatible[Self._Source, V])
+    comptime TimedOut[V: Movable & Deinitable] = Self.C.TimedOut[V]
+    comptime DelayedBy[V: Movable & Deinitable] = _DelayedOf[Self._Source, V]
+    comptime Waited[V: Movable & Deinitable] = _WaitedOf[Self._Source, V]
+
+    @staticmethod
+    def canceled() -> Self.Canceled:
+        """Delegate to LiftConcurrent.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Concurrent.canceled()
+
+    @staticmethod
+    def guarantee[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.Guaranteed[V, Q]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's guaranteed carrier.
+        """
+        return Self._Concurrent.guarantee(program^, finalizer^)
+
+    @staticmethod
+    def on_cancel[V: Movable & Deinitable, Q: Movable & Deinitable](var program: V, var finalizer: Q) -> Self.OnCanceled[V, Q]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            V: The program's carrier type.
+            Q: The finalizer's unit carrier type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Concurrent.on_cancel(program^, finalizer^)
+
+    @staticmethod
+    def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            V: The program's carrier type.
+            F: The base provider's case finalizer type.
+
+        Args:
+            program: The program, consumed.
+            finalizer: The finalizer, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Concurrent.guarantee_case(program^, finalizer^)
+
+    @staticmethod
+    def restore[V: Movable & Deinitable](poll: Self.RegionPoll, var program: V) -> Self.Restored[V]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            poll: The region's poll, borrowed.
+            program: The program, consumed.
+
+        Returns:
+            The base's carrier.
+        """
+        return Self._Concurrent.restore(poll, program^)
+
+    @staticmethod
+    def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            F: A once-callable taking RegionPoll and returning a layer carrier.
+
+        Args:
+            body: The region's factory, consumed.
+
+        Returns:
+            The base's masked carrier.
+        """
+        return Self._Concurrent.uncancelable(body^)
+
+    @staticmethod
+    def start[V: Movable & Deinitable](var program: V) -> Self.Started[V]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            The destination family's carrier of the fiber's handle.
+        """
+        return Self._Concurrent.start(program^)
+
+    @staticmethod
+    def join[T: Movable & Deinitable](var fiber: Self.Handle[T]) -> Self.Joined[T]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The layer program's success type.
+
+        Args:
+            fiber: The handle, consumed.
+
+        Returns:
+            The destination family's carrier of the outcome.
+        """
+        return Self._Concurrent.join[T](fiber^)
+
+    @staticmethod
+    def cancel[T: Movable & Deinitable](fiber: Self.Handle[T]) -> Self.Stopped:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The layer program's success type.
+
+        Args:
+            fiber: The handle, borrowed.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Concurrent.cancel[T](fiber)
+
+    @staticmethod
+    def never[A: Movable & Deinitable]() -> Self.Forever[A]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            A: The success type the carrier declares.
+
+        Returns:
+            The destination family's carrier.
+        """
+        return Self._Concurrent.never[A]()
+
+    @staticmethod
+    def cede() -> Self.Ceded:
+        """Delegate to LiftConcurrent.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Concurrent.cede()
+
+    @staticmethod
+    def make_ref[T: Movable & Deinitable](var value: T) -> Self.RefMade[T]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            value: The initial state, consumed.
+
+        Returns:
+            The destination family's carrier of the new cell.
+        """
+        return Self._Concurrent.make_ref(value^)
+
+    @staticmethod
+    def make_deferred[T: Copyable & Deinitable]() -> Self.DeferredMade[T]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The value type.
+
+        Returns:
+            The destination family's carrier of the new deferred value.
+        """
+        return Self._Concurrent.make_deferred[T]()
+
+    @staticmethod
+    def get_ref[T: Copyable & Deinitable](cell: Self.RefHandle[T]) -> Self.RefRead[T]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            cell: The cell, borrowed.
+
+        Returns:
+            The destination family's carrier of the copy.
+        """
+        return Self._Concurrent.get_ref[T](cell)
+
+    @staticmethod
+    def set_ref[T: Movable & Deinitable](cell: Self.RefHandle[T], var value: T) -> Self.RefWritten:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            cell: The cell, borrowed.
+            value: The replacement, consumed.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Concurrent.set_ref[T](cell, value^)
+
+    @staticmethod
+    def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefUpdated[T, F]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The state type.
+            F: A non-raising transformation from T to T.
+
+        Args:
+            cell: The cell, borrowed.
+            function: The transformation, consumed.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        return Self._Concurrent.update_ref[T, F](cell, function^)
+
+    @staticmethod
+    def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefModified[T, A, F]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The state type.
+            A: The result type.
+            F: A non-raising transformation from T to (T, A).
+
+        Args:
+            cell: The cell, borrowed.
+            function: The transformation, consumed.
+
+        Returns:
+            The destination family's carrier of A.
+        """
+        return Self._Concurrent.modify_ref[T, A, F](cell, function^)
+
+    @staticmethod
+    def complete_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T], var value: T) -> Self.DeferredCompleted:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The value type.
+
+        Args:
+            deferred: The deferred value, borrowed.
+            value: The value, consumed.
+
+        Returns:
+            The destination family's carrier of whether this completion won.
+        """
+        return Self._Concurrent.complete_deferred[T](deferred, value^)
+
+    @staticmethod
+    def get_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T]) -> Self.DeferredRead[T]:
+        """Delegate to LiftConcurrent.
+
+        Parameters:
+            T: The value type.
+
+        Args:
+            deferred: The deferred value, borrowed.
+
+        Returns:
+            The destination family's carrier of the value.
+        """
+        return Self._Concurrent.get_deferred[T](deferred)
+
+    @staticmethod
+    def monotonic() -> Self.Monotonic:
+        """Lift the base's clock reading, as LiftTiming does.
+
+        Returns:
+            The destination family's carrier of the current Instant.
+        """
+        return Self._Source.read()
+
+    @staticmethod
+    def timed[V: Movable & Deinitable](var program: V) -> Self.Timed[V]:
+        """Measure a layer program with the lifted clock reading, as LiftTiming does.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+
+        Returns:
+            The destination family's carrier of the duration and value.
+        """
+        comptime assert Self.TimedCompatible[V], "timed: unsupported layer, mismatched base family or program"
+        return _timed[Self._Source, V](program^)
+
+    @staticmethod
+    def sleep(duration: Duration) -> Self.Slept:
+        """Lift the base's sleep.
+
+        Args:
+            duration: The duration.
+
+        Returns:
+            The destination family's unit carrier.
+        """
+        comptime assert Self._Selected, "sleep: mismatched base family, or a layer whose programs are not base programs"
+        return Self._Source.sleep(duration)
+
+    @staticmethod
+    def timeout_to[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> Self.TimedOut[V]:
+        """Forward a layer program and fallback to the base's timeout_to.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The deadline, measured from entry.
+            fallback: The fallback, consumed.
+
+        Returns:
+            The base's carrier, a carrier of the destination family.
+        """
+        comptime assert Self.TemporalCompatible[V], "timeout_to: unsupported layer, mismatched base family or program"
+        return Self.C.timeout_to(program^, duration, fallback^)
+
+    @staticmethod
+    def timeout_after[V: Movable & Deinitable](var program: V, duration: Duration, var fallback: V) -> Self.TimedOut[V]:
+        """Forward a layer program and fallback to the base's timeout_after.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The deadline, measured from entry.
+            fallback: The fallback, consumed.
+
+        Returns:
+            The base's carrier, a carrier of the destination family.
+        """
+        comptime assert Self.TemporalCompatible[V], "timeout_after: unsupported layer, mismatched base family or program"
+        return Self.C.timeout_after(program^, duration, fallback^)
+
+    @staticmethod
+    def timeout[V: Movable & Deinitable](var program: V, duration: Duration, var error: Self.Error) -> Self.TimedOut[V]:
+        """Forward a layer program to the base's timeout, raising the base's error.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The deadline, measured from entry.
+            error: The base's domain error raised on timeout, consumed.
+
+        Returns:
+            The base's carrier, a carrier of the destination family.
+        """
+        comptime assert Self.TemporalCompatible[V], "timeout: unsupported layer, mismatched base family or program"
+        return Self.C.timeout(program^, duration, error^)
+
+    @staticmethod
+    def delay_by[V: Movable & Deinitable](var program: V, duration: Duration) -> Self.DelayedBy[V]:
+        """Sleep through the layer, then run the program.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The sleep before it.
+
+        Returns:
+            The destination family's carrier with the program's outcome.
+        """
+        comptime assert Self.TemporalCompatible[V], "delay_by: unsupported layer, mismatched base family or program"
+        return _delay_by[Self._Source, V](program^, duration)
+
+    @staticmethod
+    def and_wait[V: Movable & Deinitable](var program: V, duration: Duration) -> Self.Waited[V]:
+        """Run the program, then sleep through the layer, keeping its value.
+
+        Parameters:
+            V: The program's carrier type.
+
+        Args:
+            program: The program, consumed.
+            duration: The sleep after it.
+
+        Returns:
+            The destination family's carrier with the program's value; a
+            layer's absence or stored error skips the sleep.
+        """
+        comptime assert Self.TemporalCompatible[V], "and_wait: unsupported layer, mismatched base family or program"
+        return _and_wait[Self._Source, V](program^, duration)
+
+
 def defer[F: ThunkContract & Movable & Deinitable, //, I: Defer](var factory: F) -> I.Deferred[F] where I.DeferCompatible[F]:
     """Build an effect when the program reaches it, in any family with Defer.
 
@@ -1312,3 +2180,134 @@ def get_deferred[I: Concurrent, T: Copyable & Deinitable](deferred: I.DeferredHa
         The family's carrier producing a copy of the value.
     """
     return I.get_deferred[T](deferred)
+
+
+def monotonic[I: Timing]() -> I.Monotonic:
+    """Read the inherited clock when the program reaches it, in any family with Timing.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Returns:
+        The family's carrier producing the current Instant.
+    """
+    return I.monotonic()
+
+
+def timed[V: Movable & Deinitable, //, I: Timing](var program: V) -> I.Timed[V] where I.TimedCompatible[V]:
+    """Run a program and measure it on the inherited clock, in any family with Timing.
+
+    Parameters:
+        V: The program's carrier type.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        program: The program, consumed.
+
+    Returns:
+        The family's carrier producing the elapsed Duration with the value.
+    """
+    return I.timed(program^)
+
+
+def sleep[I: Temporal](duration: Duration) -> I.Slept:
+    """Wait for a duration on the inherited clock, in any family with Temporal.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        duration: The duration.
+
+    Returns:
+        The family's unit carrier.
+    """
+    return I.sleep(duration)
+
+
+def timeout_to[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration, var fallback: V) -> I.TimedOut[V] where I.TemporalCompatible[V]:
+    """Fall back after a duration, preferring the program's drained result.
+
+    Parameters:
+        V: The program's carrier type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        program: The program, consumed.
+        duration: The deadline, measured from entry.
+        fallback: Runs if the deadline passes first, consumed.
+
+    Returns:
+        The family's carrier with the program's or the fallback's outcome.
+    """
+    return I.timeout_to(program^, duration, fallback^)
+
+
+def timeout_after[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration, var fallback: V) -> I.TimedOut[V] where I.TemporalCompatible[V]:
+    """Fall back after a duration by first terminal outcome.
+
+    Parameters:
+        V: The program's carrier type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        program: The program, consumed.
+        duration: The deadline, measured from entry.
+        fallback: Runs if the deadline passes first, consumed.
+
+    Returns:
+        The family's carrier with the program's or the fallback's outcome.
+    """
+    return I.timeout_after(program^, duration, fallback^)
+
+
+def timeout[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration, var error: I.Error) -> I.TimedOut[V] where I.TemporalCompatible[V]:
+    """Fail with an error after a duration, preferring the program's drained result.
+
+    Parameters:
+        V: The program's carrier type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        program: The program, consumed.
+        duration: The deadline, measured from entry.
+        error: The domain error raised on timeout, consumed.
+
+    Returns:
+        The family's carrier with the program's outcome or the error.
+    """
+    return I.timeout(program^, duration, error^)
+
+
+def delay_by[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration) -> I.DelayedBy[V] where I.TemporalCompatible[V]:
+    """Sleep, then run the program, in any family with Temporal.
+
+    Parameters:
+        V: The program's carrier type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        program: The program, consumed.
+        duration: The sleep before it.
+
+    Returns:
+        The family's carrier with the program's outcome.
+    """
+    return I.delay_by(program^, duration)
+
+
+def and_wait[V: Movable & Deinitable, //, I: Temporal](var program: V, duration: Duration) -> I.Waited[V] where I.TemporalCompatible[V]:
+    """Run the program, then sleep, keeping its value, in any family with Temporal.
+
+    Parameters:
+        V: The program's carrier type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        program: The program, consumed.
+        duration: The sleep after it.
+
+    Returns:
+        The family's carrier with the program's value after the sleep.
+    """
+    return I.and_wait(program^, duration)

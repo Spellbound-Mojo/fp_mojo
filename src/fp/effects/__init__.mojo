@@ -23,7 +23,8 @@ those operations through one layer. Listen pairs the payload with an observed
 log, while censor transforms only the selected computation's output log.
 LiftDefer and LiftRaise lift Defer and Raise through any layer; LiftCancel and
 LiftSpawn forward Cancel and Spawn through OptionalT and ResultT, whose
-programs are the base's programs.
+programs are the base's programs, as do LiftConcurrent and LiftTemporal;
+LiftTiming lifts Timing through any layer.
 
 Transformer order matters. `StateT` over `Result` returns no state on failure;
 `ResultT` over `State` can return a failed `Result` together with the updated
@@ -58,9 +59,9 @@ cancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over
 shared state. The optional Fiber backend requires explicit unsafe_start and
 its documented thread-safety obligations.
 """
-from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
+from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, Timing, Temporal, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
 from .reader import ReaderT, Reader
-from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, LiftDefer, LiftRaise, LiftCancel, LiftSpawn, TellContract, ask, local, get, put, modify, tell, listen, censor, defer, raise_error, start, join, cancel, never, cede, make_ref, make_deferred, get_ref, set_ref, update_ref, modify_ref, complete_deferred, get_deferred
+from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, LiftDefer, LiftRaise, LiftCancel, LiftSpawn, LiftConcurrent, LiftTiming, LiftTemporal, TellContract, ask, local, get, put, modify, tell, listen, censor, defer, raise_error, start, join, cancel, never, cede, make_ref, make_deferred, get_ref, set_ref, update_ref, modify_ref, complete_deferred, get_deferred, monotonic, timed, sleep, timeout_to, timeout_after, timeout, delay_by, and_wait
 from .state import StateT, State
 from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT

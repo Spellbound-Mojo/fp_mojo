@@ -147,6 +147,8 @@ an existing operation:
 | `Cancel` (`MonadCancel`) | `canceled[I]()`, `guarantee[I]`, `on_cancel[I]`, `guarantee_case[I]`, `uncancelable[I]`, `restore[I]` | `Async[E]`, `SyncIO[E]` |
 | `Spawn` (`GenSpawn`) | `start[I]`, `join[I, T]`, `cancel[I, T]`, `never[I, A]`, `cede[I]` | `Async[E]` |
 | `Concurrent` (`GenConcurrent`) | `make_ref[I]`, `get_ref[I, T]`, `set_ref[I]`, `update_ref[I]`, `modify_ref[I, A]`, `make_deferred[I, T]`, `complete_deferred[I]`, `get_deferred[I, T]` | `Async[E]` |
+| `Timing` (`Clock`) | `monotonic[I]()`, `timed[I](program)` | `Async[E]`, `SyncIO[E]` |
+| `Temporal` (`GenTemporal`) | `sleep[I]`, `timeout_to[I]`, `timeout_after[I]`, `timeout[I]`, `delay_by[I]`, `and_wait[I]` | `Async[E]` |
 
 `Async[E]` is the dictionary for `IO[T, E]`; `SyncIO[E]` is the dictionary for
 the synchronous `fp.effects.IO[E]`, which has no fibers. A function such as
@@ -170,11 +172,22 @@ a Mojo keyword and `get`, `put`, and `modify` already select `Stateful` state.
 Callbacks given to either handle are library callables or plain functions;
 closures are rejected, as for other `IO` callbacks.
 
+Time comes from one clock per root: every fiber, sleep, timeout, and
+`monotonic` reading in a driven program uses the system monotonic clock or the
+manual clock given to its `Driver`, which moves only when advanced. An
+`Instant` is compared only within that clock, and `later.since(earlier)` gives
+the `Duration` between two readings; `to_nanoseconds()` reads a duration.
+`timed` pairs that duration with a program's value, and a failure has none.
+There is no wall-clock reading: the Mojo standard library offers no wall-clock
+source. `SyncIO` provides `Timing` but not `Temporal`: the synchronous
+`sleep_io` blocks the thread on the system clock, and inside an `IO` through
+`IO.eval_io` it blocks the cooperative host.
+
 Transformer layers forward these capabilities through explicit selections, as
-`LiftAsk` does for `Ask`. `LiftDefer[Layer, C]` and `LiftRaise[Layer, C]` lift
-the base's carriers through any layer; `LiftCancel[Layer, C]` and
-`LiftSpawn[Layer, C]` forward through `OptionalT` and `ResultT`, whose programs
-are the base's programs:
+`LiftAsk` does for `Ask`. `LiftDefer[Layer, C]`, `LiftRaise[Layer, C]`, and
+`LiftTiming[Layer, C]` work through any layer; `LiftCancel`, `LiftSpawn`,
+`LiftConcurrent`, and `LiftTemporal` forward through `OptionalT` and
+`ResultT`, whose programs are the base's programs:
 
 ```text
 comptime Opt = OptionalT[Async[Int]]
@@ -187,9 +200,13 @@ finalizers and is not a cancellation. Finalizers are the layer's unit programs,
 their results discarded, and `guarantee_case` takes the base's case finalizer.
 A fiber started through `LiftSpawn[OptionalT[Async[E]], Async[E]]` is a
 `Fiber[Optional[T], E]`, and joining it produces absence inside a successful
-`Outcome`. `ReaderT` and `StateT` forward only `Defer` and `Raise`; over `Async`,
-a `ReaderT` bind, and so `defer`, is rejected when run, because the IO would
-keep the borrowed environment.
+`Outcome`. A cell made through `LiftConcurrent` is the base's cell. Timeouts
+forward the layer's programs, so a layer's absence beats the deadline, while
+`timed`, `delay_by`, and `and_wait` bind through the layer, as Cats Effect
+derives them: a layer's absence has no duration and skips the sleep after it.
+`ReaderT`, `StateT`, and `WriterT` forward only `Defer`, `Raise`, and `Timing`;
+over `Async`, a `ReaderT` bind, and so `defer` and `timed`, is rejected when
+run, because the IO would keep the borrowed environment.
 
 ## Drive external work and shutdown
 
@@ -263,12 +280,14 @@ reported deadline.
 | `guarantee`, `guaranteeCase`, `onCancel`, `uncancelable` | `guarantee`, `guarantee_case`, `on_cancel`, `IO.uncancelable` | Masked cleanup with the exact exit |
 | `IO.async`, `IO.async_` | `IO.async`, `IO.async_` | Withdrawal runs after every entered registration |
 | `IO.cede`, `IO.never`, `IO.sleep`, `IO.canceled` | the same, on `IO[T, E]` | |
+| `IO.monotonic`, `timed`, `timeout`, `delayBy`, `andWait` | `IO[T, E].monotonic()`, `timed`, `timeout`, `delay_by`, `and_wait` | Monotonic `Instant` only; no `realTime` |
 | `both`, `race`, `timeoutTo` | `both`, `race`, `timeout_to` | Cancel and drain; surviving source outcomes can win |
 | Earlier selection policies | `race_first`, `timeout_after` | First terminal outcome, or timer-selected fallback after clean draining |
 | `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
 | `MonadCancel`, `GenSpawn`, `Sync` (deferral only) | `Cancel`, `Spawn`, `Defer`, `Raise` dictionaries: `Async[E]`, `SyncIO[E]` | Narrower capabilities stay narrower; the synchronous family has no `Spawn` |
-| `MonadCancel[OptionT[F, *], E]` and the other transformer instances | `LiftDefer`, `LiftRaise`, `LiftCancel`, `LiftSpawn` selections | Cancel and Spawn forward through `OptionalT` and `ResultT` only; case finalizers observe the base exit |
+| `MonadCancel[OptionT[F, *], E]` and the other transformer instances | `LiftDefer`, `LiftRaise`, `LiftTiming`, `LiftCancel`, `LiftSpawn`, `LiftConcurrent`, `LiftTemporal` selections | Cancel, Spawn, Concurrent, and Temporal forward through `OptionalT` and `ResultT` only; case finalizers observe the base exit |
 | `Ref.of`, `Deferred[F, A]`, `GenConcurrent` | `Ref(value)`, `Deferred[T]()`, `Concurrent` with `make_ref[I]`, `make_deferred[I, T]` | Updates cannot raise; reads copy, so `get` needs copyable state |
+| `Clock`, `GenTemporal` | `Timing` and `Temporal` dictionaries | `SyncIO[E]` provides `Timing` only |
 | `fa.start`, `fiber.join`, `fiber.cancel` | `io.start()`, `fiber^.join()`, `fiber.cancel()`, `fiber.request_cancel()` | Owners drain unjoined children before completing |
 | `Supervisor(await).use(f)`, `supervise` | `Supervisor[E].scoped(f, await_on_release)`, `supervisor.supervise(io)` | Release cancels live supervised fibers unless it awaits them |
 | `racePair` | `io.race_pair(other)` | A `RaceWinner` with the first outcome and the other fiber |

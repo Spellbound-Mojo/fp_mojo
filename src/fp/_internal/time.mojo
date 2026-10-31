@@ -73,6 +73,14 @@ struct Duration(Copyable):
         """
         return Self._from_scaled[1000000000](value)
 
+    def to_nanoseconds(self) -> Int:
+        """Read the duration as an integer nanosecond count.
+
+        Returns:
+            A count from zero through 10**18 inclusive.
+        """
+        return self._nanoseconds
+
 
 struct Instant(Copyable, Comparable):
     """An opaque absolute point in a runtime clock's monotonic origin.
@@ -133,6 +141,34 @@ struct Instant(Copyable, Comparable):
     def __add__(self, duration: Duration) -> Self:
         """Add a checked duration through the same arithmetic owner as after."""
         return self.after(duration)
+
+    def since(self, earlier: Self) -> Duration:
+        """Measure the duration from an earlier point in the same clock origin.
+
+        Args:
+            earlier: A point read from the same clock, at most this one.
+
+        Returns:
+            The elapsed duration; zero if `earlier` is later, and the largest
+            supported duration, 10**18 nanoseconds, if the gap exceeds it.
+        """
+        var elapsed = Duration()
+        if not earlier < self:
+            return elapsed^
+        var limit = UInt64(Duration._maximum_nanoseconds)
+        var high = self._high - earlier._high
+        var low: UInt64
+        if self._low >= earlier._low:
+            low = self._low - earlier._low
+        else:
+            # Borrow from the high word, which is at least one here.
+            high -= 1
+            low = (UInt64.MAX - earlier._low) + self._low + 1
+        if high > 0 or low > limit:
+            elapsed._nanoseconds = Duration._maximum_nanoseconds
+        else:
+            elapsed._nanoseconds = Int(low)
+        return elapsed^
 
     def __lt__(self, other: Self) -> Bool:
         return self._high < other._high or (self._high == other._high and self._low < other._low)
