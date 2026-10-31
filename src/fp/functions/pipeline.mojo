@@ -856,11 +856,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
     def map[F: UnaryContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](
         deinit self, var function: F
     ) raises MapContract[I, Self.Value, F].Error -> Piped[MapContract[I, Self.Value, F].Out] where MapContract[I, Self.Value, F].Compatible:
-        """Map an owned library callback through the held value's family or an explicit one.
-
-        Admission is the free map's contract, so a generic wrapper forwards
-        `MapContract[I, V, F].Compatible`.
-        """
+        """Map an owned library callback through the held value's family or an explicit one, admitted by the free map's MapContract."""
         return Piped(_family_map[I](self.value^, function^))
 
     def filter[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,

@@ -24044,20 +24044,20 @@
       "signature": "def traverse[R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R]](deinit self, function: def(var _NativeOwnedArg[downcast[Self.I.Element, Movable & Deinitable]]) raises E thin -> R) raises G.CollectError[Self.I, NativeUnary[downcast[Self.I.Element, Movable & Deinitable], R, E, type_of(function), True]] -> G.Collected[Self.I, NativeUnary[downcast[Self.I.Element, Movable & Deinitable], R, E, type_of(function), True]] where G.CollectCompatible[Self.I, NativeUnary[downcast[Self.I.Element, Movable & Deinitable], R, E, type_of(function), True]]:"
      },
      {
-      "sha256": "2a2c1d0ad1d5a2055fd151c0d450ed0a9b54acd9da88bb64dfe3b2821231f2f0",
-      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, F: def(var A) -> R](deinit self, ref[o] function: F ) raises G.CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] -> G.Collected[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] where Self.I.Element == A and G.CollectCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]:"
+      "sha256": "bdc716a1a6feb2b43290a80a06e3f728b96f69da28497783fbb6c4c7cb01aa23",
+      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], F: def(var A) -> R = def(var A) -> R](deinit self, ref[o] function: F ) raises G.CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] -> G.Collected[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] where Self.I.Element == A and G.CollectCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]:"
      },
      {
-      "sha256": "73085bb196ecc6ebe58569a47a8a4c4f4433aef1b2878505275e157e9ef3e671",
-      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F ) raises G.CollectError[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] -> G.Collected[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] where Self.I.Element == A and G.CollectCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o]]:"
+      "sha256": "a3ff4f12cf3d27f6840817748caacb6d588da84210ab084e46db7f5fab4f03c4",
+      "signature": "def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, G: Applicative = _InferredApplicative[R], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R](deinit self, ref[o] function: F ) raises G.CollectError[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] -> G.Collected[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] where Self.I.Element == A and G.CollectCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o]]:"
      },
      {
-      "sha256": "b195e73c8217cb51f65e001ebaa3db839083b7e5062a8e29d92f78068a1d2eb4",
-      "signature": "def traverse[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative](deinit self, ref[o] function: F ) raises G.CollectError[Self.I, F._View[o]] -> G.Collected[Self.I, F._View[o]] where Self.I.Element == F._View[o].Arg and G.CollectCompatible[Self.I, F._View[o]]:"
+      "sha256": "f5b3879dab3616a96806272d034e2e0642036cd1b35bfb0bb7af8a9a515aa580",
+      "signature": "def traverse[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o]](deinit self, ref[o] function: F ) raises G.CollectError[Self.I, F._View[o]] -> G.Collected[Self.I, F._View[o]] where Self.I.Element == F._View[o].Arg and G.CollectCompatible[Self.I, F._View[o]]:"
      },
      {
-      "sha256": "a4ff00daa5196d2ead161a8fac963452cd7c8902fd5a0c296c8279507192c9b1",
-      "signature": "def traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative](deinit self, var function: F ) raises G.CollectError[Self.I, F] -> G.Collected[Self.I, F] where Self.I.Element == F.Arg and G.CollectCompatible[Self.I, F]:"
+      "sha256": "08c08f116528d011c34bddd2d0800677ba2afb1d6295acaef2f6473af4e5fb1b",
+      "signature": "def traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out]](deinit self, var function: F ) raises G.CollectError[Self.I, F] -> G.Collected[Self.I, F] where Self.I.Element == F.Arg and G.CollectCompatible[Self.I, F]:"
      }
     ],
     "traverse_filter": [

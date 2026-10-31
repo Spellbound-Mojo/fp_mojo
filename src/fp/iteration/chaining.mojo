@@ -1781,7 +1781,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
     # --- end traversal conveniences ---
 
     def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
-                 G: Applicative, F: def(var A) -> R](deinit self, ref[o] function: F
+                 G: Applicative = _InferredApplicative[R], F: def(var A) -> R = def(var A) -> R](deinit self, ref[o] function: F
     ) raises G.CollectError[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] -> G.Collected[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]] where Self.I.Element == A and G.CollectCompatible[Self.I, _NativeUnaryRef[A, R, Never, F, False, o]]:
         """Consume into an effect containing a List, stopping according to G.
 
@@ -1789,7 +1789,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             A: The callback input type, including its native origins.
             R: The native callback result type.
             o: The origin of the borrowed native callback.
-            G: The target Applicative family; it determines effect sequencing and failure.
+            G: The target Applicative family; it determines effect sequencing and failure. Defaults to the family of the callback's result.
             F: The callback type, retaining its receiver, captures and error contract.
 
         Args:
@@ -1804,17 +1804,17 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
         return G.collect(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), self._iterator^)
 
     def traverse[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //,
-                 G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R](deinit self, ref[o] function: F
+                 G: Applicative = _InferredApplicative[R], E: Movable & Deinitable = Never, F: def(var A) raises E -> R = def(var A) raises E -> R](deinit self, ref[o] function: F
     ) raises G.CollectError[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] -> G.Collected[Self.I, _NativeUnaryRef[A, R, E, F, True, o]] where Self.I.Element == A and G.CollectCompatible[Self.I, _NativeUnaryRef[A, R, E, F, True, o]]:
         """Consume with a raising native callback and the exact target effect."""
         return G.collect(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), self._iterator^)
 
-    def traverse[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative](deinit self, ref[o] function: F
+    def traverse[F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o]](deinit self, ref[o] function: F
     ) raises G.CollectError[Self.I, F._View[o]] -> G.Collected[Self.I, F._View[o]] where Self.I.Element == F._View[o].Arg and G.CollectCompatible[Self.I, F._View[o]]:
         """Traverse with a shared callable view, retaining its native origin."""
         return self^.traverse[G](function._unary_view())
 
-    def traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative](deinit self, var function: F
+    def traverse[F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out]](deinit self, var function: F
     ) raises G.CollectError[Self.I, F] -> G.Collected[Self.I, F] where Self.I.Element == F.Arg and G.CollectCompatible[Self.I, F]:
         """Consume with an owned library callback and the target effect."""
         return G.collect(function^, self._iterator^)
