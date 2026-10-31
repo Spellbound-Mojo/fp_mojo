@@ -1,4 +1,5 @@
 """Fixed-arity callable protocols and borrowed endpoints: the types every callback is called through."""
+from std.os import abort
 
 
 # Fixed-arity library callables. A contract holds the types and each receiver
@@ -301,7 +302,24 @@ struct _ErrorProbe[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable 
 
 
 # The borrowing counterpart, for predicates and other borrowing callbacks.
-struct _BorrowErrorProbe[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable](BorrowCallContract):
+# Contracts that name a BorrowCallable accept it too; it is never invoked.
+struct _BorrowErrorProbe[P: AnyType, R: Movable & Deinitable, E: Movable & Deinitable](BorrowCallable):
     comptime Payload = Self.P
     comptime Result = Self.R
     comptime Failure = Self.E
+
+    def invoke(self, ref payload: Self.P) raises Self.E capturing -> Self.R:
+        abort()
+
+
+# The binary and zero-argument counterparts, for folds and factories.
+struct _BinaryErrorProbe[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable](BinaryContract):
+    comptime First = Self.A
+    comptime Second = Self.B
+    comptime Out = Self.R
+    comptime Error = Self.E
+
+
+struct _ThunkErrorProbe[R: Movable & Deinitable, E: Movable & Deinitable](ThunkContract):
+    comptime Out = Self.R
+    comptime Error = Self.E

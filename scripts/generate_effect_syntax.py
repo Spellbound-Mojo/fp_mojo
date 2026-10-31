@@ -1,7 +1,7 @@
 """Native boundaries for shared effectful folds and conditional composition."""
 from itertools import product
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure, source_default, split_explicit
+from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure, source_default, split_explicit, error_probe, probed
 from operation_specs import EFFECT_REDUCTIONS, EffectChoice
 
 START = '# --- effect syntax (generated) ---\n'
@@ -22,6 +22,25 @@ def variants(mode, operation, elements, *, error):
     names.update({'in0': 'A0', 'in1': 'B'} if operation.mode == 'binary' else {'in0': 'P' if borrowing else 'A'})
     return [('catalog', form) for form in admissions(
         operation.mode, elements, view=False, repeatable=borrowing, names=names)]
+
+
+def _probe_contract(kind, factory, form, mode, callback, contract, raised, condition):
+    """Spell a raising native callback's contract error through a probe.
+
+    Mojo does not reduce the contract's error alias for a stored native
+    callback, chiefly a plain function's, so the declared error, its
+    admission and the execution use the probe spelling; the body asserts both
+    spellings agree. Library callbacks and non-raising forms are unchanged.
+    """
+    native = factory if kind == 'catalog' else form
+    if native is None or not native.raising or native.kind == 'library':
+        return '', raised, condition
+    inputs = tuple('NoneType' for _ in native.inputs) if native.kind == 'thin' else native.inputs
+    if mode == 'binary' and native.kind == 'thin':
+        inputs = native.inputs
+    probe = error_probe(mode, inputs, native.result, native.error)
+    spelled, assertion = probed(raised, callback, probe)
+    return assertion, spelled, condition.replace(raised, spelled)
 
 
 def folds(mode, array=False):
@@ -98,6 +117,7 @@ def folds(mode, array=False):
                     relations.append(f'{metadata.inputs[0]} == A')
                 condition = ' and '.join([*relations, condition])
             result = f'{contract}.Out'
+            assertion, raised, condition = _probe_contract(kind, factory, form if native else None, operation.mode, cb, contract, raised, condition)
             call = plan.invoke(raised, value)
             if mode == 'free':
                 args = ['var source: V'] + (['var initial: A'] if fold else []) + [arg]
@@ -107,7 +127,8 @@ def folds(mode, array=False):
             indent = '' if mode == 'free' else '    '
             doc = ('Fold in order with an effectful accumulator step; empty input returns the initial value in the effect.' if fold else
                    'Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result.')
-            out.append(f'\n{indent}def {name}[{", ".join(params)}]({", ".join(args)}) raises {raised} -> {result} where {condition}:\n{indent}    """{doc}"""\n{indent}    return {call}\n')
+            prelude = f'{indent}    {assertion}\n' if assertion else ''
+            out.append(f'\n{indent}def {name}[{", ".join(params)}]({", ".join(args)}) raises {raised} -> {result} where {condition}:\n{indent}    """{doc}"""\n{prelude}{indent}    return {call}\n')
     return document_first_methods(''.join(out))
 
 
@@ -255,11 +276,13 @@ def searches(mode, array=False):
             condition+=f' and (_ErrorCompatible[{raised}, {fe}] or _ErrorCompatible[{raised}, {actual}])'
             if kind=='catalog':condition=' and '.join([*factory.conditions, condition])
             if folding: condition+=f' and _ErrorCompatible[{raised}, M.Error]'
+            assertion, raised, condition = _probe_contract(kind, factory, form if native else None, operation.mode, cb, contract, raised, condition)
             call = plan.invoke(raised, value)
             result = contract + '.Out'
             args=['var source: V', arg] if mode=='free' else ['deinit self', arg]
             if mode=='piped':result=f'Piped[{result}]';call=f'Piped({call})'
             ind='' if mode=='free' else '    '
             summary={'find_effect':'Find the first original element selected by an effectful borrowing predicate in each live branch.','find_map_effect':'Find the first present Optional produced inside the selected Monad in each live branch.','fold_map_effect':'Map each element into the selected Monad and combine its values in order with an explicit Monoid.'}[name]
-            out.append(f'\n{ind}def {name}[{", ".join(params)}]({", ".join(args)}) raises {raised} -> {result} where {condition}:\n{ind}    """{summary}"""\n{ind}    return {call}\n')
+            prelude=f'{ind}    {assertion}\n' if assertion else ''
+            out.append(f'\n{ind}def {name}[{", ".join(params)}]({", ".join(args)}) raises {raised} -> {result} where {condition}:\n{ind}    """{summary}"""\n{prelude}{ind}    return {call}\n')
     return document_first_methods(''.join(out))

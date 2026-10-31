@@ -58,6 +58,32 @@ def callable_metadata(mode, owner):
     )
 
 
+def error_probe(mode, inputs, result, error):
+    """A type-only callback of the given shape that names only its types.
+
+    Mojo does not reduce a family error alias spelled through a stored native
+    callback, chiefly a plain function's, in a raises clause. Spelling the same
+    alias through a probe with the callback's input, result and error does
+    reduce; each body asserts both spellings name the same error.
+    """
+    if mode == 'borrow':
+        return f'_BorrowErrorProbe[{inputs[0]}, {result}, {error}]'
+    if mode == 'binary':
+        return f'_BinaryErrorProbe[{inputs[0]}, {inputs[1]}, {result}, {error}]'
+    if mode == 'thunk':
+        return f'_ThunkErrorProbe[{result}, {error}]'
+    return f'_ErrorProbe[{inputs[0]}, {result}, {error}]'
+
+
+def probed(declared, callback, probe):
+    """The declared error spelled through the probe instead of the callback,
+    and the assertion relating the two; unchanged when it names no callback."""
+    if callback not in declared:
+        return declared, ''
+    spelled = declared.replace(callback, probe)
+    return spelled, f'comptime assert {declared} == {spelled}'
+
+
 def split_explicit(parameters):
     """Split explicit callback parameters around a defaulted family.
 

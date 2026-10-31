@@ -1166,8 +1166,17 @@ variants from the source's elements. `fold_map_effect` takes its Monoid first,
 native error through `_ErrorProbe` and executes through `_traverse_as`. With
 explicit or inferred targets alike, a raising plain function to the other
 operations, and a raising borrowing closure to `traverse_tap`, `filter_effect`,
-`any_effect`, `all_effect` and `find_effect`, needs its error named with `X=`;
-their contract errors do not reduce from the callback. This predates inference.
+`any_effect`, `all_effect` and `find_effect`, needed its error named with `X=`:
+their contract errors did not reduce from the callback. This predated
+inference and is fixed: every raising native form in the traversal and effect
+generators, on the free functions, `Piped` and `Iter`, spells its declared
+error through a probe of the callback's shape (`error_probe()` and `probed()`
+in `scripts/native_signatures.py`: `_ErrorProbe`, `_BorrowErrorProbe`,
+`_BinaryErrorProbe`, `_ThunkErrorProbe`), asserts that it equals the stored
+callback's error, and passes it to the execution. `_BorrowErrorProbe` is a
+`BorrowCallable` whose `invoke` aborts, since search and predicate-fold
+contracts name callables; it is never invoked. Piped's per-carrier
+`traverse_void` forms also default their target now.
 
 Phase 4: `Piped` methods default their families the same way, with targets
 first, and List, Optional, Deque, LinkedList and Result no longer have native

@@ -327,11 +327,10 @@ The free functions infer the same target: `traverse(source, callback)`,
 folds. `sequence(source)` and its variants infer it from the source's
 elements. A single bracketed family overrides the target; `fold_map_effect`
 takes its Monoid first, `fold_map_effect[M](source, function)`, and an explicit
-target second. A raising native callback that the target's error does not name
-directly, such as a raising plain function to these operations other than
-`traverse`, or a raising borrowing closure to `traverse_tap`, `filter_effect`,
-`any_effect`, `all_effect` or `find_effect`, names its error with `X=`
-(`Z=` for `fold_effect`), as in `any_effect[X=String](source, predicate)`.
+target second. Raising plain functions and closures need no hint: each operation names the
+callback's exact error itself. Generic code that forwards a raising callback
+whose error is a type parameter can still name it with `X=` (`Z=` for
+`fold_effect`).
 
 <!-- example: docs/examples/fluent_effects.mojo -->
 
