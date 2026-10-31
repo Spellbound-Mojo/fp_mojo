@@ -143,10 +143,14 @@ the function returned.
   below `max_workers`, under the worker-list lock. A worker whose idle timeout
   passes re-reads the queue under the same lock before exiting, so a job is
   never left without a worker.
-- **Ownership.** The root's `_Scheduler` holds the root's pool and its
-  in-flight count, which the worker decrements with release ordering after its
-  last use of the job; `finish` waits for it with acquire loads before dropping
-  the root's copy. Each worker body holds the pool's core until it returns,
+- **Ownership.** The root's `_Scheduler` holds one word: zero, or the address
+  of the root's pool and in-flight count. A configured pool is installed when
+  the root is created; otherwise the first blocking call builds a private pool
+  and installs it with one compare-exchange from zero (acquire-release; a loser
+  drops its threadless candidate). The worker decrements the in-flight count
+  with release ordering after its last use of the job; `finish` takes the
+  word, waits for the count with acquire loads, then drops the root's copy,
+  and does nothing more for a root whose word is still zero. Each worker body holds the pool's core until it returns,
   and the worker list holds none, so a pool closed on its own worker detaches
   that worker, which releases the core last.
 

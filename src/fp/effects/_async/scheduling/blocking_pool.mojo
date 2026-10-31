@@ -8,8 +8,9 @@ function and completes the submitting fiber's `Completion` with its outcome;
 the run loop never runs on a worker.
 
 Ownership. Copies of a `BlockingPool` share one pool, which lives as long as
-its copies. A root holds a copy: the one in its `IORuntimeConfig`, or a
-private pool created with the root, with no threads until the first call.
+its copies. A root holds a copy: the one in its `IORuntimeConfig`, installed
+when the root is created, or a private pool created on the root's first
+blocking call (see the root's hook below).
 Finishing a root waits for its in-flight calls (their callers wait for them
 anyway, so only the worker's last steps remain), then drops its copy. Dropping
 the last copy closes the pool: every queued job runs, then the workers stop and
@@ -563,31 +564,72 @@ struct _RootBlocking(Copyable):
 # ===------------------------------------------------------------------=== #
 
 
+# The root's slot is one word on `_Scheduler`: 0, or the address of a
+# heap-allocated `_RootBlocking` that the slot owns. A root that never blocks
+# leaves it 0, so creating and finishing it cost one load each.
+#
+# Orderings. An installer builds its candidate, then publishes it with a
+# compare-exchange from 0 that is ACQUIRE_RELEASE on success: the release
+# makes the candidate's construction visible to every thread that reads the
+# address. A reader loads the word with ACQUIRE, and a losing installer's
+# failed compare-exchange is ACQUIRE too, so either one sees the winner's
+# fully built `_RootBlocking`; the loser drops its candidate, whose pool has
+# started no thread. Exactly one compare-exchange from 0 succeeds, so the slot
+# is installed once. The root's finish takes the address with an ACQUIRE
+# compare-exchange to 0, after every blocking call of the root has completed, so no
+# reader remains. Today only the polling thread installs; the
+# compare-exchange keeps the install correct when 13c's workers race on it.
+
+
+def _publish(word: Pointer[Atomic[Int], MutUntrackedOrigin], var root: _RootBlocking) -> Int:
+    """Install `root` unless another installer won; returns the installed address."""
+    var candidate = unsafe_alloc[_RootBlocking](1)
+    candidate.unsafe_write(root^)
+    var expected = 0
+    if word[].compare_exchange[success_ordering=Ordering.ACQUIRE_RELEASE, failure_ordering=Ordering.ACQUIRE](expected, Int(candidate)):
+        return Int(candidate)
+    candidate.unsafe_deinit_pointee()
+    candidate.unsafe_free()
+    return expected
+
+
+def _slot(scheduler: ArcPointer[_Scheduler]) -> Pointer[Atomic[Int], MutUntrackedOrigin]:
+    return Pointer(to=scheduler[].blocking[]).unsafe_origin_cast[MutUntrackedOrigin]()
+
+
 def _install_blocking(scheduler: ArcPointer[_Scheduler], pool: Optional[BlockingPool]):
-    """Give a new root its pool: the configured one, or a private one with no threads yet."""
-    var chosen: BlockingPool
+    """Install a configured pool when the root is created; otherwise leave the slot empty."""
     if pool:
-        chosen = pool.value().copy()
-    else:
-        try:
-            chosen = BlockingPool()
-        except:
-            abort("fp.effects: the default blocking pool configuration is invalid")
-    scheduler[].blocking[] = Optional(_Erased(_RootBlocking(chosen^)))
+        _ = _publish(_slot(scheduler), _RootBlocking(pool.value().copy()))
 
 
 def _root_blocking(scheduler: ArcPointer[_Scheduler]) -> _RootBlocking:
-    """The running root's pool and call count; read on the polling thread."""
-    ref slot = scheduler[].blocking[]
-    if not slot:
-        abort("fp.effects: blocking calls run only under a driver")
-    return slot.value().pointer[_RootBlocking]()[].copy()
+    """The running root's pool and call count, creating a private pool on first use."""
+    var word = _slot(scheduler)
+    var address = word[].load[ordering=Ordering.ACQUIRE]()
+    if address == 0:
+        var private: BlockingPool
+        try:
+            private = BlockingPool()
+        except:
+            abort("fp.effects: the default blocking pool configuration is invalid")
+        address = _publish(word, _RootBlocking(private^))
+    return Pointer[_RootBlocking, MutUntrackedOrigin](unsafe_from_address=address)[].copy()
 
 
 def _finish_blocking(scheduler: ArcPointer[_Scheduler]):
-    """Wait for the root's calls, then drop its copy of the pool."""
-    ref slot = scheduler[].blocking[]
-    if not slot:
+    """Wait for the root's calls, then drop its copy of the pool; one load for a root that never blocked."""
+    var word = _slot(scheduler)
+    if word[].load[ordering=Ordering.ACQUIRE]() == 0:
         return
-    var root = slot.take().take[_RootBlocking]()
+    # Atomic has no exchange: take the address with a compare-exchange to 0.
+    var address = word[].load[ordering=Ordering.ACQUIRE]()
+    while address != 0:
+        if word[].compare_exchange[success_ordering=Ordering.ACQUIRE, failure_ordering=Ordering.ACQUIRE](address, 0):
+            break
+    if address == 0:
+        return
+    var owned = Pointer[_RootBlocking, MutUntrackedOrigin](unsafe_from_address=address)
+    var root = owned.unsafe_take_pointee()
+    owned.unsafe_free()
     root^.finish()

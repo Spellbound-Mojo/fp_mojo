@@ -260,8 +260,8 @@ reused for the next call and retires after `idle_timeout`, and at most
 `max_workers` run at once; further calls wait in a queue.
 `BlockingPool(max_workers=64, idle_timeout=60 s)` raises for a nonpositive
 maximum. Each root uses `IORuntimeConfig.blocking_pool`, or else a private pool
-with the defaults, created with the root and starting no thread before the
-first call. Copies of a pool share it, so passing one pool to several roots
+with the defaults, created on the root's first blocking call, so a root that
+never blocks pays nothing for it. Copies of a pool share it, so passing one pool to several roots
 shares its workers:
 
 ```text
