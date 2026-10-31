@@ -438,7 +438,8 @@ def lock_variant[spins: Int](label: String) raises:
 def lock_variants() raises:
     print("Four threads, each doing push+pop pairs on 4 stripes; ns per pair per thread:")
     lock_variant[0]("  yield after every failed attempt (_lock_metadata's loop)")
-    lock_variant[64]("  64 spins, then yield (_lock_cell)")
+    lock_variant[64]("  64 spins, then yield")
+    lock_variant[256]("  256 spins, then yield (_lock_cell)")
     lock_variant[1 << 40]("  spin only, never yield")
 
 

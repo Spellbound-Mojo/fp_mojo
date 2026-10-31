@@ -17,8 +17,13 @@ from std.atomic import Atomic, Ordering
 from std.memory import ArcPointer
 from std.time import sleep
 
-comptime _CELL_SPINS = 64
-"""Attempts a borrowed guard makes before yielding the processor."""
+comptime _CELL_SPINS = 256
+"""Attempts a borrowed guard makes before yielding the processor.
+
+With four threads contending for four external-queue stripes, 64 spins cost
+as much as yielding at once, and 256 or more matched spinning without yielding
+(probes/wstp_cost.mojo).
+"""
 
 
 @fieldwise_init

@@ -102,42 +102,63 @@ and each one leaves a structure exactly once or is destroyed with it.
   advancing the real tag and releases them by advancing the steal tag. A full
   ring moves half its elements to the external queue in batches.
 - **External queue** (`_ExternalQueue`), after `ScalQueue`: power-of-two
-  stripes, each a standard-library `Deque` guarded by the shared metadata lock
-  from `fp._internal.cells`, with a published length per stripe so consumers
-  skip empty stripes without locking.
+  stripes stored inline, each a standard-library `Deque` with its lock and a
+  published length, so consumers skip empty stripes without locking. Stripes
+  are locked through `_lock_cell` in `fp._internal.cells`, a borrowed guard that
+  shares its acquire and release with `_lock_metadata`, costs no reference
+  counting, and spins up to 256 times before yielding. Upstream offers each
+  32-element spill batch as one element to a random stripe and moves a polled
+  batch into the ring in one step. Here each batch goes to its own random
+  stripe as separate elements, and a refill takes up to one batch from one
+  stripe.
 - **Timer heap** (`_TimerHeap`), after `TimerHeap`: changed only by its owner.
   Any thread may cancel through a generation-checked ticket (the wake
   registry's `_Ticket`), which marks and counts the node; the owner packs once
   counted cancellations reach half the heap. Other workers take expired timers
-  by walking the heap. Upstream clears callbacks with plain writes and
-  tolerates a duplicate run. Here a single compare-exchange on each node's
-  state word picks the one taker of a move-only payload. Slots, payloads and
-  heap entries live in chunks that never move, so no reclamation scheme is
-  needed.
+  by walking the heap, after reading an earliest-deadline hint kept on its own
+  cache line. Upstream clears callbacks with plain writes and tolerates a
+  duplicate run. Here a single compare-exchange on each node's state word
+  picks the one taker of a move-only payload. Slots, payloads and heap entries
+  live in chunks that never move, so no reclamation scheme is needed.
+- **Parking** (`_Parking`), after `WorkStealingThreadPool`: the state machine
+  only, since the operating-system park and unpark belong to the poller. One
+  word counts active and searching workers. Searching is granted only while
+  fewer than half the workers search, enforced exactly by compare-exchange.
+  Submitters wake a parked worker only when none is searching and fewer than
+  all are active. A per-worker parked flag claimed by compare-exchange makes
+  exactly one notifier unpark a worker for one parking. Sequentially
+  consistent fences on the submitter's and the last parking searcher's paths
+  ensure that one of them sees the other, so no work is stranded.
 
 Cross-thread operations borrow a structure immutably and change only atomics
 and the slots they have claimed. Mojo cannot express a victim and an exclusive
 destination borrowed from the same collection, so `steal_into` relies on the
 protocol rather than the borrow for `dst`.
 
-The clients `wstp_queues` and `wstp_timers` check exact single-thread
-contracts, then run several threads with tracked elements to prove that each
-element is received at most once (exactly once when drained) and destroyed
-once, including leftovers. Measurements from `probes/wstp_cost.mojo` at O3 on
-a 4-core x86 host:
+The clients `wstp_queues`, `wstp_timers` and `wstp_parking` check exact
+single-thread contracts, then run several threads with tracked elements to
+prove that each element is received at most once (exactly once when drained)
+and destroyed once, including leftovers. `wstp_parking` runs workers on
+`OSThread`s with a test-only self-pipe parker. It submits work after every
+worker has parked, checks the searcher bound, and checks for one unpark per
+parking. It fails when the last searcher's re-check is removed. Measurements
+from `probes/wstp_cost.mojo` at O3 on a 4-core x86 host:
 
 | Operation | ns |
 |---|---|
 | Acquire load, release store, relaxed load (plain-load cost) | 0.4–0.7 |
 | `fetch_add`, compare-exchange, sequential store, sequential fence | 6–9 |
 | Ring enqueue and dequeue pair | 14 |
-| Stolen element, or element spilled to the external queue | 17–19 |
-| External push and pop pair (`_lock_metadata`) | 77–81 |
-| The same pair under a borrowed spin lock | 25 |
-| Timer insert and poll with 1,000 timers queued (`BinaryHeap`: 45–60) | 58–61 |
-| Timer insert and owner cancellation, or marked cancellation | 24–35 |
+| Stolen element, or element spilled to the external queue | 15–19 |
+| External push and pop pair (`_lock_cell`; 75–81 with `_lock_metadata`) | 31–33 |
+| The same pair under a hand-written borrowed spin lock | 25 |
+| Timer insert and poll with 1,000 timers queued (`BinaryHeap`: 45–60) | 56–61 |
+| Timer insert and owner cancellation, or marked cancellation | 22–37 |
 
 Under contention, an owner's ring pair costs about 350 ns while two thieves
-steal in a tight loop, and an external pair costs 1.5 µs with four threads on
-four stripes. The shared lock calls `sleep(0.0)` between attempts; how much of
-that cost the sleep accounts for has not been measured.
+steal in a tight loop. An external pair costs 1.1 µs with four threads on four
+stripes (1.5–1.6 µs with `_lock_metadata`). That cost is mostly cache-line
+transfer: yielding after every failed attempt costs 10–25% more than spinning
+without yielding, and 256 spins match spinning. A timer insert and poll costs
+230–300 ns while two threads steal due timers, against 410–460 ns before the
+earliest-deadline hint moved to its own line.
