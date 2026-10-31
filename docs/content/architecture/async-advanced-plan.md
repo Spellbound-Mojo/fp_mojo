@@ -2120,6 +2120,13 @@ Decided on 2026-10-31:
    scheduler per logical processor. It becomes Pass 13, with a payload
    thread-safety contract; the qualification pass becomes Pass 14.
 7. **macOS** is deferred; POSIX compatibility is the goal now.
+8. **Host notifier.** An erased notifier given to `Driver`'s constructor, so
+   `Driver[P]` keeps its type; the host asserts its thread safety.
+9. **Blocking pool ownership.** Each root owns a pool started on first use and
+   may borrow one shared by several roots; there is no process-wide default.
+10. **Capability.** A `Blocking` capability with `blocking[I]` and
+    `interruptible[I]`, provided by `Async[E]` through the pool and by
+    `SyncIO[E]` inline.
 
 ### Current state
 
@@ -2446,6 +2453,20 @@ runtime; `TestControl` stays deterministic.
   nothing running.
 - Stress and soak runs of randomized spawn, join, cancel, and wake mixes, and a
   measured comparison with the current-thread profile.
+
+### Pass 13 review decisions
+
+Decided on 2026-10-31, as recommended below:
+
+1. `run` uses the work-stealing profile by default once 13e lands, with the
+   thread-safety contract documented and the current-thread profile one
+   setting away.
+2. An explicit `Runtime` value owns the workers; `run` creates one per call,
+   and there is no process-wide default runtime.
+3. `Driver` embeds the current-thread profile only; the work-stealing profile
+   is driven through `Runtime`.
+4. Wave 1 of the combined plan starts in separate cloud sessions, one per
+   stream, with this session as integrator.
 
 ### Review questions
 
