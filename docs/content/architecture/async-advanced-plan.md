@@ -2068,6 +2068,172 @@ out.
   pass ran targeted qualification; the full verification gates (step 3e) have
   not run and wait for a request.
 
+## Pass 12 proposal
+
+Pass 12 integrates the runtime with its host where Mojo 1.2 allows it, and
+publishes the narrower profile, with the exact blocked obligation, where it
+does not. The plan requires host-service ownership, an execution-context
+contract, and execution profiles to be specified first; this proposal does
+that, then proposes what to build. Nothing has been built.
+
+### Current state
+
+- **Host boundary.** `Driver.poll` is nonblocking and reports completion,
+  readiness, the earliest deadline, and quiescence; the host decides when to
+  call it again. The blocking `run` drives the same `Driver` and idles in
+  1 ms sleeps, whatever the next deadline. `TestControl` drives a manual
+  clock. There is no way for a host to learn that an external event made the
+  root runnable except by polling.
+- **Notification state.** `Signal`, the wake registry, `Completion` admission,
+  `CancellationToken`, and the manual clock keep their state behind atomic
+  spin locks, and wake registrations are generation-checked. The design
+  anticipates other threads, but nothing has been qualified across threads:
+  `Signal`'s documentation disclaims cross-thread callback safety and memory
+  visibility, and `Completion.complete` is documented as a cooperative
+  host-thread operation. `CancellationToken.cancel` sets an atomic flag and
+  notifies a `Signal`, so a canceled waiter wakes through the same path.
+- **Threads.** The only threads are the synchronous family's `unsafe_start`,
+  which starts a Linux OS thread through `pthread_create` and puts every
+  thread-safety obligation on the caller, since Mojo has no Send or Sync
+  proof. The synchronous `Ref`, `Deferred`, `Semaphore`, and `Queue` are
+  qualified under contention from such threads (`test_coordination`). The
+  async run loop, its fibers, and every `IO` value are confined to the polling
+  thread.
+- **Platform.** The [scheduler](async-scheduler.md) records the inspected Mojo
+  1.2 standard library: no wait or notify on `Atomic`, no readiness
+  registration on file descriptors, no public `std.net`, unfinished async
+  primitives kept private, and only timed sleep for waiting. Pass 11 recorded
+  that there is no wall-clock source either. This plan does not authorize a C
+  backend or direct readiness FFI.
+- **Cats Effect `Sync` and `Async`.** `delay`, `defer`, `monotonic`, `async`,
+  `async_`, `never`, `sleep`, and the timeouts have providers. `blocking`,
+  `interruptible`, `interruptibleMany`, `realTime`, `evalOn`, `startOn`,
+  `backgroundOn`, and `executionContext` do not.
+
+### Proposal
+
+1. **Execution profiles.** One matrix, in the guide and the scheduler page:
+
+   | State | Profile | Rule |
+   |---|---|---|
+   | Run loop, fibers, `IO` values, `Ref`/`Deferred`/`Queue`/`Semaphore` operations, `Driver`, `TestControl` | Confined to the polling thread | Never touched from another thread |
+   | `Signal`, wake registrations, `Completion` admission, `CancellationToken`, manual `Clock` | Shared notification state | Safe from any thread once qualified in 12a; locks give each operation a total order |
+   | Payloads moved by `Completion.complete` | Transferred once, under the completion's lock | The caller asserts the payload may move to and be destroyed on the polling thread |
+   | Work running on other threads | Not provided by the async runtime | `unsafe_start` remains a synchronous-family tool with its own obligations |
+
+   Locks stay on in every profile. Removing them for a proven thread-confined
+   profile is a measured optimization for Pass 13, not a semantic change.
+2. **Host services.** A root owns its run loop, wake registry, and budget; it
+   borrows its clock, cancellation token, and, after 12b, a host notifier.
+   Finishing a root retires its registrations, so a late notification from
+   another thread finds a stale generation and does nothing, and it never
+   stops a borrowed service: a shared clock, token, or notifier outlives the
+   root. Initialization acquires nothing that can fail. The execution-context
+   contract is that a root has exactly one execution context, the thread that
+   polls it. There is no executor to shift onto, so `evalOn` and its
+   relatives have no provider, which the profile records.
+3. **Foreign-thread notification (12a).** Qualify `Signal.notify`,
+   `Completion.complete`, and `CancellationToken.cancel` from threads other
+   than the polling thread:
+   - **Ordering.** Everything the notifying thread wrote before the call
+     happens before the polling thread's continuation that observes it,
+     because both sides pass through the same lock.
+   - **Wake before park.** A notification between the polling thread reading a
+     revision and registering its wait is not lost: registration compares
+     revisions under the lock and wakes at once, as on one thread.
+   - **Payload transfer.** `complete` moves the outcome into the completion
+     under its lock; the polling thread takes it under the same lock. Late or
+     duplicate payloads are destroyed on the calling thread, outside the lock.
+   - **Teardown with producers in flight.** A completion delivered after its
+     registration was withdrawn, or after the root finished, is rejected and
+     wakes nothing.
+
+   The documentation of `Signal` and `Completion` changes from disclaiming
+   cross-thread use to stating these guarantees and the caller's payload
+   obligation.
+4. **Host notifier (12b).** A `Driver` and `TestControl` may be given a host
+   notifier, called from whichever thread delivers an external event when that
+   event makes the root runnable. It lets an application's own event loop,
+   which may park with mechanisms outside this library, learn when to poll
+   again instead of polling on a timer. The notifier must be nonblocking,
+   callable from any thread, and must not reenter the `Driver`; it is never
+   called after `finish` returns, and `finish` waits for a call already in
+   progress. Deadlines need no notifier: they are set during a poll and
+   reported in `Progress`.
+5. **Narrower profile (12c).** The guide publishes a provider matrix listing
+   every Cats Effect `Sync` and `Async` operation with its provider or its
+   blocked obligation:
+   - `blocking`, `interruptible`, `interruptibleMany`: no public pure-Mojo
+     worker thread, no way to park or interrupt one, and no Send or Sync proof
+     for what would move to it.
+   - `evalOn`, `startOn`, `backgroundOn`, `executionContext`: one execution
+     context per root.
+   - `realTime`: no wall-clock source.
+   - Parking in `run`: no wait or notify primitive, so `run` keeps polling.
+     It will, however, never sleep past the next deadline: it sleeps for the
+     shorter of 1 ms and the time to that deadline.
+   - Network readiness: no public `std.net` or readiness registration.
+
+   Each entry names the standard-library facility whose arrival would unblock
+   it.
+
+### Steps
+
+1. **12a:** the execution profiles and host-service contract in the
+   documentation, and foreign-thread qualification of `Signal`, `Completion`,
+   and `CancellationToken`.
+2. **12b:** the host notifier for `Driver` and `TestControl`, with its
+   teardown rule.
+3. **12c:** the provider matrix and blocked obligations in the guide, and the
+   deadline-capped idle in `run`.
+
+### Gate and clients
+
+From the delivery table: every advertised `Sync` or `Async` operation has a
+real provider and tests; owned and borrowed service teardown, wake before
+park, and the supported publication contracts pass; everything else is
+published as the narrower profile with its exact blocked obligation; no C
+fallback and no implicit thread-safety assertion.
+
+- `foreign_completion`: an OS thread from `unsafe_start` completes an
+  `IO.async` registration while the host polls, many times with randomized
+  delays on both sides; every program completes within a bound, so no wake is
+  lost, with the value written before the call; a second completion and one
+  after the root finished are rejected.
+- `foreign_signal`: an OS thread notifies a `Signal` that a custom leaf waits
+  on, and cancels a token that a waiting fiber observes; data written before
+  the call is visible after it.
+- `host_notifier`: the notifier runs when a foreign thread completes a
+  registration, not when nothing external happens, never after `finish`, and
+  `finish` waits for an in-flight call.
+- `run_idle`: `run` completes a sleep of less than 1 ms without oversleeping
+  to the next millisecond.
+- These clients run on Linux x86-64 only, like `unsafe_start`; they join every
+  thread they start before finishing.
+
+### Review questions
+
+1. **Payloads from other threads.** Qualify `Completion.complete` with any
+   payload, under a documented caller obligation like `unsafe_start`'s, or only
+   notification (`Signal`, `Completion[NoneType]`, cancellation), with values
+   passed through the already qualified synchronous `Ref` or `Queue`?
+   Recommendation: any payload, documented, since wrapping callback-based
+   foreign APIs is the main use, and the transfer itself is ordered by the
+   lock.
+2. **Notifier shape.** An erased notifier given to `Driver`'s constructor, so
+   `Driver[P]` keeps its type, or a type parameter `Driver[P, N]`?
+   Recommendation: erased, with the notifier a copyable value whose
+   thread-safety the host asserts.
+3. **Blocking work.** Record `blocking` and `interruptible` as blocked, or
+   offer an explicitly unsafe `IO.unsafe_blocking` over `unsafe_start`'s OS
+   threads? Recommendation: record them as blocked; the host can run blocking
+   work on its own threads and complete an `IO.async` registration, which 12a
+   qualifies.
+4. **Scope.** Build 12a through 12c, or record only the profiles and blocked
+   obligations and move to Pass 13? Recommendation: build them; 12a closes the
+   largest gap, completion from other threads, without new platform
+   assumptions.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:
