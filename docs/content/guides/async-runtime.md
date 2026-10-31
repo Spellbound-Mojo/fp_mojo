@@ -1,8 +1,8 @@
 # Async runtime preview
 
 `fp.effects.async_runtime` provides pure-Mojo asynchronous programs with Cats
-Effect vocabulary: `IO`, `Resource`, `Deferred`, `Queue`, `Semaphore`, races,
-and timeouts. This opt-in preview is qualified on the pinned Mojo 1.2.0 Linux
+Effect vocabulary: `IO`, `Resource`, `Ref`, `Deferred`, `Queue`, `Semaphore`,
+races, and timeouts. This opt-in preview is qualified on the pinned Mojo 1.2.0 Linux
 x86-64 checkout. It executes cooperatively on one host thread. Callbacks must
 return promptly; `IO.delay` and `IO.eval_io` perform synchronous work inside
 their step. The preview does not offload blocking IO or use compiler coroutines.
@@ -146,6 +146,7 @@ an existing operation:
 | `Raise` | `raise_error[I, A](e)` | `Async[E]`, `SyncIO[E]` |
 | `Cancel` (`MonadCancel`) | `canceled[I]()`, `guarantee[I]`, `on_cancel[I]`, `guarantee_case[I]`, `uncancelable[I]`, `restore[I]` | `Async[E]`, `SyncIO[E]` |
 | `Spawn` (`GenSpawn`) | `start[I]`, `join[I, T]`, `cancel[I, T]`, `never[I, A]`, `cede[I]` | `Async[E]` |
+| `Concurrent` (`GenConcurrent`) | `make_ref[I]`, `get_ref[I, T]`, `set_ref[I]`, `update_ref[I]`, `modify_ref[I, A]`, `make_deferred[I, T]`, `complete_deferred[I]`, `get_deferred[I, T]` | `Async[E]` |
 
 `Async[E]` is the dictionary for `IO[T, E]`; `SyncIO[E]` is the dictionary for
 the synchronous `fp.effects.IO[E]`, which has no fibers. A function such as
@@ -156,6 +157,18 @@ its admission in `where` clauses, as other capabilities in `fp.effects` do.
 `raise_error` builds a failure that recovery handles, never one marked
 canceled. Generic entry points share the names of the synchronous functions and
 take the dictionary as their first explicit parameter.
+
+`Concurrent`'s handles are `Ref` and `Deferred`. A `Ref` is a shared cell whose
+updates run once under its guard, never suspend, and so are atomic with respect
+to other fibers; `get`, `get_and_update`, and `update_and_get` copy the state,
+while `modify`, `update`, `set`, `get_and_set`, and `inspect` also work for
+move-only state. Updates cannot raise, because consuming the old state would
+lose it on failure. A `Deferred` is completed once, and every waiting reader
+receives a copy. `make_ref` and `make_deferred` create fresh state each time a
+program runs. Its entry points carry the handle in their names because `ref` is
+a Mojo keyword and `get`, `put`, and `modify` already select `Stateful` state.
+Callbacks given to either handle are library callables or plain functions;
+closures are rejected, as for other `IO` callbacks.
 
 Transformer layers forward these capabilities through explicit selections, as
 `LiftAsk` does for `Ask`. `LiftDefer[Layer, C]` and `LiftRaise[Layer, C]` lift
@@ -255,6 +268,7 @@ reported deadline.
 | `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
 | `MonadCancel`, `GenSpawn`, `Sync` (deferral only) | `Cancel`, `Spawn`, `Defer`, `Raise` dictionaries: `Async[E]`, `SyncIO[E]` | Narrower capabilities stay narrower; the synchronous family has no `Spawn` |
 | `MonadCancel[OptionT[F, *], E]` and the other transformer instances | `LiftDefer`, `LiftRaise`, `LiftCancel`, `LiftSpawn` selections | Cancel and Spawn forward through `OptionalT` and `ResultT` only; case finalizers observe the base exit |
+| `Ref.of`, `Deferred[F, A]`, `GenConcurrent` | `Ref(value)`, `Deferred[T]()`, `Concurrent` with `make_ref[I]`, `make_deferred[I, T]` | Updates cannot raise; reads copy, so `get` needs copyable state |
 | `fa.start`, `fiber.join`, `fiber.cancel` | `io.start()`, `fiber^.join()`, `fiber.cancel()`, `fiber.request_cancel()` | Owners drain unjoined children before completing |
 | `Supervisor(await).use(f)`, `supervise` | `Supervisor[E].scoped(f, await_on_release)`, `supervisor.supervise(io)` | Release cancels live supervised fibers unless it awaits them |
 | `racePair` | `io.race_pair(other)` | A `RaceWinner` with the first outcome and the other fiber |
@@ -288,7 +302,7 @@ operation now returns `IO`:
 | `callback(register, withdrawal)` | `IO[T, E].async(register, withdrawal)` |
 | `resource(acquire, release)`, `use(body)` | `Resource[T, E].make(acquire, release)`, `use(body)` |
 | `resource_case(acquire, cleanup)`, `use(scoped_body)` | `Resource[T, E].make_case(acquire, cleanup)`, `use_scoped(scoped_body)` |
-| `Deferred`, `Queue`, `Semaphore` operations | the same names, returning `IO` |
+| `Deferred`, `Queue`, `Semaphore` operations | the same names, returning `IO`; `Ref` joins them |
 | A custom `Machine` with `Family = Async[E]` | A `Machine`, lifted with `IO[T, E].lift(machine)` |
 | `Nursery`, `Spawner`, `scope`, `ScopedBoth` | Removed; start fibers with `io.start()` and join them |
 

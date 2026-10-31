@@ -1878,6 +1878,71 @@ and no async collection API additions.
    `guarantee_case` and a combined dictionary that selects several
    capabilities through one layer? Recommendation: keep them out.
 
+### Pass 11 review decisions
+
+Decided on 2026-10-31:
+
+1. The capabilities are `Concurrent`, `Timing`, and `Temporal`, with
+   handle-qualified entry points such as `get_ref` and `complete_deferred`.
+2. `get_and_update` and `update_and_get`, for copyable state, are added once to
+   the shared synchronous `Ref`, which the async `Ref` wraps. Generic code gets
+   `get_ref`, `set_ref`, `update_ref`, and `modify_ref`; `tryUpdate` and
+   `access` stay out.
+3. `Unique` stays out: nothing in the library needs it, and a process-wide
+   counter would be the runtime's first global mutable state. Identity is
+   specified as absent until a consumer needs it.
+4. `memoize` stays out, with its constraints kept in the audit table. A future
+   version takes a factory that can rebuild a canceled first run.
+5. `TestControl` is a public type in `fp.effects.async_runtime`, with Cats
+   Effect's names and its documented deadlock assumption.
+6. The 10d follow-ups stay out of Pass 11.
+7. **Layering.** `IO` names `Async[E]` as its family, `Async` must name the
+   handle types it provides, and their methods return `IO`, so the three must
+   share a module or form an import cycle. No cycle is introduced: the async
+   `Ref` and `Deferred` live in `engine.mojo` beside `IO` and `Async`, as the
+   `Spawn` handle `Fiber` does, and the private machines that run one guarded
+   update or wait for a change move to a module below it, which `Queue` and
+   `Semaphore` in `coordination.mojo` also use. Public import paths do not
+   change.
+
+### Pass 11 progress
+
+**11a** was built on 2026-10-31: the async `Ref` and the `Concurrent`
+capability.
+
+- **Layering.** As decided, `Ref` and `Deferred` live in `engine.mojo` beside
+  `IO` and `Async`. The private `_attempt`, `_Once`, and `_Await` moved to
+  `_async/attempts.mojo`, below the engine, and `Queue` and `Semaphore` in
+  `coordination.mojo` use them from there. Public import paths are unchanged.
+- **`Ref`.** It wraps the synchronous `Ref`'s cell and transitions: `get`,
+  `set`, `get_and_set`, `update`, `modify`, `inspect`, `get_and_update`, and
+  `update_and_get`, each an `IO` built from one guarded attempt. The two new
+  operations were added once to the synchronous `Ref` through the existing
+  private `_Update`, which now also yields a copy of the previous or next state.
+  Library callbacks must not be borrowed views, and native callbacks are plain
+  functions only: the synchronous `Ref` accepts closures because its typed
+  recipes keep their origins, but an erased `IO` would not, so closures are
+  rejected as for other `IO` callbacks.
+- **`Concurrent`.** The trait in `fp.effects.protocols` extends `Spawn` with
+  handle types, carriers, admission predicates for updates, and static
+  operations. `Async[E]` provides it with `Ref` and `Deferred`; creation is an
+  `IO.delay`, so each run allocates fresh state. The entry points in
+  `fp.effects.capabilities` infer the state type from the handle, because Mojo
+  1.2 resolves arguments left to right and cannot type the handle from a later
+  callback's `Arg`; reads and `make_deferred` take it explicitly, as `join`
+  does.
+- **Clients.** `capability_concurrent` covers set, modify, and get through the
+  entry points; one hundred updates from four interleaved fibers; two waiting
+  readers and a losing second completion; fresh state on each run; library
+  callables and plain functions; `Ref`'s own operations, including move-only
+  state; and a parked `Deferred` read that spends no polls or transitions until
+  another root completes it. `test_coordination` covers the synchronous
+  additions. `public_reject_concurrent_sync`, `public_reject_ref_get_move_only`,
+  and `public_reject_ref_closure` reject `Concurrent` on `SyncIO`, reading
+  move-only state, and a capturing closure.
+- **Remaining.** Forwarding `Concurrent` through `OptionalT` and `ResultT`
+  arrives with 11b, as the steps order it.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:

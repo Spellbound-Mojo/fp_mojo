@@ -1,136 +1,21 @@
-"""Resumable coordination using canonical Ref transitions and Permit owners."""
+"""Queue and Semaphore over canonical Ref transitions and Permit owners.
+
+The async Ref and Deferred live beside IO in the engine, because Async names
+them as its Concurrent handles.
+"""
 from std.collections import Deque
-from std.builtin.rebind import rebind_var
 from std.os import abort
 from fp.data import Result, Ok
-from fp.effects import IOContext, Outcome, EffectFailure, ExitCase, Permit
-from fp.effects.coordination import Deferred as _Deferred, Queue as _Queue, Semaphore as _Semaphore
-from fp.effects.coordination import _RefAction, _RefModify, _RefInspect, _Complete, _Copy, _Size, _TryTake, _TryOffer, _Reserve
+from fp.effects import IOContext, EffectFailure, ExitCase, Permit
+from fp.effects.coordination import Queue as _Queue, Semaphore as _Semaphore
+from fp.effects.coordination import _RefModify, _TryTake, _TryOffer, _Reserve
 from fp.effects.outcomes import _failure_as
-from fp._internal.cells import _try_lock
 from fp.callables import OnceUnary
 from .kernel import Machine, Step, Wait
+from .attempts import _attempt, _Once, _Await
 from .composition import pure
 from .scopes import Scope, CleanupMachine, _ProgramUse
 from .engine import IO
-
-
-def _attempt[P: _RefAction](mut action: Optional[P], context: IOContext[P.SelectedError], notify: Bool) -> Step[P.Value, P.SelectedError]:
-    if context.canceled():
-        return .ready(None)
-    var locked = _try_lock(action.value()._guard_cell())
-    if not locked:
-        # Guard contention yields one bounded attempt, never a blocking wait.
-        return .pending(Wait())
-    return .ready(action.take()._locked(locked.take(), context, notify))
-
-
-struct _Once[P: _RefAction](Machine):
-    comptime Value = Self.P.Value
-    comptime Error = Self.P.SelectedError
-    var action: Optional[Self.P]
-    var completed: Bool
-
-    def __init__(out self, var action: Self.P):
-        self.action = Optional(action^)
-        self.completed = False
-
-    def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
-        if self.completed:
-            abort("coordination operation polled after completion")
-        var step = _attempt(self.action, context, True)
-        self.completed = Bool(step._completed)
-        return step^
-
-
-struct _Await[A: Movable & Deinitable, P: _RefAction & Copyable](Machine):
-    comptime Value = Self.A
-    comptime Error = Self.P.SelectedError
-    var template: Self.P
-    var action: Optional[Self.P]
-    var notify_success: Bool
-    var completed: Bool
-
-    def __init__(out self, var action: Self.P, notify_success: Bool):
-        comptime assert Self.P.Value == Optional[Self.A]
-        self.action = Optional(action.copy())
-        self.template = action^
-        self.notify_success = notify_success
-        self.completed = False
-
-    def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.A, Self.Error]:
-        comptime assert Self.P.Value == Optional[Self.A]
-        if self.completed:
-            abort("coordination wait polled after completion")
-        var changed = self.template._changes()
-        # Observe the event before the state: registration rechecks revision.
-        var revision = changed.revision()
-        var step = _attempt(self.action, context, False)
-        if not step._completed:
-            return .pending(step^._waiting())
-        var outcome = rebind_var[Outcome[Optional[Self.A], Self.Error]](step^._outcome())
-        if not outcome or outcome.value().is_err():
-            self.completed = True
-            if self.notify_success:
-                changed.notify()
-            return .ready(_failure_as[Self.A](outcome^))
-        var value = outcome.take()._take_ok()
-        if value:
-            self.completed = True
-            if self.notify_success:
-                changed.notify()
-            return .ready(Optional(Result[Self.A, EffectFailure[Self.Error]](Ok(value.take()))))
-        self.action = Optional(self.template.copy())
-        # An unavailable value is not a state change. Notifying here would let
-        # empty-queue waiters keep one another runnable indefinitely.
-        var wait = Wait.changed(changed, revision)
-        wait._interruptible = not context._masked
-        return .pending(wait^)
-
-
-struct Deferred[T: Copyable & Deinitable](Copyable):
-    """Shared single-assignment value; waiting readers receive owned copies.
-
-    Parameters:
-        T: The stored value, copied for successful reads.
-    """
-    var _source: _Deferred[Self.T]
-
-    def __init__(out self):
-        self._source = _Deferred[Self.T]()
-
-    def complete[E: Movable & Deinitable](self, var value: Self.T) -> IO[Bool, E]:
-        """Attempt single assignment when the recipe executes.
-
-        Parameters:
-            E: The selected domain error of the returned recipe.
-
-        Args:
-            value: The owned value, consumed into the unopened recipe.
-
-        Returns:
-            An IO yielding whether this assignment won; later assignments leave the stored value intact."""
-        return IO[Bool, E]._lifted(_Once(self._source.complete[E](value^)))
-
-    def try_get[E: Movable & Deinitable](self) -> IO[Optional[Self.T], E]:
-        """Read the current assignment without waiting.
-
-        Parameters:
-            E: The selected domain error of the returned recipe.
-
-        Returns:
-            An IO yielding an owned optional copy of the value."""
-        return IO[Optional[Self.T], E]._lifted(_Once(self._source.try_get[E]()))
-
-    def get[E: Movable & Deinitable](self) -> IO[Self.T, E]:
-        """Wait cooperatively for assignment, unless canceled.
-
-        Parameters:
-            E: The selected domain error of the returned recipe.
-
-        Returns:
-            An IO yielding an owned copy after assignment."""
-        return IO[Self.T, E]._lifted(_Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]](self._source.get[E]()._into_attempt(), False))
 
 
 struct _Offer[T: Movable & Deinitable, E: Movable & Deinitable](Machine):

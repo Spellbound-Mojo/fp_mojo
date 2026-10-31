@@ -135,6 +135,9 @@ def coord_serial() raises:
     assert_equal(errors.first(), 9)
     _ = coord_value(state.set[Error](4))
     assert_equal(coord_value(state.get[Error]()), 4)
+    assert_equal(coord_value(state.get_and_update[Error](coord_increment)), 4)
+    assert_equal(coord_value(state.update_and_get[Error](coord_increment)), 6)
+    assert_equal(coord_value(state.get[Error]()), 6)
 
     var deferred = Deferred[Int]()
     assert_true(not coord_value(deferred.try_get[Error]()))

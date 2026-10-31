@@ -58,9 +58,9 @@ cancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over
 shared state. The optional Fiber backend requires explicit unsafe_start and
 its documented thread-safety obligations.
 """
-from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
+from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
 from .reader import ReaderT, Reader
-from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, LiftDefer, LiftRaise, LiftCancel, LiftSpawn, TellContract, ask, local, get, put, modify, tell, listen, censor, defer, raise_error, start, join, cancel, never, cede
+from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, LiftDefer, LiftRaise, LiftCancel, LiftSpawn, TellContract, ask, local, get, put, modify, tell, listen, censor, defer, raise_error, start, join, cancel, never, cede, make_ref, make_deferred, get_ref, set_ref, update_ref, modify_ref, complete_deferred, get_deferred
 from .state import StateT, State
 from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT

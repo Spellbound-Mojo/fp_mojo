@@ -122,15 +122,34 @@ struct _Copy[T: Movable & Deinitable](BorrowCallable, Copyable):
         return rebind_var[Self.T](rebind[C](value).copy())
 
 
+comptime _KEEP_NONE = 0
+comptime _KEEP_OLD = 1
+comptime _KEEP_NEW = 2
+
+
 @fieldwise_init
-struct _Update[F: UnaryContract & Movable & Deinitable](OnceUnary, Copyable where conforms_to(F, Copyable)):
+struct _Update[F: UnaryContract & Movable & Deinitable, keep: Int = _KEEP_NONE](OnceUnary, Copyable where conforms_to(F, Copyable)):
+    """Transform the state, yielding unit or a copy of the previous or next state."""
     var function: Self.F
     comptime Arg = Self.F.Arg
-    comptime Out = Tuple[Self.F.Arg, NoneType]
+    comptime Kept = NoneType if Self.keep == _KEEP_NONE else Self.F.Arg
+    comptime Out = Tuple[Self.F.Arg, Self.Kept]
     def call_once(deinit self, var value: Self.Arg) -> Self.Out:
         comptime assert Self.F.Error == Never and Self.F.Out == Self.F.Arg
-        var next = _unary_once_as[Never](self.function^, value^)
-        return (rebind_var[Self.Arg](next^), None)
+        comptime if Self.keep == _KEEP_NONE:
+            var next = _unary_once_as[Never](self.function^, value^)
+            var unit: NoneType = None
+            return rebind_var[Self.Out]((rebind_var[Self.Arg](next^), unit))
+        else:
+            comptime C = downcast[Self.Arg, Copyable & Deinitable]
+            comptime if Self.keep == _KEEP_OLD:
+                var previous = rebind_var[Self.Arg](rebind[C](value).copy())
+                var next = _unary_once_as[Never](self.function^, value^)
+                return rebind_var[Self.Out]((rebind_var[Self.Arg](next^), previous^))
+            else:
+                var next = rebind_var[Self.Arg](_unary_once_as[Never](self.function^, value^))
+                var kept = rebind_var[Self.Arg](rebind[C](next).copy())
+                return rebind_var[Self.Out]((next^, kept^))
 
 
 struct Ref[T: Movable & Deinitable](Copyable):
@@ -230,6 +249,46 @@ struct Ref[T: Movable & Deinitable](Copyable):
     def update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, NoneType, E, _Update[NativeUnary[P, R, Never, F, False]]] where P == Self.T and R == Self.T:
         """Adapt a non-raising native state transformation."""
         return self.update[E](NativeUnary[P, R, Never, F, False](function^))
+
+    def get_and_update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[F, _KEEP_OLD]] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable):
+        """Defer an atomic non-raising transformation, yielding the previous state.
+
+        Parameters:
+            F: A once-callable non-raising transformation from T to T.
+            E: The selected IO error type.
+
+        Args:
+            function: The owned state transformation.
+
+        Returns:
+            An IO[E] recipe yielding a copy of the state before the update;
+            available only when T is Copyable.
+        """
+        return _RefModify[Self.T, Self.T, E, _Update[F, _KEEP_OLD]](self._cell.copy(), self._changed.copy(), _Update[F, _KEEP_OLD](function^))
+
+    def get_and_update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[NativeUnary[P, R, Never, F, False], _KEEP_OLD]] where P == Self.T and R == Self.T and conforms_to(Self.T, Copyable):
+        """Adapt a non-raising native transformation, yielding the previous state."""
+        return self.get_and_update[E](NativeUnary[P, R, Never, F, False](function^))
+
+    def update_and_get[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[F, _KEEP_NEW]] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable):
+        """Defer an atomic non-raising transformation, yielding the next state.
+
+        Parameters:
+            F: A once-callable non-raising transformation from T to T.
+            E: The selected IO error type.
+
+        Args:
+            function: The owned state transformation.
+
+        Returns:
+            An IO[E] recipe yielding a copy of the state after the update;
+            available only when T is Copyable.
+        """
+        return _RefModify[Self.T, Self.T, E, _Update[F, _KEEP_NEW]](self._cell.copy(), self._changed.copy(), _Update[F, _KEEP_NEW](function^))
+
+    def update_and_get[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[NativeUnary[P, R, Never, F, False], _KEEP_NEW]] where P == Self.T and R == Self.T and conforms_to(Self.T, Copyable):
+        """Adapt a non-raising native transformation, yielding the next state."""
+        return self.update_and_get[E](NativeUnary[P, R, Never, F, False](function^))
 
     def set[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Self.T, NoneType, E, _Update[_Replace[Self.T]]]:
         """Replace and destroy the previous value when the recipe executes.

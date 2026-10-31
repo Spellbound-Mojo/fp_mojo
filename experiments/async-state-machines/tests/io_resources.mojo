@@ -1,7 +1,8 @@
 """Coordination and Resource on IO: shared waits, permits, ordered releases and exact errors."""
 from std.memory import ArcPointer
 from fp.callables import BorrowOnceCallable
-from fp.effects._async.coordination import Deferred, Queue, Semaphore
+from fp.effects._async.engine import Deferred
+from fp.effects._async.coordination import Queue, Semaphore
 from fp.effects._async.io_resource import Resource
 from state_machine import IO, run
 from foundation import check

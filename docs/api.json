@@ -54468,6 +54468,368 @@
     "Tell"
    ]
   },
+  "effects.Concurrent": {
+   "aliases": [
+    {
+     "description": "A shared cell holding T.",
+     "name": "RefHandle"
+    },
+    {
+     "description": "A single-assignment value of T whose readers receive copies.",
+     "name": "DeferredHandle"
+    },
+    {
+     "description": "The carrier producing a new RefHandle[T].",
+     "name": "RefMade"
+    },
+    {
+     "description": "The carrier producing a new, empty DeferredHandle[T].",
+     "name": "DeferredMade"
+    },
+    {
+     "description": "The carrier producing a copy of a cell's state.",
+     "name": "RefRead"
+    },
+    {
+     "description": "The unit carrier that replaces a cell's state.",
+     "name": "RefWritten"
+    },
+    {
+     "description": "Whether F is an admitted non-raising transformation from T to T.",
+     "name": "UpdateCompatible"
+    },
+    {
+     "description": "The unit carrier that transforms a cell's state with F.",
+     "name": "RefUpdated"
+    },
+    {
+     "description": "Whether F is an admitted non-raising transformation from T to (T, A).",
+     "name": "ModifyCompatible"
+    },
+    {
+     "description": "The carrier that replaces a cell's state with F and produces A.",
+     "name": "RefModified"
+    },
+    {
+     "description": "The carrier producing whether a completion won.",
+     "name": "DeferredCompleted"
+    },
+    {
+     "description": "The carrier waiting for a deferred value and producing a copy.",
+     "name": "DeferredRead"
+    }
+   ],
+   "description": "A provider names its handle types; copies of a handle share its state.\nCreating one is an effect, so each run of a program creates fresh state.\nUpdates are atomic with respect to other fibers and never suspend; reading\na deferred value waits until it is completed.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "complete_deferred": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The deferred value, borrowed.",
+        "name": "deferred",
+        "type": "Self.DeferredHandle[T]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The value, consumed.",
+        "name": "value",
+        "type": "T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The value type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing whether this completion won; later ones change nothing.",
+       "type": "Self.DeferredCompleted"
+      },
+      "signature": "def complete_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T], var value: T) -> Self.DeferredCompleted",
+      "summary": "Assign a deferred value once."
+     }
+    ],
+    "get_deferred": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The deferred value, borrowed.",
+        "name": "deferred",
+        "type": "Self.DeferredHandle[T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The value type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing a copy of the value.",
+       "type": "Self.DeferredRead[T]"
+      },
+      "signature": "def get_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T]) -> Self.DeferredRead[T]",
+      "summary": "Wait for a deferred value, unless canceled."
+     }
+    ],
+    "get_ref": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The cell, borrowed.",
+        "name": "cell",
+        "type": "Self.RefHandle[T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing the copy.",
+       "type": "Self.RefRead[T]"
+      },
+      "signature": "def get_ref[T: Copyable & Deinitable](cell: Self.RefHandle[T]) -> Self.RefRead[T]",
+      "summary": "Copy a cell's state."
+     }
+    ],
+    "make_deferred": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The value type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing the new deferred value.",
+       "type": "Self.DeferredMade[T]"
+      },
+      "signature": "def make_deferred[T: Copyable & Deinitable]() -> Self.DeferredMade[T]",
+      "summary": "Create an empty deferred value when the program reaches it."
+     }
+    ],
+    "make_ref": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The initial state, consumed.",
+        "name": "value",
+        "type": "T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing the new cell.",
+       "type": "Self.RefMade[T]"
+      },
+      "signature": "def make_ref[T: Movable & Deinitable](var value: T) -> Self.RefMade[T]",
+      "summary": "Create a shared cell when the program reaches it."
+     }
+    ],
+    "modify_ref": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The cell, borrowed.",
+        "name": "cell",
+        "type": "Self.RefHandle[T]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The result type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A non-raising transformation from T to (T, A).",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing A.",
+       "type": "Self.RefModified[T, A, F]"
+      },
+      "signature": "def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefModified[T, A, F]",
+      "summary": "Consume and replace a cell's state atomically, producing a result."
+     }
+    ],
+    "set_ref": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The cell, borrowed.",
+        "name": "cell",
+        "type": "Self.RefHandle[T]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The replacement, consumed.",
+        "name": "value",
+        "type": "T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit carrier.",
+       "type": "Self.RefWritten"
+      },
+      "signature": "def set_ref[T: Movable & Deinitable](cell: Self.RefHandle[T], var value: T) -> Self.RefWritten",
+      "summary": "Replace a cell's state."
+     }
+    ],
+    "update_ref": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The cell, borrowed.",
+        "name": "cell",
+        "type": "Self.RefHandle[T]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "A non-raising transformation from T to T.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit carrier.",
+       "type": "Self.RefUpdated[T, F]"
+      },
+      "signature": "def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefUpdated[T, F]",
+      "summary": "Transform a cell's state atomically."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Concurrent(Spawn)",
+   "summary": "Shared cells and single-assignment values, as Cats Effect's GenConcurrent.",
+   "traits": [
+    "Cancel",
+    "Spawn"
+   ]
+  },
   "effects.Defer": {
    "aliases": [
     {
@@ -60263,6 +60625,96 @@
       "summary": "Replace the state and transfer the previous owner to the caller."
      }
     ],
+    "get_and_update": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The owned state transformation.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable non-raising transformation from T to T.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding a copy of the state before the update;\navailable only when T is Copyable.",
+       "type": "_RefModify[Self.T, Self.T, E, _Update[F, _KEEP_OLD]]"
+      },
+      "signature": "def get_and_update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[F, _KEEP_OLD]] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable)",
+      "summary": "Defer an atomic non-raising transformation, yielding the previous state."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[P, R]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_RefModify[Self.T, Self.T, E, _Update[NativeUnary[P, R, Never, F, False], _KEEP_OLD]]"
+      },
+      "signature": "def get_and_update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[NativeUnary[P, R, Never, F, False], _KEEP_OLD]] where P == Self.T and R == Self.T and conforms_to(Self.T, Copyable)",
+      "summary": "Adapt a non-raising native transformation, yielding the previous state."
+     }
+    ],
     "inspect": [
      {
       "args": [
@@ -60635,6 +61087,96 @@
       },
       "signature": "def update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, NoneType, E, _Update[NativeUnary[P, R, Never, F, False]]] where P == Self.T and R == Self.T",
       "summary": "Adapt a non-raising native state transformation."
+     }
+    ],
+    "update_and_get": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The owned state transformation.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable non-raising transformation from T to T.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The selected IO error type.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO[E] recipe yielding a copy of the state after the update;\navailable only when T is Copyable.",
+       "type": "_RefModify[Self.T, Self.T, E, _Update[F, _KEEP_NEW]]"
+      },
+      "signature": "def update_and_get[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[F, _KEEP_NEW]] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable)",
+      "summary": "Defer an atomic non-raising transformation, yielding the next state."
+     },
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "P",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "F",
+        "type": "_Unary[P, R]",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "_RefModify[Self.T, Self.T, E, _Update[NativeUnary[P, R, Never, F, False], _KEEP_NEW]]"
+      },
+      "signature": "def update_and_get[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[NativeUnary[P, R, Never, F, False], _KEEP_NEW]] where P == Self.T and R == Self.T and conforms_to(Self.T, Copyable)",
+      "summary": "Adapt a non-raising native transformation, yielding the next state."
      }
     ]
    },
@@ -64820,6 +65362,54 @@
     },
     {
      "description": "",
+     "name": "RefHandle"
+    },
+    {
+     "description": "",
+     "name": "DeferredHandle"
+    },
+    {
+     "description": "",
+     "name": "RefMade"
+    },
+    {
+     "description": "",
+     "name": "DeferredMade"
+    },
+    {
+     "description": "",
+     "name": "RefRead"
+    },
+    {
+     "description": "",
+     "name": "RefWritten"
+    },
+    {
+     "description": "",
+     "name": "UpdateCompatible"
+    },
+    {
+     "description": "",
+     "name": "RefUpdated"
+    },
+    {
+     "description": "",
+     "name": "ModifyCompatible"
+    },
+    {
+     "description": "",
+     "name": "RefModified"
+    },
+    {
+     "description": "",
+     "name": "DeferredCompleted"
+    },
+    {
+     "description": "",
+     "name": "DeferredRead"
+    },
+    {
+     "description": "",
      "name": "CollectCompatible"
     },
     {
@@ -64909,6 +65499,45 @@
       },
       "signature": "def cede() -> IO[NoneType, Self.E]",
       "summary": "Yield once; see IO.cede."
+     }
+    ],
+    "complete_deferred": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The Deferred, borrowed.",
+        "name": "deferred",
+        "type": "Deferred[T]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The value, consumed.",
+        "name": "value",
+        "type": "T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The value type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing whether this completion won.",
+       "type": "IO[Bool, Self.E]"
+      },
+      "signature": "def complete_deferred[T: Copyable & Deinitable](deferred: Deferred[T], var value: T) -> IO[Bool, Self.E]",
+      "summary": "Assign a Deferred once; see Deferred.complete."
      }
     ],
     "defer": [
@@ -65019,6 +65648,70 @@
       },
       "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Bound[V, F]",
       "summary": "Continue with the IO a callback builds from the success value."
+     }
+    ],
+    "get_deferred": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The Deferred, borrowed.",
+        "name": "deferred",
+        "type": "Deferred[T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The value type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing a copy of the value.",
+       "type": "IO[T, Self.E]"
+      },
+      "signature": "def get_deferred[T: Copyable & Deinitable](deferred: Deferred[T]) -> IO[T, Self.E]",
+      "summary": "Wait for a Deferred's value; see Deferred.get."
+     }
+    ],
+    "get_ref": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The Ref, borrowed.",
+        "name": "cell",
+        "type": "Ref[T]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the copy.",
+       "type": "IO[T, Self.E]"
+      },
+      "signature": "def get_ref[T: Copyable & Deinitable](cell: Ref[T]) -> IO[T, Self.E]",
+      "summary": "Copy a Ref's state; see Ref.get."
      }
     ],
     "guarantee": [
@@ -65145,6 +65838,62 @@
       "summary": "Wait for a fiber and take its outcome; see Fiber.join."
      }
     ],
+    "make_deferred": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The value type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Copyable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing a new Deferred on each run.",
+       "type": "IO[Deferred[T], Self.E]"
+      },
+      "signature": "def make_deferred[T: Copyable & Deinitable]() -> IO[Deferred[T], Self.E]",
+      "summary": "Allocate an empty Deferred when the IO reaches it."
+     }
+    ],
+    "make_ref": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The initial state, consumed.",
+        "name": "value",
+        "type": "T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing a new Ref on each run.",
+       "type": "IO[Ref[T], Self.E]"
+      },
+      "signature": "def make_ref[T: Movable & Deinitable](var value: T) -> IO[Ref[T], Self.E]",
+      "summary": "Allocate a Ref when the IO reaches it."
+     }
+    ],
     "map": [
      {
       "args": [
@@ -65249,6 +65998,59 @@
       },
       "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) -> Self.Combined[V, F, R]",
       "summary": "Run the left IO, build and run the right, then combine their values."
+     }
+    ],
+    "modify_ref": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The Ref, borrowed.",
+        "name": "cell",
+        "type": "Ref[T]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The result type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "An owned non-raising transformation from T to (T, A).",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing A.",
+       "type": "IO[A, Self.E]"
+      },
+      "signature": "def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Ref[T], var function: F) -> IO[A, Self.E]",
+      "summary": "Consume and replace a Ref's state atomically; see Ref.modify."
      }
     ],
     "never": [
@@ -65470,6 +66272,45 @@
       "summary": "Run part of a region with the outer cancellation state; see IO.restore."
      }
     ],
+    "set_ref": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The Ref, borrowed.",
+        "name": "cell",
+        "type": "Ref[T]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The replacement, consumed.",
+        "name": "value",
+        "type": "T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def set_ref[T: Movable & Deinitable](cell: Ref[T], var value: T) -> IO[NoneType, Self.E]",
+      "summary": "Replace a Ref's state; see Ref.set."
+     }
+    ],
     "start": [
      {
       "args": [
@@ -65533,6 +66374,52 @@
       "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]",
       "summary": "Run a region masked; see IO.uncancelable."
      }
+    ],
+    "update_ref": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "The Ref, borrowed.",
+        "name": "cell",
+        "type": "Ref[T]",
+        "variadic": false
+       },
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The state type.",
+        "inferred": false,
+        "name": "T",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "An owned non-raising transformation from T to T.",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO.",
+       "type": "IO[NoneType, Self.E]"
+      },
+      "signature": "def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Ref[T], var function: F) -> IO[NoneType, Self.E]",
+      "summary": "Transform a Ref's state atomically; see Ref.update."
+     }
     ]
    },
    "parameters": [
@@ -65545,11 +66432,12 @@
     }
    ],
    "provider": "effects/_async/engine",
-   "signature": "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Spawn, not Deinitable)",
+   "signature": "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Concurrent, not Deinitable)",
    "summary": "The sequencing and recovery family of IO.",
    "traits": [
     "Applicative",
     "Cancel",
+    "Concurrent",
     "Defer",
     "ErrorRecovery",
     "Functor",
@@ -65794,7 +66682,7 @@
      "variadic": false
     }
    ],
-   "provider": "effects/_async/coordination",
+   "provider": "effects/_async/engine",
    "signature": "struct Deferred[T: Copyable & Deinitable](Copyable)",
    "summary": "Shared single-assignment value; waiting readers receive owned copies.",
    "traits": [
@@ -68131,6 +69019,527 @@
    "summary": "The side of a race_pair that finished first, and the other side's fiber.",
    "traits": []
   },
+  "effects.async_runtime.Ref": {
+   "aliases": [],
+   "description": "The counterpart of Cats Effect's Ref, over the cell the synchronous\n`fp.effects.Ref` owns. Copies share the cell. Each operation is an IO that\nruns once, when reached: callbacks run under the cell's guard, must not\nreenter the same Ref, and never suspend, so an update is atomic with\nrespect to other fibers. Raising updates are rejected because consuming\nthe old state would lose it on failure. Callbacks must own their state, as\nfor other IO callbacks.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "get": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected domain error of the returned IO.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO yielding a copy; available only when T is Copyable.",
+       "type": "IO[Self.T, E]"
+      },
+      "signature": "def get[E: Movable & Deinitable](self) -> IO[Self.T, E] where conforms_to(Self.T, Copyable)",
+      "summary": "Copy the current state."
+     }
+    ],
+    "get_and_set": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The replacement, consumed into the unopened IO.",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected domain error of the returned IO.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO yielding the previous state without copying it.",
+       "type": "IO[Self.T, E]"
+      },
+      "signature": "def get_and_set[E: Movable & Deinitable](self, var value: Self.T) -> IO[Self.T, E]",
+      "summary": "Replace the state and transfer the previous one to the caller."
+     }
+    ],
+    "get_and_update": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable non-raising transformation from T to T.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The selected domain error of the returned IO.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO yielding the state before the update; available only when T is Copyable.",
+       "type": "IO[Self.T, E]"
+      },
+      "signature": "def get_and_update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[Self.T, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable) and _Admitted[F]",
+      "summary": "Transform the state atomically, yielding a copy of the previous state."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[Self.T, E]"
+      },
+      "signature": "def get_and_update[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[Self.T, E] where conforms_to(Self.T, Copyable)",
+      "summary": "Transform with a plain function, yielding the previous state; closures are rejected."
+     }
+    ],
+    "inspect": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The observation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned borrowing callable whose result does not borrow the state.",
+        "inferred": true,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The selected domain error; the callable's error must be E or Never.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO yielding the observation, or failing with its error.",
+       "type": "IO[F.Result, E]"
+      },
+      "signature": "def inspect[F: BorrowCallContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[F.Result, E] where F.Payload == Self.T and _ErrorCompatible[E, F.Failure] and _OnceBorrowAvailable[F] and _Admitted[F]",
+      "summary": "Borrow the state once under the guard and return an owned result."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(Self.T) thin -> A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[A, E]"
+      },
+      "signature": "def inspect[A: Movable & Deinitable, //, E: Movable & Deinitable](self, function: def(Self.T) thin -> A) -> IO[A, E]",
+      "summary": "Observe the state with a plain borrowing function; closures are rejected."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(Self.T) raises X thin -> A",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[A, E]"
+      },
+      "signature": "def inspect[A: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable](self, function: def(Self.T) raises X thin -> A) -> IO[A, E] where _ErrorCompatible[E, X]",
+      "summary": "Observe the state with a plain borrowing function, keeping its compatible error."
+     }
+    ],
+    "modify": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected domain error of the returned IO.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The owned result type.",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "An owned once-callable non-raising transformation from T to (T, A).",
+        "inferred": false,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO yielding A after replacing the state.",
+       "type": "IO[A, E]"
+      },
+      "signature": "def modify[E: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](self, var function: F) -> IO[A, E] where F.Arg == Self.T and F.Out == Tuple[Self.T, A] and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F]",
+      "summary": "Consume the state and replace it, returning a result, atomically."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> Tuple[Self.T, A]",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": false,
+        "name": "A",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[A, E]"
+      },
+      "signature": "def modify[E: Movable & Deinitable, A: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Tuple[Self.T, A]) -> IO[A, E]",
+      "summary": "Modify with a plain function; spell modify[E, A]. Closures are rejected."
+     }
+    ],
+    "set": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The replacement, consumed into the unopened IO.",
+        "name": "value",
+        "type": "Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "The selected domain error of the returned IO.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO.",
+       "type": "IO[NoneType, E]"
+      },
+      "signature": "def set[E: Movable & Deinitable](self, var value: Self.T) -> IO[NoneType, E]",
+      "summary": "Replace the state, destroying the previous one."
+     }
+    ],
+    "update": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable non-raising transformation from T to T.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The selected domain error of the returned IO.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A unit IO.",
+       "type": "IO[NoneType, E]"
+      },
+      "signature": "def update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[NoneType, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F]",
+      "summary": "Transform the state atomically."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[NoneType, E]"
+      },
+      "signature": "def update[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[NoneType, E]",
+      "summary": "Transform the state atomically with a plain function; closures are rejected."
+     }
+    ],
+    "update_and_get": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The transformation, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable non-raising transformation from T to T.",
+        "inferred": true,
+        "name": "F",
+        "type": "UnaryContract & Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "The selected domain error of the returned IO.",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO yielding the state after the update; available only when T is Copyable.",
+       "type": "IO[Self.T, E]"
+      },
+      "signature": "def update_and_get[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[Self.T, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable) and _Admitted[F]",
+      "summary": "Transform the state atomically, yielding a copy of the next state."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(var _NativeOwnedArg[Self.T]) thin -> Self.T",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": false,
+        "name": "E",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "IO[Self.T, E]"
+      },
+      "signature": "def update_and_get[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[Self.T, E] where conforms_to(Self.T, Copyable)",
+      "summary": "Transform with a plain function, yielding the next state; closures are rejected."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The exact owned state type; callbacks cannot borrow it out of the cell.",
+     "inferred": false,
+     "name": "T",
+     "type": "Movable & Deinitable",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/_async/engine",
+   "signature": "struct Ref[T: Movable & Deinitable](Copyable)",
+   "summary": "A shared cell with serialized updates, including move-only state.",
+   "traits": [
+    "Copyable"
+   ]
+  },
   "effects.async_runtime.Resource": {
    "aliases": [
     {
@@ -69672,6 +71081,58 @@
    "provider": "effects/capabilities",
    "summary": ""
   },
+  "effects.complete_deferred": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The deferred value, borrowed.",
+       "name": "deferred",
+       "type": "I.DeferredHandle[T]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The value, consumed.",
+       "name": "value",
+       "type": "T",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The value type.",
+       "inferred": true,
+       "name": "T",
+       "type": "Copyable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing whether this completion won.",
+      "type": "I.DeferredCompleted"
+     },
+     "signature": "def complete_deferred[T: Copyable & Deinitable, //, I: Concurrent](deferred: I.DeferredHandle[T], var value: T) -> I.DeferredCompleted",
+     "summary": "Assign a deferred value once, in any family with Concurrent."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
   "effects.defer": {
    "description": "",
    "kind": "function",
@@ -70893,6 +72354,96 @@
      },
      "signature": "def get[I: Stateful]() raises I.GetError -> I.Got where I.GetAvailable",
      "summary": "Read a copy of the selected state without changing it."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.get_deferred": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The deferred value, borrowed.",
+       "name": "deferred",
+       "type": "I.DeferredHandle[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      },
+      {
+       "description": "The value type.",
+       "inferred": false,
+       "name": "T",
+       "type": "Copyable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing a copy of the value.",
+      "type": "I.DeferredRead[T]"
+     },
+     "signature": "def get_deferred[I: Concurrent, T: Copyable & Deinitable](deferred: I.DeferredHandle[T]) -> I.DeferredRead[T]",
+     "summary": "Wait for a deferred value, unless canceled, in any family with Concurrent."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.get_ref": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The cell, borrowed.",
+       "name": "cell",
+       "type": "I.RefHandle[T]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      },
+      {
+       "description": "The state type.",
+       "inferred": false,
+       "name": "T",
+       "type": "Copyable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing the copy.",
+      "type": "I.RefRead[T]"
+     },
+     "signature": "def get_ref[I: Concurrent, T: Copyable & Deinitable](cell: I.RefHandle[T]) -> I.RefRead[T]",
+     "summary": "Copy a cell's state, in any family with Concurrent."
     }
    ],
    "provider": "effects/capabilities",
@@ -72155,6 +73706,88 @@
    "provider": "effects/capabilities",
    "summary": ""
   },
+  "effects.make_deferred": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      },
+      {
+       "description": "The value type, copied for every reader.",
+       "inferred": false,
+       "name": "T",
+       "type": "Copyable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing a new deferred value on each run.",
+      "type": "I.DeferredMade[T]"
+     },
+     "signature": "def make_deferred[I: Concurrent, T: Copyable & Deinitable]() -> I.DeferredMade[T]",
+     "summary": "Create an empty single-assignment value when the program reaches it."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.make_ref": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The initial state, consumed.",
+       "name": "value",
+       "type": "T",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The state type.",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing a new cell on each run.",
+      "type": "I.RefMade[T]"
+     },
+     "signature": "def make_ref[T: Movable & Deinitable, //, I: Concurrent](var value: T) -> I.RefMade[T]",
+     "summary": "Create a shared cell when the program reaches it, in any family with Concurrent."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
   "effects.modify": {
    "description": "",
    "kind": "function",
@@ -72304,6 +73937,123 @@
      },
      "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Stateful, F: _RaisingUnary[A, R, E]](var f: F) raises I.ModifyError[NativeUnary[A, R, E, F, True]] -> I.Modified[NativeUnary[A, R, E, F, True]] where I.ModifyCompatible[NativeUnary[A, R, E, F, True]] and A == I.StateType and R == I.StateType",
      "summary": "Update with a raising native callback, preserving its exact error type."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
+  "effects.modify_ref": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The cell, borrowed.",
+       "name": "cell",
+       "type": "I.RefHandle[T]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The transformation, consumed.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The state type.",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "An owned non-raising transformation from T to (T, A).",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      },
+      {
+       "description": "The result type.",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing A.",
+      "type": "I.RefModified[T, A, F]"
+     },
+     "signature": "def modify_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Concurrent, A: Movable & Deinitable](cell: I.RefHandle[T], var function: F) -> I.RefModified[T, A, F] where I.ModifyCompatible[T, A, F]",
+     "summary": "Consume and replace a cell's state atomically, producing a result."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "cell",
+       "type": "I.RefHandle[T]",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var _NativeOwnedArg[T]) thin -> Tuple[T, A]",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "A",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.RefModified[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]]"
+     },
+     "signature": "def modify_ref[T: Movable & Deinitable, //, I: Concurrent, A: Movable & Deinitable](cell: I.RefHandle[T], function: def(var _NativeOwnedArg[T]) thin -> Tuple[T, A]) -> I.RefModified[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]] where I.ModifyCompatible[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]]",
+     "summary": "Modify a cell's state with a plain function; spell modify_ref[I, A]. Closures are rejected."
     }
    ],
    "provider": "effects/capabilities",
@@ -75885,6 +77635,58 @@
    "provider": "effects/scoped",
    "summary": ""
   },
+  "effects.set_ref": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The cell, borrowed.",
+       "name": "cell",
+       "type": "I.RefHandle[T]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The replacement, consumed.",
+       "name": "value",
+       "type": "T",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The state type.",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's unit carrier.",
+      "type": "I.RefWritten"
+     },
+     "signature": "def set_ref[T: Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], var value: T) -> I.RefWritten",
+     "summary": "Replace a cell's state, in any family with Concurrent."
+    }
+   ],
+   "provider": "effects/capabilities",
+   "summary": ""
+  },
   "effects.sleep_io": {
    "description": "",
    "kind": "function",
@@ -76315,6 +78117,109 @@
     }
    ],
    "provider": "effects/fibers",
+   "summary": ""
+  },
+  "effects.update_ref": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "The cell, borrowed.",
+       "name": "cell",
+       "type": "I.RefHandle[T]",
+       "variadic": false
+      },
+      {
+       "convention": "var",
+       "description": "The transformation, consumed.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "The state type.",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "An owned non-raising transformation from T to T.",
+       "inferred": true,
+       "name": "F",
+       "type": "UnaryContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's unit carrier.",
+      "type": "I.RefUpdated[T, F]"
+     },
+     "signature": "def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], var function: F) -> I.RefUpdated[T, F] where I.UpdateCompatible[T, F]",
+     "summary": "Transform a cell's state atomically, in any family with Concurrent."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "cell",
+       "type": "I.RefHandle[T]",
+       "variadic": false
+      },
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(var _NativeOwnedArg[T]) thin -> T",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "T",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Concurrent",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.RefUpdated[T, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False]]"
+     },
+     "signature": "def update_ref[T: Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], function: def(var _NativeOwnedArg[T]) thin -> T) -> I.RefUpdated[T, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False]] where I.UpdateCompatible[T, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False]]",
+     "summary": "Transform a cell's state with a plain function; closures are rejected."
+    }
+   ],
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.use_resource": {

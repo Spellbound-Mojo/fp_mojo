@@ -21,7 +21,7 @@ from fp.callables._receiver import _unary_once_as, _thunk_once_as, _borrow_once_
 from fp.callables._binding import _BindFirst
 from fp.callables._identity import Identity
 from fp.callables._views import _BorrowedView
-from fp.callables.native import NativeUnary, _NativeThunk, _NativeOwnedArg
+from fp.callables.native import NativeUnary, _NativeThunk, _NativeOwnedArg, _NativeBorrow
 from fp.algebra._outcomes import _Materialize
 from fp.iteration._advance import _Source, _source, _next_optional
 from fp._internal.erased import _Erased
@@ -30,8 +30,9 @@ from fp.data import Result, Ok, Err, NonEmptyList, Left, Right
 from fp.effects import IOContext, Outcome, EffectFailure, ExitCase
 from fp.effects.outcomes import _failure_as, _finish, _ExitState, _zip_outcomes
 from fp.effects._io_core import _settle, IOContract, canceled as _cancel_request
-from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn
+from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn, Concurrent
 from fp.effects.finalization import Poll as _SyncPoll
+from fp.effects.coordination import Ref as _Ref, Deferred as _Deferred, _RefInspect, _Copy
 from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep
 from .time import Duration, Instant
 from .racing import RaceResult, _winner, _loser
@@ -39,6 +40,7 @@ from .io import EvalIO as _EvalIO
 from .callbacks import Callback as _Callback, Completion, _CallbackUnit
 from .erased import _ErasedMachine
 from .finalization import Poll
+from .attempts import _Once, _Await
 from .fibers import FiberInfo, _FiberHost, _FiberRecord, _Inbox, _Fibers, _Spawn, _Claim, _Join, _Delivery, _Unwrap, _CancelFiber, _RequestCancel, _FirstDone, _typed, _unsuccessful
 
 # Head and frame kinds.
@@ -619,6 +621,238 @@ struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
         """
         return IO[NoneType, Self.E]._lifted(_RequestCancel[Self.E](self._claim.record.copy()))
 
+
+
+struct Ref[T: Movable & Deinitable](Copyable):
+    """A shared cell with serialized updates, including move-only state.
+
+    The counterpart of Cats Effect's Ref, over the cell the synchronous
+    `fp.effects.Ref` owns. Copies share the cell. Each operation is an IO that
+    runs once, when reached: callbacks run under the cell's guard, must not
+    reenter the same Ref, and never suspend, so an update is atomic with
+    respect to other fibers. Raising updates are rejected because consuming
+    the old state would lose it on failure. Callbacks must own their state, as
+    for other IO callbacks.
+
+    Parameters:
+        T: The exact owned state type; callbacks cannot borrow it out of the cell.
+    """
+    var _source: _Ref[Self.T]
+
+    def __init__(out self, var value: Self.T):
+        """Allocate a shared cell holding the initial value.
+
+        Args:
+            value: The initial state, consumed.
+        """
+        self._source = _Ref[Self.T](value^)
+
+    def get[E: Movable & Deinitable](self) -> IO[Self.T, E] where conforms_to(Self.T, Copyable):
+        """Copy the current state.
+
+        Parameters:
+            E: The selected domain error of the returned IO.
+
+        Returns:
+            An IO yielding a copy; available only when T is Copyable.
+        """
+        return IO[Self.T, E]._lifted(_Once(self._source.get[E]()))
+
+    def set[E: Movable & Deinitable](self, var value: Self.T) -> IO[NoneType, E]:
+        """Replace the state, destroying the previous one.
+
+        Parameters:
+            E: The selected domain error of the returned IO.
+
+        Args:
+            value: The replacement, consumed into the unopened IO.
+
+        Returns:
+            A unit IO.
+        """
+        return IO[NoneType, E]._lifted(_Once(self._source.set[E](value^)))
+
+    def get_and_set[E: Movable & Deinitable](self, var value: Self.T) -> IO[Self.T, E]:
+        """Replace the state and transfer the previous one to the caller.
+
+        Parameters:
+            E: The selected domain error of the returned IO.
+
+        Args:
+            value: The replacement, consumed into the unopened IO.
+
+        Returns:
+            An IO yielding the previous state without copying it.
+        """
+        return IO[Self.T, E]._lifted(_Once(self._source.get_and_set[E](value^)))
+
+    def update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[NoneType, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F]:
+        """Transform the state atomically.
+
+        Parameters:
+            F: An owned once-callable non-raising transformation from T to T.
+            E: The selected domain error of the returned IO.
+
+        Args:
+            function: The transformation, consumed.
+
+        Returns:
+            A unit IO.
+        """
+        return IO[NoneType, E]._lifted(_Once(self._source.update[E](function^)))
+
+    def update[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[NoneType, E]:
+        """Transform the state atomically with a plain function; closures are rejected."""
+        return self.update[E](NativeUnary[Self.T, Self.T, Never, def(var _NativeOwnedArg[Self.T]) thin -> Self.T, False](function))
+
+    def modify[E: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](self, var function: F) -> IO[A, E] where F.Arg == Self.T and F.Out == Tuple[Self.T, A] and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F]:
+        """Consume the state and replace it, returning a result, atomically.
+
+        Parameters:
+            E: The selected domain error of the returned IO.
+            A: The owned result type.
+            F: An owned once-callable non-raising transformation from T to (T, A).
+
+        Args:
+            function: The transformation, consumed.
+
+        Returns:
+            An IO yielding A after replacing the state.
+        """
+        return IO[A, E]._lifted(_Once(self._source.modify[E, A](function^)))
+
+    def modify[E: Movable & Deinitable, A: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Tuple[Self.T, A]) -> IO[A, E]:
+        """Modify with a plain function; spell modify[E, A]. Closures are rejected."""
+        return self.modify[E, A](NativeUnary[Self.T, Tuple[Self.T, A], Never, def(var _NativeOwnedArg[Self.T]) thin -> Tuple[Self.T, A], False](function))
+
+    def get_and_update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[Self.T, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable) and _Admitted[F]:
+        """Transform the state atomically, yielding a copy of the previous state.
+
+        Parameters:
+            F: An owned once-callable non-raising transformation from T to T.
+            E: The selected domain error of the returned IO.
+
+        Args:
+            function: The transformation, consumed.
+
+        Returns:
+            An IO yielding the state before the update; available only when T is Copyable.
+        """
+        return IO[Self.T, E]._lifted(_Once(self._source.get_and_update[E](function^)))
+
+    def get_and_update[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[Self.T, E] where conforms_to(Self.T, Copyable):
+        """Transform with a plain function, yielding the previous state; closures are rejected."""
+        return self.get_and_update[E](NativeUnary[Self.T, Self.T, Never, def(var _NativeOwnedArg[Self.T]) thin -> Self.T, False](function))
+
+    def update_and_get[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[Self.T, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable) and _Admitted[F]:
+        """Transform the state atomically, yielding a copy of the next state.
+
+        Parameters:
+            F: An owned once-callable non-raising transformation from T to T.
+            E: The selected domain error of the returned IO.
+
+        Args:
+            function: The transformation, consumed.
+
+        Returns:
+            An IO yielding the state after the update; available only when T is Copyable.
+        """
+        return IO[Self.T, E]._lifted(_Once(self._source.update_and_get[E](function^)))
+
+    def update_and_get[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[Self.T, E] where conforms_to(Self.T, Copyable):
+        """Transform with a plain function, yielding the next state; closures are rejected."""
+        return self.update_and_get[E](NativeUnary[Self.T, Self.T, Never, def(var _NativeOwnedArg[Self.T]) thin -> Self.T, False](function))
+
+    def inspect[F: BorrowCallContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[F.Result, E] where F.Payload == Self.T and _ErrorCompatible[E, F.Failure] and _OnceBorrowAvailable[F] and _Admitted[F]:
+        """Borrow the state once under the guard and return an owned result.
+
+        Parameters:
+            F: An owned borrowing callable whose result does not borrow the state.
+            E: The selected domain error; the callable's error must be E or Never.
+
+        Args:
+            function: The observation, consumed.
+
+        Returns:
+            An IO yielding the observation, or failing with its error.
+        """
+        return IO[F.Result, E]._lifted(_Once(self._source.inspect[E](function^)))
+
+    def inspect[A: Movable & Deinitable, //, E: Movable & Deinitable](self, function: def(Self.T) thin -> A) -> IO[A, E]:
+        """Observe the state with a plain borrowing function; closures are rejected."""
+        return self.inspect[E](_NativeBorrow[Self.T, A, Never, def(Self.T) thin -> A, False](function))
+
+    def inspect[A: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable](self, function: def(Self.T) raises X thin -> A) -> IO[A, E] where _ErrorCompatible[E, X]:
+        """Observe the state with a plain borrowing function, keeping its compatible error."""
+        return self.inspect[E](_NativeBorrow[Self.T, A, X, def(Self.T) raises X thin -> A, True](function))
+
+
+@fieldwise_init
+struct _NewRef[T: Movable & Deinitable](OnceThunk):
+    """Allocate a Ref when the program reaches it."""
+    var value: Self.T
+    comptime Out = Ref[Self.T]
+    comptime Error = Never
+
+    def call_once(deinit self) -> Ref[Self.T]:
+        return Ref[Self.T](self.value^)
+
+
+struct _NewDeferred[T: Copyable & Deinitable](OnceThunk, Defaultable):
+    """Allocate a Deferred when the program reaches it."""
+    comptime Out = Deferred[Self.T]
+    comptime Error = Never
+
+    def __init__(out self):
+        pass
+
+    def call_once(deinit self) -> Deferred[Self.T]:
+        return Deferred[Self.T]()
+
+
+struct Deferred[T: Copyable & Deinitable](Copyable):
+    """Shared single-assignment value; waiting readers receive owned copies.
+
+    Parameters:
+        T: The stored value, copied for successful reads.
+    """
+    var _source: _Deferred[Self.T]
+
+    def __init__(out self):
+        self._source = _Deferred[Self.T]()
+
+    def complete[E: Movable & Deinitable](self, var value: Self.T) -> IO[Bool, E]:
+        """Attempt single assignment when the recipe executes.
+
+        Parameters:
+            E: The selected domain error of the returned recipe.
+
+        Args:
+            value: The owned value, consumed into the unopened recipe.
+
+        Returns:
+            An IO yielding whether this assignment won; later assignments leave the stored value intact."""
+        return IO[Bool, E]._lifted(_Once(self._source.complete[E](value^)))
+
+    def try_get[E: Movable & Deinitable](self) -> IO[Optional[Self.T], E]:
+        """Read the current assignment without waiting.
+
+        Parameters:
+            E: The selected domain error of the returned recipe.
+
+        Returns:
+            An IO yielding an owned optional copy of the value."""
+        return IO[Optional[Self.T], E]._lifted(_Once(self._source.try_get[E]()))
+
+    def get[E: Movable & Deinitable](self) -> IO[Self.T, E]:
+        """Wait cooperatively for assignment, unless canceled.
+
+        Parameters:
+            E: The selected domain error of the returned recipe.
+
+        Returns:
+            An IO yielding an owned copy after assignment."""
+        return IO[Self.T, E]._lifted(_Await[Self.T, _RefInspect[Optional[Self.T], E, _Copy[Optional[Self.T]]]](self._source.get[E]()._into_attempt(), False))
 
 
 @fieldwise_init
@@ -1802,7 +2036,7 @@ struct _StartCollect[V: Movable & Deinitable, F: UnaryContract & Movable & Deini
         return _start_fold[Self.V, Identity[Self.F.Arg], _CollectStep[Self.F, Self.K, Self.E], Self.K, Self.E](self.source^, Identity[Self.F.Arg](), _CollectStep[Self.F, Self.K, Self.E](self.function^), start^)
 
 
-struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Spawn, not Deinitable):
+struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Concurrent, not Deinitable):
     """The sequencing and recovery family of IO.
 
     Pipeline, tail_rec_m, traverse and attempt select it from an IO. Every
@@ -1854,6 +2088,18 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Spawn,
     comptime Stopped = IO[NoneType, Self.E]
     comptime Forever[A: Movable & Deinitable] = IO[A, Self.E]
     comptime Ceded = IO[NoneType, Self.E]
+    comptime RefHandle[T: Movable & Deinitable] = Ref[T]
+    comptime DeferredHandle[T: Copyable & Deinitable] = Deferred[T]
+    comptime RefMade[T: Movable & Deinitable] = IO[Ref[T], Self.E]
+    comptime DeferredMade[T: Copyable & Deinitable] = IO[Deferred[T], Self.E]
+    comptime RefRead[T: Copyable & Deinitable] = IO[T, Self.E]
+    comptime RefWritten = IO[NoneType, Self.E]
+    comptime UpdateCompatible[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Arg == T and F.Out == T and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F]
+    comptime RefUpdated[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = IO[NoneType, Self.E]
+    comptime ModifyCompatible[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = F.Arg == T and F.Out == Tuple[T, A] and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F]
+    comptime RefModified[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = IO[A, Self.E]
+    comptime DeferredCompleted = IO[Bool, Self.E]
+    comptime DeferredRead[T: Copyable & Deinitable] = IO[T, Self.E]
 
     @staticmethod
     def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
@@ -2068,6 +2314,132 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Spawn,
             A unit IO.
         """
         return IO[NoneType, Self.E].cede()
+
+    @staticmethod
+    def make_ref[T: Movable & Deinitable](var value: T) -> IO[Ref[T], Self.E]:
+        """Allocate a Ref when the IO reaches it.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            value: The initial state, consumed.
+
+        Returns:
+            An IO producing a new Ref on each run.
+        """
+        return IO[Ref[T], Self.E].delay(_NewRef[T](value^))
+
+    @staticmethod
+    def make_deferred[T: Copyable & Deinitable]() -> IO[Deferred[T], Self.E]:
+        """Allocate an empty Deferred when the IO reaches it.
+
+        Parameters:
+            T: The value type.
+
+        Returns:
+            An IO producing a new Deferred on each run.
+        """
+        return IO[Deferred[T], Self.E].delay(_NewDeferred[T]())
+
+    @staticmethod
+    def get_ref[T: Copyable & Deinitable](cell: Ref[T]) -> IO[T, Self.E]:
+        """Copy a Ref's state; see Ref.get.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            cell: The Ref, borrowed.
+
+        Returns:
+            An IO producing the copy.
+        """
+        return cell.get[Self.E]()
+
+    @staticmethod
+    def set_ref[T: Movable & Deinitable](cell: Ref[T], var value: T) -> IO[NoneType, Self.E]:
+        """Replace a Ref's state; see Ref.set.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            cell: The Ref, borrowed.
+            value: The replacement, consumed.
+
+        Returns:
+            A unit IO.
+        """
+        return cell.set[Self.E](value^)
+
+    @staticmethod
+    def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Ref[T], var function: F) -> IO[NoneType, Self.E]:
+        """Transform a Ref's state atomically; see Ref.update.
+
+        Parameters:
+            T: The state type.
+            F: An owned non-raising transformation from T to T.
+
+        Args:
+            cell: The Ref, borrowed.
+            function: The transformation, consumed.
+
+        Returns:
+            A unit IO.
+        """
+        comptime assert F.Arg == T and F.Out == T and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F], "update_ref: the transformation must own its state and map T to T without raising"
+        return cell.update[Self.E](function^)
+
+    @staticmethod
+    def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Ref[T], var function: F) -> IO[A, Self.E]:
+        """Consume and replace a Ref's state atomically; see Ref.modify.
+
+        Parameters:
+            T: The state type.
+            A: The result type.
+            F: An owned non-raising transformation from T to (T, A).
+
+        Args:
+            cell: The Ref, borrowed.
+            function: The transformation, consumed.
+
+        Returns:
+            An IO producing A.
+        """
+        comptime assert F.Arg == T and F.Out == Tuple[T, A] and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F], "modify_ref: the transformation must own its state and map T to (T, A) without raising"
+        return cell.modify[Self.E, A](function^)
+
+    @staticmethod
+    def complete_deferred[T: Copyable & Deinitable](deferred: Deferred[T], var value: T) -> IO[Bool, Self.E]:
+        """Assign a Deferred once; see Deferred.complete.
+
+        Parameters:
+            T: The value type.
+
+        Args:
+            deferred: The Deferred, borrowed.
+            value: The value, consumed.
+
+        Returns:
+            An IO producing whether this completion won.
+        """
+        return deferred.complete[Self.E](value^)
+
+    @staticmethod
+    def get_deferred[T: Copyable & Deinitable](deferred: Deferred[T]) -> IO[T, Self.E]:
+        """Wait for a Deferred's value; see Deferred.get.
+
+        Parameters:
+            T: The value type.
+
+        Args:
+            deferred: The Deferred, borrowed.
+
+        Returns:
+            An IO producing a copy of the value.
+        """
+        return deferred.get[Self.E]()
 
     @staticmethod
     def pure[A: Movable & Deinitable](var value: A) -> Self.Pure[A]:

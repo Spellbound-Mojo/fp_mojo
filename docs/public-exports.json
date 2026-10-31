@@ -5390,6 +5390,63 @@
    },
    "provider": "effects/protocols"
   },
+  "effects.Concurrent": {
+   "declarations": [
+    "trait Concurrent(Spawn):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "complete_deferred": [
+     {
+      "sha256": "542a6479d49a50fed031138220f669829c9001fcc1e493b4b1c4c20aabb76d67",
+      "signature": "def complete_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T], var value: T) -> Self.DeferredCompleted:"
+     }
+    ],
+    "get_deferred": [
+     {
+      "sha256": "b25b0eac165845f7690ddb245f41caca5efa2c28cdff968521ac48ccba9cd24d",
+      "signature": "def get_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T]) -> Self.DeferredRead[T]:"
+     }
+    ],
+    "get_ref": [
+     {
+      "sha256": "bd88450f6987acfbb6cf32c254cb7e5e6e73bfb20116379961bd33af0d11778b",
+      "signature": "def get_ref[T: Copyable & Deinitable](cell: Self.RefHandle[T]) -> Self.RefRead[T]:"
+     }
+    ],
+    "make_deferred": [
+     {
+      "sha256": "3566bdb7d5bc653f09a42298e2593600ef3bb86c91fe1fe52f5ba94a32fd6fea",
+      "signature": "def make_deferred[T: Copyable & Deinitable]() -> Self.DeferredMade[T]:"
+     }
+    ],
+    "make_ref": [
+     {
+      "sha256": "abb131bd2972aaac7d9fc75ae4b1ca5a533838d7647d8ddbbfebf253a4ed0422",
+      "signature": "def make_ref[T: Movable & Deinitable](var value: T) -> Self.RefMade[T]:"
+     }
+    ],
+    "modify_ref": [
+     {
+      "sha256": "2e1b9a8a7681318b999a3b495971c2693d78aededa29b358d5980becb39fef80",
+      "signature": "def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefModified[T, A, F]:"
+     }
+    ],
+    "set_ref": [
+     {
+      "sha256": "f7f6d78c0fffa01426c08b71b20bd1d3b72143f0ecfb4ffea8acf53d0e64cee9",
+      "signature": "def set_ref[T: Movable & Deinitable](cell: Self.RefHandle[T], var value: T) -> Self.RefWritten:"
+     }
+    ],
+    "update_ref": [
+     {
+      "sha256": "58e7bcc9e49d66bef2a1c809426ef4c66e703e63f7bfcf2ed4251e2ae2f82304",
+      "signature": "def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefUpdated[T, F]:"
+     }
+    ]
+   },
+   "provider": "effects/protocols"
+  },
   "effects.Defer": {
    "declarations": [
     "trait Defer:"
@@ -6367,6 +6424,16 @@
       "signature": "def get_and_set[E: Movable & Deinitable](self, var value: Self.T) -> _RefModify[Self.T, Self.T, E, _BindFirst[_Pair[Self.T, Self.T]]]:"
      }
     ],
+    "get_and_update": [
+     {
+      "sha256": "aa54651bcf5057fe17081b303e6b5727a5ebc076ff4e259519c2d0f87a815246",
+      "signature": "def get_and_update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[F, _KEEP_OLD]] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable):"
+     },
+     {
+      "sha256": "9371c0c229504b64aa972efa0de1a423307c113a6ea2ce810c5cdc3da4ef7720",
+      "signature": "def get_and_update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[NativeUnary[P, R, Never, F, False], _KEEP_OLD]] where P == Self.T and R == Self.T and conforms_to(Self.T, Copyable):"
+     }
+    ],
     "inspect": [
      {
       "sha256": "27064f7670d12968280186d98c8269320f555aa35378f57653692c1ead10362c",
@@ -6405,6 +6472,16 @@
      {
       "sha256": "bae860c3fcfe375aebd5fd1d51b38295770eeb9adabb75f58ef1a39394f96977",
       "signature": "def update[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, NoneType, E, _Update[NativeUnary[P, R, Never, F, False]]] where P == Self.T and R == Self.T:"
+     }
+    ],
+    "update_and_get": [
+     {
+      "sha256": "6bfcc497b62d81382be25f76b4f62acacf0fa61f73e1b1bb0dd4704284123bd9",
+      "signature": "def update_and_get[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[F, _KEEP_NEW]] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable):"
+     },
+     {
+      "sha256": "db3c49671aa64f0234b1e30672de63060140dcc8dc39de360175890c84b306d9",
+      "signature": "def update_and_get[P: Movable & Deinitable, R: Movable & Deinitable, //, E: Movable & Deinitable, F: _Unary[P, R]](self, var function: F) -> _RefModify[Self.T, Self.T, E, _Update[NativeUnary[P, R, Never, F, False], _KEEP_NEW]] where P == Self.T and R == Self.T and conforms_to(Self.T, Copyable):"
      }
     ]
    },
@@ -7018,7 +7095,7 @@
   },
   "effects.async_runtime.Async": {
    "declarations": [
-    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Spawn, not Deinitable):"
+    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Concurrent, not Deinitable):"
    ],
    "kind": "type or alias",
    "methods": {
@@ -7040,6 +7117,12 @@
       "signature": "def cede() -> IO[NoneType, Self.E]:"
      }
     ],
+    "complete_deferred": [
+     {
+      "sha256": "d51ab3ddfc6cf524f2a4837ee30dcb798c7fc48d68fc5b30a05c83dbd8812c47",
+      "signature": "def complete_deferred[T: Copyable & Deinitable](deferred: Deferred[T], var value: T) -> IO[Bool, Self.E]:"
+     }
+    ],
     "defer": [
      {
       "sha256": "046f215740315fe0fdce62951657b482031c5378f9e18617f191c64ea7267ba1",
@@ -7056,6 +7139,18 @@
      {
       "sha256": "af0facfacf5486d5df617ff395d5da212dd57908a6c35dafcda577a68062d19d",
       "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> Self.Bound[V, F]:"
+     }
+    ],
+    "get_deferred": [
+     {
+      "sha256": "0ced3dda402dfa87ec274c391735a75152e5e9b652383aec60640d405f528fcd",
+      "signature": "def get_deferred[T: Copyable & Deinitable](deferred: Deferred[T]) -> IO[T, Self.E]:"
+     }
+    ],
+    "get_ref": [
+     {
+      "sha256": "ea298450ecd8e446b52aac7a62472868cb03a5c82d2d814d95053bf73ec78a1d",
+      "signature": "def get_ref[T: Copyable & Deinitable](cell: Ref[T]) -> IO[T, Self.E]:"
      }
     ],
     "guarantee": [
@@ -7076,6 +7171,18 @@
       "signature": "def join[T: Movable & Deinitable](var fiber: Fiber[T, Self.E]) -> IO[Outcome[T, Self.E], Self.E]:"
      }
     ],
+    "make_deferred": [
+     {
+      "sha256": "d054bc25fb970a76574525968434e9cc7b065a23ef784e20ec21de92f355915d",
+      "signature": "def make_deferred[T: Copyable & Deinitable]() -> IO[Deferred[T], Self.E]:"
+     }
+    ],
+    "make_ref": [
+     {
+      "sha256": "2377f7e7a20c8560a49eeac20ffa16317feef52d05871b04280723c46b51e457",
+      "signature": "def make_ref[T: Movable & Deinitable](var value: T) -> IO[Ref[T], Self.E]:"
+     }
+    ],
     "map": [
      {
       "sha256": "e488f49bac4b82946241842a155c30a106d960ebb8a9fe88a1dbc5123b7d2668",
@@ -7086,6 +7193,12 @@
      {
       "sha256": "6acc90d1c963aa1bb0c87c187f3ad449c5fd7b3572c41c79629d1ea8ee664839",
       "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) -> Self.Combined[V, F, R]:"
+     }
+    ],
+    "modify_ref": [
+     {
+      "sha256": "dd16605458bd4806167e124a33873ffda0a53e89d83a9ca496e40cea910cb559",
+      "signature": "def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Ref[T], var function: F) -> IO[A, Self.E]:"
      }
     ],
     "never": [
@@ -7124,6 +7237,12 @@
       "signature": "def restore[V: Movable & Deinitable](poll: _PollOf[Self.E], var program: V) -> V:"
      }
     ],
+    "set_ref": [
+     {
+      "sha256": "8c657c0044def8c73af96ead224a56c5dad5e78193997aba4338aa57f443bdf3",
+      "signature": "def set_ref[T: Movable & Deinitable](cell: Ref[T], var value: T) -> IO[NoneType, Self.E]:"
+     }
+    ],
     "start": [
      {
       "sha256": "5c225fbed5acc02645a9b6bd98f76437058c1159d2ff4538d54a4a7278394363",
@@ -7134,6 +7253,12 @@
      {
       "sha256": "a23469a0c8bfdfbfe12044f884a9702f9ca24ad2d5ccd16e5d958f53adabc546",
       "signature": "def uncancelable[F: UnaryContract & Movable & Deinitable](var body: F) -> Self.Uncanceled[F]:"
+     }
+    ],
+    "update_ref": [
+     {
+      "sha256": "769480af79111b3a69e8cb5686b162c575f9f1db37e296535687bdb8331ecd6a",
+      "signature": "def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Ref[T], var function: F) -> IO[NoneType, Self.E]:"
      }
     ]
    },
@@ -7206,7 +7331,7 @@
      }
     ]
    },
-   "provider": "effects/_async/coordination"
+   "provider": "effects/_async/engine"
   },
   "effects.async_runtime.Driver": {
    "declarations": [
@@ -7734,6 +7859,87 @@
    },
    "provider": "effects/_async/engine"
   },
+  "effects.async_runtime.Ref": {
+   "declarations": [
+    "struct Ref[T: Movable & Deinitable](Copyable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "get": [
+     {
+      "sha256": "6dc96287d092a8ea643123dbc6907721d696df9e9a354b6c43fa00456135661c",
+      "signature": "def get[E: Movable & Deinitable](self) -> IO[Self.T, E] where conforms_to(Self.T, Copyable):"
+     }
+    ],
+    "get_and_set": [
+     {
+      "sha256": "6c975592de5ac658a03c8bddd4827e2033f442c045544309651a736f7775cf66",
+      "signature": "def get_and_set[E: Movable & Deinitable](self, var value: Self.T) -> IO[Self.T, E]:"
+     }
+    ],
+    "get_and_update": [
+     {
+      "sha256": "b38c207700e4bb6da9818c8389bd2cf5be8e9a11e3d45c1eb8a994c5742004d5",
+      "signature": "def get_and_update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[Self.T, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable) and _Admitted[F]:"
+     },
+     {
+      "sha256": "c29048f11fd5455657622f171210cc9c6dad36d2e5ec426d5e3d7e26e9b32a86",
+      "signature": "def get_and_update[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[Self.T, E] where conforms_to(Self.T, Copyable):"
+     }
+    ],
+    "inspect": [
+     {
+      "sha256": "106bc5cb47f16e13b878c9f8e59032047beec5b2a37e9d201646030d97e332d5",
+      "signature": "def inspect[F: BorrowCallContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[F.Result, E] where F.Payload == Self.T and _ErrorCompatible[E, F.Failure] and _OnceBorrowAvailable[F] and _Admitted[F]:"
+     },
+     {
+      "sha256": "6af8f1f47153d04ce7a2635691633fda228552c7cb8d3db9e0659af698963ef3",
+      "signature": "def inspect[A: Movable & Deinitable, //, E: Movable & Deinitable](self, function: def(Self.T) thin -> A) -> IO[A, E]:"
+     },
+     {
+      "sha256": "4b240d79852917d5f54e1d743e6e3cd05f93825103c758f047258fec15ddcdb9",
+      "signature": "def inspect[A: Movable & Deinitable, X: Movable & Deinitable, //, E: Movable & Deinitable](self, function: def(Self.T) raises X thin -> A) -> IO[A, E] where _ErrorCompatible[E, X]:"
+     }
+    ],
+    "modify": [
+     {
+      "sha256": "54902ccddd290237414a5a16bbdec8c0200c3091ac80ebee867643abc4cd6626",
+      "signature": "def modify[E: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](self, var function: F) -> IO[A, E] where F.Arg == Self.T and F.Out == Tuple[Self.T, A] and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F]:"
+     },
+     {
+      "sha256": "a4e1e8867f0de64929db981da05703c3333000ccbc65c23a8c6d65d52827f846",
+      "signature": "def modify[E: Movable & Deinitable, A: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Tuple[Self.T, A]) -> IO[A, E]:"
+     }
+    ],
+    "set": [
+     {
+      "sha256": "b821184d766e730cc856369b446ad0b01afe6fd7b992eee0c2e6ea1c0bdd5f96",
+      "signature": "def set[E: Movable & Deinitable](self, var value: Self.T) -> IO[NoneType, E]:"
+     }
+    ],
+    "update": [
+     {
+      "sha256": "e649e079a4a8406597353db4cb70f3a394a02b84a71f699ca0b1323a7312c3f8",
+      "signature": "def update[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[NoneType, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and _Admitted[F]:"
+     },
+     {
+      "sha256": "3267edb606fa2f219a248423a77b16979ff6a1db6f5d9d36bceb9a54f69eb50c",
+      "signature": "def update[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[NoneType, E]:"
+     }
+    ],
+    "update_and_get": [
+     {
+      "sha256": "12aa0d39d23fe146fee7c09e4e16f3008ad4440c3648e429a0d9672bce76c9c3",
+      "signature": "def update_and_get[F: UnaryContract & Movable & Deinitable, //, E: Movable & Deinitable](self, var function: F) -> IO[Self.T, E] where F.Arg == Self.T and F.Out == Self.T and F.Error == Never and _OnceUnaryAvailable[F] and conforms_to(Self.T, Copyable) and _Admitted[F]:"
+     },
+     {
+      "sha256": "7d2bed77c56796f1c2aaed153b9cc812840f37b08bec8062ae25052821e62aa7",
+      "signature": "def update_and_get[E: Movable & Deinitable](self, function: def(var _NativeOwnedArg[Self.T]) thin -> Self.T) -> IO[Self.T, E] where conforms_to(Self.T, Copyable):"
+     }
+    ]
+   },
+   "provider": "effects/_async/engine"
+  },
   "effects.async_runtime.Resource": {
    "declarations": [
     "struct Resource[T: Movable & Deinitable, E: Movable & Deinitable](ResourcePlan, _AsyncResourceType):"
@@ -8058,6 +8264,16 @@
    ],
    "provider": "effects/capabilities"
   },
+  "effects.complete_deferred": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "d39bbc67fc70756abc793161ea1971cb82d694fb10958cdbc68acc19d4eb11f8",
+     "signature": "def complete_deferred[T: Copyable & Deinitable, //, I: Concurrent](deferred: I.DeferredHandle[T], var value: T) -> I.DeferredCompleted:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.defer": {
    "kind": "function",
    "overloads": [
@@ -8148,6 +8364,26 @@
     {
      "sha256": "f4cf9b5d74baef67264ad791ec8945f38b8c0e3ff47d7ba848ab840ae8d28bd4",
      "signature": "def get[I: Stateful]() raises I.GetError -> I.Got where I.GetAvailable:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.get_deferred": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "8dba2c2d48626ec09dbe018d5ffc3caff0cf0baee62127fcec6f23b3f8a05b19",
+     "signature": "def get_deferred[I: Concurrent, T: Copyable & Deinitable](deferred: I.DeferredHandle[T]) -> I.DeferredRead[T]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.get_ref": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "12efbcfb10c02e9b6ab09a234c0581f71fecea4ff8801a1a7e742cd864bf0052",
+     "signature": "def get_ref[I: Concurrent, T: Copyable & Deinitable](cell: I.RefHandle[T]) -> I.RefRead[T]:"
     }
    ],
    "provider": "effects/capabilities"
@@ -8304,6 +8540,26 @@
    ],
    "provider": "effects/capabilities"
   },
+  "effects.make_deferred": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "39ea97aea17bc35ee6fdd3cebe9b90ba02e090e09c519bcabc50c7d818a86539",
+     "signature": "def make_deferred[I: Concurrent, T: Copyable & Deinitable]() -> I.DeferredMade[T]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.make_ref": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "1ff4f032b9c5eae5a9d997054d282cddea11f66490d8e104d63eb8a295d3b61b",
+     "signature": "def make_ref[T: Movable & Deinitable, //, I: Concurrent](var value: T) -> I.RefMade[T]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.modify": {
    "kind": "function",
    "overloads": [
@@ -8318,6 +8574,20 @@
     {
      "sha256": "902b99e447bbbf61a0416d22977091b5bd2fae6bce76c2314c43052412058784",
      "signature": "def modify[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Stateful, F: _RaisingUnary[A, R, E]](var f: F ) raises I.ModifyError[NativeUnary[A, R, E, F, True]] -> I.Modified[NativeUnary[A, R, E, F, True]] where I.ModifyCompatible[NativeUnary[A, R, E, F, True]] and A == I.StateType and R == I.StateType:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
+  "effects.modify_ref": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "291d13c8273313189155a06759d7f8726f268b323221cac948f2666bb2bdf9c3",
+     "signature": "def modify_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Concurrent, A: Movable & Deinitable](cell: I.RefHandle[T], var function: F) -> I.RefModified[T, A, F] where I.ModifyCompatible[T, A, F]:"
+    },
+    {
+     "sha256": "199b1adc5a1fa34f273a7f43c9db7ce01b54c287abc9c5e2bf9db4f7f5920139",
+     "signature": "def modify_ref[T: Movable & Deinitable, //, I: Concurrent, A: Movable & Deinitable](cell: I.RefHandle[T], function: def(var _NativeOwnedArg[T]) thin -> Tuple[T, A] ) -> I.RefModified[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]] where I.ModifyCompatible[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]]:"
     }
    ],
    "provider": "effects/capabilities"
@@ -8674,6 +8944,16 @@
    ],
    "provider": "effects/scoped"
   },
+  "effects.set_ref": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "2928ef1ed250e0009bba0c199cf99f62bfccb1c3a01093413bc8637c8ca4d51c",
+     "signature": "def set_ref[T: Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], var value: T) -> I.RefWritten:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.sleep_io": {
    "kind": "function",
    "overloads": [
@@ -8749,6 +9029,20 @@
     }
    ],
    "provider": "effects/fibers"
+  },
+  "effects.update_ref": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "b06793ff35be790fa3085d1efc715f8b305bc3273aa41e55b7610c7a5ebf53a4",
+     "signature": "def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], var function: F) -> I.RefUpdated[T, F] where I.UpdateCompatible[T, F]:"
+    },
+    {
+     "sha256": "652cfa106217c0395239f7e227a986485174416361a2aa9e9e58acbc6b166ca2",
+     "signature": "def update_ref[T: Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], function: def(var _NativeOwnedArg[T]) thin -> T ) -> I.RefUpdated[T, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False]] where I.UpdateCompatible[T, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False]]:"
+    }
+   ],
+   "provider": "effects/capabilities"
   },
   "effects.use_resource": {
    "kind": "function",

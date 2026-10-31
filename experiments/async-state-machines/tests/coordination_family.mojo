@@ -1,5 +1,6 @@
 """Coordination operations return IO, which selects the Async family through Pipeline."""
-from fp.effects._async.coordination import Deferred, Queue, Semaphore
+from fp.effects._async.engine import Deferred
+from fp.effects._async.coordination import Queue, Semaphore
 from fp.effects._async.kernel import run
 from fp.effects._async.engine import IO
 from fp.functions import pipeline

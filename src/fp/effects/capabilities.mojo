@@ -5,9 +5,9 @@ from fp.algebra._adapt import _map_as, _flat_map_as
 from fp.callables._binding import _BindSecond
 from fp.callables._transforms import _Fill, _IgnoreInput
 from fp.callables.protocols import BorrowCallContract, UnaryContract, OnceUnary, ThunkContract
-from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing, NativeUnary, as_unary, _Unary, _RaisingUnary
+from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing, NativeUnary, as_unary, _Unary, _RaisingUnary, _NativeOwnedArg
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, _Hoisting, _CapabilityLifting, _CarrierLifting, _LocalLifting
+from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, _Hoisting, _CapabilityLifting, _CarrierLifting, _LocalLifting
 from ._adapt import _lift_as
 from ._transport import _CensorOp
 
@@ -1168,3 +1168,147 @@ def cede[I: Spawn]() -> I.Ceded:
         The family's unit carrier.
     """
     return I.cede()
+
+
+def make_ref[T: Movable & Deinitable, //, I: Concurrent](var value: T) -> I.RefMade[T]:
+    """Create a shared cell when the program reaches it, in any family with Concurrent.
+
+    Parameters:
+        T: The state type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        value: The initial state, consumed.
+
+    Returns:
+        The family's carrier producing a new cell on each run.
+    """
+    return I.make_ref(value^)
+
+
+def make_deferred[I: Concurrent, T: Copyable & Deinitable]() -> I.DeferredMade[T]:
+    """Create an empty single-assignment value when the program reaches it.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E].
+        T: The value type, copied for every reader.
+
+    Returns:
+        The family's carrier producing a new deferred value on each run.
+    """
+    return I.make_deferred[T]()
+
+
+def get_ref[I: Concurrent, T: Copyable & Deinitable](cell: I.RefHandle[T]) -> I.RefRead[T]:
+    """Copy a cell's state, in any family with Concurrent.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E].
+        T: The state type.
+
+    Args:
+        cell: The cell, borrowed.
+
+    Returns:
+        The family's carrier producing the copy.
+    """
+    return I.get_ref[T](cell)
+
+
+def set_ref[T: Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], var value: T) -> I.RefWritten:
+    """Replace a cell's state, in any family with Concurrent.
+
+    Parameters:
+        T: The state type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        cell: The cell, borrowed.
+        value: The replacement, consumed.
+
+    Returns:
+        The family's unit carrier.
+    """
+    return I.set_ref[T](cell, value^)
+
+
+def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], var function: F) -> I.RefUpdated[T, F] where I.UpdateCompatible[T, F]:
+    """Transform a cell's state atomically, in any family with Concurrent.
+
+    Parameters:
+        T: The state type.
+        F: An owned non-raising transformation from T to T.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        cell: The cell, borrowed.
+        function: The transformation, consumed.
+
+    Returns:
+        The family's unit carrier.
+    """
+    return I.update_ref[T, F](cell, function^)
+
+
+def update_ref[T: Movable & Deinitable, //, I: Concurrent](cell: I.RefHandle[T], function: def(var _NativeOwnedArg[T]) thin -> T
+) -> I.RefUpdated[T, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False]] where I.UpdateCompatible[T, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False]]:
+    """Transform a cell's state with a plain function; closures are rejected."""
+    return I.update_ref[T, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False]](cell, NativeUnary[T, T, Never, def(var _NativeOwnedArg[T]) thin -> T, False](function))
+
+
+def modify_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Concurrent, A: Movable & Deinitable](cell: I.RefHandle[T], var function: F) -> I.RefModified[T, A, F] where I.ModifyCompatible[T, A, F]:
+    """Consume and replace a cell's state atomically, producing a result.
+
+    Parameters:
+        T: The state type.
+        F: An owned non-raising transformation from T to (T, A).
+        I: The capability dictionary, such as Async[E].
+        A: The result type.
+
+    Args:
+        cell: The cell, borrowed.
+        function: The transformation, consumed.
+
+    Returns:
+        The family's carrier producing A.
+    """
+    return I.modify_ref[T, A, F](cell, function^)
+
+
+def modify_ref[T: Movable & Deinitable, //, I: Concurrent, A: Movable & Deinitable](cell: I.RefHandle[T], function: def(var _NativeOwnedArg[T]) thin -> Tuple[T, A]
+) -> I.RefModified[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]] where I.ModifyCompatible[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]]:
+    """Modify a cell's state with a plain function; spell modify_ref[I, A]. Closures are rejected."""
+    return I.modify_ref[T, A, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False]](cell, NativeUnary[T, Tuple[T, A], Never, def(var _NativeOwnedArg[T]) thin -> Tuple[T, A], False](function))
+
+
+def complete_deferred[T: Copyable & Deinitable, //, I: Concurrent](deferred: I.DeferredHandle[T], var value: T) -> I.DeferredCompleted:
+    """Assign a deferred value once, in any family with Concurrent.
+
+    Parameters:
+        T: The value type.
+        I: The capability dictionary, such as Async[E].
+
+    Args:
+        deferred: The deferred value, borrowed.
+        value: The value, consumed.
+
+    Returns:
+        The family's carrier producing whether this completion won.
+    """
+    return I.complete_deferred[T](deferred, value^)
+
+
+def get_deferred[I: Concurrent, T: Copyable & Deinitable](deferred: I.DeferredHandle[T]) -> I.DeferredRead[T]:
+    """Wait for a deferred value, unless canceled, in any family with Concurrent.
+
+    Parameters:
+        I: The capability dictionary, such as Async[E].
+        T: The value type.
+
+    Args:
+        deferred: The deferred value, borrowed.
+
+    Returns:
+        The family's carrier producing a copy of the value.
+    """
+    return I.get_deferred[T](deferred)

@@ -570,6 +570,164 @@ trait Spawn(Cancel):
         ...
 
 
+trait Concurrent(Spawn):
+    """Shared cells and single-assignment values, as Cats Effect's GenConcurrent.
+
+    A provider names its handle types; copies of a handle share its state.
+    Creating one is an effect, so each run of a program creates fresh state.
+    Updates are atomic with respect to other fibers and never suspend; reading
+    a deferred value waits until it is completed.
+    """
+    comptime RefHandle[T: Movable & Deinitable]: Copyable & Deinitable
+    """A shared cell holding T."""
+    comptime DeferredHandle[T: Copyable & Deinitable]: Copyable & Deinitable
+    """A single-assignment value of T whose readers receive copies."""
+    comptime RefMade[T: Movable & Deinitable]: Movable & Deinitable
+    """The carrier producing a new RefHandle[T]."""
+    comptime DeferredMade[T: Copyable & Deinitable]: Movable & Deinitable
+    """The carrier producing a new, empty DeferredHandle[T]."""
+    comptime RefRead[T: Copyable & Deinitable]: Movable & Deinitable
+    """The carrier producing a copy of a cell's state."""
+    comptime RefWritten: Movable & Deinitable
+    """The unit carrier that replaces a cell's state."""
+    comptime UpdateCompatible[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool
+    """Whether F is an admitted non-raising transformation from T to T."""
+    comptime RefUpdated[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The unit carrier that transforms a cell's state with F."""
+    comptime ModifyCompatible[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool
+    """Whether F is an admitted non-raising transformation from T to (T, A)."""
+    comptime RefModified[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Movable & Deinitable
+    """The carrier that replaces a cell's state with F and produces A."""
+    comptime DeferredCompleted: Movable & Deinitable
+    """The carrier producing whether a completion won."""
+    comptime DeferredRead[T: Copyable & Deinitable]: Movable & Deinitable
+    """The carrier waiting for a deferred value and producing a copy."""
+
+    @staticmethod
+    def make_ref[T: Movable & Deinitable](var value: T) -> Self.RefMade[T]:
+        """Create a shared cell when the program reaches it.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            value: The initial state, consumed.
+
+        Returns:
+            A carrier producing the new cell.
+        """
+        ...
+
+    @staticmethod
+    def make_deferred[T: Copyable & Deinitable]() -> Self.DeferredMade[T]:
+        """Create an empty deferred value when the program reaches it.
+
+        Parameters:
+            T: The value type.
+
+        Returns:
+            A carrier producing the new deferred value.
+        """
+        ...
+
+    @staticmethod
+    def get_ref[T: Copyable & Deinitable](cell: Self.RefHandle[T]) -> Self.RefRead[T]:
+        """Copy a cell's state.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            cell: The cell, borrowed.
+
+        Returns:
+            A carrier producing the copy.
+        """
+        ...
+
+    @staticmethod
+    def set_ref[T: Movable & Deinitable](cell: Self.RefHandle[T], var value: T) -> Self.RefWritten:
+        """Replace a cell's state.
+
+        Parameters:
+            T: The state type.
+
+        Args:
+            cell: The cell, borrowed.
+            value: The replacement, consumed.
+
+        Returns:
+            A unit carrier.
+        """
+        ...
+
+    @staticmethod
+    def update_ref[T: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefUpdated[T, F]:
+        """Transform a cell's state atomically.
+
+        Parameters:
+            T: The state type.
+            F: A non-raising transformation from T to T.
+
+        Args:
+            cell: The cell, borrowed.
+            function: The transformation, consumed.
+
+        Returns:
+            A unit carrier.
+        """
+        ...
+
+    @staticmethod
+    def modify_ref[T: Movable & Deinitable, A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](cell: Self.RefHandle[T], var function: F) -> Self.RefModified[T, A, F]:
+        """Consume and replace a cell's state atomically, producing a result.
+
+        Parameters:
+            T: The state type.
+            A: The result type.
+            F: A non-raising transformation from T to (T, A).
+
+        Args:
+            cell: The cell, borrowed.
+            function: The transformation, consumed.
+
+        Returns:
+            A carrier producing A.
+        """
+        ...
+
+    @staticmethod
+    def complete_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T], var value: T) -> Self.DeferredCompleted:
+        """Assign a deferred value once.
+
+        Parameters:
+            T: The value type.
+
+        Args:
+            deferred: The deferred value, borrowed.
+            value: The value, consumed.
+
+        Returns:
+            A carrier producing whether this completion won; later ones change nothing.
+        """
+        ...
+
+    @staticmethod
+    def get_deferred[T: Copyable & Deinitable](deferred: Self.DeferredHandle[T]) -> Self.DeferredRead[T]:
+        """Wait for a deferred value, unless canceled.
+
+        Parameters:
+            T: The value type.
+
+        Args:
+            deferred: The deferred value, borrowed.
+
+        Returns:
+            A carrier producing a copy of the value.
+        """
+        ...
+
+
 trait _CarrierOp(Movable, Deinitable):
     """A consumed transformation of a base carrier; no stack interpretation."""
     comptime Compatible[V: Movable & Deinitable]: Bool
