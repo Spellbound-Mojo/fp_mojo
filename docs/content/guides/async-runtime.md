@@ -5,7 +5,10 @@ Effect vocabulary: `IO`, `Resource`, `Ref`, `Deferred`, `Queue`, `Semaphore`,
 races, and timeouts. This opt-in preview is qualified on the pinned Mojo 1.2.0 Linux
 x86-64 checkout. It executes cooperatively on one host thread. Callbacks must
 return promptly; `IO.delay` and `IO.eval_io` perform synchronous work inside
-their step. The preview does not offload blocking IO or use compiler coroutines.
+their step. Blocking work belongs in `IO.blocking` or `IO.interruptible`, which
+run it on a pool of worker threads (see
+[run blocking calls](#run-blocking-calls)). The preview does not use compiler
+coroutines.
 
 Import application types from `fp.effects.async_runtime`, preferably as `ar`
 when the synchronous `fp.effects.IO` family is also in scope. Custom leaf and
@@ -155,6 +158,7 @@ an existing operation:
 | `Concurrent` (`GenConcurrent`) | `make_ref[I]`, `get_ref[I, T]`, `set_ref[I]`, `update_ref[I]`, `modify_ref[I, A]`, `make_deferred[I, T]`, `complete_deferred[I]`, `get_deferred[I, T]` | `Async[E]` |
 | `Timing` (`Clock`) | `monotonic[I]()`, `timed[I](program)` | `Async[E]`, `SyncIO[E]` |
 | `Temporal` (`GenTemporal`) | `sleep[I]`, `timeout_to[I]`, `timeout_after[I]`, `timeout[I]`, `delay_by[I]`, `and_wait[I]` | `Async[E]` |
+| `Blocking` (`Sync`'s `blocking`, `interruptible`) | `blocking[I](f)`, `interruptible[I](f)` | `Async[E]` on the blocking pool, `SyncIO[E]` inline |
 
 `Async[E]` is the dictionary for `IO[T, E]`; `SyncIO[E]` is the dictionary for
 the synchronous `fp.effects.IO[E]`, which has no fibers. A function such as
@@ -190,8 +194,8 @@ source. `SyncIO` provides `Timing` but not `Temporal`: the synchronous
 `IO.eval_io` it blocks the cooperative host.
 
 Transformer layers forward these capabilities through explicit selections, as
-`LiftAsk` does for `Ask`. `LiftDefer[Layer, C]`, `LiftRaise[Layer, C]`, and
-`LiftTiming[Layer, C]` work through any layer; `LiftCancel`, `LiftSpawn`,
+`LiftAsk` does for `Ask`. `LiftDefer[Layer, C]`, `LiftRaise[Layer, C]`,
+`LiftTiming[Layer, C]`, and `LiftBlocking[Layer, C]` work through any layer; `LiftCancel`, `LiftSpawn`,
 `LiftConcurrent`, and `LiftTemporal` forward through `OptionalT` and
 `ResultT`, whose programs are the base's programs:
 
@@ -213,6 +217,77 @@ derives them: a layer's absence has no duration and skips the sleep after it.
 `ReaderT`, `StateT`, and `WriterT` forward only `Defer`, `Raise`, and `Timing`;
 over `Async`, a `ReaderT` bind, and so `defer` and `timed`, is rejected when
 run, because the IO would keep the borrowed environment.
+
+## Run blocking calls
+
+`IO[T, E].blocking(f)` runs an owned function on a worker thread and resumes the
+fiber with its result or error; other fibers of the root keep running
+meanwhile. Like Cats Effect's `IO.blocking`, the call cannot be canceled: a
+cancellation or a timeout waits for the function to return, and `timeout_to`
+then prefers its drained result. The function follows the `IO` callback rule:
+a library callable such as a `OnceThunk`, or a plain `def() thin` function, with
+error `E` or none. Closures are rejected.
+
+`IO[T, E].interruptible(f)` lends the function an `Interruption` handle for the
+call. `requested()` reports whether the fiber's cancellation was requested, and
+a request stays visible, so there is no separate `interruptibleMany`. On
+cancellation the call completes when the function returns; its late result is
+then rejected and destroyed on the worker thread, and the fiber is canceled.
+`sleep(duration)` waits through the handle and returns False as soon as the
+request arrives, True when the duration elapsed.
+`await_readable(fd, timeout)` and `await_writable(fd, timeout)` wait for a
+`RawFileDescriptor` the caller owns and keeps open: they return True when it is
+ready, hang-up and error conditions included, and False when the request
+arrives or the optional timeout expires, which `requested()` tells apart; a
+`poll` failure raises `OSError`. No POSIX signal is sent, as in
+Cats Effect on Scala Native: a function blocked in an operating-system call
+that does not go through the handle is not woken.
+The handle is neither copyable nor movable, and the function receives it
+borrowed, so it cannot outlive the call.
+
+**The caller's obligation.** The function, its result and its error move to a
+worker thread and back, and may be destroyed on either: on the worker when a
+late result is rejected, or when the function is consumed. Mojo has no `Send`
+or `Sync` proof, so the caller asserts that these values may move to, be used
+on, and be destroyed on another thread, as for `unsafe_start` and
+`Completion.complete` (see [payload thread safety](../architecture/async-thread-safety.md)).
+Share mutable state with the function only through atomics or the
+library's synchronized owners.
+
+Calls run on a `BlockingPool`, after Cats Effect's blocking execution context
+and Erlang's dirty I/O schedulers. Workers start on demand, an idle worker is
+reused for the next call and retires after `idle_timeout`, and at most
+`max_workers` run at once; further calls wait in a queue.
+`BlockingPool(max_workers=64, idle_timeout=60 s)` raises for a nonpositive
+maximum. Each root uses `IORuntimeConfig.blocking_pool`, or else a private pool
+with the defaults, created on the root's first blocking call, so a root that
+never blocks pays nothing for it. Copies of a pool share it, so passing one pool to several roots
+shares its workers:
+
+```text
+var config = IORuntimeConfig()
+config.blocking_pool = Optional(BlockingPool(8, Duration.seconds(5)))
+var outcome = run(program^, config)
+```
+
+A pool lives as long as its copies. Finishing a root waits for its calls, then
+drops its copy; when the last copy is dropped, the pool waits for its queued
+and running calls, then stops and joins its workers. A pool whose last copy is
+dropped on one of its own workers lets that worker exit on its own. A blocking
+call outside a `Driver`, `run`, or `TestControl` aborts.
+
+The synchronous family provides the same capability inline: `blocking[SyncIO[E]]`
+runs the function like `delay`, on the calling thread, which the synchronous
+family blocks anyway, and `interruptible[SyncIO[E]]` passes a handle that
+reads the running program's cancellation token. Its `sleep` and descriptor
+waits park in a poller of their own and return False at once when the request
+was already made, but a known limitation remains: a request made during the
+wait is observed only when the wait ends, until cancellation wakes are wired
+into the poller in a later pass.
+
+Of Cats Effect's `Sync` and `Async` operations, these have no provider yet:
+`evalOn`, `startOn`, `backgroundOn`, and `executionContext` wait for the
+multi-threaded runtime, and `realTime` for wall-clock time.
 
 ## Drive external work and shutdown
 
@@ -319,12 +394,15 @@ after `finish` returns, and `finish` waits for a call in progress.
 | `guarantee`, `guaranteeCase`, `onCancel`, `uncancelable` | `guarantee`, `guarantee_case`, `on_cancel`, `IO.uncancelable` | Masked cleanup with the exact exit |
 | `IO.async`, `IO.async_` | `IO.async`, `IO.async_` | Withdrawal runs after every entered registration, not only on cancellation; `complete` from any thread |
 | `IO.cede`, `IO.never`, `IO.sleep`, `IO.canceled` | the same, on `IO[T, E]` | |
+| `IO.blocking` | `IO[T, E].blocking(f)`, `blocking[I](f)` | Uncancelable; runs on the root's `BlockingPool`; inline in `SyncIO[E]` |
+| `IO.interruptible`, `IO.interruptibleMany` | `IO[T, E].interruptible(f)`, `interruptible[I](f)` | The function borrows an `Interruption`; a request stays visible; no signal; cancellation completes when it returns |
+| Blocking execution context | `BlockingPool`, `IORuntimeConfig.blocking_pool` | Per root unless shared; no process-wide pool; bounded by `max_workers` |
 | `IO.monotonic`, `timed`, `timeout`, `delayBy`, `andWait` | `IO[T, E].monotonic()`, `timed`, `timeout`, `delay_by`, `and_wait` | Monotonic `Instant` only; no `realTime` |
 | `both`, `race`, `timeoutTo` | `both`, `race`, `timeout_to` | Cancel and drain; surviving source outcomes can win |
 | Earlier selection policies | `race_first`, `timeout_after` | First terminal outcome, or timer-selected fallback after clean draining |
 | `Resource.make`, `makeCase`, `use` | `Resource.make`, `make_case`, `use`, `use_scoped` | Scoped borrowing; reverse release order |
-| `MonadCancel`, `GenSpawn`, `Sync` (deferral only) | `Cancel`, `Spawn`, `Defer`, `Raise` dictionaries: `Async[E]`, `SyncIO[E]` | Narrower capabilities stay narrower; the synchronous family has no `Spawn` |
-| `MonadCancel[OptionT[F, *], E]` and the other transformer instances | `LiftDefer`, `LiftRaise`, `LiftTiming`, `LiftCancel`, `LiftSpawn`, `LiftConcurrent`, `LiftTemporal` selections | Cancel, Spawn, Concurrent, and Temporal forward through `OptionalT` and `ResultT` only; case finalizers observe the base exit |
+| `MonadCancel`, `GenSpawn`, `Sync` | `Cancel`, `Spawn`, `Defer`, `Raise`, `Blocking` dictionaries: `Async[E]`, `SyncIO[E]` | Narrower capabilities stay narrower; the synchronous family has no `Spawn` |
+| `MonadCancel[OptionT[F, *], E]` and the other transformer instances | `LiftDefer`, `LiftRaise`, `LiftTiming`, `LiftBlocking`, `LiftCancel`, `LiftSpawn`, `LiftConcurrent`, `LiftTemporal` selections | Cancel, Spawn, Concurrent, and Temporal forward through `OptionalT` and `ResultT` only; case finalizers observe the base exit |
 | `Ref.of`, `Deferred[F, A]`, `GenConcurrent` | `Ref(value)`, `Deferred[T]()`, `Concurrent` with `make_ref[I]`, `make_deferred[I, T]` | Updates cannot raise; reads copy, so `get` needs copyable state |
 | `Clock`, `GenTemporal` | `Timing` and `Temporal` dictionaries | `SyncIO[E]` provides `Timing` only |
 | `fa.start`, `fiber.join`, `fiber.cancel` | `io.start()`, `fiber^.join()`, `fiber.cancel()`, `fiber.request_cancel()` | Owners drain unjoined children before completing |

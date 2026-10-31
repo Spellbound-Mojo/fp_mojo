@@ -5,9 +5,9 @@ from fp.algebra._adapt import _map_as, _flat_map_as
 from fp.callables._binding import _BindSecond
 from fp.callables._transforms import _Fill, _IgnoreInput
 from fp.callables.protocols import BorrowCallContract, UnaryContract, OnceUnary, ThunkContract
-from fp.callables.native import _NativeBorrow, _Borrowing, _RaisingBorrowing, NativeUnary, as_unary, _Unary, _RaisingUnary, _NativeOwnedArg
+from fp.callables.native import _NativeThunk, _NativeBorrow, _Borrowing, _RaisingBorrowing, NativeUnary, as_unary, _Unary, _RaisingUnary, _NativeOwnedArg
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, Timing, Temporal, _Hoisting, _CapabilityLifting, _CarrierLifting, _LocalLifting
+from .protocols import Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, Timing, Temporal, Blocking, _Hoisting, _CapabilityLifting, _CarrierLifting, _LocalLifting
 from ._adapt import _lift_as
 from ._timing import _LiftedClock, _LiftedSleep, _timed, _TimedOf, _TimesCompatible, _delay_by, _DelayedOf, _DelaysCompatible, _and_wait, _WaitedOf, _WaitsCompatible
 from fp._internal.time import Duration
@@ -1933,6 +1933,60 @@ struct LiftTemporal[I: Monad & _Lifting, C: Temporal](Temporal, not Deinitable):
         return _and_wait[Self._Source, V](program^, duration)
 
 
+struct LiftBlocking[I: Monad & _Lifting, C: Blocking](Blocking, not Deinitable):
+    """Lift a selected Blocking capability through one transformer.
+
+    Both operations lift the base's carrier, as LiftDefer's delay does, so the
+    call runs where the base runs it: on Async's pool, or inline in SyncIO.
+    I.Base must equal C.Family.
+
+    Parameters:
+        I: The destination transformer family.
+        C: The Blocking capability of its immediate base.
+    """
+    comptime _Layer = downcast[Self.I, _CapabilityLifting]
+    comptime _Selected = Self._Layer.Base == Self.C.Family
+    comptime Family = Self.I
+    comptime BlockingCompatible[F: ThunkContract & Movable & Deinitable] = Self._Selected and Self.C.BlockingCompatible[F] and _ErrorCompatible[Never, Self.I.LiftError[Self.C.Blocked[F]]]
+    comptime Blocked[F: ThunkContract & Movable & Deinitable] = Self.I.Lifted[Self.C.Blocked[F]]
+    comptime InterruptibleCompatible[F: BorrowCallContract & Movable & Deinitable] = Self._Selected and Self.C.InterruptibleCompatible[F] and _ErrorCompatible[Never, Self.I.LiftError[Self.C.Interrupted[F]]]
+    comptime Interrupted[F: BorrowCallContract & Movable & Deinitable] = Self.I.Lifted[Self.C.Interrupted[F]]
+
+    @staticmethod
+    def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]:
+        """Lift the base's blocking call.
+
+        Parameters:
+            F: A once-callable thunk the base admits.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            The destination family's carrier of the function's value.
+        """
+        comptime assert Self.BlockingCompatible[F], "blocking: unavailable capability or mismatched base family"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Blocked[F]]]
+        return _lift_as[Never, Self.I](Self.C.blocking(function^))
+
+    @staticmethod
+    def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]:
+        """Lift the base's interruptible call.
+
+        Parameters:
+            F: A once-callable borrowing an Interruption that the base admits.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            The destination family's carrier of the function's value.
+        """
+        comptime assert Self.InterruptibleCompatible[F], "interruptible: unavailable capability or mismatched base family"
+        comptime assert _ErrorCompatible[Never, Self.I.LiftError[Self.C.Interrupted[F]]]
+        return _lift_as[Never, Self.I](Self.C.interruptible(function^))
+
+
 def defer[F: ThunkContract & Movable & Deinitable, //, I: Defer](var factory: F) -> I.Deferred[F] where I.DeferCompatible[F]:
     """Build an effect when the program reaches it, in any family with Defer.
 
@@ -2311,3 +2365,65 @@ def and_wait[V: Movable & Deinitable, //, I: Temporal](var program: V, duration:
         The family's carrier with the program's value after the sleep.
     """
     return I.and_wait(program^, duration)
+
+
+def blocking[F: ThunkContract & Movable & Deinitable, //, I: Blocking](var function: F) -> I.Blocked[F] where I.BlockingCompatible[F]:
+    """Run a blocking function, in any family with Blocking.
+
+    Async runs it on the root's blocking pool and SyncIO inline; neither can
+    cancel it. Other overloads take a plain native function; closures are
+    rejected.
+
+    Parameters:
+        F: An owned once-callable thunk the family admits.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        function: The function, consumed.
+
+    Returns:
+        The family's carrier producing the function's value.
+    """
+    return I.blocking(function^)
+
+
+def blocking[R: Movable & Deinitable, //, I: Blocking](function: def() thin -> R) -> I.Blocked[_NativeThunk[R, Never, def() thin -> R, False]] where I.BlockingCompatible[_NativeThunk[R, Never, def() thin -> R, False]]:
+    """Run a plain native blocking function, in any family with Blocking."""
+    return I.blocking(_NativeThunk[R, Never, def() thin -> R, False](function))
+
+
+def blocking[R: Movable & Deinitable, X: Movable & Deinitable, //, I: Blocking](function: def() raises X thin -> R) -> I.Blocked[_NativeThunk[R, X, def() raises X thin -> R, True]] where I.BlockingCompatible[_NativeThunk[R, X, def() raises X thin -> R, True]]:
+    """Run a raising plain native blocking function, in any family with Blocking."""
+    return I.blocking(_NativeThunk[R, X, def() raises X thin -> R, True](function))
+
+
+def interruptible[F: BorrowCallContract & Movable & Deinitable, //, I: Blocking](var function: F) -> I.Interrupted[F] where I.InterruptibleCompatible[F]:
+    """Run a function that observes cancellation through an Interruption, in any family with Blocking.
+
+    Async runs it on the root's blocking pool, and cancellation completes when
+    it returns; SyncIO runs it inline with a handle reading the program's
+    token. Other overloads take a plain native function; closures are rejected.
+
+    Parameters:
+        F: An owned once-callable borrowing an Interruption that the family admits.
+        I: The capability dictionary, such as Async[E] or SyncIO[E].
+
+    Args:
+        function: The function, consumed.
+
+    Returns:
+        The family's carrier producing the function's value.
+    """
+    return I.interruptible(function^)
+
+
+# The handle type is inferred from the function rather than named: this module
+# sits below the handle's, and the family's admission requires an Interruption.
+def interruptible[P: AnyType, R: Movable & Deinitable, //, I: Blocking](function: def(P) thin -> R) -> I.Interrupted[_NativeBorrow[P, R, Never, def(P) thin -> R, False]] where I.InterruptibleCompatible[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]:
+    """Run a plain native function borrowing an Interruption, in any family with Blocking."""
+    return I.interruptible(_NativeBorrow[P, R, Never, def(P) thin -> R, False](function))
+
+
+def interruptible[P: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, I: Blocking](function: def(P) raises X thin -> R) -> I.Interrupted[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] where I.InterruptibleCompatible[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]:
+    """Run a raising plain native function borrowing an Interruption, in any family with Blocking."""
+    return I.interruptible(_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](function))

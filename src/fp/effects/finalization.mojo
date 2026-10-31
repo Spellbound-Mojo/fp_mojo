@@ -7,7 +7,10 @@ from fp.callables._binding import _OwnedUnary
 from fp.callables.native import NativeUnary, _Unary, _RaisingUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.data import Result, Err
-from .protocols import ReaderAction, Defer, Raise, Cancel, Timing
+from .protocols import ReaderAction, Defer, Raise, Cancel, Timing, Blocking
+from fp.callables.protocols import BorrowCallContract
+from fp.callables._receiver import _OnceBorrowAvailable
+from ._interruption import Interruption, _LendInterruption
 from ._timing import _ClockSource, _timed, _TimedOf, _TimesCompatible
 from .outcomes import Outcome, EffectFailure, ExitCase, _ExitState, _capture, _finish
 from ._io_core import IO, IOContext, IOContract, _run_io, _settle, _IODelay, _IODefer, _IOCancel, _SyncDefers, _IOMonotonic, canceled
@@ -360,8 +363,24 @@ struct _SyncClock[E: Movable & Deinitable](_ClockSource, not Deinitable):
         return _IOMonotonic[Self.E]()
 
 
-struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, not Deinitable):
-    """The capabilities of the synchronous IO[E] family: Defer, Raise, Cancel and Timing.
+@fieldwise_init
+struct _IOInterruptible[E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](ReaderAction):
+    """Run an interruptible function inline, with a handle reading the context's token."""
+    var function: Self.F
+    comptime Family = IO[Self.E]
+    comptime Value = Self.F.Result
+    comptime Env = IOContext[Self.E]
+    comptime Out[o: ImmOrigin] = Outcome[Self.Value, Self.E]
+
+    def run[o: ImmOrigin](deinit self, ref[o] env: Self.Env) -> Self.Out[o]:
+        if env.canceled():
+            return None
+        comptime assert Self.F.Payload == Interruption and _ErrorCompatible[Self.E, Self.F.Failure]
+        return _settle(Optional(_capture[Self.E](_LendInterruption[Self.F](self.function^, env._token.copy(), None))), env)
+
+
+struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, Blocking, not Deinitable):
+    """The capabilities of the synchronous IO[E] family: Defer, Raise, Cancel, Timing and Blocking.
 
     Generic code names this dictionary to run in IO[E], such as
     `guarantee[SyncIO[E]](program, cleanup)`. Each operation forwards to the
@@ -392,6 +411,10 @@ struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, not Deinita
     comptime Monotonic = _IOMonotonic[Self.E]
     comptime TimedCompatible[V: Movable & Deinitable] = _TimesCompatible[_SyncClock[Self.E], V]
     comptime Timed[V: Movable & Deinitable] = _TimedOf[_SyncClock[Self.E], V]
+    comptime BlockingCompatible[F: ThunkContract & Movable & Deinitable] = Self.DelayCompatible[F]
+    comptime Blocked[F: ThunkContract & Movable & Deinitable] = _IODelay[Self.E, F]
+    comptime InterruptibleCompatible[F: BorrowCallContract & Movable & Deinitable] = F.Payload == Interruption and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure]
+    comptime Interrupted[F: BorrowCallContract & Movable & Deinitable] = _IOInterruptible[Self.E, F]
 
     @staticmethod
     def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
@@ -565,3 +588,40 @@ struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, not Deinita
         """
         comptime assert Self.TimedCompatible[V], "timed: the program must be a synchronous IO with error E"
         return _timed[_SyncClock[Self.E], V](program^)
+
+    @staticmethod
+    def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]:
+        """Run a blocking function inline, on the calling thread, as delay does.
+
+        The synchronous family already blocks its thread, so no pool is used.
+
+        Parameters:
+            F: A once-callable thunk with error E or none.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            A program producing the function's value.
+        """
+        comptime assert Self.BlockingCompatible[F], "blocking: the function's error must be E or none"
+        return _IODelay[Self.E, F](function^)
+
+    @staticmethod
+    def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]:
+        """Run an interruptible function inline, on the calling thread.
+
+        Its Interruption reports the running program's cancellation token.
+        Cancellation is checked before the call and after it, as for delay.
+
+        Parameters:
+            F: A once-callable borrowing an Interruption, with error E or none.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            A program producing the function's value.
+        """
+        comptime assert Self.InterruptibleCompatible[F], "interruptible: the function must borrow an Interruption and raise E or nothing"
+        return _IOInterruptible[Self.E, F](function^)

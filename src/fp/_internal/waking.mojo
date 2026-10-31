@@ -327,6 +327,12 @@ struct _Scheduler(Movable):
     # ACQUIRE, so a zero they read follows every dropped registration's last
     # access. It is a count, not a lock: readers only decide quiescence.
     var registrations: ArcPointer[Atomic[Int]]
+    # The address of the root's blocking pool and calls in flight
+    # (`_RootBlocking`, allocated by `fp.effects._async.scheduling.blocking_pool`,
+    # which lives above this module), or 0 before the root's first blocking
+    # call. Installed once by compare-exchange and taken by the root's finish;
+    # that module documents the orderings.
+    var blocking: ArcPointer[Atomic[Int]]
 
     def __init__(out self):
         self.ready = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_ReadyQueue())))
@@ -338,6 +344,7 @@ struct _Scheduler(Movable):
         self.in_flight = ArcPointer(Atomic(0))
         self.notifier = ArcPointer(Optional[_Notifier](None))
         self.registrations = ArcPointer(Atomic(0))
+        self.blocking = ArcPointer(Atomic(0))
 
     def registered(self) -> Int:
         """Live external registrations under this root (see `registrations`)."""
