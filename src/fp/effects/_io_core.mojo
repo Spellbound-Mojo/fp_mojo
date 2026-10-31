@@ -18,7 +18,6 @@ from .layers import ResultT
 from .outcomes import EffectFailure, Outcome, _capture, _finish
 from fp._internal.time import Instant
 from fp._internal.waking import _Event, _Clock, _Runtime, _Ticket
-from fp._internal.cells import _LockWaiter
 
 
 struct CancellationToken(Copyable):
@@ -96,7 +95,7 @@ struct _Budget(Movable):
         self.remaining = self.yield_threshold
 
 
-struct IOContext[E: Movable & Deinitable](_IOContextType, _LockWaiter, Copyable):
+struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):
     """A borrowed execution context for custom IO endpoints.
 
     Masking is local to a context value; token copies share only the atomic

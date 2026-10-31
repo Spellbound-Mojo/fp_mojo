@@ -94,6 +94,14 @@ struct LockedShot(Movable):
             return taken^
 
 
+def offer(shot: _OneShot[Int], value: Int) -> Bool:
+    """A competing writer's offer, as `Completion.complete` makes it."""
+    if not shot.try_claim():
+        return False
+    _ = shot.publish(value)
+    return True
+
+
 struct Rig(Movable):
     var shots: List[_OneShot[Int]]
     var locked: List[LockedShot]
@@ -139,7 +147,7 @@ def shot_role(rig: Rig, mode: Int, receiver: Bool, rounds: Int, me: Int) -> Tupl
                 slow += 1
         else:
             if mode == LOCK_FREE:
-                _ = rig.shots[r].put(me)
+                _ = offer(rig.shots[r], me)
             elif mode == SPIN_LOCK:
                 _ = rig.locked[r].put[False](me)
             else:
@@ -200,7 +208,7 @@ def timed(kind: Int, mode: Int, threads: Int) raises -> Tuple[Int, Int, Int]:
             # Uncontended: offer, then take, each round.
             for r in range(ROUNDS):
                 if mode == LOCK_FREE:
-                    _ = rig[].shots[r].put(r)
+                    _ = offer(rig[].shots[r], r)
                     check(Bool(rig[].shots[r].take()), "uncontended take")
                 elif mode == SPIN_LOCK:
                     _ = rig[].locked[r].put[False](r)

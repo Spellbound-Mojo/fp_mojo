@@ -15,8 +15,8 @@ One implementation acquires and releases a cell's lock word (`_acquire_lock`,
   for a bounded number of attempts before yielding with `sleep(0.0)`.
 
 `_lock_until_canceled` is the third client: the coordination owners' `_lock`,
-which spins and yields like the borrowed guard and asks its waiter (an
-`IOContext`) between yields whether cancellation stops the wait. No lock in
+which spins and yields like the borrowed guard and asks its waiter (the
+calling context) between yields whether cancellation stops the wait. No lock in
 this module sleeps for a fixed interval.
 """
 from std.atomic import Atomic, Ordering
