@@ -14,17 +14,20 @@ from std.atomic import Atomic
 from std.ffi import external_call, c_int
 from std.memory import ArcPointer
 from std.os import abort, getenv
+from std.sys import stderr
 from std.time import monotonic, sleep
 from fp.callables import OnceThunk, OnceUnary, BorrowCallable
 from fp._internal.erased import _Erased
 from fp._internal.os import getrusage, RUSAGE_SELF, Pipe, write as os_write
 from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Interruption, BlockingPool, IORuntimeConfig, Duration, run
-from fp.effects._async.scheduling.blocking_pool import _RootBlocking, _WorkerContext
+from fp.effects._async.scheduling.blocking_pool import _WorkerContext, _Job, _Calls
 
 
 def check(condition: Bool, message: String):
     if not condition:
+        # Also on standard error, which soaks keep.
+        print(String("blocking pool: ", message), file=stderr)
         abort(String("blocking pool: ", message))
 
 
@@ -62,9 +65,15 @@ def os_threads() -> Int:
 
 
 def wait_until_threads(expected: Int) -> Bool:
+    """Wait until at most `expected` threads remain.
+
+    A joined thread can still be counted in /proc for a moment after its join
+    returns, so a baseline read just after a join may be one too high: the
+    checks bound the count from above rather than match it.
+    """
     var deadline = Int(monotonic()) + 2_000_000_000
     while Int(monotonic()) < deadline:
-        if os_threads() == expected:
+        if os_threads() <= expected:
             return True
         sleep(0.002)
     return False
@@ -356,14 +365,17 @@ def nothing() -> Int:
 
 def reuse_and_retire() raises:
     var base = os_threads()
-    var pool = BlockingPool(4, ms(40))
+    # Long enough that no scheduling delay between calls retires the worker.
+    var pool = BlockingPool(4, ms(400))
     for _ in range(10):
         check(value_of(run(IO[Int, Int].blocking(nothing), config_with(pool))) == 1, "a sequential call returns")
         check(wait_until_parked(pool, 1), "the worker parks after its call")
     check(pool._started() == 1, String("sequential calls reuse one worker, started ", pool._started()))
     check(pool._live() == 1, "the worker is still idle before the timeout")
-    check(os_threads() == base + 1, "one worker thread exists")
-    sleep(0.15)
+    check(os_threads() <= base + 1, "no more than one worker thread exists")
+    var retired_by = Int(monotonic()) + 3_000_000_000
+    while pool._live() != 0 and Int(monotonic()) < retired_by:
+        sleep(0.01)
     check(pool._live() == 0, "an idle worker retires after the timeout")
     check(value_of(run(IO[Int, Int].blocking(nothing), config_with(pool))) == 1, "a call after retirement starts a worker")
     check(pool._started() == 2, "a new worker started after retirement")
@@ -375,7 +387,8 @@ def reuse_and_retire() raises:
     var after = getrusage(RUSAGE_SELF)
     var used = (after.user_nanoseconds + after.system_nanoseconds) - (before.user_nanoseconds + before.system_nanoseconds)
     check(parked._live() >= 2, "several idle workers are parked")
-    check(used < 30_000_000, String("idle workers park without spinning, used ns: ", used))
+    # A spinning worker would use the whole 300 ms; parked ones use almost none.
+    check(used < 100_000_000, String("idle workers park without spinning, used ns: ", used))
     _ = parked^
     _ = pool^
     check(wait_until_threads(base), "dropping the last copy joins every worker")
@@ -582,15 +595,20 @@ def shared_pool() raises:
 struct Holder(Movable):
     var pool: BlockingPool
     var done: ArcPointer[Atomic[Int]]
+    var released: ArcPointer[Atomic[Int]]
 
-    def __init__(out self, var pool: BlockingPool, done: ArcPointer[Atomic[Int]]):
+    def __init__(out self, var pool: BlockingPool, done: ArcPointer[Atomic[Int]], released: ArcPointer[Atomic[Int]]):
         self.pool = pool^
         self.done = done.copy()
+        self.released = released.copy()
 
 
 def run_holder(var body: _Erased, worker: _WorkerContext):
     var holder = body^.take[Holder]()
-    sleep(0.005)
+    # Wait until the submitter dropped its copy, so this one is the last.
+    var deadline = Int(monotonic()) + 2_000_000_000
+    while holder.released[].load() == 0 and Int(monotonic()) < deadline:
+        sleep(0.0002)
     var done = holder.done.copy()
     # The last copy of the pool goes here, on one of its own workers.
     _ = holder^
@@ -598,15 +616,23 @@ def run_holder(var body: _Erased, worker: _WorkerContext):
 
 
 def drop_on_worker() raises:
+    """Drop every other copy while the call runs, so the call drops the last one."""
     var base = os_threads()
     var done = ArcPointer(Atomic[Int](0))
     var pool = BlockingPool(2)
-    # The job runs on `pool` and holds `pool`'s only other copy.
-    var on_pool = _RootBlocking(pool.copy())
-    on_pool.submit(_Erased(Holder(pool^, done)), run_holder)
-    on_pool^.finish()
-    check(done[].load() == 1, "the call that dropped the last copy finished")
-    check(wait_until_threads(base), "the detached worker exited on its own")
+    var released = ArcPointer(Atomic[Int](0))
+    var calls = _Calls()
+    calls.begin()
+    var submitter = pool.copy()
+    submitter._submit(_Job(_Erased(Holder(pool^, done, released)), run_holder, calls))
+    # The job's copy is now the only one.
+    _ = submitter^
+    released[].store(1)
+    var deadline = Int(monotonic()) + 2_000_000_000
+    while calls.in_flight() != 0 and Int(monotonic()) < deadline:
+        sleep(0.0005)
+    check(done[].load() == 1 and calls.in_flight() == 0, "the call that dropped the last copy finished")
+    check(wait_until_threads(base), String("the detached worker exited on its own, threads ", os_threads(), " of ", base))
 
 
 def main() raises:
