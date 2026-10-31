@@ -1149,9 +1149,12 @@ Probed and found while implementing:
   `filter_map` and Piped generic forms had the same gap. Raising forms name the
   error through `_ErrorProbe` or `_BorrowErrorProbe` (for borrowing predicates)
   and execute through `_filter_map_as` or `_filter_native`'s `Raised`.
-- A plain function that consumes its argument (`def f(var x: Int)`) binds the
-  borrowed-closure form, which `fp.effects.IO` rejects; a borrowing plain
-  function binds the owned form. This predates inference.
+- A plain function that consumes its argument (`def f(var x: Int)`) bound the
+  borrowed-closure form, which `fp.effects.IO` rejected at `run_io`. This
+  predated inference and no longer reproduces once the callback parameters
+  follow the defaulted families: consuming and borrowing plain functions and
+  live closures all run, `tests/runtime/test_io_native_callbacks.mojo` checks
+  it, and closure forms still borrow.
 
 Implementation, phase 2: the free `fp.algebra` operations listed in the
 [algebra reference](../reference/algebra.md#family-inference) default their
