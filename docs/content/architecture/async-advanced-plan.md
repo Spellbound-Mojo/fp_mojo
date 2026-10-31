@@ -2518,7 +2518,7 @@ it into `nightly`.
 | **S2 Poller** | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
 | **S3 Cross-thread qualification** (merged) | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
 | **S4 Concurrent structures** (merged) | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
-| **S5 Engine refactor** | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
+| **S5 Engine refactor** (merged) | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
 | **S6 Blocking** | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
 | **S7 Thread-safety research** (merged) | The payload contract, the audit list, and research on compile-time rejection by reflection (13e's research) | Plan and design notes | None |
 
@@ -2762,6 +2762,113 @@ operation's ordering and why it suffices (design item 8).
     which exercise the changed lock code, passed 24 of 24 from source and
     package at O0 and O3.
   - No thread sanitizer runs here (see S7).
+
+**S5** (Wave 1) was merged on 2026-10-31: 13b, fibers as scheduled tasks on
+the current-thread profile, with Pass 12's host notifier. Wave 1 is complete.
+
+- **Tasks.** Every fiber and the root program are tasks (`_TaskHeader`) with
+  an atomic state: idle, scheduled, running, notified while running, or done.
+  A queue entry is the right to run a task, and only its holder touches the
+  task's body. The new `_async/executor.mojo` runs them. One root poll is one
+  executor turn: queued tasks run in FIFO order, each at most once, while the
+  transition budget lasts, and a task requeued during the turn waits for the
+  next one. The ready queue sits behind a small `_TaskQueue` interface, which
+  S4's ring and external queue can implement in 13c.
+- **Per-fiber wake registries.** Each task has its own registry, the existing
+  generation-checked tree. When the registry's root list fills, its hook
+  schedules the task, or marks a running task notified. Whether a finished run
+  requeues or parks is decided under the registry's lock, which every wake
+  also takes, so no wake is lost. A shared per-root `_Scheduler` holds the
+  ready queue, one timer heap of generation-checked wakers, the host notifier,
+  and the table of live fibers. The locks are always taken in one order
+  (registry, then ready queue; timers, then registry), so they cannot
+  deadlock.
+- **Ownership in records.** Each run loop that starts fibers has a scope that
+  counts its live children atomically. A finished program's task cancels its
+  children and waits on the scope's signal for the count to reach zero. Held
+  outcomes, joins, claims, delivery, and exactly-once reporting keep their
+  semantics, and a supervised fiber belongs to the supervisor fiber's scope.
+  `_Fibers`, `_Inbox`, `_FiberHost`, and the per-host scheduling step are
+  gone.
+- **Host notifier** (Pass 12, decision 8). A new `Driver` constructor overload
+  takes a repeatable, non-raising `Thunk`, so `Driver[P]` keeps its type.
+  - The driver calls it only for wakes that arrive between polls, possibly
+    from another thread.
+  - It is never called after `finish` returns, and `finish` waits for a call
+    in progress.
+  - At integration, `notify_host` was changed to register its call before
+    it reads the notifier, which `shutdown` clears once `close` returns.
+- **Cross-thread borrows (found at integration).**
+  - With that reorder, `foreign_completion` hung in about 60% of O3 runs and
+    `foreign_signal` in about 25%, because `close` waited forever on a
+    notification count stuck at 1 or -1.
+  - The cause was that `_Scheduler`'s methods took `mut self` while other
+    threads called them on the same object. A `mut` borrow is exclusive in
+    Mojo, so the compiler may assume nothing else touches the struct during
+    the call, and the atomics stored inline in it lost concurrent updates.
+  - Ruled out:
+    - a use-after-free: leaking every scheduler still hung, and
+      AddressSanitizer was clean;
+    - a stray store to a fixed offset: a canary there survived.
+
+    Moving only that counter into its own allocation fixed both clients.
+  - S5 then moved every atomic of `_Scheduler` and `_TaskHeader`, and the
+    notifier, behind pointers to separate allocations. Every cross-thread
+    method now takes immutable `self`, as the S4 structures already did. The
+    rule is in the development guide's compiler practices.
+  - Cost for 13c: each task makes one more small allocation, which a packed
+    per-task atomic block can remove.
+- **Teardown.** A finished root empties its timer heap, queue, fiber table,
+  and notifier on the polling thread. This breaks the cycle through stale
+  timer entries, which had leaked the scheduler, and keeps a late foreign
+  wake from destroying the host's notifier on another thread. It answers
+  S3's teardown note.
+- **Behavior changes, accepted on review.**
+  - `Driver.fibers()` lists every live fiber under the root, each with its
+    owner, including fibers started by an `IO` lifted into a leaf and fibers
+    under roots that are not an `IO`. Cats Effect's fiber dump does the same.
+  - Fibers run in FIFO turns instead of the old, unspecified alternation
+    between a root's program and its fibers. `spawn_laws` relied on that
+    alternation; its `.map` now sits inside the masked region, so the law
+    tests masking rather than scheduling order.
+- **Deviations from the plan.**
+  - An `IO` run as a leaf still drains the fibers it started before
+    completing, which keeps the guide's promise that such a leaf runs with
+    its own fibers.
+  - Fiber state stays in the task header between runs, and the queue entry
+    carries the right to run it. This gives the same exclusive access as
+    moving the state through the queue.
+- **Open for 13c.** S7's parallel races are not fixed here:
+  - `_FiberRecord`'s `outcome`, `done`, and `released`;
+  - `_SupervisorState` and `_Stop`;
+  - the `_Budget` counters.
+
+  Each needs one atomic or lock-guarded terminal decision before fibers run
+  in parallel.
+- **Measurements** (O3, against baseline binaries run back to back).
+
+  | Measurement | Before | After |
+  |---|---|---|
+  | Fiber pair, both children done at once | 12–17 µs | 11–13 µs |
+  | Fiber pair, each child yields once | 17–21 µs | 15–19 µs |
+  | Run-loop step | 44–59 ns | 45–47 ns |
+
+  Fiber pairs are about 10–15% cheaper, and the step is unchanged within
+  noise.
+- **Qualification.**
+  - S5 swept all 93 positive and rejection clients from source and package at
+    O0 and O3: 364 of 372 passed. The 4 `host_notifier` failures were an
+    unused-variable warning in the new client, since fixed. The 4
+    `reject_callback_error` failures were a stale fixture expecting a
+    diagnostic that `callbacks.mojo` stopped emitting on 2026-10-29; the
+    integrator updated it.
+  - After rebasing, 27 overlapping clients passed 108 of 108.
+  - After the fix, 200 O3 runs each of `foreign_completion`,
+    `foreign_signal`, and `host_notifier` all passed.
+  - At merge, `host_notifier`, `test_control`, `foreign_completion`,
+    `foreign_signal`, `reject_callback_error`, `fiber_snapshot`,
+    `spawn_laws`, `fiber_basics`, `fiber_supervisor`, and `callbacks` passed
+    40 of 40 from source and package at O0 and O3.
 
 ## Implementation reference map
 

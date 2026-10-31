@@ -188,6 +188,15 @@ migration. The limits and compatibility changes are recorded in
   structs, such as a result computed from a list of clauses, can take compile
   time exponential in the chain's length when it appears in a signature. Spell
   it over the parameters directly and pass it to the implementation explicitly.
+- **Never borrow a shared object mutably from two threads.** A `mut`
+  argument, `mut self` included, is an exclusive borrow, so the compiler may
+  assume nothing else touches the borrowed value during the call. An atomic
+  stored inline in a struct that several threads borrow mutably at once can
+  therefore lose updates. This hung `close` in the async scheduler until its
+  counters moved out. An object reached from several threads takes immutable
+  `self` in every method that can run concurrently. Its atomics and mutable
+  state live in separate allocations behind pointers: an `ArcPointer`, or a
+  `Pointer[..., MutUntrackedOrigin]` as in the work-stealing structures.
 - **Check hot paths in assembly.** `Optional` and `Variant` storage of
   non-trivial types is initialized and taken out of line, and `Optional.take()`
   is not inlined; use untagged `MaybeUninit` slots where it matters. Compare O3
