@@ -36,7 +36,7 @@ def check_native_families() raises:
     assert_equal(pipeline(List[Int]([1, 2, 3])).fold_map_effect[StringMonoid](transform).raise_on_err(), "123")
     assert_equal(pipeline(List[Int]()).fold_map_effect[StringMonoid](transform).raise_on_err(), "")
     assert_equal(pipeline(List[Int]([1, -2, 3])).fold_map_effect[StringMonoid](transform).get()._err().value, "negative")
-    assert_equal(pipeline(List[Int]([4, 5])).fold_map_effect[ResultFamily[String], StringMonoid](transform).raise_on_err(), "45")
+    assert_equal(pipeline(List[Int]([4, 5])).fold_map_effect[StringMonoid, ResultFamily[String]](transform).raise_on_err(), "45")
     assert_equal(transform.call(6).raise_on_err(), "6")
     def alternatives(value: Int) -> List[String]: return [String(value), "x"]
     var branching = kleisli[ListFamily](alternatives)

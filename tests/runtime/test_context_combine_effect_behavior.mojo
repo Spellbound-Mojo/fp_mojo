@@ -38,7 +38,7 @@ def main() raises:
     var optional: List[Optional[String]] = [Optional(String("a")), Optional(String("b"))]
     assert_equal(pipeline(optional^).combine_all_effect[StringMonoid]().get_or(""), "ab")
     assert_equal(pipeline(List[Optional[String]]()).combine_all_effect[StringMonoid]().get_or("fallback"), "")
-    assert_equal(pipeline(List[Optional[String]]()).combine_all_effect[OptionalFamily, StringMonoid]().get_or("fallback"), "")
+    assert_equal(pipeline(List[Optional[String]]()).combine_all_effect[StringMonoid, OptionalFamily]().get_or("fallback"), "")
     assert_equal(pipeline(List[Optional[String]]()).combine_all_effect[J=OptionalFamily, M=StringMonoid]().get_or("fallback"), "")
     assert_equal(pipeline(List[Optional[String]]()).combine_all_effect[M=StringMonoid]().get_or("fallback"), "")
     var result = List[Result[String, Int]]()

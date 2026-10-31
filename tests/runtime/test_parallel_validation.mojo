@@ -84,6 +84,12 @@ struct PVConstructor(OnceUnary):
 
 
 @fieldwise_init
+struct PVNine(OnceUnary, Defaultable):
+    comptime Arg=Tuple[Int,Int,Int,Int,Int,Int,Int,Int,Int]
+    comptime Out=Int
+    def call_once(deinit self,var arg:Self.Arg)->Int:return arg[0]+arg[8]
+
+@fieldwise_init
 struct PVSingle(OnceUnary, Defaultable):
     comptime Arg=Tuple[Int]
     comptime Out=Int
@@ -128,6 +134,8 @@ def pv_nary() raises:
         comptime assert type_of(error) == PVNativeFailure
         code = error.code
     assert_equal(code, 3)
+    assert_equal(pipeline(pv_validate(1)).par_map_n((pv_validate(2),pv_validate(3),pv_validate(4),pv_validate(5),pv_validate(6),pv_validate(7),pv_validate(8),pv_validate(9)),PVNine()).get()._ok().value,10)
+    assert_equal(pipeline(pv_validate(1)).par_product_n((pv_validate(2),pv_validate(3),pv_validate(4),pv_validate(5),pv_validate(6),pv_validate(7),pv_validate(8),pv_validate(9))).get()._ok().value[8],9)
     assert_equal(pipeline(R(Ok(4))).par_map_n[PVFailJoin](Tuple(),PVSingle()).get()._ok().value,4)
     # No combine happens for one operand, so the native effect remains Never.
     assert_equal(pipeline(R(Ok(4))).par_map_n[PVFailJoin](Tuple(),pv_one).get()._ok().value,5)

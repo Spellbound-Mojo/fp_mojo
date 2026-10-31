@@ -311,7 +311,11 @@ comptime _CanonicalEffectMonoid[R: Movable & Deinitable]: Monoid = _CanonicalMon
 ]
 
 
-struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](RebindingFunctor, Filterable, FunctorFilter):
+struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](RebindingFunctor, Filterable, FunctorFilter, _ValueFolding):
+    comptime FoldSource[V: Movable & Deinitable] = List[Self.A]
+    @staticmethod
+    def fold_source[V: Movable & Deinitable](var value: V) -> List[Self.A]:
+        return _dict_values(rebind_var[Dict[Self.K, Self.A, Self.H]](value^))
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == Dict[Self.K, Self.A, Self.H] and F.Arg == Self.A and RepeatableUnary[F]
     comptime WithElement[A: Movable & Deinitable] = _DictFamily[Self.K, A, Self.H]
     comptime Element[V: Movable & Deinitable] = Self.A
@@ -348,6 +352,51 @@ struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hashe
         return rebind_var[V](Self.filter_map(_Select[T, P](predicate^), value^))
 
 
+trait _ValueFolding:
+    """A family whose folds read values that its carrier's native iteration does not yield.
+
+    Dictionary families select values, while a Dict iterates its keys. Their
+    folds, searches and effectful reductions read `FoldSource[V]`, which the
+    family builds from the carrier by moving every value out once.
+    """
+    comptime FoldSource[V: Movable & Deinitable]: Movable & Deinitable
+    @staticmethod
+    def fold_source[V: Movable & Deinitable](var value: V) -> Self.FoldSource[V]:
+        ...
+
+
+comptime _FoldSource[I: AnyType, V: Movable & Deinitable]: Movable & Deinitable = (
+    downcast[I, _ValueFolding].FoldSource[V] if conforms_to(I, _ValueFolding) else V
+)
+"""The source a fold over a carrier of family I reads; the carrier itself unless I selects values."""
+
+
+def _fold_source[I: AnyType, V: Movable & Deinitable](var value: V) -> _FoldSource[I, V]:
+    """Convert a carrier to the source its family folds over; other carriers move unchanged."""
+    comptime if conforms_to(I, _ValueFolding):
+        return rebind_var[_FoldSource[I, V]](downcast[I, _ValueFolding].fold_source[V](value^))
+    else:
+        return rebind_var[_FoldSource[I, V]](value^)
+
+
+def _dict_values[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](
+    var source: Dict[K, A, H]
+) -> List[A]:
+    """Move every value out in insertion order; keys are destroyed, nothing is copied."""
+    var values = List[A](capacity=len(source))
+    var entries = source.take_items()
+    while True:
+        var entry = _next_optional[DictEntry[K, A, H]](entries)
+        if not entry:
+            break
+        var key_slot = MaybeUninit[K]()
+        var value_slot = MaybeUninit[A]()
+        _take_entry(entry.unsafe_take(), key_slot, value_slot)
+        _ = key_slot^.unsafe_assume_init()
+        values.append(value_slot^.unsafe_assume_init())
+    return values^
+
+
 def _dict_accumulate[K: KeyElement & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable,
                      H: Hasher & Defaultable & Deinitable, F: UnaryContract & Movable & Deinitable, S: _Accumulate](
     var f: F, var source: Dict[K, A, H]
@@ -370,7 +419,11 @@ def _take_entry[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher &
     entry^.deinit_with(take)
 
 
-struct _StringDictFamily[A: Movable & Deinitable](RebindingFunctor, Filterable, FunctorFilter):
+struct _StringDictFamily[A: Movable & Deinitable](RebindingFunctor, Filterable, FunctorFilter, _ValueFolding):
+    comptime FoldSource[V: Movable & Deinitable] = List[Self.A]
+    @staticmethod
+    def fold_source[V: Movable & Deinitable](var value: V) -> List[Self.A]:
+        return _dict_values(_take_string_dict(rebind_var[StringDict[Self.A]](value^)))
     comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = V == StringDict[Self.A] and F.Arg == Self.A and RepeatableUnary[F]
     comptime WithElement[A: Movable & Deinitable] = _StringDictFamily[A]
     comptime Element[V: Movable & Deinitable] = Self.A

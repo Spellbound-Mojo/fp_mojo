@@ -1,6 +1,6 @@
 # error: no matching function in call to 'filter'
 from fp.callables import BorrowOnceCallable, BorrowCallContract, BorrowMutableCallable
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.algebra import ListFamily, filter, filter_not
 struct Once(BorrowOnceCallable):
     comptime Payload = Int

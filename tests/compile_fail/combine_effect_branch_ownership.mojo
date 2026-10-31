@@ -1,4 +1,4 @@
-# error: no matching
+# error: invalid call to 'combine_all_effect'
 from fp.functions import pipeline
 from fp.algebra import StringMonoid, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid
 from fp.data import Result

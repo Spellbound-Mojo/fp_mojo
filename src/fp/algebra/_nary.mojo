@@ -109,8 +109,10 @@ struct _ProductTypes[I: Applicative, V: Movable & Deinitable, *Ws: Movable & Dei
     comptime C7 = Map2Contract[Self.I, Self.S6, Self.Ws[6], _AppendTuple[Self.I.Element[Self.Ws[6]], Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]], Self.I.Element[Self.Ws[1]], Self.I.Element[Self.Ws[2]], Self.I.Element[Self.Ws[3]], Self.I.Element[Self.Ws[4]], Self.I.Element[Self.Ws[5]]]]
     comptime S7: Movable & Deinitable = Self.C7.Out if Self.Ws.length >= 7 else Self.S6
     comptime E7: Movable & Deinitable = _CommonError[Self.E6, Self.C7.Error] if Self.Ws.length >= 7 else Self.E6
-    comptime Out = Self.S7
+    comptime Closed: Bool = Self.Run.NativeInputs and Self.S0 == Self.I.Pure[Tuple[Self.I.Element[Self.V]]] and (Self.S1 == Self.I.Pure[Tuple[Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]]]] if Self.Ws.length >= 1 else True)
+    comptime Out: Movable & Deinitable = Self.I.Pure[Self.Run.Payload] if Self.Ws.length >= 8 and Self.Closed else Self.S7
     comptime Error = Self.E7
+    comptime Admitted: Bool = Self.Ws.length < 8 or Self.Closed
 
 struct _MapNTypes[I: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, *Ws: Movable & Deinitable]:
     comptime Product = _ProductTypes[Self.I, Self.V, *Self.Ws]

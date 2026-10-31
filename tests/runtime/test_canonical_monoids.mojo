@@ -36,9 +36,9 @@ def main() raises:
     assert_equal(iterated(range(2)).fold_map_effect(maybe).value(), "01")
     assert_equal(pipeline(List[Int]([1, 2])).fold_map_effect(maybe).get().value(), "12")
     assert_equal(pipeline(range(3)).fold_map_effect(maybe).get().value(), "012")
-    assert_equal(pipeline(range(2)).fold_map_effect[OptionalFamily](maybe).get().value(), "01")
+    assert_equal(pipeline(range(2)).fold_map_effect[J=OptionalFamily](maybe).get().value(), "01")
     assert_equal(pipeline(List[Optional[String]]([Optional(String("a")), Optional(String("b"))])).combine_all_effect().get().value(), "ab")
-    assert_equal(pipeline(List[Optional[String]]([Optional(String("a"))])).combine_all_effect[OptionalFamily]().get().value(), "a")
+    assert_equal(pipeline(List[Optional[String]]([Optional(String("a"))])).combine_all_effect[J=OptionalFamily]().get().value(), "a")
     # Explicit monoids still bind, including numbers.
     assert_equal(fold_map[StringMonoid](range(2), show), "#0#1")
     assert_equal(combine_all[IntSumMonoid](List[Int]([1, 2, 3])), 6)

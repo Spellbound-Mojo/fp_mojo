@@ -1,5 +1,5 @@
 # error: use of uninitialized value 'source'
-from fp.functions import pipeline,piped
+from fp.functions import pipeline
 from fp.data import Result,Ok
 from fp.algebra import ListFamily
 from fp.iteration import iterated,fill

@@ -517,8 +517,9 @@ Native functions and closures take one argument per operand, from one to eight.
 They are borrowed until the family finishes using them. Library `Unary`,
 `MutableUnary` and `OnceUnary` callbacks instead receive the whole flat tuple;
 the family selects the supported receiver mode. Pipeline products and library
-callbacks use variadic operand packs; native callback overloads cover one to
-eight operands. An empty additional tuple produces a one-element product;
+callbacks use variadic operand packs: any number for List, Optional, Result,
+Validation and Identity, up to eight for deferred families; native callback overloads
+cover one to eight operands. An empty additional tuple produces a one-element product;
 `.map_n((), native_function)` behaves as unary mapping.
 
 Combination builds successive tuple prefixes through `map2_lazy`, then `map_n`

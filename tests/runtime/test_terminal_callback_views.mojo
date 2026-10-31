@@ -1,5 +1,5 @@
 """Named projections are reusable across free, iterator and Piped terminals."""
-from fp.functions import partial, pipeline, flow, as_unary
+from fp.functions import partial, pipeline, pipeline_values, flow, as_unary
 from fp.iteration import iterated, sum_by, min_by, max_by, find_map, fold_map
 from fp.iteration import sum_by as combined_sum_by
 from fp.algebra import StringMonoid, Monoid
@@ -95,6 +95,10 @@ def main() raises:
     linked.append(1)
     linked.append(2)
     assert_equal(pipeline(linked^).sum_by(project).get(), 6)
+    var table = Dict[String, Int]()
+    table["a"] = 1
+    table["b"] = 2
+    assert_equal(pipeline_values(table^).sum_by(project).get(), 6)
     var chain = flow(plus_one, double)
     assert_equal(sum_by(range(3), chain), 12)
     assert_equal(iterated(range(3)).sum_by(chain), 12)

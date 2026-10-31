@@ -201,8 +201,8 @@ This is the same pattern as [Cats' `foldMapM`](https://github.com/typelevel/cats
 `StringMonoid` concatenates successful strings. `ListMonoid[T]` concatenates
 lists, and a custom `Monoid` can define another identity and combination.
 Empty input returns that identity in the effect without calling the transform.
-Optional and Result stop on failure; List keeps branch order. Use the existing
-`[Target, Monoid]` form to select a custom or deferred effect explicitly.
+Optional and Result stop on failure; List keeps branch order. Name the target
+second, `[Monoid, Target]`, to select a custom or deferred effect explicitly.
 
 When the effects already exist, use `.combine_all_effect[Monoid]()`:
 
@@ -211,7 +211,7 @@ When the effects already exist, use `.combine_all_effect[Monoid]()`:
 This keeps the same target inference, identity, order and failure behavior,
 without asking you to write an identity callback. Existing effects were
 constructed before the call; explicitly selected deferred effects still execute
-when run. Use `.combine_all_effect[Target, Monoid]()` for another Monad policy.
+when run. Use `.combine_all_effect[Monoid, Target]()` for another Monad policy.
 For numeric payloads, `.sum_effect()` also selects the combining rule for you.
 
 ## Choose a constant or lazy default

@@ -2,7 +2,7 @@
 # error: origin_of(anchor)
 # error: origin_of(local)
 from fp.algebra import ResultFamily, ValidationFamily, ListMonoid, ListFamily, map, map2, map2_lazy, traverse, sequence
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.callables import OnceBinary, OnceThunk
 from fp.data import Result, Ok, Err
 

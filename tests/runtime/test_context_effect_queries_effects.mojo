@@ -79,11 +79,11 @@ def main() raises:
     def later(var value: Int) {calls} -> Deferred.Pure[String]:
         calls[] += 1
         return Deferred.pure(String(value))
-    try: _ = pipeline(Counted(Pointer(to=pulls),0,5)).fold_map_effect[Deferred, QueryMonoid[True]](later).get()
+    try: _ = pipeline(Counted(Pointer(to=pulls),0,5)).fold_map_effect[QueryMonoid[True], Deferred](later).get()
     except error: code = error.code
     assert_equal(code, 10); assert_equal(calls[], 0); assert_equal(pulls, 0)
     try:
-        var combined = pipeline(Counted(Pointer(to=pulls),0,5)).fold_map_effect[Deferred, QueryMonoid[False]](later).get()
+        var combined = pipeline(Counted(Pointer(to=pulls),0,5)).fold_map_effect[QueryMonoid[False], Deferred](later).get()
         if calls[] != 0 or pulls != 0: raise QueryFailure(-1)
         _ = run[Deferred](combined^, 0)
     except error: code = error.code

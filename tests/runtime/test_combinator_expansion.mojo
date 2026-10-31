@@ -260,8 +260,11 @@ def expansion_reductions() raises:
     assert_equal(sum(floats^), 4.0)
     var vectors: List[SIMD[DType.float32, 2]] = [SIMD[DType.float32, 2](1, 2), SIMD[DType.float32, 2](3, 4)]
     assert_equal(iterated(vectors^).sum(), SIMD[DType.float32, 2](4, 6))
-    # Pipeline folds over Dict and StringDict visit keys; pipeline_values selects
-    # values for mapping-style stages only, so Piped's dictionary value sums are not ported.
+    var dict: Dict[String, Int] = {'a': 2, 'b': 3}
+    assert_equal(pipeline_values(dict^).sum().get(), 5)
+    var kw = StringDict[Int]()
+    kw['a'] = 4
+    assert_equal(pipeline_values(kw^).sum_by(expansion_square).get(), 16)
     var array: Array[Int, 2] = [2, 3]
     assert_equal(pipeline(array^).elements().sum().get(), 5)
 

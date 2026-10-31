@@ -47,7 +47,7 @@ def basic() raises:
     var array:Array[Int,3]=[0,1,2]
     assert_equal(pipeline(array^).find_map_effect[ResultFamily[String]](i6_project).get().raise_on_err().value(),"2")
     var array2:Array[Int,3]=[0,1,2]
-    assert_equal(pipeline(array2^).fold_map_effect[ResultFamily[String], StringMonoid](i6_text).get().raise_on_err(),"012")
+    assert_equal(pipeline(array2^).fold_map_effect[StringMonoid, ResultFamily[String]](i6_text).get().raise_on_err(),"012")
     assert_equal(iterated(range(5)).find_map_effect[OptionalFamily](I6Mapper(0)).value().value(),1)
     assert_equal(find_map_effect[CellFamily](range(3),i6_cell).value.value(),0)
     assert_equal(run_writer[Writer[StringMonoid]](fold_map_effect[StringMonoid, Writer[StringMonoid]](range(3),i6_logged)),(String("log0log1log2"),String("012")))

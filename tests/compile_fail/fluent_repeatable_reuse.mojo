@@ -1,5 +1,5 @@
 # error: use of uninitialized value 'step'
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.data import ControlFlow, Continue
 from fluent_fold_support import Step, Once, Bare
 def main():

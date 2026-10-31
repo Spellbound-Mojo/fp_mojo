@@ -1,5 +1,5 @@
 # error: does not conform to trait 'Copyable & Deinitable'
-from fp.functions import pipeline,piped
+from fp.functions import pipeline
 from fp.data import Result,Ok
 from fp.algebra import ListFamily
 from fp.iteration import iterated,tuple_left

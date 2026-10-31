@@ -22,7 +22,16 @@ def types():
         out.append(f'    comptime C{n} = Map2Contract[Self.I, Self.S{n-1}, Self.Ws[{n-1}], {step}]\n')
         out.append(f'    comptime S{n}: {MD} = Self.C{n}.Out if Self.Ws.length >= {n} else Self.S{n-1}\n')
         out.append(f'    comptime E{n}: {MD} = _CommonError[Self.E{n-1}, Self.C{n}.Error] if Self.Ws.length >= {n} else Self.E{n-1}\n')
-    out.append(f'    comptime Out = Self.S{MAX-1}\n    comptime Error = Self.E{MAX-1}\n')
+    # Mojo has no recursive type aliases, so the general description stops at
+    # MAX operands. A family whose combination keeps pure carriers pure (List,
+    # Optional, Result, Validation) has an arity-independent result: the pure
+    # carrier of the flat tuple. _ProductRun asserts every step against it.
+    closed = ('Self.Run.NativeInputs and Self.S0 == Self.I.Pure[Tuple[Self.I.Element[Self.V]]] and '
+              '(Self.S1 == Self.I.Pure[Tuple[Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]]]] if Self.Ws.length >= 1 else True)')
+    out.append(f'    comptime Closed: Bool = {closed}\n')
+    out.append(f'    comptime Out: {MD} = Self.I.Pure[Self.Run.Payload] if Self.Ws.length >= {MAX} and Self.Closed else Self.S{MAX-1}\n'
+               f'    comptime Error = Self.E{MAX-1}\n'
+               f'    comptime Admitted: Bool = Self.Ws.length < {MAX} or Self.Closed\n')
     out.append(f'''\nstruct _MapNTypes[I: Applicative, V: {MD}, F: UnaryContract & {MD}, *Ws: {MD}]:
     comptime Product = _ProductTypes[Self.I, Self.V, *Self.Ws]
     comptime Mapping = MapContract[Self.I, Self.Product.Out, Self.F]

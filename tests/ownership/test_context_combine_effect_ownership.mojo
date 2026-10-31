@@ -46,7 +46,7 @@ def main() raises:
     drops[] = 0
     var actions = List[Deferred.Pure[List[CombineOwner]]]()
     actions.append(Deferred.pure(one(1, drops))); actions.append(Deferred.pure(one(2, drops)))
-    var pending = pipeline(actions^).combine_all_effect[Deferred, ListMonoid[CombineOwner]]().get()
+    var pending = pipeline(actions^).combine_all_effect[ListMonoid[CombineOwner], Deferred]().get()
     assert_equal(drops[], 0)
     var combined = run[Deferred](pending^, 0)
     assert_equal(len(combined), 2); assert_equal(drops[], 0)
@@ -55,7 +55,7 @@ def main() raises:
     drops[] = 0
     var unused = List[Deferred.Pure[List[CombineOwner]]]()
     unused.append(Deferred.pure(one(1, drops))); unused.append(Deferred.pure(one(2, drops)))
-    var abandoned = pipeline(unused^).combine_all_effect[Deferred, ListMonoid[CombineOwner]]().get()
+    var abandoned = pipeline(unused^).combine_all_effect[ListMonoid[CombineOwner], Deferred]().get()
     assert_equal(drops[], 0)
     _ = abandoned^
     assert_equal(drops[], 2)

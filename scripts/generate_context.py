@@ -457,7 +457,8 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         run = f"_ProductRun[{family}, Self.V, *Ws]"
         result = f"{family}.Pure[{run}.Payload]"
         error = f"({semigroup}.Error if Ws.length > 0 else Never)"
-        conditions = ["conforms_to(Self.V, _ResultType)", f"Ws.length < {MAX}", f"{run}.NativeInputs"]
+        # Validation keeps pure Results pure, so any number of operands combines.
+        conditions = ["conforms_to(Self.V, _ResultType)", f"{run}.NativeInputs"]
         emit("par_product_n", {}, policy + [f"*Ws: {MD}"], "var others: Tuple[*Ws]", result, error, "Self.I", conditions,
              f"{run}.run[{result}, {error}](self.value^, others^)", "Combine evaluated Results, accumulating stored errors in operand order.")
         cb = callback("owned", "library", f"{run}.Payload", "function")
@@ -613,9 +614,11 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
                 params += ["//"]
             if not folding:
                 if mapped_fold:
-                    # The monoid defaults to the canonical monoid of J's payload.
+                    # Monoid first, then the target, as the free function and
+                    # Iter take them; both default from the callback's effect.
                     at = params.index("//") + 1
-                    params[at:] = ["J: Monad", canonical_monoid(f"J.Element[{cb['result']}]")] + defaulted(params[at:])
+                    params[at:] = [canonical_effect_monoid(cb["result"]),
+                                   f"J: Monad = {inferred_target(cb, capability='Monad')}"] + defaulted(params[at:])
                 else:
                     params = inferred_target_parameters(cb, capability="Monad")
             c, result = cb["adapter_type"], cb["result"]
@@ -646,18 +649,6 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
             emit("run" if folding else name, cb, params, cb["argument"],
                  result, error, "J", conditions, expr,
                  "Consume the source through the target Monad's ordered effectful reduction.")
-            if mapped_fold:
-                # Binding the monoid leaves the native effect inferable from
-                # the callback. Keep the original [J, M] surface independently.
-                inferred = inferred_target(cb, capability="Monad")
-                native_plan = operation.bind(inferred, "Self.V", element, c, cb["build"], cb["result"], monoid="M")
-                native_contract = native_plan.contract
-                emit(name, cb, [canonical_effect_monoid(cb["result"]) if p.startswith("M: Monoid") else p
-                                for p in params if p != "J: Monad"], cb["argument"],
-                     native_contract + ".Out", native_contract + ".Error", inferred,
-                     admission + [native_contract + ".Compatible"],
-                     native_plan.invoke(native_contract + ".Error", "self.value^"),
-                     "Infer the native effect from the callback and combine through the selected monoid.")
             if folding:
                 fold_body.append(re.sub(r"\bJ\b", "Self.J", body.pop()))
                 # The source and seed are already owned and typed. Infer the
@@ -684,8 +675,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     # callback. Both target choices retain its carrier and ownership contract.
     element = "_FoldElement[Self.V]"
     for family, params in (
-        (f"_Binding[_InferredApplicative[{element}]]", [canonical_effect_monoid(element)]),
-        ("J", ["J: Monad", canonical_monoid(f"J.Element[{element}]")]),
+        ("J", [canonical_effect_monoid(element), f"J: Monad = _Binding[_InferredApplicative[{element}]]"]),
     ):
         plan = EFFECT_REDUCTIONS["fold_map_effect"].bind(
             family, "Self.V", element, f"Identity[{element}]", f"Identity[{element}]()", element, monoid="M")
@@ -901,10 +891,10 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     run = f"_ProductRun[{family}, Self.V, *Ws]"
     product_type = f"_ProductTypes[{family}, Self.V, *Ws]"
     target = f"Pipeline[Self.I, {product_type}.Out, Self.E]"
-    conditions = f"conforms_to(Self.I, Applicative) and Ws.length < {MAX} and {run}.AdmittedInputs"
+    conditions = f"conforms_to(Self.I, Applicative) and {product_type}.Admitted and {run}.AdmittedInputs"
     body.append(
         f"\n    def product_n[*Ws: {MD}](deinit self, var others: Tuple[*Ws]) raises {product_type}.Error -> {target} where {conditions}:\n"
-        '        """Combine up to eight evaluated carriers into flat tuples."""\n'
+        '        """Combine evaluated carriers into flat tuples; deferred families take up to eight."""\n'
         f"        return {target}({run}.run[{product_type}.Out, {product_type}.Error](self.value^, others^))\n"
     )
     cb = callback("owned", "library", f"{run}.Payload", "function")
@@ -919,7 +909,7 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
         "Self.I",
         [conditions] + cb["conditions"],
         f"_map_n_as[{family}, {product_type}.Out, {mapped}.Out, {mapped}.Error](function^, self.value^, others^)",
-        "Combine up to eight carriers and consume each tuple through a library callback.",
+        "Combine carriers and consume each tuple through a library callback; deferred families take up to eight.",
     )
     for n in range(1, MAX + 1):
         carriers = [f"W{i}" for i in range(n - 1)]
@@ -1350,6 +1340,26 @@ def methods(*, fold_stage=False, inferred_fold_stage=False):
     return "".join(inferred_fold_body if inferred_fold_stage else fold_body if fold_stage else body)
 
 
+def folded_sources(text):
+    """Read the family's fold source in every fold, search and reduction.
+
+    A family that selects values its carrier does not iterate (dictionary
+    values) declares its source through `_ValueFolding`; for every other family
+    `_FoldSource[I, V]` is the carrier itself. Applied to methods that read
+    elements through `_FoldElement` or bind an effect fold stage.
+    """
+    out, active = [], False
+    for line in text.splitlines(keepends=True):
+        if re.match(r"\s*def \w+[\[(]", line):
+            active = "_FoldElement[Self.V]" in line or "FoldStage[" in line
+        if active:
+            line = line.replace("self.value^", "_fold_source[Self.I](self.value^)")
+            line = re.sub(r"(?<![\w.])Self\.V\b", "_FoldSource[Self.I, Self.V]", line)
+            line = line.replace("_FoldSource[Self.I, _FoldSource[Self.I, Self.V]]", "_FoldSource[Self.I, Self.V]")
+        out.append(line)
+    return "".join(out)
+
+
 def _pipeline_error_rewritten(line, error):
     """Replace the native error argument of each Pipeline or fold-stage type in a line."""
     out, i = [], 0
@@ -1563,7 +1573,10 @@ def documented(source):
 def source(path=OUTPUT):
     value = path.read_text()
     for start, end, options in SECTIONS:
-        value = splice_source(value, joined_thin_errors(methods(**options)), start, end, HEADER)
+        generated = joined_thin_errors(methods(**options))
+        if not options:
+            generated = folded_sources(generated)
+        value = splice_source(value, generated, start, end, HEADER)
     return documented(value)
 
 

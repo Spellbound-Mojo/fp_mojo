@@ -150,6 +150,12 @@ struct FCTupleOnce(OnceUnary):
         return arg[0]+arg[1]+arg[2]+self.owned.code
 
 
+@fieldwise_init
+struct FCLargeTuple(Unary):
+    comptime Arg = Tuple[Int,Int,Int,Int,Int,Int,Int,Int,Int,Int]
+    comptime Out = Int
+    def call(self,var arg: Self.Arg) -> Int: return arg[0]+arg[9]
+
 
 def fc_nary() raises:
     var single = pipeline(Optional(4)).product_n(()).get()
@@ -161,6 +167,13 @@ def fc_nary() raises:
     var eight = pipeline(Optional(1)).map_n((Optional(2),Optional(3),Optional(4),Optional(5),Optional(6),Optional(7),Optional(8)),fc_eight).get()
     assert_equal(eight.value(),36)
     assert_equal(pipeline[IdentityFamily](1).map_n((2,3,4,5,6,7,8),fc_eight).get(),36)
+    # Families that keep pure carriers pure take any number of operands.
+    var large = pipeline(Optional(1)).product_n((Optional(2),Optional(3),Optional(4),Optional(5),Optional(6),Optional(7),Optional(8),Optional(9),Optional(10))).get()
+    assert_equal(large.value(),(1,2,3,4,5,6,7,8,9,10))
+    var large_map = pipeline(Optional(1)).map_n((Optional(2),Optional(3),Optional(4),Optional(5),Optional(6),Optional(7),Optional(8),Optional(9),Optional(10)),FCLargeTuple()).get()
+    assert_equal(large_map.value(),11)
+    var large_list = pipeline(List[Int]([1])).product_n((List[Int]([2]),List[Int]([3]),List[Int]([4]),List[Int]([5]),List[Int]([6]),List[Int]([7]),List[Int]([8]),List[Int]([9]),List[Int]([10]))).get()
+    assert_equal(large_list[0][9],10)
     var mixed = pipeline(Result[Int,String](Ok(1))).product_n((Result[String,String](Ok(String("text"))),Result[Bool,String](Ok(True)))).get()
     assert_equal(mixed^.raise_on_err(),(1,String("text"),True))
     var a:List[Int]=[1,2]

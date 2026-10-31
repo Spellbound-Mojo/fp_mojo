@@ -397,6 +397,9 @@ key order, native hasher type and container type survive each transformation.
 The value type may change repeatedly through map, filter_map, compact and
 pair_with without selecting another family. Callbacks must be repeatable;
 values and keys can be move-only. Use `.raising[E]()` for native errors as usual.
+Folds, searches, sums and effectful reductions read the values in insertion
+order, as in `pipeline_values(prices^).sum_by(price)`: the values move into
+temporary List storage once, as Array folds do, and the keys are destroyed.
 `pipeline(dictionary^)` continues to treat the entire dictionary as one value.
 
 <!-- example: docs/examples/dictionary_values.mojo -->
@@ -479,7 +482,7 @@ captures. Reader and other deferred families retain their usual timing and can
 join distinct branch representations. Native closures are borrowed for the
 effect's lifetime, while native thin pointers and library factories are owned.
 
-`par_map_n(others, mapper)` and `par_product_n(others)` combine up to eight
+`par_map_n(others, mapper)` and `par_product_n(others)` combine any number of
 evaluated Result operands, including the receiver, and accumulate stored errors
 in operand order. Native mappers receive separate payload arguments; library
 callables consume the flat payload tuple. An empty `others` tuple produces a
@@ -522,15 +525,16 @@ retains the original target selection; an already bound inferred stage also
 accepts `run[Target](step)`. Both forms use the same fold contract and execution.
 `fold_map_effect[Monoid](transform)` consumes items into effectful monoid
 values and combines them in order, starting with the identity. The callback
-infers a [recognized target family](#inference-for-effect-recipes). The original
-`fold_map_effect[Target, Monoid](transform)` form retains explicit custom
-policies and positional callback type bindings. Both `find_map_effect(chain)`
+infers a [recognized target family](#inference-for-effect-recipes), and the
+monoid defaults to its payload's canonical monoid. Name the target second,
+`fold_map_effect[Monoid, Target](transform)`, as the free function and Iter
+do, or by keyword (`J=Target`). Both `find_map_effect(chain)`
 and `fold_map_effect[Monoid](chain)` borrow a reusable shared Kleisli chain and
 inherit its selected family, including Reader and custom policies. Deferred
 results retain that borrow until execution finishes.
 `combine_all_effect[Monoid]()` combines existing effectful values through the
 same mapped fold with its canonical identity callable. It infers native targets;
-`combine_all_effect[Target, Monoid]()` selects a custom policy. Empty input lifts
+`combine_all_effect[Monoid, Target]()` selects a custom policy. Empty input lifts
 the monoid identity, and owned contents and borrowed origins are preserved.
 Existing effects are already constructed; their execution follows the target.
 `sum_by_effect(transform)` selects numeric addition automatically for native
@@ -607,9 +611,11 @@ keep their exact types; none becomes a stored target error automatically.
 
 `map2(other, combine)`, `product(other)`, `product_l(other)`, `product_r(other)`,
 `map_n((other, ...), combine)` and `product_n((other, ...))` retain the current
-Applicative family. The n-ary forms accept one to eight total operands; native
-functions take separate payload arguments, while library Unary callables take
-one tuple. Operands are already evaluated and are consumed once. Result keeps
+Applicative family. Native functions take separate payload arguments, one to
+eight, while library Unary callables take one tuple. With a library callable
+or `product_n`, List, Optional, Result, Validation and Identity combine any number of
+operands, because combining pure carriers stays pure; other families, such as
+Reader and State, describe each step and accept one to eight total operands. Operands are already evaluated and are consumed once. Result keeps
 its first stored error, Optional skips absent inputs, and List produces
 Cartesian combinations. Selecting `ValidationFamily[Semigroup]` explicitly
 accumulates stored errors through the same operations.
