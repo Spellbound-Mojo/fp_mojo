@@ -19,5 +19,5 @@ def main():
     print("declined:", refused^.swap().get_or(0))
     var account = capture.stateful(debit, 20)
     print("saved state:", account.run(5).get_or(0))
-    var payments = pipeline[Int]([5, 20, 100]).traverse(mut_ref(account)).get()
+    var payments = pipeline[List[Int]]([5, 20, 100]).traverse(mut_ref(account)).get()
     print("traversal error:", payments^.swap().get_or(0), "; state:", account.state())

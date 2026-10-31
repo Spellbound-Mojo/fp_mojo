@@ -365,8 +365,8 @@ operation objects, runtime registries or dispatch tokens.
 
 ### Container-preserving map
 
-`Pipeline.map(f)` maps these native containers. List, Optional and Result are
-inferred; `.elements()` selects Array, Deque and LinkedList elements, and
+`Pipeline.map(f)` maps these native containers. List, Optional, Result, Deque,
+LinkedList and NonEmptyList are inferred; `.elements()` selects Array elements, and
 `pipeline_values(dictionary^)` selects Dict and StringDict values:
 
 | Input | Output | Retained context |

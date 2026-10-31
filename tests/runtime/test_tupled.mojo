@@ -15,7 +15,7 @@ def biased(bias: Int, first: Int, second: Int) -> Int: return bias + first + sec
 def workflows() raises:
     var sum = tupled(add)
     assert_equal(sum((2, 3)), 5)
-    assert_equal(pipeline[Tuple[Int, Int]]([(1, 2), (3, 4)]).map(sum).get(), [3, 7])
+    assert_equal(pipeline[List[Tuple[Int, Int]]]([(1, 2), (3, 4)]).map(sum).get(), [3, 7])
     assert_equal(pipeline(Optional((2, 3))).map(sum).get_or(0), 5)
     assert_equal(pipeline(Optional(2)).map_n((Optional(3),), tupled(add)).get().value(), 5)
     assert_equal(flow(pair, sum^)(2), 5)

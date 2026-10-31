@@ -43,11 +43,11 @@ def main() raises:
 
     var queue = Deque[CEOwner]()
     queue.append(CEOwner(4, drops))
-    var untouched = pipeline(queue^).elements().get()
+    var untouched = pipeline(queue^).get()
     assert_equal(drops[], 3)
     _ = untouched^
     assert_equal(drops[], 4)
-    var nonempty = pipeline(NonEmptyList(CEOwner(5, drops))).elements().get()
+    var nonempty = pipeline(NonEmptyList(CEOwner(5, drops))).get()
     assert_equal(drops[], 4)
     _ = nonempty^
     assert_equal(drops[], 5)

@@ -94,7 +94,7 @@ struct View[o:ImmOrigin](BorrowMutableCallable):
         self.calls+=1
         return self.view[value:]
 def external(owner:List[Int])->List[Tuple[Int,Span[Int,origin_of(owner)]]]:
-    return pipeline[Int]([0,1]).pair_with(View(Span(owner),0)).get()
+    return pipeline[List[Int]]([0,1]).pair_with(View(Span(owner),0)).get()
 def main() raises:
     for fail in range(2):
         comptime for mode in range(4):eager[mode](Bool(fail))

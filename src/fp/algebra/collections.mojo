@@ -21,6 +21,8 @@ from ._selection import _Select, _Keep
 from .instances import _ListElement, ListFamily, _NativeFamily, IdentityFamily
 from fp.iteration._advance import _next_optional, _buffer_owned
 from .monoids import _CanonicalMonoid
+from .non_empty import NonEmptyListFamily
+from fp.data.non_empty_list import NonEmptyList
 
 
 comptime ArrayFamily[N: Int] = _ArrayFamily[N]
@@ -39,7 +41,7 @@ Parameters:
 comptime DequeFamily = _DequeFamily
 """Map and filter native Deque elements, preserving their order and settings.
 
-Select with `pipeline(values^).elements()` or name `DequeFamily` explicitly.
+`pipeline(values^)` selects it from a Deque; generic code can name `DequeFamily`.
 Mapping and filter_map can change
 the element type. Callbacks are repeatable and elements are moved. The family
 implements Functor, Filterable and FunctorFilter, without Applicative or Monad.
@@ -48,7 +50,8 @@ implements Functor, Filterable and FunctorFilter, without Applicative or Monad.
 comptime LinkedListFamily = _LinkedListFamily
 """Map and filter native LinkedList elements in their original order.
 
-Select with `pipeline(values^).elements()` or name `LinkedListFamily` explicitly.
+`pipeline(values^)` selects it from a LinkedList; generic code can name
+`LinkedListFamily`.
 Mapping and filter_map can
 change the element type. Callbacks are repeatable and elements are moved. The
 family implements Functor, Filterable and FunctorFilter, without Applicative
@@ -297,11 +300,34 @@ struct _UnrecognizedCarrier(Monad, Traversable, Filterable, FunctorFilter):
         return _NoElement()
 
 
-comptime _SourceFamily[V: Movable & Deinitable] = (
+# Native sequences beyond List and Optional; _NativeFamily consults them only
+# after recipes, Result, List and Optional, so a generic recipe type still
+# folds to its declared family.
+comptime _SequenceFamily[V: Movable & Deinitable]: Functor = downcast[
     _DequeFamily if conforms_to(V, IterableOwned) and V == Deque[_ListElement[V]] else
     _LinkedListFamily if conforms_to(V, IterableOwned) and V == LinkedList[_ListElement[V]] else
-    _UnrecognizedCarrier if _NativeFamily[V] == IdentityFamily else
-    _NativeFamily[V]
+    NonEmptyListFamily if conforms_to(V, IterableOwned) and V == NonEmptyList[_ListElement[V]] else
+    IdentityFamily,
+    Functor,
+]
+
+comptime FamilyOf[V: Movable & Deinitable]: Functor = _NativeFamily[V, _SequenceFamily[V]]
+"""The family `pipeline(value)` and the free operations select for a value's type.
+
+List, Optional, Result, Deque, LinkedList and NonEmptyList select their element
+families; effect recipes select their declared family. Every other value,
+including Dict, StringDict and Array (whose length Mojo cannot read from a
+generic type), is one value under IdentityFamily. Generic code names it in
+contracts, as in `MapContract[FamilyOf[V], V, F].Compatible`.
+
+Parameters:
+    V: The value's type.
+"""
+
+
+# The free operations reject a bare value instead of treating it as Identity.
+comptime _SourceFamily[V: Movable & Deinitable] = (
+    _UnrecognizedCarrier if FamilyOf[V] == IdentityFamily else FamilyOf[V]
 )
 
 # The canonical monoid of an effect's payload, through the effect's source

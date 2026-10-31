@@ -17,12 +17,12 @@ def main() raises:
     for value in range(4):
         deque.append(value)
         linked.append(value)
-    var kept = pipeline(deque^).elements().filter(mut_ref(predicate)).get()
+    var kept = pipeline(deque^).filter(mut_ref(predicate)).get()
     comptime assert type_of(kept) == Deque[Int]
     assert_equal(kept._min_capacity, 4)
     assert_equal(kept._shrink, False)
     assert_equal(collect_list(kept^), [1, 3])
-    var rejected = pipeline(linked^).elements().filter_not(mut_ref(predicate)).get()
+    var rejected = pipeline(linked^).filter_not(mut_ref(predicate)).get()
     comptime assert type_of(rejected) == LinkedList[Int]
     assert_equal(collect_list(rejected^), [0, 2])
     var dictionary = Dict[String, Int, default_comp_time_hasher]()

@@ -27,11 +27,11 @@ def main() raises:
     assert_equal(err[Int](2).value_or(transform), 4)
     assert_equal(pipeline(err[Int](3)).fold_owned(transform, transform), 6)
     var selected = as_unary(optional)
-    assert_equal(pipeline[Int]([1, 2]).traverse(selected).get().value(), [2, 3])
+    assert_equal(pipeline[List[Int]]([1, 2]).traverse(selected).get().value(), [2, 3])
     assert_equal(pipeline(Optional(3)).flat_map(selected).get_or(0), 4)
     assert_equal(pipeline(4).then(selected).map(transform).get_or(0), 10)
     var validated = as_unary(checked)
-    var gathered = pipeline[Int]([1, 2]).traverse(validated).get()
+    var gathered = pipeline[List[Int]]([1, 2]).traverse(validated).get()
     comptime assert type_of(gathered) == Result[List[Int], String]
     assert_equal(gathered^.raise_on_err(), [2, 3])
     assert_true(pipeline(-1).then(validated).get().is_err())

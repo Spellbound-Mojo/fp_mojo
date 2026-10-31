@@ -16,24 +16,23 @@ return their final value directly. For a reusable generic wrapper, follow the
 
 ## Select family and native errors before callbacks
 
-`pipeline(values)` starts a `Pipeline` for List, Optional or Result. Reader,
-State and IO recipes and Writer values select their declared family. Bare
-values use Identity: `map` applies its callback to the whole bare value once.
+`pipeline(value)` selects a family from the value's type: List, Optional,
+Result, Deque, LinkedList and NonEmptyList select their element families, and
+Reader, State, Writer and IO recipes their declared family. Any other value,
+including a struct, a number or a Dict, is one value under Identity: `map`
+applies its callback to the whole value once. The same `pipeline(value)` works
+in generic code, where the family is `FamilyOf[V]`; nothing needs naming.
 `pipeline[Family](value)` selects a Functor explicitly. Call `raising[E]()` once
 to select native callback errors. A raising plain function selects its own
 error when none is selected (Never), and that error carries to later stages;
 any other selected error must match it. Native closures always use the
 selected error, so call `.raising[E]()` before the first raising closure.
-Existing explicit payload bindings, such as `pipeline[T=Int](values)`, remain
-available. For a list literal, use `pipeline[Int]([1, 2])` or
-`pipeline[Int]([])`; this avoids an explicit `List[Int](...)` constructor.
-A bare `pipeline([1, 2])` is ambiguous in Mojo 1.2 because a literal can
-construct a List or use its default Array type.
-Generic wrappers over an unknown value type select a family
-explicitly; use `pipeline[IdentityFamily](value)` for a whole-value stage.
-For native sequences, `.elements()` infers the element family: for example,
-`pipeline(array^).elements().map(transform)`. List, Array, Deque, LinkedList
-and NonEmptyList are supported. Selection preserves the native error context
+Give a list literal its type in the bracket: `pipeline[List[Int]]([1, 2])` or
+`pipeline[List[Int]]([])`. A bare `pipeline([1, 2])` keeps Mojo's literal type,
+which is not a List. Mojo also converts a literal to a scalar, so
+`pipeline[Int]([1, 2])` means the number 1, as `var n: Int = [1, 2]` does.
+Mojo cannot read an Array's length from a generic type, so Array selects its
+element family with `.elements()`: `pipeline(array^).elements().map(transform)`. Selection preserves the native error context
 and performs no iteration or callback invocation.
 `map`, `filter`, `flat_map` and `filter_map` use the selected family's
 capabilities. Result combinators use their existing branch and ownership rules.
@@ -819,7 +818,7 @@ The binary `combine` in the example yields snapshots `[0, 2, 8, 22]`.
 
 Use `tupled(function)` when a binary callback needs to consume one pair.
 For example, `flow(with_fee, tupled(add))` passes the subtotal and fee to `add`,
-and `pipeline[Tuple[Int, Int]]([(2, 3)]).map(tupled(add))` produces a List
+and `pipeline[List[Tuple[Int, Int]]]([(2, 3)]).map(tupled(add))` produces a List
 containing `5`. Plain functions, stored thin pointers and library binary
 callables work directly. Capturing binary closures first use
 `BinarySignature[A, B, R, E].capture(closure^)` from `fp.callables`.

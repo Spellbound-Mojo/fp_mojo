@@ -47,17 +47,17 @@ def main():
     def below(value: Int) {limit} -> Bool: return value < limit
     var selected = BorrowSignature[Int, Bool].capture(below)
     print("captured predicate:", iterated(range(5)).filter(selected).collect_list())
-    print("reused predicate:", pipeline[Int]([1, 4, 2]).filter(selected).get())
+    print("reused predicate:", pipeline[List[Int]]([1, 4, 2]).filter(selected).get())
     print("stateful predicate:", iterated(range(5)).filter(EveryOther(0)).collect_list())
     print("stateful projection:", iterated(range(1, 4)).pair_with(RunningKey(0)).collect_list())
-    print("family projection:", pipeline[Int]([1, 2, 3]).pair_with(RunningKey(0)).get())
+    print("family projection:", pipeline[List[Int]]([1, 2, 3]).pair_with(RunningKey(0)).get())
     var predicate = EveryOther(0)
     print("borrowed mutable predicate:", iterated(range(5)).filter(mut_ref(predicate)).to_list())
     print("retained calls:", predicate.calls)
     print("continued predicate:", iterated(range(3)).filter(mut_ref(predicate)).to_list())
     print("total calls:", predicate.calls)
-    print("family mutable filter:", pipeline[Int]([0, 1, 2, 3]).filter(mut_ref(predicate)).get())
-    print("family mutable filter_not:", pipeline[Int]([0, 1, 2, 3]).filter_not(mut_ref(predicate)).get())
+    print("family mutable filter:", pipeline[List[Int]]([0, 1, 2, 3]).filter(mut_ref(predicate)).get())
+    print("family mutable filter_not:", pipeline[List[Int]]([0, 1, 2, 3]).filter_not(mut_ref(predicate)).get())
     print("family retained calls:", predicate.calls)
     var observations = 0
     def observe(value: Int) {mut observations} -> Optional[NoneType]:

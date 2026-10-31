@@ -41,7 +41,7 @@ def forward[I:Functor,V:Movable & Deinitable,C:BorrowCallContract & Movable & De
 def main() raises:
     var modes=ArcPointer(List[Int]())
     var callback=Modes(0,modes)
-    assert_equal(pipeline[Int]([1,2]).pair_with(callback^).get(),[(1,2),(2,4)])
+    assert_equal(pipeline[List[Int]]([1,2]).pair_with(callback^).get(),[(1,2),(2,4)])
     assert_equal(pipeline(List[Int]([1,2])).pair_with(Modes(0,modes)).get(),[(1,2),(2,4)])
     assert_equal(pipeline(5).tap(Modes(0,modes)).get(),5)
     assert_equal(pipeline(5).tap(Modes(0,modes)).get(),5)

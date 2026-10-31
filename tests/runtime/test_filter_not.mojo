@@ -36,7 +36,7 @@ def filter_not_shapes() raises:
     var deque = Deque[Int](capacity=8, min_capacity=4, maxlen=2, shrink=False)
     deque.append(-1)
     deque.append(2)
-    var kept_deque = pipeline(deque^).elements().filter_not(filter_not_positive).get()
+    var kept_deque = pipeline(deque^).filter_not(filter_not_positive).get()
     comptime assert type_of(kept_deque) == Deque[Int]
     assert_equal(kept_deque._min_capacity, 4)
     assert_equal(kept_deque._shrink, False)
@@ -46,7 +46,7 @@ def filter_not_shapes() raises:
     var linked = LinkedList[Int]()
     linked.append(-1)
     linked.append(2)
-    var kept_linked = pipeline(linked^).elements().filter_not(filter_not_positive).get()
+    var kept_linked = pipeline(linked^).filter_not(filter_not_positive).get()
     comptime assert type_of(kept_linked) == LinkedList[Int]
     assert_equal(collect_list(kept_linked^), [-1])
     var dict = Dict[String, Int, default_comp_time_hasher]()
@@ -77,11 +77,11 @@ def filter_not_library_shapes() raises:
     var deque = Deque[Int]()
     deque.append(-1)
     deque.append(2)
-    assert_equal(collect_list(pipeline(deque^).elements().filter_not(ContainerFilterPredicate(calls)).get()), [-1])
+    assert_equal(collect_list(pipeline(deque^).filter_not(ContainerFilterPredicate(calls)).get()), [-1])
     var linked = LinkedList[Int]()
     linked.append(-1)
     linked.append(2)
-    assert_equal(collect_list(pipeline(linked^).elements().filter_not(ContainerFilterPredicate(calls)).get()), [-1])
+    assert_equal(collect_list(pipeline(linked^).filter_not(ContainerFilterPredicate(calls)).get()), [-1])
     var dict = Dict[String, Int, default_comp_time_hasher]()
     dict["b"] = -1
     dict["a"] = 2

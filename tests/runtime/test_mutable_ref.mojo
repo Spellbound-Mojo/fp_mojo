@@ -54,7 +54,7 @@ def shapes() raises:
     var unary=Unary(0)
     assert_equal(iterated(range(3)).map(mut_ref(unary)).to_list(),[1,3,5])
     assert_equal(unary.calls,3)
-    assert_equal(pipeline[Int]([0,1]).map(mut_ref(unary)).get(),[4,6])
+    assert_equal(pipeline[List[Int]]([0,1]).map(mut_ref(unary)).get(),[4,6])
     assert_equal(unary.calls,5)
     var binary=Binary(0)
     assert_equal(iterated(range(3)).fold_left(mut_ref(binary),0),9)

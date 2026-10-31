@@ -29,7 +29,7 @@ def entries() raises:
     var unary = flow(plus, partial(scale, 2)).compose(plus).then(plus).compose(plus)
     comptime assert type_of(unary).Fs.length == 5
     comptime assert conforms_to(type_of(unary), Unary)
-    assert_equal(pipeline[Int]([1, 2]).map(unary).get(), [9, 11])
+    assert_equal(pipeline[List[Int]]([1, 2]).map(unary).get(), [9, 11])
     var mirrored = compose(partial(scale, 2), plus).compose(plus).then(plus).compose(plus)
     assert_equal(mirrored(1), 9)
     var deep = flow(plus, plus).compose(plus).compose(plus).compose(plus).compose(plus).compose(plus).compose(plus).compose(plus).compose(plus).compose(plus).compose(plus)

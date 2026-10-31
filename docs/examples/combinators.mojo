@@ -40,8 +40,8 @@ def main() raises:
     assert_equal(iterated(rejected_lazy^).filter_not(positive).map(square).collect_list(), [1, 1])
     assert_equal(iterated(range(-1, 2)).filter_not(positive).collect_list(), [-1, 0])
     assert_equal(iterated(range(3)).fill(7).replace(7, 9).collect_list(), [9, 9, 9])
-    assert_equal(pipeline[Int]([2, 3]).pair_with(square).get(), [(2, 4), (3, 9)])
-    assert_equal(pipeline[Int]([]).map(square).get(), List[Int]())
+    assert_equal(pipeline[List[Int]]([2, 3]).pair_with(square).get(), [(2, 4), (3, 9)])
+    assert_equal(pipeline[List[Int]]([]).map(square).get(), List[Int]())
     var options: List[Optional[Int]] = [None, Optional(4), Optional(5)]
     assert_equal(pipeline(options^).compact().sum().get(), 9)
     print(result)

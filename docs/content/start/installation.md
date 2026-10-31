@@ -131,7 +131,7 @@ program beside its `pixi.toml`.
 ### Run the tutorial examples
 
 The current tutorials use the nightly API, including `pipeline`, Result
-terminals and `.elements()`. Follow the [checkout route](#work-from-a-checkout)
+terminals and inferred container families. Follow the [checkout route](#work-from-a-checkout)
 and run their maintained files from the repository root:
 
 ```sh

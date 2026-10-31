@@ -27,14 +27,14 @@ def main() raises:
     var trace = List[Int]()
     def size(values: List[Int]) {ref trace}: trace.append(len(values))
     def record(value: Int) {ref trace}: trace.append(value)
-    var pairs = pipeline[Int]([1, 2, 3, 4]).tap(size).filter_not(even).tap_each(record).pair_with(as_text).get()
+    var pairs = pipeline[List[Int]]([1, 2, 3, 4]).tap(size).filter_not(even).tap_each(record).pair_with(as_text).get()
     assert_equal(trace, List[Int]([4, 1, 3]))
     assert_equal(pairs[1][0], 3)
     assert_equal(pairs[1][1], "3")
 
     # Borrow payloads for effects, then continue in the selected target family.
     def audit(value: Int) -> Optional[String]: return Optional(String(value))
-    var audited = pipeline[Int]([1, 2, 3, 4]).traverse_tap(audit).get()
+    var audited = pipeline[List[Int]]([1, 2, 3, 4]).traverse_tap(audit).get()
     assert_equal(audited.value(), List[Int]([1, 2, 3, 4]))
     def available(value: Int) -> Result[Bool, String]: return Ok(value % 2 == 0)
     def count(var values: List[Int]) -> Int: return len(values)
@@ -44,17 +44,17 @@ def main() raises:
     # Transform optional values inside the effect, then compact the source.
     def optional_double(var value: Int) -> Optional[Optional[Int]]:
         return Optional(Optional(value * 2) if value % 2 == 0 else Optional[Int]())
-    var doubled = pipeline[Int]([1,2,3,4]).traverse_filter(optional_double).get()
+    var doubled = pipeline[List[Int]]([1,2,3,4]).traverse_filter(optional_double).get()
     assert_equal(doubled.value(), List[Int]([4,8]))
     def expand(var value: Int) -> Optional[List[Int]]: return Optional(List[Int]([value,value+10]))
-    var expanded = pipeline[Int]([1,2]).flat_traverse(expand).get()
+    var expanded = pipeline[List[Int]]([1,2]).flat_traverse(expand).get()
     assert_equal(expanded.value(), List[Int]([1,11,2,12]))
-    _ = pipeline[Int]([1,2]).traverse_void(optional_double).get()
+    _ = pipeline[List[Int]]([1,2]).traverse_void(optional_double).get()
 
     # Reductions infer numeric types and select the resulting carrier family.
     assert_equal(pipeline(range(4)).sum_by(double).get(), 12)
-    assert_equal(pipeline[Int]([1,2,3]).max_by(as_text).get().value(), 3)
-    var compacted = pipeline[Optional[Int]]([Optional(1),Optional[Int](),Optional(3)]).compact().tuple_right(String("kept")).get()
+    assert_equal(pipeline[List[Int]]([1,2,3]).max_by(as_text).get().value(), 3)
+    var compacted = pipeline[List[Optional[Int]]]([Optional(1),Optional[Int](),Optional(3)]).compact().tuple_right(String("kept")).get()
     assert_equal(compacted[1][0], 3)
     assert_equal(compacted[1][1], "kept")
     def present() -> Optional[Int]: return Optional(10)
@@ -63,7 +63,7 @@ def main() raises:
     def validate(var value: Int) -> Result[Int,List[String]]:
         if value < 0: return Err(List[String]([String(value)]))
         return Ok(value)
-    var errors = pipeline[Int]([-1,2,-3]).par_traverse(validate).swap().to_optional()
+    var errors = pipeline[List[Int]]([-1,2,-3]).par_traverse(validate).swap().to_optional()
     assert_equal(errors.value(), List[String](["-1","-3"]))
 
     var checked: Int

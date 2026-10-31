@@ -15,7 +15,7 @@ def captures() raises:
     var callback = as_unary(captured^)
     comptime assert not conforms_to(type_of(callback), Copyable)
     assert_equal(pipeline(Optional(10)).map(callback).get_or(0), 11)
-    assert_equal(pipeline[Int]([1, 2]).map(callback).get(), [2, 3])
+    assert_equal(pipeline[List[Int]]([1, 2]).map(callback).get(), [2, 3])
     var pending = pipeline[Reader[Int]](Reader[Int].pure(10)).map(callback).get()
     assert_equal(ledger[].calls, 3)
     assert_equal(ledger[].drops[1], 0)

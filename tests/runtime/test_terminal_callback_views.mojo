@@ -55,7 +55,7 @@ def main() raises:
     assert_equal(combined_sum_by(range(4), project), 12)
     assert_equal(iterated(range(4)).sum_by(project), 12)
     assert_equal(pipeline(List[Int]([1, 2, 3])).sum_by(project).get(), 12)
-    assert_equal(pipeline[Int]([1, 2, 3]).sum_by(project).get(), 12)
+    assert_equal(pipeline[List[Int]]([1, 2, 3]).sum_by(project).get(), 12)
     assert_equal(sum_by(range(0), project), 0)
     assert_equal(min_by(range(4), project).value(), 0)
     assert_equal(max_by(range(4), project).value(), 3)

@@ -18,7 +18,7 @@ def main() raises:
     var queue = Deque[Int]()
     queue.append(-1)
     queue.append(42)
-    var labels = pipeline(queue^).elements().filter(positive).map(text).get()
+    var labels = pipeline(queue^).filter(positive).map(text).get()
     var label = labels.pop()
     assert_equal(label, "42")
     print("queue label:", label)

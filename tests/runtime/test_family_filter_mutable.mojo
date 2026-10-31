@@ -16,9 +16,9 @@ struct EveryOther(BorrowCallable, BorrowMutableCallable):
 
 def ordinary_forms() raises:
     var predicate = EveryOther(0)
-    assert_equal(pipeline[Int]([0, 1, 2, 3]).filter(mut_ref(predicate)).get(), [1, 3])
+    assert_equal(pipeline[List[Int]]([0, 1, 2, 3]).filter(mut_ref(predicate)).get(), [1, 3])
     assert_equal(predicate.calls, 4)
-    assert_equal(pipeline[Int]([0, 1, 2, 3]).filter_not(mut_ref(predicate)).get(), [0, 2])
+    assert_equal(pipeline[List[Int]]([0, 1, 2, 3]).filter_not(mut_ref(predicate)).get(), [0, 2])
     assert_equal(predicate.calls, 8)
     var input: List[Int] = [0, 1, 2, 3]
     assert_equal(pipeline(input^).filter(mut_ref(predicate)).get(), [1, 3])
@@ -39,8 +39,8 @@ def ordinary_forms() raises:
 def main() raises:
     ordinary_forms()
     # Owned calls choose the mutable receiver even when a shared one exists.
-    assert_equal(pipeline[Int]([0, 1, 2, 3]).filter(EveryOther(0)).get(), [1, 3])
-    assert_equal(pipeline[Int]([0, 1, 2, 3]).filter_not(EveryOther(0)).get(), [0, 2])
+    assert_equal(pipeline[List[Int]]([0, 1, 2, 3]).filter(EveryOther(0)).get(), [1, 3])
+    assert_equal(pipeline[List[Int]]([0, 1, 2, 3]).filter_not(EveryOther(0)).get(), [0, 2])
     var callback = EveryOther(0)
     assert_equal(pipeline(List[Int]()).filter(mut_ref(callback)).get(), List[Int]())
     assert_equal(pipeline(Optional[Int]()).filter_not(mut_ref(callback)).get(), Optional[Int]())

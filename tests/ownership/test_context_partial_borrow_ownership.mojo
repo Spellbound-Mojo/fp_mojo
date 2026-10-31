@@ -24,7 +24,7 @@ def copies() raises:
     var prefix = Prefix(ledger)
     var predicate = partial(odd, prefix)
     assert_equal(ledger[].factories, 1)
-    var selected = pipeline[Token]([Token(1, payloads), Token(2, payloads)]).filter(predicate).get()
+    var selected = pipeline[List[Token]]([Token(1, payloads), Token(2, payloads)]).filter(predicate).get()
     assert_equal(ledger[].factories, 3)
     assert_equal(ledger[].drops[0], 2)
     assert_equal(payloads[].drops[1], 0)

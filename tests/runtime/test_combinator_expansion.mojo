@@ -116,14 +116,14 @@ def expansion_transforms() raises:
     var deque = Deque[Int](capacity=8, min_capacity=4, maxlen=2, shrink=False)
     deque.append(1)
     deque.append(2)
-    var d = pipeline(deque^).elements().fill(3).get()
+    var d = pipeline(deque^).fill(3).get()
     assert_equal(d._min_capacity, 4)
     assert_false(d._shrink)
     d.append(4)
     assert_equal(collect_list(d^), [3, 4])
     var linked = LinkedList[Int]()
     linked.append(4)
-    assert_equal(collect_list(pipeline(linked^).elements().tuple_right(2).get()), [(4, 2)])
+    assert_equal(collect_list(pipeline(linked^).tuple_right(2).get()), [(4, 2)])
     var dict = Dict[String, Int, default_comp_time_hasher]()
     dict['b'] = 2
     dict['a'] = 3
@@ -156,14 +156,14 @@ def expansion_selection() raises:
     var deque = Deque[Int](capacity=8, min_capacity=4, maxlen=2, shrink=False)
     deque.append(1)
     deque.append(2)
-    var d = pipeline(deque^).elements().filter_map(expansion_select).get()
+    var d = pipeline(deque^).filter_map(expansion_select).get()
     assert_equal(d._min_capacity, 4)
     assert_false(d._shrink)
     assert_equal(collect_list(d^), ['2'])
     var linked = LinkedList[Int]()
     linked.append(1)
     linked.append(2)
-    assert_equal(collect_list(pipeline(linked^).elements().filter_map(expansion_select).get()), ['2'])
+    assert_equal(collect_list(pipeline(linked^).filter_map(expansion_select).get()), ['2'])
     var dict = Dict[String, Int, default_comp_time_hasher]()
     dict['b'] = 1
     dict['a'] = 3

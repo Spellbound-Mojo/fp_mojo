@@ -72,7 +72,7 @@ def values() raises:
     var predicate = BorrowSignature[Int, Bool].capture(selected)
     comptime assert conforms_to(type_of(predicate), BorrowCallable)
     assert_equal(iterated(range(6)).filter(predicate).collect_list(), [0, 1, 2, 3])
-    assert_equal(pipeline[Int]([2, 4, 1]).filter(predicate).get(), [2, 1])
+    assert_equal(pipeline[List[Int]]([2, 4, 1]).filter(predicate).get(), [2, 1])
     assert_true(predicate.invoke(number))
     var projected = asks[Reader[String]](BorrowSignature[String, Int].capture(size))
     assert_equal(run[Reader[String]](projected^, text), 2)

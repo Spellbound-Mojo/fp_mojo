@@ -32,12 +32,12 @@ def main() raises:
     var queue = Deque[Int]()
     queue.append(1)
     queue.append(4)
-    var kept_queue = pipeline(queue^).elements().filter(predicate).get()
+    var kept_queue = pipeline(queue^).filter(predicate).get()
     assert_equal(kept_queue.pop(), 1)
     var linked = LinkedList[Int]()
     linked.append(1)
     linked.append(4)
-    assert_equal(List(pipeline(linked^).elements().filter(predicate).get()), [1])
+    assert_equal(List(pipeline(linked^).filter(predicate).get()), [1])
     var table = Dict[String, Int]()
     table["a"] = 1
     table["b"] = 4

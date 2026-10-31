@@ -29,8 +29,8 @@ iteration, direct Result operations and native capture. The free functions in
 fit when a direct function call suits the surrounding algorithm.
 
 For a list literal, put its element type on the pipeline:
-`pipeline[Int]([1, 2, 3]).map(square).get()`. Empty lists use the same form:
-`pipeline[Int]([])`. A named List already carries its type, so
+`pipeline[List[Int]]([1, 2, 3]).map(square).get()`. Empty lists use the same form:
+`pipeline[List[Int]]([])`. A named List already carries its type, so
 `pipeline(values^)` needs no type arguments. Mojo 1.2 leaves a bare call such
 as `pipeline([1, 2])` ambiguous between List and the default Array literal.
 
@@ -247,19 +247,21 @@ consumed, including cleanup when skipped; native captured factories are borrowed
 
 ## Map sequence elements
 
-Use `pipeline(values^).elements()` for Array, Deque, LinkedList or NonEmptyList.
-List is supported too; its ordinary pipeline already maps elements. The
-container, element type and Array length are inferred, so no family import or
-annotation is needed:
+`pipeline(values^)` maps the elements of a List, Deque, LinkedList or
+NonEmptyList directly. An Array needs `.elements()`, because Mojo cannot read
+its length from a generic type. The container, element type and Array length
+are inferred, so no family import or annotation is needed:
 
 <!-- example: docs/examples/collection_families.mojo -->
 
 Selection only moves the existing container. Array mapping preserves its fixed
 length; Deque and LinkedList also support filter and filter_map. Filtering a
-NonEmptyList produces a List because the result may be empty. `.elements()`
+NonEmptyList produces a List because the result may be empty. Selection
 preserves the native error selected by `.raising[MyError]()`.
 
-`pipeline(array^)` keeps its whole-value behavior until `.elements()` is called.
+`pipeline(array^)` keeps its whole-value behavior until `.elements()` is called,
+and any value that is not a recognized container, such as a Dict, a number or
+your own struct, is one Identity payload.
 Use `pipeline_values(dictionary^)` for dictionary values and `iterated(values^)`
 for lazy processing. Generic code can still name a family explicitly, as in
 `pipeline[ArrayFamily[N]](values^)`.

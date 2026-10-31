@@ -23,8 +23,8 @@ def main() raises:
     print("reused:", pipeline(6).then(triple).get())
 
     var greater_than_two = partial(above, 2)
-    print("filtered:", pipeline[Int]([1, 2, 3, 4]).filter(greater_than_two).get())
-    print("rejected:", pipeline[Int]([1, 2, 3]).filter_not(greater_than_two).get())
+    print("filtered:", pipeline[List[Int]]([1, 2, 3, 4]).filter(greater_than_two).get())
+    print("rejected:", pipeline[List[Int]]([1, 2, 3]).filter_not(greater_than_two).get())
 
     # Keyword binding is a native closure with a capture list.
     var base = 2
