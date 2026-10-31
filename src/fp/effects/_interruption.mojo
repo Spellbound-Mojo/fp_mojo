@@ -4,6 +4,8 @@ It lives below both families: the async blocking pool and SyncIO's inline
 provider build it from a cancellation token, so the request it reports is the
 token's, and it stays visible once made.
 """
+from fp.callables.protocols import BorrowCallContract, OnceThunk
+from fp.callables._receiver import _borrow_once_as
 from ._io_core import CancellationToken
 
 
@@ -36,3 +38,17 @@ struct Interruption:
             True once the call's cancellation was requested; it stays True.
         """
         return self._token.requested()
+
+
+@fieldwise_init
+struct _LendInterruption[F: BorrowCallContract & Movable & Deinitable](OnceThunk):
+    """Call an interruptible function with a handle that lives only for the call."""
+    var function: Self.F
+    var token: CancellationToken
+    comptime Out = Self.F.Result
+    comptime Error = Self.F.Failure
+
+    def call_once(deinit self) raises Self.Error -> Self.Out:
+        comptime assert Self.F.Payload == Interruption
+        var handle = Interruption(_token=self.token)
+        return _borrow_once_as[Self.Error](rebind[Self.F.Payload](handle), self.function^)

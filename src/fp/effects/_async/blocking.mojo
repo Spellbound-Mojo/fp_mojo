@@ -23,14 +23,14 @@ from std.builtin.rebind import rebind_var
 from std.memory import ArcPointer
 from std.os import abort
 from fp.callables.protocols import ThunkContract, BorrowCallContract, OnceThunk, OnceUnary
-from fp.callables._receiver import _thunk_once_as, _borrow_once_as
+from fp.callables._receiver import _thunk_once_as
 from fp._internal.cells import _Cell, _lock_cell
 from fp._internal.erased import _Erased
 from fp._internal.errors import _ErrorCompatible
 from fp.data import Result, Ok
 from fp.effects import IOContext, EffectFailure, CancellationToken
 from fp.effects.outcomes import _capture
-from fp.effects._interruption import Interruption
+from fp.effects._interruption import _LendInterruption
 from .callbacks import Completion
 from .kernel import Machine, Step
 from .scheduling.blocking_pool import _RootBlocking, _root_blocking
@@ -119,20 +119,6 @@ struct _Interrupt[E: Movable & Deinitable](Copyable):
         if done:
             var unit: NoneType = None
             _ = completion.complete(Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit))))
-
-
-@fieldwise_init
-struct _LendInterruption[F: BorrowCallContract & Movable & Deinitable](OnceThunk):
-    """Call an interruptible function with a handle that lives only for the call."""
-    var function: Self.F
-    var token: CancellationToken
-    comptime Out = Self.F.Result
-    comptime Error = Self.F.Failure
-
-    def call_once(deinit self) raises Self.Error -> Self.Out:
-        comptime assert Self.F.Payload == Interruption
-        var handle = Interruption(_token=self.token)
-        return _borrow_once_as[Self.Error](rebind[Self.F.Payload](handle), self.function^)
 
 
 @fieldwise_init

@@ -30,7 +30,7 @@ from fp.data import Result, Ok, Err, NonEmptyList, Left, Right
 from fp.effects import IOContext, Outcome, EffectFailure, ExitCase
 from fp.effects.outcomes import _failure_as, _finish, _ExitState, _zip_outcomes
 from fp.effects._io_core import _settle, IOContract, canceled as _cancel_request
-from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn, Concurrent, Temporal
+from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn, Concurrent, Temporal, Blocking
 from fp.effects._timing import _SleepSource, _timed, _delay_by, _and_wait
 from fp.effects.finalization import Poll as _SyncPoll
 from fp.effects.coordination import Ref as _Ref, Deferred as _Deferred, _RefInspect, _Copy
@@ -2238,7 +2238,7 @@ struct _StartCollect[V: Movable & Deinitable, F: UnaryContract & Movable & Deini
         return _start_fold[Self.V, Identity[Self.F.Arg], _CollectStep[Self.F, Self.K, Self.E], Self.K, Self.E](self.source^, Identity[Self.F.Arg](), _CollectStep[Self.F, Self.K, Self.E](self.function^), start^)
 
 
-struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Temporal, not Deinitable):
+struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Temporal, Blocking, not Deinitable):
     """The sequencing and recovery family of IO.
 
     Pipeline, tail_rec_m, traverse and attempt select it from an IO. Every
@@ -2310,6 +2310,10 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Tempor
     comptime TimedOut[V: Movable & Deinitable] = V
     comptime DelayedBy[V: Movable & Deinitable] = V
     comptime Waited[V: Movable & Deinitable] = V
+    comptime BlockingCompatible[F: ThunkContract & Movable & Deinitable] = Self.DelayCompatible[F]
+    comptime Blocked[F: ThunkContract & Movable & Deinitable] = IO[_DelayValue[F.Out], Self.E]
+    comptime InterruptibleCompatible[F: BorrowCallContract & Movable & Deinitable] = F.Payload == Interruption and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure] and _Admitted[F]
+    comptime Interrupted[F: BorrowCallContract & Movable & Deinitable] = IO[F.Result, Self.E]
 
     @staticmethod
     def delay[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Delayed[F]:
@@ -2342,6 +2346,38 @@ struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Tempor
         """
         comptime assert Self.DeferCompatible[F]
         return IO[downcast[F.Out, Machine].Value, Self.E]._deferred(factory^)
+
+    @staticmethod
+    def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]:
+        """Run a blocking function on the root's blocking pool; see IO.blocking.
+
+        Parameters:
+            F: An owned once-callable, with error E or none.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            An IO producing the function's value; cancellation waits for it.
+        """
+        comptime assert Self.BlockingCompatible[F]
+        return IO[_DelayValue[F.Out], Self.E]._blocking(function^)
+
+    @staticmethod
+    def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]:
+        """Run an interruptible function on the root's blocking pool; see IO.interruptible.
+
+        Parameters:
+            F: An owned once-callable borrowing an Interruption, with error E or none.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            An IO producing the function's value, or canceled after it returns.
+        """
+        comptime assert Self.InterruptibleCompatible[F]
+        return IO[F.Result, Self.E]._interruptible(function^)
 
     @staticmethod
     def raise_error[A: Movable & Deinitable](var error: Self.E) -> IO[A, Self.E]:

@@ -886,6 +886,62 @@ trait Temporal(Concurrent, Timing):
         ...
 
 
+trait Blocking:
+    """Run blocking functions without blocking other work, as Cats Effect's blocking and interruptible.
+
+    Async runs each function on a worker of the root's blocking pool while
+    other fibers keep running; SyncIO runs it inline, on the calling thread,
+    which the synchronous family blocks anyway. `blocking` cannot be canceled:
+    cancellation and timeouts wait for it. `interruptible` lends the function
+    an Interruption handle that reports a cancellation request, and
+    cancellation completes when the function returns. Functions follow the
+    family's callback rule: owned callables and plain functions, never
+    closures or borrowed views. In Async the function, its result and its
+    error move to another thread, which the caller asserts is safe.
+    """
+    comptime Family: Monad
+    """The family whose carriers this capability builds."""
+    comptime BlockingCompatible[F: ThunkContract & Movable & Deinitable]: Bool
+    """Whether F is admitted: owned, with an error the family accepts."""
+    comptime Blocked[F: ThunkContract & Movable & Deinitable]: Movable & Deinitable
+    """The carrier running F as a blocking call."""
+    comptime InterruptibleCompatible[F: BorrowCallContract & Movable & Deinitable]: Bool
+    """Whether F is admitted: owned, borrowing an Interruption, with an error the family accepts."""
+    comptime Interrupted[F: BorrowCallContract & Movable & Deinitable]: Movable & Deinitable
+    """The carrier running F as an interruptible call."""
+
+    @staticmethod
+    def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]:
+        """Run a blocking function when the program reaches it.
+
+        Parameters:
+            F: An admitted once-callable thunk.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            A carrier producing the function's value, or failing with its error.
+        """
+        ...
+
+    @staticmethod
+    def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]:
+        """Run a blocking function that observes cancellation through an Interruption.
+
+        Parameters:
+            F: An admitted once-callable borrowing an Interruption.
+
+        Args:
+            function: The function, consumed.
+
+        Returns:
+            A carrier producing the function's value; canceled after it returns
+            when cancellation was requested.
+        """
+        ...
+
+
 trait _CarrierOp(Movable, Deinitable):
     """A consumed transformation of a base carrier; no stack interpretation."""
     comptime Compatible[V: Movable & Deinitable]: Bool
