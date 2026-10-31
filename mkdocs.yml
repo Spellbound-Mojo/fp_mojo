@@ -84,6 +84,7 @@ nav:
       - Async integration workload: architecture/async-workload.md
       - Async overnight qualification: architecture/async-qualification.md
       - Async finalization and masking: architecture/async-finalization.md
+      - Async payload thread safety: architecture/async-thread-safety.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md
