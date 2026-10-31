@@ -2,10 +2,14 @@
 from std.builtin.rebind import downcast
 from std.os import abort
 from fp.effects import CancellationToken, Outcome, IOContext
-from fp._internal.waking import _Clock
+from fp._internal.waking import _Clock, _Notifier
+from fp._internal.erased import _Erased
+from fp._internal.errors import _ErrorCompatible
+from fp.callables.protocols import Thunk
+from fp.callables._receiver import _thunk_repeated_as
 from fp._internal.time import Duration, Instant
 from .kernel import Machine, Driver as _Driver, Progress, Step, IORuntimeConfig, run as _run
-from .fibers import FiberInfo, _FiberHost
+from .fibers import FiberInfo, _fiber_infos
 
 
 struct Clock(Copyable):
@@ -89,6 +93,30 @@ struct Driver[P: Machine](Movable, not Deinitable):
             config: How often IO yields and checks for cancellation.
         """
         self._driver = _Driver(program^, token, clock._clock, config)
+    def __init__[N: Thunk](out self, var program: Self.P, token: CancellationToken, clock: Clock, config: IORuntimeConfig, var notifier: N) where _ErrorCompatible[Never, N.Error]:
+        """Own a program and learn of external wakes through a host notifier.
+
+        The driver calls the notifier when an event delivered while no poll
+        runs, such as completing an IO.async registration or notifying a
+        Signal, makes the root runnable, so a host with its own event loop can
+        schedule the next poll instead of polling on a timer. The call may come
+        from any thread that delivers such an event; the host asserts the
+        notifier is safe there. It must return promptly and must not reenter
+        this driver. Work that becomes runnable during a poll is reported by the
+        poll's Progress instead. The notifier is never called after finish
+        returns: finish waits for a call in progress.
+
+        Parameters:
+            N: A repeatable, non-raising callable; its result is ignored.
+
+        Args:
+            program: The unopened program, consumed once.
+            token: The shared cancellation request handle, copied.
+            clock: The shared runtime clock, copied.
+            config: How often IO yields and checks for cancellation.
+            notifier: The host's wake callback, consumed.
+        """
+        self._driver = _Driver(program^, token, clock._clock, config, _Notifier(_Erased(notifier^), _notify_host[N]))
     def request_cancel(self):
         """Request cancellation; continue polling to join all work and cleanup."""
         self._driver.cancel()
@@ -116,25 +144,20 @@ struct Driver[P: Machine](Movable, not Deinitable):
             raise Error("driver budget must be nonnegative")
         return self._driver.poll(budget)
     def fibers(self) -> List[FiberInfo]:
-        """List the live fibers the root IO hosts, between polls.
+        """List the live fibers under the root, between polls.
 
         A bounded diagnostic view, like Cats Effect's fiber dump: each entry
         names an internal slot, its owner's slot, and whether it is runnable,
         suspended, or draining its children. It holds no payloads and no
-        completed fibers. The sides of both and races are fibers of the root
-        and are listed; an IO lifted into a leaf with IO.lift hosts its own
-        fibers, which are not.
+        completed fibers. Every fiber the root runs is listed, including the
+        sides of both and races and fibers started by an IO lifted into a leaf,
+        which belong to the fiber running that leaf.
 
         Returns:
-            The live fibers in slot order; empty for a root that is not an IO,
-            before the first start, and after completion.
+            The live fibers in slot order; empty before the first start and
+            after completion.
         """
-        comptime if conforms_to(Self.P, _FiberHost):
-            ref program = self._driver.task._slot._program
-            if program:
-                var now = self._driver.task.context._clock.now()
-                return rebind[downcast[Self.P, _FiberHost]](program.value()[])._fiber_snapshot(now)
-        return List[FiberInfo]()
+        return _fiber_infos(self._driver.task._executor.scheduler[].snapshot())
 
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
         """Consume a completed root exactly once.
@@ -144,6 +167,11 @@ struct Driver[P: Machine](Movable, not Deinitable):
             Calling before completion is a protocol violation.
         """
         return self._driver^.finish()
+
+
+def _notify_host[N: Thunk](mut target: _Erased) where _ErrorCompatible[Never, N.Error]:
+    # Only the constructor that erased an N pairs this cast.
+    _ = _thunk_repeated_as[Never, N](target.pointer[N]()[])
 
 
 struct TestControl[P: Machine](Movable, not Deinitable):

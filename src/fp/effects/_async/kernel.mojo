@@ -7,7 +7,8 @@ from .time import Duration, Instant
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
 from fp.effects._io_core import _settle, _Budget, _Reporter
 from fp.data import Result, Ok
-from fp._internal.waking import _Event as Signal, _Runtime, _Ticket, _Subscription, _Waker, _Clock as Clock
+from fp._internal.waking import _Event as Signal, _Runtime, _Ticket, _Subscription, _Waker, _Clock as Clock, _Notifier
+from .executor import _Executor
 
 
 @fieldwise_init
@@ -400,22 +401,31 @@ struct IORuntimeConfig(Copyable):
 
 
 struct Task[P: Machine](Movable, not Deinitable):
-    """Linear owner of the complete execution subtree, including cleanup."""
+    """Linear owner of the complete execution subtree, including cleanup.
+
+    The root program is a task of the root's current-thread executor, beside
+    every fiber started under it; one root poll is one executor turn.
+    """
     var _slot: _Slot[Self.P, Self.P.Value, Self.P.Error]
     var context: IOContext[Self.P.Error]
+    var _executor: _Executor
 
     def __init__(out self, var program: Self.P, token: CancellationToken, config: IORuntimeConfig = IORuntimeConfig()):
         self._slot = _Slot[Self.P, Self.P.Value, Self.P.Error](program^)
         self.context = IOContext[Self.P.Error](token.copy(), False)
-        self.context._runtime = Optional(_Runtime())
+        var runtime = _Runtime()
+        self.context._runtime = Optional(runtime.copy())
         self.context._budget = Optional(ArcPointer(_Budget(config.auto_yield_threshold, config.cancelation_check_threshold, config.report_unhandled_fiber_errors, config.reporter)))
+        self._executor = _Executor(runtime)
         self._slot.prepare(self.context)
+        # The root's registration is ready, so installing the hook queues the root.
+        runtime.attach(self._executor.root)
 
     def done(self) -> Bool:
         return self._slot.done()
 
     def ready(self, now: Instant) -> Bool:
-        return self._slot.ready(now, self.context)
+        return not self._slot.done() and self._executor.ready()
 
     def cancel(self):
         self.context.request_cancel()
@@ -426,9 +436,26 @@ struct Task[P: Machine](Movable, not Deinitable):
         return self._poll_ready()
 
     def _poll_ready(mut self) -> Bool:
-        # Each root poll gets a fresh slice of interpreter transitions.
+        """One root poll: an executor turn over the queued tasks, in FIFO order.
+
+        Each poll gets a fresh slice of interpreter transitions, and the turn
+        ends when it is spent, the queue is empty, or the next task already ran.
+        """
         self.context._budget.value()[].refill()
-        return _tick(self._slot, self.context)
+        self._executor.begin_turn()
+        var ran = False
+        while self.context._budget.value()[].remaining > 0:
+            var next = self._executor.next()
+            if not next:
+                break
+            ran = True
+            var task = next.take()
+            if task[].root:
+                _ = _tick(self._slot, self.context)
+                _Executor.settle(task, self._slot.done())
+            else:
+                _Executor.run(task)
+        return ran
 
     def _transitions(self) -> Int:
         return self.context._budget.value()[].consumed
@@ -474,6 +501,15 @@ struct Driver[P: Machine](Movable, not Deinitable):
     def __init__(out self, var program: Self.P):
         self = Self(program^, CancellationToken(), Clock())
 
+    def __init__(out self, var program: Self.P, token: CancellationToken, clock: Clock, config: IORuntimeConfig, var notifier: _Notifier):
+        """Own a program whose external wakes are reported through a host notifier.
+
+        The notifier is installed after the root is queued, so only wakes
+        delivered while no poll runs reach it.
+        """
+        self = Self(program^, token, clock, config)
+        self.task._executor.scheduler[].notifier = Optional(notifier^)
+
     def cancel(self):
         self.task.cancel()
 
@@ -487,6 +523,8 @@ struct Driver[P: Machine](Movable, not Deinitable):
         var polls = 0
         var timers = 0
         var before = self.task._transitions()
+        var scheduler = self.task._executor.scheduler.copy()
+        scheduler[].set_polling(True)
         while polls + timers < budget and not self.task.done():
             var now = self.task.context._clock.now()
             var ready = self.task.ready(now)
@@ -499,6 +537,9 @@ struct Driver[P: Machine](Movable, not Deinitable):
                 self._timer_turn = True
             else:
                 break
+        # Cleared before reading readiness: a wake queued after this reads
+        # notifies the host (see _Scheduler.push).
+        scheduler[].set_polling(False)
         var deadline = self.task.context._runtime.value().next_deadline()
         var ready = not self.task.done() and (self.task.ready(self.task.context._clock.now()) or (Bool(deadline) and deadline.value() <= self.task.context._clock.now()))
         var done = self.task.done()
@@ -506,6 +547,8 @@ struct Driver[P: Machine](Movable, not Deinitable):
         return Progress(done, ready, deadline^, polls, timers, self.task._transitions() - before, quiescent)
 
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
+        # The notifier is never called after this returns; wait for a call in flight.
+        self.task._executor.scheduler[].close()
         return self.task^.finish()
 
 

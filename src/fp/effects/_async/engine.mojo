@@ -42,7 +42,7 @@ from .callbacks import Callback as _Callback, Completion, _CallbackUnit
 from .erased import _ErasedMachine
 from .finalization import Poll
 from .attempts import _Once, _Await
-from .fibers import FiberInfo, _FiberHost, _FiberRecord, _Inbox, _Fibers, _Spawn, _Claim, _Join, _Delivery, _Unwrap, _CancelFiber, _RequestCancel, _FirstDone, _typed, _unsuccessful
+from .fibers import _FiberRecord, _Scope, _Spawn, _Claim, _Join, _Delivery, _Unwrap, _CancelFiber, _RequestCancel, _FirstDone, _typed, _unsuccessful
 
 # Head and frame kinds.
 comptime _EMPTY = 0
@@ -251,11 +251,12 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
     # Handoffs left before the next cancellation check, and the interval.
     var until_check: Int
     var check_every: Int
-    # The inbox of the IO hosting this loop's fibers, and the running fiber's
-    # id (0 for the host's own program); a host also owns its fiber table.
-    var inbox: Optional[ArcPointer[_Inbox[Self.E]]]
-    var fiber: Int
-    var fibers: Optional[OwnedPointer[_Fibers[Self.E]]]
+    # The fibers this loop started: the ownership scope that drains them, and
+    # those started during the current run segment, admitted when it ends.
+    var scope: Optional[ArcPointer[_Scope[Self.E]]]
+    var pending: List[_Spawn[Self.E]]
+    # A terminal step held while the scope's children drain.
+    var held: Optional[Step[_Erased, Self.E]]
 
     def __init__(out self, var program: _Program[Self.E]):
         self.state = _EVALUATE
@@ -270,22 +271,57 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
         self.switched = False
         self.until_check = 1
         self.check_every = 1
-        self.inbox = None
-        self.fiber = 0
-        self.fibers = None
+        self.scope = None
+        self.pending = List[_Spawn[Self.E]]()
+        self.held = None
         program^.install_into(self)
 
-    def spawn(mut self, var program: _Program[Self.E], var record: ArcPointer[_FiberRecord[Self.E]]) -> Int:
-        """Queue a started child for this loop's host, owned by the running fiber.
+    def spawn(mut self, var program: _Program[Self.E], var record: ArcPointer[_FiberRecord[Self.E]], owner: Optional[ArcPointer[_Scope[Self.E]]] = None) -> ArcPointer[_Scope[Self.E]]:
+        """Start a child owned by this loop's scope, or by a supervisor's.
 
-        Returns the child's fiber id in that host.
+        The child is admitted to the executor when this run segment ends.
+        Returns the child's own scope, which owns the fibers it starts.
         """
-        if not self.inbox:
-            # The first start makes this loop's IO the host of its fibers.
-            var inbox = ArcPointer(_Inbox[Self.E]())
-            self.fibers = Optional(OwnedPointer(_Fibers[Self.E](inbox)))
-            self.inbox = Optional(inbox^)
-        return _spawn_into(self.inbox.value(), program^, record^, self.fiber)
+        var parent: ArcPointer[_Scope[Self.E]]
+        if owner:
+            parent = owner.value().copy()
+        else:
+            if not self.scope:
+                self.scope = Optional(ArcPointer(_Scope[Self.E]()))
+            parent = self.scope.value().copy()
+        var child = _RunLoop[Self.E](program^)
+        var scope = ArcPointer(_Scope[Self.E]())
+        child.scope = Optional(scope.copy())
+        self.pending.append(_Spawn[Self.E](_Leaf[Self.E](_FiberLoop[Self.E](OwnedPointer(child^))), record^, scope.copy(), parent^))
+        return scope^
+
+    def admit(mut self, context: IOContext[Self.E]):
+        """Admit the fibers started during this segment, in start order."""
+        var pending = List[_Spawn[Self.E]]()
+        swap(pending, self.pending)
+        pending.reverse()
+        while len(pending):
+            pending.pop().admit(context)
+
+    def drain(mut self, var step: Optional[Step[_Erased, Self.E]]) -> Step[_Erased, Self.E]:
+        """Complete only once this loop's started fibers have completed.
+
+        Given a terminal step, cancels the live children and holds it; given
+        none, continues holding. The wait cannot be interrupted, as an owner's
+        drain cannot.
+        """
+        if step:
+            if not self.scope or not self.scope.value()[].count():
+                return step.take()
+            self.scope.value()[].cancel_children()
+            self.held = step^
+        ref scope = self.scope.value()[]
+        var revision = scope.signal.revision()
+        if not scope.count():
+            return self.held.take()
+        var wait = Wait.changed(scope.signal, revision)
+        wait._interruptible = False
+        return Step[_Erased, Self.E].pending(wait^)
 
     def take_override(mut self) -> Optional[IOContext[Self.E]]:
         var previous: Optional[IOContext[Self.E]] = None
@@ -339,6 +375,8 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
                 step = self.steps(context, context, budget)
             if step:
                 _publish(context, budget)
+                if len(self.pending):
+                    self.admit(context)
                 return step.take()
 
     def steps(mut self, context: IOContext[Self.E], base: IOContext[Self.E], mut budget: Int) -> Optional[Step[_Erased, Self.E]]:
@@ -505,44 +543,6 @@ struct _FiberLoop[E: Movable & Deinitable](Machine):
 
     def poll(mut self, context: IOContext[Self.E]) -> Step[_Erased, Self.E]:
         return self.loop[].run(context)
-
-
-def _spawn_into[E: Movable & Deinitable](inbox: ArcPointer[_Inbox[E]], var program: _Program[E], var record: ArcPointer[_FiberRecord[E]], owner: Int) -> Int:
-    """Reserve a slot in a host's inbox and queue a child owned by a given fiber id.
-
-    The child's run loop carries the inbox and its own id, so the fibers it
-    starts reach the same host. Returns the child's fiber id.
-    """
-    var index = inbox[].reserve()
-    var child = _RunLoop[E](program^)
-    child.inbox = Optional(inbox.copy())
-    child.fiber = index + 1
-    inbox[].pending.append(_Spawn[E](_Leaf[E](_FiberLoop[E](OwnedPointer(child^))), record^, owner, index))
-    return index + 1
-
-
-def _supervise[E: Movable & Deinitable](mut loop: _RunLoop[E], context: IOContext[E], var ran: Optional[Step[_Erased, E]] = None) -> Step[_Erased, E]:
-    """Run a host IO's own program and its fibers for one poll.
-
-    Fibers and the program alternate first place, so neither starves the other
-    of the root budget. `ran` is a program step already taken on this poll.
-    """
-    var host = loop.fibers.take()
-    host[].admit(context)
-    var fibers_first = host[].fibers_first and not ran
-    host[].fibers_first = not host[].fibers_first
-    if fibers_first:
-        host[].run_fibers(context)
-    if ran:
-        host[].settle_main(ran.take())
-    elif not host[].main_done():
-        host[].settle_main(loop.run(context))
-        host[].admit(context)
-    if not fibers_first:
-        host[].run_fibers(context)
-    var step = host[].step(context)
-    loop.fibers = Optional(host^)
-    return step^
 
 
 struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
@@ -915,7 +915,7 @@ comptime _Binds[E: Movable & Deinitable, F: UnaryContract & Movable & Deinitable
 comptime _Defers[E: Movable & Deinitable, F: ThunkContract & Movable & Deinitable] = _OnceThunkAvailable[F] and _ErrorCompatible[E, F.Error] and _Admitted[F] and _IsIO[F.Out, E]
 
 
-struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier, _FiberHost):
+struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier):
     """An asynchronous program producing T or failing with the exact domain error E.
 
     Building an IO runs nothing. A value runs once, when a host drives it;
@@ -1440,24 +1440,6 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         """
         return self^.start()._bind(_StartRight[Self.T, U, Self.E](other^))
 
-    def _fiber_snapshot(self, now: Instant) -> List[FiberInfo]:
-        """The live fibers this entered IO hosts; none before entry or any start."""
-        if not self._entered:
-            return List[FiberInfo]()
-        ref loop = self._loop.unsafe_assume_init()[]
-        if not loop.fibers:
-            return List[FiberInfo]()
-        return loop.fibers.value()[].snapshot(now)
-
-    def _fiber_slots(mut self) -> Int:
-        """Fiber table slots this entered IO has reserved; for storage-reuse checks."""
-        if not self._entered:
-            return 0
-        ref loop = self._loop.unsafe_assume_init()[]
-        if not loop.inbox:
-            return 0
-        return loop.inbox.value()[].size
-
     def start(deinit self) -> IO[Fiber[Self.T, Self.E], Self.E]:
         """Start this IO as a fiber owned by the running fiber.
 
@@ -1634,13 +1616,13 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
             self._entered = True
         ref loop = self._loop.unsafe_assume_init()[]
         var step: Step[_Erased, Self.E]
-        if loop.fibers:
-            step = _supervise(loop, context)
+        if loop.held:
+            step = loop.drain(None)
         else:
             step = loop.run(context)
-            if loop.fibers:
-                # A fiber started on this poll; this IO hosts its fibers from now on.
-                step = _supervise(loop, context, Optional(step^))
+            if step._completed:
+                # Fibers this IO started drain before it completes.
+                step = loop.drain(Optional(step^))
         if not step._completed:
             return Step[Self.T, Self.E].pending(step^._waiting())
         var protected = step._protected_success

@@ -1,14 +1,13 @@
 """Supervisor: a scope whose own fiber owns supervised fibers until the scope ends.
 
-`Supervisor[E].scoped(body)` starts a parked supervisor fiber in the calling
-fiber's host, runs the body with the supervisor, and releases it as a finalizer,
-all on the caller's run loop. `supervise(io)` starts `io` with the supervisor
-fiber as its owner, through that host's inbox, so a supervised fiber can
-outlive the program that started it. Release stops the parked program; the
-host's owner draining then cancels the live supervised fibers and waits for
-them, or, when the supervisor awaits on release, release first waits for them
-to finish. A Resource cannot host the supervisor: its phases run as nested IOs,
-each hosting and draining its own fibers.
+`Supervisor[E].scoped(body)` starts a parked supervisor fiber owned by the
+calling run loop, runs the body with the supervisor, and releases it as a
+finalizer, all on the caller's run loop. `supervise(io)` starts `io` with the
+supervisor fiber's scope as its owner, so a supervised fiber can outlive the
+program that started it. Release stops the parked program; the supervisor
+fiber's task then cancels the live supervised fibers and waits for them, as any
+owner drains its children, or, when the supervisor awaits on release, release
+first waits for them to finish.
 """
 from std.memory import ArcPointer
 from std.os import abort
@@ -19,8 +18,8 @@ from fp.callables.protocols import UnaryContract, OnceUnary
 from fp.callables.native import NativeUnary, _NativeOwnedArg
 from fp.effects import IOContext
 from .kernel import Machine, Step, Wait
-from .fibers import _FiberRecord, _Inbox, _unit
-from .engine import IO, Fiber, _Program, _Head, _DEFER, _Binds, _loop_at, _spawn_into
+from .fibers import _FiberRecord, _Scope as _FiberScope, _unit
+from .engine import IO, Fiber, _Program, _Head, _DEFER, _Binds, _loop_at, _RunLoop
 
 
 struct _Stop(Movable):
@@ -51,9 +50,8 @@ struct _Parked[E: Movable & Deinitable](Machine):
 
 @fieldwise_init
 struct _SupervisorState[E: Movable & Deinitable](Movable):
-    var inbox: ArcPointer[_Inbox[Self.E]]
-    # The supervisor fiber's id in its host: the owner of every supervised fiber.
-    var owner: Int
+    # The supervisor fiber's scope: the owner of every supervised fiber.
+    var scope: ArcPointer[_FiberScope[Self.E]]
     var fiber: Fiber[NoneType, Self.E]
     var children: List[ArcPointer[_FiberRecord[Self.E]]]
     var stop: ArcPointer[_Stop]
@@ -66,8 +64,8 @@ struct _Supervised[E: Movable & Deinitable](Movable):
     var program: _Program[Self.E]
     var state: ArcPointer[_SupervisorState[Self.E]]
 
-    def start(deinit self) -> ArcPointer[_FiberRecord[Self.E]]:
-        """Queue the program in the supervisor's host, owned by the supervisor."""
+    def start(deinit self, mut run: _RunLoop[Self.E]) -> ArcPointer[_FiberRecord[Self.E]]:
+        """Start the program from the calling run loop, owned by the supervisor fiber."""
         ref state = self.state[]
         if state.stopping:
             abort("a supervisor cannot start fibers after its release")
@@ -76,7 +74,7 @@ struct _Supervised[E: Movable & Deinitable](Movable):
             if not state.children[index][].done:
                 live.append(state.children[index].copy())
         var record = ArcPointer(_FiberRecord[Self.E]())
-        _ = _spawn_into(state.inbox, self.program^, record.copy(), state.owner)
+        _ = run.spawn(self.program^, record.copy(), Optional(state.scope.copy()))
         live.append(record.copy())
         state.children = live^
         return record^
@@ -145,7 +143,7 @@ struct Supervisor[E: Movable & Deinitable](Copyable):
         """
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
             ref run = _loop_at[Self.E](loop)
-            var record = callable^.take[_Supervised[Self.E]]().start()
+            var record = callable^.take[_Supervised[Self.E]]().start(run)
             run.set_value(_Erased(Fiber[T, Self.E](_record=record^)))
 
         var parts = _Supervised[Self.E](program^._into_program(), self._state.copy())
@@ -159,8 +157,8 @@ def _acquire[E: Movable & Deinitable](await_on_release: Bool) -> IO[Supervisor[E
         var awaits = callable^.take[Bool]()
         var stop = ArcPointer(_Stop())
         var record = ArcPointer(_FiberRecord[E]())
-        var owner = run.spawn(IO[NoneType, E]._lifted(_Parked[E](stop.copy()))._into_program(), record.copy())
-        var state = _SupervisorState[E](run.inbox.value().copy(), owner, Fiber[NoneType, E](_record=record^), List[ArcPointer[_FiberRecord[E]]](), stop^, False, awaits)
+        var scope = run.spawn(IO[NoneType, E]._lifted(_Parked[E](stop.copy()))._into_program(), record.copy())
+        var state = _SupervisorState[E](scope^, Fiber[NoneType, E](_record=record^), List[ArcPointer[_FiberRecord[E]]](), stop^, False, awaits)
         run.set_value(_Erased(Supervisor[E](_state=ArcPointer(state^))))
 
     return IO[Supervisor[E], E](_program=_Program[E](_Head[E](_DEFER, _Erased(await_on_release), invoke)))

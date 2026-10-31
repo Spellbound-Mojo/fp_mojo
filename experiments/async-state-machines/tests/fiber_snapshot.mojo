@@ -1,4 +1,4 @@
-"""Driver.fibers: a bounded view of the root's live fibers, their owners and status."""
+"""Driver.fibers: a bounded view of the live fibers under the root, their owners and status."""
 from std.os import abort
 from fp.callables import OnceUnary
 from fp.effects import CancellationToken, Outcome
@@ -123,7 +123,7 @@ struct Sum(OnceUnary):
         return pair[0] + pair[1]
 
 
-def nested_hosts_not_listed() raises:
+def nested_fibers_listed() raises:
     # The sides of both are fibers of the root, so a fiber one of them starts
     # is listed, owned by that side.
     var cell = Deferred[Int]()
@@ -142,12 +142,13 @@ def nested_hosts_not_listed() raises:
     var outcome = driver^.finish()
     check(Bool(outcome) and outcome.value().is_ok() and outcome.take()._take_ok() == 3, "the pair completes")
 
-    # An IO lifted into a leaf hosts its own fibers, which the driver does not list.
+    # A fiber started by an IO lifted into a leaf belongs to the fiber running
+    # the leaf, here the root program, and is listed like any other.
     var inner_cell = Deferred[Int]()
     var inner = IO[Int, Int].never().start().flat_map(One(inner_cell.copy()))
     var lifted = Driver(IO[Int, Int].lift(inner^), CancellationToken(), Clock(), IORuntimeConfig())
     settle(lifted)
-    check(len(lifted.fibers()) == 0, "a fiber hosted by an IO inside a leaf is not the root's")
+    check(described(lifted.fibers()) == "1<-0 suspended", "a fiber started inside a leaf is listed under the running fiber: " + described(lifted.fibers()))
     fire(inner_cell)
     while not lifted.poll().completed:
         pass
@@ -157,5 +158,5 @@ def nested_hosts_not_listed() raises:
 def main() raises:
     owners_and_status()
     runnable_before_first_poll()
-    nested_hosts_not_listed()
-    print("fiber snapshot: owners, runnable, suspended and draining fibers, nested hosts excluded")
+    nested_fibers_listed()
+    print("fiber snapshot: owners, runnable, suspended and draining fibers, fibers started inside leaves")

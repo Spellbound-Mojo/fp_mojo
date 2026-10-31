@@ -1,0 +1,1 @@
+host notifier: external wakes only, once per idle period, none during polls or after finish

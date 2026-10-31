@@ -72,8 +72,9 @@ def timer_lifecycle():
     for i in range(1000):
         runtime.begin(b)
         runtime.arm(b, False, Optional(at(1000 + i)))
+    var retained = runtime.scheduler()[].retained_timers()
     var guard = _lock_metadata(runtime._cell)
-    check(len(guard.cell[].slot.value().timers) <= 34 and guard.cell[].slot.value().live_timers == 1, "timer replacement does not grow retained tombstones")
+    check(retained <= 34 and guard.cell[].slot.value().live_timers == 1, "timer replacement does not grow retained tombstones")
     _ = guard^
     runtime.retire(b)
     check(not runtime.next_deadline() and not runtime.fire_due(at(10000)), "retired timers cannot fire")
