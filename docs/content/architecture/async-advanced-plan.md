@@ -1708,6 +1708,176 @@ admits.
   `cede` through `OptionalT` and `ResultT`. `reject_lift_cancel_reader` and
   `reject_lift_spawn_state` reject the excluded layers.
 
+## Pass 11 proposal
+
+Pass 11 adds generic access to shared state and time over the existing owners,
+specifies identity and clock domains, and makes virtual time and external event
+delivery controllable in tests. This proposal follows an inventory of those
+owners and of Cats Effect's derived operations; nothing has been built.
+
+### Current state
+
+- **Coordination.** `fp.effects.async_runtime` has `Deferred[T: Copyable]`,
+  `Queue[T]` (bounded, positive capacity), and `Semaphore`. Each wraps the
+  synchronous owner of the same name in `fp.effects.coordination`, built on
+  one lock-guarded cell and its transitions (`_RefModify`, `_RefInspect`), so
+  there is one implementation of each state change. Waiting operations suspend
+  on the owner's signal (`Wait.changed`); guard contention, possible only when
+  another thread holds the guard, yields once and retries. There is no async
+  `Ref`: only the synchronous `Ref[T]`, with non-raising `modify`, borrowing
+  `inspect`, `get` for copyable state, `update`, `set`, and `get_and_set`, as the
+  [Pass 7b table](#public-surface) deferred it to this pass. No owner promises
+  waiter fairness: when a signal wakes several waiters, the run loop's slot
+  order decides; queued elements stay FIFO.
+- **Synchronous waiting.** The synchronous `Ref` lock and `Deferred.get` loop
+  with 1 ms sleeps, honest blocking for the synchronous family but blocking the
+  thread. `IO.eval_io` runs a synchronous program inside one poll, so a
+  blocking synchronous wait or `sleep_io` stalls the cooperative host.
+- **Time.** `Duration` is checked nonnegative nanoseconds; `Instant` is an
+  opaque point compared only within one clock origin. A root's `Clock` is the
+  system monotonic clock or a shared manual clock, read by the host with `now`
+  and advanced with `advance_to`; machines read it through `IOContext.now`.
+  `IO.sleep`, `timeout_to`, and `timeout_after` anchor deadlines on entry. A
+  program cannot read the time as an `IO`, and nothing measures a duration.
+  The synchronous `sleep_io` measures the system clock even when its context
+  inherits a manual one. The standard library has no wall-clock source
+  (`std.time` offers `monotonic` and performance counters; `std.time.time` is
+  a module), so wall-clock time would need a C library call, which this plan
+  does not authorize.
+- **Stepping.** `Driver.poll` reports `Progress`: completion, readiness, the
+  earliest live deadline, and quiescence, meaning nothing runnable and no
+  deadline. Tests advance a manual clock by hand between polls (`io_stepping`,
+  `instant_timers`). Quiescence does not distinguish a program awaiting an
+  external callback from one that can never resume, because the runtime does
+  not count live external registrations. The blocking `run` idles with a fixed
+  1 ms sleep whatever the next deadline; Pass 12 owns replacing it.
+- **Identity.** There is no unique token; fiber identity stays private (Pass 9).
+
+### Ownership audit of derived operations
+
+| Cats Effect operation | Here | Ownership constraint | Proposal |
+|---|---|---|---|
+| `Ref.of`, `get`, `set`, `update`, `modify`, `getAndSet` | Synchronous `Ref` | Updates consume the state; raising updates are rejected because they would lose it; `get` copies | An async `Ref` over the same cell; `get` keeps requiring `Copyable` |
+| `getAndUpdate`, `updateAndGet` | None | Return a copy of the old or new state | Copyable state only, derived from `modify` |
+| `tryUpdate`, `access` | None | Optimistic versions; updates here are already serialized | Excluded |
+| `Deferred.get`, `complete` | Async and synchronous `Deferred` | Every reader gets its own copy | Unchanged; one move-only hand-off uses a `Queue` |
+| `memoize` | None | `IO` is move-only and runs once, so a result shared by many callers needs `Copyable`; Cats Effect restarts a canceled first run, which needs a factory | Review question 4 |
+| `sleep`, `timeoutTo` | `IO.sleep`, `timeout_to`, `timeout_after` | The fallback is consumed once | Generic forms |
+| `timeout` | None | The timeout error is an owned `E` value, consumed once | Derived from `timeout_to` |
+| `Clock.monotonic`, `timed` | `IOContext.now` for machines only | The measured value moves through | `IO.monotonic`, `timed` |
+| `delayBy`, `andWait` | None | None | Derived from `sleep` |
+| `Clock.realTime` | None | No pure-Mojo source | Excluded and recorded |
+| `Unique.unique` | None | Tokens must not expose fiber identity | Review question 3 |
+| `CountDownLatch`, `CyclicBarrier`, `Mutex`, `AtomicCell` | None | Derivable from `Ref` and `Deferred` | Out of scope |
+| `parTraverseN`, `parReplicateAN` | None | Collection operations | Excluded, as the plan requires |
+
+### Proposal
+
+1. **Async `Ref`.** `fp.effects.async_runtime.Ref[T]` wraps the synchronous
+   `Ref`'s cell and transitions, as `Deferred` and `Queue` do: `get`, `set`,
+   `update`, `modify`, `get_and_set`, `inspect`, `get_and_update`, and
+   `update_and_get`, each an `IO` with the error chosen per call. Updates run
+   once under the guard and never suspend, so they need no waiting machine.
+2. **Capabilities.** Following the Pass 10 pattern, dictionaries with associated
+   handle and carrier types, generic entry points, and provider forwarding:
+   - `Concurrent` (`GenConcurrent`), extending `Spawn`: `make_ref`,
+     `make_deferred`, and access to their handles. `ref` is a Mojo keyword, and
+     `get`, `put`, and `modify` already name `Stateful` operations, so entry
+     points carry the handle in their names: `get_ref`, `set_ref`,
+     `update_ref`, `modify_ref`, `complete_deferred`, `get_deferred`. Creation
+     is an effect, so each run of a program gets fresh state. Provider:
+     `Async[E]`.
+   - `Timing` (Cats Effect's `Clock`; that name is taken by the host clock):
+     `monotonic` and `timed`. Providers: `Async[E]` and `SyncIO[E]`, both reading the context
+     clock.
+   - `Temporal` (`GenTemporal`), extending `Concurrent` and `Timing`: `sleep`,
+     `timeout_to`, `timeout_after`, `timeout`, `delay_by`, and `and_wait`.
+     Provider: `Async[E]`. `SyncIO` stays narrower: a blocking sleep is not a
+     suspension.
+   - Forwarding through `OptionalT` and `ResultT` as in 10d: creation, reads,
+     and `sleep` are lifted, and timeouts forward their base programs.
+3. **Clock domains.** One clock per root, inherited by every fiber, sleep,
+   timeout, and `monotonic` read in it. `Instant` values compare only within
+   that origin; a manual clock never moves unless the host or the test control
+   advances it. The synchronous `sleep_io` keeps measuring the system clock and
+   is documented as blocking the host under `eval_io`. Wall-clock time is
+   recorded as unsupported.
+4. **Unique identity.** If included, `unique[I]()` returns an opaque `Token`,
+   compared only for equality, drawn from a process-wide counter, and unrelated
+   to fibers: providers `Async[E]` and `SyncIO[E]`.
+5. **Test control.** `TestControl[P]`, after Cats Effect's, owns a `Driver`
+   with a manual clock:
+   - `tick` runs until nothing is runnable without advancing time, and
+     `tick_one` takes one root poll.
+   - `advance(duration)` and `next_interval` move virtual time.
+   - `tick_all` alternates ticking and advancing to the next deadline until the
+     program completes or no deadline remains.
+   - `results` returns the outcome once the program completes.
+   - `is_deadlocked` is quiescence with no live external registration, which
+     needs a registration count in the host. As in Cats Effect, it assumes the
+     host delivers no other events, such as completing a `Deferred` it shares.
+
+   External events, from `Completion.complete` or from a shared owner,
+   delivered between ticks are observed at the next tick in delivery order. The
+   promised orderings are written down, not randomized: queued elements are
+   FIFO, a fiber's binds run in order, and `race_pair` checks the left side
+   first. The ready-fiber order is unspecified. Seeded exploration of that
+   order and replay traces remain Pass 13 qualification.
+6. **No polling.** Every new waiting operation suspends on a signal or a timer,
+   so a waiting program reports `runnable == False` and spends no transitions
+   until woken.
+
+### Steps
+
+1. **11a:** the async `Ref`, `Concurrent` with its entry points, and the laws.
+2. **11b:** `IO.monotonic` and `timed`, `Timing`, `Temporal`, the clock-domain
+   documentation, and forwarding through `OptionalT` and `ResultT`.
+3. **11c:** `TestControl`, the external-registration count, and the event
+   ordering record.
+4. **11d:** the approved derived operations (`unique`, `memoize`) and the audit
+   table in its final form.
+
+### Gate and clients
+
+From the delivery table: reproducible manual-time and cancellation laws that
+respect the promised event ordering, no polling loop presented as suspension,
+and no async collection API additions.
+
+- `capability_concurrent`: `Ref` reads after writes, `modify` atomic with
+  respect to other fibers, `Deferred` completing once with every reader getting
+  the value, and fresh state on each run of a program, on `Async` and through
+  `OptionalT`.
+- `temporal_laws` under `TestControl`: `sleep(a)` then `sleep(b)` advances
+  `monotonic` by `a + b`; `timeout_to(never, d, f)` equals `sleep(d)` then `f`;
+  a value completing before the deadline wins; a canceled sleep completes
+  without advancing time; `monotonic` never decreases.
+- `test_control`: `tick` versus `tick_all`, `next_interval`, deadlock against
+  awaiting an external callback, and events delivered between ticks in order.
+- Suspension checks: a waiting `Ref`-guarded, `Deferred`, `Queue`, or timer
+  program reports no runnable work and runs no transitions until woken.
+- Rejections: `Temporal` and `Concurrent` on `SyncIO`, `get_ref` on move-only
+  state, and `Concurrent` through `ReaderT`.
+
+### Review questions
+
+1. **Names.** `Concurrent`, `Timing`, and `Temporal` for the capabilities, and
+   handle-qualified entry points such as `get_ref` and `complete_deferred`; or
+   other names?
+2. **`Ref` operations.** The proposed set, including `get_and_update` and
+   `update_and_get` for copyable state; or only the synchronous `Ref`'s current
+   operations?
+3. **`Unique`.** Add `unique[I]()` with a process-wide equality-only token, or
+   keep identity out as Pass 10 did?
+4. **`memoize`.** Add `IO.memoize` for copyable results, either without
+   restarting after a canceled first run or with a factory that can rebuild
+   the program; or leave it out?
+5. **`TestControl`.** A public type in `fp.effects.async_runtime` with Cats
+   Effect's names and its deadlock assumption; or only Driver helpers such as
+   advancing to the next deadline?
+6. **10d follow-ups.** Keep out of Pass 11 a layer-specific exit type for
+   `guarantee_case` and a combined dictionary that selects several
+   capabilities through one layer? Recommendation: keep them out.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:
