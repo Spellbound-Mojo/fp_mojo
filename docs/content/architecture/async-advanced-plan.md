@@ -2018,6 +2018,56 @@ count, and the event-ordering record.
   instead of its own virtual-time loop, and the guide gains the runnable
   example `async_test_control`.
 
+**11d** was completed on 2026-10-31: the audit in its final form and the
+Pass 11 gate. As decided, it adds no operations: `Unique` and `memoize` stay
+out.
+
+| Cats Effect operation | Delivered | Ownership rule |
+|---|---|---|
+| `Ref.of`, `get`, `set`, `update`, `modify`, `getAndSet` | Async `Ref`; `make_ref`, `get_ref`, `set_ref`, `update_ref`, `modify_ref` | Updates consume the state and cannot raise; reads copy, so `get` needs copyable state; callbacks own their state, and native ones are plain functions |
+| `getAndUpdate`, `updateAndGet` | Both `Ref`s, from one private `_Update` | Copyable state only |
+| `tryUpdate`, `access` | Excluded | Updates are already serialized |
+| `Deferred.get`, `complete` | Async `Deferred`; `make_deferred`, `complete_deferred`, `get_deferred` | Every reader receives a copy; a move-only hand-off uses a `Queue` |
+| `memoize` | Out (decision 4) | A shared result needs copyable values; restarting a canceled first run needs a factory |
+| `sleep`, `timeoutTo`, `timeout` | `IO` and `Temporal` | The fallback or error is consumed once |
+| `Clock.monotonic`, `timed` | `IO.monotonic`, `timed`; `Timing` on `Async` and `SyncIO` | The value moves through; a failure has no duration |
+| `delayBy`, `andWait` | `IO` and `Temporal`, derived once in `fp.effects._timing` | Through a layer, absence skips the sleep after it |
+| `Clock.realTime` | Excluded | No pure-Mojo wall-clock source |
+| `Unique.unique` | Out (decision 3) | No consumer; fiber identity stays private |
+| `TestControl` | `TestControl` | Linear: `results` consumes a completed program |
+| `CountDownLatch`, `CyclicBarrier`, `Mutex`, `AtomicCell` | Out of scope | Derivable from `Ref` and `Deferred` |
+| `parTraverseN`, `parReplicateAN` | Excluded | Collection operations |
+
+- **Gate: manual-time and cancellation laws.** `capability_temporal` checks
+  the sleep, timeout, and delay laws through `TestControl` with exact
+  virtual durations, a canceled sleep that leaves time unchanged, and
+  monotonic readings; `test_control` checks deadlock, delivery between ticks,
+  and cancellation; the `MonadCancel` and `GenSpawn` laws are Pass 10's. The
+  promised orderings are recorded in the guide, and every check depends only
+  on them. Met for the single-threaded cooperative host; seeded exploration of
+  the unspecified orders remains Pass 13 qualification.
+- **Gate: no polling loop presented as suspension.** Every async waiting
+  operation, `Deferred.get`, `Queue` offers and takes, `Semaphore.acquire`,
+  sleeps, and timeouts, suspends on a signal or a timer: the parked read in
+  `capability_concurrent` spends no polls or transitions until woken, and a
+  sleeping program under `TestControl` has nothing to run. Recorded
+  exceptions: guard contention yields once and retries, which only another
+  thread holding a guard can cause; the synchronous family's waits block the
+  thread in 1 ms steps, honest blocking that is why `SyncIO` is not
+  `Temporal`; and the blocking `run` idles in 1 ms steps until Pass 12
+  provides waiting.
+- **Gate: no async collection API additions.** None were added.
+- **Coverage after Pass 11.** Against the [coverage
+  table](#generic-capability-coverage): deferred construction and errors,
+  cancellation, spawn, concurrent state, and monotonic time with sleeping and
+  timeouts are provided, for `Async[E]` and, where honest, `SyncIO[E]`, and
+  forward through `OptionalT` and `ResultT`. Unique identity and wall-clock
+  time are absent, as recorded. Blocking and interruptible execution,
+  execution-context access, and foreign-thread delivery belong to Pass 12.
+  Passes 8 through 11 form the first useful advanced-runtime milestone. Each
+  pass ran targeted qualification; the full verification gates (step 3e) have
+  not run and wait for a request.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:
