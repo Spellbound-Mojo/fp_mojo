@@ -52705,17 +52705,17 @@
     "fibers": [
      {
       "args": [],
-      "description": "A bounded diagnostic view, like Cats Effect's fiber dump: each entry\nnames an internal slot, its owner's slot, and whether it is runnable,\nsuspended, or draining its children. It holds no payloads and no\ncompleted fibers. The sides of both and races are fibers of the root\nand are listed; an IO lifted into a leaf with IO.lift hosts its own\nfibers, which are not.",
+      "description": "A bounded diagnostic view, like Cats Effect's fiber dump: each entry\nnames an internal slot, its owner's slot, and whether it is runnable,\nsuspended, or draining its children. It holds no payloads and no\ncompleted fibers. Every fiber the root runs is listed, including the\nsides of both and races and fibers started by an IO lifted into a leaf,\nwhich belong to the fiber running that leaf.",
       "error": "",
       "parameters": [],
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "The live fibers in slot order; empty for a root that is not an IO,\nbefore the first start, and after completion.",
+       "doc": "The live fibers in slot order; empty before the first start and\nafter completion.",
        "type": "List[FiberInfo]"
       },
       "signature": "def fibers(self) -> List[FiberInfo]",
-      "summary": "List the live fibers the root IO hosts, between polls."
+      "summary": "List the live fibers under the root, between polls."
      }
     ],
     "finish": [
@@ -54661,12 +54661,11 @@
     }
    ],
    "provider": "effects/_async/engine",
-   "signature": "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier, _FiberHost)",
+   "signature": "struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarrier)",
    "summary": "An asynchronous program producing T or failing with the exact domain error E.",
    "traits": [
     "Machine",
-    "_FamilyCarrier",
-    "_FiberHost"
+    "_FamilyCarrier"
    ]
   },
   "effects.async_runtime.IORuntimeConfig": {
