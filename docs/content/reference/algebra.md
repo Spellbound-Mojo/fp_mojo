@@ -25,8 +25,8 @@ stopping at the first. Target families come first, so a single bracketed family
 overrides the target; name the source with `S=`. A bare value such as `Int` has
 no family of its own and needs `IdentityFamily`, and an `Optional` read through
 another base Monad names that base, as in `or_else_absent[IdentityFamily]`.
-A value with no recognized family is rejected with
-`invalid call ... lacking evidence`, whose note names `_UnrecognizedCarrier`.
+A value with no recognized family, or whose family lacks the capability (a
+`Result` has no `filter_map`), is rejected with `no matching function`.
 `pure`, `fail`, `empty` and `combine` take no source value and always name
 their family. Generic code whose callback result is a type parameter names its
 families, as before.

@@ -1,4 +1,4 @@
-# error: no matching method in call to 'product'
+# error: invalid call to 'product': violated constraint
 from fp.algebra import ListFamily, ResultFamily, map2_lazy
 from fp.effects import OptionalT, ResultT
 from fp.functions import pipeline, piped

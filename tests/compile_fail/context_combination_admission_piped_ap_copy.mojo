@@ -1,4 +1,4 @@
-# error: no matching method in call to 'ap'
+# error: invalid call to 'ap': violated constraint
 from fp.algebra import ListFamily
 from fp.functions import piped
 from context_combination_admission_support import CapturedUnary,MoveState

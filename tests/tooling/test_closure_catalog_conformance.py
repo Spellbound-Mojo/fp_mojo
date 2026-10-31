@@ -22,6 +22,11 @@ def closure_bounds(text):
     for m in re.finditer(r"^\s*def [a-z_]+\[", text, re.M):
         end = matching(text, m.end() - 1)
         for parameter in split_top(text[m.end():end - 1]):
+            # A callback after a defaulted family defaults to its own bound.
+            declared, separator, default = parameter.partition(" = def(")
+            if separator:
+                assert re.sub(r"\s+", " ", declared.split(":", 1)[1]).strip() == "def(" + re.sub(r"\s+", " ", default).strip(), parameter
+                parameter = declared
             bound = BOUND.match(parameter)
             if bound and " thin" not in bound.group(2):
                 yield text.count("\n", 0, m.start()) + 1, bound

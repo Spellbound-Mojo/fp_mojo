@@ -14,9 +14,9 @@ from std.hash import Hasher, default_comp_time_hasher
 from std.memory import MaybeUninit
 from fp._internal.native_collections import _empty_deque_like, _take_string_dict, _string_dict_from_native
 from fp.callables.products import _take_pair
-from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary, MutableUnary, BorrowCallable
+from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary, MutableUnary, BorrowCallable, BinaryContract, ThunkContract
 from fp.callables.invoke import call_repeated, RepeatableUnary
-from .protocols import Functor, RebindingFunctor, Filterable, FunctorFilter, _Accumulate, _map_accumulate
+from .protocols import Functor, RebindingFunctor, Filterable, FunctorFilter, _Accumulate, _map_accumulate, Monad, Traversable, Applicative
 from ._selection import _Select, _Keep
 from .instances import _ListElement, ListFamily, _NativeFamily, IdentityFamily
 from fp.iteration._advance import _next_optional, _buffer_owned
@@ -228,11 +228,74 @@ struct _DictInsert[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hashe
 
 # The default family of a source value, for operations that take the value
 # first: what _NativeFamily recognizes (declared effect families, Result, List,
-# Optional) plus the std sequences above. Other values get _UnrecognizedCarrier,
-# which conforms to no capability, so a defaulted family admits no call and an
-# explicit family still binds.
-struct _UnrecognizedCarrier:
+# Optional) plus the std sequences above. Other values, and recognized families
+# that lack a capability, get _UnrecognizedCarrier: it conforms to every
+# capability, but its element is _NoElement and every admission is False, so a
+# defaulted family rejects the call decidably, also in generic code, and a
+# carrier's own methods are not made ambiguous. An explicit family still binds.
+@fieldwise_init
+struct _NoElement(Movable):
     pass
+
+
+struct _UnrecognizedCarrier(Monad, Traversable, Filterable, FunctorFilter):
+    comptime Element[V: Movable & Deinitable] = _NoElement
+    comptime CarrierCompatible[V: Movable & Deinitable]: Bool = False
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = False
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = False
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable]: Bool = False
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = False
+    comptime TraverseCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = False
+    comptime TargetCompatible[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable]: Bool = False
+    comptime _LoopCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate]: Bool = False
+    comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _NoElement
+    comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
+    comptime Filtered[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = _NoElement
+    comptime FilterError[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable] = Never
+    comptime MapFiltered[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _NoElement
+    comptime MapFilterError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
+    comptime Pure[A: Movable & Deinitable] = _NoElement
+    comptime Combined[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = _NoElement
+    comptime CombineError[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable] = Never
+    comptime Bound[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _NoElement
+    comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
+    comptime Traversed[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _NoElement
+    comptime TraverseError[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
+    comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _NoElement
+    comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Never
+
+    # No admission holds, so these never run; each returns the uninhabited shape.
+    @staticmethod
+    def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> _NoElement:
+        return _NoElement()
+
+    @staticmethod
+    def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable](var predicate: P, var value: V) -> _NoElement:
+        return _NoElement()
+
+    @staticmethod
+    def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> _NoElement:
+        return _NoElement()
+
+    @staticmethod
+    def pure[A: Movable & Deinitable](var value: A) -> _NoElement:
+        return _NoElement()
+
+    @staticmethod
+    def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var f: F, var left: V, var right: R) -> _NoElement:
+        return _NoElement()
+
+    @staticmethod
+    def _loop[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate](var f: F, var source: V) -> _NoElement:
+        return _NoElement()
+
+    @staticmethod
+    def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var value: V) -> _NoElement:
+        return _NoElement()
+
+    @staticmethod
+    def traverse[G: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var f: F, var source: V) -> _NoElement:
+        return _NoElement()
 
 
 comptime _SourceFamily[V: Movable & Deinitable] = (

@@ -16,8 +16,8 @@ def bound[I:Monad,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable]
     return pipeline[I](value^).flat_map(f^).get()
 
 
-def list_mapped[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var values:V,var f:F) raises F.Error -> List[F.Out] where V == List[F.Arg] and RepeatableUnary[F]:
-    return piped(values^).map(f^).get()
+def list_mapped[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var values:V,var f:F) raises MapContract[ListFamily,V,F].Error -> MapContract[ListFamily,V,F].Out where MapContract[ListFamily,V,F].Compatible:
+    return map[ListFamily](values^, f^)
 
 
 def metadata():

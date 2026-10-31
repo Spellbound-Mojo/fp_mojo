@@ -5,7 +5,6 @@ Operation templates own forwarding signatures; Mojo owns all execution. Keeping
 this separate from the stage-count generator makes adding a derived operation
 independent of the supported container count.
 """
-import re
 from dataclasses import dataclass
 from combinator_docs import document_first_methods
 from native_signatures import MD, callable_protocol, native_adapter, callback, closure, source_default, admissions, defaulted
@@ -241,19 +240,18 @@ TRANSFORMS = (
 def transform_methods(carrier=None):
     out = []
     for name, bound, extra, argument, element, callback, args, doc in TRANSFORMS:
-        if not carrier:
-            # The element comes from the defaulted family; a separate T could
-            # only be related in where, which Mojo does not infer from.
+        if carrier:
+            params = [bound, *extra, *carrier.parameters]
+        else:
+            # The element follows the defaulted family and defaults to its
+            # element, so arguments such as integer literals convert to it.
             traits = bound.split(': ', 1)[1]
-            payload = f'downcast[I.Element[Self.Value], {traits}]'
-            argument, element, callback = (re.sub(r'\bT\b', payload, x) for x in (argument, element, callback))
-            bound = None
-        params = [*([bound] if bound else []), *extra, *(carrier.parameters if carrier else ('//', piped_family('Functor')))]
-        if params[0] == '//': params = params[1:]
+            params = [*extra, '//', piped_family('Functor'), f'{bound} = downcast[I.Element[Self.Value], {traits}]']
+            if params[0] == '//': params = params[1:]
         source = carrier.value('T') if carrier else 'Self.Value'
         family = carrier.instance('T') if carrier else 'I'
         result = carrier.value(element) if carrier else f'I.Mapped[Self.Value, {callback}]'
-        condition = f'Self.Value == {source}' if carrier else f'conforms_to(I.Element[Self.Value], {traits})'
+        condition = f'Self.Value == {source}' if carrier else 'I.Element[Self.Value] == T'
         if not carrier: condition += f' and _MapCompatible[I, Self.Value, {callback}]'
         elif name in ('fill', 'tuple_left', 'tuple_right'):
             # The callback's shared receiver exists only for Copyable constants.

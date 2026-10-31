@@ -1,4 +1,4 @@
-# error: no matching method in call to 'ap'
+# error: invalid call to 'ap': violated constraint
 from fp.functions import piped
 from fp.callables import OnceUnary
 @fieldwise_init

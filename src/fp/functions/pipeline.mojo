@@ -5,7 +5,7 @@ library value such as a `Partial` or a `Composition`. Each stage's own contract
 fixes its types. `piped(value).then(f)` chains stages one call at a time, with no
 stage limit and no promotion.
 """
-from fp.algebra.contracts import ApContract, ProductContract, Map2Contract, IfContract
+from fp.algebra.contracts import ApContract, ProductContract, Map2Contract, IfContract, MapContract
 from fp.algebra.contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
 from fp.algebra._admission import _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible
 from fp.algebra.validation import ValidationFamily, _ListErrors
@@ -855,8 +855,12 @@ struct Piped[Value: Movable & Deinitable](Movable):
 
     def map[F: UnaryContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](
         deinit self, var function: F
-    ) raises I.MapError[Self.Value, F] -> Piped[I.Mapped[Self.Value, F]] where I.Element[Self.Value] == F.Arg and _MapCompatible[I, Self.Value, F]:
-        """Map an owned library callback through an explicit family."""
+    ) raises MapContract[I, Self.Value, F].Error -> Piped[MapContract[I, Self.Value, F].Out] where MapContract[I, Self.Value, F].Compatible:
+        """Map an owned library callback through the held value's family or an explicit one.
+
+        Admission is the free map's contract, so a generic wrapper forwards
+        `MapContract[I, V, F].Compatible`.
+        """
         return Piped(_family_map[I](self.value^, function^))
 
     def filter[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //,
@@ -2427,12 +2431,13 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert Self.Value == StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]
         return Piped(_family_filter_not[_StringDictFamily[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](rebind_var[StringDict[downcast[C._BorrowView[o].Payload, Movable & Deinitable]]](self.value^), predicate._borrow_view()))
 
-    def fill[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], U]] -> Piped[I.Mapped[Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], U]]] where conforms_to(I.Element[Self.Value], Movable & Deinitable) and _MapCompatible[I, Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], U]]:
+    def fill[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], T: Movable & Deinitable = downcast[I.Element[Self.Value], Movable & Deinitable]](deinit self, var value: U) raises I.MapError[Self.Value, _Fill[T, U]] -> Piped[I.Mapped[Self.Value, _Fill[T, U]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, U]]:
         """Replace payloads with value, moving it for a single call or copying for repeated calls.
 
         Parameters:
             U: The constant or result payload type; repeated constants must be Copyable.
             I: The explicit capability family, including its result and error semantics.
+            T: The element type, including its native origins.
 
         Args:
             value: The constant, consumed and copied once per emitted payload.
@@ -2443,13 +2448,14 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_Fill[downcast[I.Element[Self.Value], Movable & Deinitable], U](value^), self.value^))
+        return Piped(I.map(_Fill[T, U](value^), self.value^))
 
-    def replace[I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var old: downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable], var new: downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]) raises I.MapError[Self.Value, _Replace[downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]]] -> Piped[I.Mapped[Self.Value, _Replace[downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]]]] where conforms_to(I.Element[Self.Value], Copyable & Equatable & Deinitable) and _MapCompatible[I, Self.Value, _Replace[downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]]]:
+    def replace[I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], T: Copyable & Equatable & Deinitable = downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]](deinit self, var old: T, var new: T) raises I.MapError[Self.Value, _Replace[T]] -> Piped[I.Mapped[Self.Value, _Replace[T]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Replace[T]]:
         """Replace equal payloads, moving unmatched values unchanged.
 
         Parameters:
             I: The explicit capability family, including its result and error semantics.
+            T: The element type, including its native origins.
 
         Args:
             old: The value to compare against each payload, consumed.
@@ -2461,13 +2467,14 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_Replace[downcast[I.Element[Self.Value], Copyable & Equatable & Deinitable]](old^, new^), self.value^))
+        return Piped(I.map(_Replace[T](old^, new^), self.value^))
 
-    def void[I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self) raises I.MapError[Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], NoneType]] -> Piped[I.Mapped[Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], NoneType]]] where conforms_to(I.Element[Self.Value], Movable & Deinitable) and _MapCompatible[I, Self.Value, _Fill[downcast[I.Element[Self.Value], Movable & Deinitable], NoneType]]:
+    def void[I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], T: Movable & Deinitable = downcast[I.Element[Self.Value], Movable & Deinitable]](deinit self) raises I.MapError[Self.Value, _Fill[T, NoneType]] -> Piped[I.Mapped[Self.Value, _Fill[T, NoneType]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _Fill[T, NoneType]]:
         """Discard payloads while preserving their container shape.
 
         Parameters:
             I: The explicit capability family, including its result and error semantics.
+            T: The element type, including its native origins.
 
         Returns:
             The source shape with NoneType payloads; a lazy iterator is not drained.
@@ -2475,14 +2482,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_Fill[downcast[I.Element[Self.Value], Movable & Deinitable], NoneType](None), self.value^))
+        return Piped(I.map(_Fill[T, NoneType](None), self.value^))
 
-    def tuple_left[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, True]]] where conforms_to(I.Element[Self.Value], Movable & Deinitable) and _MapCompatible[I, Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, True]]:
+    def tuple_left[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], T: Movable & Deinitable = downcast[I.Element[Self.Value], Movable & Deinitable]](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, True]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, True]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, True]]:
         """Attach value on the left, moving it for a single call or copying for repeated calls.
 
         Parameters:
             U: The constant or result payload type; repeated constants must be Copyable.
             I: The explicit capability family, including its result and error semantics.
+            T: The element type, including its native origins.
 
         Args:
             value: The constant, consumed and copied once per emitted payload.
@@ -2493,14 +2501,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, True](value^), self.value^))
+        return Piped(I.map(_TupleWith[T, U, True](value^), self.value^))
 
-    def tuple_right[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor]](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, False]]] where conforms_to(I.Element[Self.Value], Movable & Deinitable) and _MapCompatible[I, Self.Value, _TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, False]]:
+    def tuple_right[U: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], T: Movable & Deinitable = downcast[I.Element[Self.Value], Movable & Deinitable]](deinit self, var value: U) raises I.MapError[Self.Value, _TupleWith[T, U, False]] -> Piped[I.Mapped[Self.Value, _TupleWith[T, U, False]]] where I.Element[Self.Value] == T and _MapCompatible[I, Self.Value, _TupleWith[T, U, False]]:
         """Attach value on the right, moving it for a single call or copying for repeated calls.
 
         Parameters:
             U: The constant or result payload type; repeated constants must be Copyable.
             I: The explicit capability family, including its result and error semantics.
+            T: The element type, including its native origins.
 
         Args:
             value: The constant, consumed and copied once per emitted payload.
@@ -2511,7 +2520,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
         """
-        return Piped(I.map(_TupleWith[downcast[I.Element[Self.Value], Movable & Deinitable], U, False](value^), self.value^))
+        return Piped(I.map(_TupleWith[T, U, False](value^), self.value^))
 
     def pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Functor) else _UnrecognizedCarrier, Functor], F: def(P) -> R = def(P) -> R](deinit self, ref[o] function: F) raises I.MapError[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]] -> Piped[I.Mapped[Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]]] where I.Element[Self.Value] == downcast[P, Movable & Deinitable] and _MapCompatible[I, Self.Value, _Observe[downcast[P, Movable & Deinitable], _NativeBorrowRef[P, R, Never, F, False, o], True]]:
         """Borrow each payload for projection and retain it beside the result.
@@ -2779,7 +2788,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         comptime assert I.TraverseError[G, Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True]] == I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, E]]
         return Piped(_traverse_as[I, G, Self.Value, NativeUnary[I.Element[Self.Value], R, E, type_of(function), True], I.TraverseError[G, Self.Value, _ErrorProbe[NoneType, R, E]]](NativeUnary[I.Element[Self.Value], R, E, type_of(function), True](function), self.value^))
 
-    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var other: W, var function: F) raises Map2Contract[I, Self.Value, W, F].Error -> Piped[Map2Contract[I, Self.Value, W, F].Out] where (Map2Contract[I, Self.Value, W, F].InputCompatible and Map2Contract[I, Self.Value, W, F].OperationCompatible) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
+    def map2[F: BinaryContract & Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var other: W, var function: F) raises Map2Contract[I, Self.Value, W, F].Error -> Piped[Map2Contract[I, Self.Value, W, F].Out] where Map2Contract[I, Self.Value, W, F].InputCompatible and Map2Contract[I, Self.Value, W, F].OperationCompatible:
         """Combine two already evaluated carriers, following their Applicative semantics.
 
         Parameters:
@@ -2799,15 +2808,15 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_map2_as[I, X=Map2Contract[I, Self.Value, W, F].Error](function^, self.value^, other^))
 
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative], F: def(var A, var B) -> R = def(var A, var B) -> R](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]] where (I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
+    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative], F: def(var A, var B) -> R = def(var A, var B) -> R](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]] where I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]:
         """Combine two already evaluated carriers, following their Applicative semantics."""
         return Piped(_map2_as[I, X=I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, Never, F, False, o], _ValueThunk[W]]](_NativeBinaryRef[A, B, R, Never, F, False, o](Pointer(to=function)), self.value^, other^))
 
-    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative], X: Movable & Deinitable = Never, F: def(var A, var B) raises X -> R = def(var A, var B) raises X -> R](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]] where (I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
+    def map2[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative], X: Movable & Deinitable = Never, F: def(var A, var B) raises X -> R = def(var A, var B) raises X -> R](deinit self, var other: W, ref[o] function: F) raises I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]] -> Piped[I.Combined[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]] where I.Element[Self.Value] == A and I.Element[W] == B and _CombineCompatible[I, Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]:
         """Combine two already evaluated carriers, following their Applicative semantics."""
         return Piped(_map2_as[I, X=I.CombineError[Self.Value, _NativeBinaryRef[A, B, R, X, F, True, o], _ValueThunk[W]]](_NativeBinaryRef[A, B, R, X, F, True, o](Pointer(to=function)), self.value^, other^))
 
-    def product[W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var other: W) raises ProductContract[I, Self.Value, W].Error -> Piped[ProductContract[I, Self.Value, W].Out] where (ProductContract[I, Self.Value, W].OperationCompatible) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
+    def product[W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var other: W) raises ProductContract[I, Self.Value, W].Error -> Piped[ProductContract[I, Self.Value, W].Out] where ProductContract[I, Self.Value, W].OperationCompatible:
         """Combine two already evaluated carriers into pairs, following their Applicative semantics.
 
         Parameters:
@@ -2825,7 +2834,7 @@ struct Piped[Value: Movable & Deinitable](Movable):
         """
         return Piped(_family_product[I](self.value^, other^))
 
-    def ap[W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var values: W) raises ApContract[I, Self.Value, W].Error -> Piped[ApContract[I, Self.Value, W].Out] where (ApContract[I, Self.Value, W].InputCompatible and ApContract[I, Self.Value, W].OperationCompatible) and (((W == Result[downcast[W, _ResultType].Value, downcast[Self.Value, _ResultType].Error]) if conforms_to(W, _ResultType) else False) if conforms_to(Self.Value, _ResultType) else True):
+    def ap[W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[Self.Value] if conforms_to(_SourceFamily[Self.Value], Applicative) else _UnrecognizedCarrier, Applicative]](deinit self, var values: W) raises ApContract[I, Self.Value, W].Error -> Piped[ApContract[I, Self.Value, W].Out] where ApContract[I, Self.Value, W].OperationCompatible:
         """Apply the callbacks in this carrier to an already evaluated carrier of arguments.
 
         Parameters:

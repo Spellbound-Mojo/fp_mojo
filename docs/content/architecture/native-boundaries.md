@@ -1107,9 +1107,9 @@ defaulted, on every surface: `traverse[G, S]`, `Piped.traverse[G, I]`.
 
 - **Source** families default to `_SourceFamily[V]` (`fp.algebra.collections`):
   what `_NativeFamily` recognizes (declared effect families, `Result`, `List`,
-  `Optional`) plus `Deque` and `LinkedList`. Other values get
-  `_UnrecognizedCarrier`, which conforms to no capability. The default is
-  `downcast[_SourceFamily[V], Trait]`; `source_default()` in
+  `Optional`) plus `Deque` and `LinkedList`. Other values, and families that
+  lack the capability, get `_UnrecognizedCarrier`. The default is
+  `downcast[_SourceFamily[V] if conforms_to(_SourceFamily[V], Trait) else _UnrecognizedCarrier, Trait]`; `source_default()` in
   `scripts/native_signatures.py` spells it for generators.
 - **Target** families default to `_InferredApplicative[R]` from the callback
   result, or `_ViewTarget[F, o]` for a view, as `Iter` and `Pipeline` already did.
@@ -1133,11 +1133,15 @@ Probed and found while implementing:
 
 - A guard rejecting the unrecognized default by name
   (`conforms_to(_SourceFamily[V], T) or S != default`) cannot be proven for a
-  generic caller that passes its own symbolic families, so it is not used. An
-  unrecognized carrier fails the operation's own family constraint instead:
-  `invalid call ... lacking evidence`, with a note naming `_UnrecognizedCarrier`
-  or the family's missing capability. Wrong callback inputs and bare callback
-  results still report `no matching function`.
+  generic caller that passes its own symbolic families, so it is not used.
+  `_UnrecognizedCarrier` is instead a real family: it conforms to every
+  capability, its element is the uninhabited `_NoElement` and every admission
+  is `False`. The operation's own family constraint is then decidably false,
+  also in generic code, so an unrecognized carrier reports `no matching
+  function` as before and does not make a carrier's own methods (Array, Dict)
+  ambiguous. A first version whose sentinel conformed to nothing left those
+  constraints undecidable: unrecognized carriers reported `lacking evidence`
+  and calls on Array and Dict became ambiguous.
 - Plain functions whose signature names the defaulted family
   (`def(var _NativeOwnedArg[S.Element[V]]) thin -> R`) resolve.
 - A defaulted family's error alias does not reduce for raising plain functions,
@@ -1183,8 +1187,15 @@ and terminals, which have no generic form. `pipeline.mojo` has 660 methods
 - Generic `map`, `flat_map`, `filter_map` and `traverse` take owned plain
   functions, copied into `NativeUnary` like the free operations, so a deferred
   family can keep them.
-- Unrecognized carriers report `invalid call ... lacking evidence` or
-  `violated constraint` instead of `no matching method`.
+- Copy and move violations in generic `product` and `ap` now report
+  `invalid call ...: violated constraint` instead of `no matching method`.
+- A Piped generic method does not accept a wrapper's forwarded contract as
+  evidence about `Self.Value`; generic wrappers call the free operations,
+  which do (`map[ListFamily](values^, f^)` with
+  `MapContract[ListFamily, V, F].Compatible`), or `pipeline[I]`. A native
+  carrier's methods used to accept `V == List[F.Arg]` evidence directly.
+- The callback type is no longer the first explicit parameter of List and
+  Optional methods; bind it by keyword (`.filter[F=type_of(predicate)]`).
 
 ## Callables and argument packs
 
