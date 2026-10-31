@@ -374,6 +374,9 @@
     },
     "docs/examples/async_sequencing.mojo": {
       "stdout": "42\n"
+    },
+    "docs/examples/async_test_control.mojo": {
+      "stdout": "next deadline in ms: 5000\nresult: 7\n"
     }
   },
   "version": 1

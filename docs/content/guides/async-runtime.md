@@ -264,6 +264,29 @@ are separate from the program's domain error `E`.
 
 <!-- example: docs/examples/async_host_cancel.mojo -->
 
+`TestControl[P]` runs a program on virtual time, as Cats Effect's
+`TestControl` does: it owns a `Driver` on a manual clock that starts at zero.
+`tick` runs everything runnable without moving time, `tick_one` takes one root
+poll, `advance` and `advance_and_tick` move time, `next_interval` reports the
+time to the next deadline, `tick_for` runs through every deadline within a
+duration, and `tick_all` alternates ticking and advancing until the program
+completes or nothing is scheduled. `is_deadlocked` reports an incomplete
+program with nothing runnable, no deadline, and no `IO.async` registration
+awaiting completion. Like Cats Effect, it assumes nothing else delivers
+events: a program waiting on a `Deferred` that the test could still complete
+also reports a deadlock. `results` takes the outcome once the program
+completes; to stop one that cannot, `request_cancel` and tick again.
+
+<!-- example: docs/examples/async_test_control.mojo -->
+
+Events delivered between ticks, by completing an `IO.async` registration or a
+shared `Deferred`, `Queue`, or `Ref`, are observed at the next tick. The
+orderings the runtime promises are: a fiber's own steps run in order; queued
+values leave a `Queue` in FIFO order; a race whose sides finish in the same
+tick reports the left side; and every waiting `Deferred` reader receives the
+value. The order in which several ready fibers run within one tick, and which
+waiter a `Queue`, `Semaphore`, or `Ref` serves first, are unspecified.
+
 `run` blocks until self-contained work drains, using the existing idle sleep
 fallback. Use `Driver` when the host must deliver events or advance manual time.
 A pending driver with no runnable work may require an external signal or its
@@ -292,6 +315,7 @@ reported deadline.
 | `Supervisor(await).use(f)`, `supervise` | `Supervisor[E].scoped(f, await_on_release)`, `supervisor.supervise(io)` | Release cancels live supervised fibers unless it awaits them |
 | `racePair` | `io.race_pair(other)` | A `RaceWinner` with the first outcome and the other fiber |
 | `joinWith`, `joinWithNever`, `joinWithUnit` | `join_with`, `join_with_never`, `join_with_unit` | A canceled child runs the fallback, waits, or produces unit |
+| `TestControl.execute`, `tick`, `tickOne`, `tickFor`, `tickAll`, `advance`, `advanceAndTick`, `nextInterval`, `isDeadlocked`, `results` | `TestControl(program)`, `tick`, `tick_one`, `tick_for`, `tick_all`, `advance`, `advance_and_tick`, `next_interval`, `is_deadlocked`, `results` | A linear owner: `results` consumes a completed program |
 | `IORuntimeConfig` | `IORuntimeConfig(cancelation_check_threshold, auto_yield_threshold)` | Same validation; by default checks every bind, where Cats Effect checks every 512, and yields every 1,024 transitions |
 | `reportUnhandledFiberErrors`, `reportFailure` | `IORuntimeConfig.report_unhandled_fiber_errors`, `.reporter` | On by default; reports when the last handle or join is dropped |
 | Fiber dump | `Driver.fibers()` returning `FiberInfo` | Live fibers of the root, with owner and status, no payloads |

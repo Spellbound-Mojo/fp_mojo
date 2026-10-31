@@ -9,6 +9,7 @@ from fp.callables._binding import _OwnedUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.effects import IOContext, CancellationToken, Outcome
 from fp.effects.coordination import _Cell, _lock, _try_lock
+from fp.effects._io_core import _Budget
 from fp.effects.outcomes import _discard, _capture, _finish, _failure_as, _ExitState
 from fp.effects._io_core import _settle
 from .kernel import Machine, Step, Wait, Signal, _Slot, _tick
@@ -107,6 +108,9 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
     var completed: Optional[_ExitState[Self.Value, Self.Error]]
     var masked: Optional[IOContext[Self.Error]]
     var phase: Int
+    # The root's budget while this registration is live, so the root can tell
+    # waiting for an external event from waiting for nothing.
+    var counted: Optional[ArcPointer[_Budget]]
 
     def __init__(out self, var register: Self.F, var cleanup: Self.C):
         comptime assert Self.F.Arg == Completion[Self.Value, Self.Error] and _CallbackUnit[Self.F.Out]
@@ -118,6 +122,15 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
         self.completed = None
         self.masked = None
         self.phase = 0
+        self.counted = None
+
+    def __deinit__(deinit self):
+        self._uncount()
+
+    def _uncount(mut self):
+        if self.counted:
+            self.counted.value()[].registrations -= 1
+            self.counted = None
 
     def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
         comptime assert Self.F.Arg == Completion[Self.Value, Self.Error] and _CallbackUnit[Self.F.Out]
@@ -133,11 +146,15 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
                     self.begin_cleanup(self.completion._registration_failed(Optional(_discard(registered^))), context)
                 else:
                     self.phase = 1
+                    if context._budget:
+                        context._budget.value()[].registrations += 1
+                        self.counted = context._budget.copy()
                 return .pending(Wait())
             case 1:
                 var revision = self.completion._signal.revision()
                 var selected = self.completion._select(context.canceled())
                 if selected:
+                    self._uncount()
                     self.begin_cleanup(selected.take(), context)
                     return .pending(Wait())
                 var wait = Wait.changed(self.completion._signal, revision)

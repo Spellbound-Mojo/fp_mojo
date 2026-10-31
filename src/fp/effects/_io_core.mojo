@@ -59,8 +59,9 @@ struct _Budget(Movable):
     """Interpreter transitions shared by every run loop under one root.
 
     The root refills the slice before each root poll; run loops draw from it and
-    yield when it is spent. It also carries the root's fiber failure reporting.
-    The state is confined to the root's polling thread.
+    yield when it is spent. It also carries the root's fiber failure reporting
+    and the number of live external registrations, those of IO.async awaiting
+    their completion. The state is confined to the root's polling thread.
     """
     var remaining: Int
     var consumed: Int
@@ -68,6 +69,7 @@ struct _Budget(Movable):
     var check_threshold: Int
     var report: Bool
     var reporter: _Reporter
+    var registrations: Int
 
     def __init__(out self, yield_threshold: Int, check_threshold: Int, report: Bool, reporter: _Reporter):
         self.remaining = yield_threshold
@@ -76,6 +78,7 @@ struct _Budget(Movable):
         self.check_threshold = check_threshold
         self.report = report
         self.reporter = reporter
+        self.registrations = 0
 
     def refill(mut self):
         self.remaining = self.yield_threshold

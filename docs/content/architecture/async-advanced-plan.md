@@ -1985,6 +1985,39 @@ forwarding through the layers.
   `WriterT`. `public_reject_temporal_sync` and `reject_lift_temporal_state`
   reject `Temporal` on `SyncIO` and through `StateT`.
 
+**11c** was built on 2026-10-31: `TestControl`, the external-registration
+count, and the event-ordering record.
+
+- **`TestControl`.** A public type in `fp.effects.async_runtime`, beside
+  `Driver`, with Cats Effect's names: `tick`, `tick_one`, `advance`,
+  `advance_and_tick`, `next_interval`, `tick_for`, `tick_all`,
+  `is_completed`, `is_deadlocked`, `request_cancel`, and `results`. It owns a
+  `Driver` on a manual clock at zero and is linear like it, so `results`
+  consumes a completed program. Observations poll with a zero budget, which
+  only reports status.
+- **External registrations.** The root's shared `_Budget` counts live
+  `IO.async` registrations: a `Callback` counts itself from a successful
+  registration until it selects a completion or cancellation, and its
+  destructor releases the count if it is torn down first. `is_deadlocked` is
+  quiescence with no live registration. As in Cats Effect, it assumes no other
+  events arrive: a program waiting on a `Deferred` the test could still
+  complete also reports a deadlock, which the guide documents.
+- **Event ordering.** Recorded in the guide. The proposal said events
+  delivered between ticks are observed in delivery order; that holds within
+  one fiber, but when several fibers become ready together the run loop's
+  slot order decides, so it is recorded as unspecified with waiter order. The
+  promised orderings are a fiber's own steps, FIFO queue values, the left side
+  of a race finishing in the same tick, and every `Deferred` reader receiving
+  the value. Seeded exploration of the unspecified orders stays in Pass 13.
+- **Clients.** `test_control` covers virtual sleeps, `tick` against
+  `advance`, `tick_one`, `tick_for`, a read that nothing can complete
+  reporting a deadlock and then resuming when the test completes it, two
+  `IO.async` registrations that are not deadlocked and complete together at
+  the next tick after the test delivers both events, and cancellation of
+  `never`. `capability_temporal` now runs its laws through `TestControl`
+  instead of its own virtual-time loop, and the guide gains the runnable
+  example `async_test_control`.
+
 ## Implementation reference map
 
 Use the following inspected snapshots, not moving branches:

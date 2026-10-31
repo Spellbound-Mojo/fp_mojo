@@ -18,7 +18,7 @@ from fp.effects._async.fibers import FiberInfo, FiberStatus
 from fp.effects._async.supervisor import Supervisor
 from fp.effects._async.io_resource import Resource
 from fp.effects._async.coordination import Queue, Semaphore
-from fp.effects._async.host import Clock, Driver, run
+from fp.effects._async.host import Clock, Driver, TestControl, run
 from fp.effects._async.kernel import Progress, IORuntimeConfig
 from fp._internal.time import Duration, Instant
 from fp.effects._async.racing import RaceResult

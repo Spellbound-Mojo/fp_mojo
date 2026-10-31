@@ -2,10 +2,10 @@
 from std.os import abort
 from fp.algebra import flat_map, map, StringMonoid
 from fp.callables import OnceThunk, OnceUnary
-from fp.effects import (Outcome, CancellationToken, SyncIO, OptionalT, StateT, WriterT, LiftConcurrent, LiftTiming, LiftTemporal,
+from fp.effects import (Outcome, SyncIO, OptionalT, StateT, WriterT, LiftConcurrent, LiftTiming, LiftTemporal,
     run_io, run as run_layer, delay, monotonic, timed, sleep, timeout_to, timeout_after, timeout, delay_by, and_wait,
     make_ref, update_ref, get_ref, start, cancel, join)
-from fp.effects.async_runtime import IO, Async, Ref, Fiber, Duration, Instant, Driver, Clock, IORuntimeConfig, Progress
+from fp.effects.async_runtime import IO, Async, Ref, Fiber, Duration, Instant, TestControl
 from fp.effects.async_runtime.protocols import Machine
 
 comptime A = Async[Int]
@@ -27,34 +27,13 @@ def nanos(duration: Duration) -> Int:
     return duration.to_nanoseconds()
 
 
-def step[P: Machine](mut driver: Driver[P]) -> Progress:
-    try:
-        return driver.poll(64)
-    except:
-        abort("a nonnegative budget is accepted")
-
-
 def virtual[P: Machine](var program: P) -> Outcome[P.Value, P.Error]:
-    """Run on a manual clock, advancing it to each next deadline once nothing is runnable."""
-    var clock: Clock
-    try:
-        clock = Clock.manual()
-    except:
-        abort("a manual clock starts at zero")
-    var driver = Driver(program^, CancellationToken(), clock, IORuntimeConfig())
-    while True:
-        var progress = step(driver)
-        if progress.completed:
-            break
-        if progress.runnable:
-            continue
-        if not progress.deadline:
-            abort("a virtual-time program waits for nothing it can reach")
-        try:
-            clock.advance_to(progress.deadline.value())
-        except:
-            abort("a manual clock advances to a later deadline")
-    return driver^.finish()
+    """Run on virtual time, advancing to each next deadline once nothing is runnable."""
+    var control = TestControl(program^)
+    control.tick_all()
+    if not control.is_completed():
+        abort("a virtual-time program waits for nothing it can reach")
+    return control^.results()
 
 
 def value_of[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:

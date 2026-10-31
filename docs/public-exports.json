@@ -8552,6 +8552,87 @@
    },
    "provider": "effects/_async/supervisor"
   },
+  "effects.async_runtime.TestControl": {
+   "declarations": [
+    "struct TestControl[P: Machine](Movable, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "advance": [
+     {
+      "sha256": "7d43b56f24b7a7cc8d17bb57651025739e1301d981217b439288516178d53738",
+      "signature": "def advance(mut self, duration: Duration):"
+     }
+    ],
+    "advance_and_tick": [
+     {
+      "sha256": "a4be1af02e364ec2b0e38bbad8e0b6d0a34aa331b76ca324e62e17114b1823a1",
+      "signature": "def advance_and_tick(mut self, duration: Duration):"
+     }
+    ],
+    "is_completed": [
+     {
+      "sha256": "26c9fd5b22b4259ec9d38f4c4a830650858113016663a70a0887450252e87937",
+      "signature": "def is_completed(mut self) -> Bool:"
+     }
+    ],
+    "is_deadlocked": [
+     {
+      "sha256": "4ad39dee69f055f41234a71da4fb96f7b6a1ba8220b290c4fa7b10dfab40fd4e",
+      "signature": "def is_deadlocked(mut self) -> Bool:"
+     }
+    ],
+    "next_interval": [
+     {
+      "sha256": "85280880b879150379582828df6aa68673a392af6f2c5e6b3eb41250c5c07d94",
+      "signature": "def next_interval(mut self) -> Optional[Duration]:"
+     }
+    ],
+    "now": [
+     {
+      "sha256": "90b43c0a4133ed6e8adceb90c6999fb3e4588f9aff0b2c8a3d55e84f35ed34b2",
+      "signature": "def now(self) -> Instant:"
+     }
+    ],
+    "request_cancel": [
+     {
+      "sha256": "12a4cd9d5f35c0870e98620f25468ca81e3790c03931fe323f94cabed8222399",
+      "signature": "def request_cancel(self):"
+     }
+    ],
+    "results": [
+     {
+      "sha256": "08625cc458d1b591499d60f50e7eddfed9465be3df0d9e093b93c9134bd08e8c",
+      "signature": "def results(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:"
+     }
+    ],
+    "tick": [
+     {
+      "sha256": "c20499d87f67220643035bf84680e97b66f109192fe2fdbc27b27b773e67f416",
+      "signature": "def tick(mut self):"
+     }
+    ],
+    "tick_all": [
+     {
+      "sha256": "b1adc72fb9b189ced119b4f880efdcc030d02d98468d77a7e06e182d0fe2fc1d",
+      "signature": "def tick_all(mut self):"
+     }
+    ],
+    "tick_for": [
+     {
+      "sha256": "1ea4369f3516857266ebb6102db2b3aa6164f9ade34febd5eecdbc0c8e875fd7",
+      "signature": "def tick_for(mut self, duration: Duration):"
+     }
+    ],
+    "tick_one": [
+     {
+      "sha256": "58ea264fa7d079cf02b47471eda17ab282625cd2065d7c0273c3ca823a5fb4cc",
+      "signature": "def tick_one(mut self) -> Bool:"
+     }
+    ]
+   },
+   "provider": "effects/_async/host"
+  },
   "effects.async_runtime.protocols.CleanupMachine": {
    "declarations": [
     "trait CleanupMachine(Movable, Deinitable):"

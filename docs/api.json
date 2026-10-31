@@ -7840,7 +7840,7 @@
        "variadic": false
       },
       {
-       "description": "The instance.",
+       "description": "The instance; defaults to the first carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Applicative",
@@ -7853,7 +7853,7 @@
       "doc": "The carrier of the results; for lists, every callback applied to every\nvalue in left-major order.",
       "type": "ApContract[I, V, W].Out"
      },
-     "signature": "def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var functions: V, var values: W) raises ApContract[I, V, W].Error -> ApContract[I, V, W].Out where ApContract[I, V, W].OperationCompatible",
+     "signature": "def ap[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var functions: V, var values: W) raises ApContract[I, V, W].Error -> ApContract[I, V, W].Out where ApContract[I, V, W].OperationCompatible",
      "summary": "Apply the callbacks a carrier holds to the values another carrier holds."
     }
    ],
@@ -7943,7 +7943,7 @@
       "doc": "The carrier of unwrapped present Optional payloads, in source order.",
       "type": "I.MapFiltered[V, Identity[I.Element[V]]]"
      },
-     "signature": "def compact[V: Movable & Deinitable, //, I: FunctorFilter](var value: V) raises I.MapFilterError[V, Identity[I.Element[V]]] -> I.MapFiltered[V, Identity[I.Element[V]]]",
+     "signature": "def compact[V: Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V) raises I.MapFilterError[V, Identity[I.Element[V]]] -> I.MapFiltered[V, Identity[I.Element[V]]]",
      "summary": "Unwrap present Optional payloads through the family's filter_map operation."
     }
    ],
@@ -8077,7 +8077,7 @@
       "doc": "The family's carrier of accepted values, with their origins unchanged.",
       "type": "FilterContract[I, V, P].Out"
      },
-     "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible",
+     "signature": "def filter[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, var predicate: P) raises FilterContract[I, V, P].Error -> FilterContract[I, V, P].Out where FilterContract[I, V, P].Compatible",
      "summary": "Filter a carrier through an explicit family, preserving its context."
     },
     {
@@ -8135,7 +8135,7 @@
       "doc": "",
       "type": "FilterContract[I, V, P._BorrowView[o]].Out"
      },
-     "signature": "def filter[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o]].Error -> FilterContract[I, V, P._BorrowView[o]].Out where FilterContract[I, V, P._BorrowView[o]].Compatible",
+     "signature": "def filter[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o]].Error -> FilterContract[I, V, P._BorrowView[o]].Out where FilterContract[I, V, P._BorrowView[o]].Compatible",
      "summary": "Filter through an explicit family while retaining a shared predicate."
     },
     {
@@ -8188,16 +8188,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Filterable",
+       "inferred": true,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_Borrowing[P, R]",
+       "name": "I",
+       "type": "Filterable",
        "variadic": false
       }
      ],
@@ -8207,7 +8207,7 @@
       "doc": "",
       "type": "I.Filtered[V, _NativeBorrowRef[P, Bool, Never, F, False, o]]"
      },
-     "signature": "def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Filterable, F: _Borrowing[P, R]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] where I.Element[V] == P and R == Bool",
+     "signature": "def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, F: _Borrowing[P, R], //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, Never, F, False, o]] where I.Element[V] == P and R == Bool",
      "summary": "Filter with a borrowed native predicate; its captures stay in place."
     },
     {
@@ -8228,7 +8228,7 @@
       }
      ],
      "description": "",
-     "error": "I.FilterError[V, _NativeBorrowRef[P, Bool, E, F, True, o]]",
+     "error": "I.FilterError[V, _BorrowErrorProbe[P, Bool, E]]",
      "parameters": [
       {
        "description": "",
@@ -8260,23 +8260,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Filterable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "E",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "F",
        "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Filterable",
        "variadic": false
       }
      ],
@@ -8286,7 +8286,7 @@
       "doc": "",
       "type": "I.Filtered[V, _NativeBorrowRef[P, Bool, E, F, True, o]]"
      },
-     "signature": "def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Filterable, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _NativeBorrowRef[P, Bool, E, F, True, o]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, E, F, True, o]] where I.Element[V] == P and R == Bool",
+     "signature": "def filter[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _BorrowErrorProbe[P, Bool, E]] -> I.Filtered[V, _NativeBorrowRef[P, Bool, E, F, True, o]] where I.Element[V] == P and R == Bool",
      "summary": "Filter with a raising native predicate; generic forwarding names E explicitly."
     }
    ],
@@ -8345,7 +8345,7 @@
       "doc": "The carrier of present transformed Optional payloads, in source order.",
       "type": "I.MapFiltered[V, F]"
      },
-     "signature": "def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: FunctorFilter](var value: V, var function: F) raises I.MapFilterError[V, F] -> I.MapFiltered[V, F]",
+     "signature": "def filter_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V, var function: F) raises I.MapFilterError[V, F] -> I.MapFiltered[V, F]",
      "summary": "Transform through a FunctorFilter family and retain present Optional results."
     },
     {
@@ -8398,16 +8398,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "FunctorFilter",
+       "inferred": true,
+       "name": "F",
+       "type": "_Unary[A, R]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_Unary[A, R]",
+       "name": "I",
+       "type": "FunctorFilter",
        "variadic": false
       }
      ],
@@ -8417,7 +8417,7 @@
       "doc": "",
       "type": "I.MapFiltered[V, _NativeUnaryRef[A, R, Never, F, False, o]]"
      },
-     "signature": "def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: FunctorFilter, F: _Unary[A, R]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _NativeUnaryRef[A, R, Never, F, False, o]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A",
+     "signature": "def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: _Unary[A, R], //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _NativeUnaryRef[A, R, Never, F, False, o]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A",
      "summary": "Transform and select with a borrowed non-raising native callback."
     },
     {
@@ -8438,7 +8438,7 @@
       }
      ],
      "description": "",
-     "error": "I.MapFilterError[V, _NativeUnaryRef[A, R, E, F, True, o]]",
+     "error": "I.MapFilterError[V, _ErrorProbe[A, R, E]]",
      "parameters": [
       {
        "description": "",
@@ -8470,23 +8470,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "FunctorFilter",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "E",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "F",
        "type": "_RaisingUnary[A, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "FunctorFilter",
        "variadic": false
       }
      ],
@@ -8496,7 +8496,7 @@
       "doc": "",
       "type": "I.MapFiltered[V, _NativeUnaryRef[A, R, E, F, True, o]]"
      },
-     "signature": "def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: FunctorFilter, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _NativeUnaryRef[A, R, E, F, True, o]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A",
+     "signature": "def filter_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //, I: FunctorFilter = downcast[_SourceFamily[V], FunctorFilter]](var value: V, ref[o] function: F) raises I.MapFilterError[V, _ErrorProbe[A, R, E]] -> I.MapFiltered[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A",
      "summary": "Transform and select with a borrowed native callback, retaining its exact error."
     }
    ],
@@ -8555,7 +8555,7 @@
       "doc": "The family's carrier of rejected values, with their origins unchanged.",
       "type": "FilterContract[I, V, P, True].Out"
      },
-     "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible",
+     "signature": "def filter_not[V: Movable & Deinitable, P: BorrowCallContract & Movable & Deinitable, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, var predicate: P) raises FilterContract[I, V, P, True].Error -> FilterContract[I, V, P, True].Out where FilterContract[I, V, P, True].Compatible",
      "summary": "Retain payloads the predicate rejects, through an explicit family."
     },
     {
@@ -8613,7 +8613,7 @@
       "doc": "",
       "type": "FilterContract[I, V, P._BorrowView[o], True].Out"
      },
-     "signature": "def filter_not[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o], True].Error -> FilterContract[I, V, P._BorrowView[o], True].Out where FilterContract[I, V, P._BorrowView[o], True].Compatible",
+     "signature": "def filter_not[V: Movable & Deinitable, P: _BorrowViewable, o: ImmOrigin, //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: P) raises FilterContract[I, V, P._BorrowView[o], True].Error -> FilterContract[I, V, P._BorrowView[o], True].Out where FilterContract[I, V, P._BorrowView[o], True].Compatible",
      "summary": "Filter through an explicit family while retaining a shared predicate."
     },
     {
@@ -8666,16 +8666,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Filterable",
+       "inferred": true,
+       "name": "F",
+       "type": "_Borrowing[P, R]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_Borrowing[P, R]",
+       "name": "I",
+       "type": "Filterable",
        "variadic": false
       }
      ],
@@ -8685,7 +8685,7 @@
       "doc": "",
       "type": "I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]]"
      },
-     "signature": "def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Filterable, F: _Borrowing[P, R]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] where I.Element[V] == P and R == Bool",
+     "signature": "def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, F: _Borrowing[P, R], //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, Never, F, False, o]]] where I.Element[V] == P and R == Bool",
      "summary": "Retain rejected payloads with a borrowed native predicate."
     },
     {
@@ -8706,7 +8706,7 @@
       }
      ],
      "description": "",
-     "error": "I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]]",
+     "error": "I.FilterError[V, _Negated[_BorrowErrorProbe[P, Bool, E]]]",
      "parameters": [
       {
        "description": "",
@@ -8738,23 +8738,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Filterable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "E",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "F",
        "type": "_RaisingBorrowing[P, R, E]",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Filterable",
        "variadic": false
       }
      ],
@@ -8764,7 +8764,7 @@
       "doc": "",
       "type": "I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]]"
      },
-     "signature": "def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, I: Filterable, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] where I.Element[V] == P and R == Bool",
+     "signature": "def filter_not[V: Movable & Deinitable, P: AnyType, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E], //, I: Filterable = downcast[_SourceFamily[V], Filterable]](var value: V, ref[o] predicate: F) raises I.FilterError[V, _Negated[_BorrowErrorProbe[P, Bool, E]]] -> I.Filtered[V, _Negated[_NativeBorrowRef[P, Bool, E, F, True, o]]] where I.Element[V] == P and R == Bool",
      "summary": "Retain rejected payloads with a raising native predicate; forward E explicitly."
     }
    ],
@@ -8792,7 +8792,7 @@
        "variadic": false
       }
      ],
-     "description": "An absent `Optional`, a failed `Result` or an empty `List` skips the\ncallback.\n\nOther overloads take a native function or closure directly, for every\ninstance: `flat_map[OptionalFamily](value^, halve)`. A plain function is\ncopied, so a deferred computation such as `IO` can keep it. A closure is\nborrowed, not moved: an eager instance calls it before returning, and a\ndeferred computation keeps the borrow until it runs, so keep the closure\nalive and unmoved until then, or move it in with `as_unary(f^)`. Its parameter type must\nequal the carrier's element type, origins included. Generic code that\nforwards a raising native callback names its error with `X=`.",
+     "description": "An absent `Optional`, a failed `Result` or an empty `List` skips the\ncallback.\n\nOther overloads take a native function or closure directly, for every\ninstance: `flat_map(value^, halve)`. A plain function is\ncopied, so a deferred computation such as `IO` can keep it. A closure is\nborrowed, not moved: an eager instance calls it before returning, and a\ndeferred computation keeps the borrow until it runs, so keep the closure\nalive and unmoved until then, or move it in with `as_unary(f^)`. Its parameter type must\nequal the carrier's element type, origins included. Generic code that\nforwards a raising native callback names its error with `X=`.",
      "error": "BindContract[I, V, F].Error",
      "parameters": [
       {
@@ -8810,7 +8810,7 @@
        "variadic": false
       },
       {
-       "description": "The instance.",
+       "description": "The instance; defaults to the carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Monad",
@@ -8823,7 +8823,7 @@
       "doc": "`I.Bound[V, F]`, the carrier the callback returned.",
       "type": "BindContract[I, V, F].Out"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var value: V, var f: F) raises BindContract[I, V, F].Error -> BindContract[I, V, F].Out where BindContract[I, V, F].Compatible",
+     "signature": "def flat_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, var f: F) raises BindContract[I, V, F].Error -> BindContract[I, V, F].Out where BindContract[I, V, F].Compatible",
      "summary": "Let `f` choose the next carrier of the same family from the payload of `value`: the `Monad` operation."
     },
     {
@@ -8881,7 +8881,7 @@
       "doc": "",
       "type": "I.Bound[V, F._View[o]]"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad](var value: V, ref[o] function: F) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where _BindCompatible[I, V, F._View[o]]",
+     "signature": "def flat_map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, ref[o] function: F) raises I.BindError[V, F._View[o]] -> I.Bound[V, F._View[o]] where _BindCompatible[I, V, F._View[o]]",
      "summary": "Admit a view callback; execution stays with the family."
     },
     {
@@ -8934,16 +8934,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Monad",
+       "inferred": true,
+       "name": "F",
+       "type": "def(var A) -> R",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "def(var A) -> R",
+       "name": "I",
+       "type": "Monad",
        "variadic": false
       }
      ],
@@ -8953,7 +8953,7 @@
       "doc": "",
       "type": "I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]]"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, F: def(var A) -> R](var value: V, ref[o] function: F) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, ref[o] function: F) raises I.BindError[V, _ErrorProbe[A, R, Never]] -> I.Bound[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]",
      "summary": "Admit a closure callback; execution stays with the family."
     },
     {
@@ -9006,23 +9006,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "E",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "F",
        "type": "def(var A) raises E -> R",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -9039,7 +9039,7 @@
       "doc": "",
       "type": "I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]]"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Monad, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)",
+     "signature": "def flat_map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, I: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.BindError[V, _ErrorProbe[A, R, E]]] -> I.Bound[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _BindCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)",
      "summary": "Admit a closure callback that raises; execution stays with the family."
     },
     {
@@ -9090,7 +9090,7 @@
       "doc": "",
       "type": "I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]",
+     "signature": "def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]",
      "summary": "Admit a thin callback; execution stays with the family."
     },
     {
@@ -9141,7 +9141,7 @@
       "doc": "",
       "type": "I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]",
+     "signature": "def flat_map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, Never]] -> I.Bound[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]",
      "summary": "Admit a thin callback; execution stays with the family."
     },
     {
@@ -9199,7 +9199,7 @@
       "doc": "",
       "type": "I.Bound[V, NativeUnary[I.Element[V], R, E, type_of(function), True]]"
      },
-     "signature": "def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, E]] -> I.Bound[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]",
+     "signature": "def flat_map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.BindError[V, _ErrorProbe[NoneType, R, E]] -> I.Bound[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _BindCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]",
      "summary": "Admit a thin callback that raises; execution stays with the family."
     }
    ],
@@ -9231,7 +9231,7 @@
        "variadic": false
       },
       {
-       "description": "The instance.",
+       "description": "The instance; defaults to the first carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Monad",
@@ -9244,7 +9244,7 @@
       "doc": "The inner carrier, or the outer context when there is no payload.",
       "type": "I.Bound[V, _Same[I.Element[V]]]"
      },
-     "signature": "def flatten[V: Movable & Deinitable, //, I: Monad](var nested: V) raises I.BindError[V, _Same[I.Element[V]]] -> I.Bound[V, _Same[I.Element[V]]] where _BindCompatible[I, V, _Same[I.Element[V]]]",
+     "signature": "def flatten[V: Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var nested: V) raises I.BindError[V, _Same[I.Element[V]]] -> I.Bound[V, _Same[I.Element[V]]] where _BindCompatible[I, V, _Same[I.Element[V]]]",
      "summary": "Remove one level of the same context: `flat_map` with the identity."
     }
    ],
@@ -9290,7 +9290,7 @@
        "variadic": false
       },
       {
-       "description": "The base Monad.",
+       "description": "The base Monad; defaults to the source's family.",
        "inferred": false,
        "name": "I",
        "type": "Monad",
@@ -9303,7 +9303,7 @@
       "doc": "A carrier of A in the base family.",
       "type": "AbsenceContract[I, V, F, False].Out"
      },
-     "signature": "def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad](var fallback: F, var source: V) raises AbsenceContract[I, V, F, False].Error -> AbsenceContract[I, V, F, False].Out where AbsenceContract[I, V, F, False].Compatible",
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V) raises AbsenceContract[I, V, F, False].Error -> AbsenceContract[I, V, F, False].Out where AbsenceContract[I, V, F, False].Compatible",
      "summary": "Remove Optional by keeping a present value or running a lazy base effect."
     },
     {
@@ -9342,16 +9342,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Monad",
+       "inferred": true,
+       "name": "F",
+       "type": "_Thunk[R]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_Thunk[R]",
+       "name": "I",
+       "type": "Monad",
        "variadic": false
       }
      ],
@@ -9361,7 +9361,7 @@
       "doc": "",
       "type": "AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Out"
      },
-     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Thunk[R]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Compatible",
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, F: _Thunk[R], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], False].Compatible",
      "summary": "Select a fallback supplied as an owned native function or closure."
     },
     {
@@ -9407,16 +9407,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Monad",
+       "inferred": true,
+       "name": "F",
+       "type": "_RaisingThunk[R, E]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_RaisingThunk[R, E]",
+       "name": "I",
+       "type": "Monad",
        "variadic": false
       }
      ],
@@ -9426,7 +9426,7 @@
       "doc": "",
       "type": "AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Out"
      },
-     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingThunk[R, E]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Compatible",
+     "signature": "def get_or_else_effect[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingThunk[R, E], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], False].Compatible",
      "summary": "Select a fallback supplied as an owned native function or closure."
     }
    ],
@@ -9472,24 +9472,24 @@
        "variadic": false
       },
       {
-       "description": "The target Monad family; it determines dependent sequencing and failure.",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
        "description": "The true-branch factory, retaining its native error and receiver mode.",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "The false-branch factory, retaining its native error and receiver mode.",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Monad family; it determines dependent sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -9506,7 +9506,7 @@
       "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
       "type": "IfContract[G, V, L, R].Out"
      },
-     "signature": "def if_effect[V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]",
+     "signature": "def if_effect[V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -9559,23 +9559,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -9592,7 +9592,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]]"
      },
-     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, R: def() -> W, X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -9645,30 +9645,30 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "D",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() raises D -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -9685,7 +9685,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]]"
      },
-     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -9731,16 +9731,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "L",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "L",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -9757,7 +9757,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: Movable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -9803,16 +9803,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "L",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "L",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -9829,7 +9829,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: RegisterPassable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -9882,16 +9882,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "L",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "L",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -9908,7 +9908,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]]"
      },
-     "signature": "def if_effect[W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -9961,23 +9961,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -9994,7 +9994,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, L: def() -> U, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10061,23 +10061,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -10094,7 +10094,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, R: def() -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: def() -> U, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10161,30 +10161,30 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "D",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() raises D -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -10201,7 +10201,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10254,30 +10254,30 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "Y",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() raises Y -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -10294,7 +10294,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10361,30 +10361,30 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "Y",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() raises Y -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -10401,7 +10401,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10468,37 +10468,37 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "Y",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() raises Y -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "D",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() raises D -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -10515,7 +10515,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10561,16 +10561,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "R",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "R",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -10587,7 +10587,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: Movable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10659,7 +10659,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10731,7 +10731,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10810,7 +10810,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10856,16 +10856,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "R",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "R",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -10882,7 +10882,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]]"
      },
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -10954,7 +10954,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -11026,7 +11026,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -11105,7 +11105,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]]"
      },
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -11158,16 +11158,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "R",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "R",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -11184,7 +11184,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -11263,7 +11263,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -11342,7 +11342,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -11428,7 +11428,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     }
    ],
@@ -11456,7 +11456,7 @@
        "variadic": false
       }
      ],
-     "description": "Other overloads take a native function or closure directly, for every\ninstance: `map[OptionalFamily](value^, twice)`. A plain function is\ncopied, so a deferred computation such as `IO` can keep it. A closure is\nborrowed, not moved: an eager instance calls it before returning, and a\ndeferred computation keeps the borrow until it runs, so keep the closure\nalive and unmoved until then, or move it in with `as_unary(f^)`. Its parameter type must\nequal the carrier's element type, origins included. Generic code that\nforwards a raising native callback names its error with `X=`.",
+     "description": "Other overloads take a native function or closure directly, for every\ninstance: `map(value^, twice)`. A plain function is\ncopied, so a deferred computation such as `IO` can keep it. A closure is\nborrowed, not moved: an eager instance calls it before returning, and a\ndeferred computation keeps the borrow until it runs, so keep the closure\nalive and unmoved until then, or move it in with `as_unary(f^)`. Its parameter type must\nequal the carrier's element type, origins included. Generic code that\nforwards a raising native callback names its error with `X=`.",
      "error": "MapContract[I, V, F].Error",
      "parameters": [
       {
@@ -11474,7 +11474,7 @@
        "variadic": false
       },
       {
-       "description": "The instance, such as `OptionalFamily` or `ReaderT[M, R]`.",
+       "description": "The instance, such as `OptionalFamily` or `ReaderT[M, R]`; defaults to the carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Functor",
@@ -11487,7 +11487,7 @@
       "doc": "The carrier of the callback's results, `I.Mapped[V, F]`.",
       "type": "MapContract[I, V, F].Out"
      },
-     "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor](var value: V, var f: F) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible",
+     "signature": "def map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, var f: F) raises MapContract[I, V, F].Error -> MapContract[I, V, F].Out where MapContract[I, V, F].Compatible",
      "summary": "Apply `f` to the payload of `value`, keeping the carrier's context: the `Functor` operation."
     },
     {
@@ -11545,7 +11545,7 @@
       "doc": "",
       "type": "I.Mapped[V, F._View[o]]"
      },
-     "signature": "def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor](var value: V, ref[o] function: F) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where _MapCompatible[I, V, F._View[o]]",
+     "signature": "def map[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, ref[o] function: F) raises I.MapError[V, F._View[o]] -> I.Mapped[V, F._View[o]] where _MapCompatible[I, V, F._View[o]]",
      "summary": "Admit a view callback; execution stays with the family."
     },
     {
@@ -11598,16 +11598,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Functor",
+       "inferred": true,
+       "name": "F",
+       "type": "def(var A) -> R",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "def(var A) -> R",
+       "name": "I",
+       "type": "Functor",
        "variadic": false
       }
      ],
@@ -11617,7 +11617,7 @@
       "doc": "",
       "type": "I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]]"
      },
-     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, F: def(var A) -> R](var value: V, ref[o] function: F) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, ref[o] function: F) raises I.MapError[V, _ErrorProbe[A, R, Never]] -> I.Mapped[V, _NativeUnaryRef[A, R, Never, F, False, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, Never, F, False, o]]",
      "summary": "Admit a closure callback; execution stays with the family."
     },
     {
@@ -11670,23 +11670,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Functor",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "E",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "F",
        "type": "def(var A) raises E -> R",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Functor",
        "variadic": false
       },
       {
@@ -11703,7 +11703,7 @@
       "doc": "",
       "type": "I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]]"
      },
-     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, I: Functor, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)",
+     "signature": "def map[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, I: Functor = downcast[_SourceFamily[V], Functor], X: AnyType = _InferError](var value: V, ref[o] function: F) raises _EntryError[X, I.MapError[V, _ErrorProbe[A, R, E]]] -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, True, o]] where I.Element[V] == A and _MapCompatible[I, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)",
      "summary": "Admit a closure callback that raises; execution stays with the family."
     },
     {
@@ -11754,7 +11754,7 @@
       "doc": "",
       "type": "I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]"
      },
-     "signature": "def map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]",
+     "signature": "def map[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]",
      "summary": "Admit a thin callback; execution stays with the family."
     },
     {
@@ -11805,7 +11805,7 @@
       "doc": "",
       "type": "I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]"
      },
-     "signature": "def map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]",
+     "signature": "def map[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, Never]] -> I.Mapped[V, NativeUnary[I.Element[V], R, Never, type_of(function), False]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, Never, type_of(function), False]]",
      "summary": "Admit a thin callback; execution stays with the family."
     },
     {
@@ -11863,7 +11863,7 @@
       "doc": "",
       "type": "I.Mapped[V, NativeUnary[I.Element[V], R, E, type_of(function), True]]"
      },
-     "signature": "def map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, E]] -> I.Mapped[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]",
+     "signature": "def map[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Functor = downcast[_SourceFamily[V], Functor]](var value: V, function: def(var _NativeOwnedArg[I.Element[V]]) raises E thin -> R) raises I.MapError[V, _ErrorProbe[NoneType, R, E]] -> I.Mapped[V, NativeUnary[I.Element[V], R, E, type_of(function), True]] where _MapCompatible[I, V, NativeUnary[I.Element[V], R, E, type_of(function), True]]",
      "summary": "Admit a thin callback that raises; execution stays with the family."
     }
    ],
@@ -11923,7 +11923,7 @@
        "variadic": false
       },
       {
-       "description": "The instance.",
+       "description": "The instance; defaults to the first carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Applicative",
@@ -11936,7 +11936,7 @@
       "doc": "The carrier of the combined payloads.",
       "type": "Map2Contract[I, V, W, F].Out"
      },
-     "signature": "def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative](var f: F, var left: V, var right: W) raises Map2Contract[I, V, W, F].Error -> Map2Contract[I, V, W, F].Out where Map2Contract[I, V, W, F].OperationCompatible",
+     "signature": "def map2[V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var f: F, var left: V, var right: W) raises Map2Contract[I, V, W, F].Error -> Map2Contract[I, V, W, F].Out where Map2Contract[I, V, W, F].OperationCompatible",
      "summary": "Combine two carriers with `f`, where the right one is already computed."
     }
    ],
@@ -11996,7 +11996,7 @@
        "variadic": false
       },
       {
-       "description": "The instance.",
+       "description": "The instance; defaults to the left carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Applicative",
@@ -12009,7 +12009,7 @@
       "doc": "`I.Combined[V, F, R]`, the carrier of the combined payloads.",
       "type": "CombineContract[I, V, F, R].Out"
      },
-     "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, I: Applicative](var left: V, var right: R, var f: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].OperationCompatible",
+     "signature": "def map2_lazy[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: R, var f: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].OperationCompatible",
      "summary": "Combine the payload of `left` with that of the carrier `right` produces."
     }
    ],
@@ -12055,7 +12055,7 @@
        "variadic": false
       },
       {
-       "description": "The base Monad, not the OptionalT layer over it.",
+       "description": "The base Monad, not the OptionalT layer over it; defaults to the source's family.",
        "inferred": false,
        "name": "I",
        "type": "Monad",
@@ -12068,7 +12068,7 @@
       "doc": "The base carrier of the selected Optional.",
       "type": "AbsenceContract[I, V, F].Out"
      },
-     "signature": "def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad](var fallback: F, var source: V) raises AbsenceContract[I, V, F].Error -> AbsenceContract[I, V, F].Out where AbsenceContract[I, V, F].Compatible",
+     "signature": "def or_else_absent[V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V) raises AbsenceContract[I, V, F].Error -> AbsenceContract[I, V, F].Out where AbsenceContract[I, V, F].Compatible",
      "summary": "Use a lazy effectful fallback only for an absent Optional payload."
     },
     {
@@ -12107,16 +12107,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Monad",
+       "inferred": true,
+       "name": "F",
+       "type": "_Thunk[R]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_Thunk[R]",
+       "name": "I",
+       "type": "Monad",
        "variadic": false
       }
      ],
@@ -12126,7 +12126,7 @@
       "doc": "",
       "type": "AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Out"
      },
-     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Thunk[R]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Compatible",
+     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, F: _Thunk[R], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Error -> AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Out where AbsenceContract[I, V, _NativeThunk[R, Never, F, False], True].Compatible",
      "summary": "Select a fallback supplied as an owned native function or closure."
     },
     {
@@ -12172,16 +12172,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Monad",
+       "inferred": true,
+       "name": "F",
+       "type": "_RaisingThunk[R, E]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_RaisingThunk[R, E]",
+       "name": "I",
+       "type": "Monad",
        "variadic": false
       }
      ],
@@ -12191,7 +12191,7 @@
       "doc": "",
       "type": "AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Out"
      },
-     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingThunk[R, E]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Compatible",
+     "signature": "def or_else_absent[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingThunk[R, E], //, I: Monad = downcast[_SourceFamily[V], Monad]](var fallback: F, var source: V) raises AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Error -> AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Out where AbsenceContract[I, V, _NativeThunk[R, E, F, True], True].Compatible",
      "summary": "Select a fallback supplied as an owned native function or closure."
     }
    ],
@@ -12237,7 +12237,7 @@
        "variadic": false
       },
       {
-       "description": "The Applicative family, which defines combination and errors.",
+       "description": "The Applicative family, which defines combination and errors; defaults to the first carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Applicative",
@@ -12250,7 +12250,7 @@
       "doc": "The carrier of pairs. Lists form a Cartesian product in left-major order.",
       "type": "ProductContract[I, V, W].Out"
      },
-     "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible",
+     "signature": "def product[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W) raises ProductContract[I, V, W].Error -> ProductContract[I, V, W].Out where ProductContract[I, V, W].OperationCompatible",
      "summary": "Combine already computed operands into pairs through map2."
     }
    ],
@@ -12296,7 +12296,7 @@
        "variadic": false
       },
       {
-       "description": "The Applicative family owning combination and errors.",
+       "description": "The Applicative family owning combination and errors; defaults to the first carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Applicative",
@@ -12309,7 +12309,7 @@
       "doc": "The carrier of retained left payloads.",
       "type": "ProductLeftContract[I, V, W].Out"
      },
-     "signature": "def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W) raises ProductLeftContract[I, V, W].Error -> ProductLeftContract[I, V, W].Out where ProductLeftContract[I, V, W].Compatible",
+     "signature": "def product_l[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W) raises ProductLeftContract[I, V, W].Error -> ProductLeftContract[I, V, W].Out where ProductLeftContract[I, V, W].Compatible",
      "summary": "Combine existing effects and keep the left payload on success."
     }
    ],
@@ -12355,7 +12355,7 @@
        "variadic": false
       },
       {
-       "description": "The Applicative family owning combination and errors.",
+       "description": "The Applicative family owning combination and errors; defaults to the first carrier's family.",
        "inferred": false,
        "name": "I",
        "type": "Applicative",
@@ -12368,7 +12368,7 @@
       "doc": "The carrier of retained right payloads.",
       "type": "ProductRightContract[I, V, W].Out"
      },
-     "signature": "def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative](var left: V, var right: W) raises ProductRightContract[I, V, W].Error -> ProductRightContract[I, V, W].Out where ProductRightContract[I, V, W].Compatible",
+     "signature": "def product_r[V: Movable & Deinitable, W: Movable & Deinitable, //, I: Applicative = downcast[_SourceFamily[V], Applicative]](var left: V, var right: W) raises ProductRightContract[I, V, W].Error -> ProductRightContract[I, V, W].Out where ProductRightContract[I, V, W].Compatible",
      "summary": "Combine existing effects and keep the right payload on success."
     }
    ],
@@ -12445,17 +12445,17 @@
        "variadic": false
       },
       {
-       "description": "The source's instance.",
-       "inferred": false,
-       "name": "S",
-       "type": "Traversable",
-       "variadic": false
-      },
-      {
-       "description": "The carriers' instance.",
+       "description": "The carriers' instance; defaults to the family of the source's elements.",
        "inferred": false,
        "name": "G",
        "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "The source's instance; defaults to the source's family.",
+       "inferred": false,
+       "name": "S",
+       "type": "Traversable",
        "variadic": false
       }
      ],
@@ -12465,7 +12465,7 @@
       "doc": "`G`'s carrier of the payloads in source shape; it stops at the first\nfailure.",
       "type": "S.Traversed[G, V, _Same[S.Element[V]]]"
      },
-     "signature": "def sequence[V: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]] where S.TargetCompatible[G, V, _Same[S.Element[V]]]",
+     "signature": "def sequence[V: Movable & Deinitable, //, G: Applicative = _InferredApplicative[downcast[_SourceFamily[V], Traversable].Element[V]], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V) raises S.TraverseError[G, V, _Same[S.Element[V]]] -> S.Traversed[G, V, _Same[S.Element[V]]] where S.TargetCompatible[G, V, _Same[S.Element[V]]]",
      "summary": "Turn a source of `G` carriers into one `G` carrier of the source: `traverse` with the identity."
     }
    ],
@@ -12511,7 +12511,7 @@
        "variadic": false
       },
       {
-       "description": "The selected Monad family, including its existing fold restrictions.",
+       "description": "The selected Monad family, including its existing fold restrictions; defaults to the family of the step's result.",
        "inferred": false,
        "name": "I",
        "type": "Monad",
@@ -12524,7 +12524,7 @@
       "doc": "The effect's carrier of B, or its existing failure/absence outcome.",
       "type": "TailRecContract[I, F].Out"
      },
-     "signature": "def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad](var initial: A, var step: F) raises TailRecContract[I, F].Error -> TailRecContract[I, F].Out where A == F.Arg and TailRecContract[I, F].Compatible",
+     "signature": "def tail_rec_m[A: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, I: Monad = downcast[_SourceFamily[F.Out], Monad]](var initial: A, var step: F) raises TailRecContract[I, F].Error -> TailRecContract[I, F].Out where A == F.Arg and TailRecContract[I, F].Compatible",
      "summary": "Repeat effectful steps until Break, using constant native call-stack space."
     },
     {
@@ -12570,16 +12570,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Monad",
+       "inferred": true,
+       "name": "F",
+       "type": "_Unary[A, R]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_Unary[A, R]",
+       "name": "I",
+       "type": "Monad",
        "variadic": false
       }
      ],
@@ -12589,7 +12589,7 @@
       "doc": "",
       "type": "TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out"
      },
-     "signature": "def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, //, I: Monad, F: _Unary[A, R]](var initial: A0, var step: F) raises TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error -> TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, Never, F, False]].Compatible",
+     "signature": "def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: _Unary[A, R], //, I: Monad = downcast[_SourceFamily[R], Monad]](var initial: A0, var step: F) raises TailRecContract[I, NativeUnary[A, R, Never, F, False]].Error -> TailRecContract[I, NativeUnary[A, R, Never, F, False]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, Never, F, False]].Compatible",
      "summary": "Loop with an owned native consuming function or closure."
     },
     {
@@ -12642,16 +12642,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "I",
-       "type": "Monad",
+       "inferred": true,
+       "name": "F",
+       "type": "_RaisingUnary[A, R, E]",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "_RaisingUnary[A, R, E]",
+       "name": "I",
+       "type": "Monad",
        "variadic": false
       }
      ],
@@ -12661,7 +12661,7 @@
       "doc": "",
       "type": "TailRecContract[I, NativeUnary[A, R, E, F, True]].Out"
      },
-     "signature": "def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: Monad, F: _RaisingUnary[A, R, E]](var initial: A0, var step: F) raises TailRecContract[I, NativeUnary[A, R, E, F, True]].Error -> TailRecContract[I, NativeUnary[A, R, E, F, True]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, E, F, True]].Compatible",
+     "signature": "def tail_rec_m[A0: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: _RaisingUnary[A, R, E], //, I: Monad = downcast[_SourceFamily[R], Monad]](var initial: A0, var step: F) raises TailRecContract[I, NativeUnary[A, R, E, F, True]].Error -> TailRecContract[I, NativeUnary[A, R, E, F, True]].Out where A0 == A and TailRecContract[I, NativeUnary[A, R, E, F, True]].Compatible",
      "summary": "Loop with an owned native consuming function or closure."
     }
    ],
@@ -12707,17 +12707,17 @@
        "variadic": false
       },
       {
-       "description": "The source's instance, such as `ListFamily`.",
-       "inferred": false,
-       "name": "S",
-       "type": "Traversable",
-       "variadic": false
-      },
-      {
-       "description": "The callback's applicative instance, such as `ResultFamily[E]`.",
+       "description": "The callback's applicative instance, such as `ResultFamily[E]`; defaults to the family of the callback's result.",
        "inferred": false,
        "name": "G",
        "type": "Applicative",
+       "variadic": false
+      },
+      {
+       "description": "The source's instance, such as `ListFamily`; defaults to the source's family.",
+       "inferred": false,
+       "name": "S",
+       "type": "Traversable",
        "variadic": false
       }
      ],
@@ -12727,7 +12727,7 @@
       "doc": "`S.Traversed[G, V, F]`, `G`'s carrier of the results in source shape.",
       "type": "TraverseContract[S, G, V, F].Out"
      },
-     "signature": "def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V, var f: F) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].TargetCompatible",
+     "signature": "def traverse[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //, G: Applicative = _InferredApplicative[F.Out], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, var f: F) raises TraverseContract[S, G, V, F].Error -> TraverseContract[S, G, V, F].Out where TraverseContract[S, G, V, F].InputCompatible and TraverseContract[S, G, V, F].TargetCompatible",
      "summary": "Call an effectful `f` on each element of `source`, in order, and gather the results in one `G` carrier."
     },
     {
@@ -12774,15 +12774,15 @@
       {
        "description": "",
        "inferred": false,
-       "name": "S",
-       "type": "Traversable",
+       "name": "G",
+       "type": "Applicative",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "G",
-       "type": "Applicative",
+       "name": "S",
+       "type": "Traversable",
        "variadic": false
       }
      ],
@@ -12792,7 +12792,7 @@
       "doc": "",
       "type": "S.Traversed[G, V, F._View[o]]"
      },
-     "signature": "def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, S: Traversable, G: Applicative](var source: V, ref[o] function: F) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.TargetCompatible[G, V, F._View[o]]",
+     "signature": "def traverse[V: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //, G: Applicative = _ViewTarget[F, o], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, ref[o] function: F) raises S.TraverseError[G, V, F._View[o]] -> S.Traversed[G, V, F._View[o]] where S.TargetCompatible[G, V, F._View[o]]",
      "summary": "Admit a view callback; execution stays with the family."
     },
     {
@@ -12845,9 +12845,9 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "S",
-       "type": "Traversable",
+       "inferred": true,
+       "name": "F",
+       "type": "def(var A) -> R",
        "variadic": false
       },
       {
@@ -12860,8 +12860,8 @@
       {
        "description": "",
        "inferred": false,
-       "name": "F",
-       "type": "def(var A) -> R",
+       "name": "S",
+       "type": "Traversable",
        "variadic": false
       }
      ],
@@ -12871,7 +12871,7 @@
       "doc": "",
       "type": "S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]]"
      },
-     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable, G: Applicative, F: def(var A) -> R](var source: V, ref[o] function: F) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, Never, F, False, o]]",
+     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, F: def(var A) -> R, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, ref[o] function: F) raises S.TraverseError[G, V, _ErrorProbe[A, R, Never]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, Never, F, False, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, Never, F, False, o]]",
      "summary": "Admit a closure callback; execution stays with the family."
     },
     {
@@ -12924,9 +12924,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "S",
-       "type": "Traversable",
+       "inferred": true,
+       "name": "E",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "F",
+       "type": "def(var A) raises E -> R",
        "variadic": false
       },
       {
@@ -12939,15 +12946,8 @@
       {
        "description": "",
        "inferred": false,
-       "name": "E",
-       "type": "Movable & Deinitable",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
-       "name": "F",
-       "type": "def(var A) raises E -> R",
+       "name": "S",
+       "type": "Traversable",
        "variadic": false
       },
       {
@@ -12964,7 +12964,7 @@
       "doc": "",
       "type": "S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]]"
      },
-     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, S: Traversable, G: Applicative, E: Movable & Deinitable, F: def(var A) raises E -> R, X: AnyType = _InferError](var source: V, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, V, _ErrorProbe[A, R, E]]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)",
+     "signature": "def traverse[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, E: Movable & Deinitable, F: def(var A) raises E -> R, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable], X: AnyType = _InferError](var source: V, ref[o] function: F) raises _EntryError[X, S.TraverseError[G, V, _ErrorProbe[A, R, E]]] -> S.Traversed[G, V, _NativeUnaryRef[A, R, E, F, True, o]] where S.Element[V] == A and S.TargetCompatible[G, V, _NativeUnaryRef[A, R, E, F, True, o]] and (X == _InferError or X == E)",
      "summary": "Admit a closure callback that raises; execution stays with the family."
     },
     {
@@ -13004,15 +13004,15 @@
       {
        "description": "",
        "inferred": false,
-       "name": "S",
-       "type": "Traversable",
+       "name": "G",
+       "type": "Applicative",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "G",
-       "type": "Applicative",
+       "name": "S",
+       "type": "Traversable",
        "variadic": false
       }
      ],
@@ -13022,7 +13022,7 @@
       "doc": "",
       "type": "S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]"
      },
-     "signature": "def traverse[V: Movable & Deinitable, R: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]",
+     "signature": "def traverse[V: Movable & Deinitable, R: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable) and S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]",
      "summary": "Admit a thin callback; execution stays with the family."
     },
     {
@@ -13062,15 +13062,15 @@
       {
        "description": "",
        "inferred": false,
-       "name": "S",
-       "type": "Traversable",
+       "name": "G",
+       "type": "Applicative",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "G",
-       "type": "Applicative",
+       "name": "S",
+       "type": "Traversable",
        "variadic": false
       }
      ],
@@ -13080,7 +13080,7 @@
       "doc": "",
       "type": "S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]"
      },
-     "signature": "def traverse[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, S: Traversable, G: Applicative](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]",
+     "signature": "def traverse[V: Movable & Deinitable, R: RegisterPassable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, Never]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, Never, type_of(function), False]]",
      "summary": "Admit a thin callback; execution stays with the family."
     },
     {
@@ -13127,15 +13127,15 @@
       {
        "description": "",
        "inferred": false,
-       "name": "S",
-       "type": "Traversable",
+       "name": "G",
+       "type": "Applicative",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "G",
-       "type": "Applicative",
+       "name": "S",
+       "type": "Traversable",
        "variadic": false
       }
      ],
@@ -13145,7 +13145,7 @@
       "doc": "",
       "type": "S.Traversed[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]]"
      },
-     "signature": "def traverse[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, S: Traversable, G: Applicative](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) raises E thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, E]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]]",
+     "signature": "def traverse[V: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, G: Applicative = _InferredApplicative[R], S: Traversable = downcast[_SourceFamily[V], Traversable]](var source: V, function: def(var _NativeOwnedArg[S.Element[V]]) raises E thin -> R) raises S.TraverseError[G, V, _ErrorProbe[NoneType, R, E]] -> S.Traversed[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]] where S.TargetCompatible[G, V, NativeUnary[S.Element[V], R, E, type_of(function), True]]",
      "summary": "Admit a thin callback that raises; execution stays with the family."
     }
    ],
@@ -24072,24 +24072,24 @@
        "variadic": false
       },
       {
-       "description": "The target Monad family; it determines dependent sequencing and failure.",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
        "description": "The true-branch factory, retaining its native error and receiver mode.",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "The false-branch factory, retaining its native error and receiver mode.",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The target Monad family; it determines dependent sequencing and failure.",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24106,7 +24106,7 @@
       "doc": "The selected branch effect; absence or failure in the condition skips both factories.",
       "type": "IfContract[G, V, L, R].Out"
      },
-     "signature": "def if_effect[V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]",
+     "signature": "def if_effect[V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, var on_false: R) raises _EntryError[X, IfContract[G, V, L, R].Error] -> IfContract[G, V, L, R].Out where IfContract[G, V, L, R].ShapeCompatible and _ErrorCompatible[_EntryError[X, IfContract[G, V, L, R].Error], IfContract[G, V, L, R].Error]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24159,23 +24159,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24192,7 +24192,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]]"
      },
-     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, R: def() -> W, X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24245,30 +24245,30 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "D",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() raises D -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24285,7 +24285,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]]"
      },
-     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24331,16 +24331,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "L",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "L",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24357,7 +24357,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: Movable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24403,16 +24403,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "L",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "L",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24429,7 +24429,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: RegisterPassable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], L.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24482,16 +24482,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "L",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "L",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24508,7 +24508,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]]"
      },
-     "signature": "def if_effect[W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, L: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, var on_true: L, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] -> G.Bound[V, _IfEffect[G, L, _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[L.Out] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[L.Out, W], _CommonError[L.Error, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, L.Out] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24561,23 +24561,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24594,7 +24594,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, L: def() -> U, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24661,23 +24661,23 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24694,7 +24694,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, R: def() -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: def() -> U, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24761,30 +24761,30 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "D",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() raises D -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24801,7 +24801,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, L: def() -> U, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Never, L, False, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24854,30 +24854,30 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "Y",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() raises Y -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -24894,7 +24894,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -24961,30 +24961,30 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "Y",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() raises Y -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -25001,7 +25001,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, R: def() -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, Never, R, False, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25068,37 +25068,37 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
-       "variadic": false
-      },
-      {
-       "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "Y",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "L",
        "type": "def() raises Y -> U",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "D",
        "type": "Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
-       "inferred": false,
+       "inferred": true,
        "name": "R",
        "type": "def() raises D -> W",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -25115,7 +25115,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, //, G: Monad, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, o: ImmOrigin, W: Movable & Deinitable, q: ImmOrigin, V: Movable & Deinitable, Y: Movable & Deinitable, L: def() raises Y -> U, D: Movable & Deinitable, R: def() raises D -> W, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, ref[o] on_true: L, ref[q] on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunkRef[U, Y, L, True, o], _NativeThunkRef[W, D, R, True, q]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25161,16 +25161,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "R",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "R",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -25187,7 +25187,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: Movable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25259,7 +25259,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25331,7 +25331,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25410,7 +25410,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where not conforms_to(U, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25456,16 +25456,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "R",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "R",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -25482,7 +25482,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]]"
      },
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], R.Error]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25554,7 +25554,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25626,7 +25626,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Never]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25705,7 +25705,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]]"
      },
-     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: RegisterPassable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Never, type_of(on_true), False], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], D]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25758,16 +25758,16 @@
       },
       {
        "description": "",
-       "inferred": false,
-       "name": "G",
-       "type": "Monad",
+       "inferred": true,
+       "name": "R",
+       "type": "ThunkContract & Movable & Deinitable",
        "variadic": false
       },
       {
        "description": "",
        "inferred": false,
-       "name": "R",
-       "type": "ThunkContract & Movable & Deinitable",
+       "name": "G",
+       "type": "Monad",
        "variadic": false
       },
       {
@@ -25784,7 +25784,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, R: ThunkContract & Movable & Deinitable, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, V: Movable & Deinitable, R: ThunkContract & Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, var on_false: R) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], R]] where G.Element[V] == Bool and G.Element[U] == G.Element[R.Out] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, R.Out], _CommonError[Y, R.Error]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, R.Out]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25863,7 +25863,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where not conforms_to(W, RegisterPassable) and G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -25942,7 +25942,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: RegisterPassable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, Never, type_of(on_false), False]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], Y]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     },
     {
@@ -26028,7 +26028,7 @@
       "doc": "",
       "type": "G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]]"
      },
-     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad, X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
+     "signature": "def if_effect[U: Movable & Deinitable, Y: Movable & Deinitable, W: Movable & Deinitable, D: Movable & Deinitable, V: Movable & Deinitable, //, G: Monad = downcast[_SourceFamily[V], Monad], X: AnyType = _InferError](var condition: V, on_true: def() raises Y thin -> U, on_false: def() raises D thin -> W) raises _EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] -> G.Bound[V, _IfEffect[G, _NativeThunk[U, Y, type_of(on_true), True], _NativeThunk[W, D, type_of(on_false), True]]] where G.Element[V] == Bool and G.Element[U] == G.Element[W] and _ErrorCompatible[_EntryError[X, G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]], G.BindError[V, _ErrorProbe[Bool, G._Joined[U, W], _CommonError[Y, D]]]] and _CarrierCompatible[G, V] and _CarrierCompatible[G, U] and _CarrierCompatible[G, W]",
      "summary": "Run the factory selected by an effectful Bool, skipping both factories on failure or absence."
     }
    ],
@@ -73156,6 +73156,225 @@
    "traits": [
     "Copyable"
    ]
+  },
+  "effects.async_runtime.TestControl": {
+   "aliases": [],
+   "description": "The program runs on a manual clock that starts at zero and moves only when\nthe test advances it, so sleeps and timeouts complete without real waiting.\n`tick` runs everything runnable without moving time; `advance` moves time\nwithout running anything; `tick_all` alternates the two until the program\ncompletes or nothing is scheduled. External events, such as completing an\nIO.async registration or a shared Deferred, are observed at the next tick;\nwhen several fibers become ready together, their order is unspecified.\nLike Driver, the control owns the program linearly: request cancellation\nand tick until it completes before taking its results.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "advance": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "How far to move.",
+        "name": "duration",
+        "type": "Duration",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def advance(mut self, duration: Duration)",
+      "summary": "Move virtual time forward without running anything."
+     }
+    ],
+    "advance_and_tick": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "How far to move.",
+        "name": "duration",
+        "type": "Duration",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def advance_and_tick(mut self, duration: Duration)",
+      "summary": "Move virtual time forward, then run until nothing is runnable."
+     }
+    ],
+    "is_completed": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True once results can be taken.",
+       "type": "Bool"
+      },
+      "signature": "def is_completed(mut self) -> Bool",
+      "summary": "Report whether the program and all its cleanup have finished."
+     }
+    ],
+    "is_deadlocked": [
+     {
+      "args": [],
+      "description": "As in Cats Effect, this assumes nothing outside the program delivers\nevents except through IO.async: a program waiting on a Deferred that\nthe test could still complete also reports true.",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "True when the program is incomplete, nothing is runnable, no\ndeadline is live, and no IO.async registration awaits completion.",
+       "type": "Bool"
+      },
+      "signature": "def is_deadlocked(mut self) -> Bool",
+      "summary": "Report whether the program can never continue."
+     }
+    ],
+    "next_interval": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The duration to the earliest live deadline, or None without one.",
+       "type": "Optional[Duration]"
+      },
+      "signature": "def next_interval(mut self) -> Optional[Duration]",
+      "summary": "Report how far virtual time must move to reach the next deadline."
+     }
+    ],
+    "now": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The manual clock's current point.",
+       "type": "Instant"
+      },
+      "signature": "def now(self) -> Instant",
+      "summary": "Read virtual time."
+     }
+    ],
+    "request_cancel": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def request_cancel(self)",
+      "summary": "Request cancellation; keep ticking until the program completes."
+     }
+    ],
+    "results": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Its owned success, complete ordered failure, or cancellation.\nCalling before completion is a protocol violation.",
+       "type": "Outcome[Self.P.Value, Self.P.Error]"
+      },
+      "signature": "def results(deinit self) -> Outcome[Self.P.Value, Self.P.Error]",
+      "summary": "Take the outcome of a completed program, exactly once."
+     }
+    ],
+    "tick": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def tick(mut self)",
+      "summary": "Run until nothing is runnable, without advancing time."
+     }
+    ],
+    "tick_all": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def tick_all(mut self)",
+      "summary": "Tick and advance to each next deadline until the program completes or none remains."
+     }
+    ],
+    "tick_for": [
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "How far virtual time moves in total.",
+        "name": "duration",
+        "type": "Duration",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": null,
+      "signature": "def tick_for(mut self, duration: Duration)",
+      "summary": "Run and advance through every deadline within a duration, then to its end."
+     }
+    ],
+    "tick_one": [
+     {
+      "args": [],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "Whether the poll ran any work.",
+       "type": "Bool"
+      },
+      "signature": "def tick_one(mut self) -> Bool",
+      "summary": "Take one root poll without advancing time."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The program, an IO or a custom machine.",
+     "inferred": false,
+     "name": "P",
+     "type": "Machine",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/_async/host",
+   "signature": "struct TestControl[P: Machine](Movable, not Deinitable)",
+   "summary": "Run a program on virtual time, as Cats Effect's TestControl.",
+   "traits": []
   },
   "effects.async_runtime.protocols.CleanupMachine": {
    "aliases": [
