@@ -4097,6 +4097,27 @@
    },
    "provider": "effects/protocols"
   },
+  "effects.Blocking": {
+   "declarations": [
+    "trait Blocking:"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "blocking": [
+     {
+      "sha256": "f9da094ef9244de75d25bdeca47b978e89d0cbb989c786314dc74d22fddc6191",
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]:"
+     }
+    ],
+    "interruptible": [
+     {
+      "sha256": "9a7472e0a91d30fcf1132fe5208356aab72582e1a909a99cc36ec64eaf139c77",
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]:"
+     }
+    ]
+   },
+   "provider": "effects/protocols"
+  },
   "effects.Cancel": {
    "declarations": [
     "trait Cancel:"
@@ -4668,6 +4689,27 @@
      {
       "sha256": "056a56038fdf29994ec44cde2dfa77c3da91e6ea88fdebfe99904bf78e3a02f5",
       "signature": "def ask() raises Self.AskError -> Self.Asked:"
+     }
+    ]
+   },
+   "provider": "effects/capabilities"
+  },
+  "effects.LiftBlocking": {
+   "declarations": [
+    "struct LiftBlocking[I: Monad & _Lifting, C: Blocking](Blocking, not Deinitable):"
+   ],
+   "kind": "type or alias",
+   "methods": {
+    "blocking": [
+     {
+      "sha256": "f9da094ef9244de75d25bdeca47b978e89d0cbb989c786314dc74d22fddc6191",
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]:"
+     }
+    ],
+    "interruptible": [
+     {
+      "sha256": "9a7472e0a91d30fcf1132fe5208356aab72582e1a909a99cc36ec64eaf139c77",
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]:"
      }
     ]
    },
@@ -5895,10 +5937,16 @@
   },
   "effects.SyncIO": {
    "declarations": [
-    "struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, not Deinitable):"
+    "struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, Blocking, not Deinitable):"
    ],
    "kind": "type or alias",
    "methods": {
+    "blocking": [
+     {
+      "sha256": "f9da094ef9244de75d25bdeca47b978e89d0cbb989c786314dc74d22fddc6191",
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]:"
+     }
+    ],
     "canceled": [
      {
       "sha256": "f3aa99e858d6d4061966c304805229031e88685aac4a1aa86e714fcd1ceeea3f",
@@ -5927,6 +5975,12 @@
      {
       "sha256": "7da09899f80251be0b1edf7da8ceead11a69f014517394e58973663bb76a8102",
       "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]:"
+     }
+    ],
+    "interruptible": [
+     {
+      "sha256": "9a7472e0a91d30fcf1132fe5208356aab72582e1a909a99cc36ec64eaf139c77",
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]:"
      }
     ],
     "monotonic": [
@@ -6286,7 +6340,7 @@
   },
   "effects.async_runtime.Async": {
    "declarations": [
-    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Temporal, not Deinitable):"
+    "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Temporal, Blocking, not Deinitable):"
    ],
    "kind": "type or alias",
    "methods": {
@@ -6294,6 +6348,12 @@
      {
       "sha256": "7ed89724c3b596cb794b2874b6a98eb60c9f8a092673ba3429daec3e7d6de18d",
       "signature": "def and_wait[V: Movable & Deinitable](var program: V, duration: Duration) -> V:"
+     }
+    ],
+    "blocking": [
+     {
+      "sha256": "f9da094ef9244de75d25bdeca47b978e89d0cbb989c786314dc74d22fddc6191",
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]:"
      }
     ],
     "cancel": [
@@ -6366,6 +6426,12 @@
      {
       "sha256": "9197e8525da8cfd4fb06e9e2af1b348ed617ed6af5aa06c4626f2b23ff010ee8",
       "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> V:"
+     }
+    ],
+    "interruptible": [
+     {
+      "sha256": "9a7472e0a91d30fcf1132fe5208356aab72582e1a909a99cc36ec64eaf139c77",
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]:"
      }
     ],
     "join": [
@@ -6765,6 +6831,36 @@
       "signature": "def attempt(deinit self) -> IO[Result[Self.T, EffectFailure[Self.E]], Self.E]:"
      }
     ],
+    "blocking": [
+     {
+      "sha256": "9c5fb933ee6818dcb889a8813f37987b93e409f43aaf6b3e6e53dd5a98fa78d0",
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where _DelayValue[F.Out] == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]:"
+     },
+     {
+      "sha256": "915016e34a75ecf0ca2ca5e93ae7e71b345e6efb9072ed2f987dcb81857bd951",
+      "signature": "def blocking[R: Movable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T and not conforms_to(R, RegisterPassable):"
+     },
+     {
+      "sha256": "9b5ab753395b89419872c9dd5a112833196cc3137625ffbeb8fb8038f2b19652",
+      "signature": "def blocking[R: RegisterPassable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T:"
+     },
+     {
+      "sha256": "a11e1df0f6af8290de186209061489f2a17f0707fab3a0c1157f1cb7b24614de",
+      "signature": "def blocking[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable):"
+     },
+     {
+      "sha256": "93aba8884befc8506b5532aac0a777243420074e5bbf6500b6c6b905e5759808",
+      "signature": "def blocking(function: def() thin) -> Self where Self.T == NoneType:"
+     },
+     {
+      "sha256": "0b2b670837a42b7fa0d86336f388d9d373f05ada463bccce6b39b82948e7abfa",
+      "signature": "def blocking[X: Movable & Deinitable, //](function: def() raises X thin) -> Self where Self.T == NoneType and _ErrorCompatible[Self.E, X]:"
+     },
+     {
+      "sha256": "3301c86665061982c7999f32b40a55575eca1bdf47861a9d32e12978a745fba4",
+      "signature": "def blocking[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]:"
+     }
+    ],
     "both": [
      {
       "sha256": "18cc2348498fd885642e2b41eae63fdf5abc5e046491632f19486bbf2883195c",
@@ -6877,6 +6973,20 @@
      {
       "sha256": "8fa5680c78a64af51aae8cc29096154c0520a2583464bad13266d6f69e757e28",
       "signature": "def handle_error_with[X: Movable & Deinitable, //](deinit self, handler: def(var EffectFailure[Self.E]) raises X thin -> Self) -> Self where _ErrorCompatible[Self.E, X]:"
+     }
+    ],
+    "interruptible": [
+     {
+      "sha256": "dfe84b736352fb66b00b8ce69c02b52ccb0c2f784800b0375e1f08756bee3919",
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self where F.Payload == Interruption and F.Result == Self.T and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure] and _Admitted[F]:"
+     },
+     {
+      "sha256": "558aeb18b7956ee92437ec31f6f8b4f1d2b454b696f86f343a089c4985819f98",
+      "signature": "def interruptible[R: Movable & Deinitable, //](function: def(Interruption) thin -> R) -> Self where R == Self.T:"
+     },
+     {
+      "sha256": "8aca7f3ab55bf5e17ec58a9b90d0346cfdca5eb9144a29f3d79edd3b5467b36d",
+      "signature": "def interruptible[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def(Interruption) raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]:"
      }
     ],
     "lift": [
@@ -7564,6 +7674,24 @@
    ],
    "provider": "effects/_async/host"
   },
+  "effects.blocking": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "d0355b8245e5b9584c5ff17f96f5b19d0c6e838117743df6ca65ae28de41ee6e",
+     "signature": "def blocking[F: ThunkContract & Movable & Deinitable, //, I: Blocking](var function: F) -> I.Blocked[F] where I.BlockingCompatible[F]:"
+    },
+    {
+     "sha256": "7c696e4601a1311a7b10245ebf241d83a43f3e1f6313670b8138db8c0d382bbb",
+     "signature": "def blocking[R: Movable & Deinitable, //, I: Blocking](function: def() thin -> R) -> I.Blocked[_NativeThunk[R, Never, def() thin -> R, False]] where I.BlockingCompatible[_NativeThunk[R, Never, def() thin -> R, False]]:"
+    },
+    {
+     "sha256": "1e67a50d31dbd2b863c79fca0c1e9c1afcf73eca18d128dc5941a930af3d8376",
+     "signature": "def blocking[R: Movable & Deinitable, X: Movable & Deinitable, //, I: Blocking](function: def() raises X thin -> R) -> I.Blocked[_NativeThunk[R, X, def() raises X thin -> R, True]] where I.BlockingCompatible[_NativeThunk[R, X, def() raises X thin -> R, True]]:"
+    }
+   ],
+   "provider": "effects/capabilities"
+  },
   "effects.cancel": {
    "kind": "function",
    "overloads": [
@@ -7853,6 +7981,24 @@
     }
    ],
    "provider": "effects/projections"
+  },
+  "effects.interruptible": {
+   "kind": "function",
+   "overloads": [
+    {
+     "sha256": "4f324ed6cc7c916514214da959b086b8edde04876dfd8135bb02c16fae88f89c",
+     "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable, //, I: Blocking](var function: F) -> I.Interrupted[F] where I.InterruptibleCompatible[F]:"
+    },
+    {
+     "sha256": "12a7afd3313daf9c8105542cf3b24556347873704b4bef6a23d77a24cffd0821",
+     "signature": "def interruptible[P: AnyType, R: Movable & Deinitable, //, I: Blocking](function: def(P) thin -> R) -> I.Interrupted[_NativeBorrow[P, R, Never, def(P) thin -> R, False]] where I.InterruptibleCompatible[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]:"
+    },
+    {
+     "sha256": "b4ff31b4bef245605b45b8199d21456e4d398c8ebb41acc1ddcbebe4f8d8ea39",
+     "signature": "def interruptible[P: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, I: Blocking](function: def(P) raises X thin -> R) -> I.Interrupted[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] where I.InterruptibleCompatible[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]:"
+    }
+   ],
+   "provider": "effects/capabilities"
   },
   "effects.join": {
    "kind": "function",

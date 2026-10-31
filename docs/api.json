@@ -37238,6 +37238,104 @@
    "summary": "Read an environment in a selected effect family.",
    "traits": []
   },
+  "effects.Blocking": {
+   "aliases": [
+    {
+     "description": "The family whose carriers this capability builds.",
+     "name": "Family"
+    },
+    {
+     "description": "Whether F is admitted: owned, with an error the family accepts.",
+     "name": "BlockingCompatible"
+    },
+    {
+     "description": "The carrier running F as a blocking call.",
+     "name": "Blocked"
+    },
+    {
+     "description": "Whether F is admitted: owned, borrowing an Interruption, with an error the family accepts.",
+     "name": "InterruptibleCompatible"
+    },
+    {
+     "description": "The carrier running F as an interruptible call.",
+     "name": "Interrupted"
+    }
+   ],
+   "description": "Async runs each function on a worker of the root's blocking pool while\nother fibers keep running; SyncIO runs it inline, on the calling thread,\nwhich the synchronous family blocks anyway. `blocking` cannot be canceled:\ncancellation and timeouts wait for it. `interruptible` lends the function\nan Interruption handle that reports a cancellation request, and\ncancellation completes when the function returns. Functions follow the\nfamily's callback rule: owned callables and plain functions, never\nclosures or borrowed views. In Async the function, its result and its\nerror move to another thread, which the caller asserts is safe.",
+   "fields": [],
+   "kind": "trait",
+   "methods": {
+    "blocking": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An admitted once-callable thunk.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing the function's value, or failing with its error.",
+       "type": "Self.Blocked[F]"
+      },
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]",
+      "summary": "Run a blocking function when the program reaches it."
+     }
+    ],
+    "interruptible": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An admitted once-callable borrowing an Interruption.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A carrier producing the function's value; canceled after it returns\nwhen cancellation was requested.",
+       "type": "Self.Interrupted[F]"
+      },
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]",
+      "summary": "Run a blocking function that observes cancellation through an Interruption."
+     }
+    ]
+   },
+   "parameters": [],
+   "provider": "effects/protocols",
+   "signature": "trait Blocking",
+   "summary": "Run blocking functions without blocking other work, as Cats Effect's blocking and interruptible.",
+   "traits": []
+  },
   "effects.Cancel": {
    "aliases": [
     {
@@ -40718,6 +40816,121 @@
    "summary": "Lift a selected Ask capability through one transformer.",
    "traits": [
     "Ask"
+   ]
+  },
+  "effects.LiftBlocking": {
+   "aliases": [
+    {
+     "description": "",
+     "name": "Family"
+    },
+    {
+     "description": "",
+     "name": "BlockingCompatible"
+    },
+    {
+     "description": "",
+     "name": "Blocked"
+    },
+    {
+     "description": "",
+     "name": "InterruptibleCompatible"
+    },
+    {
+     "description": "",
+     "name": "Interrupted"
+    }
+   ],
+   "description": "Both operations lift the base's carrier, as LiftDefer's delay does, so the\ncall runs where the base runs it: on Async's pool, or inline in SyncIO.\nI.Base must equal C.Family.",
+   "fields": [],
+   "kind": "struct",
+   "methods": {
+    "blocking": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable thunk the base admits.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's carrier of the function's value.",
+       "type": "Self.Blocked[F]"
+      },
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]",
+      "summary": "Lift the base's blocking call."
+     }
+    ],
+    "interruptible": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable borrowing an Interruption that the base admits.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "The destination family's carrier of the function's value.",
+       "type": "Self.Interrupted[F]"
+      },
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]",
+      "summary": "Lift the base's interruptible call."
+     }
+    ]
+   },
+   "parameters": [
+    {
+     "description": "The destination transformer family.",
+     "inferred": false,
+     "name": "I",
+     "type": "Monad & _Lifting",
+     "variadic": false
+    },
+    {
+     "description": "The Blocking capability of its immediate base.",
+     "inferred": false,
+     "name": "C",
+     "type": "Blocking",
+     "variadic": false
+    }
+   ],
+   "provider": "effects/capabilities",
+   "signature": "struct LiftBlocking[I: Monad & _Lifting, C: Blocking](Blocking, not Deinitable)",
+   "summary": "Lift a selected Blocking capability through one transformer.",
+   "traits": [
+    "Blocking"
    ]
   },
   "effects.LiftCancel": {
@@ -48335,12 +48548,60 @@
     {
      "description": "",
      "name": "Timed"
+    },
+    {
+     "description": "",
+     "name": "BlockingCompatible"
+    },
+    {
+     "description": "",
+     "name": "Blocked"
+    },
+    {
+     "description": "",
+     "name": "InterruptibleCompatible"
+    },
+    {
+     "description": "",
+     "name": "Interrupted"
     }
    ],
    "description": "Generic code names this dictionary to run in IO[E], such as\n`guarantee[SyncIO[E]](program, cleanup)`. Each operation forwards to the\nfamily's existing function. The synchronous family has no fibers, so\nSyncIO is not a Spawn provider.",
    "fields": [],
    "kind": "struct",
    "methods": {
+    "blocking": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The synchronous family already blocks its thread, so no pool is used.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable thunk with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A program producing the function's value.",
+       "type": "Self.Blocked[F]"
+      },
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]",
+      "summary": "Run a blocking function inline, on the calling thread, as delay does."
+     }
+    ],
     "canceled": [
      {
       "args": [],
@@ -48511,6 +48772,38 @@
       },
       "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> Self.CaseGuaranteed[V, F]",
       "summary": "Finalize with an effect borrowing the exact exit; see guarantee_case."
+     }
+    ],
+    "interruptible": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "Its Interruption reports the running program's cancellation token.\nCancellation is checked before the call and after it, as for delay.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "A once-callable borrowing an Interruption, with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "A program producing the function's value.",
+       "type": "Self.Interrupted[F]"
+      },
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]",
+      "summary": "Run an interruptible function inline, on the calling thread."
      }
     ],
     "monotonic": [
@@ -48721,9 +49014,10 @@
     }
    ],
    "provider": "effects/finalization",
-   "signature": "struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, not Deinitable)",
-   "summary": "The capabilities of the synchronous IO[E] family: Defer, Raise, Cancel and Timing.",
+   "signature": "struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, Blocking, not Deinitable)",
+   "summary": "The capabilities of the synchronous IO[E] family: Defer, Raise, Cancel, Timing and Blocking.",
    "traits": [
+    "Blocking",
     "Cancel",
     "Defer",
     "Raise",
@@ -51147,6 +51441,22 @@
     },
     {
      "description": "",
+     "name": "BlockingCompatible"
+    },
+    {
+     "description": "",
+     "name": "Blocked"
+    },
+    {
+     "description": "",
+     "name": "InterruptibleCompatible"
+    },
+    {
+     "description": "",
+     "name": "Interrupted"
+    },
+    {
+     "description": "",
      "name": "CollectCompatible"
     },
     {
@@ -51211,6 +51521,38 @@
       },
       "signature": "def and_wait[V: Movable & Deinitable](var program: V, duration: Duration) -> V",
       "summary": "Run the program, then sleep; see IO.and_wait."
+     }
+    ],
+    "blocking": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable, with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the function's value; cancellation waits for it.",
+       "type": "Self.Blocked[F]"
+      },
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self.Blocked[F]",
+      "summary": "Run a blocking function on the root's blocking pool; see IO.blocking."
      }
     ],
     "cancel": [
@@ -51619,6 +51961,38 @@
       },
       "signature": "def guarantee_case[V: Movable & Deinitable, F: Movable & Deinitable](var program: V, var finalizer: F) -> V",
       "summary": "Run a finalizer built from the exact exit; see IO.guarantee_case."
+     }
+    ],
+    "interruptible": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable borrowing an Interruption, with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the function's value, or canceled after it returns.",
+       "type": "Self.Interrupted[F]"
+      },
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Interrupted[F]",
+      "summary": "Run an interruptible function on the root's blocking pool; see IO.interruptible."
      }
     ],
     "join": [
@@ -52457,10 +52831,11 @@
     }
    ],
    "provider": "effects/_async/engine",
-   "signature": "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Temporal, not Deinitable)",
+   "signature": "struct Async[E: Movable & Deinitable](Monad, ErrorRecovery, Defer, Raise, Temporal, Blocking, not Deinitable)",
    "summary": "The sequencing and recovery family of IO.",
    "traits": [
     "Applicative",
+    "Blocking",
     "Cancel",
     "Concurrent",
     "Defer",
@@ -53353,6 +53728,224 @@
       "summary": "Materialize success or an ordinary failure as a Result."
      }
     ],
+    "blocking": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed; it runs once, on a pool worker.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The fiber suspends while a pool worker runs the function, so other\nfibers keep running; it resumes with the function's result or error.\nLike Cats Effect's `blocking`, the call cannot be canceled: a\ncancellation or timeout waits for the function to return. Mojo has no\nSend or Sync proof: the caller asserts that the function, its result\nand its error may move to, be used on, and be destroyed on another\nthread. Use interruptible for a function that can stop early.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable producing T, or no value when T is\n    NoneType, with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "ThunkContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the function's result; its error becomes the failure.",
+       "type": "Self"
+      },
+      "signature": "def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where _DelayValue[F.Out] == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]",
+      "summary": "Run a blocking function on the root's blocking pool when the IO reaches it."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def blocking[R: Movable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T and not conforms_to(R, RegisterPassable)",
+      "summary": "Run a native blocking function on the root's blocking pool."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def blocking[R: RegisterPassable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T",
+      "summary": "Run a native blocking function on the root's blocking pool."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def blocking[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable)",
+      "summary": "Run a raising native blocking function; its error becomes the failure."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def blocking(function: def() thin) -> Self where Self.T == NoneType",
+      "summary": "Run a native blocking function with no return value; the IO produces None."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() raises X thin",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def blocking[X: Movable & Deinitable, //](function: def() raises X thin) -> Self where Self.T == NoneType and _ErrorCompatible[Self.E, X]",
+      "summary": "Run a raising native blocking function with no return value; its error becomes the failure."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def() raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "RegisterPassable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def blocking[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]",
+      "summary": "Run a raising native blocking function; its error becomes the failure."
+     }
+    ],
     "both": [
      {
       "args": [
@@ -54012,6 +54605,105 @@
       },
       "signature": "def handle_error_with[X: Movable & Deinitable, //](deinit self, handler: def(var EffectFailure[Self.E]) raises X thin -> Self) -> Self where _ErrorCompatible[Self.E, X]",
       "summary": "Recover with a raising native handler; its error replaces the failure."
+     }
+    ],
+    "interruptible": [
+     {
+      "args": [
+       {
+        "convention": "var",
+        "description": "The function, consumed; it runs once, on a pool worker.",
+        "name": "function",
+        "type": "F",
+        "variadic": false
+       }
+      ],
+      "description": "The function borrows an Interruption handle for the call. On\ncancellation the handle reports the request, which stays visible, and\ncancellation completes when the function returns; its late result is\nthen rejected and destroyed on the worker. No signal is sent, as in\nCats Effect on Scala Native: a function blocked outside the handle is\nnot woken. The caller asserts that the function, its result and its\nerror may move to, be used on, and be destroyed on another thread.",
+      "error": "",
+      "parameters": [
+       {
+        "description": "An owned once-callable borrowing an Interruption and producing\n    T, with error E or none.",
+        "inferred": false,
+        "name": "F",
+        "type": "BorrowCallContract & Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "An IO producing the function's result, or canceled after it returns.",
+       "type": "Self"
+      },
+      "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self where F.Payload == Interruption and F.Result == Self.T and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure] and _Admitted[F]",
+      "summary": "Run a blocking function that can stop early, on the root's blocking pool."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(Interruption) thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def interruptible[R: Movable & Deinitable, //](function: def(Interruption) thin -> R) -> Self where R == Self.T",
+      "summary": "Run a native interruptible function on the root's blocking pool."
+     },
+     {
+      "args": [
+       {
+        "convention": "",
+        "description": "",
+        "name": "function",
+        "type": "def(Interruption) raises X thin -> R",
+        "variadic": false
+       }
+      ],
+      "description": "",
+      "error": "",
+      "parameters": [
+       {
+        "description": "",
+        "inferred": true,
+        "name": "R",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       },
+       {
+        "description": "",
+        "inferred": true,
+        "name": "X",
+        "type": "Movable & Deinitable",
+        "variadic": false
+       }
+      ],
+      "raises": false,
+      "raises_doc": "",
+      "returns": {
+       "doc": "",
+       "type": "Self"
+      },
+      "signature": "def interruptible[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def(Interruption) raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]",
+      "summary": "Run a raising native interruptible function; its error becomes the failure."
      }
     ],
     "lift": [
@@ -54711,6 +55403,11 @@
      "description": "The host callback for unhandled fiber failures; standard error by default. It may be called from any thread that disposes of a fiber's outcome, and\nfrom several at once once fibers run in parallel.",
      "name": "reporter",
      "type": "def(String) thin -> None"
+    },
+    {
+     "description": "The pool running IO.blocking and IO.interruptible calls; None gives the root a private pool with BlockingPool's defaults. Pass one pool to several roots to share it.",
+     "name": "blocking_pool",
+     "type": "Optional[BlockingPool]"
     }
    ],
    "kind": "struct",
@@ -57114,6 +57811,132 @@
     }
    ],
    "provider": "effects/_async/host",
+   "summary": ""
+  },
+  "effects.blocking": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The function, consumed.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Async runs it on the root's blocking pool and SyncIO inline; neither can\ncancel it. Other overloads take a plain native function; closures are\nrejected.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "An owned once-callable thunk the family admits.",
+       "inferred": true,
+       "name": "F",
+       "type": "ThunkContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Blocking",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing the function's value.",
+      "type": "I.Blocked[F]"
+     },
+     "signature": "def blocking[F: ThunkContract & Movable & Deinitable, //, I: Blocking](var function: F) -> I.Blocked[F] where I.BlockingCompatible[F]",
+     "summary": "Run a blocking function, in any family with Blocking."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def() thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Blocking",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Blocked[_NativeThunk[R, Never, def() thin -> R, False]]"
+     },
+     "signature": "def blocking[R: Movable & Deinitable, //, I: Blocking](function: def() thin -> R) -> I.Blocked[_NativeThunk[R, Never, def() thin -> R, False]] where I.BlockingCompatible[_NativeThunk[R, Never, def() thin -> R, False]]",
+     "summary": "Run a plain native blocking function, in any family with Blocking."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def() raises X thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Blocking",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Blocked[_NativeThunk[R, X, def() raises X thin -> R, True]]"
+     },
+     "signature": "def blocking[R: Movable & Deinitable, X: Movable & Deinitable, //, I: Blocking](function: def() raises X thin -> R) -> I.Blocked[_NativeThunk[R, X, def() raises X thin -> R, True]] where I.BlockingCompatible[_NativeThunk[R, X, def() raises X thin -> R, True]]",
+     "summary": "Run a raising plain native blocking function, in any family with Blocking."
+    }
+   ],
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.cancel": {
@@ -59783,6 +60606,146 @@
     }
    ],
    "provider": "effects/projections",
+   "summary": ""
+  },
+  "effects.interruptible": {
+   "description": "",
+   "kind": "function",
+   "overloads": [
+    {
+     "args": [
+      {
+       "convention": "var",
+       "description": "The function, consumed.",
+       "name": "function",
+       "type": "F",
+       "variadic": false
+      }
+     ],
+     "description": "Async runs it on the root's blocking pool, and cancellation completes when\nit returns; SyncIO runs it inline with a handle reading the program's\ntoken. Other overloads take a plain native function; closures are rejected.",
+     "error": "",
+     "parameters": [
+      {
+       "description": "An owned once-callable borrowing an Interruption that the family admits.",
+       "inferred": true,
+       "name": "F",
+       "type": "BorrowCallContract & Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "The capability dictionary, such as Async[E] or SyncIO[E].",
+       "inferred": false,
+       "name": "I",
+       "type": "Blocking",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "The family's carrier producing the function's value.",
+      "type": "I.Interrupted[F]"
+     },
+     "signature": "def interruptible[F: BorrowCallContract & Movable & Deinitable, //, I: Blocking](var function: F) -> I.Interrupted[F] where I.InterruptibleCompatible[F]",
+     "summary": "Run a function that observes cancellation through an Interruption, in any family with Blocking."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Blocking",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Interrupted[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]"
+     },
+     "signature": "def interruptible[P: AnyType, R: Movable & Deinitable, //, I: Blocking](function: def(P) thin -> R) -> I.Interrupted[_NativeBorrow[P, R, Never, def(P) thin -> R, False]] where I.InterruptibleCompatible[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]",
+     "summary": "Run a plain native function borrowing an Interruption, in any family with Blocking."
+    },
+    {
+     "args": [
+      {
+       "convention": "",
+       "description": "",
+       "name": "function",
+       "type": "def(P) raises X thin -> R",
+       "variadic": false
+      }
+     ],
+     "description": "",
+     "error": "",
+     "parameters": [
+      {
+       "description": "",
+       "inferred": true,
+       "name": "P",
+       "type": "AnyType",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "R",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": true,
+       "name": "X",
+       "type": "Movable & Deinitable",
+       "variadic": false
+      },
+      {
+       "description": "",
+       "inferred": false,
+       "name": "I",
+       "type": "Blocking",
+       "variadic": false
+      }
+     ],
+     "raises": false,
+     "raises_doc": "",
+     "returns": {
+      "doc": "",
+      "type": "I.Interrupted[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]"
+     },
+     "signature": "def interruptible[P: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, I: Blocking](function: def(P) raises X thin -> R) -> I.Interrupted[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] where I.InterruptibleCompatible[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]",
+     "summary": "Run a raising plain native function borrowing an Interruption, in any family with Blocking."
+    }
+   ],
+   "provider": "effects/capabilities",
    "summary": ""
   },
   "effects.join": {
