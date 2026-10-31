@@ -19,6 +19,6 @@ def text(var value: Int) -> Optional[String]:
 def main() raises:
     print("find:", iterated(range(6)).find_effect[OptionalFamily](selected).value().value())
     print("find map:", iterated(range(6)).find_map_effect[ResultFamily[String]](label).raise_on_err().value())
-    print("fold map:", iterated(range(1, 4)).fold_map_effect[OptionalFamily, StringMonoid](text).value())
+    print("fold map:", iterated(range(1, 4)).fold_map_effect[StringMonoid](text).value())
     var effects: List[Optional[Optional[Int]]] = [Optional(Optional(1)), Optional(Optional[Int]()), Optional(Optional(3))]
     print("sequence filter:", sequence_filter[OptionalFamily](effects^).value())

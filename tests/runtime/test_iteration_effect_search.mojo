@@ -40,7 +40,7 @@ def basic() raises:
     assert_equal(iterated(range(5)).find_map_effect[ResultFamily[String]](i6_project).raise_on_err().value(),"2")
     assert_false(find_effect[ResultFamily[String]](range(0),i6_predicate).raise_on_err())
     assert_false(find_map_effect[ResultFamily[String]](range(1),i6_project).raise_on_err())
-    assert_equal(iterated(range(4)).fold_map_effect[ResultFamily[String],StringMonoid](i6_text).raise_on_err(),"0123")
+    assert_equal(iterated(range(4)).fold_map_effect[StringMonoid,ResultFamily[String]](i6_text).raise_on_err(),"0123")
     assert_equal(fold_map_effect[StringMonoid, ResultFamily[String]](range(0),i6_text).raise_on_err(),"")
     var xs:List[Int]=[0,1,2]
     assert_equal(piped(xs^).find_effect[ResultFamily[String]](i6_predicate).get().raise_on_err().value(),2)

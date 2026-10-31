@@ -1199,6 +1199,13 @@ and terminals, which have no generic form. `pipeline.mojo` has 660 methods
 - The callback type is no longer the first explicit parameter of List and
   Optional methods; bind it by keyword (`.filter[F=type_of(predicate)]`).
 
+Phase 5: `Iter`'s explicit traversal methods default their target, so the
+separate inferred-target overloads (`inferred_collect_methods()` and the
+inferred `traverse_void` pass) are gone; `Iter.traverse` has 7 overloads (was
+11) and `chaining.mojo` 250 methods (was 257). Iter's effectful searches and
+folds default their target like the free functions, and `fold_map_effect`
+takes its Monoid first, `[M, G]`.
+
 ## Callables and argument packs
 
 | Mojo 1.1 behavior | Library consequence | Replacement trigger |

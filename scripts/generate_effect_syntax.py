@@ -66,7 +66,7 @@ def folds(mode, array=False):
                 initial = 'initial^' if acc == 'A' else f'rebind_var[{acc}](initial^)'
             if mode == 'free': params += [f'V: {MD}']
             if array: params += ['N: Int']
-            if mode in ('free', 'piped'):
+            if mode in ('free', 'piped', 'iter'):
                 # The target Monad defaults to the callback result's family; the
                 # callback parameters after it default to their own bounds.
                 explicit = factory.explicit if kind == 'catalog' else form.explicit if native else ()
@@ -226,7 +226,7 @@ def searches(mode, array=False):
                 effect=metadata.result;fe=metadata.error
             if mode=='free':params+=[f'V: {MD}']
             if array:params+=['N: Int']
-            if mode in ('free','piped'):
+            if mode in ('free','piped','iter'):
                 # The Monoid cannot be inferred, so it precedes the defaulted target.
                 explicit=factory.explicit if kind=='catalog' else form.explicit if native else ()
                 lead,trail=split_explicit(explicit)
