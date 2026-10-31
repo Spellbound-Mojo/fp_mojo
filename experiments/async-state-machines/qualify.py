@@ -89,6 +89,7 @@ POSITIVE.add("capability_lifting")
 POSITIVE.add("capability_concurrent")
 POSITIVE.add("capability_temporal")
 POSITIVE.add("test_control")
+POSITIVE.update({"foreign_completion", "foreign_signal"})
 
 
 def experiment_inputs():
