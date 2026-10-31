@@ -197,6 +197,15 @@ migration. The limits and compatibility changes are recorded in
   `self` in every method that can run concurrently. Its atomics and mutable
   state live in separate allocations behind pointers: an `ArcPointer`, or a
   `Pointer[..., MutUntrackedOrigin]` as in the work-stealing structures.
+- **Tie a guard's references to the guard.** Mojo destroys a value after its
+  last use, and a reference derived from a raw pointer the value holds does not
+  count as a use of it. Code such as `guard.cell[].slot.value().append(x)`,
+  where `cell` is a borrowed `Pointer`, may release the lock before `append`
+  runs, and a probe double-freed that way. A guard therefore keeps its pointer
+  private and returns the guarded value as `ref[self]`, as `_CellGuard.value()`
+  does, so every use of the reference keeps the guard alive. A reference
+  derived from a field the guard owns, such as `_Guard`'s `ArcPointer`, is
+  already tied to it.
 - **Check hot paths in assembly.** `Optional` and `Variant` storage of
   non-trivial types is initialized and taken out of line, and `Optional.take()`
   is not inlined; use untagged `MaybeUninit` slots where it matters. Compare O3

@@ -20,7 +20,7 @@ from fp.callables.invoke import _OnceUnaryAvailable
 from fp.callables.products import _take_pair
 from fp.callables.native import NativeUnary, _Unary, _NativeBorrow, _Borrowing, _RaisingBorrowing
 from fp._internal.errors import _ErrorCompatible
-from fp._internal.cells import _Cell, _Guard, _try_lock
+from fp._internal.cells import _Cell, _Guard, _try_lock, _lock_until_canceled
 from fp._internal.waking import _Event
 
 
@@ -39,12 +39,8 @@ trait _RefAction(ReaderAction):
 
 
 def _lock[T: Movable & Deinitable, E: Movable & Deinitable](cell: ArcPointer[_Cell[T]], context: IOContext[E]) -> Optional[_Guard[T]]:
-    while not context.canceled():
-        var guard = _try_lock(cell)
-        if guard:
-            return guard^
-        sleep(0.001)
-    return None
+    """Lock a coordination cell: spin, then yield, observing cancellation between yields."""
+    return _lock_until_canceled(cell, context)
 
 
 @fieldwise_init

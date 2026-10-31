@@ -38,10 +38,13 @@ its atomic requested flag remains the source of cancellation state.
 ## The current-thread executor
 
 All registries under one root share a scheduler: the ready queue, the timer
-heap, the host notifier, and the table of live fibers' metadata. The
+heap, the host notifier, the atomic count of live external registrations, and
+the lock-free diagnostic slots of live fibers. The
 current-thread executor (`src/fp/effects/_async/executor.mojo`) runs the
-root's tasks on the thread that polls it. One root poll is one executor turn:
-it refills the transition budget, then runs queued tasks in FIFO order, each at
+root's tasks on the thread that polls it. The transition slice belongs to the
+executor and reaches each task it runs through the task's context; the
+thresholds and the reporter beside it are read-only. One root poll is one
+executor turn: it refills the slice, then runs queued tasks in FIFO order, each at
 most once, until the budget is spent, the queue is empty, or the next task
 already ran in this turn. Idle tasks cost nothing: a parked fiber is never
 scanned or entered until a wake queues it.

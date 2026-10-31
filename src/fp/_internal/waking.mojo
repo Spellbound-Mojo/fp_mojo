@@ -9,8 +9,8 @@ becomes non-empty, the registry's wake hook schedules the task that owns it.
 A task is a `_TaskHeader`: an atomic scheduling state (idle, scheduled,
 running, notified while running, done) and its owned, erased body, which this
 module never runs. The `_Scheduler`, shared by every registry under one root,
-holds the ready queue, the timer heap, the host notifier, and the diagnostic
-table of live fibers. Wakes may arrive from any thread; everything else is
+holds the ready queue, the timer heap, the host notifier, the count of live
+external registrations, and the lock-free diagnostic slots of live fibers. Wakes may arrive from any thread; everything else is
 confined to the thread that drives the root (the current-thread profile).
 
 Objects reached from several threads at once (`_Scheduler`, a header's
@@ -27,6 +27,7 @@ from std.memory import ArcPointer
 from std.os import abort
 from std.time import monotonic, sleep
 from .cells import _Cell, _lock_metadata
+from .fiber_slots import _FiberSlots
 from .erased import _Erased
 from .time import Instant
 
@@ -289,13 +290,6 @@ struct _TimerState(Movable):
 
 
 @fieldwise_init
-struct _FiberEntry(Movable):
-    var owner: Int
-    var draining: Bool
-    var task: ArcPointer[_TaskHeader]
-
-
-@fieldwise_init
 struct _FiberView(Copyable):
     """One live fiber's metadata for a driver snapshot."""
     var index: Int
@@ -304,29 +298,21 @@ struct _FiberView(Copyable):
     var status: Int
 
 
-struct _FiberTable(Movable):
-    """Live fibers' metadata, without payloads; slots are reused."""
-    var entries: List[Optional[_FiberEntry]]
-    var free: List[Int]
-
-    def __init__(out self):
-        self.entries = List[Optional[_FiberEntry]]()
-        self.free = List[Int]()
-
-
 struct _Scheduler(Movable):
     """What every wake registry of one root shares.
 
-    The ready queue and the notifier state are safe from any thread. The timer
-    heap and the fiber table are touched only by the thread driving the root;
-    their locks are never held while another lock is taken, except that the
-    heap's maintenance locks registries, which never take the heap's lock.
+    The ready queue, the notifier state, the registration count and the fiber
+    slots are safe from any thread. The timer heap is touched only by the
+    thread driving the root; its lock is never held while another lock is
+    taken, except that the heap's maintenance locks registries, which never
+    take the heap's lock.
     """
     var ready: ArcPointer[_Cell[_ReadyQueue]]
     var timers: ArcPointer[_Cell[_TimerState]]
     # Deadlines currently armed in every registry, to bound the heap's tombstones.
     var live_timers: ArcPointer[Atomic[Int]]
-    var fibers: ArcPointer[_Cell[_FiberTable]]
+    # Live fibers' diagnostic slots, lock-free (`fiber_slots.mojo`).
+    var fibers: _FiberSlots
     # Whether the root is being polled; set and read sequentially consistently
     # with the queue's contents (see push and the driver's poll).
     var polling: ArcPointer[Atomic[UInt8]]
@@ -335,16 +321,27 @@ struct _Scheduler(Movable):
     # Installed before the root is shared and cleared by shutdown after close,
     # so a reader that passed the closed check sees it unchanged.
     var notifier: ArcPointer[Optional[_Notifier]]
+    # Live external registrations (IO.async awaiting completion). A callback
+    # increments it when it registers and decrements it when it is dropped,
+    # possibly on another thread, both with RELEASE; readers load it with
+    # ACQUIRE, so a zero they read follows every dropped registration's last
+    # access. It is a count, not a lock: readers only decide quiescence.
+    var registrations: ArcPointer[Atomic[Int]]
 
     def __init__(out self):
         self.ready = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_ReadyQueue())))
         self.timers = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_TimerState())))
         self.live_timers = ArcPointer(Atomic(0))
-        self.fibers = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_FiberTable())))
+        self.fibers = _FiberSlots()
         self.polling = ArcPointer(Atomic(UInt8(0)))
         self.closed = ArcPointer(Atomic(UInt8(0)))
         self.in_flight = ArcPointer(Atomic(0))
         self.notifier = ArcPointer(Optional[_Notifier](None))
+        self.registrations = ArcPointer(Atomic(0))
+
+    def registered(self) -> Int:
+        """Live external registrations under this root (see `registrations`)."""
+        return self.registrations[].load[ordering=Ordering.ACQUIRE]()
 
     def push(self, var task: ArcPointer[_TaskHeader]) -> Bool:
         """Queue a scheduled task; true when the host must be notified.
@@ -411,9 +408,6 @@ struct _Scheduler(Movable):
         var ready = _lock_metadata(self.ready)
         ready.cell[].slot.value() = _ReadyQueue()
         _ = ready^
-        var fibers = _lock_metadata(self.fibers)
-        fibers.cell[].slot.value() = _FiberTable()
-        _ = fibers^
         self.notifier[] = None
 
     def push_timer(self, deadline: Instant, var target: _Waker):
@@ -457,44 +451,34 @@ struct _Scheduler(Movable):
         return len(guard.cell[].slot.value().heap)
 
     def register_fiber(self, owner: Int, task: ArcPointer[_TaskHeader]) -> Int:
-        """Record a live fiber; returns its slot, from 1."""
-        var guard = _lock_metadata(self.fibers)
-        ref table = guard.cell[].slot.value()
-        var index = len(table.entries)
-        if len(table.free):
-            index = table.free.pop()
-            table.entries[index] = Optional(_FiberEntry(owner, False, task.copy()))
-        else:
-            table.entries.append(Optional(_FiberEntry(owner, False, task.copy())))
-        return index + 1
+        """Record a live fiber without a lock; returns its slot, from 1.
+
+        The slot holds the address of the task's atomic state, which lives as
+        long as the task, and the task releases the slot before it finishes.
+        """
+        return self.fibers.register(owner, UInt64(Int(task[].state.ptr())))
 
     def set_draining(self, fiber: Int):
-        var guard = _lock_metadata(self.fibers)
-        guard.cell[].slot.value().entries[fiber - 1].value().draining = True
+        self.fibers.set_draining(fiber)
 
     def release_fiber(self, fiber: Int):
-        var guard = _lock_metadata(self.fibers)
-        ref table = guard.cell[].slot.value()
-        table.entries[fiber - 1] = None
-        table.free.append(fiber - 1)
+        self.fibers.release(fiber)
 
     def fiber_slots(self) -> Int:
-        var guard = _lock_metadata(self.fibers)
-        return len(guard.cell[].slot.value().entries)
+        return self.fibers.high_water()
 
     def snapshot(self) -> List[_FiberView]:
+        """Live fibers in slot order; only between polls, on the driving thread (see `fiber_slots.mojo`)."""
         var views = List[_FiberView]()
-        var guard = _lock_metadata(self.fibers)
-        ref table = guard.cell[].slot.value()
-        for index in range(len(table.entries)):
-            if table.entries[index]:
-                ref entry = table.entries[index].value()
-                var status = 1
-                if entry.draining:
-                    status = 2
-                elif entry.task[].runnable():
+        for slot in self.fibers.snapshot():
+            var status = 1
+            if slot.draining:
+                status = 2
+            else:
+                var state = Pointer[Atomic[UInt8], MutUntrackedOrigin](unsafe_from_address=Int(slot.task))[].load[ordering=Ordering.ACQUIRE]()
+                if state == _SCHEDULED or state == _RUNNING or state == _NOTIFIED:
                     status = 0
-                views.append(_FiberView(index + 1, entry.owner, status))
+            views.append(_FiberView(slot.index, slot.owner, status))
         return views^
 
 

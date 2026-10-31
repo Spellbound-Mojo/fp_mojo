@@ -368,7 +368,10 @@ struct IORuntimeConfig(Copyable):
     var report_unhandled_fiber_errors: Bool
     """Whether unjoined fiber failures reach the reporter; on by default."""
     var reporter: def(String) thin
-    """The host callback for unhandled fiber failures; standard error by default."""
+    """The host callback for unhandled fiber failures; standard error by default.
+
+    It may be called from any thread that disposes of a fiber's outcome, and
+    from several at once once fibers run in parallel."""
 
     def __init__(out self):
         """The defaults: check every handoff, yield every 1,024 transitions, and
@@ -415,8 +418,9 @@ struct Task[P: Machine](Movable, not Deinitable):
         self.context = IOContext[Self.P.Error](token.copy(), False)
         var runtime = _Runtime()
         self.context._runtime = Optional(runtime.copy())
-        self.context._budget = Optional(ArcPointer(_Budget(config.auto_yield_threshold, config.cancelation_check_threshold, config.report_unhandled_fiber_errors, config.reporter)))
-        self._executor = _Executor(runtime)
+        var registrations = runtime.scheduler()[].registrations.copy()
+        self._executor = _Executor(runtime, _Budget(config.auto_yield_threshold, config.cancelation_check_threshold, config.report_unhandled_fiber_errors, config.reporter, registrations))
+        self.context._budget = Optional(self._executor.budget.copy())
         self._slot.prepare(self.context)
         # The root's registration is ready, so installing the hook queues the root.
         runtime.attach(self._executor.root)
@@ -441,10 +445,9 @@ struct Task[P: Machine](Movable, not Deinitable):
         Each poll gets a fresh slice of interpreter transitions, and the turn
         ends when it is spent, the queue is empty, or the next task already ran.
         """
-        self.context._budget.value()[].refill()
         self._executor.begin_turn()
         var ran = False
-        while self.context._budget.value()[].remaining > 0:
+        while not self._executor.spent():
             var next = self._executor.next()
             if not next:
                 break
@@ -454,11 +457,11 @@ struct Task[P: Machine](Movable, not Deinitable):
                 _ = _tick(self._slot, self.context)
                 _Executor.settle(task, self._slot.done())
             else:
-                _Executor.run(task)
+                self._executor.run(task)
         return ran
 
     def _transitions(self) -> Int:
-        return self.context._budget.value()[].consumed
+        return self._executor.transitions()
 
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
         # Release the shared scheduler state here, not on a thread whose late

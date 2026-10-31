@@ -190,15 +190,12 @@ def canceled_joiner() raises:
 
 def dropped_delivery():
     print("dropped delivery")
-    var record = ArcPointer(_FiberRecord[Int]())
-    record[].reporter = report
+    var record = ArcPointer(_FiberRecord[Int](True, report))
     var failure: Outcome[_Erased, Int] = Optional(Result[_Erased, EffectFailure[Int]](Err(EffectFailure[Int](NonEmptyList(5), False))))
-    record[].outcome = Optional(failure^)
-    record[].done = True
-    var taken = record[].outcome.take()
-    var delivery = _Delivery[Int](_Claim[Int](record.copy()), Optional(taken^))
+    record[].complete(failure^)
+    var delivery = _Delivery[Int](_Claim[Int](record.copy()))
     _ = delivery^
-    check(record[].released and not record[].outcome, "a dropped delivery returns its failure for reporting")
+    check(record[].done() and not record[].outcome.take() and not record[].outcome.release(), "a dropped delivery reports its failure itself, once")
 
 
 @fieldwise_init
