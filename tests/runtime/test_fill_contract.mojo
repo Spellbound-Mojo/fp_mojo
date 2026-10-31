@@ -1,5 +1,5 @@
 """Structural contracts retain exact families, construction errors and deferred runs."""
-from fp.algebra import ListFamily,OptionalFamily,ResultFamily
+from fp.algebra import ListFamily, OptionalFamily, ResultFamily
 from fp.functions import pipeline,pipeline_values
 from fp.data import Result,Ok
 from fp.effects import Reader,run

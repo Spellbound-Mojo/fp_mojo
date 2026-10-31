@@ -1,5 +1,5 @@
 """Use the same sequencing methods with eager and lazy values."""
-from fp.functions import piped, pipeline
+from fp.functions import pipeline
 from fp.callables import Thunk
 from fp.iteration import iterated
 from std.testing import assert_equal, assert_false
@@ -27,24 +27,24 @@ struct NextValues(Thunk):
 
 
 def main() raises:
-    var eager = piped(List[Int]([1, 2, 3])).flat_tap(choices).get()
+    var eager = pipeline(List[Int]([1, 2, 3])).flat_tap(choices).get()
     var lazy = iterated(range(1, 4)).flat_tap(choices).to_list()
     assert_equal(eager, [1, 1, 3, 3])
     assert_equal(lazy, eager)
     print("retained:", eager)
-    var paired = piped(List[Int]([1, 2, 3])).flat_pair_with(choices).get()
+    var paired = pipeline(List[Int]([1, 2, 3])).flat_pair_with(choices).get()
     assert_equal(paired, [(1, 11), (1, 21), (3, 13), (3, 23)])
     assert_equal(iterated(range(1, 4)).flat_pair_with(choices).to_list(), paired)
     print("paired:", paired)
 
-    var kept = piped(List[Int]([1, 2])).before(next_values).get()
+    var kept = pipeline(List[Int]([1, 2])).before(next_values).get()
     var replaced = iterated(range(2)).followed_by(next_values).to_list()
     assert_equal(kept, [1, 1, 2, 2])
     assert_equal(replaced, [7, 8, 7, 8])
     print("before:", kept)
     print("followed_by:", replaced)
 
-    var missing = piped(Optional(5)).before(unavailable).get()
+    var missing = pipeline(Optional(5)).before(unavailable).get()
     assert_false(missing)
     print("optional present:", Bool(missing))
     var factory = NextValues(7)

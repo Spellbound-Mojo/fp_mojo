@@ -9,8 +9,50 @@ from api_docs import parse_signature
 from operation_specs import RESULT_OPERATIONS, RESULT_TERMINALS, ERROR_OPERATIONS, error_operations
 from generate_plain_overloads import splice_source
 from generate_nary_syntax import MAX
-from generate_pipeline_syntax import TRANSFORMS, SEQUENCE_CARRIERS
 from operation_specs import TERMINALS, TRAVERSALS, SEQUENCING, EFFECT_REDUCTIONS, EffectChoice
+
+from dataclasses import dataclass
+
+
+@dataclass(frozen=True)
+class Carrier:
+    """A native sequence shape and its family, as `elements()` selects them."""
+    name: str
+    shape: str
+    family: str
+    parameters: tuple[str, ...] = ()
+
+    def value(self, element):
+        return self.shape.format(element=element)
+
+    def instance(self, element):
+        return self.family.format(element=element)
+
+
+# Explicit element selection. Non-empty lists use their existing family, whose
+# filtering may change the carrier.
+SEQUENCE_CARRIERS = (
+    Carrier('List', 'List[{element}]', 'ListFamily'),
+    Carrier('Array', 'Array[{element}, N]', '_ArrayFamily[N]', ('N: Int',)),
+    Carrier('Deque', 'Deque[{element}]', '_DequeFamily'),
+    Carrier('LinkedList', 'LinkedList[{element}]', '_LinkedListFamily'),
+    Carrier('NonEmptyList', 'NonEmptyList[{element}]', 'NonEmptyListFamily'),
+)
+
+# Each transformation has one callback implementation; these are only native
+# admission signatures over the selected family's map.
+TRANSFORMS = (
+    ('fill', 'T: Movable & Deinitable', ('U: Movable & Deinitable',),
+     'var value: U', 'U', '_Fill[T, U]', 'value^', 'Replace payloads with value, moving it for a single call or copying for repeated calls.'),
+    ('replace', 'T: Copyable & Equatable & Deinitable', (),
+     'var old: T, var new: T', 'T', '_Replace[T]', 'old^, new^', 'Replace equal payloads, moving unmatched values unchanged.'),
+    ('void', 'T: Movable & Deinitable', (),
+     '', 'NoneType', '_Fill[T, NoneType]', 'None', 'Discard payloads while preserving their container shape.'),
+    ('tuple_left', 'T: Movable & Deinitable', ('U: Movable & Deinitable',),
+     'var value: U', 'Tuple[U, T]', '_TupleWith[T, U, True]', 'value^', 'Attach value on the left, moving it for a single call or copying for repeated calls.'),
+    ('tuple_right', 'T: Movable & Deinitable', ('U: Movable & Deinitable',),
+     'var value: U', 'Tuple[T, U]', '_TupleWith[T, U, False]', 'value^', 'Attach value on the right, moving it for a single call or copying for repeated calls.'),
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "src/fp/functions/context.mojo"

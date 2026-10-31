@@ -7,6 +7,9 @@ evaluation order, laziness, costs, and behavior for empty input or uncovered
 cases. Most pages also include runnable examples.
 
 For a guided introduction, follow the [tutorial](../tutorial/pipelines.md).
+The [combinators guide](combinators.md) describes the named collection and
+effect operations shared by `Pipeline`, `Iter` and the free functions in
+`fp.iteration`.
 For the recommended entry point for a task, see [Choose an API](../start/choosing-api.md).
 For reusable generic operations, see [generic wrappers](../guides/generic-wrappers.md):
 public contracts name admission, output families and exact native errors.
@@ -17,12 +20,12 @@ public contracts name admission, output families and exact native errors.
 |---|---|
 | [`fp.callables`](callables.md) | Callable protocols, receiver modes and `as_unary` |
 | [`fp.functions`](functions.md) | Pipelines, composition, `flip` and partial application |
-| [`fp.combinators`](combinators.md) | Ordinary `map`, `filter` and `fold_left` functions shared with fluent chains |
 | [`fp.iteration`](iteration.md) | Lazy adapters, folds, reductions and searches |
 | [`fp.control`](control-flow.md) | `while_loop`, `fori_loop` and carry/output `scan` |
 | [`fp.adt`](adt.md) | Algebraic and inductive data types: `Data`, `Cases`, `Node`, `Choice` |
 | [`fp.data`](data.md) | `Result`, `ControlFlow` and the bridges between raised and stored errors |
 | [`fp.algebra`](algebra.md) | Functor, Filterable, Applicative, Monad, Traversable and Monoid, with native instances |
+| [`fp.algebra.contracts`](algebra.contracts.md) | Operation contracts that generic wrappers forward: `MapContract`, `TraverseContract` and others |
 | [`fp.effects.async_runtime`](effects.async_runtime.md) | Async `IO`, resources, coordination and structured host execution |
 | [`fp.effects.async_runtime.protocols`](effects.async_runtime.protocols.md) | Cooperative machines lifted into `IO`, and scoped borrowing contracts |
 | [`fp.effects`](effects.md) | Reader, State and Writer, and monad transformers |

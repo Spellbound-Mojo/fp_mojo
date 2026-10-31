@@ -1,4 +1,4 @@
-from fp.functions import piped
+from fp.functions import pipeline
 # error: constraint
 from fp.data import Result, Ok
 from fp.callables import OnceThunk
@@ -8,5 +8,5 @@ struct EFViewFactory[o: ImmOrigin](OnceThunk):
     comptime Out = Result[Span[Int,Self.o],String]
     def call_once(deinit self) -> Self.Out: return Ok(self.view)
 def mismatch(left: List[Int],right: List[Int]):
-    _ = piped(Result[Bool,String](Ok(True))).if_effect(EFViewFactory(Span(left)),EFViewFactory(Span(right))).get()
+    _ = pipeline(Result[Bool,String](Ok(True))).if_effect(EFViewFactory(Span(left)),EFViewFactory(Span(right))).get()
 def main(): mismatch([1],[2])

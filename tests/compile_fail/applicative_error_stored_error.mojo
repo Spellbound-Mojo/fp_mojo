@@ -1,9 +1,12 @@
-# The positional binding can also select a native-error overload on Mojo 1.2.
-# The companion _named fixture checks the intended family constraint directly.
-# error: cannot call function that may raise in a context that cannot raise
-from fp.algebra import ResultFamily, ListFamily, fail
-from fp.functions import piped
+# Canonical Result pipelines may change the stored-error type in or_else;
+# other ErrorRecovery families, such as ResultT over ListFamily, retain it.
+# error: no matching method in call to 'or_else'
+# error: violated constraint
+from fp.algebra import ListFamily, fail
+from fp.functions import pipeline
 from fp.data import Result, Ok, Err
-def restore(var error: String) -> Result[Int, Int]: return Err(1)
+from fp.effects import ResultT
+def restore(var error: String) -> List[Result[Int, Int]]: return [Result[Int, Int](Err(1))]
 def main():
-    _ = piped(fail[ResultFamily[String], Int](String("bad"))).or_else[ResultFamily[String]](restore).get()
+    comptime F = ResultT[ListFamily, String]
+    _ = pipeline[F](fail[F, Int](String("bad"))).or_else(restore).get()

@@ -1,7 +1,8 @@
 """Effectful folds, predicates, and selected factories share effect sequencing."""
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
-from fp.combinators import fold_effect, any_effect, all_effect, if_effect
+from fp.iteration import fold_effect, any_effect, all_effect
+from fp.algebra import if_effect
 from fp.algebra import ResultFamily, OptionalFamily, ListFamily, IdentityFamily, StringMonoid
 from fp.data import Result, Ok, Err
 from fp.callables import Binary, BorrowCallable, Unary, MutableThunk
@@ -82,21 +83,21 @@ def ef_state_predicate(x: Int) -> State[Int].Endpoint[Bool, EFStatePredicate]:
 
 def ef_basics() raises:
     var xs = ef_values()
-    assert_equal(piped(xs.copy()).fold_effect[ResultFamily[String]](ef_add,0).get().raise_on_err(),6)
+    assert_equal(pipeline(xs.copy()).fold_effect[ResultFamily[String]](0).run(ef_add).get().raise_on_err(),6)
     assert_equal(fold_effect[ResultFamily[String]](List[Int](),5,ef_add).raise_on_err(),5)
     assert_true(iterated(xs.copy()).all_effect[ResultFamily[String]](ef_positive).raise_on_err())
     assert_false(any_effect[ResultFamily[String]](List[Int](),ef_positive).raise_on_err())
     assert_true(all_effect[ResultFamily[String]](List[Int](),ef_positive).raise_on_err())
-    assert_equal(piped(Optional(4)).fold_effect[ResultFamily[String]](ef_add,2).get().raise_on_err(),6)
-    assert_equal(piped(Optional[Int]()).fold_effect[ResultFamily[String]](ef_add,2).get().raise_on_err(),2)
+    assert_equal(pipeline(Optional(4)).fold_effect[ResultFamily[String]](2).run(ef_add).get().raise_on_err(),6)
+    assert_equal(pipeline(Optional[Int]()).fold_effect[ResultFamily[String]](2).run(ef_add).get().raise_on_err(),2)
     var array: Array[Int,3] = [1,2,3]
-    assert_equal(piped(array^).fold_effect[ResultFamily[String]](ef_add,0).get().raise_on_err(),6)
+    assert_equal(pipeline(array^).elements().fold_effect[ResultFamily[String]](0).run(ef_add).get().raise_on_err(),6)
     var deque = Deque[Int]()
     deque.append(2); deque.append(4)
-    assert_equal(piped(deque^).fold_effect[ResultFamily[String]](ef_add,0).get().raise_on_err(),6)
+    assert_equal(pipeline(deque^).elements().fold_effect[ResultFamily[String]](0).run(ef_add).get().raise_on_err(),6)
     var linked = LinkedList[Int]()
     linked.append(3); linked.append(5)
-    assert_equal(piped(linked^).fold_effect[ResultFamily[String]](ef_add,0).get().raise_on_err(),8)
+    assert_equal(pipeline(linked^).elements().fold_effect[ResultFamily[String]](0).run(ef_add).get().raise_on_err(),8)
     var cursor = CombinatorRestarting(1)
     _ = cursor.__next__()
     assert_equal(iterated(cursor^).fold_effect[ResultFamily[String]](ef_add,0).raise_on_err(),5)
@@ -104,7 +105,7 @@ def ef_basics() raises:
     assert_equal(fold_effect[ListFamily](pair.copy(),0,ef_branch),[3,-1,1,-3])
     assert_equal(fold_effect[CellFamily](pair.copy(),0,ef_cell).value,3)
     assert_equal(run_writer[Writer[StringMonoid]](fold_effect[Writer[StringMonoid]](pair.copy(),0,ef_logged)), (String("12"),3))
-    assert_equal(run[Reader[Int]](piped(pair.copy()).fold_effect[Reader[Int]](EFReaderStep(),0).get(),5),13)
+    assert_equal(run[Reader[Int]](pipeline(pair.copy()).fold_effect[Reader[Int]](0).run(EFReaderStep()).get(),5),13)
     assert_equal(run[State[Int]](iterated(pair^).fold_effect[State[Int]](EFStateStep(),0),10),(24,12))
 
 
@@ -154,22 +155,22 @@ def ef_stops() raises:
 
 
 def ef_conditions() raises:
-    assert_equal(piped(Result[Bool,String](Ok(True))).if_effect(ef_yes,ef_no).get().raise_on_err(),11)
-    assert_equal(piped(Result[Bool,String](Ok(False))).if_effect(ef_yes,ef_no).get().raise_on_err(),22)
+    assert_equal(pipeline(Result[Bool,String](Ok(True))).if_effect(ef_yes,ef_no).get().raise_on_err(),11)
+    assert_equal(pipeline(Result[Bool,String](Ok(False))).if_effect(ef_yes,ef_no).get().raise_on_err(),22)
     assert_equal(if_effect[ResultFamily[String]](Result[Bool,String](Ok(True)),ef_yes,ef_no).raise_on_err(),11)
     var calls = ArcPointer(0)
     def selected() {calls} -> Result[Int,String]:
         calls[] += 1
         return Ok(4)
-    assert_true(piped(Result[Bool,String](Err(String("condition")))).if_effect(selected,selected).get().is_err())
+    assert_true(pipeline(Result[Bool,String](Err(String("condition")))).if_effect(selected,selected).get().is_err())
     assert_equal(calls[],0)
-    assert_equal(piped(Result[Bool,String](Ok(True))).if_effect(selected,ef_no).get().raise_on_err(),4)
+    assert_equal(pipeline(Result[Bool,String](Ok(True))).if_effect(selected,ef_no).get().raise_on_err(),4)
     assert_equal(calls[],1)
     var choices: List[Bool] = [True,False,True]
-    assert_equal(piped(choices^).if_effect(EFFactory(0),EFFactory(10)).get(),[1,11,2])
+    assert_equal(pipeline(choices^).if_effect(EFFactory(0),EFFactory(10)).get(),[1,11,2])
     def left() -> Reader[Int].Pure[Int]: return Reader[Int].pure(1)
     def right() -> Reader[Int].Endpoint[Int, EFRead]: return action[Reader[Int],Int](EFRead(10))
-    assert_equal(run[Reader[Int]](piped(Reader[Int].pure(False)).if_effect[Reader[Int]](left,right).get(),2),12)
+    assert_equal(run[Reader[Int]](pipeline(Reader[Int].pure(False)).if_effect(left,right).get(),2),12)
 
 
 def main() raises:

@@ -1,7 +1,7 @@
 """Traversal filtering and flattening preserve unique owners and their cleanup."""
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
-from fp.combinators import sequence_void
+from fp.iteration import sequence_void
 from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok, Err
 from fp.callables import BorrowOnceCallable, OnceUnary
@@ -55,7 +55,7 @@ def tx_keep() raises:
     var items = List[TXOwner]()
     items.append(TXOwner("drop", drops))
     items.append(TXOwner("keep", drops))
-    var kept = piped(items^).filter_effect[ResultFamily[String]](tx_decide).get().raise_on_err()
+    var kept = pipeline(items^).filter_effect[ResultFamily[String]](tx_decide).get().raise_on_err()
     assert_equal(drops[], 1)
     assert_equal(kept[0].name, "keep")
     _ = kept^
@@ -66,7 +66,7 @@ def tx_keep() raises:
     var selected = iterated(transformed^).traverse_filter[ResultFamily[String]](tx_owned_optional).raise_on_err()
     assert_equal(drops[], 3)
     assert_equal(selected[0].name, "keep")
-    var flattened = piped(selected^).flat_traverse[OptionalFamily](tx_owned_group).get()
+    var flattened = pipeline(selected^).flat_traverse[OptionalFamily](tx_owned_group).get()
     var output = flattened.take()
     assert_equal(output[0].name, "keep")
     assert_equal(drops[], 3)
@@ -82,16 +82,16 @@ def tx_cleanup() raises:
     items.append(TXOwner("unvisited", drops))
     assert_true(iterated(items^).filter_effect[ResultFamily[String]](tx_decide).is_err())
     assert_equal(drops[], 3)
-    var single = piped(Optional(TXOwner("keep", drops))).filter_effect[OptionalFamily](TXOnceDecision(TXOwner("keep", drops))).get()
+    var single = pipeline(Optional(TXOwner("keep", drops))).filter_effect[OptionalFamily](TXOnceDecision(TXOwner("keep", drops))).get()
     assert_equal(drops[], 4)
     var inner = single.take()
     assert_equal(inner.value().name, "keep")
     _ = inner^
     assert_equal(drops[], 5)
-    var absent = piped(Optional[TXOwner]()).filter_effect[OptionalFamily](TXOnceDecision(TXOwner("skipped", drops))).get()
+    var absent = pipeline(Optional[TXOwner]()).filter_effect[OptionalFamily](TXOnceDecision(TXOwner("skipped", drops))).get()
     assert_equal(drops[], 6)
     _ = absent^
-    var flat = piped(Optional(TXOwner("owned", drops))).flat_traverse[OptionalFamily](TXOnceGroup(TXOwner("capture", drops))).get()
+    var flat = pipeline(Optional(TXOwner("owned", drops))).flat_traverse[OptionalFamily](TXOnceGroup(TXOwner("capture", drops))).get()
     assert_equal(drops[], 7)
     var result = flat.take()
     assert_equal(result.value().name, "owned")
@@ -103,7 +103,7 @@ def tx_cleanup() raises:
     assert_true(sequence_void[OptionalFamily](effects^))
     assert_equal(drops[], 10)
     var source_error = Result[Optional[TXOwner], TXOwner](Err(TXOwner("original", drops)))
-    var preserved = piped(source_error^).sequence_void[OptionalFamily]().get()
+    var preserved = pipeline(source_error^).sequence_void[OptionalFamily]().get()
     var failed = preserved.take()
     assert_equal(drops[], 10)
     var stored = failed^._take_err()
@@ -118,7 +118,7 @@ def tx_native_capture() raises:
     def decision(value: Int) {var capture^} -> Optional[Bool]:
         return Optional(value == capture.name.byte_length())
     var values: List[Int] = [6, 7, 8]
-    var result = piped(values^).filter_effect[OptionalFamily](decision).get()
+    var result = pipeline(values^).filter_effect[OptionalFamily](decision).get()
     assert_equal(result.take(), [7])
     assert_equal(drops[], 0)
     _ = decision^

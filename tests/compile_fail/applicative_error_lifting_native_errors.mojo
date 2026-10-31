@@ -1,7 +1,7 @@
 # error: constraint
 from fp.algebra import ResultFamily, ListFamily, StringMonoid, ListMonoid, fail, pure
 from fp.effects import ReaderT, StateT, WriterT, OptionalT, ResultT, action, run
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.data import Result, Ok
 from fp.callables import BorrowOnceCallable
 comptime R = ReaderT[ResultFamily[String], Int]
@@ -14,5 +14,5 @@ struct AELNative(BorrowOnceCallable, Defaultable):
         raise 1
 def restore(var error: String) raises String -> Int: raise String("native")
 def main() raises:
-    var pending = piped(action[R, Int](AELNative())).recover[R](restore).get()
+    var pending = pipeline[R](action[R, Int](AELNative())).recover(restore).get()
     _ = run[R](pending^, 0)

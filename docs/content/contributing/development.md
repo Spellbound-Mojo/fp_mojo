@@ -28,7 +28,7 @@ tooling does this for you).
 | `tests/benchmarks/` | Programs that time library code against hand-written loops; the suite reports them as diagnostics |
 | `tests/compile_fail/` | Programs that must be rejected, with `# error:` lines naming the expected diagnostics |
 | `tests/tooling/` | Python unit tests for the scripts |
-| `scripts/` | Test, build, measurement and documentation tooling, and the generator of native `Piped` methods and plain-function `pipe`, `flow`, `compose`, `match` and `rewrite` overloads (`python scripts/generate_plain_overloads.py`; `--check` reports drift). Capture and selected Pipeline signatures use `generate_capture.py` and `generate_context.py`; tooling tests check their generated output |
+| `scripts/` | Test, build, measurement and documentation tooling, and the generator of plain-function `pipe`, `flow`, `compose`, `match` and `rewrite` overloads (`python scripts/generate_plain_overloads.py`; `--check` reports drift). Capture and selected Pipeline signatures use `generate_capture.py` and `generate_context.py`; tooling tests check their generated output |
 | `docs/content/` | This site's pages; navigation is in `mkdocs.yml` |
 | `docs/examples/` | The runnable examples |
 | `docs/theme/` | The MkDocs theme: templates, styles, scripts and bundled fonts |

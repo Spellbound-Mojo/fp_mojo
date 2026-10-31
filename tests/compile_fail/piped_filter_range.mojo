@@ -1,7 +1,7 @@
 # error: no matching method in call to 'filter'
-from fp.functions import piped
+from fp.functions import pipeline
 
 def select(x: Int) -> Bool: return x > 0
 def main():
     var xs = range(3)
-    _ = piped(xs^).filter(select).get()
+    _ = pipeline(xs^).filter(select).get()

@@ -1,4 +1,5 @@
-from fp.algebra import Applicative,ListFamily,IdentityFamily,OptionalFamily,ResultFamily,ValidationFamily,ListMonoid,TraverseContract,traverse
+from fp.algebra import Applicative, ListFamily, IdentityFamily, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid, traverse
+from fp.algebra.contracts import TraverseContract
 from fp.callables import MutableUnary
 from test_applicative_error_ownership import AEOOwner as Owner
 from std.memory import ArcPointer

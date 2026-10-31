@@ -1,7 +1,8 @@
 """Generic callers preserve exact raised errors and argument-carried origins."""
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
-from fp.combinators import fold_effect, any_effect, if_effect
+from fp.iteration import fold_effect, any_effect
+from fp.algebra import if_effect
 from fp.algebra import OptionalFamily, ResultFamily
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal, assert_true
@@ -9,7 +10,7 @@ from std.testing import assert_equal, assert_true
 
 def efg_fold[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //,
              F: def(var A, var B) raises X -> R](ref function: F, var initial: A, var values: List[B]) raises X -> Optional[A] where R == Optional[A] and OptionalFamily.Element[R] == A and OptionalFamily.CarrierCompatible[R]:
-    return piped(values^).fold_effect[G=OptionalFamily, A=A, B=B, R=R, X=X, Z=X](function,initial^).get()
+    return pipeline(values^).raising[X]().fold_effect[OptionalFamily](initial^).run(function).get()
 
 
 def efg_any[P: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //,
@@ -46,7 +47,7 @@ def efg_origins(anchor: List[Int]) raises:
     var result = fold_effect[OptionalFamily](values^,Span(anchor),last)
     assert_equal(result.take()[1],12)
     def choose_view() {ref anchor} -> Result[View,String]: return Ok(Span(anchor))
-    var chosen = piped(Result[Bool,String](Ok(True))).if_effect(choose_view,choose_view).get().raise_on_err()
+    var chosen = pipeline(Result[Bool,String](Ok(True))).if_effect(choose_view,choose_view).get().raise_on_err()
     assert_equal(chosen[0],11)
 
 

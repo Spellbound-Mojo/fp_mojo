@@ -1,6 +1,6 @@
 """Generic forwarding preserves both native callback signatures and errors."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from std.testing import assert_equal
 
 
@@ -15,28 +15,28 @@ def rsg_continue[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & 
                  F: def(E) raises X -> Bool, G: def(var E) raises X -> Result[T, E]](
     var value: Result[T, E], predicate: F, recover: G
 ) raises X -> Result[T, E]:
-    return piped(value^).or_else_if[T=T, Failure=E, X=X, Y=X](predicate, recover).get()
+    return pipeline(value^).raising[X]().or_else_if(predicate, recover).get()
 
 
 def rsg_tap[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable,
             X: Movable & Deinitable, F: def(E) raises X -> Result[U, E]](
     var value: Result[T, E], inspect: F
 ) raises X -> Result[T, E]:
-    return piped(value^).flat_tap_err[T=T, Failure=E, X=X](inspect).get()
+    return pipeline(value^).raising[X]().flat_tap_err(inspect).get()
 
 
 def rsg_pure_predicate[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable,
                        F: def(E) -> Bool, G: def(var E) raises X -> T](
     var value: Result[T, E], predicate: F, recover: G
 ) raises X -> Result[T, E]:
-    return piped(value^).recover_if[T=T, Failure=E, Y=X](predicate, recover).get()
+    return pipeline(value^).raising[X]().recover_if(predicate, recover).get()
 
 
 def rsg_pure_recovery[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable,
                       F: def(E) raises X -> Bool, G: def(var E) -> T](
     var value: Result[T, E], predicate: F, recover: G
 ) raises X -> Result[T, E]:
-    return piped(value^).recover_if[T=T, Failure=E, X=X](predicate, recover).get()
+    return pipeline(value^).raising[X]().recover_if(predicate, recover).get()
 
 
 def rsg_predicate(error: String) raises String -> Bool: return error == "retry"

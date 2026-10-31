@@ -88,14 +88,15 @@ nav:
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md
+      - Combinators: reference/combinators.md
       - fp.callables: reference/callables.md
-      - fp.combinators: reference/combinators.md
       - fp.functions: reference/functions.md
       - fp.iteration: reference/iteration.md
       - fp.control: reference/control-flow.md
       - fp.adt: reference/adt.md
       - fp.data: reference/data.md
       - fp.algebra: reference/algebra.md
+      - fp.algebra.contracts: reference/algebra.contracts.md
       - fp.effects: reference/effects.md
       - fp.effects.async_runtime: reference/effects.async_runtime.md
       - fp.effects.async_runtime.protocols: reference/effects.async_runtime.protocols.md

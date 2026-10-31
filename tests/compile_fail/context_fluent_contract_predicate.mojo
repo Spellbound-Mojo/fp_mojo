@@ -1,5 +1,6 @@
 # error: invalid call to 'selected': violated constraint
-from fp.algebra import Functor, Filterable, FilterContract, ListFamily, filter
+from fp.algebra import Functor, Filterable, ListFamily, filter
+from fp.algebra.contracts import FilterContract
 from fp.callables import BorrowCallable
 from fp.functions import Pipeline
 

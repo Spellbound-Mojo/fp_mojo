@@ -15,7 +15,7 @@ from fp.callables.native import NativeUnary, _NativeUnaryRef, _NativeOwnedArg
 from fp._internal.errors import _ErrorCompatible
 from .protocols import _SemigroupBinary
 from .protocols import Functor, Applicative, Monad, Traversable, Monoid, Semigroup, _pure, _map_as, _flat_map_as, _traverse_as
-from .contracts import MapContract, BindContract, TraverseContract, FilterContract, CombineContract
+from ._contracts import MapContract, BindContract, TraverseContract, FilterContract, CombineContract
 from .collections import _SourceFamily, _UnrecognizedCarrier
 from .instances import _InferredApplicative, _ViewTarget
 

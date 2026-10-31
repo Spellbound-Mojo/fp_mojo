@@ -1,6 +1,7 @@
 """Public first-match proofs preserve stopping, ownership and native origins."""
 from context_find_map_contract_support import forward, fluent, iterator_forward, selected, Text, Owned, OwnedQuery, OnceText, Branches, Borrowed, Later
-from fp.algebra import FindMapContract, IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra import IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra.contracts import FindMapContract
 from fp.iteration import iterated
 from fp.effects import Reader, run
 from algebra_support.box import BoxMonad

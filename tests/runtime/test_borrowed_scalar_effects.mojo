@@ -2,7 +2,7 @@
 from fp.algebra import ResultFamily
 from fp.callables import BorrowCallable
 from fp.data import Result, Ok
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import any_effect, all_effect, iterated
 from std.testing import assert_true, assert_false
 
@@ -26,7 +26,7 @@ def main() raises:
     assert_true(any_effect[ResultFamily[String]](values.copy(), scalar_effect_large).raise_on_err())
     assert_false(all_effect[ResultFamily[String]](values.copy(), scalar_effect_large).raise_on_err())
     assert_true(iterated(values.copy()).all_effect[ResultFamily[String]](ScalarEffectPositive()).raise_on_err())
-    assert_true(piped(values^).any_effect[ResultFamily[String]](ScalarEffectPositive()).get().raise_on_err())
+    assert_true(pipeline(values^).any_effect[ResultFamily[String]](ScalarEffectPositive()).get().raise_on_err())
     var negatives: List[Int] = [-3, -5, -8]
     assert_false(any_effect[ResultFamily[String]](negatives^, ScalarEffectPositive()).raise_on_err())
     assert_false(any_effect[ResultFamily[String]](List[Int](), scalar_effect_large).raise_on_err())

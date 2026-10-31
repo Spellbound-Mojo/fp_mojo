@@ -1,4 +1,5 @@
-from fp.algebra import FindContract, Monad, OptionalFamily
+from fp.algebra import Monad, OptionalFamily
+from fp.algebra.contracts import FindContract
 from fp.callables import BorrowCallable
 from fp.iteration import find_effect
 from std.testing import assert_equal

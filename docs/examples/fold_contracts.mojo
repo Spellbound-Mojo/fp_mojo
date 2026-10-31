@@ -1,4 +1,5 @@
-from fp.algebra import FoldContract, Monad, OptionalFamily, IdentityFamily
+from fp.algebra import Monad, OptionalFamily, IdentityFamily
+from fp.algebra.contracts import FoldContract
 from fp.callables import BinaryContract, Binary
 from fp.functions import pipeline, Pipeline
 from fp.iteration import fold_effect

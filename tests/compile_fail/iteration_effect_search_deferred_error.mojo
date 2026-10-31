@@ -1,7 +1,7 @@
 # error: constraint
 from fp.effects import Reader
 from fp.iteration import fold_map_effect
-from fp.algebra import OptionalFamily,Monoid
+from fp.algebra import OptionalFamily, Monoid
 struct Bad(Monoid):
     comptime Value=String
     comptime Error=Int

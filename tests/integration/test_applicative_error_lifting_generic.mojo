@@ -2,7 +2,7 @@
 from fp.algebra import ApplicativeError, ResultFamily, fail
 from fp.effects import ReaderT, StateT, WriterT, OptionalT, ReaderAction, run, run_writer
 from fp.algebra import StringMonoid
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.data import Result
 from std.builtin.rebind import rebind_var
 from std.os import abort
@@ -13,7 +13,7 @@ def aelg_reader[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & D
                 F: def(var A) raises E -> R](var error: A, ref handler: F
 ) raises E -> Result[R, A]:
     comptime I = ReaderT[ResultFamily[A], Int]
-    var pending = piped(fail[I, R](error^)).recover[I, R=R, X=E](handler).get()
+    var pending = pipeline[I](fail[I, R](error^)).raising[E]().recover(handler).get()
     var environment = 5
     try:
         return rebind_var[Result[R, A]](run[I](pending^, environment))
@@ -29,7 +29,7 @@ def aelg_state[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & De
                F: def(var A) raises E -> R](var error: A, ref handler: F
 ) raises E -> Result[Tuple[R, Int], A]:
     comptime I = StateT[ResultFamily[A], Int]
-    var pending = piped(fail[I, R](error^)).recover[I, R=R, X=E](handler).get()
+    var pending = pipeline[I](fail[I, R](error^)).raising[E]().recover(handler).get()
     try:
         return rebind_var[Result[Tuple[R, Int], A]](run[I](pending^, 8))
     except raised:
@@ -68,12 +68,12 @@ def aelg_origins(values: List[Int]) raises:
     assert_equal(code, 11)
     comptime W = WriterT[ResultFamily[V], StringMonoid]
     def plain(var error: V) -> V: return error
-    var written = piped(fail[W, V](view)).recover[W](plain).get()
+    var written = pipeline[W](fail[W, V](view)).recover(plain).get()
     var storage = run_writer[W](written^)
     comptime assert type_of(storage) == Result[Tuple[String, V], V]
     assert_equal(storage._ok().value[1][1], 12)
     comptime O = OptionalT[ResultFamily[V]]
-    var optional = piped(fail[O, V](view)).recover[O](plain).get()
+    var optional = pipeline[O](fail[O, V](view)).recover(plain).get()
     comptime assert type_of(optional) == Result[Optional[V], V]
     assert_equal(optional._ok().value.value()[1], 12)
 

@@ -1,4 +1,5 @@
-from fp.algebra import Map2Contract, Applicative, OptionalFamily, map2
+from fp.algebra import Applicative, OptionalFamily, map2
+from fp.algebra.contracts import Map2Contract
 from fp.callables import BinaryContract, Binary
 from std.testing import assert_equal
 

@@ -1,6 +1,6 @@
 """Generic combinator forwarding retains callback, result, origin and error types."""
 from fp.algebra import ListFamily
-from fp.functions import Piped, piped
+from fp.functions import pipeline
 from fp.iteration import Iter, MapIterator, FilterIterator, FilterNotIterator, filter_not, iterated, collect_list
 from std.iter import Iterator, iter, next
 from std.testing import assert_equal
@@ -8,8 +8,8 @@ from std.testing import assert_equal
 
 def combinator_mapped[T: Movable & Deinitable, U: Movable & Deinitable, //,
                       F: def(var T) -> U](ref function: F, var source: List[T]
-) -> Piped[List[U]]:
-    return piped(source^).map[ListFamily](function)
+) -> List[U]:
+    return pipeline[ListFamily](source^).map(function).get()
 
 
 def combinator_filtered[T: Movable & Deinitable, I: Iterator, //,
@@ -33,14 +33,14 @@ def combinator_direct_rejected[T: Movable & Deinitable, I: Iterator, //,
 
 def combinator_eager_rejected[T: Movable & Deinitable, //, F: def(T) -> Bool](
     ref predicate: F, var source: List[T]
-) -> Piped[List[T]]:
-    return piped(source^).filter_not[ListFamily](predicate)
+) -> List[T]:
+    return pipeline[ListFamily](source^).filter_not(predicate).get()
 
 
 def combinator_eager_rejected_raised[T: Movable & Deinitable, E: Movable & Deinitable, //,
                                     F: def(T) raises E -> Bool](ref predicate: F, var source: List[T]
-) raises E -> Piped[List[T]]:
-    return piped(source^).filter_not[ListFamily, E=E](predicate)
+) raises E -> List[T]:
+    return pipeline[ListFamily](source^).raising[E]().filter_not(predicate).get()
 
 def combinator_iter_mapped[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //,
                           F: def(var T) -> U](var function: F, var source: I
@@ -52,7 +52,7 @@ def combinator_folded[A: Movable & Deinitable, T: Movable & Deinitable, I: Itera
                       E: AnyType, //, F: def(var A, var T) raises E -> A](
     step: F, var initial: A, var source: I
 ) raises E -> A where I.Element == T:
-    return piped(source^).fold_left[E=E](step, initial^).get()
+    return iterated(source^).fold_left(step, initial^)
 
 
 @fieldwise_init
@@ -70,7 +70,7 @@ def combinator_generic_origins(anchor: List[Int]) raises:
     def captured(var value: Int) {mut calls, anchor} -> Span[Int, origin_of(anchor)]:
         calls += value
         return Span(anchor)
-    var views = combinator_mapped(captured, List[Int]([1, 2])).get()
+    var views = combinator_mapped(captured, List[Int]([1, 2]))
     assert_equal(calls, 3)
     var first = views[0]
     assert_equal(first[0], 11)
@@ -86,11 +86,11 @@ def combinator_generic_origins(anchor: List[Int]) raises:
     assert_equal(collect_list(combinator_filtered(selected, iter(range(4)))), [2, 3])
     assert_equal(collect_list(combinator_rejected(selected, iter(range(4)))), [0, 1])
     assert_equal(collect_list(combinator_direct_rejected(selected, iter(range(4)))), [0, 1])
-    assert_equal(combinator_eager_rejected(selected, List[Int]([0, 1, 2])).get(), [0, 1])
+    assert_equal(combinator_eager_rejected(selected, List[Int]([0, 1, 2])), [0, 1])
     def combinator_rejected_view(value: Span[Int, origin_of(anchor)]) {anchor} -> Bool:
         return len(value) == 0
     var retained_views: List[Span[Int, origin_of(anchor)]] = [Span(anchor)]
-    var retained = combinator_eager_rejected(combinator_rejected_view, retained_views^).get()
+    var retained = combinator_eager_rejected(combinator_rejected_view, retained_views^)
     assert_equal(retained[0][0], 11)
 
 

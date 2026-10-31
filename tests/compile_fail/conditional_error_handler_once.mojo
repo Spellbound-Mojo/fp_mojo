@@ -1,7 +1,8 @@
-# error: repeatable
+# ResultT over ListFamily evaluates per element, so once callbacks are rejected.
+# error: no matching method in call to 'recover_if'
 from fp.algebra import ResultFamily, OptionalFamily, ListFamily, fail
 from fp.effects import ReaderT, ResultT, run
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary, BorrowOnceCallable
 from fp.data import Result, Ok, Err
 @fieldwise_init
@@ -12,4 +13,4 @@ struct CEOnceHandler(OnceUnary):
 def yes(error: String) -> Bool: return True
 def main():
     comptime L = ResultT[ListFamily, String]
-    _ = piped(fail[L, Int](String("bad"))).recover_if[L](yes, CEOnceHandler()).get()
+    _ = pipeline[L](fail[L, Int](String("bad"))).recover_if(yes, CEOnceHandler()).get()

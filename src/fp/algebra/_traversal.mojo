@@ -1,6 +1,6 @@
 """Derived traversal policies over the canonical family traversal and loop."""
 from ._primitive_contracts import BindContract, MapContract, FilterMapContract
-from .contracts import TraverseContract
+from ._contracts import TraverseContract
 from fp.algebra._admission import _BindCompatible
 from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.callables.protocols import Unary, UnaryContract, BorrowCallContract

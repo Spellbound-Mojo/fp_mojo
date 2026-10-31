@@ -1,4 +1,4 @@
-from fp.functions import piped, pipeline
+from fp.functions import pipeline
 from fp.iteration import iterated, fold_map, combine_all, fold_map_effect
 from fp.algebra import OptionalFamily
 from fp.algebra import StringMonoid, IntSumMonoid
@@ -20,8 +20,8 @@ def main() raises:
     assert_equal(combine_all(List[List[Int]]([List[Int]([1]), List[Int]([2, 3])])), List[Int]([1, 2, 3]))
     assert_equal(iterated(range(3)).fold_map(show), "#0#1#2")
     assert_equal(iterated(List[String](["x", "y"])).combine_all(), "xy")
-    assert_equal(piped(List[Int]([0, 1])).fold_map(show).get(), "#0#1")
-    assert_equal(piped(List[String](["p", "q"])).combine_all().get(), "pq")
+    assert_equal(pipeline(List[Int]([0, 1])).fold_map(show).get(), "#0#1")
+    assert_equal(pipeline(List[String](["p", "q"])).combine_all().get(), "pq")
     assert_equal(pipeline(range(3)).fold_map(show).get(), "#0#1#2")
     assert_equal(pipeline(List[String](["m", "n"])).combine_all().get(), "mn")
     var prefix = String(">")
@@ -34,7 +34,7 @@ def main() raises:
     assert_equal(fold_map_effect[StringMonoid](range(2), maybe).value(), "01")
     assert_equal(fold_map_effect[StringMonoid, OptionalFamily](range(2), maybe).value(), "01")
     assert_equal(iterated(range(2)).fold_map_effect(maybe).value(), "01")
-    assert_equal(piped(List[Int]([1, 2])).fold_map_effect(maybe).get().value(), "12")
+    assert_equal(pipeline(List[Int]([1, 2])).fold_map_effect(maybe).get().value(), "12")
     assert_equal(pipeline(range(3)).fold_map_effect(maybe).get().value(), "012")
     assert_equal(pipeline(range(2)).fold_map_effect[OptionalFamily](maybe).get().value(), "01")
     assert_equal(pipeline(List[Optional[String]]([Optional(String("a")), Optional(String("b"))])).combine_all_effect().get().value(), "ab")

@@ -1,7 +1,7 @@
 """Fold, test, and choose effects through method chains."""
 from fp.algebra import ResultFamily
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from std.testing import assert_equal, assert_true
 
@@ -21,13 +21,14 @@ def small() -> Result[String, String]: return Ok(String("all values small"))
 def main() raises:
     var values: List[Int] = [3, 5, 8]
     var total = (
-        piped(values.copy())
-        .fold_effect[ResultFamily[String]](checked_add, 0)
+        pipeline(values.copy())
+        .fold_effect[ResultFamily[String]](0)
+        .run(checked_add)
         .get()
         .raise_on_err()
     )
     var message = (
-        piped(values.copy())
+        pipeline(values.copy())
         .any_effect[ResultFamily[String]](is_large)
         .if_effect(large, small)
         .get()

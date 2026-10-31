@@ -1,5 +1,5 @@
 # error: origin_of(local_value)
-from fp.algebra import OptionalFamily,StringMonoid,pure
+from fp.algebra import OptionalFamily, StringMonoid, pure
 from fp.effects import WriterT
 
 comptime W=WriterT[OptionalFamily,StringMonoid]

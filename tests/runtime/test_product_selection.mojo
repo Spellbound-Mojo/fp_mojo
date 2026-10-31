@@ -1,5 +1,6 @@
 """Applicative selection retains policy, shape and public generic forwarding."""
-from fp.algebra import Applicative, ProductLeftContract, ProductRightContract, product_l, product_r, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, ValidationFamily, StringMonoid, pure
+from fp.algebra import Applicative, product_l, product_r, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, ValidationFamily, StringMonoid, pure
+from fp.algebra.contracts import ProductLeftContract, ProductRightContract
 from fp.functions import pipeline, Pipeline
 from fp.data import Result, Ok, Err
 from algebra_support.box import BoxMonad

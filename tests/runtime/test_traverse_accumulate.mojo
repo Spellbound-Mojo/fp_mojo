@@ -1,4 +1,4 @@
-from fp.functions import piped, pipeline
+from fp.functions import pipeline
 from fp.iteration import iterated, traverse
 from fp.algebra import Accumulate
 from fp.data import Result, Ok, Err
@@ -15,7 +15,7 @@ def main() raises:
     assert_equal(passed._ok().value, List[Int]([10, 20]))
     assert_equal(traverse[Accumulate](range(-2, 0), check)._err().value, List[String](["negative -2", "negative -1"]))
     assert_equal(iterated(List[Int]([-1, 2, -3])).traverse[Accumulate](check)._err().value, List[String](["negative -1", "negative -3"]))
-    assert_equal(piped(List[Int]([-5, 6, -7])).traverse[Accumulate](check).get()._err().value, List[String](["negative -5", "negative -7"]))
+    assert_equal(pipeline(List[Int]([-5, 6, -7])).traverse[Accumulate](check).get()._err().value, List[String](["negative -5", "negative -7"]))
     assert_equal(pipeline(List[Int]([-8, -9])).traverse[Accumulate](check).get()._err().value, List[String](["negative -8", "negative -9"]))
     var limit = 0
     def bounded(var value: Int) {imm limit} -> Result[Int, List[String]]:

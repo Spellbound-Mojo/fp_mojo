@@ -1,5 +1,6 @@
 """Generic clients of the public borrowing traversal contract."""
-from fp.algebra import TraverseTapContract, Traversable, Applicative
+from fp.algebra import Traversable, Applicative
+from fp.algebra.contracts import TraverseTapContract
 from fp.callables import BorrowCallContract, BorrowCallable
 from fp.functions import pipeline, Pipeline
 

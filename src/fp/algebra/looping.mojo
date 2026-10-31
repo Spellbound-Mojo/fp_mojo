@@ -10,7 +10,7 @@ from fp.callables.native import NativeUnary, _Unary, _RaisingUnary
 from fp._internal.errors import _CommonError, _ErrorCompatible
 from .collections import _SourceFamily, _UnrecognizedCarrier
 from .protocols import Monad, _LiveAccumulator, _map_as
-from .contracts import _EffectFold
+from ._contracts import _EffectFold
 from ._primitive_contracts import MapContract
 from ._effect_combinators import _fold_effect
 

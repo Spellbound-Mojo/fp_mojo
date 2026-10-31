@@ -1,5 +1,5 @@
 """Native generic traversal keeps raised errors and external origins exact."""
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from fp.algebra import OptionalFamily, ListFamily
 from fp.data import Result, Ok
@@ -8,7 +8,7 @@ from std.testing import assert_equal
 
 def tg_tap[P: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //,
            F: def(P) raises E -> Optional[R]](ref function: F, var values: List[P]) raises E -> Optional[List[P]]:
-    return piped(values^).traverse_tap[OptionalFamily, ListFamily, E=E, X=E](function).get()
+    return pipeline[ListFamily](values^).raising[E]().traverse_tap[OptionalFamily](function).get()
 
 
 def tg_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //,
@@ -17,10 +17,10 @@ def tg_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deini
 
 
 def tg_result_void[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
-                   S: Movable & Deinitable, //, F: def(var A) raises E -> R](
+                   S: Movable & Deinitable, //, F: def(var A) raises E -> Optional[R]](
     ref function: F, var value: Result[A, S]
-) raises E -> Optional[Result[NoneType, S]] where OptionalFamily.CarrierCompatible[R]:
-    return piped(value^).traverse_void[G=OptionalFamily, A=A, R=R, Failure=S, E=E, X=E](function).get()
+) raises E -> Optional[Result[NoneType, S]]:
+    return pipeline(value^).raising[E]().traverse_void[OptionalFamily](function).get()
 
 
 @fieldwise_init

@@ -4,9 +4,9 @@ from std.hash import default_comp_time_hasher
 from std.memory import ArcPointer
 from std.iter import Iterator, IterableOwned
 from std.testing import assert_equal
-from fp.functions import Piped, piped
+from fp.functions import Pipeline, pipeline, pipeline_values
 from fp.iteration import iterated, collect_list
-from fp.combinators import filter_not
+from fp.iteration import filter_not
 from fp.algebra import filter_not as family_filter_not, ListFamily
 from test_container_filter import (ContainerFilterBox, ContainerFilterFamily,
     ContainerFilterPredicate, ContainerFilterRaisingPredicate, ContainerFilterFailure, ContainerDeferredFamily)
@@ -22,21 +22,21 @@ def filter_not_shapes() raises:
         calls += 1
         seen.append(value)
         return value > 0
-    var stage = piped(List[Int]([-1, 2, -3])).filter_not(filter_not_counted)
-    comptime assert type_of(stage) == Piped[List[Int]]
+    var stage = pipeline(List[Int]([-1, 2, -3])).filter_not(filter_not_counted)
+    comptime assert type_of(stage).V == List[Int]
     assert_equal(calls, 3)
     assert_equal(seen, [-1, 2, -3])
     assert_equal(stage^.get(), [-1, -3])
     assert_equal(filter_not_counted(1), True)  # Eager callback is still usable.
-    _ = piped(List[Int]()).filter_not(filter_not_counted).get()
-    _ = piped(Optional[Int]()).filter_not(filter_not_counted).get()
+    _ = pipeline(List[Int]()).filter_not(filter_not_counted).get()
+    _ = pipeline(Optional[Int]()).filter_not(filter_not_counted).get()
     assert_equal(calls, 4)
-    assert_equal(piped(List[Int]([1, 2])).filter_not(filter_not_positive).get(), List[Int]())
-    assert_equal(piped(List[Int]([-1, 0])).filter_not(filter_not_positive).get(), [-1, 0])
+    assert_equal(pipeline(List[Int]([1, 2])).filter_not(filter_not_positive).get(), List[Int]())
+    assert_equal(pipeline(List[Int]([-1, 0])).filter_not(filter_not_positive).get(), [-1, 0])
     var deque = Deque[Int](capacity=8, min_capacity=4, maxlen=2, shrink=False)
     deque.append(-1)
     deque.append(2)
-    var kept_deque = piped(deque^).filter_not(filter_not_positive).get()
+    var kept_deque = pipeline(deque^).elements().filter_not(filter_not_positive).get()
     comptime assert type_of(kept_deque) == Deque[Int]
     assert_equal(kept_deque._min_capacity, 4)
     assert_equal(kept_deque._shrink, False)
@@ -46,14 +46,14 @@ def filter_not_shapes() raises:
     var linked = LinkedList[Int]()
     linked.append(-1)
     linked.append(2)
-    var kept_linked = piped(linked^).filter_not(filter_not_positive).get()
+    var kept_linked = pipeline(linked^).elements().filter_not(filter_not_positive).get()
     comptime assert type_of(kept_linked) == LinkedList[Int]
     assert_equal(collect_list(kept_linked^), [-1])
     var dict = Dict[String, Int, default_comp_time_hasher]()
     dict["b"] = -1
     dict["a"] = 2
     dict["c"] = -3
-    var kept_dict = piped(dict^).filter_not(filter_not_counted).get()
+    var kept_dict = pipeline_values(dict^).filter_not(filter_not_counted).get()
     comptime assert type_of(kept_dict) == Dict[String, Int, default_comp_time_hasher]
     assert_equal(kept_dict["b"], -1)
     assert_equal(collect_list(kept_dict^), ["b", "c"])
@@ -61,40 +61,40 @@ def filter_not_shapes() raises:
     var kw = StringDict[Int]()
     kw["x"] = -1
     kw["y"] = 2
-    var kept_kw = piped(kw^).filter_not(filter_not_positive).get()
+    var kept_kw = pipeline_values(kw^).filter_not(filter_not_positive).get()
     comptime assert type_of(kept_kw) == StringDict[Int]
     assert_equal(len(kept_kw), 1)
     assert_equal(kept_kw["x"], -1)
-    var some = piped(Optional(-1)).filter_not(filter_not_positive).get()
+    var some = pipeline(Optional(-1)).filter_not(filter_not_positive).get()
     comptime assert type_of(some) == Optional[Int]
     assert_equal(some.take(), -1)
-    assert_equal(Bool(piped(Optional(1)).filter_not(filter_not_positive).get()), False)
+    assert_equal(Bool(pipeline(Optional(1)).filter_not(filter_not_positive).get()), False)
 
 
 def filter_not_library_shapes() raises:
     var calls = ArcPointer(0)
-    assert_equal(piped(List[Int]([-1, 2])).filter_not(ContainerFilterPredicate(calls)).get(), [-1])
+    assert_equal(pipeline(List[Int]([-1, 2])).filter_not(ContainerFilterPredicate(calls)).get(), [-1])
     var deque = Deque[Int]()
     deque.append(-1)
     deque.append(2)
-    assert_equal(collect_list(piped(deque^).filter_not(ContainerFilterPredicate(calls)).get()), [-1])
+    assert_equal(collect_list(pipeline(deque^).elements().filter_not(ContainerFilterPredicate(calls)).get()), [-1])
     var linked = LinkedList[Int]()
     linked.append(-1)
     linked.append(2)
-    assert_equal(collect_list(piped(linked^).filter_not(ContainerFilterPredicate(calls)).get()), [-1])
+    assert_equal(collect_list(pipeline(linked^).elements().filter_not(ContainerFilterPredicate(calls)).get()), [-1])
     var dict = Dict[String, Int, default_comp_time_hasher]()
     dict["b"] = -1
     dict["a"] = 2
-    var kept_dict = piped(dict^).filter_not(ContainerFilterPredicate(calls)).get()
+    var kept_dict = pipeline_values(dict^).filter_not(ContainerFilterPredicate(calls)).get()
     comptime assert type_of(kept_dict) == Dict[String, Int, default_comp_time_hasher]
     assert_equal(collect_list(kept_dict^), ["b"])
     var kw = StringDict[Int]()
     kw["x"] = -1
     kw["y"] = 2
-    var kept_kw = piped(kw^).filter_not(ContainerFilterPredicate(calls)).get()
+    var kept_kw = pipeline_values(kw^).filter_not(ContainerFilterPredicate(calls)).get()
     assert_equal(kept_kw["x"], -1)
     assert_equal(len(kept_kw), 1)
-    var some = piped(Optional(-1)).filter_not(ContainerFilterPredicate(calls)).get()
+    var some = pipeline(Optional(-1)).filter_not(ContainerFilterPredicate(calls)).get()
     assert_equal(some.take(), -1)
     assert_equal(calls[], 11)
 
@@ -108,15 +108,15 @@ def filter_not_extract(var value: FilterNotOrdinary) -> List[Int]:
 def filter_not_size(var values: List[Int]) -> Int: return len(values)
 
 def filter_not_families() raises:
-    var ordinary: Piped[FilterNotOrdinary] = piped(FilterNotOrdinary(2))
-    var scalar: Piped[Int] = ordinary^.then(filter_not_extract).filter_not(filter_not_positive).then(filter_not_size)
+    var ordinary = pipeline(FilterNotOrdinary(2))
+    var scalar = ordinary^.then(filter_not_extract).filter_not(filter_not_positive).then(filter_not_size)
     assert_equal(scalar^.get(), 1)
-    var custom = piped(ContainerFilterBox(List[Int]([-1, 2]))).filter_not[ContainerFilterFamily](filter_not_positive).get()
+    var custom = family_filter_not[ContainerFilterFamily](ContainerFilterBox(List[Int]([-1, 2])), filter_not_positive)
     assert_equal(custom.values, [-1])
     var calls = ArcPointer(0)
-    var owned_custom = piped(ContainerFilterBox(List[Int]([-1, 2]))).filter_not[ContainerFilterFamily](ContainerFilterPredicate(calls)).get()
+    var owned_custom = family_filter_not[ContainerFilterFamily](ContainerFilterBox(List[Int]([-1, 2])), ContainerFilterPredicate(calls))
     assert_equal(owned_custom.values, [-1])
-    var deferred = piped(List[Int]([-1, 2])).filter_not[ContainerDeferredFamily](ContainerFilterPredicate(calls)).get()
+    var deferred = family_filter_not[ContainerDeferredFamily](List[Int]([-1, 2]), ContainerFilterPredicate(calls))
     assert_equal(calls[], 2)
     assert_equal(deferred^.run(), [-1])
     assert_equal(calls[], 4)
@@ -124,7 +124,7 @@ def filter_not_families() raises:
     def filter_not_deferred_native(value: Int) {mut native_calls} -> Bool:
         native_calls += 1
         return value > 0
-    var native_deferred = piped(List[Int]([-1, 2])).filter_not[ContainerDeferredFamily](filter_not_deferred_native).get()
+    var native_deferred = family_filter_not[ContainerDeferredFamily](List[Int]([-1, 2]), filter_not_deferred_native)
     assert_equal(native_calls, 0)
     assert_equal(native_deferred^.run(), [-1])
     assert_equal(native_calls, 2)
@@ -162,7 +162,7 @@ def filter_not_lazy() raises:
     def filter_not_borrowed_owned(value: Int) {var filter_not_borrowed_state^} -> Bool:
         filter_not_borrowed_state.value += 1
         return filter_not_borrowed_state.value % 2 == 0
-    assert_equal(piped(List[Int]([0, 1, 2])).filter_not(filter_not_borrowed_owned).get(), [0, 2])
+    assert_equal(pipeline(List[Int]([0, 1, 2])).filter_not(filter_not_borrowed_owned).get(), [0, 2])
     assert_equal(filter_not_borrowed_owned(3), True)
     _ = filter_not_borrowed_owned^
     assert_equal(state_drops[], 2)
@@ -199,7 +199,7 @@ def filter_not_ownership() raises:
     var drops = ArcPointer(0)
     def filter_not_reject_item(value: ContainerMapItem) -> Bool: return value.value > 0
     var values: List[ContainerMapItem] = [ContainerMapItem(-1, drops), ContainerMapItem(2, drops)]
-    var kept = piped(values^).filter_not(filter_not_reject_item).get()
+    var kept = pipeline(values^).filter_not(filter_not_reject_item).get()
     assert_equal(drops[], 1)
     assert_equal(kept[0].value, -1)
     _ = kept^
@@ -208,7 +208,7 @@ def filter_not_ownership() raises:
     var dict = Dict[ContainerMapKey, ContainerMapItem]()
     dict[ContainerMapKey(0, keys)] = ContainerMapItem(-1, drops)
     dict[ContainerMapKey(1, keys)] = ContainerMapItem(2, drops)
-    var kept_dict = piped(dict^).filter_not(filter_not_reject_item).get()
+    var kept_dict = pipeline_values(dict^).filter_not(filter_not_reject_item).get()
     assert_equal(drops[], 3)
     assert_equal(keys[], 1)
     _ = kept_dict^
@@ -241,7 +241,7 @@ def filter_not_errors() raises:
         return value > 0
     var failed = False
     try:
-        _ = piped(List[Int]([-1, 2, 3])).filter_not(filter_not_checked).get()
+        _ = pipeline(List[Int]([-1, 2, 3])).raising[ContainerFilterFailure]().filter_not(filter_not_checked).get()
     except error:
         comptime assert type_of(error) == ContainerFilterFailure
         failed = error.at == 2
@@ -250,18 +250,18 @@ def filter_not_errors() raises:
     def filter_not_stop(value: Int) raises StopIteration -> Bool:
         raise StopIteration()
     failed = False
-    try: _ = piped(Optional(1)).filter_not(filter_not_stop).get()
+    try: _ = pipeline(Optional(1)).raising[StopIteration]().filter_not(filter_not_stop).get()
     except error:
         comptime assert type_of(error) == StopIteration
         failed = True
     assert_equal(failed, True)
     failed = False
-    try: _ = piped(Optional(7)).filter_not(ContainerFilterRaisingPredicate()).get()
+    try: _ = pipeline(Optional(7)).filter_not(ContainerFilterRaisingPredicate()).get()
     except error:
         comptime assert type_of(error) == ContainerFilterFailure
         failed = error.at == 7
     assert_equal(failed, True)
-    var deferred = piped(List[Int]([2])).filter_not[ContainerDeferredFamily](filter_not_checked).get()
+    var deferred = family_filter_not[ContainerDeferredFamily](List[Int]([2]), filter_not_checked)
     assert_equal(calls, 2)
     failed = False
     try: _ = deferred^.run()
@@ -276,7 +276,7 @@ def filter_not_errors() raises:
         return value.value > 0
     var items: List[ContainerMapItem] = [ContainerMapItem(-1, drops), ContainerMapItem(1, drops), ContainerMapItem(2, drops), ContainerMapItem(3, drops)]
     failed = False
-    try: _ = piped(items^).filter_not(filter_not_fail_item).get()
+    try: _ = pipeline(items^).raising[ContainerFilterFailure]().filter_not(filter_not_fail_item).get()
     except error:
         comptime assert type_of(error) == ContainerFilterFailure
         failed = True
@@ -288,7 +288,7 @@ def filter_not_origins(anchor: List[Int]) raises:
     var views: List[Span[Int, origin_of(anchor)]] = [Span(anchor)]
     def filter_not_empty(value: Span[Int, origin_of(anchor)]) {anchor} -> Bool:
         return len(value) == 0
-    var kept = piped(views^).filter_not(filter_not_empty).get()
+    var kept = pipeline(views^).filter_not(filter_not_empty).get()
     assert_equal(kept[0][0], 11)
     assert_equal(iterated(iter(kept)).filter_not(filter_not_empty).collect_list()[0][1], 12)
 

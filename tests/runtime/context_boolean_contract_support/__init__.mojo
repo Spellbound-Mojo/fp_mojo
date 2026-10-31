@@ -1,8 +1,9 @@
-from fp.algebra import AnyContract, AllContract, Monad, IdentityFamily, OptionalFamily, ListFamily, pure
+from fp.algebra import Monad, IdentityFamily, OptionalFamily, ListFamily, pure
+from fp.algebra.contracts import AnyContract, AllContract
 from fp.callables import BorrowCallable
 from fp.iteration import any_effect, all_effect, iterated, Iter
 from std.iter import Iterator
-from fp.functions import piped, pipeline, Pipeline
+from fp.functions import pipeline, Pipeline
 from std.testing import assert_equal
 from context_find_contract_support import Even, OwnedPredicate, Branches, Borrowed, Later
 from context_find_map_contract_support import Owned
@@ -21,7 +22,7 @@ def every[I: Monad, V: Movable & Deinitable, C: BorrowCallable](var predicate: C
 
 def fluent[I: Monad, V: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: V
 ) raises AnyContract[I, V, C].Error -> AnyContract[I, V, C].Out where AnyContract[I, V, C].Compatible:
-    return piped(source^).any_effect[I](predicate^).get()
+    return pipeline[IdentityFamily](source^).any_effect[I](predicate^).get()
 
 def iterator_forward[I: Monad, V: Iterator, C: BorrowCallable](var predicate: C, var source: Iter[V]
 ) raises AllContract[I, V, C].Error -> AllContract[I, V, C].Out where AllContract[I, V, C].Compatible:
@@ -33,7 +34,7 @@ def selected[I: Monad, V: Movable & Deinitable, C: BorrowCallable](var predicate
 
 def all_fluent[I: Monad, V: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: V
 ) raises AllContract[I, V, C].Error -> AllContract[I, V, C].Out where AllContract[I, V, C].Compatible:
-    return piped(source^).all_effect[I](predicate^).get()
+    return pipeline[IdentityFamily](source^).all_effect[I](predicate^).get()
 
 def any_iterator[I: Monad, V: Iterator, C: BorrowCallable](var predicate: C, var source: Iter[V]
 ) raises AnyContract[I, V, C].Error -> AnyContract[I, V, C].Out where AnyContract[I, V, C].Compatible:

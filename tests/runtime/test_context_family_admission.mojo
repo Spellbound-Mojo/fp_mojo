@@ -1,5 +1,5 @@
 from fp.functions import pipeline
-from fp.algebra import ListFamily,OptionalFamily,NonEmptyListFamily
+from fp.algebra import ListFamily, OptionalFamily, NonEmptyListFamily
 from fp.data import NonEmptyList,Result,Ok,Err
 from std.collections import Array
 from std.testing import assert_equal

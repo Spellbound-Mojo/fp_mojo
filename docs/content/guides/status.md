@@ -27,10 +27,10 @@ errors remain part of every operation's contract.
 
 | Group | Scope | Status |
 |---|---|---|
-| 1 | Fluent `map2` and `product` on Piped, including Result carriers | Implemented |
+| 1 | Fluent `map2` and `product` on Pipeline, including Result carriers | Implemented |
 | 2 | `traverse_void` and `traverse_tap` for container and iterator pipelines | Implemented for the [documented source families](../reference/combinators.md#containers-and-capabilities) |
-| 3 | Selective recovery (`recover_if`, `or_else_if`), effectful error observation (`flat_tap_err`) | Implemented on Result and Piped |
-| 4 | `map_both`, `redeem`, `redeem_with`, whole-outcome observation (`attempt_tap`) | Implemented on Result and Piped |
+| 3 | Selective recovery (`recover_if`, `or_else_if`), effectful error observation (`flat_tap_err`) | Implemented on Result and Pipeline |
+| 4 | `map_both`, `redeem`, `redeem_with`, whole-outcome observation (`attempt_tap`) | Implemented on Result and Pipeline |
 | 5 | `sequence_void`, `flat_traverse`, `flat_sequence`, `filter_effect` and `traverse_filter` | Implemented for the [documented source families](../reference/combinators.md#containers-and-capabilities) |
 | 6 | Effectful folds and predicates (`fold_effect`, `any_effect`, `all_effect`), conditional composition (`if_effect`) | Implemented; see [effectful reductions](../reference/combinators.md#fold-and-choose-effects) |
 | 7 | Fluent `ap`, multi-argument mapping and tuple construction | Implemented as `ap`, `map_n` and `product_n`; see [combination contracts](../reference/combinators.md#combine-and-inspect-effects) |
@@ -47,7 +47,7 @@ errors remain part of every operation's contract.
 | 18 | Shared outcome composition (`redeem`, `redeem_with`, `attempt_tap`) | Implemented with a fixed stored-error type |
 
 The acyclic layering contract is enforced by tooling. Algebra conveniences on
-Result now use `piped(result^)`; see the [migration](../architecture/data.md#migration-from-the-first-nightly-fluent-api).
+Result now use `pipeline(result^)`; see the [migration](../architecture/data.md#migration-from-the-first-nightly-fluent-api).
 NonEmptyList, its concatenation Semigroup and its shape-preserving family are
 implemented; see [non-empty validation](../reference/data.md#non-empty-collections-and-validation).
 Success with warnings is implemented as Ior with explicit sequential and
@@ -79,7 +79,7 @@ in left-major order, and requires copyable elements because a value participates
 in several outputs. Optional and Result combine at most once and admit move-only
 payloads; Result keeps the first stored error. Native callbacks are borrowed in
 place, library callbacks are consumed, and native errors propagate unchanged.
-Piped infers List, Optional and Result families; other Applicative families are
+Pipeline infers List, Optional and Result families; other Applicative families are
 selected explicitly. Existing `map2_lazy` remains the factory-based operation.
 
 Pass 2 derives traversal conveniences from the existing source traversal and
@@ -115,11 +115,11 @@ that can represent absence. No additional per-container primitive is needed.
 Pass 6 uses one dependent fold driver for iterable sources and eager Monad
 targets; Reader and State defer it until `run`. Effectful predicates stop on
 the first decisive Bool in each branch. `if_effect` binds an effectful Bool
-to one of two factories; use `piped(result^)` for a Result condition.
+to one of two factories; use `pipeline(result^)` for a Result condition.
 Native raised errors stay separate from stored failures.
 
 Pass 7 adds `ap`, `map_n((second, third), combine)` and
-`product_n((second, third))` to Piped, including Result carriers. The receiver is the first
+`product_n((second, third))` to Pipeline, including Result carriers. The receiver is the first
 operand and products are flat tuples. All three share the existing Applicative
 primitives. Native callbacks take one to eight arguments; tuple-taking library
 callbacks and products are variadic for inferred List, Optional and Result.
@@ -137,14 +137,14 @@ Native raises still stop immediately, and ordinary Result composition keeps
 its short circuit behavior. Result combination and native accumulation share
 their existing execution owners.
 
-Pass 10 adds `par_product_n((second, third))` on Piped holding
-Result, and `par_sequence()` on the same Piped and Iter sources as
+Pass 10 adds `par_product_n((second, third))` on Pipeline holding
+Result, and `par_sequence()` on the same Pipeline and Iter sources as
 `par_traverse`. Products are variadic flat tuples; sequencing preserves source
 shape, stored error types and native origins. Both accept an explicit error
 Semigroup and reuse the existing execution and cleanup mechanisms.
 
-Pass 11 extends `flat_tap`, `followed_by` and `before` to Piped's Monad families
-and lazy Iter. Piped infers List, Optional and Result; other families are
+Pass 11 extends `flat_tap`, `followed_by` and `before` to Pipeline's Monad families
+and lazy Iter. Pipeline infers List, Optional and Result; other families are
 selected explicitly. Retention copies per branch for List and Iter and moves
 single-use payloads for Optional and Result. Reader and State defer callbacks
 until run. Existing Result methods, traversal and the new methods share one
@@ -158,8 +158,8 @@ and deferred timing, stored errors and native origins follow the family.
 
 Pass 13 adds **shared error handling** through `ApplicativeError` for
 ResultFamily, ValidationFamily and ResultT. `fail[Family, A](error)` constructs
-a stored failure; explicit-family Piped `recover` and `or_else` handle that
-selected layer. Recovery derives once from `or_else` and `pure`. Result owns
+a stored failure; `pipeline[Family](value)` with `recover` and `or_else` handles
+that selected layer. Recovery derives once from `or_else` and `pure`. Result owns
 branch selection and cleanup, and ResultT reuses its generalized bind guard.
 Native raises keep their exact types; existing inferred Result syntax remains
 available, including error-type-changing `or_else`.
@@ -210,11 +210,11 @@ The source references are Cats' [Apply](https://github.com/typelevel/cats/blob/m
 | Partial application | `partial` binds a positional prefix of up to eight arguments of a plain function. It does not bind keywords, reorder arguments, accept capturing targets, `mut` parameters or owned remaining parameters, or nest. A native closure expresses all of these. |
 | Lazy iteration callbacks | They cannot raise; carry failures as `Result` elements. |
 | Match clauses | `fp.match` and `fp.rewrite` take one to sixteen clauses: plain functions or lambdas without captures. Data a clause needs is passed with `context=` or as a component of a tuple of values. |
-| Pipeline stages | `pipe`, `flow` and `compose` take two to eight plain functions directly. A closure is promoted with `as_unary`, and then every native function in that chain is promoted too. `piped(value).then(f)...get()` chains any number of plain functions, closures and library values. |
+| Pipeline stages | `pipe`, `flow` and `compose` take two to eight plain functions directly. A closure is promoted with `as_unary`, and then every native function in that chain is promoted too. `pipeline(value).then(f)...get()` chains any number of plain functions, closures and library values; select a raising closure's error first with `.raising[E]()`. |
 | `action` endpoints | `action` takes library endpoints (`BorrowCallable` for Reader, `Unary` for State): a plain function with read parameters would match both native forms. |
 | Algebra and effect callbacks | `map`, `flat_map`, `traverse`, `modify`, `censor` and `local` take native functions or closures. Free `map2`, `map2_lazy` and `ap` take library values; fluent `map2` accepts native functions and closures too. |
 | Capture | `Capture[E]` binds up to eight consumed positional operands, or up to three mixed read/mutable/consuming operands with an optional homogeneous native keyword pack, before callback admission. `Capture.stateful` owns explicit mutable state for repeated plain-function calls. Tested invalid calls diagnose without callback-type bindings. |
-| Selected pipeline | `pipeline(value).raising[E]()` selects native errors once for family operations and Result combinators. Pipeline is the preferred selected interface; every legacy Piped method name has a classified counterpart. Matching names do not imply interchangeable signatures or ownership contracts. |
+| Selected pipeline | `pipeline(value).raising[E]()` selects native errors once for family operations and Result combinators. Raising plain functions select their own error when none is selected; native closures use the selected error. The former `Piped` struct and `piped` factory were removed; Pipeline provides every operation they offered, and `pipeline_values` covers Dict and StringDict values. |
 | Legacy `attempt` call shapes | Zero to two positional arguments; callbacks with homogeneous native keyword packs use `attempt_kwargs`, including empty packs. Other call shapes use a closure. On Mojo 1.2, optional named convention selectors cover all supported positional combinations; `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs` remain supported. An incompatible selector needs an explicit `F` hint to diagnose normally; incompatible adapter diagnostics remain incomplete. See the [reference](../reference/data.md#select-a-native-argument-convention). |
 | Named or defaulted parameters | Pass a native function with named or defaulted parameters to library functions through a closure that spells the call. |
 | Closures with owned mutable state | Unannotated native callbacks can lose updates at O3 on Mojo 1.2. Use the documented always-inline requirement, explicit mutable library callables or Capture.stateful. |

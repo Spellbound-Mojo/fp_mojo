@@ -3,7 +3,7 @@ from fp.algebra import ResultFamily, ListFamily, fail
 from fp.effects import ReaderT, ResultT, run
 from fp.callables import BorrowOnceCallable
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from std.memory import ArcPointer
 from std.testing import assert_equal
 
@@ -37,7 +37,7 @@ def eoo_paths() raises:
         var source = Result[EOOwner, EOOwner](Ok(EOOwner(1, inputs))) if branch == 0 else Result[EOOwner, EOOwner](Err(EOOwner(1, inputs)))
         var value: Int
         try:
-            var observed = piped(source^).flat_tap_err[F](EOOnce(EOOwner(2, outputs), branch == 2, branch == 3)).get()
+            var observed = pipeline[F](source^).flat_tap_err(EOOnce(EOOwner(2, outputs), branch == 2, branch == 3)).get()
             if observed.is_ok(): value = observed._ok().value.value
             else: value = observed._err().value.value
         except error: value = error
@@ -48,7 +48,7 @@ def eoo_paths() raises:
     var drops = ArcPointer(0)
     var value: Int
     try:
-        var tapped = piped(fail[F, EOOwner](EOOwner(3, drops))).tap_err[F](EOOnce(EOOwner(4, drops), True, False)).get()
+        var tapped = pipeline[F](fail[F, EOOwner](EOOwner(3, drops))).tap_err(EOOnce(EOOwner(4, drops), True, False)).get()
         value = tapped._err().value.value
     except error: value = -1
     assert_equal(value, 3)
@@ -61,7 +61,7 @@ def eoo_branching_scope(drops: ArcPointer[Int]) raises:
     def observe(error: String) {drops} -> List[R]:
         return [R(Ok(EOOwner(10, drops))), R(Err(String("observer"))), R(Ok(EOOwner(11, drops)))]
     var source: List[R] = [R(Ok(EOOwner(8, drops))), R(Err(String("original")))]
-    var result = piped(source^).flat_tap_err[L](observe).get()
+    var result = pipeline[L](source^).flat_tap_err(observe).get()
     assert_equal(len(result), 4)
     assert_equal(result[0]._ok().value.value, 8)
     assert_equal(result[1]._err().value, "original")
@@ -75,7 +75,7 @@ def eoo_move_errors(drops: ArcPointer[Int]) raises:
     comptime L = ResultT[ListFamily, EOOwner]
     def inspect(error: EOOwner) -> Int: return error.value
     var source: List[Result[Int, EOOwner]] = [Result[Int, EOOwner](Err(EOOwner(5, drops))), Result[Int, EOOwner](Err(EOOwner(6, drops)))]
-    var tapped = piped(source^).tap_err[L](inspect).get()
+    var tapped = pipeline[L](source^).tap_err(inspect).get()
     assert_equal(tapped[0]._err().value.value, 5)
     assert_equal(tapped[1]._err().value.value, 6)
     assert_equal(drops[], 0)
@@ -84,7 +84,7 @@ def eoo_move_errors(drops: ArcPointer[Int]) raises:
 
 def eoo_pending(drops: ArcPointer[Int], execute: Bool):
     comptime D = ReaderT[ResultFamily[EOOwner], Int]
-    var pending = piped(fail[D, EOOwner](EOOwner(1, drops))).tap_err[D](EOOnce(EOOwner(2, drops), True, False)).get()
+    var pending = pipeline[D](fail[D, EOOwner](EOOwner(1, drops))).tap_err(EOOnce(EOOwner(2, drops), True, False)).get()
     if execute:
         try:
             _ = run[D](pending^, 0)

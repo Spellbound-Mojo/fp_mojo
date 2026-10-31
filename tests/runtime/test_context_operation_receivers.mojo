@@ -1,5 +1,6 @@
 """Checked operation wrappers reject missing receivers and preserve family semantics."""
-from fp.algebra import OptionalFamily, ListFamily, MapContract, BindContract, CombineContract, Map2Contract, ProductContract
+from fp.algebra import OptionalFamily, ListFamily
+from fp.algebra.contracts import MapContract, BindContract, CombineContract, Map2Contract, ProductContract
 from fp.callables import MutableUnary
 from fp.functions import Identity
 from fp.effects import Reader, run

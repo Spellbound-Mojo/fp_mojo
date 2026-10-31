@@ -1,5 +1,6 @@
 """Layer mappings forward public combined, component and conditional contracts."""
-from fp.algebra import Monad, Functor, ErrorMapping, ListFamily, ResultFamily, MapBothContract, MapErrContract
+from fp.algebra import Monad, Functor, ErrorMapping, ListFamily, ResultFamily
+from fp.algebra.contracts import MapBothContract, MapErrContract
 from fp.callables import UnaryContract
 from fp.functions import pipeline, Pipeline
 from fp.effects import ResultT, OptionalT, Reader, run

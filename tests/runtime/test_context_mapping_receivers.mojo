@@ -1,5 +1,6 @@
 """Checked mapping wrappers preserve target selection, ownership and origins."""
-from fp.algebra import ResultFamily, MapBothContract, MapErrContract
+from fp.algebra import ResultFamily
+from fp.algebra.contracts import MapBothContract, MapErrContract
 from fp.callables import MutableUnary
 from fp.data import Result
 from fp.effects import Reader, ResultT, run

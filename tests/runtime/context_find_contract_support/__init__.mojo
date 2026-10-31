@@ -1,11 +1,12 @@
-from fp.algebra import FindContract, Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, pure
+from fp.algebra import Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, pure
+from fp.algebra.contracts import FindContract
 from fp.callables import BorrowCallable, BorrowOnceCallable
 from fp.effects import Reader, run
 from std.memory import ArcPointer
 from context_find_map_contract_support import Owned
 from fp.iteration import find_effect, iterated, Iter
 from std.iter import Iterator
-from fp.functions import piped, pipeline, Pipeline
+from fp.functions import pipeline, Pipeline
 from std.testing import assert_equal
 from algebra_support.box import BoxMonad
 
@@ -17,7 +18,7 @@ def forward[I: Monad, V: Movable & Deinitable, C: BorrowCallable](
 def fluent[I: Monad, V: Movable & Deinitable, C: BorrowCallable](
     var predicate: C, var source: V
 ) raises FindContract[I, V, C].Error -> FindContract[I, V, C].Out where FindContract[I, V, C].Compatible:
-    return piped(source^).find_effect[I](predicate^).get()
+    return pipeline[IdentityFamily](source^).find_effect[I](predicate^).get()
 
 def iterator_forward[I: Monad, V: Iterator, C: BorrowCallable](
     var predicate: C, var source: Iter[V]

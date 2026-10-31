@@ -2,7 +2,8 @@
 from algebra_support.tap_contracts import observed, continued, Keep
 from algebra_support.box import Box, BoxApplicative
 from algebra_support.external import PublicMonad
-from fp.algebra import TraverseTapContract, Traversable, Applicative, ListFamily, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid
+from fp.algebra import Traversable, Applicative, ListFamily, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid
+from fp.algebra.contracts import TraverseTapContract
 from fp.callables import BorrowCallContract, BorrowCallable, BorrowMutableCallable, BorrowOnceCallable, BorrowSignature
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err

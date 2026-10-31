@@ -1,6 +1,6 @@
-from fp.algebra import OptionalFamily,ResultFamily,StringMonoid,traverse,sequence
+from fp.algebra import OptionalFamily, ResultFamily, StringMonoid, traverse, sequence
 from fp.effects import Reader,State,WriterT,writer,run,run_writer
-from fp.functions import pipeline,piped
+from fp.functions import pipeline
 from fp.data import Result,Ok,Err
 from std.testing import assert_equal
 
@@ -33,7 +33,7 @@ def main() raises:
     assert_equal(construction_error,0)
     assert_equal(free_output.take(),4)
     assert_equal(output.take(),4)
-    var legacy=piped(Optional(3)).traverse[S](state).get()
+    var legacy=pipeline(Optional(3)).traverse[S](state).get()
     var result=run[S](legacy^,10)
     assert_equal(result[0].take(),5)
     assert_equal(result[1],10)

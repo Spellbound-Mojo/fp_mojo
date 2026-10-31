@@ -1,6 +1,6 @@
 """Family observation moves payloads and releases callbacks, outputs, and errors once."""
 from fp.callables import BorrowMutableCallable,BorrowOnceCallable
-from fp.functions import piped,pipeline
+from fp.functions import pipeline
 from fp.effects import ReaderT,run
 from fp.algebra import ListFamily
 from algebra_support.result_ownership import Token,trace
@@ -32,8 +32,8 @@ def eager[mode:Int](fail:Bool) raises:
     try:
         comptime if mode==0:_=pipeline(input^).pair_with(Observe(Token(6,state),fail)).get()
         elif mode==1:_=pipeline(input^).tap_each(Observe(Token(6,state),fail)).get()
-        elif mode==2:_=piped(input^).pair_with(Observe(Token(6,state),fail)).get()
-        else:_=piped(input^).tap_each(Observe(Token(6,state),fail)).get()
+        elif mode==2:_=pipeline(input^).pair_with(Observe(Token(6,state),fail)).get()
+        else:_=pipeline(input^).tap_each(Observe(Token(6,state),fail)).get()
     except error:
         comptime assert type_of(error)==Token
         error_id=error.id
@@ -47,7 +47,7 @@ def eager[mode:Int](fail:Bool) raises:
 def whole[piped_form:Bool]() raises:
     var state=trace()
     var value:Token
-    comptime if piped_form:value=piped(Token(1,state)).tap(Once(Token(6,state))).get()
+    comptime if piped_form:value=pipeline(Token(1,state)).tap(Once(Token(6,state))).get()
     else:value=pipeline(Token(1,state)).tap(Once(Token(6,state))).get()
     assert_equal(state[].calls,1)
     assert_equal(state[].drops[1],0)

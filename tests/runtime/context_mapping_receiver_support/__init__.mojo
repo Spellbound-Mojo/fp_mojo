@@ -1,4 +1,5 @@
-from fp.algebra import ErrorMapping, MapBothContract, MapErrContract
+from fp.algebra import ErrorMapping
+from fp.algebra.contracts import MapBothContract, MapErrContract
 from fp.callables import UnaryContract
 from fp.functions import Pipeline, pipeline
 

@@ -1,7 +1,7 @@
 """Repeated receiver selection, generic forwarding, ties, and exact callback errors."""
 from fp.callables import BorrowCallContract,BorrowCallable,BorrowMutableCallable,BorrowOnceCallable,RepeatableBorrow
 from fp.iteration import min_by,max_by,iterated,minimum_by_non_empty
-from fp.functions import piped,pipeline
+from fp.functions import pipeline
 from fp.data import NonEmptyList
 from std.iter import Iterator
 from std.memory import ArcPointer
@@ -43,7 +43,7 @@ def main() raises:
     assert_equal(min_by(range(1,4),Dual(0)).value(),3)
     assert_equal(max_by(range(1,4),Dual(0)).value(),1)
     assert_equal(iterated(range(1,4)).min_by(Dual(0)).value(),3)
-    assert_equal(piped(List[Int]([1,2,3])).min_by(Dual(0)).get().value(),3)
+    assert_equal(pipeline(List[Int]([1,2,3])).min_by(Dual(0)).get().value(),3)
     assert_equal(pipeline(range(1,4)).min_by(Dual(0)).get().value(),3)
     assert_equal(minimum_by_non_empty(NonEmptyList(1,[2,3]),Dual(0)),3)
     assert_equal(forwarded(Dual(0),range(1,4)).value(),3)

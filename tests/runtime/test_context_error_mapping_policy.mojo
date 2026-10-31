@@ -1,5 +1,6 @@
 """Error mapping preserves the selected policy and validates explicit targets."""
-from fp.algebra import ErrorRecovery, ApplicativeError, ErrorMapping, ResultFamily, ValidationFamily, StringMonoid, ListMonoid, Semigroup, MapErrContract
+from fp.algebra import ErrorRecovery, ApplicativeError, ErrorMapping, ResultFamily, ValidationFamily, StringMonoid, ListMonoid, Semigroup
+from fp.algebra.contracts import MapErrContract
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal

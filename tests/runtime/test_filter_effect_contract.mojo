@@ -2,7 +2,8 @@
 from algebra_support.filter_effect_contracts import filtered, continued, Even, FailingCompaction
 from algebra_support.external import PublicMonad
 from algebra_support.box import Box, BoxApplicative
-from fp.algebra import FilterEffectContract, Traversable, FunctorFilter, Applicative, ListFamily, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid
+from fp.algebra import Traversable, FunctorFilter, Applicative, ListFamily, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid
+from fp.algebra.contracts import FilterEffectContract
 from fp.callables import BorrowCallContract, BorrowSignature, BorrowMutableCallable
 from fp.functions import pipeline
 from fp.data import Result, Err, Ok

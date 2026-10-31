@@ -1,15 +1,16 @@
 """One public signature for immediate and deferred value-returning recovery."""
-from fp.algebra import ApplicativeError, RecoverContract, ResultFamily
+from fp.algebra import ApplicativeError, ResultFamily
+from fp.algebra.contracts import RecoverContract
 from fp.callables import UnaryContract, Unary
 from fp.data import Result, Err
 from fp.effects import Reader, ResultT, run
-from fp.functions import piped
+from fp.functions import pipeline
 
 
 def recovered[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](
     var value: V, var handler: H
 ) raises RecoverContract[I, V, H].Error -> RecoverContract[I, V, H].Out where RecoverContract[I, V, H].Compatible:
-    return piped(value^).recover[I](handler^).get()
+    return pipeline[I](value^).recover(handler^).get()
 
 
 @fieldwise_init

@@ -1,5 +1,6 @@
 # error: invalid call to 'forward': violated constraint
-from fp.algebra import Applicative, CombineContract, OptionalFamily, map2_lazy
+from fp.algebra import Applicative, OptionalFamily, map2_lazy
+from fp.algebra.contracts import CombineContract
 from fp.callables import BinaryContract, ThunkContract, Binary, OnceThunk
 
 def forward[I: Applicative, V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: V, var right: R, var function: F) raises CombineContract[I, V, F, R].Error -> CombineContract[I, V, F, R].Out where CombineContract[I, V, F, R].Compatible:

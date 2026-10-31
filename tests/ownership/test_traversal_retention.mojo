@@ -1,5 +1,5 @@
 """Effectful observation retains owners and cleans up failed branches."""
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from fp.algebra import ResultFamily, OptionalFamily, ListFamily
 from fp.data import Result, Ok, Err
@@ -43,7 +43,7 @@ def main() raises:
     var owners = List[TVOwner]()
     owners.append(TVOwner("one", drops))
     owners.append(TVOwner("two", drops))
-    var retained = piped(owners^).traverse_tap[ResultFamily[String]](tv_observe).get().raise_on_err()
+    var retained = pipeline(owners^).traverse_tap[ResultFamily[String]](tv_observe).get().raise_on_err()
     assert_equal(drops[], 0)
     assert_equal(retained[0].name, "one")
     assert_equal(retained[1].name, "two")
@@ -56,7 +56,7 @@ def main() raises:
     var result = iterated(failed^).traverse_tap[ResultFamily[String]](tv_observe)
     assert_true(result.is_err())
     assert_equal(drops[], 5)
-    var single = piped(Optional(TVOwner("keep", drops))).traverse_tap[OptionalFamily](TVOnce(TVOwner("callback", drops))).get()
+    var single = pipeline(Optional(TVOwner("keep", drops))).traverse_tap[OptionalFamily](TVOnce(TVOwner("callback", drops))).get()
     assert_equal(drops[], 6)
     var inner = single.take()
     var kept = inner.take()
@@ -67,17 +67,17 @@ def main() raises:
     def tv_captured(value: Int) {var capture^} -> Optional[Int]:
         return Optional(capture.name.byte_length() + value)
     var values: List[Int] = [1, 2]
-    var observed = piped(values^).traverse_tap[OptionalFamily](tv_captured).get()
+    var observed = pipeline(values^).traverse_tap[OptionalFamily](tv_captured).get()
     assert_equal(observed.take(), [1, 2])
     assert_equal(drops[], 7)
     _ = tv_captured^
     assert_equal(drops[], 8)
     var source = Result[TVOwner, TVOwner](Ok(TVOwner("input", drops)))
-    var discarded = piped(source^).traverse_void[OptionalFamily](TVVoidOnce(TVOwner("callback", drops))).get()
+    var discarded = pipeline(source^).traverse_void[OptionalFamily](TVVoidOnce(TVOwner("callback", drops))).get()
     assert_true(discarded.take().is_ok())
     assert_equal(drops[], 10)
     var failed_source = Result[TVOwner, TVOwner](Err(TVOwner("original error", drops)))
-    var skipped = piped(failed_source^).traverse_void[OptionalFamily](TVVoidOnce(TVOwner("skipped", drops))).get()
+    var skipped = pipeline(failed_source^).traverse_void[OptionalFamily](TVVoidOnce(TVOwner("skipped", drops))).get()
     assert_equal(drops[], 11)
     var error = skipped.take()
     assert_true(error.is_err())

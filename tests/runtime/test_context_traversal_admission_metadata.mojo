@@ -1,5 +1,6 @@
 """Loop admission follows the chosen accumulator and exact native error types."""
-from fp.algebra import ListFamily,OptionalFamily,ResultFamily,NonEmptyListFamily,TraverseContract
+from fp.algebra import ListFamily, OptionalFamily, ResultFamily, NonEmptyListFamily
+from fp.algebra.contracts import TraverseContract
 from fp.data import NonEmptyList
 from context_branch_admission_support import StatefulMap
 from fp.effects import Reader

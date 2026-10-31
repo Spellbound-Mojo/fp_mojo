@@ -1,4 +1,5 @@
-from fp.algebra import OptionalFamily, MapContract, BindContract, CombineContract
+from fp.algebra import OptionalFamily
+from fp.algebra.contracts import MapContract, BindContract, CombineContract
 from fp.callables import UnaryContract, BinaryContract, ThunkContract, Binary, OnceThunk
 
 @fieldwise_init

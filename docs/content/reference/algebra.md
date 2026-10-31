@@ -25,7 +25,7 @@ stopping at the first. `traverse[Accumulate](values^, f)` accumulates without
 naming the semigroup: a callback returning `Result[T, List[E]]` selects
 `ValidationFamily[ListMonoid[E]]`, so the outcome is `Ok` of every payload or
 `Err` of every error list in source order. `Accumulate` supports collection
-only (List and other sequence sources, from free functions, Iter, Piped and
+only (List and other sequence sources, from free functions, Iter and
 Pipeline); other errors name `ValidationFamily[S]`. Target families come first, so a single bracketed family
 overrides the target; name the source with `S=`. A bare value such as `Int` has
 no family of its own and needs `IdentityFamily`, and an `Optional` read through
@@ -50,6 +50,8 @@ The [algebra tutorial](../tutorial/algebra.md) explains when to use `map`,
 `map2`, `ap`, `flat_map`, `traverse` and `sequence` through optional order values.
 
 Generic extensions can state admission using public family predicates.
+The operation contracts live in [`fp.algebra.contracts`](algebra.contracts.md),
+for example `from fp.algebra.contracts import MapContract`.
 `MapContract[I, V, F]`, `BindContract[I, V, F]` and
 `TraverseContract[S, G, V, F]` group an operation's `Compatible`, `Out` and
 `Error` projections. A generic selected-traversal wrapper can forward one
@@ -98,7 +100,7 @@ not the base's map predicate.
 
 `FoldContract[I, V, F]` describes the free `fold_effect` entry with its inferred
 construction error. A generic wrapper forwards `Compatible`, returns `Out` and
-raises `Error`; `Piped.fold_effect` accepts the same proof. The native Identity,
+raises `Error`. The native Identity,
 Optional and Result folds accept move-only source items. List additionally
 requires copyable items because each prepared item may enter several branches.
 All four require a repeatable step. Custom families keep their existing fold
@@ -117,7 +119,7 @@ admission. The example demonstrates the free and staged forms.
 
 `FoldMapContract[I, M, V, F]` describes `fold_map_effect`: produce effects
 with a repeatable unary callback and combine their payloads using monoid `M`.
-Its `Compatible`, `Out` and `Error` projections work with free, piped, iterator
+Its `Compatible`, `Out` and `Error` projections work with free, iterator
 and selected-pipeline calls. This removes private fold-step types from generic
 wrappers. Ordinary calls and positional type arguments retain their syntax.
 
@@ -131,7 +133,7 @@ when the resulting computation runs, with their exact native errors and origins.
 
 `FindMapContract[I, V, F]` provides the same public proof and type projections
 for `find_map_effect`. The callback produces an effect of `Optional`; each live
-branch stops at its first present value. Free, piped, iterator and selected
+branch stops at its first present value. Free, iterator and selected
 pipeline wrappers can forward `Compatible` without naming private search steps.
 
 Empty input and an exhausted branch produce an absent inner Optional. An absent
@@ -159,7 +161,7 @@ requirements, while linear searches support move-only retained values.
 `AnyContract[I, V, C]` and `AllContract[I, V, C]` describe `any_effect` and
 `all_effect`. Both aliases share one implementation and expose `Compatible`,
 `Out`, `Error`, and the input, output and family component predicates. Generic
-free, piped, iterator and selected-pipeline wrappers use the same proof.
+free, iterator and selected-pipeline wrappers use the same proof.
 
 Each live branch stops at its first decisive Bool: True for `any_effect`, False
 for `all_effect`. Empty input lifts False and True respectively. Borrowing
@@ -318,7 +320,7 @@ preserve the Array length while changing its element type. DequeFamily and
 LinkedListFamily also support filter and filter_map; ArrayFamily supports map.
 None requires or claims Applicative or Monad. Deque operations preserve native
 capacity and eviction settings. These names reuse the same implementations as
-`piped`'s native collection methods.
+Pipeline's native collection methods.
 
 Selection is explicit: `pipeline(array^)` treats the whole Array as an
 Identity payload until `.elements()` selects ArrayFamily. List, Deque,
@@ -370,7 +372,7 @@ without importing the private adapter that lifts the handler's value through
 the family's `pure`. With `I: ApplicativeError`, forward `Compatible`. Expanded
 selected wrappers also forward `ReceiverCompatible` and `OperationCompatible`:
 the callback must supply an invocation mode and the family must admit the
-adapted handler. Legacy Piped retains its existing signature predicates.
+adapted handler.
 
 For a generic `I: Applicative` with conditional error capability, forward
 `conforms_to(I, ApplicativeError)` and use the public
@@ -378,8 +380,7 @@ For a generic `I: Applicative` with conditional error capability, forward
 Using different family witnesses can leave their dependent construction-error
 types unrelated to the compiler. No private family alias is needed.
 
-Both `piped(value).recover[I](handler)` and
-`pipeline[I](value).recover(handler)` expose this generic capability boundary.
+`pipeline[I](value).recover(handler)` exposes this generic capability boundary.
 The descriptor's `Error` is the family's construction error: a deferred
 ResultT/Reader recovery can construct without raising and later raise the
 handler's exact error when run. Stored errors remain data throughout.
@@ -446,7 +447,6 @@ project `Family`, `Out` and `Error`; the factory must return the family's exact
 stored-error type. `BindCompatible` includes the selected family's admission
 of the validation continuation. An expanded generic proof must include that
 bind requirement as well as the callback and source-carrier predicates.
-Legacy `piped(...).ensure[I](...)` retains its existing signature requirements.
 The family owns receiver checks, branching and construction errors; deferred
 callback and failure-constructor errors remain in the action's run contract.
 Conditional wrappers use the public `downcast[I, ApplicativeError & Monad]`
@@ -504,8 +504,6 @@ separately; factory contracts check the original factory before adapting its
 ignored input. A metadata-only callback fails a checked wrapper's constraint
 without explicit callback type arguments. Family bodies still validate receiver
 repeatability and copying retained originals when branching.
-Legacy Piped retains its input-and-carrier entry admission; its generic wrappers
-can forward those component predicates without adding a bind predicate.
 `Error` describes construction: deferred effects retain their separate run-time
 errors. No contract invokes or stores the callback.
 For a conditional Monad capability on an `Applicative` type, use the same
@@ -530,10 +528,10 @@ values are both accepted; repeated invocation prefers the mutable receiver.
 Use `mut_ref(predicate)` to inspect or reuse its updated state after the operation.
 Consuming-only predicates are rejected, including for Optional.
 The independent `Filterable` interface lets custom containers define selection;
-`piped(value).filter[Family](predicate)` uses the same instance. See
+`pipeline[Family](value).filter(predicate)` uses the same instance. See
 [container filtering](../architecture/functions.md#container-preserving-filter). Named
 partial predicates can be reused without copying their stored prefix at
-admission. The same partial works in inferred Piped container calls and lazy
+admission. The same partial works in inferred Pipeline container calls and lazy
 filtering; each native invocation keeps its documented bound-argument copies.
 
 
@@ -543,7 +541,7 @@ derives from this primitive with the identity callback. This capability can
 change payload types; it is separate from `Filterable`, which retains original
 payloads. ListFamily and OptionalFamily implement both. The fluent native
 container adapters also support Deque, LinkedList, Dict values and StringDict
-values, as described in [fp.combinators](combinators.md).
+values, as described in [Combinators](combinators.md).
 
 `Semigroup` supplies associative `combine`, its value type and its native
 error type. `Monoid` extends it with `empty`; existing monoids remain valid
@@ -558,7 +556,7 @@ for the shared execution rules.
 failure constructor. Families may keep terminal states outside that channel;
 async cancellation and canceled failures do so. `ApplicativeError` extends it
 with a lawful failure constructor. Use
-`fail[Family, A](error)` to construct a failure, and Piped's explicit-family
+`fail[Family, A](error)` to construct a failure, and `pipeline[Family](value)` with
 `recover` or `or_else` to handle it. ResultFamily, ValidationFamily and ResultT
 provide instances; the remaining transformers lift the capability from their
 base Monad, with copyable state required for StateT recovery. Native raised
@@ -683,10 +681,8 @@ for `[1, -2, 3]`, stopping at `-2`.
 `IfContract[I, V, L, R]` describes `if_effect` with two library factories.
 A generic wrapper forwards `Compatible` and names `Out` and `Error`; it does
 not need the private conditional continuation or error probe. The same contract
-is used by free calls, `Piped` and selected pipelines. Existing ordinary call
-syntax and positional bindings stay available. A fully generic `Piped` wrapper
-uses `.if_effect[G=I](left^, right^)` to distinguish its family binding from the
-inferred-family overloads' error hint.
+is used by free calls and selected pipelines. Existing ordinary call
+syntax and positional bindings stay available.
 
 Admission checks the Bool condition, exact branch payloads and origins, carrier
 membership, compatible native errors and the family's receiver requirements.
@@ -725,8 +721,7 @@ is called. The family owns subsequent invocation, branching, short-circuiting
 and deferred execution. No operand or callback gains an implicit copy.
 
 Component predicates preserve existing admission differences. Free `map2`
-uses `OperationCompatible`; generic `Piped.map2` additionally checks exact
-inputs; selected pipelines also require carrier membership. New wrappers may
+uses `OperationCompatible`; selected pipelines also require carrier membership. New wrappers may
 forward `Compatible` for the complete proof. Native callback inference and
 existing positional bindings are unchanged.
 
@@ -743,7 +738,7 @@ families retain execution errors in the returned computation. For example,
 Writer pairing may raise while combining logs, whereas pairing Reader-backed
 Writers constructs a deferred computation. `Error` describes construction.
 
-Free and generic piped calls retain `OperationCompatible`; selected pipelines
+Free calls retain `OperationCompatible`; selected pipelines
 retain `FamilyCompatible`. A new wrapper can forward `Compatible` to express
 the complete contract. Origins of the two payloads remain independent in the
 resulting tuple, and existing positional family bindings still work.
@@ -778,7 +773,7 @@ work in a single-value family. Independent shared state inside a callback keeps
 its existing semantics.
 
 Admission components preserve existing generic code. Free `ap` retains
-`OperationCompatible`, generic `Piped.ap` retains `InputCompatible`, and selected
+`OperationCompatible` and selected
 pipelines retain `ShapeCompatible`. The latter combines input and family checks
 without forcing a receiver proof before specialization. `ReceiverCompatible`
 adds that proof in the complete `Compatible` predicate, so new generic wrappers

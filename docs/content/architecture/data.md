@@ -64,8 +64,8 @@ Both handlers must be invocable even when one branch is inactive.
 
 ### Derived Result combinators
 
-Result methods and their Piped counterparts share execution. The Piped methods
-recover the native Result type and forward; they never inspect its tag.
+Result methods and their Pipeline counterparts share execution. The Pipeline
+methods forward to the Result family; they never inspect its tag.
 `flat_tap` and `flat_pair_with` bind a borrowing projection and map its success
 with a consuming retention adapter. This moves the retained value once, so a
 move-only payload needs no copy. An inner failure releases the retained value.
@@ -129,8 +129,7 @@ These adapters preserve exact input, output, error and
 origin types and contain no independent branch implementation.
 
 The two-branch native methods spell input types from the source, and
-`redeem_with` spells its Result output structurally. Piped forwards that output
-type evidence explicitly. Relationships between embedded origins are checked
+`redeem_with` spells its Result output structurally. Relationships between embedded origins are checked
 in public signature constraints, including the common native error type and
 `attempt_tap`'s stored error type; body assertions alone cannot enforce those
 relationships on Mojo 1.1.
@@ -253,13 +252,13 @@ returns List. No validation policy or callback loop is added to the carrier.
 
 ### Migration from the first nightly fluent API
 
-Use `piped(value^).map2(other^, combine).get()` in place of direct Result
+Use `pipeline(value^).map2(other^, combine).get()` in place of direct Result
 `map2`; the same move applies to `product`, `ap`, `map_n`, `product_n`,
 `par_map_n`, `par_product_n` and `if_effect`. Core Result transformations,
 including outcome observation and recovery, remain consuming Result methods.
 These adapters use callable kernels below algebra; Result imports no algebra
-module. Generic native `map2` forwarders may need
-`A=A, B=B, R=R, X=X` to make the Piped carrier shape explicit.
+module. Generic `map2` wrappers forward `Map2Contract` from
+`fp.algebra.contracts`.
 
 ## Inclusive-or reuses Choice
 

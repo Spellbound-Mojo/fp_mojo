@@ -1,6 +1,6 @@
 """Fill moves once, copies only for repeated calls and cleans up skipped values."""
 from fp.data import Result, Ok, Err
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.algebra import ResultFamily, OptionalFamily, Functor
 from fp.callables import UnaryContract
 from fp.effects import Reader, run
@@ -17,9 +17,9 @@ def result_fill[route: Int](ok: Bool) raises:
     comptime if route == 0:
         output = pipeline(source^).fill(Token(3, state)).get()
     elif route == 1:
-        output = piped(source^).fill(Token(3, state)).get()
+        output = pipeline(source^).fill(Token(3, state)).get()
     elif route == 2:
-        output = piped(source^).fill[ResultFamily[Token]](Token(3, state)).get()
+        output = pipeline[ResultFamily[Token]](source^).fill(Token(3, state)).get()
     else:
         output = source^.fill(Token(3, state))
     assert_equal(output.is_ok(), ok)
@@ -38,9 +38,9 @@ def optional_fill[route: Int](present: Bool) raises:
     comptime if route == 0:
         output = pipeline(source^).fill(Token(3, state)).get()
     elif route == 1:
-        output = piped(source^).fill(Token(3, state)).get()
+        output = pipeline(source^).fill(Token(3, state)).get()
     else:
-        output = piped(source^).fill[OptionalFamily](Token(3, state)).get()
+        output = pipeline[OptionalFamily](source^).fill(Token(3, state)).get()
     assert_equal(Bool(output), present)
     assert_equal(state[].drops[1], Int(present))
     assert_equal(state[].drops[3], Int(not present))

@@ -1,5 +1,5 @@
 """Effectful reduction and branching keep unique owners and cleanup on exit."""
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from fp.algebra import ResultFamily, OptionalFamily
 from fp.data import Result, Ok, Err
@@ -55,17 +55,17 @@ def main() raises:
     assert_equal(drops[],3)
     _ = total^
     assert_equal(drops[],4)
-    var failed = piped(ef_owned_items(drops,True)).fold_effect[ResultFamily[String]](EFOwnedStep(EFOwner("!",drops)),EFOwner("start",drops)).get()
+    var failed = pipeline(ef_owned_items(drops,True)).fold_effect[ResultFamily[String]](EFOwner("start",drops)).run(EFOwnedStep(EFOwner("!",drops))).get()
     assert_true(failed.is_err()); assert_equal(drops[],9)
     var empty = iterated(List[EFOwner]()).fold_effect[ResultFamily[String]](EFOwnedStep(EFOwner("unused",drops)),EFOwner("initial",drops)).raise_on_err()
     assert_equal(empty.text,"initial"); assert_equal(drops[],10)
     _ = empty^
     assert_equal(drops[],11)
-    var selected = piped(Result[Bool,String](Ok(True))).if_effect(EFOnceFactory(EFOwner("yes",drops)),EFOnceFactory(EFOwner("no",drops))).get().raise_on_err()
+    var selected = pipeline(Result[Bool,String](Ok(True))).if_effect(EFOnceFactory(EFOwner("yes",drops)),EFOnceFactory(EFOwner("no",drops))).get().raise_on_err()
     assert_equal(selected.text,"yes"); assert_equal(drops[],12)
     _ = selected^
     assert_equal(drops[],13)
-    var skipped = piped(Result[Bool,String](Err(String("skip")))).if_effect(EFOnceFactory(EFOwner("yes",drops)),EFOnceFactory(EFOwner("no",drops))).get()
+    var skipped = pipeline(Result[Bool,String](Err(String("skip")))).if_effect(EFOnceFactory(EFOwner("yes",drops)),EFOnceFactory(EFOwner("no",drops))).get()
     assert_true(skipped.is_err()); assert_equal(drops[],15)
     var seen = List[EFOwner]()
     seen.append(EFOwner("keep",drops)); seen.append(EFOwner("unvisited",drops))
@@ -81,7 +81,7 @@ def main() raises:
     var capture = EFOwner("native",drops)
     def native() {ref capture} -> Result[String,String]: return Ok(capture.text.copy())
     def unused() -> Result[String,String]: return Ok(String("unused"))
-    var text = piped(Result[Bool,String](Ok(True))).if_effect(native,unused).get().raise_on_err()
+    var text = pipeline(Result[Bool,String](Ok(True))).if_effect(native,unused).get().raise_on_err()
     assert_equal(text,"native"); assert_equal(capture.text,"native")
     _ = capture^
     assert_equal(drops[],22)

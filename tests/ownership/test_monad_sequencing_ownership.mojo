@@ -1,5 +1,5 @@
 """Single-use retention moves owners; branch disposal and abandonment clean up."""
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from fp.effects import Reader, run
 from fp.algebra import pure
@@ -47,31 +47,31 @@ struct MSPairOnce(BorrowOnceCallable):
 def mso_retention() raises:
     var values = ArcPointer(0)
     var captures = ArcPointer(0)
-    var kept = piped(Optional(MSOwner(1,values))).flat_tap(MSOnce(MSOwner(0,captures),True)).get()
+    var kept = pipeline(Optional(MSOwner(1,values))).flat_tap(MSOnce(MSOwner(0,captures),True)).get()
     assert_equal(kept.value().id,1)
     assert_equal(values[],0)
     assert_equal(captures[],1)
     _ = kept^
     assert_equal(values[],1)
-    assert_false(piped(Optional(MSOwner(2,values))).flat_tap(MSOnce(MSOwner(0,captures),False)).get())
+    assert_false(pipeline(Optional(MSOwner(2,values))).flat_tap(MSOnce(MSOwner(0,captures),False)).get())
     assert_equal(values[],2)
-    var earlier = piped(Optional(MSOwner(3,values))).before(MSOnceFactory(MSOwner(4,captures))).get()
+    var earlier = pipeline(Optional(MSOwner(3,values))).before(MSOnceFactory(MSOwner(4,captures))).get()
     assert_equal(earlier.value().id,3)
     assert_equal(captures[],3)
     _ = earlier^
     assert_equal(values[],3)
-    var next = piped(Optional(MSOwner(5,values))).followed_by(MSOnceFactory(MSOwner(6,captures))).get()
+    var next = pipeline(Optional(MSOwner(5,values))).followed_by(MSOnceFactory(MSOwner(6,captures))).get()
     assert_equal(next.value().id,6)
     assert_equal(values[],4)
     _ = next^
     assert_equal(captures[],4)
-    assert_false(piped(Optional[MSOwner]()).before(MSOnceFactory(MSOwner(7,captures))).get())
+    assert_false(pipeline(Optional[MSOwner]()).before(MSOnceFactory(MSOwner(7,captures))).get())
     assert_equal(captures[],5)
     # Deferred retention moves its input through a once-only base effect.
     comptime R = Reader[Int]
     comptime RA = type_of(pure[R](0))
     def observe(value: MSOwner) -> RA: return pure[R](value.id)
-    var delayed = piped(pure[R](MSOwner(8,values))).flat_tap[R](observe).get()
+    var delayed = pipeline[R](pure[R](MSOwner(8,values))).flat_tap(observe).get()
     assert_equal(values[],4)
     var environment = 0
     var owned = run[R](delayed^,environment)
@@ -93,7 +93,7 @@ def mso_cleanup() raises:
     pending.append(MSOwner(2,values))
     var code = 0
     try:
-        _ = piped(pending^).followed_by(raising).get()
+        _ = pipeline(pending^).raising[MSOwner]().followed_by(raising).get()
     except error:
         comptime assert type_of(error) == MSOwner
         code = error.id
@@ -127,7 +127,7 @@ def mso_cleanup() raises:
 def mso_pairing() raises:
     var originals = ArcPointer(0)
     var projections = ArcPointer(0)
-    var pair = piped(Optional(MSOwner(1,originals))).flat_pair_with(MSPairOnce(MSOwner(2,projections),True)).get()
+    var pair = pipeline(Optional(MSOwner(1,originals))).flat_pair_with(MSPairOnce(MSOwner(2,projections),True)).get()
     assert_equal(pair.value()[0].id,1)
     assert_equal(pair.value()[1].id,2)
     assert_equal(originals[],0)
@@ -135,10 +135,10 @@ def mso_pairing() raises:
     _ = pair^
     assert_equal(originals[],1)
     assert_equal(projections[],1)
-    assert_false(piped(Optional(MSOwner(3,originals))).flat_pair_with(MSPairOnce(MSOwner(4,projections),False)).get())
+    assert_false(pipeline(Optional(MSOwner(3,originals))).flat_pair_with(MSPairOnce(MSOwner(4,projections),False)).get())
     assert_equal(originals[],2)
     assert_equal(projections[],2)
-    assert_false(piped(Optional[MSOwner]()).flat_pair_with(MSPairOnce(MSOwner(5,projections),True)).get())
+    assert_false(pipeline(Optional[MSOwner]()).flat_pair_with(MSPairOnce(MSOwner(5,projections),True)).get())
     assert_equal(projections[],3)
     # A branching projection moves each produced owner; only Int is copied.
     def branch(value: Int) {projections} -> List[MSOwner]:
@@ -146,7 +146,7 @@ def mso_pairing() raises:
         output.append(MSOwner(value+10,projections))
         output.append(MSOwner(value+20,projections))
         return output^
-    var pairs = piped(List[Int]([1,2])).flat_pair_with(branch).get()
+    var pairs = pipeline(List[Int]([1,2])).flat_pair_with(branch).get()
     assert_equal(len(pairs),4)
     assert_equal(pairs[3][0],2)
     assert_equal(pairs[3][1].id,22)

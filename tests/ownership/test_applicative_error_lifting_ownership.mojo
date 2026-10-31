@@ -1,7 +1,7 @@
 """Saved state, selected errors and deferred captures retain their owners."""
 from fp.algebra import ResultFamily, fail, ApplicativeError
 from fp.effects import StateT, ReaderT, ResultT, State, action, run
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary
 from fp.data import Result, Ok, Err
 from std.memory import ArcPointer
@@ -59,7 +59,7 @@ struct AELOHandler(OnceUnary):
 
 def aelo_state_case(copies: ArcPointer[Int], states: ArcPointer[Int], errors: ArcPointer[Int], source_native: Bool, handler_native: Bool) raises:
     var source = action[AELOState, Int](AELOSource(AELTrackedError(2, errors), source_native))
-    var pending = piped(source^).recover[AELOState](AELOHandler(AELTrackedError(3, errors), handler_native)).get()
+    var pending = pipeline[AELOState](source^).recover(AELOHandler(AELTrackedError(3, errors), handler_native)).get()
     assert_equal(copies[], 0)
     var result: Result[Tuple[Int, AELTrackedState], AELTrackedError]
     try:
@@ -77,7 +77,7 @@ def aelo_state_case(copies: ArcPointer[Int], states: ArcPointer[Int], errors: Ar
 
 def aelo_abandoned(errors: ArcPointer[Int]) raises:
     comptime R = ReaderT[AELOBase, Int]
-    var pending = piped(fail[R, Int](AELTrackedError(2, errors))).recover[R](AELOHandler(AELTrackedError(3, errors), False)).get()
+    var pending = pipeline[R](fail[R, Int](AELTrackedError(2, errors))).recover(AELOHandler(AELTrackedError(3, errors), False)).get()
     assert_equal(errors[], 0)
     # Drop without run: neither the error nor the consuming handler is invoked.
     _ = pending^
@@ -85,7 +85,7 @@ def aelo_abandoned(errors: ArcPointer[Int]) raises:
 
 def aelo_reader(errors: ArcPointer[Int]) raises:
     comptime R = ReaderT[AELOBase, Int]
-    var pending = piped(fail[R, Int](AELTrackedError(2, errors))).recover[R](AELOHandler(AELTrackedError(3, errors), False)).get()
+    var pending = pipeline[R](fail[R, Int](AELTrackedError(2, errors))).recover(AELOHandler(AELTrackedError(3, errors), False)).get()
     var environment = 7
     var result: Result[Int, AELTrackedError]
     try:
@@ -106,7 +106,7 @@ def aelo_move_state() raises:
     comptime M = ResultT[State[AELOMoveState], Int]
     comptime assert conforms_to(M, ApplicativeError)
     def restore(var error: Int) -> Int: return error + 1
-    var pending = piped(fail[M, Int](4)).recover[M](restore).get()
+    var pending = pipeline[M](fail[M, Int](4)).recover(restore).get()
     var result = run[State[AELOMoveState]](pending^, AELOMoveState(9))
     assert_equal(result[0]._ok().value, 5)
     assert_equal(result[1].value, 9)

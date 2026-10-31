@@ -1,6 +1,7 @@
-from fp.algebra import Map2Contract, Applicative, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, map2, pure
+from fp.algebra import Applicative, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, map2, pure
+from fp.algebra.contracts import Map2Contract
 from fp.callables import BinaryContract
-from fp.functions import pipeline, Pipeline, piped
+from fp.functions import pipeline, Pipeline
 from fp.effects import Reader, run
 from context_combination_admission_support import Add, OnceAdd, Stateful, MoveLeft, MoveRight, MoveState
 from algebra_support.box import BoxMonad
@@ -12,7 +13,7 @@ def forward[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable, F:
 
 def fluent[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var function: F, var left: V, var right: W
 ) raises Map2Contract[I,V,W,F].Error -> Map2Contract[I,V,W,F].Out where Map2Contract[I,V,W,F].Compatible:
-    return piped(left^).map2[I](right^, function^).get()
+    return pipeline[I](left^).map2(right^, function^).get()
 
 def selected[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var function: F, var left: V, var right: W
 ) raises Map2Contract[I,V,W,F].Error -> Pipeline[I,Map2Contract[I,V,W,F].Out] where Map2Contract[I,V,W,F].Compatible:
@@ -23,9 +24,10 @@ def legacy[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable, F: 
     return map2[I](function^, left^, right^)
 
 
-from fp.algebra import Applicative, Map2Contract, IdentityFamily, OptionalFamily, ResultFamily, map2, pure
+from fp.algebra import Applicative, IdentityFamily, OptionalFamily, ResultFamily, map2, pure
+from fp.algebra.contracts import Map2Contract
 from fp.callables import OnceBinary
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.effects import Reader, run
 from fp.data import Result, Err
 from algebra_support.box import BoxMonad
@@ -68,7 +70,7 @@ def immediate[I: Applicative, route: Int, skip: Bool, fail: Bool]() -> String wh
             trace[] += "r"
             _ = result^
         else:
-            var result = piped(left^).map2[I](right^,function^).get()
+            var result = pipeline[I](left^).map2(right^,function^).get()
             trace[] += "r"
             _ = result^
     except error:

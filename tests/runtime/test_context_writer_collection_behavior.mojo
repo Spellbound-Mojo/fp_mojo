@@ -1,4 +1,5 @@
-from fp.algebra import Monad,IdentityFamily,OptionalFamily,ResultFamily,ListFamily,StringMonoid,TraverseContract,traverse
+from fp.algebra import Monad, IdentityFamily, OptionalFamily, ResultFamily, ListFamily, StringMonoid, traverse
+from fp.algebra.contracts import TraverseContract
 from fp.callables import Unary
 from fp.effects import WriterT,writer,run_writer
 from std.testing import assert_equal

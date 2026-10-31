@@ -49,13 +49,13 @@ RETURNS = {
     'all_effect': 'The target effect of Bool, stopping each branch at False; empty input lifts True.',
     'if_effect': 'The selected branch effect; absence or failure in the condition skips both factories.',
     'filter_effect': 'The target effect containing original elements whose effectful Bool predicate succeeds with True; False discards an element and target failure follows the effect.',
-    'sequence_void': 'The target effect of NoneType, or of Result[NoneType, E] for a Piped Result source; existing source errors stay inside the target effect.',
+    'sequence_void': 'The target effect of NoneType; existing source errors stay inside the target effect.',
     'flat_traverse': 'The target effect containing the flattened source shape. The callback produces a target effect of the same source family.',
     'flat_sequence': 'The target effect containing the source shape after sequencing effects and flattening one source-family layer.',
     'traverse_filter': 'The target effect containing present Optional results in source shape; absence discards an element and target failure follows the effect.',
 
-    'traverse_void': 'The target effect of NoneType, without an output collection. A Piped Result source instead preserves its stored error inside Result[NoneType, E] in that effect. Target failures follow the effect.',
-    'traverse_tap': 'The target effect containing the original payloads; Piped preserves source shape and Iter/direct calls gather a List.',
+    'traverse_void': 'The target effect of NoneType, without an output collection. Target failures follow the effect.',
+    'traverse_tap': 'The target effect containing the original payloads, gathered in a List.',
     'map2': 'The combined carrier; Result keeps the first stored error, Optional requires both values, and List produces a Cartesian product in left-major order.',
     'product': 'The carrier of pairs. List copies elements for its Cartesian product; Result and Optional move their payloads without copying.',
     'fill': 'The source shape with a copy of value at each payload position; empty input stays empty.',
@@ -161,18 +161,10 @@ def document_first_methods(source, names=NAMES):
                 elif arg == 'other': description = 'The already evaluated second carrier, consumed. Constructing it is not deferred by this call.'
                 elif arg == 'old': description = 'The value to compare against each payload, consumed.'
                 elif arg == 'new': description = 'The replacement, consumed and copied only for matching payloads.'
-                elif arg == 'value' and name == 'fill' and owner == 'Piped':
-                    description = 'The replacement, consumed; a single call moves it, while repeated calls require Copyable and copy it.'
-                elif arg == 'value' and name in ('tuple_left', 'tuple_right') and owner == 'Piped':
-                    description = 'The attached value, consumed; a single call moves it, while repeated calls require Copyable and copy it.'
                 else: description = 'The constant, consumed and copied once per emitted payload.'
                 sections.append(f'    {arg}: {description}')
             sections.append('')
-        returns = ('The source shape with replacement payloads; empty input stays empty and stored errors pass through.'
-                   if name == 'fill' and owner == 'Piped' else
-                   'The source shape containing each original payload paired with the supplied value; empty input stays empty and stored errors pass through.'
-                   if name in ('tuple_left', 'tuple_right') and owner == 'Piped' else RETURNS[name])
-        sections += ['Returns:', '    '+returns]
+        sections += ['Returns:', '    '+RETURNS[name]]
         if parsed['error']:
             sections += ['', 'Raises:', '    The exact callback, monoid or family error; Never for a non-raising operation.']
         new = body + '\n\n' + '\n'.join(prefix + x if x else '' for x in sections) + '\n' + prefix + '"""\n'

@@ -1,7 +1,7 @@
 """Shared outcome operations move captures and values, including skipped paths."""
 from fp.algebra import ResultFamily, ListFamily, fail
 from fp.effects import ReaderT, ResultT, run
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import BorrowOnceCallable, OnceUnary
 from fp.data import Result, Ok, Err
 from std.memory import ArcPointer
@@ -75,7 +75,7 @@ def soo_ensure(drops: ArcPointer[Int], branch: Int) -> Int:
     comptime R = Result[SOOwner, SOOwner]
     var source = R(Err(SOOwner(1, drops))) if branch == 2 else R(Ok(SOOwner(1, drops)))
     try:
-        var result = piped(source^).ensure[F](SOPredicate(SOOwner(2, drops), branch == 0, branch == 3), SOFactory(SOOwner(3, drops), branch == 4)).get()
+        var result = pipeline[F](source^).ensure(SOPredicate(SOOwner(2, drops), branch == 0, branch == 3), SOFactory(SOOwner(3, drops), branch == 4)).get()
         if result.is_ok(): return result._ok().value.value
         return result._err().value.value
     except error: return error
@@ -85,7 +85,7 @@ def soo_redeem(drops: ArcPointer[Int], failed: Bool, throws: Bool) -> Int:
     comptime R = Result[SOOwner, SOOwner]
     var source = R(Err(SOOwner(1, drops))) if failed else R(Ok(SOOwner(1, drops)))
     try:
-        var result = piped(source^).redeem[F](SOHandler(SOOwner(2, drops), throws), SOHandler(SOOwner(3, drops), throws)).get()
+        var result = pipeline[F](source^).redeem(SOHandler(SOOwner(2, drops), throws), SOHandler(SOOwner(3, drops), throws)).get()
         return result._ok().value.value
     except error: return error
 
@@ -93,7 +93,7 @@ def soo_with(drops: ArcPointer[Int], failed: Bool) -> Int:
     comptime F = ResultFamily[SOOwner]
     comptime R = Result[SOOwner, SOOwner]
     var source = R(Err(SOOwner(1, drops))) if failed else R(Ok(SOOwner(1, drops)))
-    var result = piped(source^).redeem_with[F](SOEffectHandler(SOOwner(2, drops), True), SOEffectHandler(SOOwner(3, drops), False)).get()
+    var result = pipeline[F](source^).redeem_with(SOEffectHandler(SOOwner(2, drops), True), SOEffectHandler(SOOwner(3, drops), False)).get()
     if result.is_ok(): return result._ok().value.value
     return result._err().value.value
 
@@ -102,14 +102,14 @@ def soo_tap(drops: ArcPointer[Int], failed: Bool, mode: Int) -> Int:
     comptime R = Result[SOOwner, SOOwner]
     var source = R(Err(SOOwner(1, drops))) if failed else R(Ok(SOOwner(1, drops)))
     try:
-        var result = piped(source^).attempt_tap[F](SOObserver(SOOwner(2, drops), mode == 1, mode == 2)).get()
+        var result = pipeline[F](source^).attempt_tap(SOObserver(SOOwner(2, drops), mode == 1, mode == 2)).get()
         if result.is_ok(): return result._ok().value.value
         return result._err().value.value
     except error: return error
 
 def soo_deferred(drops: ArcPointer[Int], execute: Bool):
     comptime D = ReaderT[ResultFamily[SOOwner], Int]
-    var pending = piped(fail[D, SOOwner](SOOwner(1, drops))).redeem[D](SOHandler(SOOwner(2, drops), False), SOHandler(SOOwner(3, drops), False)).get()
+    var pending = pipeline[D](fail[D, SOOwner](SOOwner(1, drops))).redeem(SOHandler(SOOwner(2, drops), False), SOHandler(SOOwner(3, drops), False)).get()
     if execute:
         try: _ = run[D](pending^, 0)
         except error: pass
@@ -119,7 +119,7 @@ def soo_branch_payload(drops: ArcPointer[Int]) raises:
     def inspect(outcome: Result[Int, String]) {drops} -> List[Result[SOOwner, String]]:
         return [Result[SOOwner, String](Ok(SOOwner(1, drops))), Result[SOOwner, String](Ok(SOOwner(2, drops)))]
     var values: List[Result[Int, String]] = [Result[Int, String](Ok(7))]
-    var retained = piped(values^).attempt_tap[F](inspect).get()
+    var retained = pipeline[F](values^).attempt_tap(inspect).get()
     assert_equal(len(retained), 2)
     assert_equal(retained[0]._ok().value, 7)
     assert_equal(retained[1]._ok().value, 7)

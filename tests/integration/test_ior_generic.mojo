@@ -1,7 +1,7 @@
 """Ior retains generic native errors and immutable/mutable payload origins."""
 from fp.data import Ior, Left, Right, Both
 from fp.algebra import IorFamily, StringMonoid, ListMonoid, map, flat_map
-from fp.functions import piped, Identity
+from fp.functions import pipeline, Identity
 from fp.algebra import Functor, Monad, Applicative, Traversable, ListFamily, traverse
 from fp.callables import Unary, UnaryContract
 from std.testing import assert_equal, assert_true
@@ -108,6 +108,11 @@ def main() raises:
         raised = True
         assert_equal(error, "raised, not stored")
     assert_true(raised)
-    var skipped = piped(Ior[String, Int](Left(String("stored")))).map[IorFamily[StringMonoid]](ig_fail).get()
+    var skipped: Ior[String, Int]
+    try:
+        skipped = pipeline[IorFamily[StringMonoid]](Ior[String, Int](Left(String("stored")))).map(ig_fail).get()
+    except error:
+        comptime assert type_of(error) == String
+        raise Error(error)
     assert_equal(skipped[Left[String]].value, "stored")
     print("ior generic: ok")

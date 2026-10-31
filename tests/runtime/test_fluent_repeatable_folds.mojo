@@ -1,6 +1,6 @@
 """Fluent terminal folds reuse the standalone repeatable receiver contract."""
-from fp.callables import BinaryContract, Binary, MutableBinary, OnceBinary, RepeatableBinary, mut_ref
-from fp.functions import pipeline, piped
+from fp.callables import BinaryContract, Binary, MutableBinary, OnceBinary, RepeatableBinary, mut_ref, shared_ref
+from fp.functions import pipeline
 from fp.data import ControlFlow, Break, Continue
 from std.testing import assert_equal
 
@@ -60,7 +60,7 @@ def main() raises:
     assert_equal(pipeline[Int]([1,2,3]).fold_left(mut_ref(step),0).get(),14)
     assert_equal(step.calls,3)
     var values: List[Int] = [1,2,3]
-    assert_equal(piped(values^).fold_left(Weight(0),0).get(),14)
+    assert_equal(pipeline(values^).fold_left(Weight(0),0).get(),14)
     assert_equal(pipeline[Int]([1,2,3]).reduce_optional(Weight(0)).get().value(),9)
     var stop = Stop(0)
     var result = pipeline[Int]([1,2,3]).fold_until(mut_ref(stop),0).get()
@@ -69,13 +69,13 @@ def main() raises:
 
     assert_equal(generic(Weight(0),0,numbers()),14)
     var shared = Modes(0)
-    assert_equal(piped(numbers()).fold_left(shared,0).get(),6)
+    assert_equal(pipeline(numbers()).fold_left(shared_ref(shared),0).get(),6)
     assert_equal(shared.calls,0)
-    assert_equal(piped(numbers()).fold_left(shared^,0).get(),14)
-    assert_equal(piped(numbers()).fold_left(Modes(0),0).get(),14)
+    assert_equal(pipeline(numbers()).fold_left(shared^,0).get(),14)
+    assert_equal(pipeline(numbers()).fold_left(Modes(0),0).get(),14)
     assert_equal(pipeline(numbers()).fold_left(Modes(0),0).get(),14)
     var retained = Modes(0)
-    assert_equal(piped(numbers()).fold_left(mut_ref(retained),0).get(),14)
+    assert_equal(pipeline(numbers()).fold_left(mut_ref(retained),0).get(),14)
     assert_equal(retained.calls,3)
     var empty = Weight(0)
     assert_equal(pipeline[Int]([]).fold_left(mut_ref(empty),7).get(),7)

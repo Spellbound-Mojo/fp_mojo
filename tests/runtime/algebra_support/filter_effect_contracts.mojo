@@ -1,5 +1,6 @@
 """Generic filtering clients and an independent source with a compaction error."""
-from fp.algebra import FilterEffectContract, Traversable, FunctorFilter, Applicative, ListFamily
+from fp.algebra import Traversable, FunctorFilter, Applicative, ListFamily
+from fp.algebra.contracts import FilterEffectContract
 from fp.callables import BorrowCallContract, BorrowCallable, UnaryContract
 from fp.functions import pipeline, Pipeline
 

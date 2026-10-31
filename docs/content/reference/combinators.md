@@ -1,10 +1,9 @@
-# fp.combinators
+# Combinators
 
 Named methods remove wrapper lambdas and intermediate type aliases from
 collection pipelines. `Pipeline` keeps eager results in the chain; `Iter` keeps
-transformations lazy and returns terminal results directly. The direct functions
-in `fp.combinators` re-export their canonical operations from `fp.iteration`
-and, for conditional composition, `fp.algebra`.
+transformations lazy and returns terminal results directly. Import the direct
+functions from `fp.iteration`, and `if_effect` from `fp.algebra`.
 
 The table uses `Pipeline` spellings. Select a family with `pipeline[Family](value)`
 when it cannot be inferred; each following operation uses that selection.
@@ -147,33 +146,24 @@ callback borrows until execution, so keep those callbacks alive and unmoved.
 For new generic wrappers, forward the public contracts in the
 [generic-wrapper guide](../guides/generic-wrappers.md).
 
-The compatibility `Piped` methods retain per-method `[Family]` selection.
-Their native forwarding may supply the complete callback result and raised
-error as `.or_else[Family, R=R, X=E](handler)` or
-`.recover[Family, R=R, X=E](handler)`. Conditional methods use `R` for the
-handler result, `X` for the predicate's native error, `E` for the handler's
-native error and `Z` for an explicit common construction error when generic
-forwarding needs it. Native raises from a non-match's `fail` also propagate;
-Reader and State may defer that construction until `run`.
-
-Compatibility `Piped` observers accept `R` for the complete native callback result,
-`X` for its native error and `Z` for an explicit common construction error.
-Inferred Result `flat_tap_err` accepts `U` for the observer's success payload,
+Native raises from a non-match's `fail` also propagate; Reader and State may
+defer that construction until `run`. A raising native closure handler needs
+`.raising[E]()` once before it; a raising plain function selects its error
+itself. Inferred Result `flat_tap_err` accepts `U` for the observer's success payload,
 with its return structurally fixed to `Result[U, E]` to retain error origins.
 
 ## Validate and observe outcomes
 
 Select an error-capable family once with `pipeline[Family](source^)`, then use
 `ensure`, `redeem`, `redeem_with` and `attempt_tap` without repeating the family.
-The compatibility Piped forms below select the family on each operation and
-keep that family's stored-error type.
+Each method keeps that family's stored-error type.
 
 | Method | Callback contract | Required capability |
 |---|---|---|
-| `ensure[Family](predicate, make_error)` | Borrow a success for a Bool test; borrow it again to construct an error only on rejection | Monad and ApplicativeError |
-| `redeem[Family](on_ok, on_err)` | Consume the original success or error; both handlers return the same success type | ApplicativeError |
-| `redeem_with[Family](on_ok, on_err)` | Consume the original success or error; both handlers return the selected family with a common success type | Monad and ApplicativeError |
-| `attempt_tap[Family](inspect)` | Borrow the whole `Result[A, E]` representing the selected outcome; return an effect in the same family | Monad and ApplicativeError |
+| `ensure(predicate, make_error)` | Borrow a success for a Bool test; borrow it again to construct an error only on rejection | Monad and ApplicativeError |
+| `redeem(on_ok, on_err)` | Consume the original success or error; both handlers return the same success type | ApplicativeError |
+| `redeem_with(on_ok, on_err)` | Consume the original success or error; both handlers return the selected family with a common success type | Monad and ApplicativeError |
+| `attempt_tap(inspect)` | Borrow the whole `Result[A, E]` representing the selected outcome; return an effect in the same family | Monad and ApplicativeError |
 
 An existing failure skips both `ensure` callbacks. Rejection invokes the
 family's failure constructor, whose native exceptions propagate unchanged.
@@ -219,9 +209,9 @@ result type and constrain it to the selected family's error type.
 
 ## Sequence dependent effects
 
-`flat_tap`, `flat_pair_with`, `followed_by` and `before` chain directly on Piped and Iter.
-Piped infers List, Optional and Result; select another Monad explicitly,
-as in `.before[Reader[Config]](make_next)`. Each callback returns a value in
+`flat_tap`, `flat_pair_with`, `followed_by` and `before` chain directly on Pipeline and Iter.
+Pipeline infers List, Optional and Result; select another Monad when the
+pipeline starts, as in `pipeline[Reader[Config]](action^).before(make_next)`. Each callback returns a value in
 the same family as its source. Iter callbacks return native iterables or
 iterators, which are flattened lazily.
 
@@ -251,9 +241,9 @@ be move-only even when a branching source requires copyable originals.
 Projection results may retain external origins, but cannot borrow an original
 that moves into the output.
 
-Piped's native List, Optional and Result methods execute immediately. Reader
+Pipeline's native List, Optional and Result methods execute immediately. Reader
 and State preserve deferred execution, and Iter pulls nothing until advanced.
-Native callbacks passed to Piped are borrowed until the computation finishes;
+Native callbacks passed to Pipeline are borrowed until the computation finishes;
 keep them alive and unmoved. Lazy Iter owns its callbacks, including mutable
 captured state, and resumes the source's current position. Abandoning it drops
 remaining state without running further callbacks.
@@ -265,7 +255,7 @@ The existing direct Result methods follow these same sequencing rules.
 
 ## Result composition
 
-These methods are available directly on `Result` and on `piped(result^)`.
+These methods are available directly on `Result` and on `pipeline(result^)`.
 They execute immediately and consume the Result. Native callbacks are borrowed
 in place; library callbacks are consumed, including callbacks skipped on the
 inactive branch.
@@ -310,13 +300,13 @@ handler does not run its error handler. `redeem` keeps the Result wrapper;
 `fold_owned` returns the selected value directly. `attempt_tap` observes stored
 outcomes, and does not catch native raised errors.
 
-`map_err` and `or_else` also forward through Piped, including changes to the
+`map_err` and `or_else` also forward through Pipeline, including changes to the
 stored error type. See [Results and recovery](../tutorial/results.md#compose-validation-and-recovery)
 for a complete chain and generic forwarding conventions.
 
 ## Containers and capabilities
 
-| `Piped` operations | Automatic native support | Explicit family capability |
+| `Pipeline` operations | Automatic native support | Explicit family capability |
 |---|---|---|
 | `map`, `fill`, `replace`, `void`, tuple methods, `pair_with`, `tap_each` | List, Array, Deque, LinkedList, Dict, StringDict, Optional, Result | Functor |
 | `filter`, `filter_not` | List, Deque, LinkedList, Dict, StringDict, Optional | Filterable |
@@ -341,42 +331,28 @@ on **values**, retaining keys, insertion order and hasher for transformations;
 reductions consume values too. Deques retain bounds and storage policy. Arrays
 retain length for mapping; they cannot filter while retaining their type.
 Result has no implicit rejection policy or terminal that discards its error.
-`Piped.fold_left` and the three effectful reductions follow native iteration,
+`Pipeline.fold_left` and the three effectful reductions follow native iteration,
 including dictionary keys. Result is a target effect for these reductions;
 it is not an iterable source.
 
 For a custom container, select its capability explicitly:
-`piped(tensor^).fill[TensorFamily](0)` or
-`piped(source^).filter_map[SourceFamily](transform)`. The family determines
+`pipeline[TensorFamily](tensor^).fill(0)` or
+`pipeline[SourceFamily](source^).filter_map(transform)`. The family determines
 result types, evaluation and errors. A custom Functor needs only `map` for the
 mapping conveniences; a FunctorFilter needs only its `filter_map` primitive
 for `compact`. No per-combinator container implementation is needed.
 
-Piped methods infer the held value's family, as the free operations do, and a
+Pipeline methods infer the held value's family, as the free operations do, and a
 traversal infers its target from the callback result or the held elements:
-`piped(values^).traverse(transform)`, `.sequence()`. The target comes first,
-so `.traverse[ValidationFamily[M]](transform)` selects another policy and a
-custom source is named second or by keyword:
-`.traverse[EffectFamily, SourceFamily](transform)`,
-`.sequence[EffectFamily, SourceFamily]()`. Generic callback forwarding can select a family,
-as in `.pair_with[ListFamily](project)`, or name inferred callback parameters,
-as in `.sum_by[A=T, R=Int, E=E](project)` for a generic raising function.
-
-`traverse_tap` uses the same source selection as `traverse`. A generic raising
-wrapper can use `.traverse_tap[OptionalFamily, ListFamily, E=E, X=E](inspect)`.
-`X` supplies exact error evidence when Mojo cannot reduce a generic family
-error expression; it must match the actual error and never converts or erases
-it. Generic Result-source `traverse_void` can use all-keyword parameters
-`G=OptionalFamily, A=A, R=R, Failure=S, E=E, X=E`, where `R` names the complete
-callback result type, such as `Optional[Int]`.
-The new traversal methods use the same target/source order and `E`/`X`
-error evidence. For example, `.flat_traverse[OptionalFamily, ListFamily, E=E, X=E](transform)`
-forwards a generic raising callback. `flat_traverse` requires the callback's
-successful payload to belong to the same source family; Result's stored error
-type, including its origins, must agree at both levels.
-For fluent binary callbacks, the native parameter names are `A`, `B`, `R` and
-`X`: a generic Piped wrapper can supply
-`.map2[A=A, B=B, R=R, X=X](other^, combine)` as evidence for its native shape.
+`pipeline(values^).traverse(transform)`, `.sequence()`. Name the target to
+choose another policy, as in `.traverse[ValidationFamily[M]](transform)`.
+Select a custom source when the pipeline starts:
+`pipeline[SourceFamily](source^).traverse[EffectFamily](transform)`.
+`traverse_tap` and the other traversal methods use the same selection.
+`flat_traverse` requires the callback's successful payload to belong to the
+same source family; Result's stored error type, including its origins, must
+agree at both levels. Generic wrappers forward the public operation contracts
+described in the [generic-wrapper guide](../guides/generic-wrappers.md).
 
 Use `iterated(source)` for a range, borrowed iterator or custom iterator.
 Its elements follow native iteration: iterating a dictionary yields keys.
@@ -389,7 +365,7 @@ remaining transformations.
 
 ## Evaluation, ownership and errors
 
-Built-in `Piped` operations execute when their method is called. `.get()` only
+Built-in `Pipeline` operations execute when their method is called. `.get()` only
 extracts the result. `Iter` transformations, including `void` and `tap_each`,
 execute as elements are pulled. `void` does not drain an iterator. Terminals
 consume immediately; traversal runs according to its target effect, which may
@@ -409,7 +385,7 @@ elements and requires a repeatable callback, including for an Optional source.
 Empty input succeeds with `None` in the target effect. A branching effect can
 produce several successful `None` values. Short-circuiting targets stop further
 source pulls and callbacks after failure. Array still needs the input buffer
-described below. Piped dictionaries do not yet have this method.
+described below.
 
 For a Result source, `traverse_void` instead returns the target effect of
 `Result[NoneType, E]`: a source `Err` is preserved and skips the callback, while
@@ -420,7 +396,7 @@ inactive and active source branches with the same carrier type.
 
 `traverse_tap` borrows each element for its effectful callback. When that effect
 succeeds, the original element moves into the result; failed branches release
-it. Piped preserves the source family's shape, including an existing Result
+it. Pipeline preserves the source family's shape, including an existing Result
 error inside the target effect. Iter and direct calls collect originals in a
 List. Branching targets need copyable originals; single-output targets support
 move-only originals. Optional and Result sources can use a consuming borrowing
@@ -430,7 +406,7 @@ until the returned computation completes; keep them alive and unmoved.
 
 `sequence_void` is `traverse_void` with an identity callback. It consumes
 already constructed effects, so stopping traversal cannot undo their construction.
-A Piped Result source keeps its stored error inside `Result[NoneType, E]` in
+A Pipeline Result source keeps its stored error inside `Result[NoneType, E]` in
 the target effect, just as `traverse_void` does.
 
 `flat_traverse` traverses a callback returning an effect of another source
@@ -527,8 +503,7 @@ an intermediate lambda. The receiver supplies the first argument to `combine`.
 `.product_n((second, third))` produces a flat `Tuple[A, B, C]` in the same
 family. Start with `pipeline(value)` for native carriers or declared effect
 recipes, or `pipeline[Family](value)` for another Applicative or an erased layer.
-The following operations retain that selection. Compatibility Piped calls keep
-per-method `.map_n[Family]` and `.product_n[Family]` selections.
+The following operations retain that selection.
 
 Operands are consumed and already constructed. Combination follows receiver-first
 order, with the last operand varying fastest in List's Cartesian product.
@@ -578,9 +553,6 @@ the whole iterator without collecting those numbers.
 
 <!-- example: docs/examples/fluent_effects.mojo -->
 
-<!-- api: combinators -->
-
-
 ## Flatten and filter effects
 
 `filter_effect` checks effectful Bool decisions, while `traverse_filter` lets the
@@ -607,7 +579,7 @@ No callback runs after a Result failure or Optional absence, and iterator
 sources receive no further pulls. `any_effect` stops at `True`; `all_effect`
 stops at `False`. A native error propagates unchanged and also stops the work.
 
-Piped wraps the resulting effect for further chaining; Iter returns it
+Pipeline wraps the resulting effect for further chaining; Iter returns it
 directly. Direct calls put the source last:
 `fold_effect[EffectFamily](source^, initial^, step)` and
 `any_effect[EffectFamily](source^, predicate)`. Both pipeline forms run eager
@@ -619,7 +591,8 @@ The source iterator is consumed at its current position.
 selected zero-argument factory. It skips both factories for a failed Result or
 absent Optional. The branches return effects from the same family with the
 same successful payload type; Result also keeps the exact stored error type.
-Piped infers List, Optional and Result, or accepts an explicit Monad family.
+Pipeline infers List, Optional and Result, or accepts an explicit Monad family
+selected with `pipeline[Family](condition^)`.
 The free form is `if_effect[EffectFamily](condition^, on_true, on_false)`.
 Library factories are consumed even when skipped; native factories are
 borrowed. Optional and Result accept once-only factories with move-only
@@ -635,7 +608,7 @@ library binary callback can retain its own state between calls.
 
 These reductions add no mapped source collection and use constant stack depth.
 They retain the target's accumulator carrier and one element at a time;
-branching targets may allocate and grow their outputs. Piped Array sources
+branching targets may allocate and grow their outputs. Pipeline Array sources
 first move into O(N) temporary List storage, including when a predicate stops
 early. Custom eager Monad families with a stable carrier inherit the shared
 driver; deferred families supply the fold hooks described in the
@@ -665,10 +638,10 @@ immediately and keep their exact type.
 
 | Method | Available on | Successful result |
 |---|---|---|
-| `.par_map_n((second, third), construct)` | Piped holding Result | The constructor's output |
-| `.par_product_n((second, third))` | Piped holding Result | A flat tuple, receiver first |
-| `.par_traverse(validate)` | Piped holding List, Optional or Result; Iter | Transformed payloads in source shape; List for Iter |
-| `.par_sequence()` | Piped holding List, Optional or Result; Iter | Unwrapped payloads in source shape; List for Iter |
+| `.par_map_n((second, third), construct)` | Pipeline holding Result | The constructor's output |
+| `.par_product_n((second, third))` | Pipeline holding Result | A flat tuple, receiver first |
+| `.par_traverse(validate)` | Pipeline holding List, Optional or Result; Iter | Transformed payloads in source shape; List for Iter |
+| `.par_sequence()` | Pipeline holding List, Optional or Result; Iter | Unwrapped payloads in source shape; List for Iter |
 
 <!-- example: docs/examples/parallel_validation.mojo -->
 
@@ -691,11 +664,11 @@ it needs no `empty`. `StringMonoid`, for example, concatenates scalar String
 errors when selected explicitly. Multiple inhabited native error types must
 agree; neither callback nor combiner errors become stored validation errors.
 
-Piped supports List, Optional and Result traversal sources, preserving their
+Pipeline supports List, Optional and Result traversal sources, preserving their
 shape inside the output Result. Iter consumes from its current position and
 collects a List. An empty source succeeds without calling the validator. A
 Result source's stored `Err` remains inside the target effect as `Ok(Err(...))`;
-it is separate from errors produced by the validator. Piped wraps the result
+it is separate from errors produced by the validator. Pipeline wraps the result
 for further chaining; Iter returns it directly.
 
 These methods execute immediately. `par_` selects error accumulation and does

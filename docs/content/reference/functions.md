@@ -23,7 +23,7 @@ values use Identity: `map` applies its callback to the whole bare value once.
 to select native callback errors. A raising plain function selects its own
 error when none is selected (Never), and that error carries to later stages;
 any other selected error must match it. Native closures always use the
-selected error.
+selected error, so call `.raising[E]()` before the first raising closure.
 Existing explicit payload bindings, such as `pipeline[T=Int](values)`, remain
 available. For a list literal, use `pipeline[Int]([1, 2])` or
 `pipeline[Int]([])`; this avoids an explicit `List[Int](...)` constructor.
@@ -118,8 +118,7 @@ may include `Never` without a separate non-Never constraint.
 `fold_left`, `reduce_optional` and `fold_until` accept owned shared or mutable
 library steps. They use the standalone fold’s mutable-first receiver choice.
 Pass `mut_ref(step)` to retain the callback state, including after a failure.
-The existing `Piped.fold_left` also accepts owned mutable steps and keeps
-borrowing named shared steps. All forms preserve early stopping, exact errors
+Named shared steps are borrowed. All forms preserve early stopping, exact errors
 and move-only accumulator ownership.
 
 <!-- example: docs/examples/selected_pipeline.mojo -->
@@ -225,7 +224,7 @@ output `ResultFamily`. Intrinsic Result calls under a family with neither
 retain this behavior. Other error-capable families retain their selected
 stored-error layer.
 
-Generic value-returning recovery can use `fp.algebra.RecoverContract` with an
+Generic value-returning recovery can use `fp.algebra.contracts.RecoverContract` with an
 `ApplicativeError` family. For selected `or_else` or `handle_error_with`, use
 `fp.functions.OrElseContract[I,V,H]`: its `Compatible` predicate and
 `Family`/`Out`/`Error` projections describe both family recovery and Result's
@@ -357,12 +356,10 @@ captures across selected pipelines. List sequencing calls it once per source
 element; deferred families call it when the resulting computation runs. The
 factory must outlive that computation. A moved or temporary factory keeps its
 own receiver selection, and `mut_ref(factory)` retains mutable state. Direct
-Result sequencing accepts the same named shared factories. Legacy `piped`
-keeps its existing factory ownership forms.
+Result sequencing accepts the same named shared factories.
 
 A Validation selection does not support Monad sequencing. Select
 `pipeline[ResultFamily[ErrorType]](value)` for sequential Result behavior.
-Legacy `piped` bindings remain available.
 
 `filter`, `filter_not`, `filter_map` and `compact` continue in the output family
 declared by the filtering capability. Defaults preserve custom families.
@@ -386,7 +383,7 @@ They require `RepeatableBorrow`, including on single-element families, so the
 same callback contract works across carriers. Whole-value `tap` also accepts
 `BorrowOnceCallable`: it prefers a consuming receiver, then mutable, then
 shared, because it invokes the observer exactly once. These rules apply to
-Piped and selected Pipeline methods without extra type arguments.
+Pipeline methods without extra type arguments.
 
 `filter` and `filter_not` accept owned `BorrowMutableCallable` and
 `BorrowCallable` values, with the same repeated receiver choice as observers.
@@ -436,8 +433,8 @@ must agree when both can raise. These eager reductions select the result's
 native family and preserve the selected native error for subsequent stages.
 
 A named unary `partial`, stored `as_unary` adapter or shared composition can
-be reused directly in `sum_by`, `fold_map` and `find_map`, across selected
-Pipeline, Piped and iterator forms. These immediate calls borrow the callback;
+be reused directly in `sum_by`, `fold_map` and `find_map`, across
+Pipeline and iterator forms. These immediate calls borrow the callback;
 `callback^` transfers it. Partial key functions also work in `min_by` and
 `max_by`, without copying move-only payloads. See the
 [reusable projection example](iteration.md#reuse-projections-in-reductions).
@@ -523,7 +520,6 @@ The binding stage owns the source and initial value but evaluates no callback.
 Abandoning it destroys those owners. Explicit `fold_effect[Target](initial)`
 retains the original target selection; an already bound inferred stage also
 accepts `run[Target](step)`. Both forms use the same fold contract and execution.
-Existing `Piped.fold_effect(step, initial)` retains its original syntax.
 `fold_map_effect[Monoid](transform)` consumes items into effectful monoid
 values and combines them in order, starting with the identity. The callback
 infers a [recognized target family](#inference-for-effect-recipes). The original
@@ -742,9 +738,9 @@ context, while a library factory retains its own error type.
 ## Other pipeline entry points
 
 `pipe(value, first, second, ...)` applies up to eight plain functions in one
-call, inferring the intermediate types and their common native error. Existing
-`piped(value).then(...)` chains remain available too. New fluent code can use
-`pipeline` for a consistent selected family and native error context.
+call, inferring the intermediate types and their common native error. For more
+stages, closures or payload operations, use `pipeline(value).then(...)`: it has
+no stage limit and keeps one selected family and native error context.
 
 <!-- example: docs/examples/callable_pipeline.mojo -->
 
@@ -772,12 +768,6 @@ can accept distinct structs with the same representation. Its `E=` parameter
 forwards the native error; use `Never` for a non-raising wrapper. For generic
 Pipeline wrappers, prefer the [public operation contracts](../guides/generic-wrappers.md).
 
-On the older `Piped` surface, `.map[Family](transform)` selects an explicit
-Functor for an operation. Pipeline selects it at construction with
-`pipeline[Family](value)`. `Piped` names its payload parameter `Value`:
-explicit `Piped[T=Int]` and `Piped[Int].T` become `Piped[Value=Int]` and
-`Piped[Int].Value`.
-
 ## Bind leading arguments with partial
 
 `partial(function, prefix...)` binds leading positional arguments of a plain
@@ -786,7 +776,7 @@ the remaining arguments are borrowed. Use a native closure for keyword binding,
 captured targets, or owned and mutable remaining parameters.
 
 A named unary partial works as a transform, predicate or observer in supported
-Pipeline, Result, Piped and iterator operations. For example, bind a threshold
+Pipeline, Result and iterator operations. For example, bind a threshold
 with `partial(above, 2)` and reuse it in `.filter(predicate)` and
 `.filter_not(predicate)`. Borrowing-payload calls such as `.tap_each`,
 `.pair_with`, `.ensure` and `.fold` do not require a copyable payload.
@@ -952,7 +942,6 @@ chains directly. Passing `chain^` instead transfers ownership when the
 selected operation admits a consuming callback. For example,
 `pipeline[Reader[Int]](action^).map(chain)` retains a borrow until execution,
 while `.map(chain^)` moves the chain into the deferred computation.
-Legacy `piped` retains its existing borrowed-callable support.
 
 `chain.call(input)` borrows shared callbacks, `chain.call_mut(input)` reuses
 mutable callback state, and `chain^.call_once(input)` consumes the chain.

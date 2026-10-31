@@ -1,9 +1,8 @@
-# The positional binding can also select a native-error overload on Mojo 1.2.
-# The companion _named fixture checks the intended family constraint directly.
-# error: cannot call function that may raise in a context that cannot raise
+# Canonical Result handlers may agree on a new stored-error type, but not on two.
+# error: no matching method in call to 'redeem_with'
 from fp.algebra import ResultFamily
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.data import Result, Ok
 def left(var value: Int) -> Result[Int, Int]: return Ok(value)
-def right(var error: String) -> Result[Int, Int]: return Ok(0)
-def main(): _ = piped(Result[Int, String](Ok(1))).redeem_with[ResultFamily[String]](left, right)
+def right(var error: String) -> Result[Int, String]: return Ok(0)
+def main(): _ = pipeline[ResultFamily[String]](Result[Int, String](Ok(1))).redeem_with(left, right)

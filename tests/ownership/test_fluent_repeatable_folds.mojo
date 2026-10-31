@@ -1,6 +1,6 @@
 """Fluent folds retain the canonical terminal's moves, pulls, breaks and errors."""
 from fp.callables import mut_ref
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.data import ControlFlow, Break, Continue
 from algebra_support.result_ownership import Token, trace
 from test_repeatable_folds_ownership import Source, Step, Until, Tail
@@ -19,7 +19,7 @@ def exercise[mode: Int](length: Int, fail: Bool) raises:
         comptime if mode == 0:
             result = Optional(pipeline(source^).fold_left(step^,Token(0,state)).get())
         elif mode == 1:
-            result = Optional(piped(source^).fold_left(step^,Token(0,state)).get())
+            result = Optional(pipeline(source^).fold_left(step^,Token(0,state)).get())
         elif mode == 2:
             result = pipeline(source^).reduce_optional(step^).get()
         else:

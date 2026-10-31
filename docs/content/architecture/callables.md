@@ -369,7 +369,7 @@ family proof. Input identities, errors and origin requirements remain intact.
 | Consumer | Route and receiver |
 |---|---|
 | `pipe`, `flow`, `compose` | Plain functions stored as thin functions, closures promoted with `as_unary`, and `Thunk`/`Unary`/`Binary` values; the planner infers each stage's types |
-| `piped(...).then` | One native function, closure or `Unary` value per call, inferred at that call |
+| `pipeline(...).then` | One native function, closure or `Unary` value per call; closures use the selected native error |
 | `flip` | A `Binary` value (receiver modes kept) or a plain function through a read pack |
 | `partial` | A plain function stored directly; the result implements `Thunk`/`Unary`/`Binary` |
 | `map`, `filter_map`, `flat_map`, `scan_left`, folds, reductions | Native callbacks or the operation's unary/binary protocol; owned callbacks and supported shared views use the same driver |

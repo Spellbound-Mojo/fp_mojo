@@ -1,6 +1,6 @@
 """Generic effect searches preserve exact callback errors and embedded origins."""
 from fp.iteration import iterated, find_effect, find_map_effect, fold_map_effect
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.algebra import OptionalFamily, StringMonoid, ListMonoid
 from std.testing import assert_equal
 
@@ -14,7 +14,7 @@ def i6g_map[A:Movable & Deinitable,B:Movable & Deinitable,E:Movable & Deinitable
 
 
 def i6g_fold[A:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitable,//,F:def(var A) raises E -> R](ref function:F,var values:List[A]) raises E ->Optional[String] where R==Optional[String] and OptionalFamily.Element[R]==String and OptionalFamily.CarrierCompatible[R]:
-    return piped(values^).fold_map_effect[G=OptionalFamily,M=StringMonoid,A=A,R=R,E=E,X=E](function).get()
+    return pipeline(values^).raising[E]().fold_map_effect[OptionalFamily, StringMonoid](function).get()
 
 
 @fieldwise_init

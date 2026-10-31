@@ -1,4 +1,5 @@
-from fp.algebra import FoldContract, Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra import Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra.contracts import FoldContract
 from fp.callables import BinaryContract, RepeatableBinary
 from fp.functions import pipeline, Pipeline
 from context_fold_contract_support import Add, SumOwned, Fallible, owned_items

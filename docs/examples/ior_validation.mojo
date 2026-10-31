@@ -1,7 +1,7 @@
 """Keep successful values with warnings and collect independent diagnostics."""
 from fp.data import Ior, Left, Right, Both, NonEmptyList
 from fp.algebra import IorFamily, IorValidationFamily, NonEmptyListSemigroup, ListFamily, traverse
-from fp.functions import piped
+from fp.functions import pipeline
 from std.testing import assert_equal
 
 comptime Issues = NonEmptyList[String]
@@ -17,7 +17,7 @@ def checked(value: Int) -> Checked:
 def twice(value: Int) -> Int: return value * 2
 
 def main() raises:
-    var accepted = piped(checked(0)).map[Sequential](twice).get()
+    var accepted = pipeline[Sequential](checked(0)).map(twice).get()
     assert_equal(accepted[Both[Issues, Int]].right, 0)
     print("value:", accepted[Both[Issues, Int]].right)
     print("warning:", accepted[Both[Issues, Int]].left.first())

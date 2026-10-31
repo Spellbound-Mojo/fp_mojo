@@ -1,7 +1,7 @@
 """Conditional recovery moves errors and cleans up both callbacks on every path."""
 from fp.algebra import ResultFamily, ListFamily, fail
 from fp.effects import ReaderT, ResultT, run
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary, MutableUnary, BorrowOnceCallable, BorrowCallable
 from fp.data import Result, Ok, Err
 from std.memory import ArcPointer
@@ -52,7 +52,7 @@ def ceo_path(ok: Bool, selected: Bool, throw_predicate: Bool, throw_handler: Boo
     var code = 0
     var value = 0
     try:
-        var recovered = piped(result^).recover_if[F](CEOPredicate(CEOOwner(1, drops), selected, throw_predicate), CEOHandler(CEOOwner(2, drops), calls, throw_handler)).get()
+        var recovered = pipeline[F](result^).recover_if(CEOPredicate(CEOOwner(1, drops), selected, throw_predicate), CEOHandler(CEOOwner(2, drops), calls, throw_handler)).get()
         if recovered.is_ok(): value = recovered._ok().value.value
         else: value = recovered._err().value.value
     except error:
@@ -87,7 +87,7 @@ def ceo_branching() raises:
     var items: List[Result[Int, CEOOwner]] = [Result[Int, CEOOwner](Err(CEOOwner(1, drops))), Result[Int, CEOOwner](Err(CEOOwner(2, drops)))]
     var code = 0
     try:
-        _ = piped(items^).recover_if[L](CEORepeatedPredicate(CEOOwner(0, drops)), CEORepeatedHandler(CEOOwner(0, drops))).get()
+        _ = pipeline[L](items^).recover_if(CEORepeatedPredicate(CEOOwner(0, drops)), CEORepeatedHandler(CEOOwner(0, drops))).get()
     except error:
         code = error
     assert_equal(code, 73)
@@ -96,7 +96,7 @@ def ceo_branching() raises:
 
 def ceo_pending(drops: ArcPointer[Int], calls: ArcPointer[Int], execute: Bool):
     comptime R = ReaderT[ResultFamily[CEOOwner], Int]
-    var pending = piped(fail[R, CEOOwner](CEOOwner(4, drops))).recover_if[R](CEOPredicate(CEOOwner(1, drops), True, False), CEOHandler(CEOOwner(2, drops), calls, False)).get()
+    var pending = pipeline[R](fail[R, CEOOwner](CEOOwner(4, drops))).recover_if(CEOPredicate(CEOOwner(1, drops), True, False), CEOHandler(CEOOwner(2, drops), calls, False)).get()
     if execute:
         try:
             _ = run[R](pending^, 0)

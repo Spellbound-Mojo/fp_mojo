@@ -1,5 +1,6 @@
 """Public contracts retain target families through abstract and conditional clients."""
-from fp.algebra import Functor, ErrorMapping, ResultFamily, StringMonoid, MapBothContract, MapErrContract
+from fp.algebra import Functor, ErrorMapping, ResultFamily, StringMonoid
+from fp.algebra.contracts import MapBothContract, MapErrContract
 from fp.callables import UnaryContract
 from fp.effects import ReaderT, StateT, WriterT, run, run_writer
 from fp.functions import Pipeline, pipeline

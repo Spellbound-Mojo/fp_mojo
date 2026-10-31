@@ -1,24 +1,24 @@
 """Derived operations retain exact contracts when forwarding generic callbacks."""
 from std.builtin.rebind import rebind_var
 from std.testing import assert_equal
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from fp.algebra import ListFamily
 
 
 def expansion_forward_select[T: Movable & Deinitable, U: Movable & Deinitable, //,
                              F: def(var T) -> Optional[U]](ref function: F, var values: List[T]) -> List[U]:
-    return piped(values^).filter_map[ListFamily](function).get()
+    return pipeline[ListFamily](values^).filter_map(function).get()
 
 
 def expansion_forward_raised[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & Deinitable, //,
                              F: def(var T) raises E -> Optional[U]](ref function: F, var values: List[T]) raises E -> List[U]:
-    return piped(values^).filter_map[ListFamily, E=E](function).get()
+    return pipeline[ListFamily](values^).raising[E]().filter_map(function).get()
 
 
 def expansion_forward_pair[T: Movable & Deinitable, U: Movable & Deinitable, //,
                            F: def(T) -> U](ref function: F, var values: List[T]) -> List[Tuple[T, U]]:
-    return piped(values^).pair_with[ListFamily](function).get()
+    return pipeline[ListFamily](values^).pair_with(function).get()
 
 
 def expansion_forward_min[T: Movable & Deinitable, K: Comparable & Movable & Deinitable, E: Movable & Deinitable, //,
@@ -28,7 +28,7 @@ def expansion_forward_min[T: Movable & Deinitable, K: Comparable & Movable & Dei
 
 def expansion_forward_sum[T: Movable & Deinitable, E: Movable & Deinitable, //,
                           F: def(var T) raises E -> Int](ref function: F, var values: List[T]) raises E -> Int:
-    return piped(values^).sum_by[A=T, R=Int, E=E](function).get()
+    return pipeline(values^).raising[E]().sum_by(function).get()
 
 
 @fieldwise_init

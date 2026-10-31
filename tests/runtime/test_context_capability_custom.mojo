@@ -1,6 +1,7 @@
 from fp.functions import pipeline, Pipeline
 from fp.callables import BorrowCallContract
-from fp.algebra import Functor, Filterable, FunctorFilter, FilterMapContract, ListFamily, filter
+from fp.algebra import Functor, Filterable, FunctorFilter, ListFamily, filter
+from fp.algebra.contracts import FilterMapContract
 from fp.callables import BorrowCallable, UnaryContract, Unary
 from std.testing import assert_equal
 

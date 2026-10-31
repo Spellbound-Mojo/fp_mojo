@@ -1,5 +1,6 @@
 # error: invalid call to 'tapped': lacking evidence to prove correctness
-from fp.algebra import Monad, FlatTapContract, ListFamily, OptionalFamily
+from fp.algebra import Monad, ListFamily, OptionalFamily
+from fp.algebra.contracts import FlatTapContract
 from fp.callables import BorrowCallContract, BorrowCallable
 from fp.functions import pipeline
 

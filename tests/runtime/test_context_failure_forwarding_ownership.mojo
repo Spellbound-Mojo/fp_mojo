@@ -1,7 +1,7 @@
 """Failure construction retains callback selection, exact errors and cleanup order."""
 from std.testing import assert_equal
 from std.memory import ArcPointer
-from fp.algebra import OrElseIfContract
+from fp.algebra.contracts import OrElseIfContract
 from fp.callables import BorrowOnceCallable, OnceUnary
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err

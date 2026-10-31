@@ -15,7 +15,7 @@ from fp.iteration.branching import _BufferPolicy, PartitionBranches, PartitionMa
 from fp.callables.invoke import RepeatableUnary, RepeatableBorrow
 from fp.iteration.terminals import first as _first, last as _last, is_empty as _is_empty, count as _count, contains as _contains, to_non_empty_list as _to_non_empty_list, combine_all_optional as _combine_all_optional, _count_where, _for_each, _collect_fold
 from fp.data.non_empty_list import NonEmptyList
-from fp.algebra.contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
+from fp.algebra._contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
 from fp.algebra.validation import ValidationFamily, _ListErrors
 from fp.algebra._sequencing import _EffectRetain
 from fp.iteration._sequencing import _IteratorMap, _bind_iterator
@@ -1515,7 +1515,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             function: The callback, consumed; calls follow the operation's evaluation order.
 
         Returns:
-            The target effect of NoneType, without an output collection. A Piped Result source instead preserves its stored error inside Result[NoneType, E] in that effect. Target failures follow the effect.
+            The target effect of NoneType, without an output collection. Target failures follow the effect.
 
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
@@ -1547,7 +1547,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             function: The callback, consumed; calls follow the operation's evaluation order.
 
         Returns:
-            The target effect containing the original payloads; Piped preserves source shape and Iter/direct calls gather a List.
+            The target effect containing the original payloads, gathered in a List.
 
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.
@@ -1571,7 +1571,7 @@ struct Iter[I: Iterator](Iterator, IterableOwned):
             X: The exact native error type; traversal can supply it as generic evidence, which is checked without converting errors.
 
         Returns:
-            The target effect of NoneType, or of Result[NoneType, E] for a Piped Result source; existing source errors stay inside the target effect.
+            The target effect of NoneType; existing source errors stay inside the target effect.
 
         Raises:
             The exact callback, monoid or family error; Never for a non-raising operation.

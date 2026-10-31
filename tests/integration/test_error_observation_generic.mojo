@@ -2,20 +2,20 @@
 from fp.algebra import ResultFamily, fail
 from fp.effects import ReaderT, run
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from std.testing import assert_equal
 from std.builtin.rebind import rebind_var
 
 
 def eog_tap[A: Movable & Deinitable, U: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable,
             F: def(A) raises E -> U](var source: Result[T, A], ref inspect: F) raises E -> Result[T, A]:
-    return piped(source^).tap_err[ResultFamily[A], R=U, X=E, Z=E](inspect).get()
+    return pipeline[ResultFamily[A]](source^).raising[E]().tap_err(inspect).get()
 
 
-def eog_flat[A: Movable & Deinitable, R: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable,
-             F: def(A) raises E -> R](var source: Result[T, A], ref inspect: F
-) raises E -> Result[T, A] where R == Result[ResultFamily[A].Element[R], A]:
-    return piped(source^).flat_tap_err[ResultFamily[A], R=R, X=E, Z=E](inspect).get()
+def eog_flat[A: Movable & Deinitable, U: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable,
+             F: def(A) raises E -> Result[U, A]](var source: Result[T, A], ref inspect: F
+) raises E -> Result[T, A]:
+    return pipeline[ResultFamily[A]](source^).raising[E]().flat_tap_err(inspect).get()
 
 
 def eog_origins(values: List[Int]) raises:
@@ -32,7 +32,12 @@ def eog_origins(values: List[Int]) raises:
     # Inferred Result signatures must admit the same embedded origins too.
     var direct = Result[V, V](Err(view)).flat_tap_err(observer)
     assert_equal(direct._err().value[0], 11)
-    var inferred = piped(Result[V, V](Err(view))).flat_tap_err(failed).get()
+    var inferred: Result[V, V]
+    try:
+        inferred = pipeline(Result[V, V](Err(view))).raising[V]().flat_tap_err(failed).get()
+    except error:
+        comptime assert type_of(error) == V
+        raise Error("unexpected raised observer error")
     assert_equal(inferred._err().value[1], 12)
     var code = 0
     try:
@@ -43,7 +48,7 @@ def eog_origins(values: List[Int]) raises:
     assert_equal(code, 11)
     comptime Deferred = ReaderT[ResultFamily[V], Int]
     def deferred_observer(error: V) raises V -> Deferred.Pure[V]: return Deferred.pure(error)
-    var pending = piped(fail[Deferred, V](view)).tap_err[Deferred](observer).flat_tap_err[Deferred](deferred_observer).get()
+    var pending = pipeline[Deferred](fail[Deferred, V](view)).raising[V]().tap_err(observer).flat_tap_err(deferred_observer).get()
     var deferred_code: Int
     try:
         var retained = run[Deferred](pending^, 0)

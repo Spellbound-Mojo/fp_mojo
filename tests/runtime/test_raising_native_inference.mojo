@@ -2,7 +2,7 @@
 from std.testing import assert_equal
 from fp.iteration import (traverse, flat_traverse, traverse_filter, traverse_tap, traverse_void, filter_effect,
                           any_effect, all_effect, find_effect, find_map_effect, fold_effect, fold_map_effect, iterated)
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.algebra import StringMonoid
 
 
@@ -67,8 +67,8 @@ def fluent_surfaces() raises:
     def a() raises String: _ = iterated(List[Int]([-1])).traverse(half)
     def b() raises String: _ = iterated(List[Int]([-1])).traverse_void(half)
     def c() raises String: _ = iterated(List[Int]([-1])).all_effect(even)
-    def d() raises String: _ = piped(List[Int]([-1])).traverse_void(half).get()
-    def e() raises String: _ = piped(List[Int]([-1])).find_effect(even).get()
+    def d() raises String: _ = pipeline(List[Int]([-1])).traverse_void(half).get()
+    def e() raises String: _ = pipeline(List[Int]([-1])).find_effect(even).get()
     assert_equal(raised(a), "half")
     assert_equal(raised(b), "half")
     assert_equal(raised(c), "even")
@@ -83,7 +83,7 @@ def closures() raises:
         return True
     def a() raises String {check}: _ = traverse_tap(List[Int]([-1]), check)
     def b() raises String {check}: _ = all_effect(List[Int]([-1]), check)
-    def c() raises String {check}: _ = piped(List[Int]([-1])).filter_effect(check).get()
+    def c() raises String {check}: _ = pipeline(List[Int]([-1])).raising[String]().filter_effect(check).get()
     assert_equal(raised(a), "closure")
     assert_equal(raised(b), "closure")
     assert_equal(raised(c), "closure")

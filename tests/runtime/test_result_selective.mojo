@@ -1,6 +1,6 @@
 """Selective recovery runs only the selected error continuation."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import BorrowCallable, OnceUnary, MutableUnary
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
@@ -67,9 +67,9 @@ def main() raises:
     assert_equal(rs_value().flat_tap_err(rs_inspect).raise_on_err(), 7)
     assert_equal(rs_message(rs_error("retry").flat_tap_err(rs_inspect)), "retry")
     assert_equal(rs_message(rs_error("retry").flat_tap_err(rs_bad_inspector)), "inspection failed")
-    assert_equal(piped(rs_error("retry")).recover_if(rs_retry, rs_restore).get().raise_on_err(), 5)
-    assert_equal(piped(rs_error("retry")).or_else_if(rs_retry, rs_continue).get().raise_on_err(), 15)
-    assert_equal(rs_message(piped(rs_error("keep")).flat_tap_err(rs_inspect).get()), "keep")
+    assert_equal(pipeline(rs_error("retry")).recover_if(rs_retry, rs_restore).get().raise_on_err(), 5)
+    assert_equal(pipeline(rs_error("retry")).or_else_if(rs_retry, rs_continue).get().raise_on_err(), 15)
+    assert_equal(rs_message(pipeline(rs_error("keep")).flat_tap_err(rs_inspect).get()), "keep")
     assert_equal(rs_error("retry").recover_if(RSPredicate(), RSRecovery(0)).raise_on_err(), 6)
     assert_equal(rs_error("retry").recover_if(rs_retry, RSRecovery(1)).raise_on_err(), 7)
     assert_equal(rs_error("retry").recover_if(RSPredicate(), rs_restore).raise_on_err(), 5)
@@ -87,7 +87,7 @@ def main() raises:
     assert_equal(calls[], List[Int]())
     _ = rs_error("keep").recover_if(rs_counted_predicate, rs_counted_recovery)
     assert_equal(calls[], [1])
-    var eager = piped(rs_error("retry")).recover_if(rs_counted_predicate, rs_counted_recovery)
+    var eager = pipeline(rs_error("retry")).recover_if(rs_counted_predicate, rs_counted_recovery)
     assert_equal(calls[], [1, 1, 2])
     assert_equal(eager^.get().raise_on_err(), 99)
     var code = 0
@@ -103,7 +103,7 @@ def main() raises:
     try: _ = rs_error("retry").or_else_if(rs_retry, rs_raise_continuation)
     except error: code = error.code
     assert_equal(code, 33)
-    try: _ = piped(rs_error("retry")).flat_tap_err(rs_raise_inspector)
+    try: _ = pipeline(rs_error("retry")).flat_tap_err(rs_raise_inspector)
     except error: code = error.code
     assert_equal(code, 44)
     try: _ = rs_error("retry").recover_if(RSPredicate(), rs_raise_recovery)

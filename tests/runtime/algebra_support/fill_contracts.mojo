@@ -1,5 +1,6 @@
 """Generic structural wrappers using only public contracts and operations."""
-from fp.algebra import Functor,FillContract,VoidContract
+from fp.algebra import Functor
+from fp.algebra.contracts import FillContract, VoidContract
 from fp.callables import UnaryContract
 from fp.functions import Pipeline,pipeline
 def filled[I:Functor,V:Movable & Deinitable,U:Movable & Deinitable](var source:V,var replacement:U) raises FillContract[I,V,U].Error -> FillContract[I,V,U].Out where FillContract[I,V,U].InvocationCompatible:

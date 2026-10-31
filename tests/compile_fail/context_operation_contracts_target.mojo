@@ -1,5 +1,6 @@
 # error: invalid call to 'forward': violated constraint
-from fp.algebra import Applicative, Traversable, TraverseContract, ListFamily, ResultFamily
+from fp.algebra import Applicative, Traversable, ListFamily, ResultFamily
+from fp.algebra.contracts import TraverseContract
 from fp.callables import Unary
 from fp.functions import pipeline
 from fp.data import Result, Ok

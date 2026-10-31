@@ -9,7 +9,8 @@ from .io import IO, IOContext, IOContract, CancellationToken, _run_io, _settle, 
 from .protocols import ReaderAction
 from .outcomes import Outcome, EffectFailure, _capture
 from fp.data import Result, Ok, Err
-from fp.algebra import flat_map, BindContract
+from fp.algebra import flat_map
+from fp.algebra.contracts import BindContract
 from fp.callables import UnaryContract, BorrowCallContract, BorrowCallable, OnceUnary, OnceThunk
 from fp.callables._receiver import _unary_once_as, _OnceBorrowAvailable
 from fp.callables._binding import _BorrowThunk, _BindFirst

@@ -1,4 +1,4 @@
-"""Iter and Piped closure bounds are the catalog's closure forms.
+"""Iter closure bounds are the catalog's closure forms.
 
 Generated overloads take them from native_signatures.closure(); documented
 hand-written overloads keep their own text, so this test holds every closure
@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from native_signatures import closure  # noqa: E402
 from value_first import matching, split_top  # noqa: E402
 
-MODULES = ("src/fp/iteration/chaining.mojo", "src/fp/functions/pipeline.mojo")
+MODULES = ("src/fp/iteration/chaining.mojo",)
 BOUND = re.compile(r"^\s*(\w+)\s*:\s*(def\((.*)\)(?:\s+raises\s+(\w+))?\s*->\s*(.+))$", re.S)
 
 
@@ -62,7 +62,7 @@ class ClosureCatalogConformanceTest(unittest.TestCase):
                 got = f"{bound.group(1)}: {re.sub(r'\\s+', ' ', bound.group(2)).strip()}"
                 self.assertEqual(got, want, f"{module}:{line}")
                 checked += 1
-        self.assertGreater(checked, 400)
+        self.assertGreater(checked, 60)
 
     def test_no_alias_spelled_closure_bounds(self):
         alias = re.compile(r"\b\w+\s*:\s*_(?:Raising)?(?:Unary|Binary|Borrowing|Thunk)\[")

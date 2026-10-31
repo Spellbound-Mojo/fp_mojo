@@ -1,11 +1,13 @@
 """One result-family projection per operation, including independent filtering."""
-from fp.algebra import Functor, Filterable, FunctorFilter, FilterContract, FilterMapContract, ListFamily, filter
+from fp.algebra import Functor, Filterable, FunctorFilter, ListFamily, filter
+from fp.algebra.contracts import FilterContract, FilterMapContract
 from fp.callables import BorrowCallable, UnaryContract
 from fp.functions import Pipeline, pipeline
 from test_context_capability_custom import Independent, Tagged, Choose
 from test_context_selection_contracts import Positive
 from std.testing import assert_equal
-from fp.algebra import Monad, Applicative, Traversable, MapContract, BindContract, TraverseContract, CombineContract, OptionalFamily, map2_lazy
+from fp.algebra import Monad, Applicative, Traversable, OptionalFamily, map2_lazy
+from fp.algebra.contracts import MapContract, BindContract, TraverseContract, CombineContract
 from fp.callables import BinaryContract, ThunkContract
 from fp.functions import Identity
 from test_context_operation_contracts import Present

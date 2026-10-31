@@ -1,6 +1,6 @@
 # error: no matching method
 from fp.functions import pipeline
-from fp.algebra import ValidationFamily,ListMonoid
+from fp.algebra import ValidationFamily, ListMonoid
 from fp.data import Result,Ok
 def factory()->Result[Int,List[String]]: return Ok(1)
 def main():

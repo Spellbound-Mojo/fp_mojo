@@ -1,6 +1,6 @@
 """Generic native forwarding keeps Result payload and native error types."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from std.testing import assert_equal
 
 
@@ -26,7 +26,7 @@ def rcg_before[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & De
 
 def rcg_recover[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable,
                 F: def(var E) raises X -> T](var value: Result[T, E], callback: F) raises X -> Result[T, E]:
-    return piped(value^).recover[A=E, R=T, X=X](callback).get()
+    return pipeline(value^).raising[X]().recover(callback).get()
 
 
 def rcg_check[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable,

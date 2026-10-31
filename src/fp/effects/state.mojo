@@ -5,7 +5,7 @@ Each operation is one struct whose run delegates to the base family.
 """
 
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
-from fp.algebra.contracts import MapContract, BindContract
+from fp.algebra._contracts import MapContract, BindContract
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue

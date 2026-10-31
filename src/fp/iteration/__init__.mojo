@@ -15,10 +15,9 @@ also consuming methods. Wrap another standard adapter's result with `iterated`
 to continue chaining.
 `to_list()` and `collect_list()` are alias methods for the free `collect_list`.
 Named chains are consumed explicitly, as in `stream^.to_list()`.
-The core functions `map`, `filter`, `filter_not` and `fold_left` are also exported by
-`fp.combinators`; both imports refer to the same native functions. `Piped` adds
-the same named methods to eager value chains. Its fold keeps the accumulator
-inside the chain, while `Iter.fold_left` returns the accumulator directly.
+`pipeline(value)` adds the same named methods to eager value chains. Its fold
+keeps the accumulator inside the chain, while `Iter.fold_left` returns the
+accumulator directly.
 
 **Lazy adapters** (`map`, `filter`, `filter_not`, `filter_map`, `flatten`, `flat_map`,
 `scan_left`, `zip_with`, `map_with_index` and value-taking `take_while`/`drop_while`)

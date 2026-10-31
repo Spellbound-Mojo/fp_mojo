@@ -4,7 +4,7 @@ import re
 from fp_tools.runtime import ROOT
 
 from module_layout import (PUBLIC_PACKAGES as MODULES,
-                           CALLABLE_ENTRIES, declaration_providers)
+                           CALLABLE_ENTRIES, declaration_providers, admits)
 
 def declaration_sources(root):
     for package, provider, names in declaration_providers():
@@ -40,7 +40,7 @@ def declaration_sites(root=ROOT):
                 continue
             if match[1] and (not owner or owner.startswith('_')):
                 continue
-            if names is not None and (owner if match[1] else match[2]) not in names:
+            if not admits(names, owner if match[1] else match[2]):
                 continue
             name = '.'.join(x for x in (module, owner if match[1] else None, match[2]) if x)
             # Declarations end at the colon at the end of a physical line. Types
@@ -68,7 +68,7 @@ def public_types(root=ROOT):
     for module, path, names in declaration_sources(root):
         for line in path.read_text().splitlines():
             match = re.match(r'^(?:struct|trait|comptime) ([A-Za-z]\w*)', line)
-            if match and (names is None or match[1] in names):
+            if match and admits(names, match[1]):
                 if module + '.' + match[1] in CALLABLE_ENTRIES:
                     continue
                 result.setdefault(module+'.'+match[1], []).append(line.strip())

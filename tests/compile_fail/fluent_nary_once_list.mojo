@@ -1,5 +1,5 @@
 # error: repeatable
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary
 @fieldwise_init
 struct NaryOnce(OnceUnary):
@@ -10,4 +10,4 @@ def main():
     var a:List[Int]=[1]
     var b:List[Int]=[2]
     var c:List[Int]=[3]
-    _=piped(a^).map_n((b^,c^),NaryOnce())
+    _=pipeline(a^).map_n((b^,c^),NaryOnce())

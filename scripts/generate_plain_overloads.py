@@ -1,5 +1,5 @@
 """Generate the plain-function overloads of pipe, flow and compose (two to eight
-stages), match and rewrite (one to sixteen clauses), and native Piped methods.
+stages), and match and rewrite (one to sixteen clauses).
 
 Mojo 1.1 reads a plain function's signature only at a parameter of its function
 type, so each stage or clause count spells one thin signature per function. Run
@@ -16,7 +16,6 @@ import argparse
 import sys
 
 from fp_tools.runtime import ROOT
-import generate_pipeline_syntax as pipeline_syntax
 import generate_combinator_syntax as combinator_syntax
 import generate_iterator_syntax as iterator_syntax
 import generate_result_syntax as result_syntax
@@ -402,9 +401,7 @@ def splice_source(source, text, start_marker=START, end_marker=END, header=HEADE
 
 
 def pipeline_source(path):
-    source = splice_source(spliced(path, pipe_overloads()), pipeline_syntax.container_methods(),
-                           pipeline_syntax.START, pipeline_syntax.END, pipeline_syntax.HEADER)
-    return splice_source(source, result_syntax.methods(piped=True), result_syntax.START, result_syntax.END, result_syntax.HEADER)
+    return spliced(path, pipe_overloads())
 
 
 def composition_source(path):
@@ -642,8 +639,8 @@ def main():
             expected = splice_source(expected, generate('free'), iterator_syntax.START, iterator_syntax.END, iterator_syntax.HEADER)
         if name == 'iteration/chaining.mojo':
             expected = splice_source(expected, iterator_syntax.methods(), '    '+iterator_syntax.START, '    '+iterator_syntax.END, '    '+iterator_syntax.HEADER)
-            expected = splice_source(expected, sequencing_syntax.methods(iteration=True), sequencing_syntax.START, sequencing_syntax.END, sequencing_syntax.HEADER)
-        effect_mode = {'functions/pipeline.mojo': 'piped', 'iteration/chaining.mojo': 'iter', 'iteration/effectful.mojo': 'free', 'algebra/conditional.mojo': 'conditional'}.get(name)
+            expected = splice_source(expected, sequencing_syntax.methods(), sequencing_syntax.START, sequencing_syntax.END, sequencing_syntax.HEADER)
+        effect_mode = {'iteration/chaining.mojo': 'iter', 'iteration/effectful.mojo': 'free', 'algebra/conditional.mojo': 'conditional'}.get(name)
         if effect_mode:
             indent = '' if effect_mode in ('free', 'conditional') else '    '
             expected = splice_source(expected, effect_syntax.methods(effect_mode), indent+effect_syntax.START, indent+effect_syntax.END, indent+effect_syntax.HEADER)

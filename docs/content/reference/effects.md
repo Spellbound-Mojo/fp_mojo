@@ -147,8 +147,8 @@ is lost with it.
 
 ReaderT, WriterT, OptionalT and StateT support `ApplicativeError` when their
 base Monad does. StateT also requires copyable state for this capability.
-Use `.recover[Family](handler)` for a replacement value or
-`.or_else[Family](handler)` for a replacement effect. Native raised errors
+Select the layer with `pipeline[Family](value^)`, then use `.recover(handler)`
+for a replacement value or `.or_else(handler)` for a replacement effect. Native raised errors
 propagate unchanged.
 
 StateT handlers restart from the input at the recovery boundary; ResultT above

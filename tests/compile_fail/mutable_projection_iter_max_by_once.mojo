@@ -1,7 +1,7 @@
 # error: no matching method in call to 'max_by'
 from fp.callables import BorrowOnceCallable
 from fp.iteration import min_by,max_by,minimum_by_non_empty,maximum_by_non_empty,pair_with,tap_each,iterated
-from fp.functions import piped,pipeline
+from fp.functions import pipeline
 from fp.data import NonEmptyList
 struct Once(BorrowOnceCallable):
     comptime Payload=Int

@@ -1,5 +1,6 @@
 """Generic conditional recovery forwards public contracts and native errors."""
-from fp.algebra import ErrorRecovery, Functor, Applicative, ApplicativeError, ErrorMapping, IdentityFamily, RecoverIfContract, OrElseIfContract, ResultFamily
+from fp.algebra import ErrorRecovery, Functor, Applicative, ApplicativeError, ErrorMapping, IdentityFamily, ResultFamily
+from fp.algebra.contracts import RecoverIfContract, OrElseIfContract
 from fp.callables import BorrowCallContract, BorrowCallable, UnaryContract, Unary
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err

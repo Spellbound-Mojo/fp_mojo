@@ -55,7 +55,8 @@ proof incidentally.
 
 ## Choose the descriptor
 
-Most descriptors are exported from `fp.algebra`. `OrElseContract`,
+Most descriptors are exported from [`fp.algebra.contracts`](../reference/algebra.contracts.md),
+as in `from fp.algebra.contracts import MapContract`. `OrElseContract`,
 `RedeemContract` and `RedeemWithContract` are exported from `fp.functions`.
 
 | Operation | Public descriptor |

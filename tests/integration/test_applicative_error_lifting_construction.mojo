@@ -3,7 +3,7 @@ from fp.algebra import ApplicativeError, Monad, Monoid, ResultFamily, fail
 from fp.callables import UnaryContract, BinaryContract, ThunkContract
 from fp.effects import ReaderT, StateT, WriterT, OptionalT, run, run_writer
 from fp.data import Result, Ok
-from fp.functions import piped
+from fp.functions import pipeline
 from std.testing import assert_equal
 
 
@@ -72,8 +72,8 @@ def main() raises:
     var reader = fail[R, Int](String("construct"))
     var state = fail[S, Int](String("construct"))
     def fallback(var error: String) -> Int: return 9
-    var protected_read = piped(reader^).recover[R](fallback).get()
-    var protected_state = piped(state^).recover[S](fallback).get()
+    var protected_read = pipeline[R](reader^).recover(fallback).get()
+    var protected_state = pipeline[S](state^).recover(fallback).get()
     var code = 0
     try:
         _ = run[R](protected_read^, 0)

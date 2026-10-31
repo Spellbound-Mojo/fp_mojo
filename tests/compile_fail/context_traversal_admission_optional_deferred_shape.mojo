@@ -1,5 +1,5 @@
 # error: no matching method in call to 'traverse'
-from fp.algebra import OptionalFamily,ResultFamily
+from fp.algebra import OptionalFamily, ResultFamily
 from fp.effects import Reader,State
 from fp.functions import pipeline
 from fp.data import Result,Ok

@@ -1,4 +1,5 @@
-from fp.algebra import Applicative,OptionalFamily,ResultFamily,TraverseContract,traverse
+from fp.algebra import Applicative, OptionalFamily, ResultFamily, traverse
+from fp.algebra.contracts import TraverseContract
 from fp.effects import Reader,State,run
 from fp.callables import OnceUnary
 from fp.data import Result,Ok,Err

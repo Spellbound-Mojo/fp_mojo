@@ -1,7 +1,7 @@
 """Traversal postprocessing checks construction errors, preserving deferred ones."""
 from fp.iteration import iterated
-from fp.combinators import filter_effect, traverse_filter, flat_traverse
-from fp.functions import piped
+from fp.iteration import filter_effect, traverse_filter, flat_traverse
+from fp.functions import pipeline
 from fp.effects import Reader, ReaderAction, run
 from fp.callables import BorrowCallable, Unary
 from std.testing import assert_equal
@@ -61,9 +61,9 @@ def main() raises:
     check(filter_effect[Reader[Int]](range(4),Decide()),environment)
     check(traverse_filter[Reader[Int]](range(4),Select()),environment)
     check(flat_traverse[Reader[Int]](range(4),Expand()),environment)
-    check(piped(List[Int]([0,1,2,3])).filter_effect[Reader[Int]](Decide()).get(),environment)
-    check(piped(List[Int]([0,1,2,3])).traverse_filter[Reader[Int]](Select()).get(),environment)
-    check(piped(List[Int]([0,1,2,3])).flat_traverse[Reader[Int]](Expand()).get(),environment)
+    check(pipeline(List[Int]([0,1,2,3])).filter_effect[Reader[Int]](Decide()).get(),environment)
+    check(pipeline(List[Int]([0,1,2,3])).traverse_filter[Reader[Int]](Select()).get(),environment)
+    check(pipeline(List[Int]([0,1,2,3])).flat_traverse[Reader[Int]](Expand()).get(),environment)
     # Raw native callbacks keep explicit target selection and native error types.
     check(iterated(range(4)).filter_effect[Reader[Int]](decide),environment)
     check(iterated(range(4)).traverse_filter[Reader[Int]](select),environment)
@@ -71,6 +71,6 @@ def main() raises:
     check(filter_effect[Reader[Int]](range(4),decide),environment)
     check(traverse_filter[Reader[Int]](range(4),select),environment)
     check(flat_traverse[Reader[Int]](range(4),expand),environment)
-    check(piped(List[Int]([0,1,2,3])).filter_effect[Reader[Int]](decide).get(),environment)
-    check(piped(List[Int]([0,1,2,3])).traverse_filter[Reader[Int]](select).get(),environment)
-    check(piped(List[Int]([0,1,2,3])).flat_traverse[Reader[Int]](expand).get(),environment)
+    check(pipeline(List[Int]([0,1,2,3])).filter_effect[Reader[Int]](decide).get(),environment)
+    check(pipeline(List[Int]([0,1,2,3])).traverse_filter[Reader[Int]](select).get(),environment)
+    check(pipeline(List[Int]([0,1,2,3])).flat_traverse[Reader[Int]](expand).get(),environment)

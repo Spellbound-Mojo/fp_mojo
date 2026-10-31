@@ -1,6 +1,6 @@
 # error: constraint
 from fp.algebra import ListMonoid
-from fp.functions import piped
+from fp.functions import pipeline
 
 def main():
-    _ = piped(List[Int]([1,2])).par_sequence[ListMonoid[String]]()
+    _ = pipeline(List[Int]([1,2])).par_sequence[ListMonoid[String]]()

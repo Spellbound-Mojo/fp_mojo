@@ -1,5 +1,6 @@
-from fp.algebra import ProductContract, Applicative, IdentityFamily, OptionalFamily, ResultFamily, product, pure
-from fp.functions import pipeline, Pipeline, piped
+from fp.algebra import Applicative, IdentityFamily, OptionalFamily, ResultFamily, product, pure
+from fp.algebra.contracts import ProductContract
+from fp.functions import pipeline, Pipeline
 from fp.effects import Reader, run
 from fp.data import Result, Err
 from std.memory import ArcPointer
@@ -12,7 +13,7 @@ def forward[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable](va
 
 def fluent[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable](var left: V, var right: W
 ) raises ProductContract[I,V,W].Error -> ProductContract[I,V,W].Out where ProductContract[I,V,W].Compatible:
-    return piped(left^).product[I](right^).get()
+    return pipeline[I](left^).product(right^).get()
 
 def selected[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable](var left: V, var right: W
 ) raises ProductContract[I,V,W].Error -> Pipeline[I,ProductContract[I,V,W].Out] where ProductContract[I,V,W].Compatible:
@@ -52,7 +53,7 @@ def immediate[I: Applicative, route: Int, skip_left: Bool, skip_right: Bool]() -
             trace[] += "r"
             _ = result^
         else:
-            var result = piped(left^).product[I](right^).get()
+            var result = pipeline[I](left^).product(right^).get()
             trace[] += "r"
             _ = result^
     except error:

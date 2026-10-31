@@ -1,6 +1,8 @@
 """Filtering borrows move-only payloads and retains caller-owned mutable callbacks."""
 from fp.callables import BorrowMutableCallable, mut_ref
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
+# ContainerDeferredFamily is Filterable but not a Functor, so it uses the family-selected free functions.
+from fp.algebra import filter, filter_not
 from algebra_support.filtering import ContainerDeferredFamily
 from algebra_support.result_ownership import Token, trace
 from std.testing import assert_equal
@@ -29,10 +31,10 @@ def execute[deferred: Bool, inverted: Bool](fail: Bool) raises:
     try:
         comptime if deferred:
             comptime if inverted:
-                var pending = piped(input^).filter_not[ContainerDeferredFamily](mut_ref(predicate)).get()
+                var pending = filter_not[ContainerDeferredFamily](input^, mut_ref(predicate))
                 output = pending^.run()
             else:
-                var pending = piped(input^).filter[ContainerDeferredFamily](mut_ref(predicate)).get()
+                var pending = filter[ContainerDeferredFamily](input^, mut_ref(predicate))
                 output = pending^.run()
         elif inverted:
             output = pipeline(input^).filter_not(mut_ref(predicate)).get()
@@ -59,7 +61,7 @@ def abandoned() raises:
     var state = trace()
     var predicate = Predicate(Token(6, state), False)
     var input: List[Token] = [Token(1, state)]
-    var pending = piped(input^).filter[ContainerDeferredFamily](mut_ref(predicate)).get()
+    var pending = filter[ContainerDeferredFamily](input^, mut_ref(predicate))
     _ = pending^
     assert_equal(state[].calls, 0)
     assert_equal(state[].drops[1], 1)

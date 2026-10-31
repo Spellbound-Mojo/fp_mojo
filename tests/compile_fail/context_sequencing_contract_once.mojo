@@ -1,5 +1,6 @@
 # error: invalid call to 'kept': violated constraint
-from fp.algebra import Monad, BeforeContract, OptionalFamily, ListFamily
+from fp.algebra import Monad, OptionalFamily, ListFamily
+from fp.algebra.contracts import BeforeContract
 from fp.callables import ThunkContract, Thunk, OnceThunk
 from fp.functions import pipeline
 

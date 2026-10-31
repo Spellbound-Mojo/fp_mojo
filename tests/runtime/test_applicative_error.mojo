@@ -2,7 +2,7 @@
 from fp.algebra import ApplicativeError, Monad, ResultFamily, ValidationFamily, ListFamily, ListMonoid, fail
 from fp.effects import ResultT, Reader, State, Writer, action, run, writer, run_writer
 from fp.algebra import StringMonoid
-from fp.functions import piped, kleisli
+from fp.functions import pipeline, kleisli
 from fp.callables import MutableUnary, OnceUnary, BorrowOnceCallable
 from fp.data import Result, Ok, Err
 from std.memory import ArcPointer
@@ -31,40 +31,40 @@ struct AEBranches(MutableUnary):
 def ae_direct() raises:
     assert_true(conforms_to(AEF, ApplicativeError))
     assert_equal(fail[AEF, Int](String("bad"))._err().value, "bad")
-    assert_equal(piped(fail[AEF, Int](String("bad"))).recover[AEF](ae_value).get()._ok().value, 3)
-    assert_equal(piped(fail[AEF, Int](String("bad"))).or_else[AEF](ae_effect).get()._ok().value, 3)
-    assert_equal(piped(fail[AEF, Int](String("bad"))).or_else[AEF](ae_again).get()._err().value, "bad!")
+    assert_equal(pipeline[AEF](fail[AEF, Int](String("bad"))).recover(ae_value).get()._ok().value, 3)
+    assert_equal(pipeline[AEF](fail[AEF, Int](String("bad"))).or_else(ae_effect).get()._ok().value, 3)
+    assert_equal(pipeline[AEF](fail[AEF, Int](String("bad"))).or_else(ae_again).get()._err().value, "bad!")
     var calls = ArcPointer(0)
     def counted(var error: String) {calls} -> Int:
         calls[] += 1
         return 8
-    assert_equal(piped(AER(Ok(7))).recover[AEF](counted).get()._ok().value, 7)
+    assert_equal(pipeline[AEF](AER(Ok(7))).recover(counted).get()._ok().value, 7)
     assert_equal(calls[], 0)
     var chain = kleisli[AEF](ae_effect)
-    assert_equal(piped(fail[AEF, Int](String("four"))).or_else[AEF](chain).get()._ok().value, 4)
+    assert_equal(pipeline[AEF](fail[AEF, Int](String("four"))).or_else(chain).get()._ok().value, 4)
     def raised(var error: String) raises Int -> Int: raise 91
     var code = 0
     try:
-        _ = piped(fail[AEF, Int](String("bad"))).recover[AEF](raised).get()
+        _ = pipeline[AEF](fail[AEF, Int](String("bad"))).recover(raised).get()
     except error:
         comptime assert type_of(error) == Int
         code = error
     assert_equal(code, 91)
     # Existing inferred Result recovery still admits a changed stored-error type.
     def changed(var error: String) -> Result[Int, Int]: return Err(error.byte_length())
-    assert_equal(piped(fail[AEF, Int](String("bad"))).or_else(changed).get()._err().value, 3)
+    assert_equal(pipeline(fail[AEF, Int](String("bad"))).or_else(changed).get()._err().value, 3)
     comptime V = ValidationFamily[ListMonoid[String]]
     comptime assert conforms_to(V, ApplicativeError) and not conforms_to(V, Monad)
     def count(var errors: List[String]) -> Int: return len(errors)
     var errors: List[String] = ["first", "second"]
-    assert_equal(piped(fail[V, Int](errors^)).recover[V](count).get()._ok().value, 2)
+    assert_equal(pipeline[V](fail[V, Int](errors^)).recover(count).get()._ok().value, 2)
 
 
 def ae_layers() raises:
     comptime L = ResultT[ListFamily, String]
     var calls = ArcPointer(0)
     var items: List[AER] = [AER(Ok(8)), AER(Err(String("a"))), AER(Err(String("drop"))), AER(Err(String("b"))), AER(Ok(9))]
-    var handled = piped(items^).or_else[L](AEBranches(calls)).get()
+    var handled = pipeline[L](items^).or_else(AEBranches(calls)).get()
     assert_equal(calls[], 3)
     assert_equal(len(handled), 6)
     assert_equal(handled[0]._ok().value, 8)
@@ -73,21 +73,21 @@ def ae_layers() raises:
     assert_equal(handled[3]._ok().value, 3)
     assert_equal(handled[4]._err().value, "b")
     assert_equal(handled[5]._ok().value, 9)
-    var no_items = piped(List[AER]()).or_else[L](AEBranches(calls)).get()
+    var no_items = pipeline[L](List[AER]()).or_else(AEBranches(calls)).get()
     assert_equal(len(no_items), 0)
     assert_equal(calls[], 3)
-    var recovered = piped(List[AER]([AER(Err(String("abc"))), AER(Ok(4))])).recover[L](ae_value).get()
+    var recovered = pipeline[L](List[AER]([AER(Err(String("abc"))), AER(Ok(4))])).recover(ae_value).get()
     assert_equal(recovered[0]._ok().value, 3)
     assert_equal(recovered[1]._ok().value, 4)
     comptime Nested = ResultT[AEF, String]
     comptime NR = Result[AER, String]
     def nested(var error: String) -> NR: return Ok(AER(Ok(20)))
-    var inner = piped(NR(Ok(AER(Err(String("inner")))))).or_else[Nested](nested).get()
+    var inner = pipeline[Nested](NR(Ok(AER(Err(String("inner")))))).or_else(nested).get()
     assert_equal(inner._ok().value._ok().value, 20)
-    var outer = piped(NR(Err(String("outer")))).or_else[Nested](nested).get()
+    var outer = pipeline[Nested](NR(Err(String("outer")))).or_else(nested).get()
     assert_equal(outer._err().value, "outer")
     comptime Distinct = ResultT[ResultFamily[Int], String]
-    var distinct = piped(Result[AER, Int](Err(99))).recover[Distinct](ae_value).get()
+    var distinct = pipeline[Distinct](Result[AER, Int](Err(99))).recover(ae_value).get()
     assert_equal(distinct._err().value, 99)
     assert_equal(fail[L, Int](String("one"))[0]._err().value, "one")
 
@@ -118,13 +118,13 @@ def ae_deferred() raises:
     def handler(var error: String) {calls} -> RA:
         calls[] += 1
         return action[R, AER](AERead(calls))
-    var recovered = piped(fail[L, Int](String("bad"))).or_else[L](handler).get()
+    var recovered = pipeline[L](fail[L, Int](String("bad"))).or_else(handler).get()
     assert_equal(calls[], 0)
     var env = 7
     assert_equal(run[R](recovered^, env)._ok().value, 8)
     assert_equal(calls[], 2)
     def raised(var error: String) raises Int -> Int: raise 77
-    var failing = piped(fail[L, Int](String("bad"))).recover[L](raised).get()
+    var failing = pipeline[L](fail[L, Int](String("bad"))).recover(raised).get()
     var code = 0
     try:
         _ = run[R](failing^, env)
@@ -134,7 +134,7 @@ def ae_deferred() raises:
     assert_equal(code, 77)
     comptime S = State[Int]
     comptime T = ResultT[S, String]
-    var state = piped(action[S, AER](AEState())).recover[T](ae_value).get()
+    var state = pipeline[T](action[S, AER](AEState())).recover(ae_value).get()
     var result = run[S](state^, 5)
     assert_equal(result[0]._ok().value, 7)
     assert_equal(result[1], 15)
@@ -142,7 +142,7 @@ def ae_deferred() raises:
     comptime WT = ResultT[W, String]
     comptime WA = type_of(writer[W, AER]((String(), AER(Ok(0)))))
     def log(var error: String) -> WA: return writer[W, AER]((String("b"), AER(Ok(6))))
-    var logged = piped(writer[W, AER]((String("a"), AER(Err(String("bad")))))).or_else[WT](log).get()
+    var logged = pipeline[WT](writer[W, AER]((String("a"), AER(Err(String("bad")))))).or_else(log).get()
     var output = run_writer[W](logged^)
     assert_equal(output[0], "ab")
     assert_equal(output[1]._ok().value, 6)

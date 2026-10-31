@@ -6,7 +6,7 @@ carrier is reached. No operation here runs a Reader or threads a State.
 from std.builtin.rebind import rebind_var
 from std.memory import MaybeUninit
 from fp.algebra.protocols import Monad, ErrorMapping
-from fp.algebra.contracts import MapContract
+from fp.algebra._contracts import MapContract
 from fp.algebra.error_mapping import MapBothContract, _map_both
 from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary
 from fp.callables.products import _take_pair, _WithSecond, _MapPair, _map_pair

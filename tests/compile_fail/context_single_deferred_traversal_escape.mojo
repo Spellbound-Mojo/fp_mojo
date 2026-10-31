@@ -1,5 +1,5 @@
 # error: origin_of(local_value)
-from fp.algebra import OptionalFamily,sequence
+from fp.algebra import OptionalFamily, sequence
 from fp.effects import Reader,run
 
 def read_pointer[o:ImmOrigin](ref[o] value:Int)->Pointer[Int,o]:return Pointer(to=value)

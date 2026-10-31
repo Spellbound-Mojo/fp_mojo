@@ -1,4 +1,4 @@
-from fp.algebra import Applicative,IdentityFamily,OptionalFamily,ResultFamily,ListFamily,StringMonoid,pure
+from fp.algebra import Applicative, IdentityFamily, OptionalFamily, ResultFamily, ListFamily, StringMonoid, pure
 from fp.effects import WriterT,ReaderT,StateT,OptionalT,ResultT,run,run_writer
 from test_applicative_error_ownership import AEOOwner as Owner
 from test_writer_capabilities import WCMoveLogMonoid

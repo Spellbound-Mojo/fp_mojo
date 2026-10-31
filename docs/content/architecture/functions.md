@@ -232,16 +232,13 @@ execution loop. The [generic wrapper guide](../guides/generic-wrappers.md)
 describes admission checks; the [compatibility inventory](../guides/compatibility.md)
 records source/package qualification.
 
-The legacy chain remains available:
-
-`piped(value)` returns a `Piped[T]` holding the value, and each `then(f)` applies
-one stage and returns `Piped[R]`. A chain is therefore a sequence of ordinary
-calls, each with one function-typed parameter, so Mojo infers every stage's
-types without a planner and without a stage limit. Non-raising stages and library
-`Unary` values go through the single-stage `pipe(value, f)` overloads; a raising
-stage is called directly, because forwarded through `pipe` its error would be the
-callback's `F.E`, which Mojo 1.1 cannot prove equal to the stated `E`. There is
-no common-error check across a chain: each `then` raises its stage's own error.
+The former `piped(value)` chain has been removed in favor of `pipeline`; see
+[removed surfaces](native-boundaries.md#removed-surfaces). It returned a
+`Piped[T]` holding the value, and each `then(f)` applied one stage and returned
+`Piped[R]`, so Mojo inferred every stage's types without a planner and without
+a stage limit. Each `then` raised its stage's own error, with no common-error
+check across the chain. Pipeline keeps the unlimited one-stage-per-call shape
+and adds a selected error context.
 
 ## Composition
 
@@ -360,15 +357,17 @@ packs forwarded into named parameters would allow keyword binding.
 
 ## Pipeline combinators
 
-`Piped` and `Iter` expose `map`, `filter` and `fold_left`. `Iter` forwards to
-the canonical iterator operations; `fp.combinators` re-exports those functions
-for direct calls. Piped delegates mapping and filtering to algebra families;
-its fold uses iteration. There are no
+`Pipeline` and `Iter` expose `map`, `filter` and `fold_left`. `Iter` forwards to
+the canonical iterator operations, which `fp.iteration` also exports for direct
+calls. Pipeline delegates mapping and filtering to algebra families; its fold
+uses iteration. There are no
 operation objects, runtime registries or dispatch tokens.
 
 ### Container-preserving map
 
-`Piped.map(f)` infers these native containers from its receiver:
+`Pipeline.map(f)` maps these native containers. List, Optional and Result are
+inferred; `.elements()` selects Array, Deque and LinkedList elements, and
+`pipeline_values(dictionary^)` selects Dict and StringDict values:
 
 | Input | Output | Retained context |
 |---|---|---|
@@ -392,8 +391,8 @@ raised by a callback is an error, not source exhaustion. Result errors remain da
 The adapters live in `src/fp/algebra/collections.mojo`, separate from pipeline
 syntax. Existing List, Optional and Result instances remain their canonical
 owners. Identity traversal and collection construction share `_map_accumulate`
-and its existing `_Accumulate` rules; native callback adaptation is shared by
-algebra operations and Piped through `_map_native`.
+and its existing `_Accumulate` rules; algebra operations adapt native callbacks
+through `_map_native`.
 
 Mojo's native receiver constraints infer array lengths, key types and hashers.
 Dict and StringDict do not expose their value parameter through a trait, so
@@ -428,7 +427,7 @@ An explicit family can supply one; otherwise choose lazy `iterated` mapping.
 
 ### Container-preserving filter
 
-`Piped.filter(predicate)` runs immediately for List, Deque, LinkedList, Dict,
+`Pipeline.filter(predicate)` runs immediately for List, Deque, LinkedList, Dict,
 StringDict and Optional, returning the same concrete container type. The
 predicate borrows each candidate once in native order and returns Bool.
 Accepted values move unchanged; rejected values are destroyed before the next
@@ -476,18 +475,16 @@ explicit family or lazy iteration. Nothing silently becomes a List.
 
 ### Evaluation and migration
 
-`Piped.get()` only extracts its stored value. Built-in container mapping and
+`Pipeline.get()` only extracts its stored value. Built-in container mapping and
 filtering have already run; explicit families retain their evaluation semantics.
 `Iter.map` and `Iter.filter` construct lazy iterators and require non-raising
-callbacks. Folds consume their sources immediately; Piped wraps the accumulator
+callbacks. Folds consume their sources immediately; Pipeline wraps the accumulator
 and Iter returns it directly.
 
-Replace the previous lazy `piped(source).map(f).get()` with
-`iterated(source).map(f)` when you need deferred iteration. For eager mapping,
-pass a supported container to Piped. Similarly, replace a lazy
-`piped(source).filter(p).get()` with `iterated(source).filter(p)`. Eager
-`piped(values^).filter(p).map(f)` needs no intermediate collection call.
-Direct `fp.combinators.map` and `filter` retain their lazy semantics.
+Use `iterated(source).map(f)` or `iterated(source).filter(p)` for deferred
+iteration. For eager work, pass a supported container to `pipeline`: eager
+`pipeline(values^).filter(p).map(f)` needs no intermediate collection call.
+Direct `fp.iteration.map` and `filter` are lazy.
 
 ### Ordinary functions and fluent syntax
 
@@ -514,7 +511,7 @@ Migrate prototype calls as follows:
 | `.then[E=E](fold_left, step, initial)` | `.fold_left[E=E](step, initial)` |
 
 `MapOperation`, `FilterOperation` and `FoldLeftOperation` are removed. The names
-`map`, `filter` and `fold_left` in `fp.combinators` now refer to ordinary
+`map`, `filter` and `fold_left` in `fp.iteration` are ordinary
 functions. The experimental `.then(function, arguments...)` overloads are also
 removed; `then` accepts one callable receiving the whole value. Bind arguments
 in a named helper or native closure, or use `partial` when its copying and
@@ -526,10 +523,10 @@ protocol.
 
 ### Derived combinators
 
-`Piped[Value]` remains a general value wrapper. Families belong to individual
-collection operations; `.then()` can change an ordinary struct into a container
-and later into a scalar without carrying or resetting a family parameter.
-Arbitrary structs do not acquire collection semantics. Generic code selects a
+`Pipeline[I, V, E]` carries its family as a type parameter. `.then()` can change
+an ordinary struct into a container and later into a scalar; each stage infers
+the native family of its result. Arbitrary structs use Identity and do not
+acquire collection semantics. Generic code selects a
 family explicitly when native container inference is unavailable.
 
 Derived combinators reuse the existing capabilities. `filter_not` adapts a
@@ -544,7 +541,7 @@ through this selection path with `_Select`, while custom Filterable families
 remain independent and need no migration.
 
 `callables._transforms` owns constant mapping, equality replacement, tuple
-construction and borrowed observation. Both Piped and Iter reuse these rules.
+construction and borrowed observation. Both Pipeline and Iter reuse these rules.
 The observation adapters borrow the payload, then move it unchanged or pair it
 with the result. Native lazy observation uses a MutableUnary adapter so that
 owned capture updates survive O3; the existing map iterator admits that private
@@ -572,23 +569,13 @@ Monad and Traversable operations. Iter traversal is a terminal into the target
 Applicative's carrier of a List. There is no new implementation of effect
 sequencing or short-circuit behavior.
 
-Native forwarding signatures come from `scripts/generate_pipeline_syntax.py`.
-One carrier table describes type shapes, family adapters, extra parameters and
-supported capabilities. Operation templates produce Piped's native container
-methods; `scripts/generate_combinator_syntax.py` shares terminal signatures
-between direct calls and both chain forms. Run `python scripts/generate_plain_overloads.py`
-to regenerate them, or add `--check` to detect drift. The generated methods
-check receiver type and origins, recover the native type and delegate; they
-contain no traversal, callback invocation or collection construction. Explicit
-family methods handle custom containers, including deferred results.
-
-Adding a supported native carrier requires its primitive capability adapters
-and one table entry. Adding a derived operation requires its shared semantics
-and forwarding templates, independent of the carrier count. This removes
-manual signature repetition; generated source and overload resolution still
-grow with containers times operations. Compilation cost has not been
-benchmarked. The generator follows the repository's existing approach to
-native plain-function signatures.
+Pipeline's native forwarding signatures come from `scripts/generate_context.py`;
+`scripts/generate_combinator_syntax.py` shares terminal signatures between
+direct calls and the fluent forms. The generated methods check receiver type
+and origins and delegate; they contain no traversal, callback invocation or
+collection construction. Explicit families handle custom containers, including
+deferred results. Adding a native carrier requires its primitive capability
+adapters and family inference, not new per-carrier methods.
 
 Iterator filtering uses the same Boolean decision rule and the existing
 private filter iterator, with a compile-time polarity parameter.
@@ -605,24 +592,10 @@ Cats derives
 [`filterNot` in `FunctorFilter`](https://github.com/typelevel/cats/blob/main/core/src/main/scala/cats/FunctorFilter.scala).
 The tested Mojo 1.1 generic forwarding and overloaded family-selection
 encodings could not recover native container parameters. A combined constraint
-also failed to infer a Dict's key and non-default hasher. Generated native
-signatures preserve direct chaining without adding a family parameter to every
-pipeline or an extra family-view step.
-
-### Piped type parameter migration
-
-The type parameter is now `Value`, the whole pipeline payload. Change explicit
-`Piped[T=Int]` bindings to `Piped[Value=Int]` and `Piped[Int].T` references to
-`Piped[Int].Value`. Positional `Piped[Int]`, inferred `piped(value)` and explicit
-`piped[T=Int](value)` calls keep their existing spelling; the factory has its own
-parameter named `T`.
-
-The rename leaves `T` available for a mapping method's element type. Captured
-callbacks, including callbacks returning borrowed views, passed when method
-signatures used the canonical `T` and `U` names; substituting `A` for `T` failed
-during lazy callback admission on Mojo 1.1. Giving the struct and its method
-the same parameter name is rejected as a redefinition. The rename preserves
-the wrapper's single stored value and its ownership and error contracts.
+also failed to infer a Dict's key and non-default hasher. The removed Piped
+surface therefore generated per-carrier native signatures. Pipeline instead
+carries the family as a type parameter selected once at construction, and
+`pipeline_values` selects dictionary values explicitly.
 
 ## Kleisli composition
 

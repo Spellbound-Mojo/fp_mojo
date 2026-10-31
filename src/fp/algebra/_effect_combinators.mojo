@@ -5,7 +5,7 @@ from fp._internal.errors import _CommonError, _ErrorCompatible
 from .protocols import Monad, _LiveAccumulator, Monoid, _start_as, _flat_map_as, _fold_as
 from ._sequencing import _choose_effect, _IfEffect
 from ._accumulation import _Combine, _FoldMappedStep, _SearchStep, _BoolLive, _PredicateStep
-from .contracts import _EffectFold
+from ._contracts import _EffectFold
 from .protocols import _AllLive
 
 

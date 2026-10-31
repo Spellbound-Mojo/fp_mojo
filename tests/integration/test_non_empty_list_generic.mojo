@@ -2,7 +2,7 @@
 from fp.data import NonEmptyList
 from fp.algebra import NonEmptyListFamily, NonEmptyListSemigroup, map, traverse
 from fp.effects import Reader, run
-from fp.functions import piped
+from fp.functions import pipeline
 from std.testing import assert_equal
 
 
@@ -23,7 +23,12 @@ def nelg_borrows(values: List[Int]) raises:
     assert_equal(mapped.first()[1], 8)
     var joined = NonEmptyListSemigroup[View].combine(mapped^, NonEmptyList(view))
     assert_equal(joined^.into_list()[1][0], 7)
-    var projected = piped(NonEmptyList(view)).map[NonEmptyListFamily](nelg_same[origin_of(values)]).get()
+    var projected: NonEmptyList[View]
+    try:
+        projected = pipeline[NonEmptyListFamily](NonEmptyList(view)).map(nelg_same[origin_of(values)]).get()
+    except error:
+        comptime assert type_of(error) == String
+        raise Error(error)
     assert_equal(projected.first()[0], 7)
 
 def nelg_produce(var value: Int) -> Reader[Int].Pure[Int]:

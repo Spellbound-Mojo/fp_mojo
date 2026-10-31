@@ -2,7 +2,7 @@
 from fp.algebra import Semigroup
 from fp.callables import MutableUnary, OnceUnary
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
@@ -66,7 +66,7 @@ def pvo_conveniences() raises:
     var success = ArcPointer(0)
     var errors = ArcPointer(0)
     comptime R = Result[PVOwned,List[PVOwned]]
-    var product = piped(R(Ok(PVOwned(1,success)))).par_product_n((R(Ok(PVOwned(2,success))),)).get()
+    var product = pipeline(R(Ok(PVOwned(1,success)))).par_product_n((R(Ok(PVOwned(2,success))),)).get()
     assert_equal(product._ok().value[1].id,2)
     assert_equal(success[],0)
     _ = product^
@@ -74,7 +74,7 @@ def pvo_conveniences() raises:
     var items = List[R]()
     items.append(R(Ok(PVOwned(3,success))))
     items.append(R(Ok(PVOwned(4,success))))
-    var collected = piped(items^).par_sequence().get()
+    var collected = pipeline(items^).par_sequence().get()
     assert_equal(collected._ok().value[1].id,4)
     assert_equal(success[],2)
     _ = collected^
@@ -103,7 +103,7 @@ def pvo_conveniences() raises:
     second.append(PVOwned(2,errors))
     var code = 0
     try:
-        _ = piped(R(Err(first^))).par_product_n[PVOwnedMerge]((R(Err(second^)),R(Ok(PVOwned(9,success))))).get()
+        _ = pipeline(R(Err(first^))).par_product_n[PVOwnedMerge]((R(Err(second^)),R(Ok(PVOwned(9,success))))).get()
     except error:
         comptime assert type_of(error) == PVOwned
         code = error.id
@@ -137,13 +137,13 @@ def main() raises:
     pvo_traverse(success,errors,owners)
     assert_equal(errors[],2)
     comptime R=Result[PVOwned,List[PVOwned]]
-    var joined=piped(R(Ok(PVOwned(1,success)))).par_map_n((R(Ok(PVOwned(2,success))),),PVOwnedConstructor(PVOwned(3,owners))).get()
+    var joined=pipeline(R(Ok(PVOwned(1,success)))).par_map_n((R(Ok(PVOwned(2,success))),),PVOwnedConstructor(PVOwned(3,owners))).get()
     assert_equal(joined._ok().value,6)
     assert_equal(success[],5)
     assert_equal(owners[],2)
     var failures=List[PVOwned]()
     failures.append(PVOwned(7,errors))
-    var skipped=piped(R(Ok(PVOwned(9,success)))).par_map_n((R(Err(failures^)),),PVOwnedConstructor(PVOwned(8,owners))).get()
+    var skipped=pipeline(R(Ok(PVOwned(9,success)))).par_map_n((R(Err(failures^)),),PVOwnedConstructor(PVOwned(8,owners))).get()
     assert_true(skipped.is_err())
     assert_equal(success[],6)
     assert_equal(owners[],3)
@@ -151,7 +151,7 @@ def main() raises:
     assert_equal(errors[],3)
     var code=0
     try:
-        _=piped(R(Ok(PVOwned(2,success)))).par_map_n((R(Ok(PVOwned(3,success))),),pvo_failure).get()
+        _=pipeline(R(Ok(PVOwned(2,success)))).par_map_n((R(Ok(PVOwned(3,success))),),pvo_failure).get()
     except error:
         comptime assert type_of(error)==PVOwned
         code=error.id
@@ -167,7 +167,7 @@ def main() raises:
             return Err(es^)
         return Ok(PVOwned(value,success))
     try:
-        _=piped(List[Int]([1,-2,3,4])).par_traverse(raised).get()
+        _=pipeline(List[Int]([1,-2,3,4])).raising[PVOwned]().par_traverse(raised).get()
     except error:
         comptime assert type_of(error)==PVOwned
         code=error.id
@@ -179,7 +179,7 @@ def main() raises:
     var right=List[PVOwned]()
     right.append(PVOwned(2,errors))
     try:
-        _=piped(R(Err(left^))).par_map_n[PVOwnedMerge]((R(Err(right^)),R(Ok(PVOwned(3,success)))),pvo_three).get()
+        _=pipeline(R(Err(left^))).par_map_n[PVOwnedMerge]((R(Err(right^)),R(Ok(PVOwned(3,success)))),pvo_three).get()
     except error:
         comptime assert type_of(error)==PVOwned
         code=error.id

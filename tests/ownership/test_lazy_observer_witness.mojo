@@ -1,6 +1,6 @@
 """Stored native observers retain origins, exact destruction and no-value calls."""
 from fp.iteration import iterated
-from fp.functions import piped
+from fp.functions import pipeline
 from std.memory import ArcPointer
 from std.testing import assert_equal
 
@@ -63,6 +63,6 @@ def main() raises:
     var seen = 0
     def observe(value: Int) {mut seen}:
         seen += value
-    var eager = piped(List[Int]([3, 4])).tap_each(observe).get()
+    var eager = pipeline(List[Int]([3, 4])).tap_each(observe).get()
     assert_equal(seen, 7)
     assert_equal(eager, [3, 4])

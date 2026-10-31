@@ -1,5 +1,6 @@
 from context_ap_contract_support import Plus, Consuming, Missing, KeepMove, CopyOnce, MoveState
-from fp.algebra import ApContract, OptionalFamily, ListFamily
+from fp.algebra import OptionalFamily, ListFamily
+from fp.algebra.contracts import ApContract
 
 def main():
     comptime assert not ApContract[OptionalFamily,Optional[Int],Optional[Int]].CallableCompatible

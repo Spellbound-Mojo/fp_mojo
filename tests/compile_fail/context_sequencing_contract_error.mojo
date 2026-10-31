@@ -1,5 +1,6 @@
 # error: context that supports an error type of 'String'
-from fp.algebra import Monad, BeforeContract, OptionalFamily, ListFamily
+from fp.algebra import Monad, OptionalFamily, ListFamily
+from fp.algebra.contracts import BeforeContract
 from fp.callables import ThunkContract, Thunk, OnceThunk
 from fp.functions import pipeline
 

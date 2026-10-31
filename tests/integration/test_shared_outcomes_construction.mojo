@@ -2,7 +2,7 @@
 from test_applicative_error_lifting_construction import AELConstructorBase, AELConstructionFailure
 from test_applicative_error_extension import AEXFamily
 from fp.effects import ReaderT, run
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
 
@@ -18,37 +18,37 @@ def main() raises:
     comptime F = AELConstructorBase
     var code: Int
     try:
-        var accepted = piped(Result[Int, String](Ok(1))).ensure[F](soc_accept, soc_error).get()
+        var accepted = pipeline[F](Result[Int, String](Ok(1))).ensure(soc_accept, soc_error).get()
         code = accepted._ok().value
     except error: code = -1
     assert_equal(code, 1)
     try:
-        _ = piped(Result[Int, String](Ok(1))).ensure[F](soc_reject, soc_error).get()
+        _ = pipeline[F](Result[Int, String](Ok(1))).ensure(soc_reject, soc_error).get()
     except error:
         comptime assert type_of(error) == AELConstructionFailure
         code = error.value
     assert_equal(code, 31)
     var retained: String
     try:
-        var existing = piped(Result[Int, String](Err(String("construct")))).ensure[F](soc_reject, soc_error).get()
+        var existing = pipeline[F](Result[Int, String](Err(String("construct")))).ensure(soc_reject, soc_error).get()
         retained = existing._err().value.copy()
     except error: retained = "unexpected"
     assert_equal(retained, "construct")
     code = 0
     try:
-        _ = piped(Result[Int, String](Err(String("construct")))).attempt_tap[F](soc_observe).get()
+        _ = pipeline[F](Result[Int, String](Err(String("construct")))).attempt_tap(soc_observe).get()
     except error:
         comptime assert type_of(error) == AELConstructionFailure
         code = error.value
     assert_equal(code, 31)
     try:
-        var replaced = piped(Result[Int, String](Err(String("construct")))).attempt_tap[F](soc_failed).get()
+        var replaced = pipeline[F](Result[Int, String](Err(String("construct")))).attempt_tap(soc_failed).get()
         retained = replaced._err().value.copy()
     except error: retained = "unexpected"
     assert_equal(retained, "observer")
-    assert_equal(piped(Result[Int, String](Err(String("construct")))).redeem[AEXFamily](soc_ok, soc_err).get()._ok().value, 42)
+    assert_equal(pipeline[AEXFamily](Result[Int, String](Err(String("construct")))).redeem(soc_ok, soc_err).get()._ok().value, 42)
     comptime D = ReaderT[F, Int]
-    var pending = piped(D.pure(1)).ensure[D](soc_reject, soc_error).get()
+    var pending = pipeline[D](D.pure(1)).ensure(soc_reject, soc_error).get()
     code = 0
     try: _ = run[D](pending^, 0)
     except error:

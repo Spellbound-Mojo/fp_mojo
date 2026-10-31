@@ -1,10 +1,11 @@
-from fp.algebra import FindMapContract, Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, pure
+from fp.algebra import Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, pure
+from fp.algebra.contracts import FindMapContract
 from fp.callables import UnaryContract, Unary, MutableUnary, OnceUnary
 from fp.effects import Reader, run
 from std.memory import ArcPointer
 from fp.iteration import find_map_effect, iterated, Iter
 from std.iter import Iterator
-from fp.functions import piped, pipeline, Pipeline
+from fp.functions import pipeline, Pipeline
 from std.testing import assert_equal
 from algebra_support.box import BoxMonad
 
@@ -16,7 +17,7 @@ def forward[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Dein
 def fluent[I: Monad, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: V
 ) raises FindMapContract[I, V, F].Error -> FindMapContract[I, V, F].Out where FindMapContract[I, V, F].Compatible:
-    return piped(source^).find_map_effect[I](function^).get()
+    return pipeline[IdentityFamily](source^).find_map_effect[I](function^).get()
 
 def iterator_forward[I: Monad, V: Iterator, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: Iter[V]

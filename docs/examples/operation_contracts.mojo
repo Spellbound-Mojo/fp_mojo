@@ -1,5 +1,6 @@
 """Public contracts name generic operation admission, results and native errors."""
-from fp.algebra import Functor, MapContract, FillContract, VoidContract, TupleRightContract, Applicative, Traversable, TraverseContract, TraverseTapContract, FunctorFilter, FilterEffectContract, Monad, TraverseFilterContract, FlatTraverseContract, ListFamily, OptionalFamily
+from fp.algebra import Functor, Applicative, Traversable, FunctorFilter, Monad, ListFamily, OptionalFamily
+from fp.algebra.contracts import MapContract, FillContract, VoidContract, TupleRightContract, TraverseContract, TraverseTapContract, FilterEffectContract, TraverseFilterContract, FlatTraverseContract
 from fp.callables import UnaryContract, Unary, BorrowCallContract, BorrowSignature, as_unary
 from fp.functions import pipeline, Identity
 from std.testing import assert_equal

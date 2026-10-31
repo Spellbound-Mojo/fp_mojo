@@ -1,6 +1,6 @@
 """Direct combinator exports retain native signatures, origins and errors."""
-from fp.combinators import map, filter, fold_left
-from fp.functions import piped
+from fp.iteration import map, filter, fold_left
+from fp.functions import pipeline
 from fp.iteration import MapIterator, FilterIterator, iterated, collect_list
 from fp.iteration import map as native_map, filter as native_filter, fold_left as native_fold
 from fp.callables import as_unary
@@ -22,7 +22,7 @@ def direct_examples() raises:
     var selected = filter(direct_values^, combinator_positive)
     var squares = map(selected^, combinator_square)
     assert_equal(fold_left(squares^, 0, combinator_add), 50)
-    assert_equal(piped(collect_list(filter(values^, combinator_positive))).map(combinator_square).fold_left(combinator_add, 0).get(), 50)
+    assert_equal(pipeline(collect_list(filter(values^, combinator_positive))).map(combinator_square).fold_left(combinator_add, 0).get(), 50)
     assert_equal(iterated(lazy_values^).filter(combinator_positive).map(combinator_square).fold_left(combinator_add, 0), 50)
     assert_equal(collect_list(map(range(3), combinator_text)), ["0", "1", "2"])
     assert_equal(fold_left(range(0), 7, combinator_add), 7)

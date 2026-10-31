@@ -16,47 +16,6 @@ from fp.callables.products import _take_pair
 from fp._internal.errors import _CommonError, _ErrorCompatible
 
 
-trait _Terminal(Movable, Deinitable):
-    """A terminal with a generic source boundary, preserving local view origins."""
-    comptime Out: Movable & Deinitable
-    comptime Error: Movable & Deinitable
-    def run[V: Movable & Deinitable](deinit self, var source: V) raises Self.Error -> Self.Out:
-        ...
-
-
-@fieldwise_init
-struct _FoldMapRun[F: UnaryContract & Movable & Deinitable, M: Monoid,
-                   E: Movable & Deinitable](_Terminal):
-    var function: Self.F
-    comptime Out = Self.M.Value
-    comptime Error = Self.E
-    def run[V: Movable & Deinitable](deinit self, var source: V) raises Self.E -> Self.Out:
-        return _fold_map[V, Self.F, Self.M, Self.E](self.function^, source^)
-
-
-@fieldwise_init
-struct _FindMapRun[F: UnaryContract & Movable & Deinitable](_Terminal):
-    var function: Self.F
-    comptime Out = Self.F.Out
-    comptime Error = Self.F.Error
-    def run[V: Movable & Deinitable](deinit self, var source: V) raises Self.Error -> Self.Out:
-        return _find_map(self.function^, source^)
-
-
-@fieldwise_init
-struct _ExtremumRun[T: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable, smallest: Bool](_Terminal):
-    var function: Self.C
-    comptime Out = Optional[Self.T]
-    comptime Error = Self.C.Failure
-    def run[V: Movable & Deinitable](deinit self, var source: V) raises Self.Error -> Self.Out:
-        return _extremum[V, Self.T, Self.C, Self.smallest](self.function^, source^)
-
-
-def _run_terminal[R: _Terminal, V: Movable & Deinitable](var reduction: R, var source: V
-) raises R.Error -> R.Out:
-    return reduction^.run(source^)
-
-
 def _fold_map[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, M: Monoid,
               E: Movable & Deinitable = _CommonError[F.Error, M.Error]](
     var function: F, var source: V

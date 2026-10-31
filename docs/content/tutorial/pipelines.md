@@ -24,9 +24,9 @@ next starts. The lazy chain retains an iterator until `.sum_by(square)` consumes
 it. `filter_not(positive)` keeps the two negative values instead.
 
 The [API guide](../start/choosing-api.md) compares eager collection work, lazy
-iteration, direct Result operations and native capture. Free functions in
-[`fp.combinators`](../reference/combinators.md) remain available when a direct
-function call fits the surrounding algorithm.
+iteration, direct Result operations and native capture. The free functions in
+`fp.iteration`, described in the [combinators guide](../reference/combinators.md),
+fit when a direct function call suits the surrounding algorithm.
 
 For a list literal, put its element type on the pipeline:
 `pipeline[Int]([1, 2, 3]).map(square).get()`. Empty lists use the same form:
@@ -319,9 +319,9 @@ A wrapper generic over a family should forward its public
 operation contract; the [wrapper guide](../guides/generic-wrappers.md) covers
 that advanced case. Ordinary fluent calls need no such contract annotations.
 
-Existing `pipe(value, first, second, ...)` and `piped(value)` code remains
-supported. Their overload rules are documented under
+`pipe(value, first, second, ...)` applies up to eight plain functions in one
+call. Its overload rules are documented under
 [other pipeline entry points](../reference/functions.md#other-pipeline-entry-points).
-Use `pipeline` as the starting point for new fluent code.
+Use `pipeline` for closures, payload operations or longer chains.
 
 Next, see how [folds and lazy iterators](iteration.md) consume sources.

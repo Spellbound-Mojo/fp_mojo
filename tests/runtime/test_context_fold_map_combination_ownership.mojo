@@ -1,5 +1,6 @@
 """Mapped folds preserve owned callback, source, accumulator and error cleanup."""
-from fp.algebra import FoldMapContract, Monad, Monoid, IdentityFamily, OptionalFamily, ResultFamily, pure
+from fp.algebra import Monad, Monoid, IdentityFamily, OptionalFamily, ResultFamily, pure
+from fp.algebra.contracts import FoldMapContract
 from fp.callables import MutableUnary
 from fp.effects import Reader, run
 from context_fold_map_contract_support import forward

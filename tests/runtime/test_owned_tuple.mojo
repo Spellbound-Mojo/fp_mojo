@@ -1,6 +1,6 @@
 """Tuple attachment infers move-only values through single-call families."""
 from fp.data import Result, Ok, Err
-from fp.functions import pipeline, piped, pipeline_values
+from fp.functions import pipeline, pipeline_values
 from fp.algebra import ResultFamily, OptionalFamily
 from fp.effects import Reader, run
 from std.testing import assert_equal
@@ -26,15 +26,15 @@ def main() raises:
     var right = generic^.get_or((Box(0), Box(0)))
     assert_equal(right[0].value, 2)
     assert_equal(right[1].value, 8)
-    var legacy = piped(Result[Int, String](Ok(3))).tuple_right(Box(9)).get()
+    var legacy = pipeline(Result[Int, String](Ok(3))).tuple_right(Box(9)).get()
     assert_equal(legacy^.get_or((0, Box(0)))[1].value, 9)
-    var explicit = piped(Result[Int, String](Ok(4))).tuple_left[ResultFamily[String]](Box(10)).get()
+    var explicit = pipeline[ResultFamily[String]](Result[Int, String](Ok(4))).tuple_left(Box(10)).get()
     assert_equal(explicit^.get_or((Box(0), 0))[0].value, 10)
     var optional = pipeline(Optional(5)).tuple_right(Box(11)).get()
     assert_equal(optional.value()[1].value, 11)
-    var optional_legacy = piped(Optional(5)).tuple_left(Box(12)).get()
+    var optional_legacy = pipeline(Optional(5)).tuple_left(Box(12)).get()
     assert_equal(optional_legacy.value()[0].value, 12)
-    var optional_explicit = piped(Optional(5)).tuple_right[OptionalFamily](Box(13)).get()
+    var optional_explicit = pipeline[OptionalFamily](Optional(5)).tuple_right(Box(13)).get()
     assert_equal(optional_explicit.value()[1].value, 13)
     var identity = pipeline(Box(6)).tuple_right(Box(14)).get()
     assert_equal(identity[0].value, 6)
@@ -45,7 +45,7 @@ def main() raises:
     assert_equal(deferred[0].value, 15)
     assert_equal(deferred[1].value, 7)
     assert_equal(pipeline(List[Int]([1, 2])).tuple_left(3).get(), [(3, 1), (3, 2)])
-    assert_equal(piped(List[Int]([1, 2])).tuple_right(3).get(), [(1, 3), (2, 3)])
+    assert_equal(pipeline(List[Int]([1, 2])).tuple_right(3).get(), [(1, 3), (2, 3)])
     var dictionary = Dict[String, Int]()
     dictionary["key"] = 2
     var selected_dictionary = pipeline_values(dictionary^).raising[Int]().tuple_right(3)

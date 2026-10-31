@@ -1,4 +1,5 @@
-from fp.algebra import ErrorRecovery, AttemptContract, ResultFamily, IdentityFamily
+from fp.algebra import ErrorRecovery, ResultFamily, IdentityFamily
+from fp.algebra.contracts import AttemptContract
 from fp.effects import Reader, ResultT, run
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err

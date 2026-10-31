@@ -1,5 +1,6 @@
 """Generic attachment clients use public contracts without private adapters."""
-from fp.algebra import Functor, TupleLeftContract, TupleRightContract
+from fp.algebra import Functor
+from fp.algebra.contracts import TupleLeftContract, TupleRightContract
 from fp.functions import Pipeline, pipeline
 
 

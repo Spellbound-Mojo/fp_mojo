@@ -1,4 +1,4 @@
-from fp.algebra import Applicative,OptionalFamily,StringMonoid,pure
+from fp.algebra import Applicative, OptionalFamily, StringMonoid, pure
 from fp.effects import WriterT,WriterValue,ReaderT,run,run_writer
 from std.testing import assert_equal
 

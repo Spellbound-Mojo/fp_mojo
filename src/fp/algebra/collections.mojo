@@ -20,9 +20,7 @@ from .protocols import Monoid, Functor, RebindingFunctor, Filterable, FunctorFil
 from ._selection import _Select, _Keep
 from .instances import _ListElement, ListFamily, _NativeFamily, IdentityFamily
 from fp.iteration._advance import _next_optional, _buffer_owned
-from fp.iteration.reductions import _Terminal
 from .monoids import _CanonicalMonoid
-from fp.iteration.adapters import map as _lazy_map
 
 
 comptime ArrayFamily[N: Int] = _ArrayFamily[N]
@@ -430,42 +428,9 @@ struct _FilterValues[K: KeyElement & Deinitable, U: Movable & Deinitable, H: Has
 
 
 def _take_array[T: Movable & Deinitable, N: Int](var source: Array[T, N]) -> List[T]:
-    # One workaround for the pinned owning Array iterator, shared by mapping
-    # and terminal operations. Elements are moved, including move-only values.
+    # One workaround for the pinned owning Array iterator, used by mapping. Elements are moved, including move-only values.
     return _buffer_owned(source^)
 
 
-@fieldwise_init
-struct _EntryPayload[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](Unary):
-    comptime Arg = DictEntry[Self.K, Self.T, Self.H]
-    comptime Out = Self.T
-    def call(self, var arg: Self.Arg) -> Self.T:
-        var key_slot = MaybeUninit[Self.K]()
-        var value_slot = MaybeUninit[Self.T]()
-        _take_entry(arg^, key_slot, value_slot)
-        var key = key_slot^.unsafe_assume_init()
-        _ = key^
-        return value_slot^.unsafe_assume_init()
 
 
-def _dict_terminal[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hasher & Defaultable & Deinitable, R: _Terminal](
-    var reduction: R, var source: Dict[K, T, H]
-) raises R.Error -> R.Out:
-    # take_items borrows local storage. Run the terminal before that storage
-    # dies; a returned iterator would let this borrow escape. The generic run
-    # method preserves the view's native origin without erasing it.
-    var entries = source.take_items()
-    var values = _lazy_map(entries^, _EntryPayload[K, T, H]())
-    return reduction^.run(values^)
-
-
-def _string_dict_terminal[T: Movable & Deinitable, R: _Terminal](
-    var reduction: R, var source: StringDict[T]
-) raises R.Error -> R.Out:
-    return _dict_terminal(reduction^, _take_string_dict(source^))
-
-
-def _array_terminal[T: Movable & Deinitable, N: Int, R: _Terminal](
-    var reduction: R, var source: Array[T, N]
-) raises R.Error -> R.Out:
-    return reduction^.run(_take_array(source^))

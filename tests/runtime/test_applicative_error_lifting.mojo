@@ -2,7 +2,7 @@
 from fp.algebra import ApplicativeError, ResultFamily, ListFamily, StringMonoid, fail, pure
 from fp.effects import Reader, ReaderT, State, StateT, Writer, WriterT, OptionalT, ResultT, action, run, writer, run_writer
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary, MutableUnary, BorrowOnceCallable
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true, assert_false
@@ -61,16 +61,16 @@ def ael_reader() raises:
     def restore(var error: String) {calls} -> Next:
         calls[] += 1
         return action[AELRead, Int](AELRestoreRead(calls))
-    var pending = piped(action[AELRead, Int](AELReadSource(calls, True))).or_else[AELRead](restore).get()
+    var pending = pipeline[AELRead](action[AELRead, Int](AELReadSource(calls, True))).or_else(restore).get()
     assert_equal(calls[], 0)
     var env = 7
     assert_equal(run[AELRead](pending^, env)._ok().value, 17)
     assert_equal(calls[], 3)
-    var successful = piped(action[AELRead, Int](AELReadSource(calls, False))).or_else[AELRead](restore).get()
+    var successful = pipeline[AELRead](action[AELRead, Int](AELReadSource(calls, False))).or_else(restore).get()
     assert_equal(run[AELRead](successful^, env)._ok().value, 7)
     assert_equal(calls[], 4)
     def fallback(var error: String) -> Int: return 9
-    var failed = piped(fail[AELRead, Int](String("missing"))).recover[AELRead](fallback).get()
+    var failed = pipeline[AELRead](fail[AELRead, Int](String("missing"))).recover(fallback).get()
     assert_equal(run[AELRead](failed^, env)._ok().value, 9)
 
 
@@ -79,12 +79,12 @@ def ael_state() raises:
     comptime assert not conforms_to(State[Int], ApplicativeError)
     comptime Next = type_of(action[AELState, Int](AELRestoreState()))
     def restore(var error: String) -> Next: return action[AELState, Int](AELRestoreState())
-    var pending = piped(action[AELState, Int](AELStateSource(True))).or_else[AELState](restore).get()
+    var pending = pipeline[AELState](action[AELState, Int](AELStateSource(True))).or_else(restore).get()
     assert_equal(run[AELState](pending^, 5)._ok().value, (5, 6))
-    var successful = piped(action[AELState, Int](AELStateSource(False))).or_else[AELState](restore).get()
+    var successful = pipeline[AELState](action[AELState, Int](AELStateSource(False))).or_else(restore).get()
     assert_equal(run[AELState](successful^, 5)._ok().value, (105, 105))
     def fallback(var error: String) -> Int: return 9
-    var failed = piped(fail[AELState, Int](String("missing"))).recover[AELState](fallback).get()
+    var failed = pipeline[AELState](fail[AELState, Int](String("missing"))).recover(fallback).get()
     assert_equal(run[AELState](failed^, 5)._ok().value, (9, 5))
 
 
@@ -93,21 +93,21 @@ def ael_optional_writer() raises:
     comptime assert conforms_to(O, ApplicativeError)
     comptime assert not conforms_to(OptionalT[ListFamily], ApplicativeError)
     def optional(var error: String) -> Result[Optional[Int], String]: return Ok(Optional(8))
-    assert_equal(piped(fail[O, Int](String("bad"))).or_else[O](optional).get()._ok().value.value(), 8)
-    var absent = piped(Result[Optional[Int], String](Ok(Optional[Int]()))).or_else[O](optional).get()
+    assert_equal(pipeline[O](fail[O, Int](String("bad"))).or_else(optional).get()._ok().value.value(), 8)
+    var absent = pipeline[O](Result[Optional[Int], String](Ok(Optional[Int]()))).or_else(optional).get()
     assert_false(absent._ok().value)
     def value(var error: String) -> Int: return 12
-    assert_equal(piped(fail[O, Int](String("bad"))).recover[O](value).get()._ok().value.value(), 12)
+    assert_equal(pipeline[O](fail[O, Int](String("bad"))).recover(value).get()._ok().value.value(), 12)
     comptime W = WriterT[AELBase, StringMonoid]
     comptime assert conforms_to(W, ApplicativeError)
     comptime assert not conforms_to(Writer[StringMonoid], ApplicativeError)
     comptime Next = type_of(writer[W, Int](Result[Tuple[String, Int], String](Ok((String("handler"), 6)))))
     def logged(var error: String) -> Next:
         return writer[W, Int](Result[Tuple[String, Int], String](Ok((String("handler"), 6))))
-    var recovered = piped(fail[W, Int](String("bad"))).or_else[W](logged).get()
+    var recovered = pipeline[W](fail[W, Int](String("bad"))).or_else(logged).get()
     assert_equal(run_writer[W](recovered^)._ok().value, (String("handler"), 6))
     var source = writer[W, Int](Result[Tuple[String, Int], String](Ok((String("source"), 2))))
-    var kept = piped(source^).or_else[W](logged).get()
+    var kept = pipeline[W](source^).or_else(logged).get()
     assert_equal(run_writer[W](kept^)._ok().value, (String("source"), 2))
 
 
@@ -128,7 +128,7 @@ struct AELBoundary(OnceUnary, Defaultable):
     comptime Source = type_of(action[AELState, Int](AELStateSource(True)))
     comptime Out = AELState.Handled[Self.Source, Self.Handler]
     def call_once(deinit self, var value: Int) -> Self.Out:
-        return piped(action[AELState, Int](AELStateSource(True))).or_else[AELState](Self.Handler()).get()
+        return pipeline[AELState](action[AELState, Int](AELStateSource(True))).or_else(Self.Handler()).get()
 
 
 @fieldwise_init
@@ -171,10 +171,10 @@ struct AELBranchHandler(MutableUnary):
 
 
 def ael_boundary_and_branches() raises:
-    var composed = piped(action[AELState, Int](AELStateSource(False))).flat_map[AELState](AELBoundary()).get()
+    var composed = pipeline[AELState](action[AELState, Int](AELStateSource(False))).flat_map(AELBoundary()).get()
     assert_equal(run[AELState](composed^, 5)._ok().value, (105, 106))
     var calls = ArcPointer(0)
-    var branches = piped(action[AELBranches, Int](AELBranchSource())).or_else[AELBranches](AELBranchHandler(calls)).get()
+    var branches = pipeline[AELBranches](action[AELBranches, Int](AELBranchSource())).or_else(AELBranchHandler(calls)).get()
     assert_equal(calls[], 0)
     var outputs = run[AELBranches](branches^, 5)
     assert_equal(calls[], 2)
@@ -187,24 +187,24 @@ def ael_boundary_and_branches() raises:
 def ael_nested() raises:
     comptime OuterReader = ReaderT[ResultT[AELBase, String], Int]
     def fallback(var error: String) -> Int: return 10
-    var inner = piped(fail[OuterReader, Int](String("inner"))).recover[OuterReader](fallback).get()
+    var inner = pipeline[OuterReader](fail[OuterReader, Int](String("inner"))).recover(fallback).get()
     var environment = 5
     assert_equal(run[OuterReader](inner^, environment)._ok().value._ok().value, 10)
     var outer_error = Result[Result[Int, String], String](Err(String("outer")))
-    var outer = piped(OuterReader.lift(outer_error^)).recover[OuterReader](fallback).get()
+    var outer = pipeline[OuterReader](OuterReader.lift(outer_error^)).recover(fallback).get()
     assert_equal(run[OuterReader](outer^, environment)._err().value, "outer")
     comptime O = OptionalT[AELRead]
-    var optional = piped(fail[O, Int](String("bad"))).recover[O](fallback).get()
+    var optional = pipeline[O](fail[O, Int](String("bad"))).recover(fallback).get()
     assert_equal(run[AELRead](optional^, environment)._ok().value.value(), 10)
-    var absent = piped(pure[AELRead](Optional[Int]())).recover[O](fallback).get()
+    var absent = pipeline[O](pure[AELRead](Optional[Int]())).recover(fallback).get()
     assert_false(run[AELRead](absent^, environment)._ok().value)
     comptime W = WriterT[AELRead, StringMonoid]
-    var logged = piped(fail[W, Int](String("bad"))).recover[W](fallback).get()
+    var logged = pipeline[W](fail[W, Int](String("bad"))).recover(fallback).get()
     var base = run_writer[W](logged^)
     assert_equal(run[AELRead](base^, environment)._ok().value, (String(), 10))
     # The base below State may itself be deferred.
     comptime S = StateT[AELRead, Int]
-    var state = piped(fail[S, Int](String("bad"))).recover[S](fallback).get()
+    var state = pipeline[S](fail[S, Int](String("bad"))).recover(fallback).get()
     var read = run[S](state^, 8)
     assert_equal(run[AELRead](read^, environment)._ok().value, (10, 8))
 
@@ -229,7 +229,7 @@ def ael_nested_environment() raises:
     def restore(var error: String) {calls} -> Next:
         calls[] += 1
         return action[AELOuterRead, Int](AELNestedRead(calls))
-    var pending = piped(fail[AELOuterRead, Int](String("bad"))).or_else[AELOuterRead](restore).get()
+    var pending = pipeline[AELOuterRead](fail[AELOuterRead, Int](String("bad"))).or_else(restore).get()
     var outer_environment = String("configuration")
     var inner = run[AELOuterRead](pending^, outer_environment)
     assert_equal(calls[], 0)

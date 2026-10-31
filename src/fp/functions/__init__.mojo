@@ -39,7 +39,7 @@ monadic bind. Its `map` transforms successful payloads; ordinary container
 """
 
 from fp.callables.native import as_unary, as_binary
-from .pipeline import identity, pipe, Piped, piped
+from .pipeline import identity, pipe
 from .composition import Composition, Identity, flow, compose
 from .kleisli import Kleisli, kleisli
 from .flipped import Flipped, FlippedFunction, flip

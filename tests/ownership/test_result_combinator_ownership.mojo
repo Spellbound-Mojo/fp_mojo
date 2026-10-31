@@ -1,6 +1,6 @@
 """Result combinators retain move-only owners and release every branch once."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import BorrowOnceCallable, OnceThunk
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
@@ -86,7 +86,7 @@ def rco_other_branches() raises:
     var drops = ArcPointer(0)
     var calls = ArcPointer(0)
     var value = Result[RCOwner, RCOwner](Ok(RCOwner("keep", drops)))
-    var kept = piped(value^).before(RCOFactory(RCOwner("ignored", drops))).get()
+    var kept = pipeline(value^).before(RCOFactory(RCOwner("ignored", drops))).get()
     assert_equal(drops[], 1)
     assert_equal(kept^.fold_owned(rco_name, rco_name), "keep")
     assert_equal(drops[], 2)
@@ -139,7 +139,7 @@ def rco_origins_and_native_capture(values: List[Int]) raises:
     def rco_captured(value: Int) {var capture^} -> Result[String, String]:
         return Ok(capture.name.copy() + String(value))
     var captured_input = Result[Int, String](Ok(2))
-    var capture_pair = piped(captured_input^).flat_pair_with(rco_captured).get().raise_on_err()
+    var capture_pair = pipeline(captured_input^).flat_pair_with(rco_captured).get().raise_on_err()
     assert_equal(capture_pair[1], "captured2")
     assert_equal(drops[], 0)
     _ = rco_captured^

@@ -1,5 +1,6 @@
 from context_if_contract_support import Missing, Once, Factory, legacy_selected, expanded_forward, checked_forward
-from fp.algebra import IfContract, OptionalFamily
+from fp.algebra import OptionalFamily
+from fp.algebra.contracts import IfContract
 from std.testing import assert_equal
 
 def main() raises:

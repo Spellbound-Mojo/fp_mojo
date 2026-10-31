@@ -1,5 +1,5 @@
 # error: use of uninitialized value 'predicate'
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import BorrowCallable
 from std.memory import ArcPointer
 @fieldwise_init
@@ -14,6 +14,6 @@ struct Predicate(BorrowCallable):
 def main():
     var predicate = Predicate(ArcPointer(0))
     var xs: List[Int] = [1, 2]
-    _ = piped(xs^).filter_not(predicate^).get()
+    _ = pipeline(xs^).filter_not(predicate^).get()
     var y = 1
     _ = predicate.invoke(y)

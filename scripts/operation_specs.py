@@ -37,13 +37,6 @@ class Terminal:
             else callback_error
         )
 
-    def runner(self, element, callback, monoid, error):
-        if self.borrowing:
-            return f"_ExtremumRun[{element}, {callback}, {self.smallest}]"
-        if self.rule == "find_map":
-            return f"_FindMapRun[{callback}]"
-        return f"_FoldMapRun[{callback}, {monoid}, {error}]"
-
     def invoke(self, parameters, callback, source):
         bindings = f"[{parameters}]" if parameters else ""
         return f"{self.driver}{bindings}({callback}, {source})"

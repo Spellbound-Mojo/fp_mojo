@@ -3,7 +3,7 @@ from fp.data import NonEmptyList, Result, Ok, Err
 from fp.algebra import (NonEmptyListFamily, NonEmptyListSemigroup, ValidationFamily,
                         ResultFamily, OptionalFamily, ListFamily, IdentityFamily,
                         map, traverse, filter, filter_map)
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from std.testing import assert_equal, assert_true, assert_false
 
@@ -60,7 +60,7 @@ def main() raises:
     assert_equal(invalid^._take_err().into_list(), [-1, -3])
     var valid = traverse[Accumulate, NonEmptyListFamily](NonEmptyList(1, List[Int]([2])), nel_check)
     assert_equal(valid^._take_ok().into_list(), [2, 4])
-    var pair = piped(nel_check(-1)).par_map_n[NonEmptyListSemigroup[Int]]((nel_check(-2),), nel_add).get()
+    var pair = pipeline(nel_check(-1)).par_map_n[NonEmptyListSemigroup[Int]]((nel_check(-2),), nel_add).get()
     assert_equal(pair^._take_err().into_list(), [-1, -2])
     var branches = traverse[ListFamily, NonEmptyListFamily](NonEmptyList(1, List[Int]([2])), nel_choices)
     var expected = List[List[Int]]([List[Int]([1, 2]), List[Int]([1, -2]), List[Int]([-1, 2]), List[Int]([-1, -2])])

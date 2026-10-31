@@ -1,6 +1,6 @@
 """IO keeps plain functions, including consuming ones, and live closures, with inferred families."""
 from fp.algebra import pure, map, flat_map, traverse
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.effects import IO, run_io
 from std.testing import assert_equal
 def inc(var value: Int) -> Int: return value + 1
@@ -11,7 +11,7 @@ def main() raises:
     assert_equal(a.value()._ok().value, 21)
     var b = run_io(flat_map(pure[IO[Int]](20), lift))
     assert_equal(b.value()._ok().value, 40)
-    var c = run_io(piped(pure[IO[Int]](20)).map(inc).get())
+    var c = run_io(pipeline(pure[IO[Int]](20)).map(inc).get())
     assert_equal(c.value()._ok().value, 21)
     var d = run_io(traverse(List[Int]([1, 2]), check))
     assert_equal(d.value()._ok().value, [2, 3])

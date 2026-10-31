@@ -1,5 +1,5 @@
 """Effectful terminal reductions over native iterable sources."""
-from fp.algebra.contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
+from fp.algebra._contracts import AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, FoldContract
 from fp.algebra._accumulation import _FirstPresent
 from fp.algebra._effect_combinators import _SearchStep, _fold_map_effect, _AllLive, _BoolLive, _PredicateStep, _EffectFold, _fold_effect
 from fp.algebra._sequencing import _EffectRetain

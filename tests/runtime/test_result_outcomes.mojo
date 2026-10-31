@@ -1,6 +1,6 @@
 """Two-branch Result composition selects only the original branch."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary, MutableUnary
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
@@ -80,23 +80,23 @@ def main() raises:
     assert_equal(ro_message(ro_err().attempt_tap(ro_observe)), "missing")
     assert_equal(ro_message(ro_ok(3).attempt_tap(ro_reject)), "observer failed")
     assert_equal(ro_message(ro_err().attempt_tap(ro_reject)), "observer failed")
-    assert_equal(piped(ro_ok(4)).map_both(ro_map, ro_code).get().fold_owned(ro_text, ro_number), "value=4")
-    assert_equal(piped(ro_err()).redeem(ro_map, ro_recover).get().raise_on_err(), "recovered missing")
-    assert_equal(piped(ro_err()).redeem_with(ro_continue, ro_retry).get().fold_owned(ro_text, ro_number), "7")
-    assert_equal(ro_message(piped(ro_err()).attempt_tap(ro_observe).get()), "missing")
+    assert_equal(pipeline(ro_ok(4)).map_both(ro_map, ro_code).get().fold_owned(ro_text, ro_number), "value=4")
+    assert_equal(pipeline(ro_err()).redeem(ro_map, ro_recover).get().raise_on_err(), "recovered missing")
+    assert_equal(pipeline(ro_err()).redeem_with(ro_continue, ro_retry).get().fold_owned(ro_text, ro_number), "7")
+    assert_equal(ro_message(pipeline(ro_err()).attempt_tap(ro_observe).get()), "missing")
     assert_equal(ro_ok(4).redeem(ROMap(0), RORecover("unused ")).raise_on_err(), "value=5")
     assert_equal(ro_err().redeem(ROMap(0), RORecover("owned ")).raise_on_err(), "owned missing")
     assert_equal(ro_ok(4).redeem(ROMap(1), ro_recover).raise_on_err(), "value=6")
     assert_equal(ro_err().redeem(ro_map, RORecover("mixed ")).raise_on_err(), "mixed missing")
     assert_equal(ro_ok(4).redeem_with(ROContinue("library="), ro_retry).fold_owned(ro_text, ro_number), "library=4")
-    assert_equal(piped(ro_err()).redeem_with(ro_continue, RORetry(17)).get().fold_owned(ro_text, ro_number), "17")
+    assert_equal(pipeline(ro_err()).redeem_with(ro_continue, RORetry(17)).get().fold_owned(ro_text, ro_number), "17")
     assert_equal(ro_ok(4).map_both(ROMap(0), ro_code).fold_owned(ro_text, ro_number), "value=5")
     assert_equal(ro_err().map_both(ro_map, RORecover("mapped ")).fold_owned(ro_text, ro_text), "mapped missing")
     var calls = ArcPointer(0)
     def ro_counted(value: Result[Int, String]) {calls} -> Result[Int, String]:
         calls[] += 1
         return Ok(calls[])
-    var eager = piped(ro_err()).attempt_tap(ro_counted)
+    var eager = pipeline(ro_err()).attempt_tap(ro_counted)
     assert_equal(calls[], 1)
     assert_true(eager^.get().is_err())
     var code = 0
@@ -109,7 +109,7 @@ def main() raises:
     try: _ = ro_ok(22).map_both(ro_raise_ok, ro_raise_err)
     except error: code = error.code
     assert_equal(code, 22)
-    try: _ = piped(ro_ok(23)).redeem_with(ro_raise_next, ro_raise_retry)
+    try: _ = pipeline(ro_ok(23)).redeem_with(ro_raise_next, ro_raise_retry)
     except error: code = error.code
     assert_equal(code, 23)
     try: _ = ro_err().attempt_tap(ro_raise_observer)

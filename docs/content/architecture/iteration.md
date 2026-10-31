@@ -281,9 +281,8 @@ Plain raising search predicates keep their thin representation, including
 explicit `Never`; thin and closure entry points share terminal execution.
 
 Selected Pipeline folds consume a `BinaryContract` admitted by
-`RepeatableBinary`, then transfer that same owner into the standalone fold.
-Piped’s owned `fold_left` follows the same route; its named shared overload
-keeps borrowing. The facades add no callback reference type, traversal,
+`RepeatableBinary`, then transfer that same owner into the standalone fold;
+named shared steps are borrowed. The facades add no callback reference type, traversal,
 receiver selection or cleanup policy. Their generated signatures use the
 existing binary contract metadata, including exact native errors and origins.
 

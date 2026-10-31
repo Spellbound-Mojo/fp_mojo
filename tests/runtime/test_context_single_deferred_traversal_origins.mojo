@@ -1,4 +1,4 @@
-from fp.algebra import OptionalFamily,ResultFamily,traverse
+from fp.algebra import OptionalFamily, ResultFamily, traverse
 from fp.effects import Reader,run
 from fp.callables import OnceUnary
 from fp.functions import pipeline

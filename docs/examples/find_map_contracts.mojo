@@ -1,4 +1,5 @@
-from fp.algebra import FindMapContract, Monad, OptionalFamily
+from fp.algebra import Monad, OptionalFamily
+from fp.algebra.contracts import FindMapContract
 from fp.callables import Unary, UnaryContract
 from fp.iteration import find_map_effect
 from std.testing import assert_equal

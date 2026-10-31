@@ -1,5 +1,6 @@
 """Generic clients forward public contracts without naming execution adapters."""
-from fp.algebra import Monad, IdentityFamily, AbsenceContract, TailRecContract, or_else_absent, tail_rec_m
+from fp.algebra import Monad, IdentityFamily, or_else_absent, tail_rec_m
+from fp.algebra.contracts import AbsenceContract, TailRecContract
 from fp.effects import Project, Reader, asks, run
 from fp.callables import BorrowCallContract, BorrowCallable, UnaryContract, Unary, ThunkContract, OnceThunk
 from fp.data import ControlFlow, Break

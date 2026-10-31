@@ -1,4 +1,4 @@
-from fp.functions import piped
+from fp.functions import pipeline
 # error: uninitialized
 from fp.data import Result,Ok
 from fp.callables import OnceUnary
@@ -9,5 +9,5 @@ struct NaryOwner(OnceUnary):
     def call_once(deinit self,var arg:Self.Arg) -> Int: return arg[0]
 def main():
     var f=NaryOwner()
-    _=piped(Result[Int,String](Ok(1))).map_n((Result[Int,String](Ok(2)),),f^).get()
+    _=pipeline(Result[Int,String](Ok(1))).map_n((Result[Int,String](Ok(2)),),f^).get()
     _=f^

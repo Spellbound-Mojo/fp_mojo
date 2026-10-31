@@ -1,5 +1,5 @@
 """Shared receiver and payload controls for source-aware traversal admission."""
-from fp.algebra import Applicative,ListFamily
+from fp.algebra import Applicative, ListFamily
 from fp.callables import Unary,OnceUnary
 from context_branch_admission_support import MoveState,Next,OnceNext,AdmissionBase
 @fieldwise_init

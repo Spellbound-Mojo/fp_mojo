@@ -1,5 +1,6 @@
 """Unmatched errors use family.fail; its native error stays distinct from storage."""
-from fp.algebra import ApplicativeError, ResultFamily, RecoverIfContract, OrElseIfContract
+from fp.algebra import ApplicativeError, ResultFamily
+from fp.algebra.contracts import RecoverIfContract, OrElseIfContract
 from fp.callables import UnaryContract, BinaryContract, ThunkContract
 from fp.functions import pipeline
 from fp.effects import Reader, ResultT, run

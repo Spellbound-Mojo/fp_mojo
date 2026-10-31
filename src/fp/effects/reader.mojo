@@ -7,7 +7,7 @@ environment origin in its type.
 
 from fp.callables._views import _BorrowedView
 from fp.algebra._admission import _CarrierBind, _CarrierCombine
-from fp.algebra.contracts import MapContract, CombineContract
+from fp.algebra._contracts import MapContract, CombineContract
 from std.builtin.rebind import rebind_var, downcast
 from std.utils import Variant
 from fp.algebra.errors import _Continue

@@ -1,7 +1,8 @@
 """Borrowing-search proofs preserve retained owners, origins and timing."""
 from context_find_contract_support import forward, fluent, iterator_forward, selected, Even, OwnedPredicate, Branches, Borrowed, Later
 from context_find_map_contract_support import Owned
-from fp.algebra import FindContract, IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra import IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra.contracts import FindContract
 from fp.iteration import iterated
 from fp.effects import Reader, run
 from algebra_support.box import BoxMonad

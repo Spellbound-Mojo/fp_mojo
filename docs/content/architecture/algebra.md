@@ -212,7 +212,7 @@ The borrowing adapter is `_EffectRetain` in `algebra._sequencing`;
 `_TraverseTap` remains a private alias for traversal consumers. Result
 observation and fluent monadic sequencing use the same adapter.
 
-The generated Piped, Iter and free-function overloads only adapt native
+The generated Pipeline, Iter and free-function overloads only adapt native
 callback signatures and select the source family. They contain no pull loop
 or duplicated error handling. `traverse_void` admits native owned iterable
 sources and Result. Its Result path composes the callback with an effect-payload discard through the existing
@@ -261,7 +261,7 @@ no container implements a sequencing loop or a new primitive.
 
 `flat_pair_with` selects the existing paired mode of `_EffectRetain` and
 `_Retained`. That mode moves each projected payload into `(original, projected)`;
-repeated calls copy only the original. Piped, Iter and direct Result therefore
+repeated calls copy only the original. Pipeline, Iter and direct Result therefore
 share the same pairing implementation, with no additional family primitive.
 
 `_Retained` admits a repeated receiver only when the original is copyable.
@@ -279,11 +279,9 @@ mutable factories to shared retention. Public borrowing callback protocols
 keep their shared and consuming receivers.
 
 Generated methods handle native shape and callback admission. Native callbacks
-in Piped are borrowed through the existing pointer adapter, while Iter stores
-them by value and invokes them with mutable access. The sequencing boundary retains
-`P`, `R`, `X` for borrowing callbacks and `R`, `X` for factories. A generic
-wrapper can forward `.flat_tap[P=P, R=R, X=X](inspect)` or
-`.before[R=R, X=X](make_next)`. `R` names the complete effect result, including
+in Pipeline are borrowed in place, while Iter stores them by value and invokes
+them with mutable access. The sequencing boundary infers `P`, `R`, `X` for
+borrowing callbacks and `R`, `X` for factories. `R` names the complete effect result, including
 its origins; Result additionally requires its stored error type to match the
 source. The shared native reference views accept these bindings and delegate
 receiver ownership, retention and error propagation to their canonical owners.
@@ -559,12 +557,12 @@ Returning a new concrete Reader or State action type remains valid. Existing
 aliases such as `ResultFamily.Error` remain available.
 
 The public entry points are `fail[Family, A](error)`, plus
-`piped(value^).or_else[Family](handler)` and
-`piped(value^).recover[Family](handler)`. The first handler consumes an error
+`pipeline[Family](value^).or_else(handler)` and
+`pipeline[Family](value^).recover(handler)`. The first handler consumes an error
 and returns the same family with the original success type; the second
 consumes an error and returns a replacement success value. Generic recovery
 keeps the selected family's stored error type. Existing direct Result methods
-and inferred Piped Result overloads retain their current contracts, including
+and inferred `pipeline(result^)` methods retain their current contracts, including
 `or_else`'s ability to change the stored error type.
 
 ### Select one stored-error layer
@@ -583,8 +581,8 @@ the same handler again.
 | `OptionalT[M]` | The base family's selected failure; an absent Optional stays absent |
 
 For `ResultT[ResultFamily[Outer], Inner]`, recovery handles `Inner`, even when
-`Inner` and `Outer` happen to be the same type. Bare Piped Result inference
-continues to select the outer native Result. Lists, iterators, Identity and
+`Inner` and `Outer` happen to be the same type. Bare `pipeline(result^)`
+inference continues to select the outer native Result. Lists, iterators, Identity and
 standalone Optional do not acquire a stored-error channel. A list of Results
 can select `ResultT[ListFamily, E]` explicitly to recover its failed entries.
 
@@ -681,8 +679,8 @@ consuming callbacks and move-only stored errors. Native predicate and handler
 signatures have separate admission boundaries on Mojo 1.1, with the predicate
 adapter preserving its P/S/X witness and the handler using A/R/E.
 
-Error observation uses one handler around `or_else`, shared by explicit-family
-Piped methods and inferred Result methods. `tap_err` delegates borrowing and
+Error observation uses one handler around `or_else`, shared by selected
+Pipeline methods and inferred Result methods. `tap_err` delegates borrowing and
 discarding to the callable observer, then reintroduces the original error
 with `fail[A]`. `flat_tap_err` uses the existing effect-retention adapter with
 a different finishing operation. That adapter owns callback invocation and

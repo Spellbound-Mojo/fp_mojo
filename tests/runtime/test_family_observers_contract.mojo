@@ -1,8 +1,8 @@
 """Observation selects receivers by cardinality and preserves generic effects."""
 from fp.callables import BorrowCallContract,BorrowCallable,BorrowMutableCallable,BorrowOnceCallable,RepeatableBorrow
 from fp.callables._transforms import _Observe
-from fp.functions import piped,pipeline
-from fp.algebra import Functor,ListFamily,OptionalFamily
+from fp.functions import pipeline
+from fp.algebra import Functor, ListFamily, OptionalFamily
 from fp.data import Result,Ok,Err
 from std.collections import Array
 from std.memory import ArcPointer
@@ -42,14 +42,14 @@ def main() raises:
     var modes=ArcPointer(List[Int]())
     var callback=Modes(0,modes)
     assert_equal(pipeline[Int]([1,2]).pair_with(callback^).get(),[(1,2),(2,4)])
-    assert_equal(piped(List[Int]([1,2])).pair_with(Modes(0,modes)).get(),[(1,2),(2,4)])
+    assert_equal(pipeline(List[Int]([1,2])).pair_with(Modes(0,modes)).get(),[(1,2),(2,4)])
     assert_equal(pipeline(5).tap(Modes(0,modes)).get(),5)
-    assert_equal(piped(5).tap(Modes(0,modes)).get(),5)
+    assert_equal(pipeline(5).tap(Modes(0,modes)).get(),5)
     assert_equal(modes[],[2,2,2,2,3,3])
     assert_equal(forward[ListFamily](List[Int]([1,2]),Modes(0,modes)),[(1,2),(2,4)])
     assert_equal(forward[OptionalFamily](Optional(5),Modes(0,modes)).value(),(5,6))
     var array:Array[Int,2]=[1,2]
-    assert_equal(piped(array^).pair_with(Modes(0,modes)).get()[1],(2,4))
+    assert_equal(pipeline(array^).elements().pair_with(Modes(0,modes)).get()[1],(2,4))
     assert_equal(pipeline(Result[Int,String](Ok(8))).pair_with(Modes(0,modes)).get()._take_ok(),(8,9))
     var size=len(modes[])
     assert_equal(pipeline(Result[Int,String](Err(String('stored')))).pair_with(Modes(0,modes)).get().is_err(),True)

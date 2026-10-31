@@ -1,5 +1,5 @@
 """Stored native adapters share the same admission as reusable unary chains."""
-from fp.functions import pipeline, piped, as_unary
+from fp.functions import pipeline, as_unary
 from fp.algebra import map as algebra_map, OptionalFamily
 from fp.data import Result, Ok, Err, ok, err
 from fp.effects import Reader, run
@@ -22,7 +22,7 @@ def main() raises:
     assert_equal(pipeline(Optional(4)).map(transform).get_or(0), 8)
     assert_equal(pipeline(5).then(transform).get(), 10)
     assert_equal(algebra_map[OptionalFamily](Optional(3), transform).value(), 6)
-    assert_equal(piped(Optional(4)).map(transform).get().value(), 8)
+    assert_equal(pipeline(Optional(4)).map(transform).get().value(), 8)
     assert_equal(ok[Never](6).map(transform).raise_on_err(), 12)
     assert_equal(err[Int](2).value_or(transform), 4)
     assert_equal(pipeline(err[Int](3)).fold_owned(transform, transform), 6)

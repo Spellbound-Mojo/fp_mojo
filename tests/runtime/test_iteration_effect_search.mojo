@@ -1,6 +1,6 @@
 """Search and mapped reductions preserve Monad timing, failure and branching."""
 from fp.iteration import iterated, find_effect, find_map_effect, fold_map_effect, sequence_filter
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.algebra import OptionalFamily, ResultFamily, IdentityFamily, ListFamily, IorFamily, StringMonoid, Monoid
 from fp.data import Result, Ok, Err, Ior, Both
 from fp.effects import Reader, State, Writer, action, run, writer, run_writer
@@ -43,11 +43,11 @@ def basic() raises:
     assert_equal(iterated(range(4)).fold_map_effect[StringMonoid,ResultFamily[String]](i6_text).raise_on_err(),"0123")
     assert_equal(fold_map_effect[StringMonoid, ResultFamily[String]](range(0),i6_text).raise_on_err(),"")
     var xs:List[Int]=[0,1,2]
-    assert_equal(piped(xs^).find_effect[ResultFamily[String]](i6_predicate).get().raise_on_err().value(),2)
+    assert_equal(pipeline(xs^).find_effect[ResultFamily[String]](i6_predicate).get().raise_on_err().value(),2)
     var array:Array[Int,3]=[0,1,2]
-    assert_equal(piped(array^).find_map_effect[ResultFamily[String]](i6_project).get().raise_on_err().value(),"2")
+    assert_equal(pipeline(array^).find_map_effect[ResultFamily[String]](i6_project).get().raise_on_err().value(),"2")
     var array2:Array[Int,3]=[0,1,2]
-    assert_equal(piped(array2^).fold_map_effect[StringMonoid, ResultFamily[String]](i6_text).get().raise_on_err(),"012")
+    assert_equal(pipeline(array2^).fold_map_effect[ResultFamily[String], StringMonoid](i6_text).get().raise_on_err(),"012")
     assert_equal(iterated(range(5)).find_map_effect[OptionalFamily](I6Mapper(0)).value().value(),1)
     assert_equal(find_map_effect[CellFamily](range(3),i6_cell).value.value(),0)
     assert_equal(run_writer[Writer[StringMonoid]](fold_map_effect[StringMonoid, Writer[StringMonoid]](range(3),i6_logged)),(String("log0log1log2"),String("012")))
@@ -221,12 +221,12 @@ def sequencing() raises:
     xs.append(Ok(Optional(1)));xs.append(Ok(Optional[Int]()));xs.append(Ok(Optional(3)))
     assert_equal(sequence_filter[ResultFamily[String]](xs.copy()).raise_on_err(),[1,3])
     assert_equal(iterated(xs.copy()).sequence_filter[ResultFamily[String]]().raise_on_err(),[1,3])
-    assert_equal(piped(xs^).sequence_filter[G=ResultFamily[String]]().get().raise_on_err(),[1,3])
+    assert_equal(pipeline(xs^).sequence_filter[ResultFamily[String]]().get().raise_on_err(),[1,3])
     var bad=List[Result[Optional[Int],String]]()
     bad.append(Err(String("stored")));bad.append(Ok(Optional(3)))
     assert_true(sequence_filter[ResultFamily[String]](bad^).is_err())
     var single=Optional(Optional(Optional(4)))
-    var value=piped(single^).sequence_filter[G=OptionalFamily]().get()
+    var value=pipeline(single^).sequence_filter[OptionalFamily]().get()
     assert_equal(value.value().value(),4)
     assert_equal(sequence_filter[ResultFamily[String]](List[Result[Optional[Int],String]]()).raise_on_err(),List[Int]())
 

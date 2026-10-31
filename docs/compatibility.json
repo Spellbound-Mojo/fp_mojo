@@ -105,15 +105,6 @@
         "tests/compile_fail/shared_ref_unary_once.mojo"
       ]
     },
-    "combinators": {
-      "scope": "Eager collection transformations, effects, traversal and validation.",
-      "restrictions": "Capability requirements and origin/error admission remain operation-specific; legacy native inference remains restricted.",
-      "evidence": [
-        "docs/examples/combinators.mojo",
-        "docs/examples/traversal_composition.mojo",
-        "docs/examples/effectful_reductions.mojo"
-      ]
-    },
     "functions": {
       "scope": "Selected Pipeline, legacy Piped, composition, partial application and Kleisli.",
       "restrictions": "Pipeline migration is tracked below. Partial binds plain positional prefixes of up to eight operands. Declared Reader, State, Writer and IO carriers select their family; erased transformer layers and alternative policies still need explicit selection. Whole-recipe mapping uses then or explicit Identity. Pipeline.run delegates to selected Reader, State or Writer runners; IO retains run_io. IO pipelines expose run_io, guarantee and on_cancel through the existing IO contracts and owners. Selected local, listen and censor delegate through current-family capabilities; explicit lifted capabilities still use the free operations.",
@@ -768,6 +759,15 @@
       "evidence": [
         "docs/content/guides/async-runtime.md",
         "src/fp/effects/async_runtime/protocols.mojo"
+      ]
+    },
+    "algebra.contracts": {
+      "scope": "Operation contracts that generic wrappers forward: admission, result and error of each family operation.",
+      "restrictions": "Contracts describe existing operations only; generic callers still name the family and forward the contract's Compatible predicate.",
+      "evidence": [
+        "docs/examples/fluent_contracts.mojo",
+        "docs/examples/find_contracts.mojo",
+        "docs/examples/recovery_contract.mojo"
       ]
     }
   },
@@ -1604,7 +1604,7 @@
       ],
       "status": "selected",
       "families": "Validation policy for native Results; n-ary methods retain the source family, traversal selects Result",
-      "callbacks": "Fixed native arities 1\u20138 or library tuple callables. Stored n-ary thin pointers are owned and retain exact argument/result conventions. Shared callable chains are borrowed directly by par_traverse.",
+      "callbacks": "Fixed native arities 1–8 or library tuple callables. Stored n-ary thin pointers are owned and retain exact argument/result conventions. Shared callable chains are borrowed directly by par_traverse.",
       "ownership": "Consume evaluated operands, callbacks and sources; release unvisited inputs and partial output on native failure",
       "errors": "Stored errors accumulate through an inferred ListMonoid or explicit Semigroup; native raises stop immediately",
       "timing": "Ordered synchronous accumulation; a single n-ary operand never invokes the error combiner",

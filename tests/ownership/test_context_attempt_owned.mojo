@@ -1,4 +1,5 @@
-from fp.algebra import ErrorRecovery, AttemptContract, ResultFamily
+from fp.algebra import ErrorRecovery, ResultFamily
+from fp.algebra.contracts import AttemptContract
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err
 from std.memory import ArcPointer

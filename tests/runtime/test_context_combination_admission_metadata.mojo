@@ -1,5 +1,6 @@
 """Combination contracts expose copy, receiver and native-error prerequisites."""
-from fp.algebra import CombineContract, ListFamily, ResultFamily
+from fp.algebra import ListFamily, ResultFamily
+from fp.algebra.contracts import CombineContract
 from fp.effects import OptionalT, ResultT, Reader
 from fp.callables._transforms import _ValueThunk
 from context_combination_admission_support import AdmissionBase,MoveState,MoveLeft,MoveRight,Add,OnceAdd,CapturedAdd,Missing,ErrorAdd,OtherError

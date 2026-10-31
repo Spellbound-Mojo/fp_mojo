@@ -13,7 +13,9 @@ def audit_compatibility(catalog, exports, root=ROOT):
             assert (root / path).is_file(), f'Missing compatibility evidence: {path}'
 
     pipeline = set(exports['exports']['functions.Pipeline']['methods'])
-    legacy = set(exports['exports']['functions.Piped']['methods'])
+    # The retired Piped surface's methods, recorded in the catalog: each must
+    # have a Pipeline replacement or a pending migration group.
+    legacy = set(catalog['legacy_methods'])
     covered = []
     for group in catalog['pipeline']:
         assert group['status'] in ('selected', 'result_only'), group['name']
@@ -24,7 +26,6 @@ def audit_compatibility(catalog, exports, root=ROOT):
         covered.extend(group['methods'])
     assert set(covered) == pipeline, 'Unclassified Pipeline method'
     assert all(n == 1 for n in Counter(covered).values()), 'Multiply classified Pipeline method'
-    assert set(catalog['legacy_methods']) == legacy, 'Unreviewed legacy method change'
     pending = [name for group in catalog['migration'] for name in group['methods']]
     assert set(pending) == legacy - pipeline, 'Incomplete Pipeline migration inventory'
     assert all(n == 1 for n in Counter(pending).values()), 'Duplicate migration assignment'

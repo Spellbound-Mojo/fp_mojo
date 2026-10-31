@@ -1,5 +1,6 @@
 """Selected payloads preserve deferred execution and exact family errors."""
-from fp.algebra import ProductLeftContract, ProductRightContract, pure
+from fp.algebra import pure
+from fp.algebra.contracts import ProductLeftContract, ProductRightContract
 from fp.functions import pipeline
 from fp.effects import Reader, State, Writer, WriterT, IO, get, modify, writer, delay
 from test_context_product_contract_errors import FailingLog

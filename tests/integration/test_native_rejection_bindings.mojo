@@ -6,7 +6,7 @@ These calls prove that the bindings still select working native overloads.
 from fp.algebra import OptionalFamily, ResultFamily
 from fp.callables import as_unary
 from fp.data import Result, Ok, Err, attempt, mutating
-from fp.functions import pipe, piped
+from fp.functions import pipe, pipeline
 from fp.iteration import iterated
 from std.builtin.variadics import TypeList
 from std.testing import assert_equal
@@ -51,17 +51,17 @@ def main() raises:
     assert_equal(pipe((1, String("xy")), unary), 3)
     comptime Path = TypeList.of[Trait=Movable & Deinitable, Int]()
     assert_equal(pipe[Path]((2, String("xyz")), unary), 5)
-    var summed = piped(Optional(1)).map_n[F=type_of(rb_add)]((Optional(2),), rb_add).get()
+    var summed = pipeline(Optional(1)).map_n((Optional(2),), rb_add).get()
     assert_equal(summed.take(), 3)
 
     var owners = List[RejectionBindingOwner]()
     owners.append(RejectionBindingOwner(5))
-    var paired = piped(owners^).pair_with[F=type_of(rb_key)](rb_key).get()
+    var paired = pipeline(owners^).pair_with(rb_key).get()
     assert_equal(paired[0][0].value, 5)
     assert_equal(paired[0][1], 6)
-    var selected = piped(List[Int]([1, 2, 3])).filter[F=type_of(rb_select)](rb_select).get()
+    var selected = pipeline(List[Int]([1, 2, 3])).filter(rb_select).get()
     assert_equal(selected, List[Int]([2, 3]))
-    var rejected = piped(List[Int]([1, 2, 3])).filter_not[F=type_of(rb_select)](rb_select).get()
+    var rejected = pipeline(List[Int]([1, 2, 3])).filter_not(rb_select).get()
     assert_equal(rejected, List[Int]([1]))
     var checked = List[RejectionBindingOwner]()
     checked.append(RejectionBindingOwner(1))
@@ -77,23 +77,23 @@ def main() raises:
     var recovered = Result[Int, RejectionBindingOwner](Err(RejectionBindingOwner(10))).recover_if[C=type_of(rb_predicate)](rb_predicate, rb_recover)
     assert_equal(recovered._ok().value, 11)
 
-    var restored = piped(Result[Int, String](Err(String("bad")))).recover_if[ResultFamily[String], C=type_of(rb_string_predicate)](rb_string_predicate, rb_string_recover).get()
+    var restored = pipeline[ResultFamily[String]](Result[Int, String](Err(String("bad")))).recover_if(rb_string_predicate, rb_string_recover).get()
     assert_equal(restored._ok().value, 3)
-    var logged = piped(Result[Int, String](Err(String("original")))).tap_err[ResultFamily[String], C=type_of(rb_inspect)](rb_inspect).get()
+    var logged = pipeline[ResultFamily[String]](Result[Int, String](Err(String("original")))).tap_err(rb_inspect).get()
     assert_equal(logged._err().value, "original")
-    var retained = piped(Optional(String("owned"))).flat_tap[C=type_of(rb_optional)](rb_optional).get()
+    var retained = pipeline(Optional(String("owned"))).flat_tap(rb_optional).get()
     assert_equal(retained.take(), "owned")
-    var retained_pair = piped(Optional(String("owned"))).flat_pair_with[C=type_of(rb_optional)](rb_optional).get()
+    var retained_pair = pipeline(Optional(String("owned"))).flat_pair_with(rb_optional).get()
     assert_equal(retained_pair.take(), (String("owned"), 5))
-    var shared = piped(Result[Int, String](Ok(12))).attempt_tap[ResultFamily[String], C=type_of(rb_shared_outcome)](rb_shared_outcome).get()
+    var shared = pipeline[ResultFamily[String]](Result[Int, String](Ok(12))).attempt_tap(rb_shared_outcome).get()
     assert_equal(shared._ok().value, 12)
-    var ensured = piped(Result[Int, String](Ok(0))).ensure[ResultFamily[String], G=type_of(rb_factory)](rb_select, rb_factory).get()
+    var ensured = pipeline[ResultFamily[String]](Result[Int, String](Ok(0))).ensure(rb_select, rb_factory).get()
     assert_equal(ensured._err().value, "rejected")
 
-    var filtered = piped(List[String]([String("a"), String("two")])).filter_effect[OptionalFamily, F=type_of(rb_filter_effect)](rb_filter_effect).get()
+    var filtered = pipeline(List[String]([String("a"), String("two")])).filter_effect[OptionalFamily](rb_filter_effect).get()
     assert_equal(filtered.take(), List[String]([String("two")]))
     var traversed = List[RejectionBindingOwner]()
     traversed.append(RejectionBindingOwner(13))
-    var tapped = piped(traversed^).traverse_tap[OptionalFamily, F=type_of(rb_traverse)](rb_traverse).get()
+    var tapped = pipeline(traversed^).traverse_tap[OptionalFamily](rb_traverse).get()
     var kept = tapped.take()
     assert_equal(kept[0].value, 13)

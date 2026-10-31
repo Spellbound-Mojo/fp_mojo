@@ -1,6 +1,6 @@
 """Family filtering retains mutable state through ordinary callback syntax."""
 from fp.callables import BorrowCallable, BorrowMutableCallable, mut_ref
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.algebra import filter, filter_not, ListFamily, OptionalFamily
 from std.testing import assert_equal
 
@@ -21,9 +21,9 @@ def ordinary_forms() raises:
     assert_equal(pipeline[Int]([0, 1, 2, 3]).filter_not(mut_ref(predicate)).get(), [0, 2])
     assert_equal(predicate.calls, 8)
     var input: List[Int] = [0, 1, 2, 3]
-    assert_equal(piped(input^).filter(mut_ref(predicate)).get(), [1, 3])
+    assert_equal(pipeline(input^).filter(mut_ref(predicate)).get(), [1, 3])
     var other: List[Int] = [0, 1, 2, 3]
-    assert_equal(piped(other^).filter_not(mut_ref(predicate)).get(), [0, 2])
+    assert_equal(pipeline(other^).filter_not(mut_ref(predicate)).get(), [0, 2])
     assert_equal(predicate.calls, 16)
     var free: List[Int] = [0, 1, 2, 3]
     assert_equal(filter[ListFamily](free^, mut_ref(predicate)), [1, 3])

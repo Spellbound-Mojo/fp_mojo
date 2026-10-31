@@ -1,5 +1,6 @@
 """Generic wrappers name the operation's output family instead of assuming one."""
-from fp.algebra import Functor, Filterable, MapContract, FilterContract, ListFamily, filter
+from fp.algebra import Functor, Filterable, ListFamily, filter
+from fp.algebra.contracts import MapContract, FilterContract
 from fp.callables import UnaryContract, BorrowCallable
 from fp.functions import Pipeline, pipeline, Identity
 

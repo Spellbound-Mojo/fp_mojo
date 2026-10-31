@@ -1,4 +1,4 @@
 # error: no matching method in call to 'sum'
-from fp.functions import piped
+from fp.functions import pipeline
 def main():
-    _ = piped(List[String](['a', 'b'])).sum().get()
+    _ = pipeline(List[String](['a', 'b'])).sum().get()

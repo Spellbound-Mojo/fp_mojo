@@ -1,5 +1,5 @@
 """Shared projections keep exact capture, payload, stopping and origin behavior."""
-from fp.functions import partial, piped, pipeline, as_unary
+from fp.functions import partial, pipeline, as_unary
 from fp.iteration import iterated, sum_by, max_by, find_map
 from algebra_support.result_ownership import Token, Trace, trace
 from std.memory import ArcPointer
@@ -21,7 +21,7 @@ def captures() raises:
     var two: List[Token] = [Token(2, payloads)]
     assert_equal(iterated(two^).sum_by(callback), 2)
     var three: List[Token] = [Token(3, payloads)]
-    assert_equal(piped(three^).sum_by(callback).get(), 3)
+    assert_equal(pipeline(three^).sum_by(callback).get(), 3)
     var four: List[Token] = [Token(4, payloads)]
     assert_equal(pipeline(four^).sum_by(callback).get(), 4)
     assert_equal(sum_by(List[Token](), callback), 0)
@@ -52,7 +52,7 @@ def borrowed_keys() raises:
     var payloads = trace()
     var prefix = Prefix(ledger)
     var rank = partial(key, prefix)
-    assert_true(not piped(List[Token]()).max_by(rank).get())
+    assert_true(not pipeline(List[Token]()).max_by(rank).get())
     assert_equal(ledger[].factories, 1)
     assert_equal(ledger[].calls, 0)
     var first: List[Token] = [Token(1, payloads), Token(2, payloads), Token(3, payloads)]
@@ -137,7 +137,7 @@ def errors() raises:
     assert_equal(ledger[].drops[1], 1)
     assert_equal(ledger[].drops[0], 0)
     var empty = -1
-    try: empty = piped(List[Token]()).sum_by(callback).get()
+    try: empty = pipeline(List[Token]()).sum_by(callback).get()
     except error: _ = error^
     assert_equal(empty, 0)
     _ = callback^
@@ -153,7 +153,7 @@ def outside(owner: List[Int]) -> Optional[Span[Int, origin_of(owner)]]:
         return None
     var choose = partial(keep, 1)
     var values: List[View] = [view]
-    return piped(values^).find_map(choose).get()
+    return pipeline(values^).find_map(choose).get()
 
 
 def main() raises:

@@ -1,7 +1,7 @@
 """Run, endpoint and lifting entries shared by the effect families."""
 from std.builtin.rebind import downcast, rebind, rebind_var
 from fp.algebra.protocols import _Lifting
-from fp.algebra.contracts import MapContract
+from fp.algebra._contracts import MapContract
 from fp.algebra._adapt import _map_as
 from fp.callables._transforms import _KeepOperand
 from fp._internal.errors import _CommonError, _CommonErrorCompatible, _ErrorCompatible, _propagate_error

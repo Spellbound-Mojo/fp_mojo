@@ -1,7 +1,7 @@
 """A third-party capability implementation uses only public contracts."""
 from fp.algebra import ApplicativeError, ResultFamily, fail
 from fp.callables import UnaryContract, BinaryContract, ThunkContract
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
 
@@ -54,7 +54,7 @@ def main() raises:
         stored = fail[AEXFamily, Int](String("missing"))
     except error:
         raise Error("unexpected construction failure")
-    assert_equal(piped(stored^).recover[AEXFamily](restore).get()._ok().value, 7)
+    assert_equal(pipeline[AEXFamily](stored^).recover(restore).get()._ok().value, 7)
     var code = 0
     try:
         _ = fail[AEXFamily, Int](String("construct"))
@@ -68,14 +68,14 @@ def main() raises:
     # the family's constructor and must propagate its exact native error.
     var match_code: Int
     try:
-        var recovered = piped(Result[Int, String](Err(String("construct")))).recover_if[AEXFamily](aex_matches, restore).get()
+        var recovered = pipeline[AEXFamily](Result[Int, String](Err(String("construct")))).recover_if(aex_matches, restore).get()
         match_code = recovered._ok().value
     except error:
         match_code = -1
     assert_equal(match_code, 9)
     code = 0
     try:
-        _ = piped(Result[Int, String](Err(String("construct")))).recover_if[AEXFamily](aex_never, restore).get()
+        _ = pipeline[AEXFamily](Result[Int, String](Err(String("construct")))).recover_if(aex_never, restore).get()
     except error:
         comptime assert type_of(error) == AEXConstructionError
         code = error.value

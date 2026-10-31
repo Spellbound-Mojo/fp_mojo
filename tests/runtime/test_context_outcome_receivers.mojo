@@ -1,5 +1,6 @@
 """Optional invocation proofs reject absent receivers and preserve deferred calls."""
-from fp.algebra import ResultFamily, ApplicativeError, EnsureContract, AttemptTapContract
+from fp.algebra import ResultFamily, ApplicativeError
+from fp.algebra.contracts import EnsureContract, AttemptTapContract
 from fp.functions import RedeemContract, RedeemWithContract
 from fp.callables import MutableUnary, BorrowOnceCallable
 from fp.data import Result, Ok

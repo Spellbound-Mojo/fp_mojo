@@ -255,7 +255,7 @@ def traverse_void[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitab
         function: The callback, consumed; calls follow the operation's evaluation order.
 
     Returns:
-        The target effect of NoneType, without an output collection. A Piped Result source instead preserves its stored error inside Result[NoneType, E] in that effect. Target failures follow the effect.
+        The target effect of NoneType, without an output collection. Target failures follow the effect.
 
     Raises:
         The exact callback, monoid or family error; Never for a non-raising operation.
@@ -298,7 +298,7 @@ def traverse_tap[V: Movable & Deinitable, C: BorrowCallContract & Movable & Dein
         function: The callback, consumed; calls follow the operation's evaluation order.
 
     Returns:
-        The target effect containing the original payloads; Piped preserves source shape and Iter/direct calls gather a List.
+        The target effect containing the original payloads, gathered in a List.
 
     Raises:
         The exact callback, monoid or family error; Never for a non-raising operation.
@@ -352,7 +352,7 @@ def sequence_void[V: Movable & Deinitable, //, G: Applicative = _InferredApplica
         source: The source, consumed with its native origins; iterator sources are not restarted.
 
     Returns:
-        The target effect of NoneType, or of Result[NoneType, E] for a Piped Result source; existing source errors stay inside the target effect.
+        The target effect of NoneType; existing source errors stay inside the target effect.
 
     Raises:
         The exact callback, monoid or family error; Never for a non-raising operation.

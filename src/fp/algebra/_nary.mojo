@@ -2,7 +2,7 @@
 from std.builtin.variadics import TypeList
 from std.builtin.rebind import rebind_var, rebind
 from fp.algebra.protocols import Applicative, _map_as, _map2_lazy_as
-from fp.algebra.contracts import MapContract, Map2Contract
+from fp.algebra._contracts import MapContract, Map2Contract
 from fp.callables.protocols import Unary, UnaryContract, Binary
 from fp.callables._transforms import _ValueThunk
 from fp._internal.errors import _CommonError, _ErrorCompatible

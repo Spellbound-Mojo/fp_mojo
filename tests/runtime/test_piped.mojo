@@ -1,6 +1,7 @@
 """Chained pipelines: no stage limit, one inferred call per stage, exact errors."""
-from fp.functions import piped, Piped, partial, flow, as_unary
+from fp.functions import pipeline, Pipeline, partial, flow, as_unary
 from fp.data import Result, Ok, Err
+from fp.algebra import IdentityFamily
 from std.testing import assert_equal, assert_true
 
 
@@ -43,14 +44,14 @@ def checked(value: Int) -> Result[Int, String]:
 
 
 def stages() raises:
-    assert_equal(piped(7).get(), 7)
-    assert_equal(piped(1).then(inc).get(), 2)
+    assert_equal(pipeline(7).get(), 7)
+    assert_equal(pipeline(1).then(inc).get(), 2)
     # Twelve stages, past the eight that pipe takes as plain functions, with
     # read and owned parameters and changing types.
-    var long = piped(0).then(inc).then(owned_inc).then(inc).then(owned_inc).then(inc) \
+    var long = pipeline(0).then(inc).then(owned_inc).then(inc).then(owned_inc).then(inc) \
         .then(owned_inc).then(inc).then(owned_inc).then(inc).then(label).then(length).then(inc).get()
     assert_equal(long, 10)  # nine increments, len("value = 9") == 9, then one more
-    comptime assert type_of(piped(1).then(label)) == Piped[String]
+    comptime assert type_of(pipeline(1).then(label)).V == String
 
 
 def order_and_closures() raises:
@@ -62,7 +63,7 @@ def order_and_closures() raises:
     def second(value: Int) {mut trace, bias} -> Int:
         trace.append(2)
         return value + bias
-    var out = piped(5).then(first).then(second).then(first).get()
+    var out = pipeline(5).then(first).then(second).then(first).get()
     assert_equal(out, 220)
     var expected: List[Int] = [1, 2, 1]
     assert_equal(trace, expected)
@@ -72,19 +73,19 @@ def library_values() raises:
     var offset = 3
     def shift(value: Int) {imm offset} -> Int:
         return value + offset
-    var out = piped(1).then(partial(add, 10)).then(flow(inc, inc)).then(as_unary(shift)).then(label).get()
+    var out = pipeline(1).then(partial(add, 10)).then(flow(inc, inc)).then(as_unary(shift)).then(label).get()
     assert_equal(out, "value = 16")
 
 
 def errors() raises:
-    assert_equal(piped(String("41")).then(parse).then(inc).get(), 42)
+    assert_equal(pipeline(String("41")).then(parse).then(inc).get(), 42)
     var after = 0
     def counted(value: Int) {mut after} -> Int:
         after += 1
         return value
     var text = String()
     try:
-        _ = piped(String("abc")).then(parse).then(counted).get()
+        _ = pipeline(String("abc")).then(parse).then(counted).get()
     except error:
         comptime assert type_of(error) == PipedParseError
         text = error.text
@@ -93,20 +94,20 @@ def errors() raises:
 
 
 def results_pass_whole() raises:
-    var failed = piped(-1).then(checked).get()
+    var failed = pipeline(-1).then(checked).get()
     assert_true(failed.is_err())
-    var passed = piped(4).then(checked).get()
+    var passed = pipeline(4).then(checked).get()
     assert_equal(passed^.raise_on_err(), 4)
 
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, C: Movable & Deinitable, //,
             F: def(var A) -> B, G: def(var B) -> C](var value: A, f: F, g: G) -> C:
-    return piped(value^).then(f).then(g).get()
+    return pipeline[IdentityFamily](value^).then(f).then(g).get()
 
 
 def forward_raising[A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, //,
                     F: def(var A) raises X -> B](var value: A, f: F) raises X -> B:
-    return piped(value^).then[E=X](f).get()
+    return pipeline[IdentityFamily](value^).raising[X]().then(f).get()
 
 
 def generic_forwarding() raises:

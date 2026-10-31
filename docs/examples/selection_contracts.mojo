@@ -1,5 +1,6 @@
 """One contract per generic selection or lazy combination."""
-from fp.algebra import Filterable, Applicative, FilterContract, CombineContract, ListFamily, OptionalFamily
+from fp.algebra import Filterable, Applicative, ListFamily, OptionalFamily
+from fp.algebra.contracts import FilterContract, CombineContract
 from fp.algebra import filter, map2_lazy
 from fp.callables import BorrowCallable, BinaryContract, ThunkContract, Binary, OnceThunk
 from std.testing import assert_equal

@@ -1,4 +1,5 @@
-from fp.algebra import IdentityFamily, OptionalFamily, ResultFamily, ListFamily, StringMonoid, Monoid, TraverseContract, traverse
+from fp.algebra import IdentityFamily, OptionalFamily, ResultFamily, ListFamily, StringMonoid, Monoid, traverse
+from fp.algebra.contracts import TraverseContract
 from fp.algebra.protocols import _Accumulate
 from fp.effects import Writer, WriterT, OptionalT, ResultT, run_writer
 from context_branch_admission_support import Next, OnceNext, MoveState

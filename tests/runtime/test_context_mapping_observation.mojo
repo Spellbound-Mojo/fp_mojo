@@ -1,5 +1,6 @@
 """Mapping-only observation retains its family and native/deferred behavior."""
-from fp.algebra import Functor, ErrorMapping, ApplicativeError, TapErrContract, ResultFamily, IdentityFamily
+from fp.algebra import Functor, ErrorMapping, ApplicativeError, ResultFamily, IdentityFamily
+from fp.algebra.contracts import TapErrContract
 from fp.callables import BorrowCallContract
 from fp.functions import pipeline, Pipeline
 from fp.data import Result, Ok, Err

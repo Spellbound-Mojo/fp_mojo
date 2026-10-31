@@ -5,7 +5,7 @@ from fp.algebra import (IorFamily, IorValidationFamily, StringMonoid,
                         NonEmptyListSemigroup, ListFamily, map, flat_map,
                         map2_lazy, traverse)
 from fp.callables import Binary, OnceThunk, MutableUnary
-from fp.functions import piped, Identity
+from fp.functions import pipeline, Identity
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
 
@@ -117,7 +117,7 @@ def main() raises:
     comptime NE = IorValidationFamily[NonEmptyListSemigroup[Int]]
     var nonempty = traverse[NE, ListFamily](List[Int]([1, -2, 3]), ir_nonempty)
     assert_equal(nonempty[Left[NonEmptyList[Int]]].value.copy().into_list(), [1, -2, 3])
-    var piped_value = piped(IR(Both(String("warning"), 5))).map[IS](ir_twice).get()
+    var piped_value = pipeline[IS](IR(Both(String("warning"), 5))).map(ir_twice).get()
     ir_check(piped_value, True, "warning", 10)
     var description = fp.match(piped_value,
         lambda (left: Left[String]) -> String: "left: " + left.value,
@@ -136,7 +136,7 @@ def main() raises:
     assert_equal(calls[], 2)
     assert_equal(continued[Both[String, List[Int]]].right, [10, 20])
     assert_equal(continued[Both[String, List[Int]]].left, "12")
-    var piped_bound = piped(IR(Both(String("a"), 2))).flat_map[IS](IRStep(calls, 2)).get()
+    var piped_bound = pipeline[IS](IR(Both(String("a"), 2))).flat_map(IRStep(calls, 2)).get()
     ir_check(piped_bound, True, "ab", 5)
     ir_check(map[IS](IR(Left(String())), ir_twice), False, "", 0)
     ir_check(map[IS](IR(Both(String(), 0)), ir_twice), True, "", 0)

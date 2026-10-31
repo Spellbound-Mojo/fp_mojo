@@ -1,7 +1,7 @@
-# error: incompatible native errors
+# error: no matching method in call to 'flat_tap_err'
 from fp.algebra import ValidationFamily, Semigroup
 from fp.data import Result, Err
-from fp.functions import piped
+from fp.functions import pipeline
 
 struct ObservationErrors(Semigroup):
     comptime Value = String
@@ -14,4 +14,4 @@ def inspect(error: String) raises String -> Result[Int, String]:
     return Err(String("observer"))
 
 def main() raises:
-    _ = piped(Result[Int, String](Err(String("original")))).flat_tap_err[ValidationFamily[ObservationErrors]](inspect).get()
+    _ = pipeline[ValidationFamily[ObservationErrors]](Result[Int, String](Err(String("original")))).flat_tap_err(inspect).get()

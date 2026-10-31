@@ -1,9 +1,9 @@
 """Kleisli reuses native family semantics and preserves callback receivers."""
-from fp.functions import kleisli, piped
+from fp.functions import kleisli, pipeline, pipeline_values
 from fp.iteration import iterated, map as iterator_map, flat_map as iterator_flat_map, traverse as iterator_traverse
 from fp.algebra import flat_map, traverse
 from std.collections import Array, Deque, LinkedList, Dict, StringDict
-from fp.algebra import ResultFamily, OptionalFamily, ListFamily, IdentityFamily, map
+from fp.algebra import ResultFamily, OptionalFamily, ListFamily, IdentityFamily, ArrayFamily, DequeFamily, LinkedListFamily, map
 from fp.data import Result, Ok, Err
 from fp.callables import Unary, MutableUnary, OnceUnary, call_once
 from fp.effects import Reader, State, run
@@ -123,7 +123,7 @@ def k_external_errors() raises:
     assert_equal(code, 10)
     var raising_chain = kleisli[ResultFamily[String]](k_start).then(k_raise)
     try:
-        _ = piped(Optional(2)).map(raising_chain).get()
+        _ = pipeline(Optional(2)).map(raising_chain).get()
     except error:
         comptime assert type_of(error) == Int
         code = error
@@ -142,7 +142,7 @@ def k_external_errors() raises:
 
 def k_callback_admission() raises:
     var chain = kleisli[ResultFamily[String]](k_start).then(k_next)
-    var eager = piped(List[Int]([1, 2])).map(chain).get()
+    var eager = pipeline(List[Int]([1, 2])).map(chain).get()
     assert_equal(eager[0].copy().raise_on_err(), 4)
     assert_equal(eager[1].copy().raise_on_err(), 6)
     var lazy = iterated(List[Int]([3, 4])).map(chain).collect_list()
@@ -151,23 +151,23 @@ def k_callback_admission() raises:
     var direct = Result[Int, String](Ok(5)).map(chain)
     assert_equal(direct^.raise_on_err().raise_on_err(), 12)
     assert_equal(Result[Int, String](Ok(5)).flat_map(chain).raise_on_err(), 12)
-    assert_equal(piped(Result[Int, String](Ok(5))).flat_map(chain).get().raise_on_err(), 12)
+    assert_equal(pipeline(Result[Int, String](Ok(5))).flat_map(chain).get().raise_on_err(), 12)
     assert_equal(flat_map[ResultFamily[String]](Result[Int, String](Ok(5)), chain).raise_on_err(), 12)
-    var gathered = piped(List[Int]([1, 2])).traverse[ResultFamily[String]](chain).get()
+    var gathered = pipeline(List[Int]([1, 2])).traverse[ResultFamily[String]](chain).get()
     assert_equal(gathered^.raise_on_err(), [4, 6])
     assert_equal(traverse[ResultFamily[String], ListFamily](List[Int]([2, 3]), chain).raise_on_err(), [6, 8])
     assert_equal(iterated(range(2)).traverse[ResultFamily[String]](chain).raise_on_err(), [2, 4])
     assert_equal(iterator_traverse[ResultFamily[String]](range(2), chain).raise_on_err(), [2, 4])
     var mapped = map[OptionalFamily](Optional(6), chain)
     assert_equal(mapped.take().raise_on_err(), 14)
-    var explicit = piped(Optional(6)).map[OptionalFamily](chain).get()
+    var explicit = pipeline[OptionalFamily](Optional(6)).map(chain).get()
     assert_equal(explicit.take().raise_on_err(), 14)
     var free = iterator_map(List[Int]([7]), chain)
     var free_item = free.__next__()
     assert_equal(free_item^.raise_on_err(), 16)
     var branching = kleisli[ListFamily](k_list).then(k_list)
     assert_equal(iterated(List[Int]([1, 2])).flat_map(branching).collect_list(), [1, 11, 11, 21, 2, 12, 12, 22])
-    assert_equal(piped(List[Int]([1])).flat_map(branching).get(), [1, 11, 11, 21])
+    assert_equal(pipeline(List[Int]([1])).flat_map(branching).get(), [1, 11, 11, 21])
     var flat = iterator_flat_map(List[Int]([1]), branching)
     assert_equal(iterated(flat^).collect_list(), [1, 11, 11, 21])
     var deferred_chain = kleisli[Reader[Int]](k_reader).then(k_reader).map(k_twice)
@@ -176,7 +176,7 @@ def k_callback_admission() raises:
     var first = actions.pop()
     assert_equal(run[Reader[Int]](first^, 0), 6)
     assert_equal(run[Reader[Int]](second^, 0), 8)
-    var outer = piped(Reader[Int].pure(3)).map[Reader[Int]](chain).get()
+    var outer = pipeline[Reader[Int]](Reader[Int].pure(3)).map(chain).get()
     assert_equal(run[Reader[Int]](outer^, 0).raise_on_err(), 8)
     # Reuse after every admission above: no callback was moved or copied.
     assert_equal(chain.call(7).raise_on_err(), 16)
@@ -185,32 +185,32 @@ def k_callback_admission() raises:
 def k_container_shapes() raises:
     var chain = kleisli[IdentityFamily](k_twice).map(k_text)
     var array: Array[Int, 2] = [1, 2]
-    var mapped_array = piped(array^).map(chain).get()
+    var mapped_array = pipeline[ArrayFamily[2]](array^).map(chain).get()
     comptime assert type_of(mapped_array) == Array[String, 2]
     assert_equal(mapped_array[1], "4")
     var deque = Deque[Int]()
     deque.append(3)
-    var mapped_deque = piped(deque^).map(chain).get()
+    var mapped_deque = pipeline[DequeFamily](deque^).map(chain).get()
     assert_equal(mapped_deque.pop(), "6")
     var linked = LinkedList[Int]()
     linked.append(4)
-    assert_equal(iterated(piped(linked^).map(chain).get()).collect_list(), ["8"])
+    assert_equal(iterated(pipeline[LinkedListFamily](linked^).map(chain).get()).collect_list(), ["8"])
     var dictionary = Dict[String, Int]()
     dictionary["a"] = 5
-    assert_equal(piped(dictionary^).map(chain).get()["a"], "10")
+    assert_equal(pipeline_values(dictionary^).map(chain).get()["a"], "10")
     var strings = StringDict[Int]()
     strings["b"] = 6
-    assert_equal(piped(strings^).map(chain).get()["b"], "12")
-    var optional = piped(Optional(7)).map(chain).get()
+    assert_equal(pipeline_values(strings^).map(chain).get()["b"], "12")
+    var optional = pipeline(Optional(7)).map(chain).get()
     assert_equal(optional.take(), "14")
-    assert_equal(piped(Result[Int, String](Ok(8))).map(chain).get().raise_on_err(), "16")
+    assert_equal(pipeline(Result[Int, String](Ok(8))).map(chain).get().raise_on_err(), "16")
     var calls = 0
     def count(x: Int) {mut calls} -> Optional[Int]:
         calls += 1
         return Optional(x)
     var observed = kleisli[OptionalFamily](count)
     var xs: List[Int] = [1, 2]
-    var eager = piped(xs^).map(observed)
+    var eager = pipeline(xs^).map(observed)
     assert_equal(calls, 2)
     _ = eager^.get()
     var ys: List[Int] = [3, 4]

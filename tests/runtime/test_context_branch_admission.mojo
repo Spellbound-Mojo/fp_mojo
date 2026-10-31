@@ -1,9 +1,10 @@
 """Branch contracts reject consuming receivers before invoking family bodies."""
-from fp.algebra import ApplicativeError, Functor, Monad, MapContract, BindContract, RecoverContract, TapErrContract, ListFamily, ResultFamily, map, flat_map
+from fp.algebra import ApplicativeError, Functor, Monad, ListFamily, ResultFamily, map, flat_map
+from fp.algebra.contracts import MapContract, BindContract, RecoverContract, TapErrContract
 from fp.callables import UnaryContract, RepeatableUnary
 from fp.data import Result,Err,Ok
 from fp.effects import OptionalT,ResultT,StateT,Reader,action,run
-from fp.functions import pipeline,piped,OrElseContract
+from fp.functions import pipeline, OrElseContract
 from context_branch_admission_support import OnceMap,StatefulMap,OnceNext,Next,OnceRecovery,OnceValue,Value,OnceObserver,MoveState,FailedBranches,TakeState,AdmissionBase
 from std.testing import assert_equal
 from std.builtin.rebind import downcast
@@ -107,9 +108,15 @@ def native_admission() raises:
         return value+2
     assert_equal(map[ListFamily](List[Int]([1,2]),increment),[2,3])
     assert_equal(flat_map[ListFamily](List[Int]([1,2]),branches),[1,11,2,12])
-    assert_equal(piped(List[Int]([3,4])).map(increment).get(),[4,5])
-    assert_equal(piped(List[Int]([3,4])).map(StatefulMap(0)).get(),[4,6])
-    assert_equal(piped(List[Int]([3,4])).map(raising).get(),[5,6])
+    assert_equal(pipeline(List[Int]([3,4])).map(increment).get(),[4,5])
+    assert_equal(pipeline(List[Int]([3,4])).map(StatefulMap(0)).get(),[4,6])
+    var raised_map:List[Int]
+    try:
+        raised_map=pipeline(List[Int]([3,4])).map(raising).get()
+    except error:
+        comptime assert type_of(error)==String
+        raise Error(error)
+    assert_equal(raised_map,[5,6])
     comptime O=OptionalT[ListFamily]
     assert_equal(pipeline[O](O.pure(5)).map(increment).get()[0].value(),6)
     comptime R=ResultT[ListFamily,String]

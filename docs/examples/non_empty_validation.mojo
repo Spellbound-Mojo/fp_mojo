@@ -1,7 +1,7 @@
 """Accumulate at least one error while retaining a non-empty success shape."""
 from fp.data import NonEmptyList, Result, Ok, Err
 from fp.algebra import NonEmptyListFamily, NonEmptyListSemigroup, ValidationFamily, traverse
-from fp.functions import piped
+from fp.functions import pipeline
 
 comptime Checked = Result[Int, NonEmptyList[String]]
 comptime Errors = NonEmptyListSemigroup[String]
@@ -28,7 +28,7 @@ def show_values(var values: NonEmptyList[Int]) -> Int:
     return len(values)
 
 def main():
-    var checked = piped(positive(-1)).par_map_n[Errors]((positive(-2),), total).get()
+    var checked = pipeline(positive(-1)).par_map_n[Errors]((positive(-2),), total).get()
     _ = checked^.fold_owned(show_total, show_errors)
     var values = NonEmptyList(2, List[Int]([3, 4]))
     var valid = traverse[ValidationFamily[Errors], NonEmptyListFamily](values^, positive)

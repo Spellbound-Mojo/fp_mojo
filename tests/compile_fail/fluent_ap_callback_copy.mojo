@@ -1,5 +1,5 @@
 # error: invalid call to 'ap': violated constraint
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary
 @fieldwise_init
 struct APOnce(OnceUnary):
@@ -11,4 +11,4 @@ def main():
     var functions = List[APOnce]()
     functions.append(APOnce(1))
     var values: List[Int] = [2]
-    _ = piped(functions^).ap(values^)
+    _ = pipeline(functions^).ap(values^)

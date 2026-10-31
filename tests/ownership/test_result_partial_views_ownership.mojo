@@ -1,5 +1,5 @@
 """Shared partial observers retain prefixes and borrow move-only stored errors."""
-from fp.functions import partial, piped
+from fp.functions import partial, pipeline
 from fp.data import ok, err
 from fp.effects import ReaderT, run
 from fp.algebra import ResultFamily
@@ -48,11 +48,11 @@ def copies() raises:
     assert_equal(payloads[].drops[3], 0)
     _ = observed^
     comptime I = ReaderT[ResultFamily[Token], Int]
-    var skipped = piped(I.pure(String("kept"))).tap_err[I](predicate).get()
+    var skipped = pipeline[I](I.pure(String("kept"))).tap_err(predicate).get()
     assert_equal(run[I](skipped^, 0).get_or(""), "kept")
     assert_equal(ledger[].calls, 4)
     assert_equal(ledger[].factories, 6)
-    var pending = piped(I.lift(err[String](Token(4, payloads)))).tap_err[I](predicate).get()
+    var pending = pipeline[I](I.lift(err[String](Token(4, payloads)))).tap_err(predicate).get()
     assert_equal(ledger[].calls, 4)
     assert_equal(ledger[].factories, 6)
     var result = run[I](pending^, 0)
@@ -60,11 +60,11 @@ def copies() raises:
     assert_equal(ledger[].factories, 7)
     assert_equal(payloads[].drops[4], 0)
     _ = result^
-    var abandoned = piped(I.lift(err[String](Token(5, payloads)))).tap_err[I](predicate).get()
+    var abandoned = pipeline[I](I.lift(err[String](Token(5, payloads)))).tap_err(predicate).get()
     _ = abandoned^
     assert_equal(ledger[].calls, 5)
     assert_equal(ledger[].factories, 7)
-    var moved = piped(I.lift(err[String](Token(6, payloads)))).tap_err[I](predicate^).get()
+    var moved = pipeline[I](I.lift(err[String](Token(6, payloads)))).tap_err(predicate^).get()
     _ = run[I](moved^, 0)
     assert_equal(ledger[].calls, 6)
     assert_equal(ledger[].factories, 8)
@@ -88,7 +88,7 @@ def errors() raises:
     var prefix = Prefix(ledger)
     var observer = partial(reject, prefix)
     comptime I = ReaderT[ResultFamily[Token], Int]
-    var pending = piped(I.lift(err[String](Token(1, payloads)))).tap_err[I](observer).get()
+    var pending = pipeline[I](I.lift(err[String](Token(1, payloads)))).tap_err(observer).get()
     var caught = False
     try: _ = run[I](pending^, 0)
     except error:

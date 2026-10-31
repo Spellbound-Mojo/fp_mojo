@@ -1,8 +1,8 @@
 """Mutable family observers retain state; whole-value tap also consumes callbacks."""
 from fp.callables import BorrowMutableCallable,BorrowOnceCallable
-from fp.functions import pipeline,piped
+from fp.functions import pipeline
 from fp.effects import ReaderT,run
-from fp.algebra import ListFamily,OptionalFamily
+from fp.algebra import ListFamily, OptionalFamily
 from fp.data import Result,Ok,Err
 from std.memory import ArcPointer
 from std.testing import assert_equal
@@ -31,12 +31,12 @@ def main() raises:
     assert_equal(pipeline(List[Int]([1,2,3])).pair_with(Key(0,seen)).get(),[(1,2),(2,4),(3,6)])
     assert_equal(seen[],[2,4,6])
     seen[].clear()
-    assert_equal(piped(List[Int]([1,2,3])).pair_with(Key(0,seen)).get(),[(1,2),(2,4),(3,6)])
-    assert_equal(piped(Optional(5)).pair_with(Key(0,seen)).get().value(),(5,6))
+    assert_equal(pipeline(List[Int]([1,2,3])).pair_with(Key(0,seen)).get(),[(1,2),(2,4),(3,6)])
+    assert_equal(pipeline(Optional(5)).pair_with(Key(0,seen)).get().value(),(5,6))
     assert_equal(pipeline(Optional(5)).pair_with(Key(0,seen)).get().value(),(5,6))
     assert_equal(pipeline(List[Int]([1,2,3])).tap_each(Key(0,seen)).get(),[1,2,3])
-    assert_equal(piped(List[Int]([1,2,3])).tap_each(Key(0,seen)).get(),[1,2,3])
-    assert_equal(piped(9).tap(Key(0,seen)).get(),9)
+    assert_equal(pipeline(List[Int]([1,2,3])).tap_each(Key(0,seen)).get(),[1,2,3])
+    assert_equal(pipeline(9).tap(Key(0,seen)).get(),9)
     assert_equal(pipeline(9).tap(Key(0,seen)).get(),9)
     seen[].clear()
     comptime Reader=ReaderT[ListFamily,Int]
@@ -48,6 +48,6 @@ def main() raises:
     var abandoned=pipeline[Reader](Reader.pure(9)).tap_each(Key(0,seen)).get()
     _=abandoned^
     assert_equal(seen[],[8])
-    assert_equal(piped(17).tap(Once(seen)).get(),17)
+    assert_equal(pipeline(17).tap(Once(seen)).get(),17)
     assert_equal(pipeline(19).tap(Once(seen)).get(),19)
     assert_equal(seen[],[8,17,19])

@@ -1,6 +1,7 @@
 from context_staged_fold_contract_support import forward, checked, MissingFoldReceiver, OriginStep
 from context_fold_contract_support import Add, Once, SumOwned, Fallible, owned_items
-from fp.algebra import FoldContract, IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra import IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra.contracts import FoldContract
 from algebra_support.box import BoxMonad
 from std.testing import assert_equal
 

@@ -11,7 +11,7 @@ ELEMENT = '_Source[V].Element'
 
 
 def variants(mode, operation, elements, *, error):
-    """Iter and Piped keep their kinds; free calls are value-first and take
+    """Iter keeps its kinds; free calls are value-first and take
     every callback form from the shared catalog, keeping the public parameter
     names (F for native callbacks, C for borrowing library callbacks, A or P
     for inputs, B for a fold element)."""
@@ -43,7 +43,7 @@ def _probe_contract(kind, factory, form, mode, callback, contract, raised, condi
     return assertion, spelled, condition.replace(raised, spelled)
 
 
-def folds(mode, array=False):
+def folds(mode):
     out = []
     for name in ('fold_effect', 'any_effect', 'all_effect'):
         operation = EFFECT_REDUCTIONS[name]
@@ -62,7 +62,7 @@ def folds(mode, array=False):
                 if factory.kind == 'library':
                     metadata = callable_metadata(operation.mode, cb)
             elif native:
-                # Iter and Piped closures come from the shared catalog.
+                # Iter closures come from the shared catalog.
                 form = closure(operation.mode, kind == 'raising', names=(
                     {'C': 'F', 'X': 'X', 'in0': 'A', 'in1': 'B'} if fold else {'C': 'F', 'X': 'E', 'in0': 'P'}))
                 params = list(form.parameters)
@@ -84,32 +84,22 @@ def folds(mode, array=False):
                 acc = factory.inputs[0]
                 initial = 'initial^' if acc == 'A' else f'rebind_var[{acc}](initial^)'
             if mode == 'free': params += [f'V: {MD}']
-            if array: params += ['N: Int']
-            if mode in ('free', 'piped', 'iter'):
-                # The target Monad defaults to the callback result's family; the
-                # callback parameters after it default to their own bounds.
-                explicit = factory.explicit if kind == 'catalog' else form.explicit if native else ()
-                lead, trail = split_explicit(explicit)
-                params += [*lead, '//', 'G: Monad = ' + source_default('Monad', effect), *trail]
-            else:
-                params += ['//', 'G: Monad']
-                if kind == 'catalog': params += list(factory.explicit)
-                if native: params += list(form.explicit)
+            # The target Monad defaults to the callback result's family; the
+            # callback parameters after it default to their own bounds.
+            explicit = factory.explicit if kind == 'catalog' else form.explicit if native else ()
+            lead, trail = split_explicit(explicit)
+            params += [*lead, '//', 'G: Monad = ' + source_default('Monad', effect), *trail]
             hint = 'Z' if fold else 'X'
             params += [f'{hint}: AnyType = _InferError']
-            source = 'V' if mode == 'free' else 'Self.I' if mode == 'iter' else 'Self.Value'
-            value = 'source^' if mode == 'free' else 'self._iterator^' if mode == 'iter' else 'self.value^'
+            source = 'V' if mode == 'free' else 'Self.I'
+            value = 'source^' if mode == 'free' else 'self._iterator^'
             condition = f'_Source[{source}].Element == {elem}'
-            if array:
-                condition = f'Self.Value == Array[{elem}, N]'
-                source = f'List[{elem}]'
-                value = f'_take_array(rebind_var[Array[{elem}, N]]({value}))'
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   accumulator=acc, initial=initial)
             contract = plan.contract
             error = f'{contract}.Error'
             raised = f'_EntryError[{hint}, {error}]'
-            condition = (condition + ' and ' if array else '') + f'{contract}.Compatible'
+            condition = f'{contract}.Compatible'
             condition += f' and _ErrorCompatible[{raised}, {error}]'
             if kind == 'catalog':
                 relations = list(factory.conditions)
@@ -123,7 +113,6 @@ def folds(mode, array=False):
                 args = ['var source: V'] + (['var initial: A'] if fold else []) + [arg]
             else:
                 args = ['deinit self', arg] + ([f'var initial: {acc}'] if fold else [])
-            if mode == 'piped': result, call = f'Piped[{result}]', f'Piped({call})'
             indent = '' if mode == 'free' else '    '
             doc = ('Fold in order with an effectful accumulator step; empty input returns the initial value in the effect.' if fold else
                    'Test elements with an effectful borrowing predicate, stopping each branch at its decisive Bool result.')
@@ -169,11 +158,10 @@ def conditional(mode, family=None):
         if mode == 'free': params += [f'V: {MD}']
         if family == 'Result': params += [f'Failure: {MD}']
         g = f'ResultFamily[Self.E]' if mode == 'result' else f'ResultFamily[Failure]' if family == 'Result' else family+'Family' if family else 'G'
-        if mode in ('free', 'piped') and not family:
+        if mode == 'free' and not family:
             # The condition's family is the default; the factory parameters follow it.
-            source_value = 'V' if mode == 'free' else 'Self.Value'
             lead, trail = split_explicit(explicit)
-            params += [*lead, '//', 'G: Monad = ' + source_default('Monad', source_value), *trail, 'X: AnyType = _InferError']
+            params += [*lead, '//', 'G: Monad = ' + source_default('Monad', 'V'), *trail, 'X: AnyType = _InferError']
         else:
             params += ['//']
             if not family and mode != 'result': params += ['G: Monad']
@@ -202,7 +190,6 @@ def conditional(mode, family=None):
             cond = (source_binding + plan.contract + '.ShapeCompatible'
                     + f' and _ErrorCompatible[{raised}, {actual}]')
         call = plan.invoke(raised, value, *values)
-        if mode == 'piped': result, call = f'Piped[{result}]', f'Piped({call})'
         args.insert(0, 'var condition: V' if mode == 'free' else 'deinit self')
         indent = '' if mode == 'free' else '    '
         out.append(f'\n{indent}def if_effect[{", ".join(params)}]({", ".join(args)}) raises {raised} -> {result} where {cond}:\n{indent}    """Run the factory selected by an effectful Bool, skipping both factories on failure or absence."""\n{indent}    return {call}\n')
@@ -212,14 +199,10 @@ def conditional(mode, family=None):
 def methods(mode):
     if mode == 'result': return conditional(mode)
     if mode == 'conditional': return conditional('free')
-    out = folds(mode) + searches(mode)
-    if mode == 'piped':
-        # Native carriers infer their family through the generic conditional.
-        out += folds(mode, True) + searches(mode, True) + conditional(mode)
-    return out
+    return folds(mode) + searches(mode)
 
 
-def searches(mode, array=False):
+def searches(mode):
     out=[]
     for name in ('find_effect','find_map_effect','fold_map_effect'):
         operation = EFFECT_REDUCTIONS[name]
@@ -246,30 +229,21 @@ def searches(mode, array=False):
                 elem=f'downcast[{metadata.inputs[0]}, {MD}]' if borrowing else metadata.inputs[0]
                 effect=metadata.result;fe=metadata.error
             if mode=='free':params+=[f'V: {MD}']
-            if array:params+=['N: Int']
-            if mode in ('free','piped','iter'):
-                # The Monoid cannot be inferred, so it precedes the defaulted target.
-                explicit=factory.explicit if kind=='catalog' else form.explicit if native else ()
-                lead,trail=split_explicit(explicit)
-                params+=[*lead,'//']+([canonical_effect_monoid(effect)] if folding else [])+['G: Monad = '+source_default('Monad', effect), *trail]
-            else:
-                params+=['//','G: Monad']+(['M: Monoid'] if folding else [])
-                if kind=='catalog':params+=list(factory.explicit)
-                if native:params+=list(form.explicit)
+            # The Monoid precedes the defaulted target, defaulting to the payload's canonical monoid.
+            explicit=factory.explicit if kind=='catalog' else form.explicit if native else ()
+            lead,trail=split_explicit(explicit)
+            params+=[*lead,'//']+([canonical_effect_monoid(effect)] if folding else [])+['G: Monad = '+source_default('Monad', effect), *trail]
             params+=['X: AnyType = _InferError']
-            source='V' if mode=='free' else 'Self.I' if mode=='iter' else 'Self.Value'
-            value='source^' if mode=='free' else 'self._iterator^' if mode=='iter' else 'self.value^'
+            source='V' if mode=='free' else 'Self.I'
+            value='source^' if mode=='free' else 'self._iterator^'
             condition=f'_Source[{source}].Element == {elem}'
-            if array:
-                condition=f'Self.Value == Array[{elem}, N]';source=f'List[{elem}]'
-                value=f'_take_array(rebind_var[Array[{elem}, N]]({value}))'
             plan = operation.bind('G', source, elem, cb, build, effect,
                                   monoid='M' if folding else '',
                                   retained=f'_EffectRetain[{elem}, G, {cb}, True]' if borrowing else '')
             contract = plan.contract
             actual = contract + '.Error'
             raised=f'_EntryError[X, {actual}]'
-            condition = (condition + ' and ' if array else '') + contract + '.Compatible'
+            condition = contract + '.Compatible'
             # Generic forwarding can prove the native callback error directly;
             # deferred families instead admit their construction error. The
             # shared fold boundary checks every actual family error.
@@ -280,7 +254,6 @@ def searches(mode, array=False):
             call = plan.invoke(raised, value)
             result = contract + '.Out'
             args=['var source: V', arg] if mode=='free' else ['deinit self', arg]
-            if mode=='piped':result=f'Piped[{result}]';call=f'Piped({call})'
             ind='' if mode=='free' else '    '
             summary={'find_effect':'Find the first original element selected by an effectful borrowing predicate in each live branch.','find_map_effect':'Find the first present Optional produced inside the selected Monad in each live branch.','fold_map_effect':'Map each element into the selected Monad and combine its values in order with an explicit Monoid.'}[name]
             prelude=f'{ind}    {assertion}\n' if assertion else ''

@@ -1,5 +1,6 @@
 """AttemptTapContract forwards combined and component proofs without private adapters."""
-from fp.algebra import ErrorRecovery, Functor,ApplicativeError, ErrorMapping,Monad,ResultFamily,IdentityFamily,AttemptTapContract
+from fp.algebra import ErrorRecovery, Functor, ApplicativeError, ErrorMapping, Monad, ResultFamily, IdentityFamily
+from fp.algebra.contracts import AttemptTapContract
 from fp.callables import BorrowCallContract,BorrowCallable
 from fp.effects import Reader,ReaderT,ResultT,run
 from fp.functions import pipeline,Pipeline

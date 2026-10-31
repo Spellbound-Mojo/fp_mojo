@@ -1,6 +1,6 @@
 """Generic callbacks retain payload origins and exact native errors."""
 from fp.data import Result, Ok
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import UnaryContract, Unary, as_unary
 from std.testing import assert_equal
 
@@ -9,14 +9,14 @@ def fcg_combine[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & D
                 E: Movable & Deinitable, X: Movable & Deinitable,
                 F: def(var A, var B) raises X -> R](var left: Result[A, E], var right: Result[B, E], ref function: F
 ) raises X -> Result[R, E]:
-    return piped(left^).map2[A=A, B=B, R=R, X=X](right^, function).get()
+    return pipeline(left^).raising[X]().map2(right^, function).get()
 
 
 def fcg_piped[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable,
               E: Movable & Deinitable, X: Movable & Deinitable,
               F: def(var A, var B) raises X -> R](var left: Result[A, E], var right: Result[B, E], ref function: F
 ) raises X -> Result[R, E]:
-    return piped(left^).map2[A=A, B=B, R=R, X=X](right^, function).get()
+    return pipeline(left^).raising[X]().map2(right^, function).get()
 
 
 def fcg_add(a: Int, b: Int) raises String -> Int: return a + b
@@ -25,13 +25,13 @@ def fcg_add(a: Int, b: Int) raises String -> Int: return a + b
 def fcg_apply[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](
     var function: Result[F, E], var values: Result[F.Arg, E]
 ) raises F.Error -> Result[F.Out, E]:
-    return piped(function^).ap(values^).get()
+    return pipeline(function^).ap(values^).get()
 
 
 def fcg_apply_piped[F: UnaryContract & Movable & Deinitable, E: Movable & Deinitable](
     var function: Result[F, E], var values: Result[F.Arg, E]
 ) raises F.Error -> Result[F.Out, E]:
-    return piped(function^).ap(values^).get()
+    return pipeline(function^).ap(values^).get()
 
 
 def fcg_twice(value: Int) raises String -> Int: return value * 2
@@ -46,7 +46,7 @@ struct FCGView[o: ImmOrigin](Unary):
 
 def fcg_views(values: List[Int]) raises:
     var view = Span(values)
-    var result = piped(Result[type_of(view), String](Ok(view))).product(Result[Int, String](Ok(3))).get()
+    var result = pipeline(Result[type_of(view), String](Ok(view))).product(Result[Int, String](Ok(3))).get()
     var pair = result^.raise_on_err()
     comptime assert type_of(pair) == Tuple[type_of(view), Int]
     assert_equal(pair[0][0] + pair[1], 10)
@@ -61,7 +61,7 @@ def fcg_map_n[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & 
               F: def(var A0, var A1, var A2) raises X -> R](
     var first: Result[A0,E], var others: Tuple[Result[A1,E],Result[A2,E]], ref function: F
 ) raises X -> Result[R,E]:
-    return piped(first^).map_n[A0=A0,A1=A1,A2=A2,R=R,X=X](others^,function).get()
+    return pipeline(first^).raising[X]().map_n(others^,function).get()
 
 
 def fcg_map_n_piped[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deinitable,
@@ -69,7 +69,7 @@ def fcg_map_n_piped[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Mova
               F: def(var A0, var A1, var A2) raises X -> R](
     var first: Result[A0,E], var others: Tuple[Result[A1,E],Result[A2,E]], ref function: F
 ) raises X -> Result[R,E]:
-    return piped(first^).map_n[A0=A0,A1=A1,A2=A2,R=R,X=X](others^,function).get()
+    return pipeline(first^).raising[X]().map_n(others^,function).get()
 
 
 def fcg_sum_three(a:Int,b:Int,c:Int) raises String -> Int: return a+b+c
@@ -83,14 +83,14 @@ struct FCGTupleView[o: ImmOrigin](Unary):
 
 
 def fcg_library_view[o: ImmOrigin](var first:Result[Span[Int,o],String],var second:Result[Int,String]) -> Result[Span[Int,o],String]:
-    return piped(first^).map_n((second^,),FCGTupleView[o]()).get()
+    return pipeline(first^).map_n((second^,),FCGTupleView[o]()).get()
 
 
 def fcg_nary_views(values: List[Int]) raises:
     var view=Span(values)
     comptime View=type_of(view)
     def keep(var a:View,b:Int,c:Int) raises String -> View: return a
-    var tupled=piped(Result[type_of(view),String](Ok(view))).product_n((Result[Int,String](Ok(2)),Result[type_of(view),String](Ok(view)))).get().raise_on_err()
+    var tupled=pipeline(Result[type_of(view),String](Ok(view))).product_n((Result[Int,String](Ok(2)),Result[type_of(view),String](Ok(view)))).get().raise_on_err()
     comptime assert type_of(tupled) == Tuple[type_of(view),Int,type_of(view)]
     assert_equal(tupled[0][0]+tupled[1]+tupled[2][1],17)
     var mapped = fcg_map_n(Result[type_of(view),String](Ok(view)),(Result[Int,String](Ok(1)),Result[Int,String](Ok(2))),keep).raise_on_err()
@@ -102,7 +102,7 @@ def fcg_nary_views(values: List[Int]) raises:
         raise a
     var observed = 0
     try:
-        _=piped(Optional(view)).map_n((Optional(2),Optional(3)),fail).get()
+        _=pipeline(Optional(view)).map_n((Optional(2),Optional(3)),fail).get()
     except error:
         comptime assert type_of(error) == type_of(view)
         observed = error[1]

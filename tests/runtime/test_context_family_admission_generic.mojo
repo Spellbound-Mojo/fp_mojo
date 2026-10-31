@@ -2,7 +2,8 @@
 from algebra_support.applicative_traversal import ResultApplicative
 from algebra_support.external import PublicMonad
 from fp.functions import pipeline,Identity
-from fp.algebra import Functor,Applicative,Traversable,ListFamily,OptionalFamily,ResultFamily,TraverseContract
+from fp.algebra import Functor, Applicative, Traversable, ListFamily, OptionalFamily, ResultFamily
+from fp.algebra.contracts import TraverseContract
 from fp.callables import Unary,UnaryContract
 from fp.data import Result,Ok
 from std.collections import Array

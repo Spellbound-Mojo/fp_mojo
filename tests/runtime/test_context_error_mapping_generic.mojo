@@ -1,5 +1,6 @@
 """Public error-mapping components support abstract and conditional forwarding."""
-from fp.algebra import Functor, ErrorMapping, ResultFamily, ValidationFamily, StringMonoid, MapBothContract, MapErrContract
+from fp.algebra import Functor, ErrorMapping, ResultFamily, ValidationFamily, StringMonoid
+from fp.algebra.contracts import MapBothContract, MapErrContract
 from fp.callables import UnaryContract, Unary
 from fp.functions import Pipeline, pipeline
 from fp.functions.composition import Identity

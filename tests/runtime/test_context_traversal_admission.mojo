@@ -1,8 +1,9 @@
 """Source strategy preserves consuming single-value traversal and checked loops."""
-from fp.algebra import Applicative,Traversable,TraverseContract,ListFamily,OptionalFamily,ResultFamily,IdentityFamily,traverse
+from fp.algebra import Applicative, Traversable, ListFamily, OptionalFamily, ResultFamily, IdentityFamily, traverse
+from fp.algebra.contracts import TraverseContract
 from fp.algebra.protocols import _Append,_Accumulate
 from fp.effects import OptionalT,ResultT
-from fp.functions import pipeline,piped
+from fp.functions import pipeline
 from fp.callables import UnaryContract,OnceUnary,Unary
 from fp.data import Result,Ok
 from context_branch_admission_support import MoveState,Next,OnceNext,AdmissionBase
@@ -61,6 +62,6 @@ def main() raises:
     var cartesian=traverse[ListFamily, ListFamily](List[Int]([1,2]),choose)
     assert_equal(cartesian[0],[1,2])
     assert_equal(cartesian[3],[11,12])
-    assert_equal(piped(List[Int]([1,2])).traverse[ListFamily](choose).get(),cartesian)
+    assert_equal(pipeline(List[Int]([1,2])).traverse[ListFamily](choose).get(),cartesian)
     var discarded=pipeline(List[Int]([1,2])).traverse_void[ListFamily](choose).get()
     assert_equal(len(discarded),4)

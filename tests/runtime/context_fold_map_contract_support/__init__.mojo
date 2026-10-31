@@ -1,9 +1,10 @@
-from fp.algebra import FoldMapContract, Monad, Monoid, IdentityFamily, pure
+from fp.algebra import Monad, Monoid, IdentityFamily, pure
+from fp.algebra.contracts import FoldMapContract
 from fp.callables import UnaryContract, Unary, MutableUnary, OnceUnary
 from fp.effects import Reader
 from fp.iteration import fold_map_effect, Iter
 from std.iter import Iterator
-from fp.functions import piped, pipeline, Pipeline
+from fp.functions import pipeline, Pipeline
 from std.memory import ArcPointer
 
 
@@ -16,7 +17,7 @@ def forward[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Mov
 def fluent[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: V
 ) raises FoldMapContract[I, M, V, F].Error -> FoldMapContract[I, M, V, F].Out where FoldMapContract[I, M, V, F].Compatible:
-    return piped(source^).fold_map_effect[M, I](function^).get()
+    return pipeline[IdentityFamily](source^).fold_map_effect[I, M](function^).get()
 
 
 def iterator_forward[I: Monad, M: Monoid, V: Iterator, F: UnaryContract & Movable & Deinitable](

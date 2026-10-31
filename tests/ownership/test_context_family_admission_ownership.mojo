@@ -1,6 +1,6 @@
 """Source admission retains move-only Array cleanup and short-circuit semantics."""
 from fp.functions import pipeline
-from fp.algebra import ListFamily,OptionalFamily
+from fp.algebra import ListFamily, OptionalFamily
 from std.collections import Array
 from std.memory import ArcPointer
 from std.testing import assert_equal

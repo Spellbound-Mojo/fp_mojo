@@ -1,4 +1,5 @@
-from fp.algebra import Monad, FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
+from fp.algebra import Monad
+from fp.algebra.contracts import FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
 from fp.callables import BorrowCallContract, ThunkContract
 from fp.functions import pipeline
 

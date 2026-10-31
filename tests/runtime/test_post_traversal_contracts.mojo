@@ -3,7 +3,8 @@ from algebra_support.post_traversal_contracts import selected, flattened, contin
 from algebra_support.filter_effect_contracts import FailingCompaction
 from algebra_support.external import PublicMonad
 from algebra_support.box import Box, BoxApplicative
-from fp.algebra import Traversable, FunctorFilter, Monad, Applicative, TraverseFilterContract, FlatTraverseContract, ListFamily, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid
+from fp.algebra import Traversable, FunctorFilter, Monad, Applicative, ListFamily, OptionalFamily, ResultFamily, ValidationFamily, ListMonoid
+from fp.algebra.contracts import TraverseFilterContract, FlatTraverseContract
 from fp.callables import UnaryContract, MutableUnary, as_unary, mut_ref
 from fp.functions import pipeline, Identity
 from fp.data import Result, Ok, Err

@@ -1,5 +1,6 @@
 """Retain effectful projections without private types in generic signatures."""
-from fp.algebra import Monad, FlatPairWithContract, ListFamily
+from fp.algebra import Monad, ListFamily
+from fp.algebra.contracts import FlatPairWithContract
 from fp.callables import BorrowCallContract, BorrowCallable
 from fp.effects import Reader, run
 from fp.functions import Pipeline, pipeline

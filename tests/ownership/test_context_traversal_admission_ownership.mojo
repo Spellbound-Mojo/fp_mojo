@@ -1,5 +1,6 @@
 """Single-value traversal consumes captured owners without Cartesian copies."""
-from fp.algebra import Traversable,TraverseContract,OptionalFamily,ResultFamily,ListFamily,traverse
+from fp.algebra import Traversable, OptionalFamily, ResultFamily, ListFamily, traverse
+from fp.algebra.contracts import TraverseContract
 from fp.callables import OnceUnary
 from fp.data import Result,Ok,Err
 from test_applicative_error_ownership import AEOOwner as Owner

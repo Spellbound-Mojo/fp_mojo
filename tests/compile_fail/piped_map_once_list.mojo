@@ -1,5 +1,5 @@
 # error: no matching method in call to 'map'
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary
 
 @fieldwise_init
@@ -10,4 +10,4 @@ struct MapOnce(OnceUnary):
 
 def main():
     var values: List[Int] = [1, 2]
-    _ = piped(values^).map(MapOnce()).get()
+    _ = pipeline(values^).map(MapOnce()).get()

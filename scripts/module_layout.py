@@ -1,7 +1,7 @@
 """Public packages and declaration providers; paths are relative to src/fp."""
 import re
 
-PUBLIC_PACKAGES = ('callables', 'combinators', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'effects', 'matching', 'effects.async_runtime', 'effects.async_runtime.protocols')
+PUBLIC_PACKAGES = ('callables', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'algebra.contracts', 'effects', 'matching', 'effects.async_runtime', 'effects.async_runtime.protocols')
 
 
 def split_public_name(name, packages=PUBLIC_PACKAGES):
@@ -47,7 +47,7 @@ SOURCE_MODULES = (
     ('iteration', 'iteration/scans'),
     ('control', 'control/loops'),
     ('control', 'control/scan'),
-    *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'error_mapping', 'instances', 'collections', '_primitive_contracts', 'contracts', 'sequencing', '_outcomes', '_derived', '_traversal', 'monoids', 'validation', 'accumulate', 'non_empty', 'ior', 'absence', 'looping')),
+    *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'error_mapping', 'instances', 'collections', '_primitive_contracts', '_contracts', 'sequencing', '_outcomes', '_derived', '_traversal', 'monoids', 'validation', 'accumulate', 'non_empty', 'ior', 'absence', 'looping')),
     *(( 'effects', 'effects/' + name) for name in ('protocols', 'reader', 'state', 'writer', 'layers', 'operations', 'capabilities', 'projections', 'outcomes', 'resources', '_io_core', '_native_resource_io', 'scoped', 'finalization', 'effectful_resources', 'fibers', 'coordination')),
     ('data', 'data/_result'),
     ('data', 'data/_attempt'),
@@ -80,16 +80,29 @@ ASYNC_PROVIDERS = (
     ('effects.async_runtime.protocols', 'effects/async_runtime/protocols', ('Context',)),
 )
 
+def _contract(name):
+    return name.endswith('Contract')
+
+
+def _not_contract(name):
+    return not name.endswith('Contract')
+
+
+def admits(names, name):
+    """Whether a provider's name filter (None, a collection or a predicate) admits a name."""
+    return names is None or (names(name) if callable(names) else name in names)
+
+
 def declaration_providers():
     yield from ASYNC_PROVIDERS
     for package, provider in SOURCE_MODULES:
-        yield package, provider, None
-    yield 'combinators', 'iteration/adapters', ('map', 'filter', 'filter_not', 'filter_map', 'flat_map', 'flatten')
-    yield 'combinators', 'iteration/folds', ('fold_left',)
-    yield 'combinators', 'iteration/derived', None
-    yield 'combinators', 'iteration/reductions', None
-    yield 'combinators', 'iteration/effectful', None
-    yield 'combinators', 'algebra/conditional', ('if_effect',)
+        # Operation contracts are published under fp.algebra.contracts,
+        # at their physical owners; the algebra package keeps everything else.
+        if package == 'algebra':
+            yield 'algebra', provider, _not_contract
+            yield 'algebra.contracts', provider, _contract
+        else:
+            yield package, provider, None
     yield 'functions', 'callables/native', ('as_unary', 'as_binary')
 
 
@@ -98,7 +111,7 @@ def public_providers(root):
     for package, provider, names in declaration_providers():
         for name in re.findall(r'^(?:def|struct|trait|comptime) `?([A-Za-z]\w*)',
                                (root / f'src/fp/{provider}.mojo').read_text(), re.M):
-            if names is not None and name not in names:
+            if not admits(names, name):
                 continue
             key = package + '.' + name
             if key in result and result[key] != provider:

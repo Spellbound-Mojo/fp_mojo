@@ -1,6 +1,7 @@
 """Selected recovery honors the family for native and deferred carriers."""
 from fp.functions import pipeline, OrElseContract
-from fp.algebra import Functor, Applicative, ApplicativeError, RecoverContract, ResultFamily, ListFamily, IdentityFamily
+from fp.algebra import Functor, Applicative, ApplicativeError, ResultFamily, ListFamily, IdentityFamily
+from fp.algebra.contracts import RecoverContract
 from fp.callables import Unary, UnaryContract
 from fp.effects import Reader, ReaderT, ResultT, run
 from fp.data import Result, Ok, Err

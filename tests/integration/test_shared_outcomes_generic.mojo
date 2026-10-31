@@ -1,39 +1,37 @@
 """Generic forwarding keeps success, stored-error and raised-error origins."""
 from fp.algebra import ResultFamily, fail
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.effects import ReaderT, run
 from std.testing import assert_equal
-from std.builtin.rebind import rebind_var
 
 
 def sog_ensure[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable,
                F: def(T) raises X -> Bool, G: def(T) raises X -> E](
     var source: Result[T, E], ref predicate: F, ref factory: G
 ) raises X -> Result[T, E]:
-    return piped(source^).ensure[ResultFamily[E], R=Bool, S=E, X=X, Y=X, Z=X](predicate, factory).get()
+    return pipeline[ResultFamily[E]](source^).raising[X]().ensure(predicate, factory).get()
 
 
 def sog_redeem[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable,
                F: def(var T) raises X -> U, G: def(var E) raises X -> U](
     var source: Result[T, E], ref success: F, ref failure: G
 ) raises X -> Result[U, E]:
-    return piped(source^).redeem[ResultFamily[E], R=U, S=U, X=X, Y=X, Z=X](success, failure).get()
+    return pipeline[ResultFamily[E]](source^).raising[X]().redeem(success, failure).get()
 
 
-def sog_with[T: Movable & Deinitable, E: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable,
-             F: def(var T) raises X -> R, G: def(var E) raises X -> R](
+def sog_with[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable,
+             F: def(var T) raises X -> Result[U, E], G: def(var E) raises X -> Result[U, E]](
     var source: Result[T, E], ref success: F, ref failure: G
-) raises X -> R where R == Result[ResultFamily[E].Element[R], E]:
-    comptime assert R == Result[ResultFamily[E].Element[R], E]
-    return rebind_var[R](piped(source^).redeem_with[ResultFamily[E], R=R, S=R, X=X, Y=X, Z=X](success, failure).get())
+) raises X -> Result[U, E]:
+    return pipeline[ResultFamily[E]](source^).raising[X]().redeem_with(success, failure).get()
 
 
 def sog_tap[T: Movable & Deinitable, E: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable,
             F: def(Result[T, E]) raises X -> R](
     var source: Result[T, E], ref inspect: F
 ) raises X -> Result[T, E] where R == Result[ResultFamily[E].Element[R], E]:
-    return piped(source^).attempt_tap[ResultFamily[E], R=R, X=X, Z=X](inspect).get()
+    return pipeline[ResultFamily[E]](source^).raising[X]().attempt_tap(inspect).get()
 
 
 def sog_origins(values: List[Int]) raises:
@@ -61,7 +59,7 @@ def sog_origins(values: List[Int]) raises:
     assert_equal(code, 12)
     comptime D = ReaderT[F, Int]
     def deferred(outcome: R) -> D.Pure[V]: return D.pure(outcome._err().value)
-    var pending = piped(fail[D, V](view)).attempt_tap[D](deferred).get()
+    var pending = pipeline[D](fail[D, V](view)).attempt_tap(deferred).get()
     var retained = run[D](pending^, 3)
     comptime assert type_of(retained) == R
     assert_equal(retained._err().value[0], 9)

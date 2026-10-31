@@ -1,7 +1,8 @@
 """Generic sequencing uses public contracts with exact family semantics."""
-from fp.algebra import Applicative, Monad, ListFamily, OptionalFamily, FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
+from fp.algebra import Applicative, Monad, ListFamily, OptionalFamily
+from fp.algebra.contracts import FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
 from fp.callables import BorrowCallContract, BorrowCallable, BorrowOnceCallable, ThunkContract, Thunk, MutableThunk, OnceThunk, UnaryContract, BinaryContract
-from fp.functions import Pipeline, pipeline, piped, Identity
+from fp.functions import Pipeline, pipeline, Identity
 from fp.effects import Reader, run
 from std.memory import ArcPointer
 from std.builtin.rebind import downcast, rebind_var
@@ -50,8 +51,8 @@ def expanded_followed[I: Monad, V: Movable & Deinitable, F: ThunkContract & Mova
     return followed[I](value^, factory^).get()
 
 
-def legacy[I: Monad, V: Movable & Deinitable, F: ThunkContract & Movable & Deinitable](var value: V, var factory: F) raises BeforeContract[I,V,F].Error -> BeforeContract[I,V,F].Out where BeforeContract[I,V,F].CarrierCompatible:
-    return piped(value^).before[I](factory^).get()
+# Pipeline.before admits BeforeContract.Compatible or the expanded components
+# above; Piped's CarrierCompatible-only legacy proof is not ported.
 
 
 @fieldwise_init
@@ -193,7 +194,6 @@ def main() raises:
     assert_equal(expanded_pair[ListFamily](List[Int]([1,2]), Project[ListFamily](calls)), [(1,11),(2,12)])
     assert_equal(expanded_before[ListFamily](List[Int]([1,2]), Branches(0)), [1,1,2,2])
     assert_equal(expanded_followed[ListFamily](List[Int]([1,2]), Branches(0)), [1,11,2,12])
-    assert_equal(legacy[OptionalFamily](Optional(5), Create[OptionalFamily](calls)).value(), 5)
     var selected = tapped[CellFamily](Cell(3), Project[CellFamily](calls))
     comptime assert type_of(selected).I == CellFamily
     assert_equal(selected^.get().take(), 3)

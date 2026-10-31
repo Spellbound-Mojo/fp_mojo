@@ -2,7 +2,7 @@
 from fp.algebra import ListFamily, IdentityFamily
 from fp.callables import MutableThunk
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_false
@@ -28,38 +28,38 @@ struct MSFactory(MutableThunk):
 
 
 def ms_eager() raises:
-    assert_equal(piped(List[Int]([1,2,3])).flat_pair_with(ms_choices).get(),[(1,11),(1,21),(3,13),(3,23)])
-    assert_equal(piped(List[Int]([1,2,3])).flat_pair_with[ListFamily](ms_choices).get(),[(1,11),(1,21),(3,13),(3,23)])
-    assert_equal(piped(Optional(4)).flat_pair_with(ms_some).get().value(),(4,5))
+    assert_equal(pipeline(List[Int]([1,2,3])).flat_pair_with(ms_choices).get(),[(1,11),(1,21),(3,13),(3,23)])
+    assert_equal(pipeline[ListFamily](List[Int]([1,2,3])).flat_pair_with(ms_choices).get(),[(1,11),(1,21),(3,13),(3,23)])
+    assert_equal(pipeline(Optional(4)).flat_pair_with(ms_some).get().value(),(4,5))
     var pair_calls = ArcPointer(0)
     def check(value: Int) {pair_calls} -> Result[String,String]:
         pair_calls[] += 1
         if value < 0: return Err(String('projection'))
         return Ok(String(value))
-    var good = piped(Result[Int,String](Ok(4))).flat_pair_with(check).get()
+    var good = pipeline(Result[Int,String](Ok(4))).flat_pair_with(check).get()
     assert_equal(good^.raise_on_err(),(4,String('4')))
-    assert_equal(piped(Result[Int,String](Err(String('source')))).flat_pair_with(check).get()._err().value,'source')
+    assert_equal(pipeline(Result[Int,String](Err(String('source')))).flat_pair_with(check).get()._err().value,'source')
     assert_equal(pair_calls[],1)
-    assert_equal(piped(Result[Int,String](Ok(-1))).flat_pair_with(check).get()._err().value,'projection')
+    assert_equal(pipeline(Result[Int,String](Ok(-1))).flat_pair_with(check).get()._err().value,'projection')
     assert_equal(pair_calls[],2)
     def empty(value: Int) -> Optional[Int]: return None
-    assert_false(piped(Optional(1)).flat_pair_with(empty).get())
-    assert_equal(piped(List[Int]([1,2,3])).flat_tap(ms_choices).get(),[1,1,3,3])
-    assert_equal(piped(List[Int]([1,2])).followed_by(ms_make).get(),[7,8,7,8])
-    assert_equal(piped(List[Int]([1,2])).before(ms_make).get(),[1,1,2,2])
-    assert_equal(piped(List[Int]([1,2,3])).flat_tap[ListFamily](ms_choices).get(),[1,1,3,3])
-    assert_equal(piped(Optional(4)).flat_tap(ms_some).get().value(),4)
-    assert_false(piped(Optional(4)).before(ms_none).get())
+    assert_false(pipeline(Optional(1)).flat_pair_with(empty).get())
+    assert_equal(pipeline(List[Int]([1,2,3])).flat_tap(ms_choices).get(),[1,1,3,3])
+    assert_equal(pipeline(List[Int]([1,2])).followed_by(ms_make).get(),[7,8,7,8])
+    assert_equal(pipeline(List[Int]([1,2])).before(ms_make).get(),[1,1,2,2])
+    assert_equal(pipeline[ListFamily](List[Int]([1,2,3])).flat_tap(ms_choices).get(),[1,1,3,3])
+    assert_equal(pipeline(Optional(4)).flat_tap(ms_some).get().value(),4)
+    assert_false(pipeline(Optional(4)).before(ms_none).get())
     var calls = ArcPointer(0)
-    assert_equal(piped(List[Int]([1,2])).followed_by(MSFactory(calls)).get(),[1,10,2,20])
+    assert_equal(pipeline(List[Int]([1,2])).followed_by(MSFactory(calls)).get(),[1,10,2,20])
     assert_equal(calls[],2)
-    assert_equal(piped(List[Int]([3,4])).before(MSFactory(calls)).get(),[3,3,4,4])
+    assert_equal(pipeline(List[Int]([3,4])).before(MSFactory(calls)).get(),[3,3,4,4])
     assert_equal(calls[],4)
-    assert_equal(piped(List[Int]()).before(MSFactory(calls)).get(),List[Int]())
+    assert_equal(pipeline(List[Int]()).before(MSFactory(calls)).get(),List[Int]())
     assert_equal(calls[],4)
     def observe(value:Int) -> Int: return value+10
-    assert_equal(piped(5).flat_tap[IdentityFamily](observe).get(),5)
-    assert_equal(piped(5).flat_pair_with[IdentityFamily](observe).get(),(5,15))
+    assert_equal(pipeline[IdentityFamily](5).flat_tap(observe).get(),5)
+    assert_equal(pipeline[IdentityFamily](5).flat_pair_with(observe).get(),(5,15))
 
 
 def ms_lazy() raises:

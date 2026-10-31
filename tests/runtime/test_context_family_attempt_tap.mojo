@@ -1,6 +1,7 @@
 """Selected whole-outcome observation retains family timing and restoration."""
 from fp.functions import pipeline
-from fp.algebra import ResultFamily,ListFamily,IdentityFamily,AttemptTapContract
+from fp.algebra import ResultFamily, ListFamily, IdentityFamily
+from fp.algebra.contracts import AttemptTapContract
 from fp.effects import Reader,ReaderT,ResultT,OptionalT,run
 from fp.data import Result,Ok,Err
 from fp.callables import BorrowCallable

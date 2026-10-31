@@ -2,7 +2,7 @@
 # error: origin_of(anchor)
 # error: origin_of(local)
 from fp.algebra import ResultFamily, ValidationFamily, ListMonoid, ListFamily, map, map2, map2_lazy, traverse, sequence
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.data import Result, Ok, Err
 
 def check(anchor: List[Int], local: List[Int]):
@@ -13,7 +13,7 @@ def check(anchor: List[Int], local: List[Int]):
     comptime Expected = ExpectedView
     comptime Family = ResultFamily[Expected]
     def next(var value: Int) {actual} -> Result[Int, Actual]: return Err(actual)
-    _ = piped(List[Int]([1])).traverse[Family, ListFamily](next).get()
+    _ = pipeline[ListFamily](List[Int]([1])).traverse[Family](next).get()
 def main():
     var anchor: List[Int] = [1]
     var local: List[Int] = [2]

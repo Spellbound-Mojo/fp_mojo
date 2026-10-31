@@ -1,4 +1,5 @@
-from fp.algebra import IfContract, Monad, OptionalFamily, if_effect
+from fp.algebra import Monad, OptionalFamily, if_effect
+from fp.algebra.contracts import IfContract
 from fp.callables import ThunkContract, Thunk
 from std.testing import assert_equal
 

@@ -1,9 +1,9 @@
-"""Piped.map preserves native shape, evaluation, ownership and exact errors."""
+"""Pipeline.map preserves native shape, evaluation, ownership and exact errors."""
 from std.collections import Array, Deque, LinkedList, StringDict
 from std.hash import default_comp_time_hasher, Hasher
 from std.memory import ArcPointer
 from std.testing import assert_equal
-from fp.functions import piped, Piped
+from fp.functions import pipeline, pipeline_values, Pipeline
 from fp.iteration import iterated, collect_list
 from fp.callables import as_unary, MutableUnary, OnceUnary
 from fp.algebra import ListFamily, OptionalFamily
@@ -61,15 +61,15 @@ def container_checked(var value: ContainerMapItem) raises ContainerMapFailure ->
 
 
 def container_generic[T: Movable & Deinitable, U: Movable & Deinitable, //,
-                      F: def(var T) -> U](ref function: F, var values: List[T]) -> Piped[List[U]]:
-    return piped(values^).map[ListFamily](function)
+                      F: def(var T) -> U](ref function: F, var values: List[T]) -> List[U]:
+    return pipeline[ListFamily](values^).map(function).get()
 
 
 def container_generic_raised[T: Movable & Deinitable, U: Movable & Deinitable,
                             E: Movable & Deinitable, //, F: def(var T) raises E -> U](
     ref function: F, var values: List[T]
 ) raises E -> List[U]:
-    return piped(values^).map[ListFamily, E=E](function).get()
+    return pipeline[ListFamily](values^).raising[E]().map(function).get()
 
 
 def container_shapes() raises:
@@ -78,23 +78,23 @@ def container_shapes() raises:
         calls += 1
         return String(value)
     var values: List[Int] = [3, 1, 2]
-    var stage = piped(values^).map(counted)
-    comptime assert type_of(stage) == Piped[List[String]]
+    var stage = pipeline(values^).map(counted)
+    comptime assert type_of(stage).V == List[String]
     assert_equal(calls, 3)  # Mapping completed before get.
     assert_equal(stage^.get(), ["3", "1", "2"])
     var empty = List[Int]()
-    assert_equal(len(piped(empty^).map(counted).get()), 0)
+    assert_equal(len(pipeline(empty^).map(counted).get()), 0)
     assert_equal(calls, 3)
     var xs: List[Int] = [2, 3]
-    assert_equal(container_generic(container_square, xs^).map(container_text).get(), ["4", "9"])
+    assert_equal(pipeline(container_generic(container_square, xs^)).map(container_text).get(), ["4", "9"])
     var ys: List[Int] = [0, 0, 0]
-    assert_equal(piped(ys^).map(ContainerMapCounter(0)).get(), [1, 2, 3])
+    assert_equal(pipeline(ys^).map(ContainerMapCounter(0)).get(), [1, 2, 3])
     var a: Array[Int, 3] = [3, 1, 2]
-    var b = piped(a^).map(container_text).get()
+    var b = pipeline(a^).elements().map(container_text).get()
     comptime assert type_of(b) == Array[String, 3]
     assert_equal(collect_list(b^), ["3", "1", "2"])
     var zero = Array[Int, 0](fill=0)
-    var no_items = piped(zero^).map(counted).get()
+    var no_items = pipeline(zero^).elements().map(counted).get()
     comptime assert type_of(no_items) == Array[String, 0]
     assert_equal(len(no_items), 0)
     assert_equal(calls, 3)
@@ -102,7 +102,7 @@ def container_shapes() raises:
     deque.append(4)
     deque.append(1)
     deque.append(2)
-    var mapped_deque = piped(deque^).map(as_unary(container_text)).get()
+    var mapped_deque = pipeline(deque^).elements().map(as_unary(container_text)).get()
     comptime assert type_of(mapped_deque) == Deque[String]
     assert_equal(mapped_deque._min_capacity, 4)
     assert_equal(mapped_deque._shrink, False)
@@ -111,49 +111,49 @@ def container_shapes() raises:
     var linked = LinkedList[Int]()
     linked.append(3)
     linked.append(1)
-    var mapped_linked = piped(linked^).map(container_text).get()
+    var mapped_linked = pipeline(linked^).elements().map(container_text).get()
     comptime assert type_of(mapped_linked) == LinkedList[String]
     assert_equal(collect_list(mapped_linked^), ["3", "1"])
     var dict = Dict[String, Int, default_comp_time_hasher]()
     dict["b"] = 2
     dict["a"] = 1
     dict["b"] = 3
-    var mapped_dict = piped(dict^).map(container_text).get()
+    var mapped_dict = pipeline_values(dict^).map(container_text).get()
     comptime assert type_of(mapped_dict) == Dict[String, String, default_comp_time_hasher]
     assert_equal(mapped_dict["b"], "3")
     assert_equal(collect_list(mapped_dict^), ["b", "a"])
     var kw = StringDict[Int]()
     kw["x"] = 4
-    var mapped_kw = piped(kw^).map(container_text).get()
+    var mapped_kw = pipeline_values(kw^).map(container_text).get()
     comptime assert type_of(mapped_kw) == StringDict[String]
     assert_equal(mapped_kw["x"], "4")
-    var once = piped(Optional(2)).map(ContainerMapOnce()).get()
+    var once = pipeline(Optional(2)).map(ContainerMapOnce()).get()
     assert_equal(once.take(), 3)
-    assert_equal(Bool(piped(Optional[Int]()).map(counted).get()), False)
+    assert_equal(Bool(pipeline(Optional[Int]()).map(counted).get()), False)
     assert_equal(calls, 3)
     var success = Result[Int, String](Ok(4))
-    var mapped_success = piped(success^).map(container_text).get()
+    var mapped_success = pipeline(success^).map(container_text).get()
     comptime assert type_of(mapped_success) == Result[String, String]
     assert_equal(mapped_success^._take_ok(), "4")
     var failure = Result[Int, String](Err(String("absent")))
-    var mapped_failure = piped(failure^).map(counted).get()
+    var mapped_failure = pipeline(failure^).map(counted).get()
     assert_equal(mapped_failure^._take_err(), "absent")
     assert_equal(calls, 3)
-    var custom = piped(Cell(5)).map[CellFamily](container_text).get()
+    var custom = pipeline[CellFamily](Cell(5)).map(container_text).get()
     assert_equal(custom^.take(), "5")
     var explicit: List[Int] = [2, 3]
-    assert_equal(piped(explicit^).map[ListFamily](container_square).get(), [4, 9])
+    assert_equal(pipeline[ListFamily](explicit^).map(container_square).get(), [4, 9])
 
 
 def container_origins(anchor: List[Int]) raises:
     def view(value: Int) {anchor} -> Span[Int, origin_of(anchor)]:
         return Span(anchor)
     var xs: List[Int] = [1, 2]
-    var views = container_generic(view, xs^).get()
+    var views = container_generic(view, xs^)
     assert_equal(views[0][0], 11)
     assert_equal(views[1][1], 12)
     var a: Array[Int, 2] = [1, 2]
-    var array_views = piped(a^).map(view).get()
+    var array_views = pipeline(a^).elements().map(view).get()
     assert_equal(array_views[1][0], 11)
 
 
@@ -173,7 +173,7 @@ def container_cleanup() raises:
     caught = False
     var array: Array[ContainerMapItem, 4] = [ContainerMapItem(0, drops), ContainerMapItem(1, drops), ContainerMapItem(2, drops), ContainerMapItem(3, drops)]
     try:
-        _ = piped(array^).map(container_checked).get()
+        _ = pipeline(array^).elements().map(container_checked).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         caught = True
@@ -187,7 +187,7 @@ def container_cleanup() raises:
     dict["c"] = ContainerMapItem(2, drops)
     dict["d"] = ContainerMapItem(3, drops)
     try:
-        _ = piped(dict^).map(container_checked).get()
+        _ = pipeline_values(dict^).map(container_checked).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         caught = True
@@ -197,7 +197,7 @@ def container_cleanup() raises:
         raise StopIteration()
     caught = False
     try:
-        _ = piped(Optional(1)).map(stop).get()
+        _ = pipeline(Optional(1)).raising[StopIteration]().map(stop).get()
     except error:
         comptime assert type_of(error) == StopIteration
         caught = True
@@ -206,7 +206,7 @@ def container_cleanup() raises:
         raise ContainerMapFailure(value)
     caught = False
     try:
-        _ = piped(Cell(7)).map[CellFamily](checked_cell).get()
+        _ = pipeline[CellFamily](Cell(7)).raising[ContainerMapFailure]().map(checked_cell).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         assert_equal(error.at, 7)
@@ -222,7 +222,7 @@ def container_more_cleanup() raises:
     dict[ContainerMapKey(8, keys)] = ContainerMapItem(2, drops)
     var caught = False
     try:
-        _ = piped(dict^).map(container_checked).get()
+        _ = pipeline_values(dict^).map(container_checked).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         caught = True
@@ -235,7 +235,7 @@ def container_more_cleanup() raises:
     deque.append(ContainerMapItem(2, drops))
     caught = False
     try:
-        _ = piped(deque^).map(container_checked).get()
+        _ = pipeline(deque^).elements().map(container_checked).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         caught = True
@@ -247,7 +247,7 @@ def container_more_cleanup() raises:
     linked.append(ContainerMapItem(2, drops))
     caught = False
     try:
-        _ = piped(linked^).map(as_unary(container_checked)).get()
+        _ = pipeline(linked^).elements().map(as_unary(container_checked)).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         caught = True
@@ -259,7 +259,7 @@ def container_more_cleanup() raises:
     kw["b"] = ContainerMapItem(2, drops)
     caught = False
     try:
-        _ = piped(kw^).map(container_checked).get()
+        _ = pipeline_values(kw^).map(container_checked).get()
     except error:
         comptime assert type_of(error) == ContainerMapFailure
         caught = True
@@ -269,7 +269,7 @@ def container_more_cleanup() raises:
     var a = Array[ContainerMapItem, 2](fill_with=lambda (i: Int) {drops} -> ContainerMapItem: ContainerMapItem(i, drops))
     def keep(var x: ContainerMapItem) -> ContainerMapItem:
         return ContainerMapItem(x.value * 2, x.drops)
-    var b = piped(a^).map(keep).get()
+    var b = pipeline(a^).elements().map(keep).get()
     assert_equal(drops[], 2)
     assert_equal(b[1].value, 2)
     _ = b^

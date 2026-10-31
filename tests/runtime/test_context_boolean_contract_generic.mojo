@@ -2,7 +2,8 @@
 from context_boolean_contract_support import some, every, fluent, iterator_forward, selected, all_fluent, any_iterator, any_selected, Absent
 from context_find_contract_support import Even, OwnedPredicate, Branches, Borrowed, Later
 from context_find_map_contract_support import Owned
-from fp.algebra import AnyContract, AllContract, IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra import IdentityFamily, OptionalFamily, ListFamily, ResultFamily
+from fp.algebra.contracts import AnyContract, AllContract
 from fp.iteration import iterated
 from fp.effects import Reader, run
 from std.memory import ArcPointer

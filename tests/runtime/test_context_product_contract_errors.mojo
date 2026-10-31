@@ -1,5 +1,6 @@
 from context_product_contract_support import forward
-from fp.algebra import Monoid, ProductContract
+from fp.algebra import Monoid
+from fp.algebra.contracts import ProductContract
 from fp.effects import Writer, WriterT, Reader, writer, run_writer, run
 from std.testing import assert_equal
 

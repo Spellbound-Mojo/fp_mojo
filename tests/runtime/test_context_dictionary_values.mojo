@@ -3,7 +3,8 @@ from std.collections import StringDict
 from std.hash import default_comp_time_hasher
 from std.memory import ArcPointer
 from std.testing import assert_equal
-from fp.algebra import Functor, MapContract
+from fp.algebra import Functor
+from fp.algebra.contracts import MapContract
 from fp.callables import UnaryContract
 from fp.functions import pipeline, pipeline_values, Pipeline, Identity
 from fp.iteration import collect_list

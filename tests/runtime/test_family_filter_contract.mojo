@@ -1,7 +1,7 @@
 """Generic family selection preserves admission, custom errors and deferred timing."""
-from fp.algebra import Filterable, FilterContract, ListFamily, filter, filter_not
+from fp.algebra import Filterable, ListFamily, filter, filter_not
+from fp.algebra.contracts import FilterContract
 from fp.callables import BorrowCallContract, BorrowOnceCallable, mut_ref
-from fp.functions import piped
 from test_family_filter_mutable import EveryOther
 from algebra_support.filtering import ContainerDeferredFamily
 from test_context_selection_contracts import FailingFilter, PredicateFault
@@ -33,7 +33,7 @@ def main() raises:
     assert_equal(rejected[ListFamily](mut_ref(predicate), inverse^), [0, 2])
     assert_equal(predicate.calls, 8)
     var delayed: List[Int] = [4, 5, 6, 7]
-    var pending = piped(delayed^).filter_not[ContainerDeferredFamily](mut_ref(predicate)).get()
+    var pending = filter_not[ContainerDeferredFamily](delayed^, mut_ref(predicate))
     assert_equal(predicate.calls, 8)
     assert_equal(pending^.run(), [4, 6])
     assert_equal(predicate.calls, 12)

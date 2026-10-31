@@ -4,9 +4,9 @@ from std.hash import default_comp_time_hasher
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_false, assert_true
 from std.builtin.rebind import rebind_var
-from fp.functions import piped, Piped
+from fp.functions import pipeline, pipeline_values, Pipeline
 from fp.iteration import iterated, collect_list
-from fp.combinators import fill, compact, sum, sum_by, traverse, sequence, find_map
+from fp.iteration import fill, compact, sum, sum_by, traverse, sequence, find_map
 from fp.algebra import OptionalFamily, ListFamily, IdentityFamily, StringMonoid, Monoid, FunctorFilter, filter_map as family_filter_map
 from fp.callables import BorrowCallable, MutableUnary, UnaryContract, as_unary
 from fp.data import Result, Ok, Err
@@ -87,108 +87,108 @@ struct ExpansionDeferredFamily(FunctorFilter):
 
 def expansion_transforms() raises:
     var xs: List[Int] = [1, 2, 3]
-    assert_equal(piped(xs.copy()).fill(4).replace(4, 7).get(), [7, 7, 7])
-    assert_equal(piped(xs.copy()).replace(2, 9).get(), [1, 9, 3])
+    assert_equal(pipeline(xs.copy()).fill(4).replace(4, 7).get(), [7, 7, 7])
+    assert_equal(pipeline(xs.copy()).replace(2, 9).get(), [1, 9, 3])
     assert_equal(iterated(xs.copy()).replace(2, 9).to_list(), [1, 9, 3])
     assert_equal(collect_list(fill(7, range(3))), [7, 7, 7])
-    assert_equal(piped(xs.copy()).tuple_left('x').get()[1], ('x', 2))
+    assert_equal(pipeline(xs.copy()).tuple_left('x').get()[1], ('x', 2))
     assert_equal(iterated(xs.copy()).tuple_right('x').to_list()[1], (2, 'x'))
-    assert_equal(piped(xs.copy()).pair_with(expansion_square).get()[2], (3, 9))
+    assert_equal(pipeline(xs.copy()).pair_with(expansion_square).get()[2], (3, 9))
     assert_equal(iterated(xs.copy()).pair_with(expansion_square).to_list()[2], (3, 9))
-    assert_equal(len(piped(xs.copy()).void().get()), 3)
+    assert_equal(len(pipeline(xs.copy()).void().get()), 3)
     assert_equal(len(iterated(xs.copy()).void().to_list()), 3)
-    assert_true(piped(Optional(2)).void().get())
-    assert_false(piped(Optional[Int]()).void().get())
-    assert_equal(piped(xs^).fill[ListFamily](7).get(), [7, 7, 7])
-    assert_equal(piped(Cell(4)).fill[CellFamily](7).get().take(), 7)
-    assert_equal(piped(5).fill[IdentityFamily](7).get(), 7)
+    assert_true(pipeline(Optional(2)).void().get())
+    assert_false(pipeline(Optional[Int]()).void().get())
+    assert_equal(pipeline[ListFamily](xs^).fill(7).get(), [7, 7, 7])
+    assert_equal(pipeline[CellFamily](Cell(4)).fill(7).get().take(), 7)
+    assert_equal(pipeline[IdentityFamily](5).fill(7).get(), 7)
     var calls = ArcPointer(0)
-    assert_equal(piped(4).tap(ExpansionInspect(calls)).get(), 4)
-    assert_equal(piped(List[Int]([1, 2])).tap_each(ExpansionInspect(calls)).get(), [1, 2])
+    assert_equal(pipeline(4).tap(ExpansionInspect(calls)).get(), 4)
+    assert_equal(pipeline(List[Int]([1, 2])).tap_each(ExpansionInspect(calls)).get(), [1, 2])
     assert_equal(iterated(range(2)).pair_with(ExpansionInspect(calls)).to_list(), [(0, 0), (1, 3)])
     assert_equal(calls[], 5)
     var array: Array[Int, 2] = [1, 2]
-    var mapped = piped(array^).fill('a').get()
+    var mapped = pipeline(array^).elements().fill('a').get()
     comptime assert type_of(mapped) == Array[String, 2]
     assert_equal(mapped[0], 'a')
     var empty = Array[Int, 0](fill=0)
-    assert_equal(len(piped(empty^).fill('x').get()), 0)
+    assert_equal(len(pipeline(empty^).elements().fill('x').get()), 0)
     var deque = Deque[Int](capacity=8, min_capacity=4, maxlen=2, shrink=False)
     deque.append(1)
     deque.append(2)
-    var d = piped(deque^).fill(3).get()
+    var d = pipeline(deque^).elements().fill(3).get()
     assert_equal(d._min_capacity, 4)
     assert_false(d._shrink)
     d.append(4)
     assert_equal(collect_list(d^), [3, 4])
     var linked = LinkedList[Int]()
     linked.append(4)
-    assert_equal(collect_list(piped(linked^).tuple_right(2).get()), [(4, 2)])
+    assert_equal(collect_list(pipeline(linked^).elements().tuple_right(2).get()), [(4, 2)])
     var dict = Dict[String, Int, default_comp_time_hasher]()
     dict['b'] = 2
     dict['a'] = 3
-    var changed = piped(dict^).fill(4).get()
+    var changed = pipeline_values(dict^).fill(4).get()
     comptime assert type_of(changed) == Dict[String, Int, default_comp_time_hasher]
     assert_equal(changed['a'], 4)
     assert_equal(collect_list(changed^), ['b', 'a'])
     var kw = StringDict[Int]()
     kw['x'] = 1
-    assert_equal(piped(kw^).fill(2).get()['x'], 2)
+    assert_equal(pipeline_values(kw^).fill(2).get()['x'], 2)
     var bad = Result[Int, String](Err(String('bad')))
-    assert_equal(piped(bad^).fill(3).get()._take_err(), 'bad')
+    assert_equal(pipeline(bad^).fill(3).get()._take_err(), 'bad')
     var good = Result[Int, String](Ok(4))
-    assert_equal(piped(good^).pair_with(expansion_square).get()._take_ok(), (4, 16))
+    assert_equal(pipeline(good^).pair_with(expansion_square).get()._take_ok(), (4, 16))
 
 
 def expansion_selection() raises:
     var xs: List[Int] = [1, 2, 3]
-    assert_equal(piped(xs.copy()).filter_map(expansion_select).get(), ['2', '3'])
-    assert_equal(piped(xs.copy()).filter_map[ListFamily](expansion_select).get(), ['2', '3'])
+    assert_equal(pipeline(xs.copy()).filter_map(expansion_select).get(), ['2', '3'])
+    assert_equal(pipeline[ListFamily](xs.copy()).filter_map(expansion_select).get(), ['2', '3'])
     assert_equal(family_filter_map[ListFamily](xs.copy(), expansion_select), ['2', '3'])
-    assert_equal(piped(xs.copy()).filter_map(ExpansionSelect(0)).get(), [2, 4, 6])
-    assert_equal(piped(xs^).flat_map(expansion_many).get(), [1, 2, 2, 3, 3, 4])
+    assert_equal(pipeline(xs.copy()).filter_map(ExpansionSelect(0)).get(), [2, 4, 6])
+    assert_equal(pipeline(xs^).flat_map(expansion_many).get(), [1, 2, 2, 3, 3, 4])
     var opts: List[Optional[Int]] = [None, Optional(2), None, Optional(4)]
-    assert_equal(piped(opts.copy()).compact().get(), [2, 4])
+    assert_equal(pipeline(opts.copy()).compact().get(), [2, 4])
     assert_equal(iterated(opts.copy()).compact().to_list(), [2, 4])
     assert_equal(collect_list(compact(opts^)), [2, 4])
     var nested: List[List[Int]] = [[1, 2], [], [3]]
-    assert_equal(piped(nested^).flatten().get(), [1, 2, 3])
+    assert_equal(pipeline(nested^).flatten().get(), [1, 2, 3])
     var deque = Deque[Int](capacity=8, min_capacity=4, maxlen=2, shrink=False)
     deque.append(1)
     deque.append(2)
-    var d = piped(deque^).filter_map(expansion_select).get()
+    var d = pipeline(deque^).elements().filter_map(expansion_select).get()
     assert_equal(d._min_capacity, 4)
     assert_false(d._shrink)
     assert_equal(collect_list(d^), ['2'])
     var linked = LinkedList[Int]()
     linked.append(1)
     linked.append(2)
-    assert_equal(collect_list(piped(linked^).filter_map(expansion_select).get()), ['2'])
+    assert_equal(collect_list(pipeline(linked^).elements().filter_map(expansion_select).get()), ['2'])
     var dict = Dict[String, Int, default_comp_time_hasher]()
     dict['b'] = 1
     dict['a'] = 3
-    var selected = piped(dict^).filter_map(expansion_select).get()
+    var selected = pipeline_values(dict^).filter_map(expansion_select).get()
     comptime assert type_of(selected) == Dict[String, String, default_comp_time_hasher]
     assert_equal(selected['a'], '3')
     assert_equal(collect_list(selected^), ['a'])
     var kw = StringDict[Int]()
     kw['x'] = 1
     kw['y'] = 2
-    var ks = piped(kw^).filter_map(expansion_select).get()
+    var ks = pipeline_values(kw^).filter_map(expansion_select).get()
     assert_equal(len(ks), 1)
     assert_equal(ks['y'], '2')
-    assert_false(piped(Optional(1)).filter_map(expansion_select).get())
-    assert_equal(piped(Optional(2)).filter_map(expansion_select).get().value(), '2')
+    assert_false(pipeline(Optional(1)).filter_map(expansion_select).get())
+    assert_equal(pipeline(Optional(2)).filter_map(expansion_select).get().value(), '2')
     var deferred_calls = 0
     def expansion_deferred(x: Int) {mut deferred_calls} -> Optional[Int]:
         deferred_calls += 1
         return Optional(x * 2)
-    var deferred = piped(List[Int]([1, 2])).filter_map[ExpansionDeferredFamily](expansion_deferred).get()
+    var deferred = pipeline[ExpansionDeferredFamily](List[Int]([1, 2])).filter_map(expansion_deferred).get()
     assert_equal(deferred_calls, 0)
     assert_equal(deferred^.run(), [2, 4])
     assert_equal(deferred_calls, 2)
     var nested_options: List[Optional[Int]] = [None, Optional(3)]
-    var deferred_compact = piped(nested_options^).compact[ExpansionDeferredFamily]().get()
+    var deferred_compact = pipeline[ExpansionDeferredFamily](nested_options^).compact().get()
     assert_equal(deferred_compact^.run(), [3])
 
 
@@ -196,7 +196,7 @@ def expansion_timing() raises:
     var calls = 0
     def expansion_observe(x: Int) {mut calls}:
         calls += x
-    var eager = piped(List[Int]([1, 2])).tap_each(expansion_observe)
+    var eager = pipeline(List[Int]([1, 2])).tap_each(expansion_observe)
     assert_equal(calls, 3)
     assert_equal(eager^.get(), [1, 2])
     var lazy = iterated(range(1, 4)).tap_each(expansion_observe)
@@ -237,48 +237,45 @@ def expansion_timing() raises:
 
 def expansion_reductions() raises:
     var xs: List[Int] = [1, 2, 3, 4]
-    assert_equal(piped(xs.copy()).sum().get(), 10)
-    assert_equal(piped(xs.copy()).sum_by(expansion_square).get(), 30)
+    assert_equal(pipeline(xs.copy()).sum().get(), 10)
+    assert_equal(pipeline(xs.copy()).sum_by(expansion_square).get(), 30)
     assert_equal(iterated(xs.copy()).sum_by(expansion_square), 30)
     assert_equal(sum(xs.copy()), 10)
     assert_equal(sum_by(xs.copy(), expansion_square), 30)
-    assert_equal(piped(xs.copy()).fold_map[StringMonoid](expansion_text).get(), '1234')
+    assert_equal(pipeline(xs.copy()).fold_map[StringMonoid](expansion_text).get(), '1234')
     assert_equal(iterated(xs.copy()).fold_map[StringMonoid](expansion_text), '1234')
     assert_equal(iterated(xs.copy()).min_by(expansion_key).value(), 3)
-    assert_equal(piped(xs.copy()).max_by(expansion_key).get().value(), 2)
-    assert_equal(piped(xs.copy()).find_map(expansion_select).get().value(), '2')
-    assert_equal(piped(xs.copy()).sum_by(expansion_vector).get(), SIMD[DType.float32, 2](10))
+    assert_equal(pipeline(xs.copy()).max_by(expansion_key).get().value(), 2)
+    assert_equal(pipeline(xs.copy()).find_map(expansion_select).get().value(), '2')
+    assert_equal(pipeline(xs.copy()).sum_by(expansion_vector).get(), SIMD[DType.float32, 2](10))
     assert_equal(iterated(xs^).sum_by(expansion_vector), SIMD[DType.float32, 2](10))
-    assert_equal(piped(List[Int]()).sum().get(), 0)
+    assert_equal(pipeline(List[Int]()).sum().get(), 0)
     assert_false(iterated(List[Int]()).min_by(expansion_key))
     assert_false(iterated(List[Int]()).find_map(expansion_some))
     var texts: List[String] = ['a', 'bc']
-    assert_equal(piped(texts.copy()).combine_all[StringMonoid]().get(), 'abc')
+    assert_equal(pipeline(texts.copy()).combine_all[StringMonoid]().get(), 'abc')
     assert_equal(iterated(texts^).combine_all[StringMonoid](), 'abc')
     var floats: List[Float64] = [1.5, 2.5]
-    assert_equal(piped(floats.copy()).sum().get(), 4.0)
+    assert_equal(pipeline(floats.copy()).sum().get(), 4.0)
     assert_equal(sum(floats^), 4.0)
     var vectors: List[SIMD[DType.float32, 2]] = [SIMD[DType.float32, 2](1, 2), SIMD[DType.float32, 2](3, 4)]
     assert_equal(iterated(vectors^).sum(), SIMD[DType.float32, 2](4, 6))
-    var dict: Dict[String, Int] = {'a': 2, 'b': 3}
-    assert_equal(piped(dict^).sum().get(), 5)
-    var kw = StringDict[Int]()
-    kw['a'] = 4
-    assert_equal(piped(kw^).sum_by(expansion_square).get(), 16)
+    # Pipeline folds over Dict and StringDict visit keys; pipeline_values selects
+    # values for mapping-style stages only, so Piped's dictionary value sums are not ported.
     var array: Array[Int, 2] = [2, 3]
-    assert_equal(piped(array^).sum().get(), 5)
+    assert_equal(pipeline(array^).elements().sum().get(), 5)
 
 
 def expansion_effects() raises:
     var xs: List[Int] = [1, 2, 3]
-    assert_equal(piped(xs.copy()).traverse[OptionalFamily](expansion_some).get().value(), [2, 4, 6])
+    assert_equal(pipeline(xs.copy()).traverse[OptionalFamily](expansion_some).get().value(), [2, 4, 6])
     assert_equal(iterated(xs.copy()).traverse[OptionalFamily](expansion_some).value(), [2, 4, 6])
     assert_equal(traverse[OptionalFamily](xs^, expansion_some).value(), [2, 4, 6])
     var os: List[Optional[Int]] = [Optional(4), Optional(6)]
     assert_equal(iterated(os.copy()).sequence[OptionalFamily]().value(), [4, 6])
     assert_equal(sequence[OptionalFamily](os^).value(), [4, 6])
     var failed: List[Optional[Int]] = [Optional(4), None]
-    assert_false(piped(failed^).sequence[OptionalFamily]().get())
+    assert_false(pipeline(failed^).sequence[OptionalFamily]().get())
     var calls = 0
     def expansion_stop(x: Int) {mut calls} -> Optional[Int]:
         calls += 1
@@ -286,16 +283,16 @@ def expansion_effects() raises:
         return Optional(x)
     assert_false(iterated(range(8)).traverse[OptionalFamily](expansion_stop))
     assert_equal(calls, 3)
-    assert_equal(piped(Optional(2)).flat_map(expansion_some).get().value(), 4)
-    assert_equal(piped(Optional(Optional(3))).flatten().get().value(), 3)
+    assert_equal(pipeline(Optional(2)).flat_map(expansion_some).get().value(), 4)
+    assert_equal(pipeline(Optional(Optional(3))).flatten().get().value(), 3)
     var nested_result = Result[Result[Int, String], String](Ok(Result[Int, String](Ok(4))))
-    assert_equal(piped(nested_result^).flatten().get()._take_ok(), 4)
+    assert_equal(pipeline(nested_result^).flatten().get()._take_ok(), 4)
 
 
 def expansion_ownership() raises:
     var drops = ArcPointer(0)
     var xs: List[ContainerMapItem] = [ContainerMapItem(1, drops), ContainerMapItem(2, drops)]
-    var pairs = piped(xs^).pair_with(expansion_item_key).get()
+    var pairs = pipeline(xs^).pair_with(expansion_item_key).get()
     assert_equal(drops[], 0)
     assert_equal(pairs[1][0].value, 2)
     _ = pairs^
@@ -314,14 +311,14 @@ def expansion_ownership() raises:
     def expansion_keep_item(var x: ContainerMapItem) -> Optional[ContainerMapItem]:
         if x.value == 2: return Optional(x^)
         return None
-    var kept = piped(dict^).filter_map(expansion_keep_item).get()
+    var kept = pipeline_values(dict^).filter_map(expansion_keep_item).get()
     assert_equal(keys[], 1)
     assert_equal(values[], 1)
     _ = kept^
     assert_equal(keys[], 2)
     assert_equal(values[], 2)
     var zs: Array[ContainerMapItem, 2] = [ContainerMapItem(1, drops), ContainerMapItem(2, drops)]
-    assert_equal(piped(zs^).min_by(expansion_item_key).get().value().value, 1)
+    assert_equal(pipeline(zs^).elements().min_by(expansion_item_key).get().value().value, 1)
     assert_equal(drops[], 7)
 
 
@@ -332,14 +329,14 @@ def expansion_errors() raises:
         if x == 2: raise ExpansionFailure(x)
         return Optional(x)
     var failed = False
-    try: _ = piped(List[Int]([1, 2, 3])).filter_map(expansion_checked).get()
+    try: _ = pipeline(List[Int]([1, 2, 3])).raising[ExpansionFailure]().filter_map(expansion_checked).get()
     except error:
         comptime assert type_of(error) == ExpansionFailure
         assert_equal(error.code, 2)
         failed = True
     assert_true(failed)
     failed = False
-    try: _ = piped(List[Int]([1, 2, 3])).combine_all[ExpansionMonoid]().get()
+    try: _ = pipeline(List[Int]([1, 2, 3])).combine_all[ExpansionMonoid]().get()
     except error:
         comptime assert type_of(error) == ExpansionFailure
         assert_equal(error.code, 2)
@@ -356,7 +353,7 @@ def expansion_errors() raises:
         failed = True
     assert_true(failed)
     failed = False
-    try: _ = piped(List[Int]([1, 2])).sum_by(expansion_bad_key).get()
+    try: _ = pipeline(List[Int]([1, 2])).sum_by(expansion_bad_key).get()
     except error:
         comptime assert type_of(error) == ExpansionFailure
         failed = True
@@ -372,13 +369,13 @@ def expansion_errors() raises:
 def expansion_origins(anchor: List[Int]) raises:
     def expansion_view(x: Int) {anchor} -> Span[Int, origin_of(anchor)]:
         return Span(anchor)
-    var pairs = piped(List[Int]([1, 2])).pair_with(expansion_view).get()
+    var pairs = pipeline(List[Int]([1, 2])).pair_with(expansion_view).get()
     assert_equal(pairs[0][1][1], 12)
     var lazy = iterated(range(2)).pair_with(expansion_view)
     assert_equal(next(lazy)[1][0], 11)
     var spans: List[Span[Int, origin_of(anchor)]] = [Span(anchor)]
     def expansion_view_key(x: Span[Int, origin_of(anchor)]) {anchor} -> Int: return len(x)
-    assert_equal(piped(spans^).min_by(expansion_view_key).get().value()[1], 12)
+    assert_equal(pipeline(spans^).min_by(expansion_view_key).get().value()[1], 12)
 
 
 def main() raises:

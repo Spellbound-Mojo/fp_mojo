@@ -1,5 +1,5 @@
 """Conditional composition in a Monad family."""
-from fp.algebra.contracts import IfContract
+from fp.algebra._contracts import IfContract
 from fp.algebra._admission import _CarrierCompatible
 from fp.callables.native import _NativeThunkRef, _NativeThunk, _Thunk, _RaisingThunk
 from fp.callables.protocols import ThunkContract

@@ -1,22 +1,20 @@
 """Imported generic callbacks retain success, stored-error and raised-error origins."""
 from fp.algebra import ApplicativeError, ResultFamily, fail
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.data import Result, Ok
 from std.testing import assert_equal
-from std.builtin.rebind import rebind_var
 
 
 def aeg_recover[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
                 F: def(var A) raises E -> R](var source: Result[R, A], ref handler: F
 ) raises E -> Result[R, A]:
-    return piped(source^).recover[ResultFamily[A], R=R, X=E](handler).get()
+    return pipeline[ResultFamily[A]](source^).raising[E]().recover(handler).get()
 
 
-def aeg_or_else[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable,
-                F: def(var A) raises E -> R](var source: R, ref handler: F
-) raises E -> R where R == Result[ResultFamily[A].Element[R], A]:
-    comptime assert R == Result[ResultFamily[A].Element[R], A]
-    return rebind_var[R](piped(source^).or_else[ResultFamily[A], R=R, X=E](handler).get())
+def aeg_or_else[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable,
+                F: def(var A) raises E -> Result[T, A]](var source: Result[T, A], ref handler: F
+) raises E -> Result[T, A]:
+    return pipeline[ResultFamily[A]](source^).raising[E]().or_else(handler).get()
 
 
 def aeg_fail[I: ApplicativeError, A: Movable & Deinitable](var error: I.Failure

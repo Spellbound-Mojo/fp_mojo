@@ -1,6 +1,7 @@
 """Selected observation retains family policy, deferred timing and native errors."""
 from fp.functions import pipeline
-from fp.algebra import Applicative, ApplicativeError, ErrorMapping, ResultFamily, ListFamily, ValidationFamily, ListMonoid, IdentityFamily, TapErrContract, FlatTapErrContract
+from fp.algebra import Applicative, ApplicativeError, ErrorMapping, ResultFamily, ListFamily, ValidationFamily, ListMonoid, IdentityFamily
+from fp.algebra.contracts import TapErrContract, FlatTapErrContract
 from fp.callables import BorrowCallContract, BorrowCallable, UnaryContract, BinaryContract, ThunkContract
 from fp.effects import Reader, ReaderT, ResultT, run
 from fp.data import Result, Ok, Err

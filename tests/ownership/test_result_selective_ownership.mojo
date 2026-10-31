@@ -1,6 +1,6 @@
 """Selective recovery keeps move-only owners, captures and external origins."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import BorrowOnceCallable, OnceUnary
 from std.memory import ArcPointer
 from std.testing import assert_equal
@@ -77,7 +77,7 @@ def rso_selective() raises:
         var recovery_drops = -1
         var predicate_drops = -1
         try:
-            var result = piped(source^).recover_if(guard^, recovery^).get()
+            var result = pipeline(source^).recover_if(guard^, recovery^).get()
             predicate_drops = predicates[]
             input_drops = inputs[]
             recovery_drops = recoveries[]
@@ -133,7 +133,7 @@ def rso_origins(values: List[Int]) raises:
         assert capture.name == "capture"
         return Ok(view)
     var recoverable = Result[View, RSOOwner](Err(RSOOwner("retry", drops)))
-    var result = piped(recoverable^).or_else_if(rso_accept, rso_return_view).get()
+    var result = pipeline(recoverable^).or_else_if(rso_accept, rso_return_view).get()
     assert_equal(drops[], 1)
     # The native closure stays callable after the chain; its capture is borrowed.
     _ = rso_return_view(RSOOwner("again", drops))

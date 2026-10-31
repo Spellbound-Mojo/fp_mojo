@@ -1,6 +1,7 @@
 """Public SharedRef describes shared callbacks in immediate and deferred wrappers."""
 from fp.callables import SharedRef,Thunk,shared_ref
-from fp.algebra import Monad,BeforeContract,FollowedByContract,OptionalFamily
+from fp.algebra import Monad, OptionalFamily
+from fp.algebra.contracts import BeforeContract, FollowedByContract
 from fp.effects import Reader,run
 from fp.functions import pipeline
 from test_context_sequencing_contracts import Create

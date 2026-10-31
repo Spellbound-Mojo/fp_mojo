@@ -9,7 +9,6 @@ import generate_capture as capture
 import generate_context as context
 import generate_native_conventions as native
 import generate_plain_overloads as generator
-import generate_pipeline_syntax as syntax
 import generate_combinator_syntax as combinators
 import generate_result_syntax as results
 import generate_traversal_syntax as traversals
@@ -77,21 +76,6 @@ class GeneratedOverloadTests(unittest.TestCase):
         self.assertEqual(path.read_text(), generator.spliced(
             path, results.methods(), results.START, results.END, results.HEADER))
 
-    def test_new_carrier_uses_existing_operation_templates(self):
-        # Adding a native shape must not require per-operation handwritten Mojo.
-        carrier = syntax.Carrier('Example', 'Example[{element}, N]',
-                                 'ExampleFamily[N]', ('N: Int',))
-        mapped = syntax.map_methods(carrier)
-        filtered = syntax.filter_methods(carrier, 'filter_not', 'Retain rejected')
-        self.assertIn('Piped[Example[U, N]]', mapped)
-        self.assertIn('_family_map[ExampleFamily[N], X=E]', mapped)
-        self.assertIn('_family_filter_not[ExampleFamily[N]](', filtered)
-        self.assertIn('where R == Bool and Self.Value == Example[T, N]', filtered)
-        self.assertIn('C.Failure', filtered)
-        self.assertIn('_Fill[T, U]', syntax.transform_methods(carrier))
-        self.assertIn('ExampleFamily[N].filter_map', syntax.algebra_methods(carrier))
-        self.assertNotIn('def flat_map', syntax.algebra_methods(carrier))
-
     def test_terminal_sources_match_the_generator(self):
         for name, mode, indent in (('reductions', 'free', ''), ('chaining', 'iter', '    ')):
             path = ROOT / f'src/fp/iteration/{name}.mojo'
@@ -108,14 +92,10 @@ class GeneratedOverloadTests(unittest.TestCase):
                                          indent + traversals.HEADER)
             self.assertEqual(path.read_text(), expected)
 
-    def test_filter_capability_excludes_fixed_or_nonempty_carriers(self):
-        names = {c.name for c in syntax.CARRIERS if 'filter' in c.capabilities}
-        self.assertEqual(names, {'List', 'Deque', 'LinkedList', 'Dict', 'StringDict', 'Optional'})
-
     def test_sequencing_sources_match_the_generator(self):
         path = ROOT / 'src/fp/iteration/chaining.mojo'
         self.assertEqual(path.read_text(), generator.spliced(
-            path, sequencing.methods(iteration=True),
+            path, sequencing.methods(),
             sequencing.START, sequencing.END, sequencing.HEADER))
 
     def test_effect_sources_match_the_generator(self):
@@ -123,7 +103,6 @@ class GeneratedOverloadTests(unittest.TestCase):
             ('iteration/effectful.mojo', 'free', ''),
             ('algebra/conditional.mojo', 'conditional', ''),
             ('iteration/chaining.mojo', 'iter', '    '),
-            ('functions/pipeline.mojo', 'piped', '    '),
         ):
             with self.subTest(module=module):
                 path = ROOT / 'src/fp' / module

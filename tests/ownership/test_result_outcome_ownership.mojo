@@ -1,6 +1,6 @@
 """Outcome combinators move selected payloads and dispose of skipped owners."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceUnary, BorrowOnceCallable
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
@@ -70,7 +70,7 @@ def roo_branches() raises:
             try:
                 var result: Result[ROOOwner, ROOOwner]
                 if mode == 0: result = source^.map_both(ok^, err^)
-                elif mode == 1: result = piped(source^).redeem(ok^, err^).get()
+                elif mode == 1: result = pipeline(source^).redeem(ok^, err^).get()
                 else: result = source^.redeem_with(ROOSequence(ok^), ROOSequence(err^))
                 is_ok = result.is_ok()
                 ok_drops = successes[]
@@ -100,7 +100,7 @@ def roo_observation() raises:
             var is_ok = False
             var name: String
             try:
-                var result = piped(source^).attempt_tap(ROOObserve(ROOOwner("observer", outputs), mode, observed)).get()
+                var result = pipeline(source^).attempt_tap(ROOObserve(ROOOwner("observer", outputs), mode, observed)).get()
                 input_drops = inputs[]
                 output_drops = outputs[]
                 is_ok = result.is_ok()

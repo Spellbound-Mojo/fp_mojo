@@ -1,5 +1,5 @@
 """Public pure specializes payload construction without changing native storage."""
-from fp.algebra import Applicative,IdentityFamily,OptionalFamily,ResultFamily,ListFamily,StringMonoid,pure
+from fp.algebra import Applicative, IdentityFamily, OptionalFamily, ResultFamily, ListFamily, StringMonoid, pure
 from fp.effects import WriterT,run_writer
 from std.testing import assert_equal
 

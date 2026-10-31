@@ -1,7 +1,8 @@
-# error: constraint
+# error: no matching method in call to 'recover'
+# error: cannot be converted from 'def restore(var error: Int)
 from fp.algebra import ResultFamily, ListFamily, fail
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.data import Result, Ok, Err
 def restore(var error: Int) -> Int: return error
 def main():
-    _ = piped(fail[ResultFamily[String], Int](String("bad"))).recover[ResultFamily[String]](restore).get()
+    _ = pipeline[ResultFamily[String]](fail[ResultFamily[String], Int](String("bad"))).recover(restore).get()

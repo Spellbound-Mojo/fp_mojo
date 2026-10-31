@@ -1,8 +1,8 @@
-# error: repeatable
+# error: no matching method in call to 'ensure'
 from fp.algebra import ListFamily
 from fp.effects import ResultT
 from fp.callables import BorrowOnceCallable
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.data import Result, Ok
 @fieldwise_init
 struct OncePredicate(BorrowOnceCallable):
@@ -12,4 +12,4 @@ struct OncePredicate(BorrowOnceCallable):
 def factory(value: Int) -> String: return "bad"
 def main():
     comptime F = ResultT[ListFamily, String]
-    _ = piped(List[Result[Int, String]]([Result[Int, String](Ok(1))])).ensure[F](OncePredicate(), factory)
+    _ = pipeline[F](List[Result[Int, String]]([Result[Int, String](Ok(1))])).ensure(OncePredicate(), factory)

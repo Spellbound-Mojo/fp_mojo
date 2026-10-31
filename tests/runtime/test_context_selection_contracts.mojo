@@ -1,6 +1,7 @@
 """Generic filter and lazy-combination wrappers retain family errors and origins."""
 from fp.callables import BorrowCallContract
-from fp.algebra import Filterable, Applicative, FilterContract, CombineContract, ListFamily, OptionalFamily
+from fp.algebra import Filterable, Applicative, ListFamily, OptionalFamily
+from fp.algebra.contracts import FilterContract, CombineContract
 from fp.algebra import filter, filter_not, map2_lazy
 from fp.callables import BorrowCallable, BinaryContract, ThunkContract, Binary, OnceThunk
 from fp.functions import pipeline

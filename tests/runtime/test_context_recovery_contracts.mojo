@@ -1,6 +1,7 @@
 """Generic recovery names one public contract and preserves family semantics."""
-from fp.algebra import Applicative, ApplicativeError, RecoverContract, ResultFamily, ListFamily
-from fp.functions import piped, Pipeline, Identity
+from fp.algebra import Applicative, ApplicativeError, ResultFamily, ListFamily
+from fp.algebra.contracts import RecoverContract
+from fp.functions import pipeline, Pipeline, Identity
 from fp.callables import UnaryContract, Unary, OnceUnary, BinaryContract, ThunkContract
 from fp.effects import Reader, ReaderT, ResultT, run
 from std.builtin.rebind import downcast
@@ -12,7 +13,7 @@ def expanded[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Mo
     return recovered[I](source^, handler^)
 
 def recovered[I: ApplicativeError, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var handler: H) raises RecoverContract[I,V,H].Error -> RecoverContract[I,V,H].Out where RecoverContract[I,V,H].Compatible:
-    return piped(source^).recover[I](handler^).get()
+    return pipeline[I](source^).recover(handler^).get()
 
 @fieldwise_init
 struct Size(Unary):
@@ -195,7 +196,7 @@ def owning_failure() raises:
 
 def recovered_conditional[I: Applicative, V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var source: V, var handler: H) raises RecoverContract[downcast[I,ApplicativeError],V,H].Error -> RecoverContract[downcast[I,ApplicativeError],V,H].Out where conforms_to(I,ApplicativeError) and RecoverContract[downcast[I,ApplicativeError],V,H].Compatible:
     # Use the same public witness for the metadata and the operation's adapter.
-    return piped(source^).recover[downcast[I,ApplicativeError]](handler^).get()
+    return pipeline[downcast[I,ApplicativeError]](source^).recover(handler^).get()
 
 def conditional_witness() raises:
     comptime I = ReaderT[ResultFamily[String],Int]

@@ -1,5 +1,6 @@
 """Operation contracts forward opaque families, exact errors and deferred types."""
-from fp.algebra import Functor, Monad, MapContract, BindContract, ListFamily, OptionalFamily, StringMonoid
+from fp.algebra import Functor, Monad, ListFamily, OptionalFamily, StringMonoid
+from fp.algebra.contracts import MapContract, BindContract
 from fp.algebra import map, flat_map
 from fp.callables import UnaryContract, Unary
 from fp.functions import pipeline, Identity

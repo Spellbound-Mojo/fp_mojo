@@ -1,4 +1,5 @@
-from fp.algebra import IdentityFamily,OptionalFamily,ResultFamily,ValidationFamily,ListFamily,TraverseContract,ListMonoid,BindContract,flat_map
+from fp.algebra import IdentityFamily, OptionalFamily, ResultFamily, ValidationFamily, ListFamily, ListMonoid, flat_map
+from fp.algebra.contracts import TraverseContract, BindContract
 from fp.algebra.protocols import _Accumulate,Semigroup
 from fp.callables import Unary, NativeUnary
 from fp.data import Result,Ok

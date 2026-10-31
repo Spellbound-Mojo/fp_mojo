@@ -1,5 +1,5 @@
 """Select family and native errors before callback inference; reuse algebra execution."""
-from fp.algebra.contracts import ApContract, ProductContract, ProductLeftContract, ProductRightContract, Map2Contract, IfContract
+from fp.algebra._contracts import ApContract, ProductContract, ProductLeftContract, ProductRightContract, Map2Contract, IfContract
 from std.builtin.rebind import downcast, rebind_var
 from std.collections import Array, Deque, LinkedList, StringDict, KeyElement
 from std.hash import Hasher
@@ -11,7 +11,7 @@ from fp.data._result import _ResultType, _fold_result_owned, _call_transform
 from fp.algebra.protocols import _FamilyCarrier, _MappedFamily, Functor, Filterable, Monad, FunctorFilter, Applicative, ApplicativeError, ErrorRecovery, ErrorMapping, Traversable, Monoid, Semigroup
 from fp.algebra.validation import ValidationFamily, _ListErrors
 from fp.algebra.instances import ListFamily, OptionalFamily, ResultFamily, IdentityFamily, _NativeFamily, _InferredApplicative, _ListElement
-from fp.algebra.contracts import FoldContract, AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, MapContract, FilterMapContract, BindContract, TraverseContract, TraverseTapContract, FilterContract, CombineContract
+from fp.algebra._contracts import FoldContract, AnyContract, AllContract, FindContract, FindMapContract, FoldMapContract, MapContract, FilterMapContract, BindContract, TraverseContract, TraverseTapContract, FilterContract, CombineContract
 from fp.algebra._admission import _TraverseCompatible, _MapCompatible, _BindCompatible, _CombineCompatible, _CollectCompatible, _CarrierCompatible
 from fp.algebra._sequencing import _EffectRetain
 from fp.algebra._adapt import _flat_map_as

@@ -1,6 +1,6 @@
 # error: no matching method in call to 'pair_with'
 from fp.callables import BorrowOnceCallable,BorrowMutableCallable,BorrowCallContract
-from fp.functions import piped,pipeline
+from fp.functions import pipeline
 struct Once(BorrowOnceCallable):
     comptime Payload=Int
     comptime Result=Int

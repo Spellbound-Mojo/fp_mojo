@@ -1,5 +1,6 @@
 """Public generic clients of traversal followed by compaction or flattening."""
-from fp.algebra import Traversable, FunctorFilter, Monad, Applicative, TraverseFilterContract, FlatTraverseContract
+from fp.algebra import Traversable, FunctorFilter, Monad, Applicative
+from fp.algebra.contracts import TraverseFilterContract, FlatTraverseContract
 from fp.callables import UnaryContract, Unary
 from fp.functions import pipeline, Pipeline
 

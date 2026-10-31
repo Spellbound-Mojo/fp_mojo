@@ -3,7 +3,7 @@ from fp.algebra._admission import _BindCompatible, _CombineCompatible, _CollectC
 from fp.callables.protocols import BinaryContract
 from fp.callables._identity import Identity
 from fp.callables._transforms import _ValueThunk as _Value, _Pair, _KeepOperand, _Apply
-from .contracts import ApContract, ProductContract, ProductLeftContract, ProductRightContract, Map2Contract, _Function
+from ._contracts import ApContract, ProductContract, ProductLeftContract, ProductRightContract, Map2Contract, _Function
 from .protocols import Applicative, Monad, Traversable, _map2_lazy_as
 from fp._internal.errors import _ErrorCompatible
 from std.builtin.rebind import downcast

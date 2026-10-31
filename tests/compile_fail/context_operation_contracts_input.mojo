@@ -1,5 +1,6 @@
 # error: invalid call to 'forward': violated constraint
-from fp.algebra import Functor, MapContract, ListFamily
+from fp.algebra import Functor, ListFamily
+from fp.algebra.contracts import MapContract
 from fp.callables import UnaryContract
 from fp.functions import pipeline, Identity
 def forward[I: Functor, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](

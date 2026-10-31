@@ -1,4 +1,5 @@
-from fp.algebra import FoldMapContract, Monad, Monoid, OptionalFamily, StringMonoid
+from fp.algebra import Monad, Monoid, OptionalFamily, StringMonoid
+from fp.algebra.contracts import FoldMapContract
 from fp.callables import Unary, UnaryContract
 from fp.iteration import fold_map_effect
 from std.testing import assert_equal

@@ -1,5 +1,6 @@
 """Ensure borrows success payloads and releases one-shot captures exactly once."""
-from fp.algebra import ResultFamily, EnsureContract, ApplicativeError, Monad
+from fp.algebra import ResultFamily, ApplicativeError, Monad
+from fp.algebra.contracts import EnsureContract
 from fp.callables import BorrowOnceCallable, BorrowCallable
 from fp.data import Result, Ok, Err
 from fp.effects import Reader, ResultT, run

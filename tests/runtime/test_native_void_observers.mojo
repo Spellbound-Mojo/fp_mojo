@@ -1,6 +1,6 @@
 """Implicit no-value observers preserve selection and their native error type."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from std.testing import assert_equal, assert_true
 
 
@@ -29,7 +29,7 @@ def main() raises:
     assert_true(successful.is_ok())
     assert_equal(calls, 3)
 
-    var chained = piped(failed^).tap_err(observe).get()
+    var chained = pipeline(failed^).tap_err(observe).get()
     assert_true(chained.is_err())
     assert_equal(calls, 6)
     var kept = chained^.tap_err(native_void_never)

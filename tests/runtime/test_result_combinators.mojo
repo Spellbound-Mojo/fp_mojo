@@ -1,6 +1,6 @@
 """Result composition: branch selection, native errors and callback ownership."""
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import BorrowCallable, BorrowOnceCallable, OnceThunk, MutableUnary
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
@@ -133,7 +133,7 @@ def rc_skipped_and_eager() raises:
     assert_equal(rc_failure(result^), "projection")
     assert_true(rc_ok().flat_pair_with(rc_projection).is_err())
     assert_equal(calls[], 2)
-    var pipeline = piped(rc_ok()).before(rc_factory).ensure(rc_predicate, rc_make_error)
+    var pipeline = pipeline(rc_ok()).before(rc_factory).ensure(rc_predicate, rc_make_error)
     assert_equal(calls[], 4)
     assert_equal(pipeline^.get().raise_on_err(), 3)
     assert_equal(calls[], 4)
@@ -194,43 +194,43 @@ def rc_native_errors() raises:
 
 
 def rc_piped() raises:
-    assert_equal(piped(rc_ok()).flat_tap(rc_project).flat_pair_with(rc_project).get().raise_on_err()[1], "3")
-    assert_equal(piped(rc_ok()).followed_by(rc_next).get().raise_on_err(), "next")
-    assert_equal(piped(rc_ok()).before(rc_next).get().raise_on_err(), 3)
-    assert_equal(piped(rc_err()).map_err(rc_error).or_else(rc_retry).get().raise_on_err(), 18)
+    assert_equal(pipeline(rc_ok()).flat_tap(rc_project).flat_pair_with(rc_project).get().raise_on_err()[1], "3")
+    assert_equal(pipeline(rc_ok()).followed_by(rc_next).get().raise_on_err(), "next")
+    assert_equal(pipeline(rc_ok()).before(rc_next).get().raise_on_err(), 3)
+    assert_equal(pipeline(rc_err()).map_err(rc_error).or_else(rc_retry).get().raise_on_err(), 18)
     var count = 0
     def rc_log(error: String) {mut count}: count += 1
-    assert_equal(piped(rc_err()).tap_err(rc_log).recover(rc_recover).get().raise_on_err(), 8)
+    assert_equal(pipeline(rc_err()).tap_err(rc_log).recover(rc_recover).get().raise_on_err(), 8)
     assert_equal(count, 1)
-    assert_equal(piped(rc_ok()).ensure(RCPredicate(), RCErrorFactory("unused")).get().raise_on_err(), 3)
-    assert_equal(piped(rc_ok()).ensure(rc_positive, RCErrorFactory("unused")).get().raise_on_err(), 3)
-    assert_equal(piped(rc_ok()).ensure(RCPredicate(), rc_problem).get().raise_on_err(), 3)
+    assert_equal(pipeline(rc_ok()).ensure(RCPredicate(), RCErrorFactory("unused")).get().raise_on_err(), 3)
+    assert_equal(pipeline(rc_ok()).ensure(rc_positive, RCErrorFactory("unused")).get().raise_on_err(), 3)
+    assert_equal(pipeline(rc_ok()).ensure(RCPredicate(), rc_problem).get().raise_on_err(), 3)
     var code = 0
-    try: _ = piped(rc_ok()).flat_tap(rc_raise_projection)
+    try: _ = pipeline(rc_ok()).flat_tap(rc_raise_projection)
     except err: code = err.code
     assert_equal(code, 3)
-    try: _ = piped(rc_ok()).flat_pair_with(rc_raise_projection)
+    try: _ = pipeline(rc_ok()).flat_pair_with(rc_raise_projection)
     except err: code = err.code
     assert_equal(code, 3)
-    try: _ = piped(rc_ok()).followed_by(rc_raise_factory)
+    try: _ = pipeline(rc_ok()).followed_by(rc_raise_factory)
     except err: code = err.code
     assert_equal(code, 11)
-    try: _ = piped(rc_ok()).before(rc_raise_factory)
+    try: _ = pipeline(rc_ok()).before(rc_raise_factory)
     except err: code = err.code
     assert_equal(code, 11)
-    try: _ = piped(rc_ok(-1)).ensure(rc_positive, rc_raise_error)
+    try: _ = pipeline(rc_ok(-1)).ensure(rc_positive, rc_raise_error)
     except err: code = err.code
     assert_equal(code, 29)
-    try: _ = piped(rc_err()).tap_err(rc_raise_inspector)
+    try: _ = pipeline(rc_err()).tap_err(rc_raise_inspector)
     except err: code = err.code
     assert_equal(code, 48)
-    try: _ = piped(rc_err()).recover(rc_raise_recovery)
+    try: _ = pipeline(rc_err()).recover(rc_raise_recovery)
     except err: code = err.code
     assert_equal(code, 58)
-    try: _ = piped(rc_err()).map_err(rc_raise_recovery)
+    try: _ = pipeline(rc_err()).map_err(rc_raise_recovery)
     except err: code = err.code
     assert_equal(code, 58)
-    try: _ = piped(rc_err()).or_else(rc_raise_retry)
+    try: _ = pipeline(rc_err()).or_else(rc_raise_retry)
     except err: code = err.code
     assert_equal(code, 60)
 

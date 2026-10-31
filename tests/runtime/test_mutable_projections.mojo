@@ -1,7 +1,7 @@
 """Owned mutable key selectors and lazy observers infer their ordinary calls."""
 from fp.callables import BorrowMutableCallable
 from fp.iteration import min_by,max_by,iterated,pair_with,tap_each,collect_list,minimum_by_non_empty,maximum_by_non_empty
-from fp.functions import piped,pipeline
+from fp.functions import pipeline
 from fp.data import NonEmptyList
 from std.memory import ArcPointer
 from std.testing import assert_equal
@@ -23,8 +23,8 @@ def main() raises:
     assert_equal(max_by(values(),Rank(0,calls)).value(),'bbb')
     assert_equal(iterated(values()).min_by(Rank(0,calls)).value(),'aa')
     assert_equal(iterated(values()).max_by(Rank(0,calls)).value(),'bbb')
-    assert_equal(piped(values()).min_by(Rank(0,calls)).get().value(),'aa')
-    assert_equal(piped(values()).max_by(Rank(0,calls)).get().value(),'bbb')
+    assert_equal(pipeline(values()).min_by(Rank(0,calls)).get().value(),'aa')
+    assert_equal(pipeline(values()).max_by(Rank(0,calls)).get().value(),'bbb')
     assert_equal(pipeline(values()).min_by(Rank(0,calls)).get().value(),'aa')
     assert_equal(pipeline(values()).max_by(Rank(0,calls)).get().value(),'bbb')
     assert_equal(minimum_by_non_empty(NonEmptyList(String('aa'),[String('bbb'),String('c')]),Rank(0,calls)),'aa')

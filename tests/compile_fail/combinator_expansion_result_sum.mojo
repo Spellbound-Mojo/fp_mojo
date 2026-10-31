@@ -1,5 +1,5 @@
-# error: no matching method in call to 'sum'
-from fp.functions import piped
+# error: invalid call to 'sum': lacking evidence to prove correctness
+from fp.functions import pipeline
 from fp.data import Result, Ok
 def main():
-    _ = piped(Result[Int, String](Ok(1))).sum().get()
+    _ = pipeline(Result[Int, String](Ok(1))).sum().get()

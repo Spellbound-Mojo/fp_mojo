@@ -1,7 +1,8 @@
 """Rejected family operations stay unprojected; exact valid calls still execute."""
-from fp.algebra import RecoverContract, RecoverIfContract, OrElseIfContract, TapErrContract, FlatTapErrContract, ApplicativeError
+from fp.algebra import ApplicativeError
+from fp.algebra.contracts import RecoverContract, RecoverIfContract, OrElseIfContract, TapErrContract, FlatTapErrContract
 from fp.callables import UnaryContract
-from fp.functions import pipeline, piped, OrElseContract
+from fp.functions import pipeline, OrElseContract
 from fp.data import Result, Ok, Err
 from context_recovery_admission_support import Policy, MissingUnary, MissingBorrow, MissingEffect, RaiseBorrow, RaisePredicate
 from context_error_capability_support import recover, effect, choose, observe, observe_effect, Value, Effect, Predicate, BorrowValue, BorrowEffect
@@ -13,8 +14,8 @@ def combined[I:ApplicativeError,V:Movable & Deinitable,H:UnaryContract & Movable
 def components[I:ApplicativeError,V:Movable & Deinitable,H:UnaryContract & Movable & Deinitable](var source:V,var handler:H) raises RecoverContract[I,V,H].Error->RecoverContract[I,V,H].Out where RecoverContract[I,V,H].InputCompatible and RecoverContract[I,V,H].OutputCompatible and RecoverContract[I,V,H].CarrierCompatible and RecoverContract[I,V,H].ReceiverCompatible and RecoverContract[I,V,H].OperationCompatible:
     return combined[I](source^,handler^)
 
-def legacy_expanded[I:ApplicativeError,V:Movable & Deinitable,H:UnaryContract & Movable & Deinitable](var source:V,var handler:H) raises RecoverContract[I,V,H].Error->RecoverContract[I,V,H].Out where H.Arg==I.Failure and H.Out==I.Element[V] and I._ErrorCarrier[V]:
-    return piped(source^).recover[I](handler^).get()
+# Pipeline.recover admits RecoverContract.Compatible (or its documented
+# components); Piped's legacy expanded H.Arg/H.Out/_ErrorCarrier proof is not ported.
 
 def main() raises:
     comptime R=Result[Int,String]
@@ -38,7 +39,6 @@ def main() raises:
     comptime assert not TapErrContract[Throws,R,RaiseBorrow].NativeErrorsCompatible
     comptime assert not RecoverIfContract[Throws,R,RaisePredicate,Value[String]].NativeErrorsCompatible
     assert_equal(components[Allowed](R(Err(String("error"))),Value[String]())._ok().value,7)
-    assert_equal(legacy_expanded[Allowed](R(Err(String("error"))),Value[String]())._ok().value,7)
     assert_equal(pipeline[Allowed](R(Err(String("error")))).recover(recover).get()._ok().value,5)
     assert_equal(pipeline[Allowed](R(Err(String("error")))).or_else(effect).get()._ok().value,5)
     assert_equal(pipeline[Allowed](R(Err(String("error")))).recover_if(choose,recover).get()._ok().value,5)

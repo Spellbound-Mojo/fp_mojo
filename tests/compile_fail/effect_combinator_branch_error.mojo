@@ -1,6 +1,6 @@
-from fp.functions import piped
+from fp.functions import pipeline
 # error: no matching method in call to 'if_effect'
 from fp.data import Result, Ok
 def left() -> Result[Int,String]: return Ok(1)
 def right() -> Result[Int,Int]: return Ok(2)
-def main(): _ = piped(Result[Bool,String](Ok(True))).if_effect(left,right).get()
+def main(): _ = pipeline(Result[Bool,String](Ok(True))).if_effect(left,right).get()

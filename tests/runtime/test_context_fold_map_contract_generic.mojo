@@ -1,6 +1,7 @@
 """Public mapped-fold proofs preserve ownership, origins and execution timing."""
 from context_fold_map_contract_support import forward, fluent, iterator_forward, selected, Text, Owned, OwnedSum, ProduceOwned, ProduceSource, OnceText, Branches, Borrowed, FallibleMonoid, Later, CountingText
-from fp.algebra import FoldMapContract, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, StringMonoid, ListMonoid
+from fp.algebra import IdentityFamily, OptionalFamily, ListFamily, ResultFamily, StringMonoid, ListMonoid
+from fp.algebra.contracts import FoldMapContract
 from fp.iteration import iterated
 from fp.effects import Reader, run
 from std.memory import ArcPointer

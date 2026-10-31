@@ -1,5 +1,6 @@
 """Selected conditional recovery preserves family timing, branches and capabilities."""
-from fp.algebra import ApplicativeError, Monad, ResultFamily, ListFamily, IdentityFamily, ValidationFamily, ListMonoid, RecoverIfContract
+from fp.algebra import ApplicativeError, Monad, ResultFamily, ListFamily, IdentityFamily, ValidationFamily, ListMonoid
+from fp.algebra.contracts import RecoverIfContract
 from fp.effects import Reader, ReaderT, ResultT, run
 from fp.functions import pipeline
 from fp.data import Result, Ok, Err

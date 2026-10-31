@@ -1,5 +1,5 @@
 # error: no matching method in call to 'map2'
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import OnceBinary
 @fieldwise_init
 struct FCOnce(OnceBinary):
@@ -10,4 +10,4 @@ struct FCOnce(OnceBinary):
 def main():
     var left: List[Int] = [1, 2]
     var right: List[Int] = [3]
-    _ = piped(left^).map2(right^, FCOnce())
+    _ = pipeline(left^).map2(right^, FCOnce())

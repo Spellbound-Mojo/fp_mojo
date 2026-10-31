@@ -1,6 +1,6 @@
 """Attached values move once, copy only for repetition and retain exact origins."""
 from fp.data import Result, Ok, Err
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.algebra import ResultFamily
 from fp.effects import Reader, run
 from fp.iteration import iterated
@@ -22,14 +22,14 @@ def result_attachment[left: Bool, route: Int](ok: Bool) raises:
             output = pipeline(source^).tuple_right(Token(3, state)).get()
     elif route == 1:
         comptime if left:
-            output = piped(source^).tuple_left(Token(3, state)).get()
+            output = pipeline(source^).tuple_left(Token(3, state)).get()
         else:
-            output = piped(source^).tuple_right(Token(3, state)).get()
+            output = pipeline(source^).tuple_right(Token(3, state)).get()
     elif route == 2:
         comptime if left:
-            output = piped(source^).tuple_left[ResultFamily[Token]](Token(3, state)).get()
+            output = pipeline[ResultFamily[Token]](source^).tuple_left(Token(3, state)).get()
         else:
-            output = piped(source^).tuple_right[ResultFamily[Token]](Token(3, state)).get()
+            output = pipeline[ResultFamily[Token]](source^).tuple_right(Token(3, state)).get()
     elif route == 3:
         comptime if left:
             output = source^.tuple_left(Token(3, state))

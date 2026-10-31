@@ -1,5 +1,5 @@
-from fp.functions import piped
+from fp.functions import pipeline
 # error: no matching method in call to 'map_n'
 from fp.data import Result,Ok
 def add(a:Int,b:Int,c:Int) -> Int: return a+b+c
-def main(): _=piped(Result[Int,String](Ok(1))).map_n((Result[String,String](Ok(String("x"))),Result[Int,String](Ok(3))),add).get()
+def main(): _=pipeline(Result[Int,String](Ok(1))).map_n((Result[String,String](Ok(String("x"))),Result[Int,String](Ok(3))),add).get()

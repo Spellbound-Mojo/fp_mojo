@@ -1,4 +1,5 @@
-from fp.algebra import Functor, ApplicativeError, Monad, EnsureContract, AttemptTapContract
+from fp.algebra import Functor, ApplicativeError, Monad
+from fp.algebra.contracts import EnsureContract, AttemptTapContract
 from fp.callables import UnaryContract, BorrowCallContract, Unary, BorrowCallable
 from fp.functions import pipeline, RedeemContract, RedeemWithContract
 from fp.data import Result, Ok

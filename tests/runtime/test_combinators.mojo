@@ -1,6 +1,6 @@
 """Combinator stages preserve native iterator, callback and ownership contracts."""
-from fp.functions import Piped, piped
-from fp.combinators import map, filter, fold_left
+from fp.functions import Pipeline, pipeline
+from fp.iteration import map, filter, fold_left
 from fp.iteration import iterated, collect_list
 from fp.callables import as_unary, Binary, BorrowCallable
 from std.iter import Iterator, IterableOwned, iter, next
@@ -67,14 +67,10 @@ struct CombinatorPositive(BorrowCallable):
         return payload > 0
 
 def combinator_examples() raises:
-    var named = Piped[Value=Int](4)
-    comptime assert type_of(named).Value == Int
-    assert_equal(named^.get(), 4)
-    assert_equal(piped[T=Int](5).get(), 5)
     var a: List[Int] = [3, -1, 4, -1, 5]
     var b = a.copy()
     var c = a.copy()
-    var eager = piped(a^).filter(combinator_positive).map(combinator_square).fold_left(combinator_add, 0).then(combinator_report).get()
+    var eager = pipeline(a^).filter(combinator_positive).map(combinator_square).fold_left(combinator_add, 0).then(combinator_report).get()
     var selected = filter(b^, combinator_positive)
     var squared = map(selected^, combinator_square)
     var direct = fold_left(squared^, 0, combinator_add)
@@ -82,9 +78,9 @@ def combinator_examples() raises:
     assert_equal(eager, "sum of positive squares = 50")
     assert_equal(combinator_report(direct), eager)
     assert_equal(combinator_report(lazy), eager)
-    assert_equal(piped(List[Int]([0, 1, 2])).map(combinator_text).get(), ["0", "1", "2"])
-    assert_equal(piped(range(0)).fold_left(combinator_add, 7).get(), 7)
-    assert_equal(piped(range(1, 4)).fold_left(combinator_subtract, 10).get(), 4)
+    assert_equal(pipeline(List[Int]([0, 1, 2])).map(combinator_text).get(), ["0", "1", "2"])
+    assert_equal(pipeline(range(0)).fold_left(combinator_add, 7).get(), 7)
+    assert_equal(pipeline(range(1, 4)).fold_left(combinator_subtract, 10).get(), 4)
 
 def combinator_captures_and_laziness() raises:
     var calls = ArcPointer(0)
@@ -101,26 +97,26 @@ def combinator_captures_and_laziness() raises:
     def combinator_changing(value: Int) {mut bias} -> Int:
         bias += 1
         return value + bias
-    assert_equal(piped(List[Int]([0, 1, 2])).map(combinator_changing).get(), [1, 3, 5])
+    assert_equal(pipeline(List[Int]([0, 1, 2])).map(combinator_changing).get(), [1, 3, 5])
     assert_equal(bias, 3)
     calls[] = 0
-    var folded = piped(List[Int]([0, 1, 2])).map(combinator_counted).fold_left(combinator_add, 0)
+    var folded = pipeline(List[Int]([0, 1, 2])).map(combinator_counted).fold_left(combinator_add, 0)
     assert_equal(calls[], 3)  # The fold ran before get.
     assert_equal(folded^.get(), 6)
     assert_equal(calls[], 3)
     var limit = 1
     def combinator_select(value: Int) {limit} -> Bool: return value > limit
-    assert_equal(piped(List[Int]([0, 1, 2, 3])).filter(combinator_select).get(), [2, 3])
+    assert_equal(pipeline(List[Int]([0, 1, 2, 3])).filter(combinator_select).get(), [2, 3])
     def combinator_shifted(var total: Int, var value: Int) {limit} -> Int:
         return total + value + limit
-    assert_equal(piped(range(3)).fold_left(combinator_shifted, 0).get(), 6)
-    assert_equal(piped(List[Int]([0, 1, 2, 3])).filter(CombinatorPositive()).map(as_unary(combinator_square)).fold_left(CombinatorAdd(), 0).get(), 14)
+    assert_equal(pipeline(range(3)).fold_left(combinator_shifted, 0).get(), 6)
+    assert_equal(pipeline(List[Int]([0, 1, 2, 3])).filter(CombinatorPositive()).map(as_unary(combinator_square)).fold_left(CombinatorAdd(), 0).get(), 14)
     assert_equal(iterated(range(4)).filter(CombinatorPositive()).map(as_unary(combinator_square)).fold_left(CombinatorAdd(), 0), 14)
 
 def combinator_ownership() raises:
     var drops = ArcPointer(0)
     var values: List[CombinatorItem] = [CombinatorItem(1, drops), CombinatorItem(-1, drops), CombinatorItem(3, drops)]
-    var total = piped(values^).filter(combinator_keep).map(combinator_bump).fold_left(combinator_accumulate, CombinatorItem(0, drops)).get()
+    var total = pipeline(values^).filter(combinator_keep).map(combinator_bump).fold_left(combinator_accumulate, CombinatorItem(0, drops)).get()
     assert_equal(total.value, 6)
     assert_equal(drops[], 3)
     _ = total^
@@ -162,7 +158,7 @@ def combinator_errors() raises:
         return total + value
     var caught = False
     try:
-        _ = piped(range(5)).fold_left(combinator_check, 0).get()
+        _ = pipeline(range(5)).raising[CombinatorFailure]().fold_left(combinator_check, 0).get()
     except error:
         comptime assert type_of(error) == CombinatorFailure
         assert_equal(error.at, 2)

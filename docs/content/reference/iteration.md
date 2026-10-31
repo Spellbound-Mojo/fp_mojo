@@ -57,7 +57,7 @@ existing signature and owned-capture requirements.
 `fold_left`, `fold_until`, `reduce_optional` and both `reduce` forms accept
 owned shared or mutable library callbacks, through free functions and Iter
 methods. Selected `Pipeline.fold_left`, `reduce_optional` and `fold_until`
-accept the same callbacks; `Piped.fold_left` also accepts owned mutable steps. For example, `.fold_left(IncreasingWeight(1), 0)` returns `14` over
+accept the same callbacks. For example, `.fold_left(IncreasingWeight(1), 0)` returns `14` over
 `[1, 2, 3]`, retaining the changing weight between steps without an adapter
 or a closure. Move a named stateful step with `step^`, or pass `mut_ref(step)` to inspect
 or reuse its state afterward. The example folds through a selected Pipeline
@@ -161,8 +161,8 @@ identity first, and an identity failure destroys the source without pulling it.
 <!-- example: docs/examples/reusable_projections.mojo -->
 
 `sum_by`, `fold_map` and `find_map` accept named unary partials, native
-adapters and shared compositions through free functions, Iter, Piped and
-selected Pipeline methods. These reductions run immediately without building
+adapters and shared compositions through free functions, Iter and
+Pipeline methods. These reductions run immediately without building
 an intermediate collection; the example reuses `price` across them.
 
 `min_by` and `max_by` borrow each candidate, so a unary `partial` also works
@@ -174,7 +174,7 @@ types; callback and Monoid errors must match when both can raise.
 
 Owned key projections can implement `BorrowMutableCallable` directly:
 `min_by(source^, key^)`, `iterated(source^).max_by(key^)`, and the corresponding
-Piped and selected Pipeline methods infer the payload and key types. The
+Pipeline methods infer the payload and key types. The
 non-empty variants accept the same callbacks. A repeated call prefers
 `invoke_mut`, retaining one callback state throughout the reduction; a
 shared-only key uses `invoke`. Consuming-only keys are rejected. Native callbacks
@@ -402,7 +402,7 @@ copy requirements. Explicit Validation and third-party families remain supported
 Postprocessing stays inside the effect. Reader and State defer both filtering
 and callback errors until execution. The same distinction between construction
 and execution applies to `traverse_filter` and `flat_traverse`, through Iter,
-free functions and Piped. A construction-error selector does not change a
+free functions and Pipeline. A construction-error selector does not change a
 stored deferred computation's execution error.
 
 <!-- example: docs/examples/traversal_composition.mojo -->
@@ -463,7 +463,7 @@ Existing positional and named family/error arguments keep their meaning.
 | `sequence_filter(source)` | Elements already contain `G[Optional[B]]` | Effect containing present values |
 
 The first three are consuming Monad terminals, also available on `Iter` and
-`Piped`. `G`, the effect family, is inferred from the callback result or the
+`Pipeline`. `G`, the effect family, is inferred from the callback result or the
 elements; name it to choose another. Searches stop each live branch at its first match. Empty input and a
 successful search with no match lift `None`; an absent or failed outer effect
 still represents effect failure. List branches retain their first match while
@@ -483,7 +483,7 @@ forward the payload and family admission constraints.
 
 `sequence_filter` is identity `traverse_filter`, with the same Applicative and
 source-shape support. Free and `Iter` forms collect present values into a List
-inside the effect; `Piped` follows the source family's traversal shape. It is a
+inside the effect; `Pipeline` follows the source family's traversal shape. It is a
 terminal traversal, so it consumes the successful input rather than returning
 a lazy filtered iterator. All four preserve current iterator position, native
 ownership and borrowed origins.

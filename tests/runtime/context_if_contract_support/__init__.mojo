@@ -1,5 +1,6 @@
-from fp.algebra import IfContract, Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, if_effect, pure
-from fp.functions import pipeline, piped, Pipeline
+from fp.algebra import Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, if_effect, pure
+from fp.algebra.contracts import IfContract
+from fp.functions import pipeline, Pipeline
 from fp.callables import ThunkContract, Thunk, OnceThunk
 from fp.effects import Reader, run
 from algebra_support.box import BoxMonad
@@ -9,7 +10,7 @@ def forward[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Dein
     return if_effect[I](source^, left^, right^)
 
 def fluent[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where IfContract[I,V,L,R].Compatible:
-    return piped(source^).if_effect[G=I](left^, right^).get()
+    return pipeline[I](source^).if_effect(left^, right^).get()
 
 def selected[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V) raises IfContract[I,V,L,R].Error -> Pipeline[I,IfContract[I,V,L,R].Out] where IfContract[I,V,L,R].Compatible:
     return pipeline[I](source^).if_effect(left^, right^)
@@ -29,7 +30,7 @@ struct Once[G: Monad](OnceThunk):
 
 from fp.algebra import Monad, IdentityFamily, OptionalFamily, ListFamily, ResultFamily, if_effect, pure
 from fp.callables import OnceThunk, MutableThunk
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.effects import Reader, run
 from fp.data import Result, Err
 from std.memory import ArcPointer
@@ -72,7 +73,7 @@ def immediate[G: Monad, route: Int, truth: Bool, absent: Bool, fail: Bool]() -> 
             trace[] += "r"
             _ = result^
         else:
-            var result = piped(condition^).if_effect[G=G](left^,right^).get()
+            var result = pipeline[G](condition^).if_effect(left^,right^).get()
             trace[] += "r"
             _ = result^
     except error:
@@ -149,9 +150,8 @@ def legacy_forward[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable
 ) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where I.Element[V] == Bool and I.Element[L.Out] == I.Element[R.Out] and I.CarrierCompatible[V] and I.CarrierCompatible[L.Out] and I.CarrierCompatible[R.Out]:
     return if_effect[I](source^, left^, right^)
 
-def legacy_fluent[I: Monad, V: Movable & Deinitable, L: ThunkContract & Movable & Deinitable, R: ThunkContract & Movable & Deinitable](var left: L, var right: R, var source: V
-) raises IfContract[I,V,L,R].Error -> IfContract[I,V,L,R].Out where I.Element[V] == Bool and I.Element[L.Out] == I.Element[R.Out] and I.CarrierCompatible[V] and I.CarrierCompatible[L.Out] and I.CarrierCompatible[R.Out]:
-    return piped(source^).if_effect[G=I](left^, right^).get()
+# Pipeline.if_effect admits IfContract.Compatible only; the expanded legacy
+# predicates remain supported by the free if_effect above.
 
 
 @fieldwise_init

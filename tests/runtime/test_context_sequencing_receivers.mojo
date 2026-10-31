@@ -1,5 +1,6 @@
 """Checked sequencing wrappers admit actual receivers and preserve execution."""
-from fp.algebra import OptionalFamily, ListFamily, FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
+from fp.algebra import OptionalFamily, ListFamily
+from fp.algebra.contracts import FlatTapContract, FlatPairWithContract, BeforeContract, FollowedByContract
 from fp.effects import Reader, run
 from std.memory import ArcPointer
 from std.testing import assert_equal

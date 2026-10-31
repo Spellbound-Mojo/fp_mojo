@@ -1,4 +1,5 @@
-from fp.algebra import ApContract, Applicative, OptionalFamily, ap
+from fp.algebra import Applicative, OptionalFamily, ap
+from fp.algebra.contracts import ApContract
 from fp.callables import OnceUnary
 from std.testing import assert_equal
 

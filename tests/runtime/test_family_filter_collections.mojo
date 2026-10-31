@@ -1,7 +1,7 @@
 """Stateful filters preserve native container settings, keys and output families."""
 from std.collections import Deque, LinkedList, StringDict
 from std.hash import default_comp_time_hasher
-from fp.functions import pipeline, piped, pipeline_values
+from fp.functions import pipeline, pipeline_values
 from fp.iteration import collect_list
 from fp.data import NonEmptyList
 from fp.algebra import NonEmptyListFamily
@@ -22,7 +22,7 @@ def main() raises:
     assert_equal(kept._min_capacity, 4)
     assert_equal(kept._shrink, False)
     assert_equal(collect_list(kept^), [1, 3])
-    var rejected = piped(linked^).filter_not(mut_ref(predicate)).get()
+    var rejected = pipeline(linked^).elements().filter_not(mut_ref(predicate)).get()
     comptime assert type_of(rejected) == LinkedList[Int]
     assert_equal(collect_list(rejected^), [0, 2])
     var dictionary = Dict[String, Int, default_comp_time_hasher]()

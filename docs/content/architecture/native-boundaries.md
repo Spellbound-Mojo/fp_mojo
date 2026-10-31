@@ -78,7 +78,7 @@ API without a separate review.
   rejected. Error adaptation uses the existing receiver helpers, or an owned
   static boundary, so the handler never reuses a partially consumed receiver.
 - Inferring a nested native `Result.map_err` or `or_else` call from a generic
-  `Piped` overload crashes this compiler. Those forwards use the shared native
+  fluent overload crashes this compiler. Those forwards use the shared native
   callback view and Result's existing library-callback entry point.
 - Direct generic callback fields can lose their native function witnesses.
   `NativeUnary` and the private lazy adapters use the existing inline optional
@@ -99,7 +99,7 @@ API without a separate review.
   requirements in the signature, allowing plain functions to reach the fixed
   overloads. Explicit-result and explicit-error forwarding remain available.
 - Native callback signatures referring directly to `Self` aliases can fail
-  plain-function conversion. `Piped.then`, Result folds and transformations infer callback input
+  plain-function conversion. Result folds and transformations infer callback input
   types independently and require equality with the stored payload in `where`
   clauses. These Result operations use the shared native invocation bridges.
 - Explicit `raises Never` callbacks require a literal `Never` signature during
@@ -119,14 +119,14 @@ API without a separate review.
   carrier type packs become inferred or individually named carrier types.
   Library callable overloads retain their variadic packs. Inferred `map2` overloads
   infer the second carrier independently, then constrain its exact payload.
-- Generic `Piped.then` now infers a native callback's exact error without an
-  explicit hint. The former rejection fixture is replaced by a positive
-  propagation test and a rejection test for an incompatible enclosing error.
+- Generic `Piped.then` inferred a native callback's exact error without an
+  explicit hint. Piped has since been removed; see
+  [removed surfaces](#removed-surfaces).
 - Native Result `flat_tap_err` and `attempt_tap` infer the complete callback
   result before checking its stored error and embedded origins in `where`.
   The existing positional `C`/`X` bindings and named `U` binding remain available.
 - Native Result outcome handlers infer their result types independently, then
-  require equality in `where`. `redeem_with` and Piped's native `or_else` infer
+  require equality in `where`. `redeem_with` infers
   the complete returned Result before checking its payloads. This avoids
   conflicts with explicit family bindings while preserving positional callback
   and error bindings, and named `U`/`V` bindings.
@@ -244,9 +244,9 @@ binding, before runtime-operand inference:
 
 | Existing parameter | Boundaries covered by these fixtures |
 |---|---|
-| `F=type_of(callback)` | `mutating`, `as_unary`, Piped `pair_with`, `map_n`, `filter`, `filter_not`, `filter_effect`, `traverse_tap`, and Iterated `all_effect` |
-| `C=type_of(callback)` | Result and Piped projection, recovery and observer callbacks |
-| `G=type_of(factory)` | Piped `ensure` error factory |
+| `F=type_of(callback)` | `mutating`, `as_unary`, Pipeline `pair_with`, `map_n`, `filter`, `filter_not`, `filter_effect`, `traverse_tap`, and Iterated `all_effect` |
+| `C=type_of(callback)` | Result and Pipeline projection, recovery and observer callbacks |
+| `G=type_of(factory)` | Pipeline `ensure` error factory |
 
 `tests/integration/test_native_rejection_bindings.mojo` supplies valid
 counterparts with the same explicit bindings, checking mutable input updates,
@@ -953,7 +953,6 @@ argument register variants disappear. The callback-first order cannot use it.
 | Free binary (`fold_effect`) | 19 | 6, value-first |
 | `Pipeline.map`, `Pipeline.flat_map` | 9 | 8 |
 | `Iter.traverse` | 16 | 11 |
-| `Piped.map`, per carrier | 4 | 4 |
 | `if_effect` | 33 | not probed |
 
 The surfaces already know their element type, so value-first changes nothing
@@ -1103,7 +1102,8 @@ and `StringDict`. Decision: adopted, after family inference (next section).
 
 Decision: operations infer their families, and an explicit family is an
 override. Target families come first and source families second, both
-defaulted, on every surface: `traverse[G, S]`, `Piped.traverse[G, I]`.
+defaulted: `traverse[G, S]`. Pipeline names the target as `.traverse[G]` and
+selects its source family at construction, `pipeline[S](value)`.
 
 - **Source** families default to `_SourceFamily[V]` (`fp.algebra.collections`):
   what `_NativeFamily` recognizes (declared effect families, `Result`, `List`,
@@ -1201,8 +1201,8 @@ and terminals, which have no generic form. `pipeline.mojo` has 660 methods
   family can keep them.
 - Copy and move violations in generic `product` and `ap` now report
   `invalid call ...: violated constraint` instead of `no matching method`.
-- A Piped generic method does not accept a wrapper's forwarded contract as
-  evidence about `Self.Value`, and neither form accepts evidence spelled for a
+- A Piped generic method did not accept a wrapper's forwarded contract as
+  evidence about `Self.Value`, and neither form accepted evidence spelled for a
   concrete family. Generic wrappers take the family as a parameter and call
   the free operation, as the [contract-forwarding guide](../guides/generic-wrappers.md)
   shows: `map[I](values^, f^)` with `MapContract[I, V, F].Compatible`, or
@@ -1282,13 +1282,29 @@ explicit because inferring `V` from its arguments turns literals into
 `StringLiteral`; `collect_fold` keeps its explicit monoid.
 
 `Accumulate` (in `accumulate.mojo`) is an Applicative target whose collection
-delegates to `ValidationFamily[_ListErrors[F.Out]]`, the policy Piped's
+delegates to `ValidationFamily[_ListErrors[F.Out]]`, the policy
 `par_traverse` already infers. Collection is the only traversal step List and
 the other sequence families use, so no traversal signature changes and generic
 forwarding of `G` is unaffected. Its remaining Applicative members admit
 nothing and delegate to `_UnrecognizedCarrier`. A substituted target such as
 `X if G == Accumulate else G` in every traversal signature was rejected: it
 would not reduce for a symbolic `G`, breaking generic wrappers.
+
+### Removed surfaces
+
+- **`Piped` and `piped`** were removed without deprecation in favor of
+  `Pipeline` and `pipeline`. Piped inferred each closure's native error, and
+  that inference crashes Mojo 1.2 on a closure with an invalid convention (see
+  the closure probe above). Pipeline closures use the selected error instead.
+  Pipeline covers every Piped method, has no stage limit, and
+  `pipeline_values` covers Dict and StringDict values. Pipeline selects the
+  family at construction, so per-call family brackets move to
+  `pipeline[F](value)`, and per-call error hints become one `.raising[E]()`.
+- **`fp.combinators`** was removed. It only re-exported `fp.iteration`
+  operations and `fp.algebra.if_effect`; those packages remain their owners.
+- **Operation contracts** moved from `fp.algebra` to `fp.algebra.contracts`.
+  They exist for generic wrappers only, so everyday `fp.algebra` imports no
+  longer list them.
 
 ## Callables and argument packs
 

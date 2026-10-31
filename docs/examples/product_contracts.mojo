@@ -1,4 +1,5 @@
-from fp.algebra import ProductContract, Applicative, OptionalFamily, product
+from fp.algebra import Applicative, OptionalFamily, product
+from fp.algebra.contracts import ProductContract
 from std.testing import assert_equal
 
 def pair[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable](

@@ -44,7 +44,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 
 | Example | What it shows | Page |
 |---|---|---|
-| `effectful_reductions.mojo` | Effectful folds, short-circuiting predicates and selected factories | [fp.combinators](../reference/combinators.md#fold-and-choose-effects) |
+| `effectful_reductions.mojo` | Effectful folds, short-circuiting predicates and selected factories | [Combinators guide](../reference/combinators.md#fold-and-choose-effects) |
 | `iteration.mojo` | Lazy selection, ordered reduction and initial-first snapshots | [Iteration tutorial](../tutorial/iteration.md) |
 | `iteration_chaining.mojo` | Consuming method chains, both list collectors and native `enumerate` | [Iteration tutorial](../tutorial/iteration.md#chain-operations-with-methods) |
 | `generic_fold.mojo` | One `fold_left` over scalars, SIMD vectors and a user-defined document | [fp.iteration](../reference/iteration.md#fold-scalars-simd-vectors-and-documents-with-one-function) |
@@ -90,15 +90,15 @@ compile them through source and precompiled package imports at O0 and O3 with
 | `algebra_core.mojo` | `pure`, `map`, `flat_map` and `traverse` over four native carriers | [fp.algebra](../reference/algebra.md#use-one-set-of-operations-over-four-carriers) |
 | `algebra_choices.mojo` | Mapping, monadic bind, `map2`, `ap` and List's Cartesian combination | [Algebra tutorial](../tutorial/algebra.md#choose-the-operation-by-what-the-next-step-needs) |
 | `algebra_traversal.mojo` | `traverse` and `sequence`, early termination and empty input | [Algebra tutorial](../tutorial/algebra.md#collect-results-with-traverse-and-sequence) |
-| `parallel_validation.mojo` | Collect independent errors through Result, Piped and iterator composition | [Combinators reference](../reference/combinators.md#accumulate-independent-validation-errors) |
-| `fluent_effects.mojo` | Fluent combination, effectful observation and traversal without output collection | [Combinators reference](../reference/combinators.md#combine-and-inspect-effects) |
-| `monad_sequencing.mojo` | Retain originals or take the next effect's values in eager and lazy chains | [Combinators reference](../reference/combinators.md#sequence-dependent-effects) |
-| `traversal_composition.mojo` | Flattening, filtering and sequencing effectful results | [Combinators reference](../reference/combinators.md#flatten-and-filter-effects) |
-| `transformer_recovery.mojo` | Compare state restored at the recovery boundary with state retained below ResultT | [Combinators reference](../reference/combinators.md#recover-a-selected-error-layer) |
-| `error_recovery.mojo` | Recover native Results and selected inner errors in ResultT | [Combinators reference](../reference/combinators.md#recover-a-selected-error-layer) |
+| `parallel_validation.mojo` | Collect independent errors through Result, Pipeline and iterator composition | [Combinators guide](../reference/combinators.md#accumulate-independent-validation-errors) |
+| `fluent_effects.mojo` | Fluent combination, effectful observation and traversal without output collection | [Combinators guide](../reference/combinators.md#combine-and-inspect-effects) |
+| `monad_sequencing.mojo` | Retain originals or take the next effect's values in eager and lazy chains | [Combinators guide](../reference/combinators.md#sequence-dependent-effects) |
+| `traversal_composition.mojo` | Flattening, filtering and sequencing effectful results | [Combinators guide](../reference/combinators.md#flatten-and-filter-effects) |
+| `transformer_recovery.mojo` | Compare state restored at the recovery boundary with state retained below ResultT | [Combinators guide](../reference/combinators.md#recover-a-selected-error-layer) |
+| `error_recovery.mojo` | Recover native Results and selected inner errors in ResultT | [Combinators guide](../reference/combinators.md#recover-a-selected-error-layer) |
 | `selective_recovery.mojo` | Observe failures and recover only matching stored errors | [Results and recovery](../tutorial/results.md#recover-selected-errors) |
 | `result_outcomes.mojo` | Map, observe and continue either Result branch | [Results and recovery](../tutorial/results.md#compose-either-outcome) |
-| `shared_outcomes.mojo` | Validate, observe and handle outcomes through an explicit effect family | [Combinators reference](../reference/combinators.md#validate-and-observe-outcomes) |
+| `shared_outcomes.mojo` | Validate, observe and handle outcomes through an explicit effect family | [Combinators guide](../reference/combinators.md#validate-and-observe-outcomes) |
 | `effects_reader.mojo` | Pricing configuration with `ask`, `local` and a borrowed deferred callback | [Effects tutorial](../tutorial/effects.md#read-configuration-with-reader) |
 | `effects_state.mojo` | Reading, updating and resetting a counter with State | [Effects tutorial](../tutorial/effects.md#pass-an-evolving-counter-through-state) |
 | `effects_writer.mojo` | Ordered logs with Writer, `tell`, `listen` and `censor` | [Effects tutorial](../tutorial/effects.md#accumulate-output-with-writer) |

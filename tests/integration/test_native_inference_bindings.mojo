@@ -1,6 +1,6 @@
 """Exact result constraints preserve positional callbacks and named output types."""
 from fp.data import Result, Ok, Err, ControlFlow, Continue
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import fold_left, fold_until, reduce, reduce_optional, find, collect_list, filter_map, scan_left
 from std.testing import assert_equal
 
@@ -50,5 +50,5 @@ def main() raises:
     assert_equal(present, List[Int]([4, 5]))
     var snapshots = collect_list(scan_left[type_of(binding_add)](range(3), 10, binding_add))
     assert_equal(snapshots, List[Int]([10, 10, 11, 13]))
-    var selected = piped(List[Int]([1, 2, 3])).filter[F=type_of(binding_predicate)](binding_predicate).get()
+    var selected = pipeline(List[Int]([1, 2, 3])).filter(binding_predicate).get()
     assert_equal(selected, List[Int]([2, 3]))

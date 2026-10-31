@@ -2,7 +2,7 @@
 from fp.algebra import Semigroup, ListMonoid, ValidationFamily, ListFamily, traverse
 from fp.callables import Unary, UnaryContract, NativeUnary
 from fp.data import Result, Ok, Err
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.iteration import iterated
 from std.testing import assert_equal
 
@@ -11,20 +11,20 @@ def pvg_native[A:Movable & Deinitable,B:Movable & Deinitable,R:Movable & Deinita
                E:Movable & Deinitable,X:Movable & Deinitable,
                F:def(var A,var B) raises X -> R](var left:Result[A,List[E]],var right:Result[B,List[E]],ref function:F
 ) raises X -> Result[R,List[E]]:
-    return piped(left^).par_map_n[A=A,B=B,R=R,X=X]((right^,),function).get()
+    return pipeline(left^).raising[X]().par_map_n((right^,),function).get()
 
 
 def pvg_piped[A:Movable & Deinitable,B:Movable & Deinitable,R:Movable & Deinitable,
                E:Movable & Deinitable,X:Movable & Deinitable,
                F:def(var A,var B) raises X -> R](var left:Result[A,List[E]],var right:Result[B,List[E]],ref function:F
 ) raises X -> Result[R,List[E]]:
-    return piped(left^).par_map_n[A=A,B=B,R=R,X=X]((right^,),function).get()
+    return pipeline(left^).raising[X]().par_map_n((right^,),function).get()
 
 
 def pvg_traverse[A:Movable & Deinitable,R:Movable & Deinitable,E:Movable & Deinitable,
                  F:def(var A) raises E -> R, //, S:Semigroup](var values:List[A],var function:F
 ) raises ValidationFamily[S].CollectError[List[A],NativeUnary[A,R,E,F,True]] -> ValidationFamily[S].Collected[List[A],NativeUnary[A,R,E,F,True]] where S.Error == Never and R == ValidationFamily[S].Pure[ValidationFamily[S].Element[R]]:
-    return piped(values^).par_traverse[S](NativeUnary[A,R,E,F,True](function^)).get()
+    return pipeline(values^).par_traverse[S](NativeUnary[A,R,E,F,True](function^)).get()
 
 
 @fieldwise_init
@@ -37,19 +37,19 @@ struct PVGKeep[o:ImmOrigin](Unary, Copyable, Defaultable):
 def pvg_product[A:Movable & Deinitable,B:Movable & Deinitable,E:Movable & Deinitable](
     var left:Result[A,List[E]],var right:Result[B,List[E]]
 ) -> Result[Tuple[A,B],List[E]]:
-    return piped(left^).par_product_n((right^,)).get()
+    return pipeline(left^).par_product_n((right^,)).get()
 
 
 def pvg_product_policy[A:Movable & Deinitable,B:Movable & Deinitable,//,S:Semigroup](
     var left:Result[A,S.Value],var right:Result[B,S.Value]
 ) raises S.Error -> Result[Tuple[A,B],S.Value]:
-    return piped(left^).par_product_n[S]((right^,)).get()
+    return pipeline(left^).par_product_n[S]((right^,)).get()
 
 
 def pvg_sequence[A:Movable & Deinitable,E:Movable & Deinitable](
     var values:List[Result[A,List[E]]]
 ) -> Result[List[A],List[E]]:
-    return piped(values^).par_sequence().get()
+    return pipeline(values^).par_sequence().get()
 
 
 def pvg_sequence_policy[A:Movable & Deinitable,//,S:Semigroup](
@@ -67,13 +67,13 @@ def pvg_origins(values:List[Int]) raises:
     assert_equal(combined._ok().value[1],8)
     var piped_result=pvg_piped(Result[View,List[String]](Ok(view)),Result[Int,List[String]](Ok(1)),keep)
     assert_equal(piped_result._ok().value[0],7)
-    var owned=piped(Result[View,List[String]](Ok(view))).par_map_n((Result[Int,List[String]](Ok(2)),),PVGKeep[origin_of(values)]()).get()
+    var owned=pipeline(Result[View,List[String]](Ok(view))).par_map_n((Result[Int,List[String]](Ok(2)),),PVGKeep[origin_of(values)]()).get()
     assert_equal(owned._ok().value[1],8)
     # Error origins also survive list concatenation, without copying payloads.
     var first:List[View]=[view]
     var second:List[View]=[view]
     def add(a:Int,b:Int)->Int: return a+b
-    var failures=piped(Result[Int,List[View]](Err(first^))).par_map_n((Result[Int,List[View]](Err(second^)),),add).get()
+    var failures=pipeline(Result[Int,List[View]](Err(first^))).par_map_n((Result[Int,List[View]](Err(second^)),),add).get()
     comptime assert type_of(failures)==Result[Int,List[View]]
     assert_equal(failures._err().value[1][0],7)
     var product = pvg_product(Result[View,List[String]](Ok(view)),Result[Int,List[String]](Ok(2)))

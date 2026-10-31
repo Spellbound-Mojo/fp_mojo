@@ -1,6 +1,6 @@
 """Generic traversal forwarding preserves payload, result and raised-error origins."""
-from fp.functions import piped
-from fp.combinators import traverse_filter, filter_effect, flat_traverse
+from fp.functions import pipeline
+from fp.iteration import traverse_filter, filter_effect, flat_traverse
 from fp.algebra import OptionalFamily, ListFamily, ResultFamily, Traversable, FunctorFilter
 from fp.data import Result, Ok, Err
 from fp.callables import Unary, BorrowCallable, UnaryContract
@@ -11,7 +11,7 @@ def txg_flat[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Dein
              F: def(var A) raises E -> Optional[List[B]]](
     ref function: F, var source: List[A]
 ) raises E -> Optional[List[B]]:
-    return piped(source^).flat_traverse[OptionalFamily, ListFamily, E=E, X=E](function).get()
+    return pipeline[ListFamily](source^).raising[E]().flat_traverse[OptionalFamily](function).get()
 
 
 def txg_select[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //,
@@ -78,7 +78,7 @@ def txg_origins(left: List[Int], right: List[Int]) raises:
     assert_equal(flattened.take()[0][1], 22)
     var more = List[Packet]()
     more.append(Packet(Span(left), Span(right)))
-    var selected = piped(more^).traverse_filter[OptionalFamily](present).get()
+    var selected = pipeline(more^).traverse_filter[OptionalFamily](present).get()
     assert_equal(selected.take()[0][1], 22)
     var views = List[Left]()
     views.append(Span(left))
@@ -86,7 +86,7 @@ def txg_origins(left: List[Int], right: List[Int]) raises:
     assert_equal(kept.take()[0][1], 12)
     var values: List[Int] = [1, 2]
     var code = 0
-    try: _ = piped(values^).filter_effect[OptionalFamily](TXGRaiseView(Span(right))).get()
+    try: _ = pipeline(values^).filter_effect[OptionalFamily](TXGRaiseView(Span(right))).get()
     except error:
         comptime assert type_of(error) == Right
         code = error[1]
@@ -94,7 +94,7 @@ def txg_origins(left: List[Int], right: List[Int]) raises:
     def nested(value: Left) -> Optional[Result[Left, Right]]:
         return Optional(Result[Left, Right](Ok(value)))
     var source = Result[Left, Right](Err(Span(right)))
-    var preserved = piped(source^).flat_traverse[OptionalFamily, ResultFamily[Right]](nested).get()
+    var preserved = pipeline[ResultFamily[Right]](source^).flat_traverse[OptionalFamily](nested).get()
     var stored = preserved.take()
     assert_equal(stored^._take_err()[1], 22)
 
@@ -152,7 +152,7 @@ def txg_custom() raises:
     def present(value: Int) -> Optional[Optional[Int]]: return Optional(Optional(value))
     var values: List[Int] = [1, 2]
     var code = 0
-    try: _ = piped(values^).traverse_filter[OptionalFamily, TXGSource](present).get()
+    try: _ = pipeline[TXGSource](values^).traverse_filter[OptionalFamily](present).get()
     except error:
         comptime assert type_of(error) == TXGFailure
         code = error.code
@@ -170,4 +170,4 @@ struct TXGResultGroup[A: Movable & Deinitable, S: Movable & Deinitable](Unary, C
 def txg_result_library[A: Movable & Deinitable, S: Movable & Deinitable](
     var source: Result[A, S]
 ) -> Optional[Result[A, S]]:
-    return piped(source^).flat_traverse[OptionalFamily](TXGResultGroup[A, S]()).get()
+    return pipeline(source^).flat_traverse[OptionalFamily](TXGResultGroup[A, S]()).get()

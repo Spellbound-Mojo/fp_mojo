@@ -1,5 +1,5 @@
 """Kleisli moves callbacks and payloads, including deferred continuations."""
-from fp.functions import kleisli, piped
+from fp.functions import kleisli, pipeline
 from fp.iteration import iterated
 from fp.algebra import ResultFamily
 from fp.effects import Reader, run
@@ -97,7 +97,7 @@ def ko_views() raises:
     assert_equal(run[Reader[Int]](first^, 0), 4)
     assert_equal(run[Reader[Int]](second^, 0), 5)
     assert_equal(drops[], 0)
-    var eager = piped(Optional(3)).map(chain).get()
+    var eager = pipeline(Optional(3)).map(chain).get()
     assert_equal(run[Reader[Int]](eager.take(), 0), 6)
     _ = chain^
     assert_equal(drops[], 1)

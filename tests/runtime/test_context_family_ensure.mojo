@@ -1,5 +1,6 @@
 """Selected ensure preserves family construction, branching and deferred timing."""
-from fp.algebra import Applicative, ApplicativeError, Monad, EnsureContract, ResultFamily, ListFamily
+from fp.algebra import Applicative, ApplicativeError, Monad, ResultFamily, ListFamily
+from fp.algebra.contracts import EnsureContract
 from fp.callables import BorrowCallContract, BorrowCallable, UnaryContract, BinaryContract, ThunkContract
 from fp.functions import pipeline, Pipeline
 from fp.data import Result, Ok, Err

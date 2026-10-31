@@ -99,7 +99,7 @@ continuation. When applying a function that already returns a Result,
 ## Reuse Result predicates and observers
 
 Bind a native predicate or observer with `partial`, then pass it by name to
-several operations. Direct Result and Piped Result methods borrow that stored
+several operations. Direct Result and Pipeline Result methods borrow that stored
 callback: `.ensure`, `.tap_err`, `.flat_tap_err`, `.attempt_tap`,
 `.recover_if` and `.or_else_if` use their existing branch and error rules.
 A predicate or observer borrows its payload; recovery still consumes the
@@ -108,7 +108,7 @@ for explicit moves and deferred lifetimes.
 
 <!-- example: docs/examples/reusable_result_handlers.mojo -->
 
-Family-parameterized Piped calls, such as `.tap_err[Family](observer)`, also
+Selected pipelines, such as `pipeline[Family](value^).tap_err(observer)`, also
 retain named partials through the selected family's execution. Skipped branches
 do not invoke the callback or copy its bound arguments.
 
@@ -287,9 +287,9 @@ borrows the guaranteed first element; `len` is constant time. `into_list()` and
 consuming iteration transfer the existing buffer without copying elements.
 
 Choose `NonEmptyListFamily` explicitly for `map` and `traverse`, or for fluent
-methods on `piped(values^)`. Mapping and every successful traversal retain the
+methods on `pipeline[NonEmptyListFamily](values^)`. Mapping and every successful traversal retain the
 non-empty shape. `filter` and `filter_map` return ordinary Lists because all
-elements may be removed. Selected `pipeline[NonEmptyListFamily](values)` chains
+elements may be removed. Such pipeline chains
 continue in ListFamily after filtering or compaction. The target Applicative determines short-circuiting,
 accumulation, branching and deferred execution.
 
@@ -314,7 +314,7 @@ other Choice values. Each constructor also has consuming `into_payload`: Left
 and Right return their field; Both returns a native Tuple of diagnostics and
 value. These extractions move the fields and accept move-only values.
 
-Select a family explicitly for algebra and `piped` operations:
+Select a family explicitly for algebra and `pipeline` operations:
 
 | Family | Left input | Both input | Collection behavior |
 |---|---|---|---|

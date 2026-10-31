@@ -1,6 +1,6 @@
 """Reusable native binary pointers keep signatures, views and extraction exact."""
 from fp.callables import as_binary, NativeBinary, Binary
-from fp.functions import flow, compose, partial, piped
+from fp.functions import flow, compose, partial, pipeline
 from fp.iteration import iterated
 from test_mixed_composition import (add, sub, joined, label_sum, left_text, left_size,
     right_text, right_size, sizes, ignore, fail)
@@ -65,7 +65,7 @@ def reuse() raises:
     var step = as_binary(pair)
     assert_equal(iterated(range(3)).scan_map(step, 0).collect_list(), ["0", "2", "6"])
     assert_equal(iterated(range(2)).scan_map(step, 0).collect_list(), ["0", "2"])
-    assert_equal(piped(List[Int]([1, 2, 3])).fold_left(callback, 0).get(), 6)
+    assert_equal(pipeline(List[Int]([1, 2, 3])).fold_left(callback, 0).get(), 6)
     assert_equal(callback(4, 5), 9)
     assert_equal(flow(callback.copy(), plus)(2, 3), 6)
     assert_equal(compose(partial(scale, 2), plus).compose(callback^)(2, 3), 12)

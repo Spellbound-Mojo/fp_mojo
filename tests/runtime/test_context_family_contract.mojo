@@ -1,7 +1,7 @@
 """Family contracts preserve generic calls, exact origins and native errors."""
 from fp.algebra import Functor, Applicative, Traversable, ListFamily, ResultFamily, ValidationFamily, ListMonoid, map, map2, map2_lazy, traverse, sequence
 from fp.callables import Unary, OnceUnary, OnceBinary, OnceThunk, UnaryContract, BinaryContract, ThunkContract
-from fp.functions import pipeline, piped
+from fp.functions import pipeline
 from fp.data import Result, Ok, Err
 from std.testing import assert_equal
 
@@ -53,7 +53,7 @@ def check(owner: List[Int]) raises:
     var validated = forward_map[Accumulating](FamilyContractPass[Int](), Result[Int,Stored](Err(Stored([view]))))
     assert_equal(Pointer(to=validated._err().value[0][0]) == Pointer(to=owner[0]), True)
     assert_equal(map[Sequential](Result[Int,Stored](Ok(2)), inc)._ok().value, 3)
-    assert_equal(piped(Result[Int,Stored](Ok(3))).map[Sequential](inc).get()._ok().value, 4)
+    assert_equal(pipeline[Sequential](Result[Int,Stored](Ok(3))).map(inc).get()._ok().value, 4)
     assert_equal(pipeline[Accumulating](Result[Int,Stored](Ok(4))).map(inc).get()._ok().value, 5)
 
     var combined = forward_pair[Sequential](FamilyContractRight[Int,View](), Result[Int,Stored](Ok(2)), FamilyContractHeld(Result[View,Stored](Ok(view))))
@@ -63,14 +63,14 @@ def check(owner: List[Int]) raises:
     assert_equal(Pointer(to=errors._err().value[1][0]) == Pointer(to=owner[0]), True)
     var paired = map2[Sequential](FamilyContractRight[Int,View](), Result[Int,Stored](Ok(1)), Result[View,Stored](Ok(view)))
     assert_equal(Pointer(to=paired._ok().value[1]) == Pointer(to=owner[1]), True)
-    var fluent = piped(Result[Int,Stored](Ok(1))).map2[Accumulating](Result[View,Stored](Ok(view)), FamilyContractRight[Int,View]()).get()
+    var fluent = pipeline[Accumulating](Result[Int,Stored](Ok(1))).map2(Result[View,Stored](Ok(view)), FamilyContractRight[Int,View]()).get()
     assert_equal(Pointer(to=fluent._ok().value[1]) == Pointer(to=owner[1]), True)
 
     var traversed = forward_traverse[ListFamily,Sequential](FamilyContractNext[Stored](), List[Int]([1,2]))
     assert_equal(traversed._ok().value, List[Int]([2,3]))
     var gathered = forward_traverse[ListFamily,Accumulating](FamilyContractNext[Stored](), List[Int]([3,4]))
     assert_equal(gathered._ok().value, List[Int]([4,5]))
-    var legacy = piped(List[Int]([1,2])).traverse[Sequential, ListFamily](next).get()
+    var legacy = pipeline[ListFamily](List[Int]([1,2])).traverse[Sequential](next).get()
     assert_equal(legacy._ok().value, List[Int]([2,3]))
     var selected = pipeline(List[Int]([3,4])).traverse[Accumulating](next).get()
     assert_equal(selected._ok().value, List[Int]([4,5]))
@@ -79,7 +79,7 @@ def check(owner: List[Int]) raises:
     assert_equal(sequence[Sequential, ListFamily](inputs^)._ok().value, List[Int]([7]))
     var inputs2 = List[Result[Int,Stored]]()
     inputs2.append(Ok(8))
-    assert_equal(piped(inputs2^).sequence[Accumulating, ListFamily]().get()._ok().value, List[Int]([8]))
+    assert_equal(pipeline[ListFamily](inputs2^).sequence[Accumulating]().get()._ok().value, List[Int]([8]))
 
     # Native errors remain independent of the selected stored error.
     var same_origin = False

@@ -1,5 +1,5 @@
 # error: invalid call to 'ap': violated constraint
-from fp.functions import piped
+from fp.functions import pipeline
 from fp.callables import Unary
 @fieldwise_init
 struct APResource(Movable):
@@ -14,4 +14,4 @@ def main():
     functions.append(APFunction())
     var values = List[APResource]()
     values.append(APResource(2))
-    _ = piped(functions^).ap(values^)
+    _ = pipeline(functions^).ap(values^)

@@ -6,8 +6,9 @@ from test_context_failure_forwarding_ownership import Owner
 from context_branch_admission_support import MoveState
 from fp.callables import UnaryContract
 
-from fp.algebra import ApContract, Applicative, ap, pure
-from fp.functions import pipeline, piped, Pipeline
+from fp.algebra import Applicative, ap, pure
+from fp.algebra.contracts import ApContract
+from fp.functions import pipeline, Pipeline
 from fp.callables import Unary, OnceUnary, MutableUnary
 from fp.effects import Reader, run
 
@@ -50,7 +51,7 @@ def forward[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable](va
 
 def fluent[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable](var callbacks: V, var values: W
 ) raises ApContract[I,V,W].Error -> ApContract[I,V,W].Out where ApContract[I,V,W].Compatible:
-    return piped(callbacks^).ap[I](values^).get()
+    return pipeline[I](callbacks^).ap(values^).get()
 
 def selected[I: Applicative, V: Movable & Deinitable, W: Movable & Deinitable](var callbacks: V, var values: W
 ) raises ApContract[I,V,W].Error -> Pipeline[I,ApContract[I,V,W].Out] where ApContract[I,V,W].Compatible:
@@ -100,7 +101,7 @@ def immediate[I: Applicative,route: Int,skip_left: Bool,skip_right: Bool,fail: B
             trace[] += "r"
             _ = result^
         else:
-            var result = piped(left^).ap[I](right^).get()
+            var result = pipeline[I](left^).ap(right^).get()
             trace[] += "r"
             _ = result^
     except error:

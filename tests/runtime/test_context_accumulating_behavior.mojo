@@ -1,6 +1,6 @@
 """Accumulating operations preserve ordered errors and usable Result continuations."""
 from fp.functions import pipeline
-from fp.algebra import StringMonoid,ValidationFamily,ListMonoid
+from fp.algebra import StringMonoid, ValidationFamily, ListMonoid
 from fp.data import Result,Ok,Err
 from std.testing import assert_equal
 

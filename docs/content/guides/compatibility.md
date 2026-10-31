@@ -1,8 +1,10 @@
 # Mojo 1.2 compatibility and migration
 
 Use `Pipeline` and `Capture` for new native callback code. They select semantic
-context before matching a callback. Existing free functions, `Piped`, Result
-methods and iterator APIs remain available under their documented contracts.
+context before matching a callback. Existing free functions, Result methods and
+iterator APIs remain available under their documented contracts. The former
+`Piped` struct and `piped` factory were removed; see
+[Pipeline migration coverage](#pipeline-migration-coverage).
 The published FP Mojo 1.0.0 package targets Mojo 1.1; Mojo 1.2 users currently
 use the `nightly` source checkout.
 
@@ -97,8 +99,7 @@ admission predicates in the signature, including embedded origins.
 Effectful queries and reductions now select a Monad target. The selected binary
 fold binds its accumulator first: `fold_effect[Target](initial).run(step)`.
 This avoids Mojo 1.2's crash while inferring an accumulator and diagnosing an
-incompatible native argument convention together. Legacy `Piped` calls keep
-their existing order. Array sources use temporary List storage to preserve
+incompatible native argument convention together. Array sources use temporary List storage to preserve
 move-only ownership across native iterator moves.
 
 `Capture[E].args(...)` binds zero to eight consumed positional operands; an
@@ -113,7 +114,22 @@ for executable examples and ownership rules.
 
 ## Pipeline migration coverage
 
-Every legacy Piped method now has a selected counterpart in the catalog. The
+`Piped` and `piped(value)` were removed. Replace `piped(value)` with
+`pipeline(value)` and `piped(dictionary^)` value operations with
+`pipeline_values(dictionary^)`. Pipeline has every method Piped had, and
+`.then(...)` chains have no stage limit. Pipeline closures use the selected
+native error: call `.raising[MyError]()` once before a raising closure. A
+raising plain function selects its error itself. Piped inferred each closure's
+error, which could crash Mojo 1.2 on an invalid closure convention. Per-method
+family selection such as `.map[Family](f)` or `.recover[Family](h)` moves to
+the start: `pipeline[Family](value).map(f)`. To switch family mid-chain, start
+again with `pipeline[Other](previous^.get())`; `then[J]` still selects the output
+family of a whole-value stage. Keyword error hints such as `[R=R, X=E]` become
+one `.raising[E]()` before the stage. `fold_effect[G](step, initial)` becomes
+`fold_effect[G](initial).run(step)`, or `fold_effect(initial).run(step)` to
+infer `G`.
+
+Every retired Piped method has a selected counterpart in the catalog. The
 documentation audit rejects missing, duplicate or stale assignments when the
 API changes. The remaining-name inventory is empty:
 
@@ -122,6 +138,12 @@ API changes. The remaining-name inventory is empty:
 Name coverage does not imply arbitrary family support. The catalog distinguishes
 Result-specific operations from capabilities; custom dictionaries and deferred
 families retain their public admission and execution contracts.
+
+The `fp.combinators` package was removed; it only re-exported other packages.
+Import `map`, `filter`, `fold_left` and the other collection functions from
+`fp.iteration`, and `if_effect` from `fp.algebra`. Operation contracts such as
+`MapContract` moved from `fp.algebra` to
+[`fp.algebra.contracts`](../reference/algebra.contracts.md).
 
 ## Current contracts
 

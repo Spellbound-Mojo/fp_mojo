@@ -1,4 +1,5 @@
-from fp.algebra import Monad,ListFamily,IdentityFamily,OptionalFamily,ResultFamily,TraverseContract,traverse
+from fp.algebra import Monad, ListFamily, IdentityFamily, OptionalFamily, ResultFamily, traverse
+from fp.algebra.contracts import TraverseContract
 from fp.callables import MutableUnary
 from fp.effects import WriterT
 from test_applicative_error_ownership import AEOOwner as Owner

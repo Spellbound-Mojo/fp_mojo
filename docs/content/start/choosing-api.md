@@ -49,7 +49,7 @@ or `tuple_right(value)` keeps the success and attaches another value beside it.
 Choose `pipeline(result^)` when the task needs container capabilities such as
 `map_n`, accumulation with `par_map_n`, or traversal. A chain can continue
 through Result-specific operations without extracting and wrapping every step.
-The [validation example](../reference/combinators.md) combines independent checks
+The [validation example](../reference/combinators.md#accumulate-independent-validation-errors) combines independent checks
 with the same Result type used for dependent steps.
 
 ## Choose eager or lazy collection processing
@@ -100,7 +100,7 @@ contracts expose the output family, result, native error and admission rules
 for [generic wrappers](../guides/generic-wrappers.md). Ordinary concrete calls
 do not need to reconstruct those contracts.
 
-Existing free functions, `piped` and compatibility adapters remain supported.
+Existing free functions, `pipe` and compatibility adapters remain supported.
 Use them when maintaining code written to their documented contracts or when a
 direct function fits the surrounding algorithm. The preferred entry points
 above provide a consistent starting path; they do not change existing
