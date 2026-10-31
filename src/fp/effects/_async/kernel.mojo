@@ -461,6 +461,9 @@ struct Task[P: Machine](Movable, not Deinitable):
         return self.context._budget.value()[].consumed
 
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
+        # Release the shared scheduler state here, not on a thread whose late
+        # wake drops the last reference (see _Scheduler.shutdown).
+        self._executor.scheduler[].shutdown()
         return self._slot.take_outcome()
 
 
@@ -547,8 +550,8 @@ struct Driver[P: Machine](Movable, not Deinitable):
         return Progress(done, ready, deadline^, polls, timers, self.task._transitions() - before, quiescent)
 
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
-        # The notifier is never called after this returns; wait for a call in flight.
-        self.task._executor.scheduler[].close()
+        # The notifier is never called after this returns: the task's finish
+        # closes it and waits for a call in flight.
         return self.task^.finish()
 
 

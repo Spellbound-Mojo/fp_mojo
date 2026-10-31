@@ -382,6 +382,28 @@ struct _Scheduler(Movable):
         while self.in_flight.load[ordering=Ordering.SEQUENTIAL]() != 0:
             sleep(0.0)
 
+    def shutdown(mut self):
+        """Release what a finished root shares, on the thread that drives it.
+
+        A waker retained by another thread may hold the last reference to a
+        registry, and through it to this scheduler, after the root finishes.
+        Stale heap entries also refer back to registries, a cycle. Emptying the
+        heap, the queue, the fiber table and the notifier here breaks the cycle
+        and leaves only plain metadata for another thread to destroy; the host's
+        notifier is destroyed here, after `close`.
+        """
+        self.close()
+        var timers = _lock_metadata(self.timers)
+        timers.cell[].slot.value().heap = BinaryHeap[_Timer]()
+        _ = timers^
+        var ready = _lock_metadata(self.ready)
+        ready.cell[].slot.value() = _ReadyQueue()
+        _ = ready^
+        var fibers = _lock_metadata(self.fibers)
+        fibers.cell[].slot.value() = _FiberTable()
+        _ = fibers^
+        self.notifier = None
+
     def push_timer(mut self, deadline: Instant, var target: _Waker):
         var guard = _lock_metadata(self.timers)
         ref timers = guard.cell[].slot.value()
