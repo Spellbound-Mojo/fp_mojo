@@ -2517,7 +2517,7 @@ it into `nightly`.
 | **S1 OS layer** (merged) | External calls for `pipe`, `pipe2`, `fcntl`, `poll`, `read`, `write`, `close`, `clock_gettime`, `getrusage`, and the thread owner extracted from `unsafe_start` | New `src/fp/_internal/os.mojo`; `src/fp/effects/fibers.mojo` | None |
 | **S2 Poller** | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
 | **S3 Cross-thread qualification** (merged) | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
-| **S4 Concurrent structures** | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
+| **S4 Concurrent structures** (merged) | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
 | **S5 Engine refactor** | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
 | **S6 Blocking** | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
 | **S7 Thread-safety research** (merged) | The payload contract, the audit list, and research on compile-time rejection by reflection (13e's research) | Plan and design notes | None |
@@ -2683,6 +2683,85 @@ published as [Async payload thread safety](async-thread-safety.md).
   on the owner's signal instead is decided in 13c, from measurements. The
   thread sanitizer does not run for Mojo executables in this container, so
   design item 8's sanitizer run needs another host or a toolchain fix.
+
+**S4** (Wave 1) was merged on 2026-10-31: the work-stealing pool's concurrent
+structures in isolation (13a), in the private package
+`fp.effects._async.scheduling`. Each module's docstring gives every atomic
+operation's ordering and why it suffices (design item 8).
+
+- **Local ring** (`_LocalQueue`, after `LocalQueue`):
+  - 256 entries, with one producer (its owner) and many consumers.
+  - The head word packs a steal tag and a real tag; the tags are 32-bit, which
+    widens the ABA window from 2^16 to 2^32 operations.
+  - A thief takes half the elements, and a full ring spills half to the
+    external queue in batches of 32.
+- **External queue** (`_ExternalQueue`, after `ScalQueue`):
+  - Power-of-two stripes, each a `Deque` in a `_Cell` with a padded, published
+    length, so consumers skip empty stripes without locking.
+  - Each spilled batch goes to its own random stripe, as `ScalQueue.offerAll`
+    does with upstream's batch arrays, and a refill takes up to one batch from
+    one stripe.
+- **Timer heap** (`_TimerHeap`, after `TimerHeap`):
+  - The heap is owner-only, and each node carries a generation-tagged state
+    word. A single compare-exchange picks the one taker of each payload: the
+    owner firing it, a thief, or a canceler. Upstream tolerates a duplicate
+    run, but these payloads are move-only.
+  - Cross-thread cancellations are counted and packed by the owner.
+  - Storage never moves while other threads may read it.
+  - The earliest-deadline hint, the size, and the canceled count each sit on
+    their own cache line.
+- **Parking** (`_Parking`, after `WorkStealingThreadPool`'s state and
+  `notifyParked`):
+  - This is the state machine only. The operating-system park and unpark
+    belong to S2's poller.
+  - One word packs the active and searching counts, and each worker has a
+    parked flag that one notifier claims by compare-exchange.
+  - Searchers are bounded at half the workers exactly, by compare-exchange,
+    where upstream checks then increments.
+  - The last parking searcher and every submitter run a sequentially
+    consistent handshake, so no submitted work is lost.
+  - Upstream's last-searcher test compares the whole word with 1, which an
+    active caller never matches; this module tests the searching count.
+  - Follow-up for 13c: a waking worker spins without yielding while its
+    notifier finishes the unpark.
+- **Shared lock.** `fp._internal.cells` gained one acquire and release
+  implementation, shared by the existing `_Guard` (`_try_lock`,
+  `_lock_metadata`, whose orderings and yields are unchanged) and a new
+  borrowed `_CellGuard` (`_lock_cell`). The borrowed guard uses acquire and
+  release ordering, needs no reference counting, and spins 256 times before
+  yielding. The external queue uses it, and `Signal` and the coordination
+  owners can migrate later.
+- **Measurements** (O3, four cores, ns per operation):
+
+  | Operation | ns |
+  |---|---|
+  | Ring enqueue and dequeue pair | 14 |
+  | Per element stolen or spilled | 17–19 |
+  | External push and pop pair, uncontended | 31–33 (75–81 with `_lock_metadata`) |
+  | External pair, four threads on four stripes | 1,080–1,150 (1,460–1,600 before) |
+  | Timer insert and poll, 1,000 queued | 58–61 |
+  | Timer insert and poll, two threads stealing | 230–300 (410–460 before padding) |
+  | `fetch_add`, compare-exchange, sequentially consistent store or fence | 6–9 |
+
+  Removing bounds checks from the owner's heap arrays took timer insert and
+  poll from about 182 to 58 ns.
+- **Clients.**
+  - `wstp_support`, `wstp_queues`, and `wstp_timers` check that every element
+    is received at most once (exactly once when drained) and destroyed exactly
+    once, and that steals, spills, and cross-thread cancellations happened.
+  - `wstp_parking` runs four `OSThread` workers with a test-only self-pipe
+    parker. It checks the searcher bound, one unpark per parking, and that no
+    work is lost. Without the last searcher's re-check it fails on every run.
+  - `WSTP_SCALE` multiplies the workloads for soaks.
+  - The branch soaked 755 parking, queue, and timer runs at O0 and O3 with no
+    failure.
+- **Qualification.**
+  - The S4 branch passed 28 of 28: the four clients plus `foreign_signal`,
+    `foreign_completion`, and `callbacks`.
+  - At merge, the same four clients with `foreign_signal` and `callbacks`,
+    which exercise the changed lock code, passed 24 of 24 from source and
+    package at O0 and O3.
+  - No thread sanitizer runs here (see S7).
 
 ## Implementation reference map
 
