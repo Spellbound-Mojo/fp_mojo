@@ -11,13 +11,13 @@ and error is destroyed exactly once, counted with a ledger.
 `BLOCKING_SCALE` multiplies the burst and payload rounds for soaks.
 """
 from std.atomic import Atomic
-from std.ffi import external_call
+from std.ffi import external_call, c_int
 from std.memory import ArcPointer
 from std.os import abort, getenv
 from std.time import monotonic, sleep
 from fp.callables import OnceThunk, OnceUnary, BorrowCallable
 from fp._internal.erased import _Erased
-from fp._internal.os import getrusage, RUSAGE_SELF
+from fp._internal.os import getrusage, RUSAGE_SELF, Pipe, write as os_write
 from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Interruption, BlockingPool, IORuntimeConfig, Duration, run
 from fp.effects._async.scheduling.blocking_pool import _RootBlocking, _WorkerContext
@@ -247,6 +247,88 @@ def interrupted_sleep():
     check(raced == -1, "the canceled sleeper's fallback runs")
     check(elapsed < 2_000_000_000, String("a wait through the handle wakes on the request, took ", elapsed))
     check(value_of(run(IO[Int, Int].interruptible(sleeps_out))) == 1, "an uninterrupted sleep runs its whole duration")
+
+
+@fieldwise_init
+struct AwaitPipe(BorrowCallable):
+    """On a worker: wait for the pipe's read end, with or without a timeout."""
+    var fd: Int
+    var timeout_ms: Int
+    comptime Payload = Interruption
+    comptime Result = Int
+    comptime Failure = Error
+
+    def invoke(self, ref handle: Interruption) raises -> Int:
+        var timeout = Optional[Duration](ms(self.timeout_ms)) if self.timeout_ms > 0 else None
+        try:
+            var ready = handle.await_readable(RawFileDescriptor(Int32(self.fd)), timeout)
+            if ready:
+                return 1
+            return 2 if handle.requested() else 3
+        except:
+            raise Error("poll failed")
+
+
+@fieldwise_init
+struct AwaitWritable(BorrowCallable):
+    var fd: Int
+    comptime Payload = Interruption
+    comptime Result = Int
+    comptime Failure = Error
+
+    def invoke(self, ref handle: Interruption) raises -> Int:
+        try:
+            return 1 if handle.await_writable(RawFileDescriptor(Int32(self.fd))) else 0
+        except:
+            raise Error("poll failed")
+
+
+@fieldwise_init
+struct WriteLater(OnceUnary):
+    """From the root's thread, after a cede: make the pipe readable."""
+    var fd: Int
+    comptime Arg = NoneType
+    comptime Out = IO[Int, Error]
+
+    def call_once(deinit self, var unit: NoneType) -> IO[Int, Error]:
+        return IO[Int, Error].delay(WriteByte(self.fd))
+
+
+@fieldwise_init
+struct WriteByte(OnceThunk):
+    var fd: Int
+    comptime Out = Int
+    comptime Error = Error
+
+    def call_once(deinit self) raises -> Int:
+        var byte: List[UInt8] = [UInt8(7)]
+        try:
+            return os_write(c_int(self.fd), Span(byte))
+        except:
+            raise Error("write failed")
+
+
+def error_value[T: Movable & Deinitable](var outcome: Outcome[T, Error]) -> T:
+    if not outcome or not outcome.value().is_ok():
+        abort("blocking pool: expected a success")
+    return outcome.take()._take_ok()
+
+
+def descriptor_waits() raises:
+    var pipe = Pipe.open()
+    var read_fd = Int(pipe.read_end.fd)
+    var write_fd = Int(pipe.write_end.fd)
+    # Timeout, then interruption, both on an empty pipe.
+    check(error_value(run(IO[Int, Error].interruptible(AwaitPipe(read_fd, 5)))) == 3, "a descriptor wait times out")
+    var started = Int(monotonic())
+    var raced = error_value(run(IO[Int, Error].interruptible(AwaitPipe(read_fd, 0)).timeout_to(ms(5), IO[Int, Error].pure(-1))))
+    check(raced == -1 and Int(monotonic()) - started < 2_000_000_000, "a descriptor wait wakes on the request")
+    # Readiness that another fiber causes while the worker waits.
+    var setter = IO[NoneType, Error].cede().flat_map(WriteLater(write_fd))
+    var both = error_value(run(IO[Int, Error].interruptible(AwaitPipe(read_fd, 0)).both(setter^)))
+    check(both[0] == 1 and both[1] == 1, "a descriptor wait wakes when the descriptor is ready")
+    check(error_value(run(IO[Int, Error].interruptible(AwaitWritable(write_fd)))) == 1, "an empty pipe is writable")
+    _ = pipe^
 
 
 def quick(handle: Interruption) -> Int:
@@ -516,10 +598,11 @@ def main() raises:
     timeout_waits()
     interruption()
     interrupted_sleep()
+    descriptor_waits()
     reuse_and_retire()
     maximum()
     ledger_rounds()
     finish_waits()
     shared_pool()
     drop_on_worker()
-    print("blocking pool: other fibers run, results and errors, timeouts wait, interruption, reuse and retirement, the maximum, payload ledger, root finish, shared pools, last copy on a worker")
+    print("blocking pool: other fibers run, results and errors, timeouts wait, interruption, handle sleeps and descriptor waits, reuse and retirement, the maximum, payload ledger, root finish, shared pools, last copy on a worker")

@@ -9,7 +9,7 @@ from fp.effects import (Outcome, SyncIO, OptionalT, StateT, WriterT, LiftBlockin
     Interruption, run_io, run as run_layer, blocking, interruptible, uncancelable, canceled)
 from fp.algebra import flat_map
 from fp.effects import IO as SyncFamily
-from fp.effects.async_runtime import IO, Async, run
+from fp.effects.async_runtime import IO, Async, Duration, run
 
 comptime A = Async[Int]
 comptime S = SyncIO[Int]
@@ -102,6 +102,45 @@ struct ThenRecord(OnceUnary):
         return interruptible[S](Record(self.seen^))
 
 
+def one_ms() -> Duration:
+    var duration = Duration()
+    duration._nanoseconds = 1_000_000
+    return duration^
+
+
+def naps(handle: Interruption) -> Int:
+    return 1 if handle.sleep(one_ms()) else 2
+
+
+@fieldwise_init
+struct NapRecord(BorrowCallable):
+    """Record what an inline sleep and descriptor wait report."""
+    var seen: ArcPointer[Atomic[Int]]
+    comptime Payload = Interruption
+    comptime Result = Int
+    comptime Failure = Never
+
+    def invoke(self, ref handle: Interruption) -> Int:
+        var slept = handle.sleep(Duration())
+        var ready = True
+        try:
+            ready = handle.await_readable(RawFileDescriptor(0), Optional(Duration()))
+        except:
+            pass
+        self.seen[].store((10 if slept else 20) + (1 if ready else 2))
+        return 0
+
+
+@fieldwise_init
+struct ThenNap(OnceUnary):
+    var seen: ArcPointer[Atomic[Int]]
+    comptime Arg = NoneType
+    comptime Out = S.Interrupted[NapRecord]
+
+    def call_once(deinit self, var unit: NoneType) -> Self.Out:
+        return interruptible[S](NapRecord(self.seen^))
+
+
 def async_laws():
     # blocking(f) produces what delay(f) produces, on another thread.
     check(value_of(run(blocking[A](six))) == value_of(run(IO[Int, Int].delay(six))), "blocking(f) has delay(f)'s value")
@@ -123,6 +162,11 @@ def sync_laws() raises:
     var masked = run_io(uncancelable(flat_map[SyncFamily[Int]](canceled[S](), ThenRecord(seen.copy()))))
     check(not masked, "the masked program observes cancellation after the region")
     check(seen[].load() == 1, "SyncIO's handle reads the context token")
+    # Inline waits: an uninterrupted sleep runs out; a prior request ends waits at once.
+    check(value_of(run_io(interruptible[S](naps))) == 1, "SyncIO's inline sleep runs its duration")
+    var napped = ArcPointer(Atomic[Int](0))
+    _ = run_io(uncancelable(flat_map[SyncFamily[Int]](canceled[S](), ThenNap(napped.copy()))))
+    check(napped[].load() == 22, String("SyncIO's waits end at once after a request, saw ", napped[].load()))
 
 
 comptime O = OptionalT[A]
@@ -150,4 +194,4 @@ def main() raises:
     async_laws()
     sync_laws()
     layers()
-    print("capability blocking: delay laws on Async off-thread and on SyncIO inline, handles, layer forwarding")
+    print("capability blocking: delay laws on Async off-thread and on SyncIO inline, handles and inline waits, layer forwarding")

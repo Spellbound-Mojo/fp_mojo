@@ -1,1 +1,1 @@
-capability blocking: delay laws on Async off-thread and on SyncIO inline, handles, layer forwarding
+capability blocking: delay laws on Async off-thread and on SyncIO inline, handles and inline waits, layer forwarding

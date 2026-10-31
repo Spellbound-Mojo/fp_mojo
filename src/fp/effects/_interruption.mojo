@@ -7,10 +7,13 @@ token's, and it stays visible once made.
 from fp.callables.protocols import BorrowCallContract, OnceThunk
 from fp.callables._receiver import _borrow_once_as
 from std.os import abort
-from std.time import monotonic, sleep as _sleep
+from std.time import monotonic
 from fp._internal.time import Duration
 from ._io_core import CancellationToken
-from ._async.polling import _Poller
+from std.ffi import c_int
+from fp._internal.os import OSError
+from fp._internal.waking import Signal
+from ._async.polling import _Poller, _Registration, READ_INTEREST, WRITE_INTEREST
 
 
 struct Interruption:
@@ -51,33 +54,110 @@ struct Interruption:
         """Wait for a duration, waking early when cancellation is requested.
 
         On a blocking-pool worker the wait parks in the worker's poller, which
-        the request interrupts. Inline in SyncIO there is no other thread to
-        wake it: the wait blocks for the whole duration, and only a request
-        made before it starts ends it early.
+        the request interrupts. Inline in SyncIO the wait parks in a poller of
+        its own that nothing interrupts: a request made during the wait is
+        observed only when it ends.
 
         Args:
             duration: How long to wait, measured from the call.
 
         Returns:
             True when the duration elapsed, False when cancellation was
-            requested before it did.
+            requested first.
+        """
+        try:
+            return self._wait(None, 0, Optional(duration.copy()))
+        except:
+            abort("fp.effects: Interruption.sleep could not poll")
+
+    def await_readable(self, fd: RawFileDescriptor, timeout: Optional[Duration] = None) raises OSError -> Bool:
+        """Wait until a descriptor is readable, waking early when cancellation is requested.
+
+        The caller owns the descriptor and keeps it open during the wait. Hang-up
+        and error conditions count as ready: the caller finds them by reading.
+
+        Args:
+            fd: The descriptor.
+            timeout: How long to wait at most; None waits until ready or interrupted.
+
+        Returns:
+            True when the descriptor is ready; False when cancellation was
+            requested or the timeout expired, told apart with `requested()`.
+
+        Raises:
+            OSError: From poll.
+        """
+        return self._wait(Optional(c_int(fd.value)), READ_INTEREST, timeout)
+
+    def await_writable(self, fd: RawFileDescriptor, timeout: Optional[Duration] = None) raises OSError -> Bool:
+        """Wait until a descriptor is writable, waking early when cancellation is requested.
+
+        The caller owns the descriptor and keeps it open during the wait. Hang-up
+        and error conditions count as ready: the caller finds them by writing.
+
+        Args:
+            fd: The descriptor.
+            timeout: How long to wait at most; None waits until ready or interrupted.
+
+        Returns:
+            True when the descriptor is ready; False when cancellation was
+            requested or the timeout expired, told apart with `requested()`.
+
+        Raises:
+            OSError: From poll.
+        """
+        return self._wait(Optional(c_int(fd.value)), WRITE_INTEREST, timeout)
+
+    def _wait(self, fd: Optional[c_int], interest: Int16, timeout: Optional[Duration]) raises OSError -> Bool:
+        """The one wait loop: park until ready, requested, or the deadline.
+
+        A worker's poller belongs to the worker running this call, so the
+        registration is made and removed on the owner thread. Inline, a fresh
+        poller serves the one call.
         """
         if self.requested():
             return False
-        var deadline = Int(monotonic()) + duration.to_nanoseconds()
+        var fresh = Optional[_Poller]()
         if not self._poller:
-            _sleep(Float64(duration.to_nanoseconds()) / 1e9)
-            return True
+            fresh = Optional(_Poller())
+        var poller = self._poller.value() if self._poller else Pointer(to=fresh.value()).unsafe_origin_cast[MutUntrackedOrigin]()
+        var deadline = Int(monotonic()) + timeout.value().to_nanoseconds() if timeout else 0
+        var signal = Signal()
+        var registration = Optional[_Registration]()
+        if fd:
+            registration = poller[].register(fd.value(), interest, signal)
+        var ready = False
+        var failure = Optional[OSError]()
         while True:
+            if registration and poller[].readiness(registration.value()).ready():
+                ready = True
+                break
             if self.requested():
-                return False
-            var remaining = deadline - Int(monotonic())
-            if remaining <= 0:
-                return True
+                break
+            var wait = Optional[Duration]()
+            if timeout:
+                var remaining = deadline - Int(monotonic())
+                if remaining <= 0:
+                    # A sleep's whole duration elapsing is its success.
+                    ready = not fd
+                    break
+                var slice = Duration()
+                slice._nanoseconds = remaining
+                wait = Optional(slice^)
             try:
-                _ = self._poller.value()[].poll(Optional(Duration.nanoseconds(remaining)))
-            except:
-                abort("fp.effects: Interruption.sleep could not poll")
+                var result = poller[].poll(wait)
+                if result.closed:
+                    break
+            except error:
+                failure = Optional(error^)
+                break
+        if registration:
+            _ = poller[].deregister(registration.value())
+        # The fresh poller outlives every use through `poller`.
+        _ = fresh^
+        if failure:
+            raise failure.take()
+        return ready
 
 
 @fieldwise_init

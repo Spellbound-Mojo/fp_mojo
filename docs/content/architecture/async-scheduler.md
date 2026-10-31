@@ -152,8 +152,9 @@ worker publishes its `_Interrupter` on a locked idle list before re-reading
 the queue, and a submitter pushes its job, then claims one entry and
 interrupts it; both pass through the idle list's lock, so no job is missed.
 While an interruptible call runs, its worker's interrupter is published in the
-call's state, so the withdrawal's request wakes `Interruption.sleep`, which
-parks in the same poller. The
+call's state, so the withdrawal's request wakes `Interruption.sleep` and its
+descriptor waits, which park in the same poller; a descriptor wait registers
+there, on the worker's own thread, and deregisters before it returns. The
 `blocking_pool` client checks other fibers running during a call, results and
 errors, timeouts that wait, interruption, a sleep through the handle woken by
 the request, reuse and retirement against the process's thread count, idle

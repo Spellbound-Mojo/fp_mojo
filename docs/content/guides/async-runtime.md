@@ -228,7 +228,12 @@ a request stays visible, so there is no separate `interruptibleMany`. On
 cancellation the call completes when the function returns; its late result is
 then rejected and destroyed on the worker thread, and the fiber is canceled.
 `sleep(duration)` waits through the handle and returns False as soon as the
-request arrives, True when the duration elapsed. No POSIX signal is sent, as in
+request arrives, True when the duration elapsed.
+`await_readable(fd, timeout)` and `await_writable(fd, timeout)` wait for a
+`RawFileDescriptor` the caller owns and keeps open: they return True when it is
+ready, hang-up and error conditions included, and False when the request
+arrives or the optional timeout expires, which `requested()` tells apart; a
+`poll` failure raises `OSError`. No POSIX signal is sent, as in
 Cats Effect on Scala Native: a function blocked in an operating-system call
 that does not go through the handle is not woken.
 The handle is neither copyable nor movable, and the function receives it
@@ -268,9 +273,11 @@ call outside a `Driver`, `run`, or `TestControl` aborts.
 The synchronous family provides the same capability inline: `blocking[SyncIO[E]]`
 runs the function like `delay`, on the calling thread, which the synchronous
 family blocks anyway, and `interruptible[SyncIO[E]]` passes a handle that
-reads the running program's cancellation token. With no other thread to wake
-it, that handle's `sleep` blocks for its whole duration and only a request
-made before it starts ends it early.
+reads the running program's cancellation token. Its `sleep` and descriptor
+waits park in a poller of their own and return False at once when the request
+was already made, but a known limitation remains: a request made during the
+wait is observed only when the wait ends, until cancellation wakes are wired
+into the poller in a later pass.
 
 Of Cats Effect's `Sync` and `Async` operations, these have no provider yet:
 `evalOn`, `startOn`, `backgroundOn`, and `executionContext` wait for the
