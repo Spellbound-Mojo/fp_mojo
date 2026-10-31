@@ -1190,10 +1190,12 @@ and terminals, which have no generic form. `pipeline.mojo` has 660 methods
 - Copy and move violations in generic `product` and `ap` now report
   `invalid call ...: violated constraint` instead of `no matching method`.
 - A Piped generic method does not accept a wrapper's forwarded contract as
-  evidence about `Self.Value`; generic wrappers call the free operations,
-  which do (`map[ListFamily](values^, f^)` with
-  `MapContract[ListFamily, V, F].Compatible`), or `pipeline[I]`. A native
-  carrier's methods used to accept `V == List[F.Arg]` evidence directly.
+  evidence about `Self.Value`, and neither form accepts evidence spelled for a
+  concrete family. Generic wrappers take the family as a parameter and call
+  the free operation, as the [contract-forwarding guide](../guides/generic-wrappers.md)
+  shows: `map[I](values^, f^)` with `MapContract[I, V, F].Compatible`, or
+  `pipeline[I]`. A native List method used to accept `V == List[F.Arg]`
+  evidence directly.
 - The callback type is no longer the first explicit parameter of List and
   Optional methods; bind it by keyword (`.filter[F=type_of(predicate)]`).
 

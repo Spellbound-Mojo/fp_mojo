@@ -16,8 +16,8 @@ def bound[I:Monad,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable]
     return pipeline[I](value^).flat_map(f^).get()
 
 
-def list_mapped[V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var values:V,var f:F) raises MapContract[ListFamily,V,F].Error -> MapContract[ListFamily,V,F].Out where MapContract[ListFamily,V,F].Compatible:
-    return map[ListFamily](values^, f^)
+def list_mapped[I:Functor,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var values:V,var f:F) raises MapContract[I,V,F].Error -> MapContract[I,V,F].Out where MapContract[I,V,F].Compatible:
+    return map[I](values^, f^)
 
 
 def metadata():
@@ -50,7 +50,7 @@ def repeated() raises:
     comptime O=OptionalT[ListFamily]
     comptime R=ResultT[ListFamily,String]
     assert_equal(mapped[ListFamily](List[Int]([10,20]),StatefulMap(0)),[11,22])
-    assert_equal(list_mapped(List[Int]([10,20]),StatefulMap(0)),[11,22])
+    assert_equal(list_mapped[ListFamily](List[Int]([10,20]),StatefulMap(0)),[11,22])
     var owners:List[MoveState]=[MoveState(10),MoveState(20)]
     assert_equal(mapped[ListFamily](owners^,TakeState(0)),[11,22])
     var optional=mapped[O](List[Optional[Int]]([Optional(10),Optional[Int](),Optional(20)]),StatefulMap(0))
