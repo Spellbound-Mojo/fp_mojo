@@ -1,6 +1,5 @@
 """Borrowed adapters retain mutable and owned native conventions."""
-from fp.data import attempt, Result, raise_on_err
-from fp.data.result import mutating, consuming
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -24,19 +23,19 @@ def consume(var value: AttemptAdapterInput) -> Int:
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //,
             F: def(var A) -> R](function: F, var value: A) -> Result[R, Never]:
-    return attempt(consuming(function), value^)
+    return Capture.take(value^).run(function)
 
 def main() raises:
     var value = AttemptAdapterInput(7)
-    var updated = attempt(mutating(update), value)
+    var updated = Capture.mutable(value).run(update)
     comptime assert type_of(updated) == Result[Int, Never]
     assert_equal(raise_on_err(updated^), 8)
-    var failed = attempt(mutating(fail), value)
+    var failed = Capture.mutable(value).run(fail)
     comptime assert type_of(failed) == Result[Int, AttemptAdapterFailure]
     var code = 0
     try: _ = raise_on_err(failed^)
     except error: code = error.code
     assert_equal(code, 10)
     assert_equal(value.value, 10)
-    assert_equal(raise_on_err(attempt(consuming(consume), value^)), 10)
+    assert_equal(raise_on_err(Capture.take(value^).run(consume)), 10)
     assert_equal(raise_on_err(forward(consume, AttemptAdapterInput(12))), 12)

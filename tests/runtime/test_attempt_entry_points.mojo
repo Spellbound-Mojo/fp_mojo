@@ -1,5 +1,5 @@
 """Separate native call shapes retain inferred results, errors and empty packs."""
-from fp.data import Result, attempt, attempt_kwargs, raise_on_err
+from fp.data import Capture, Result, raise_on_err
 from std.collections import StringDict
 from std.testing import assert_equal
 
@@ -18,11 +18,11 @@ def capture[K: Movable & Deinitable, R: Movable & Deinitable,
             F: def(var **kwargs: K) raises E -> R](
     function: F, /, var **values: K
 ) -> Result[R, E]:
-    return attempt_kwargs(function, **values^)
+    return Capture[E].kwargs(**values^).run(function)
 
 
 def main() raises:
-    var result = attempt(ordinary)
+    var result = Capture().run(ordinary)
     comptime assert type_of(result) == Result[Int, Failure]
     var code = 0
     try:
@@ -42,7 +42,7 @@ def main() raises:
         return sum
 
     # Empty packs must select the keyword entry even with no keyword operands.
-    var empty = attempt_kwargs(total)
+    var empty = Capture[Failure].kwargs[K=Int]().run(total)
     comptime assert type_of(empty) == Result[Int, Failure]
     var value: Int
     try:
@@ -52,7 +52,7 @@ def main() raises:
     assert_equal(value, 0)
 
     # Names used by the bridge itself remain available as callback keywords.
-    var named = attempt_kwargs(total, function=2, first=3, values=5)
+    var named = Capture[Failure].kwargs(function=2, first=3, values=5).run(total)
     try:
         value = raise_on_err(named^)
     except error:
@@ -72,6 +72,6 @@ def main() raises:
 
     def pure(var **values: Int) -> Int:
         return len(values)
-    var success = attempt_kwargs(pure)
+    var success = Capture.kwargs[K=Int]().run(pure)
     comptime assert type_of(success) == Result[Int, Never]
     assert_equal(raise_on_err(success^), 0)

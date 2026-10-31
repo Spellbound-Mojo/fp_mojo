@@ -1,7 +1,6 @@
-# error: no matching function in call to 'attempt_kwargs'
-# Native mutable_readonly.mojo pins the detailed mutability diagnostic;
-# the public overload set summarizes this rejected read-only argument.
-from fp.data import attempt_kwargs
+# error: invalid call to 'mutable'
+# error: cannot be converted
+from fp.data import Capture
 @fieldwise_init
 struct Token(Movable):
     var value: Int
@@ -11,7 +10,7 @@ def target(mut value: Token, /, var **values: Int) -> Int:
     return value.value
 
 def owner(value: Token):
-    _ = attempt_kwargs[mutable=True](target, value, one=7)
+    _ = Capture.mutable(value).kwargs(one=7).run(target)
 
 def main():
     owner(Token(3))

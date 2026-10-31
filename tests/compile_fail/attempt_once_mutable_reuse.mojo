@@ -1,6 +1,6 @@
 # error: use of uninitialized value 'callback'
 from fp.callables import MutableThunk
-from fp.data import attempt_once
+from fp.data import Capture
 @fieldwise_init
 struct Counter(MutableThunk):
     comptime Out = Int
@@ -10,5 +10,5 @@ struct Counter(MutableThunk):
         return self.calls
 def main():
     var callback = Counter(0)
-    _ = attempt_once(callback^)
+    _ = Capture().run(callback^)
     print(callback.calls)

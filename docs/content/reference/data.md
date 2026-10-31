@@ -150,63 +150,32 @@ state through composed effects, use [State](effects.md#program-against-a-selecte
 
 ## Select a native argument convention
 
-This section documents the retained compatibility entry points. Prefer
-`Capture` for new code; its argument-first boundary also checks incompatible
-callbacks without explicit callback-type bindings. See the
+`Capture` fixes each argument's native convention before the callback is
+matched, so no convention selector, adapter or callback-type binding is
+needed. Bind shared access with `borrow`, exclusive access with `mutable`,
+ownership with `take`, and several owned operands at once with `args`; native
+keyword packs follow with `kwargs`. See the
 [ownership and error contract](../tutorial/results.md#bind-arguments-before-the-callback).
 
-Mojo 1.2 can fail while selecting between native read, mutable and owned
-callback overloads. An optional named compile-time selector chooses the
-callback's argument convention before inference:
-
-| Callback positional arguments | Selector |
+| Callback positional arguments | Call |
 |---|---|
-| None | `zero=True` |
-| One read-only resource | `read=True` |
-| One `var` argument, or a default scalar such as `Int` | `owned=True` |
-| One `mut` argument | `mutable=True` |
-| Two arguments | Combine `read`, `owned` or `mut` in order: `read_read=True`, `read_owned=True`, `read_mut=True`, `owned_read=True`, `owned_owned=True`, `owned_mut=True`, `mut_read=True`, `mut_owned=True` or `mut_mut=True` |
-
-For `attempt_kwargs`, the selector describes only the positional prefix; the
-keyword values are always owned. Selectors must be `True`. Omit the selector
-when ordinary inference works; existing positional type bindings are preserved.
+| None | `Capture().run(f)` |
+| One read-only resource | `Capture.borrow(value).run(f)` |
+| One `var` argument | `Capture.take(value^).run(f)` or `Capture.args(value^).run(f)` |
+| One `mut` argument | `Capture.mutable(value).run(f)` |
+| Mixed conventions | Chain them in order, for example `Capture.mutable(first).take(second^).run(f)` |
+| Then `var **kwargs: K` | Append `.kwargs(key=value)` before `run` |
 
 <!-- example: docs/examples/attempt_selectors.mojo -->
 
-The callback remains borrowed and reusable. Selection does not copy arguments
-or captures, erase result/error types, or change when mutation becomes visible.
-The example retains the updated balance even when `debit` raises.
-
-Choose the selector matching the callback. For a normal diagnostic on an
-incompatible selector, also supply `F=type_of(f)`, for example
-`attempt[mutable=True, F=type_of(f)](f, value)`. Without that hint, Mojo 1.2
-can crash before rejecting the call. Inside a generic forwarder, the same hint
-is `F=F`. An overloaded generic forwarder may need
-the same convention selection at its own call boundary; a selector inside its
-body cannot resolve inference at the caller. See the
-[compiler details](../architecture/native-boundaries.md#compile-time-convention-selectors).
-
-The four borrowed adapters remain supported and can be saved for repeated calls:
-
-| Callback arguments | Call |
-|---|---|
-| One `mut` argument | `attempt(mutating(f), value)` |
-| One `var` argument | `attempt(consuming(f), value^)` |
-| `mut` then `var` | `attempt(mut_owned(f), first, second^)` |
-| `mut`, `var`, then `var **kwargs: K` | `attempt_kwargs(mut_owned_kwargs(f), first, second^, key=value)` |
-
-<!-- example: docs/examples/attempt_adapters.mojo -->
-
-Factories borrow the callback without calling or copying it. A saved adapter
-can be reused while that callback remains alive and unmoved. Arguments retain
-their native conventions, and the result retains the exact success and error
-types; mutations remain visible after an error. Callbacks that mutate owned
-captures still require the documented `@always_inline` workaround on Mojo 1.2.
-
-Choose the adapter matching the callback's convention. An incompatible factory
-call can still crash Mojo 1.2 during inference instead of reporting a type
-error. These four forms cover a subset of the conventions supported by selectors;
-see the [compatibility qualification](../architecture/native-boundaries.md#convention-adapters).
+`Capture.take(text^).run(length)` consumes the text and returns
+`Result[Int, Never]` for the pure callback. `Capture.take(3).mutable(balance)`
+binds an owned amount and the mutable balance in the order `deposit` declares
+them. `Capture.mutable(balance).kwargs(payment=20, fee=1).run(debit)` captures
+`debit`'s `String` error while the balance keeps the charges already applied.
+The callback is borrowed and called once. Binding does not copy arguments or
+captures, erase result or error types, or change when mutation becomes visible.
+An incompatible callback is rejected with an ordinary diagnostic.
 
 ## Fold a Result and choose what to keep
 
@@ -257,23 +226,25 @@ see [sequencing effects](functions.md#select-family-and-native-errors-before-cal
 
 <!-- example: docs/examples/attempt_once.mojo -->
 
-`attempt_once(message^)` consumes `Message("used once")`, calls it once, and
+`Capture().run(message^)` consumes `Message("used once")`, calls it once, and
 returns `Ok("used once")`, which prints `message: used once`. An empty message
-raises `7`, so `attempt_once` returns `Err(7)` with the thunk's declared `Int`
+raises `7`, so `run` returns `Err(7)` with the thunk's declared `Int`
 error, and the program prints `error: 7`.
 
-Shared `Thunk` and mutable `MutableThunk` values work with the same function.
+Shared `Thunk` and mutable `MutableThunk` values work with the same method.
 When several modes are available, consuming wins, then mutable, then shared.
 A fully bound `partial(add, 2, 3)` is already a thunk and can be passed directly.
 The result and error types are inferred, including `Never` for pure thunks.
-`Capture[E]().run(thunk^)` uses the same rules: the thunk retains its own error
-type, while `E` selects the errors of native callbacks. The example passes the
-fully bound `partial` directly to `Capture[Error]().run`.
+A library thunk retains its own error type, while `E` in `Capture[E]()`
+selects only the errors of native callbacks. The example passes the fully
+bound `partial` directly to `Capture[Error]().run`.
 
-Use `attempt_once(mut_ref(counter))` to retain a named thunk's state. The
+Use `Capture().run(mut_ref(counter))` to retain a named thunk's state. The
 example captures the first counter call's error, then succeeds on the second
 call; `counter.calls` is 2 afterward. Each invocation consumes only the reference.
-Passing `counter^` instead transfers the original callback into the operation.
+A `shared_ref(sum)` reference lends a shared thunk, so the example runs it
+twice. Passing `counter^` instead transfers the original callback
+into the operation.
 
 ## Non-empty collections and validation
 

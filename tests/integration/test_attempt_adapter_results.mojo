@@ -1,6 +1,5 @@
 """Adapted calls separate stored Results from native errors and no-value returns."""
-from fp.data import Result, Ok, Err, attempt, raise_on_err
-from fp.data import mutating, consuming
+from fp.data import Capture, Result, Ok, Err, raise_on_err
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -25,7 +24,7 @@ def own_void(var value: String):
 def main() raises:
     var value = 0
     for expected in range(1, 4):
-        var result = attempt(mutating(nested), value)
+        var result = Capture.mutable(value).run(nested)
         comptime assert type_of(result) == Result[Result[Int, AttemptAdapterResultFailure], AttemptAdapterResultFailure]
         var native_code = 0
         var stored_code = 0
@@ -37,12 +36,12 @@ def main() raises:
         assert_equal(native_code, 30 if expected == 3 else 0)
         assert_equal(stored_code, 10 * expected if expected < 3 else 0)
         assert_equal(value, expected)
-    var stopped = attempt(mutating(stop), value)
+    var stopped = Capture.mutable(value).run(stop)
     comptime assert type_of(stopped) == Result[Int,StopIteration]
     assert_equal(stopped.is_err(), True)
     assert_equal(value, 4)
-    var void_result = attempt(mutating(mutate_void), value)
+    var void_result = Capture.mutable(value).run(mutate_void)
     assert_equal(void_result.is_ok(), True)
     assert_equal(value, 6)
-    var owned_void = attempt(consuming(own_void), String("text"))
+    var owned_void = Capture.take(String("text")).run(own_void)
     assert_equal(owned_void.is_ok(), True)

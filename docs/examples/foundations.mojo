@@ -4,7 +4,7 @@ import fp
 from std.testing import assert_equal, assert_false
 from fp.adt import Data, Cases, Choice, Value
 from fp.iteration import fold_left
-from fp.data import attempt, raise_on_err
+from fp.data import Capture, raise_on_err
 
 
 @fieldwise_init
@@ -52,7 +52,7 @@ def main() raises:
         if answer < 0:
             raise InvalidCount(answer)
         return answer
-    var result = attempt(checked)
+    var result = Capture[InvalidCount]().run(checked)
     var restored = 0
     var failed = False
     try:

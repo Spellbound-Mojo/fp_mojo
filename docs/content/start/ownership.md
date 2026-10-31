@@ -31,7 +31,7 @@ a map callback, and the value is destroyed after the call. Declare a parameter
 - **Borrowing APIs** keep the source value and its origins. They never produce a
   reference that outlives the owner.
 - **Consuming APIs** make consumption visible through `var` parameters, `deinit`
-  methods or a separately named operation (`fold_owned`, `attempt_once`). Consuming an iterator is not the
+  methods or a separately named operation (`fold_owned`, `Capture.take`). Consuming an iterator is not the
   same as consuming the collection it borrows from.
 - **Copying APIs** require `Copyable` only when their semantics need a copy,
   for example the snapshots of `scan_left` or the bound
@@ -109,7 +109,7 @@ partial application, composition or a reusable owner for captured state.
 | Transfer callback state into a while loop | `while_loop(predicate, body^, carry)` | Owns the repeatable body; owned predicates use the same receiver rule. Pass `mut_ref` to retain either callback. |
 | Transfer callback state into a counted loop | `fori_loop(lower, upper, body^, carry)` | Owns a shared or mutable repeatable body; mutable invocation wins, and empty bounds still consume it. |
 | Retain callback state across a counted loop | `fori_loop_mut(lower, upper, body, carry)` | Borrows a named library body exclusively; state remains in the caller, including after an error. |
-| Capture one library call as a Result | `attempt_once(thunk^)`, `attempt_once(shared_ref(thunk))` or `attempt_once(mut_ref(thunk))` | Move the thunk or explicitly lend its shared or mutable receiver. A reference keeps the original state available, including after failure. |
+| Capture one library call as a Result | `Capture().run(thunk^)`, `Capture().run(shared_ref(thunk))` or `Capture().run(mut_ref(thunk))` | Move the thunk or explicitly lend its shared or mutable receiver. A reference keeps the original state available, including after failure. |
 | Control receiver mutation or consumption explicitly | A callable struct | Implement the shared, mutable or consuming protocol required by the operation. |
 
 A two-stage `flow` or `compose` can combine a plain function or stored thin
@@ -210,7 +210,7 @@ Every operation follows these rules:
 
 1. Higher-order operations propagate callback failures unchanged. They never
    catch an error silently, turn it into an empty Optional or return `Err`
-   unless the operation is an explicit bridge (`attempt`, `attempt_once`,
+   unless the operation is an explicit bridge (`Capture.run`,
    `raise_on_err`).
 2. The first failure stops the operation: later stages, elements, cases and
    callbacks do not run.

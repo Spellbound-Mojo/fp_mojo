@@ -40,9 +40,16 @@ uses MAX 26.7.0, whose compiler dependency matches Mojo 1.2.0.
 ## Import from source
 
 The package lives in `src/fp`. Pass `-I src` so imports such as
-`from fp.functions import pipe` resolve. Import each name from the package that
-owns it. The package root `fp` re-exports only `match`, `rewrite` and `when`, so
-`import fp` is enough to write `fp.match(...)`.
+`from fp.functions import pipe` resolve. The package root `fp` re-exports the
+everyday names, so most programs need one import:
+`from fp import pipeline, iterated, Result, Ok, Err, Capture, map, filter`.
+It also provides `pipeline_values`, `flow`, `partial`, `flat_map`, `traverse`,
+`sequence`, `fold_map`, `combine_all`, `sum_by`, `find_map`, the canonical
+monoids (`StringMonoid`, `ListMonoid`, `IntSumMonoid`, `IntProductMonoid`),
+`Accumulate`, `ValidationFamily`, `match`, `when` and `rewrite`. `map` and
+`filter` there are the eager family operations of `fp.algebra`; the lazy forms
+are `iterated(source).map(f)` or `fp.iteration.map`. Import anything else from
+the package that owns it; `import fp` is enough to write `fp.match(...)`.
 
 ```sh
 pixi run mojo run -I src docs/examples/callable_pipeline.mojo

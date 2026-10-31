@@ -49,7 +49,7 @@ struct EnsureContract[I: ApplicativeError & Monad, V: Movable & Deinitable,
     comptime BindCompatible = Self._Bind.FamilyCompatible
     """The selected family's admission of the existing validation continuation."""
     comptime Compatible = Self.InputCompatible and Self.PredicateCompatible and Self.FailureCompatible and Self.CarrierCompatible and Self.CallbackErrorsCompatible and Self.BindCompatible
-    """Selected ensure admission; legacy Piped keeps its original predicates."""
+    """Selected ensure admission."""
     comptime ReceiverCompatible = _OnceBorrowAvailable[Self.P] and _OnceBorrowAvailable[Self.G]
     """Both borrowed callbacks have a shared or consuming receiver."""
     comptime InvocationCompatible = Self.Compatible and Self.ReceiverCompatible

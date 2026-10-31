@@ -111,7 +111,7 @@ struct _IorAccumulator[K: _Accumulate, S: Semigroup, Accumulate: Bool](_Accumula
 struct IorFamily[S: Semigroup](Monad):
     """Sequential inclusive-or: Left stops, Both continues and retains diagnostics.
 
-    Select this family explicitly in checked algebra or piped operations.
+    Select this family explicitly in checked algebra or Pipeline operations.
     Dictionary primitives assume their documented carrier/callback types;
     entry-point signature admission checks embedded origins before delegation. The
     `map` transforms a Right or Both value once, preserving its diagnostics;

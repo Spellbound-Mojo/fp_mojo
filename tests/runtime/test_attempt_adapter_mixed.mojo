@@ -1,6 +1,5 @@
 """Mixed adapters preserve reusable captures, exact errors and keyword names."""
-from fp.data import Result, attempt, attempt_kwargs, raise_on_err
-from fp.data import mutating, consuming, mut_owned, mut_owned_kwargs
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -15,7 +14,7 @@ def forward_mixed[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable &
                   E: Movable & Deinitable, //, F: def(mut A, var B) raises E -> R](
     function: F, mut first: A, var second: B
 ) -> Result[R, E]:
-    return attempt(mut_owned(function), first, second^)
+    return Capture[E].mutable(first).take(second^).run(function)
 
 def explicit_never(mut value: AttemptAdapterMixedInput) raises Never -> Int:
     value.value += 1
@@ -34,9 +33,8 @@ def main() raises:
         first.value += second.value
         return first.value + owner.value
     var first = AttemptAdapterMixedInput(10)
-    var view = mut_owned(pure)
     for i in range(3):
-        var result = attempt(view, first, AttemptAdapterMixedInput(2))
+        var result = Capture.mutable(first).take(AttemptAdapterMixedInput(2)).run(pure)
         comptime assert type_of(result) == Result[Int, Never]
         assert_equal(raise_on_err(result^), 18 + 3 * i)
     assert_equal(first.value, 16)
@@ -54,21 +52,21 @@ def main() raises:
     assert_equal(code, 20)
     assert_equal(first.value, 20)
     assert_equal(calls, 4)
-    assert_equal(raise_on_err(attempt(mutating(explicit_never), first)), 21)
-    assert_equal(raise_on_err(attempt(consuming(consume_never), AttemptAdapterMixedInput(17))), 17)
+    assert_equal(raise_on_err(Capture.mutable(first).run(explicit_never)), 21)
+    assert_equal(raise_on_err(Capture.take(AttemptAdapterMixedInput(17)).run(consume_never)), 17)
 
     def keywords(mut first: AttemptAdapterMixedInput, var second: AttemptAdapterMixedInput, /, var **values: Int) raises AttemptAdapterMixedFailure {mut calls} -> Int:
         calls += 1
         first.value += second.value + len(values)
         if len(values): raise AttemptAdapterMixedFailure(first.value)
         return first.value
-    var empty = attempt_kwargs(mut_owned_kwargs(keywords), first, AttemptAdapterMixedInput(2))
+    var empty = Capture[AttemptAdapterMixedFailure].mutable(first).take(AttemptAdapterMixedInput(2)).kwargs[K=Int]().run(keywords)
     comptime assert type_of(empty) == Result[Int, AttemptAdapterMixedFailure]
     var observed: Int
     try: observed = raise_on_err(empty^)
     except error: raise Error("unexpected empty-pack error")
     assert_equal(observed, 23)
-    var named = attempt_kwargs(mut_owned_kwargs(keywords), first, AttemptAdapterMixedInput(2), function=1, first=1, values=1)
+    var named = Capture[AttemptAdapterMixedFailure].mutable(first).take(AttemptAdapterMixedInput(2)).kwargs(function=1, first=1, values=1).run(keywords)
     code = 0
     try: _ = raise_on_err(named^)
     except error: code = error.code

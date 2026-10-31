@@ -322,7 +322,7 @@
     },
     "data": {
       "scope": "Result, Optional integration, non-empty lists, Ior and Capture.",
-      "restrictions": "Capture supports zero to eight owned positional operands; mixed conventions and homogeneous keyword packs support at most three positional operands; stored native pointers use kwargs as the pack name. Legacy attempt has diagnostic restrictions. Mixed Result folds accept plain functions and stored thin pointers directly; captures use BorrowSignature.capture or as_unary. Invalid native success handlers using mut in fold/fold_owned or var in fold can crash Mojo 1.2 during inference.",
+      "restrictions": "Capture supports zero to eight owned positional operands; mixed conventions and homogeneous keyword packs support at most three positional operands; stored native pointers use kwargs as the pack name. Mixed Result folds accept plain functions and stored thin pointers directly; captures use BorrowSignature.capture or as_unary. Invalid native success handlers using mut in fold/fold_owned or var in fold can crash Mojo 1.2 during inference.",
       "evidence": [
         "docs/examples/capture_native.mojo",
         "docs/examples/result_once.mojo",
@@ -1910,7 +1910,6 @@
   ],
   "migration": [],
   "legacy_diagnostic_controls": [
-    "tests/compile_fail/attempt_adapter_wrong_convention.mojo",
     "tests/compile_fail/callable_pipeline_inferred_no_unpack.mojo",
     "tests/compile_fail/callable_pipeline_no_unpack.mojo",
     "tests/compile_fail/combinator_expansion_pair_owned.mojo",

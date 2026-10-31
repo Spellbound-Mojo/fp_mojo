@@ -1,16 +1,16 @@
 # error: aliasing values passed mutably
-from fp.data import Result, attempt, raise_on_err
+from fp.data import Result, Capture, raise_on_err
 from std.testing import assert_equal
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R](
     function: F, mut first: A
 ) -> Result[R, Never]:
-    return attempt[mutable=True](function, first)
+    return Capture.mutable(first).run(function)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A) raises X -> R](
     function: F, mut first: A
 ) -> Result[R, X]:
-    return attempt[mutable=True](function, first)
+    return Capture[X].mutable(first).run(function)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R](
     function: F, mut first: A

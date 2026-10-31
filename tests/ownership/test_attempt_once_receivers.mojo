@@ -1,6 +1,6 @@
 """Capturing shared and mutable thunks moves each result, error and state once."""
 from fp.callables import Thunk, MutableThunk, mut_ref
-from fp.data import Capture, Result, attempt_once
+from fp.data import Capture, Result
 from algebra_support.result_ownership import Token, trace
 from std.testing import assert_equal
 
@@ -37,7 +37,7 @@ def owned[mutable: Bool](fail: Bool) raises:
     comptime if mutable:
         outcome = Capture[String]().run(Mutable(Token(6, state), fail, 0))
     else:
-        outcome = attempt_once(Shared(Token(6, state), fail))
+        outcome = Capture().run(Shared(Token(6, state), fail))
     assert_equal(outcome.is_err(), fail)
     assert_equal(state[].calls, 1)
     assert_equal(state[].drops[6], 1)
@@ -51,7 +51,7 @@ def owned[mutable: Bool](fail: Bool) raises:
 def retained() raises:
     var state = trace()
     var callback = Mutable(Token(6, state), True, 0)
-    var failure = attempt_once(mut_ref(callback))
+    var failure = Capture().run(mut_ref(callback))
     assert_equal(failure.is_err(), True)
     assert_equal(callback.calls, 1)
     assert_equal(state[].drops[6], 0)
@@ -84,7 +84,7 @@ struct External[o: ImmOrigin](MutableThunk):
 
 def external(owner: List[Int], fail: Bool) -> Result[Span[Int, origin_of(owner)], Span[Int, origin_of(owner)]]:
     var callback = External(Span(owner), fail, 0)
-    return attempt_once(mut_ref(callback))
+    return Capture().run(mut_ref(callback))
 
 
 def main() raises:

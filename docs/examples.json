@@ -15,9 +15,6 @@
     "docs/examples/ap_contracts.mojo": {
       "stdout": "applied: 7\n"
     },
-    "docs/examples/attempt_adapters.mojo": {
-      "stdout": "updated: 11\nconsumed: 4\nmixed: 14\nfailed: True ; balance: -7\n"
-    },
     "docs/examples/attempt_generic.mojo": {
       "stdout": "generic attempt: receipt=3; declined=-2; balance=-2; calls=2\n"
     },

@@ -128,7 +128,7 @@ capture, extend a lifetime, or convert one native error type into another.
 Use `shared_ref(callback)` when a generic wrapper borrows a shared library
 callable and forwards it to an operation that owns its callback. No capture
 copy is required. For example, a wrapper accepting `F: Thunk` can return
-`Result[F.Out, F.Error]` from `attempt_once(shared_ref(factory))`.
+`Result[F.Out, F.Error]` from `Capture().run(shared_ref(factory))`.
 
 For operation descriptors, spell the callback as the public `SharedRef[F, o]`,
 where the wrapper accepts `ref[o] factory: F`. A sequencing wrapper then uses

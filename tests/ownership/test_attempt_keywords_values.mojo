@@ -1,5 +1,5 @@
 """Owned keyword dictionaries transfer move-only values and retain scoped native views."""
-from fp.data import attempt_kwargs, raise_on_err
+from fp.data import Capture, raise_on_err
 from std.collections import StringDict
 from std.memory import ArcPointer
 from std.testing import assert_equal
@@ -28,7 +28,7 @@ def transfer(library: Bool, drops: ArcPointer[Int], errors: ArcPointer[Int], cal
         var code = 0
         var observed = -1
         if library:
-            var result = attempt_kwargs(target, **values^)
+            var result = Capture[AttemptKeywordsValuesFailure].kwargs(**values^).run(target)
             try:
                 var token = raise_on_err(result^)
                 observed = token.value
@@ -50,11 +50,11 @@ def views(owner: List[Int]) raises:
         for entry in values.items():
             for value in entry.value: total += value
         return total
-    assert_equal(raise_on_err(attempt_kwargs(sum, owner, first=first, second=Span(owner))), 13)
+    assert_equal(raise_on_err(Capture.borrow(owner).kwargs(first=first, second=Span(owner)).run(sum)), 13)
     assert_equal(sum(owner, first=first, second=Span(owner)), 13)
     var values = StringDict[View]()
     values["view"] = first
-    assert_equal(raise_on_err(attempt_kwargs(sum, owner, **values^)), 7)
+    assert_equal(raise_on_err(Capture.borrow(owner).kwargs(**values^).run(sum)), 7)
     assert_equal(owner[0], 1)
 
 def main() raises:

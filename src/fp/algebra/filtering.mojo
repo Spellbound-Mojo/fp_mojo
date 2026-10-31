@@ -131,8 +131,8 @@ def _filter_native[V: Movable & Deinitable, T: AnyType, E: Movable & Deinitable,
                    Raised: Movable & Deinitable = I.FilterError[V, _FilterPredicate[_NativeBorrowRef[T, Bool, E, F, raising, o], inverted]]](
     ref[o] predicate: F, var value: V
 ) raises Raised -> I.Filtered[V, _FilterPredicate[_NativeBorrowRef[T, Bool, E, F, raising, o], inverted]]:
-    # Explicit parameters keep native signature evidence through Piped as well
-    # as the free operations. Both polarities borrow the callback in place;
+    # Explicit parameters keep native signature evidence through the free
+    # operations. Both polarities borrow the callback in place;
     # all native invocation belongs to callables.native. A caller whose family
     # is defaulted names its error through _BorrowErrorProbe as Raised.
     comptime C = _NativeBorrowRef[T, Bool, E, F, raising, o]

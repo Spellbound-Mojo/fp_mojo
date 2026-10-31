@@ -2,7 +2,7 @@
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
 from fp.callables import Thunk, OnceThunk
-from fp.data import Result, Ok, Err, attempt_once
+from fp.data import Capture, Result, Ok, Err
 
 
 @fieldwise_init
@@ -37,7 +37,7 @@ struct Consume(OnceThunk):
 
 
 def capture[F: OnceThunk](var callback: F) -> Result[F.Out, F.Error]:
-    return attempt_once(callback^)
+    return Capture().run(callback^)
 
 
 def forward[F: OnceThunk](var callback: F) -> Result[F.Out, F.Error]:
@@ -114,14 +114,14 @@ def main() raises:
     assert_equal(trace[].drops, SIMD[DType.int64, 4](0, 2, 2, 2))
 
     # A thunk with both shared and consuming modes is consumed.
-    var pure = attempt_once(Dual())
+    var pure = Capture().run(Dual())
     comptime assert type_of(pure) == Result[Int, Never]
     assert_equal(pure^.raise_on_err(), 2)
-    var nested = attempt_once(Nested())
+    var nested = Capture().run(Nested())
     comptime assert type_of(nested) == Result[Result[Int, Int], Never]
     var inner = nested^.raise_on_err()
     assert_true(inner.is_err())
-    var stopped = attempt_once(Stop())
+    var stopped = Capture().run(Stop())
     comptime assert type_of(stopped) == Result[Int, StopIteration]
     assert_true(stopped.is_err())
 

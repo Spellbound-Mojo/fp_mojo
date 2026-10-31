@@ -5,7 +5,7 @@ These calls prove that the bindings still select working native overloads.
 """
 from fp.algebra import OptionalFamily, ResultFamily
 from fp.callables import as_unary
-from fp.data import Result, Ok, Err, attempt, mutating
+from fp.data import Result, Ok, Err, Capture
 from fp.functions import pipe, pipeline
 from fp.iteration import iterated
 from std.builtin.variadics import TypeList
@@ -42,8 +42,7 @@ def rb_traverse(value: RejectionBindingOwner) -> Optional[Int]: return Optional(
 
 def main() raises:
     var value = RejectionBindingOwner(3)
-    var adapter = mutating[F=type_of(rb_mutate)](rb_mutate)
-    var attempted = attempt(adapter, value)
+    var attempted = Capture.mutable(value).run(rb_mutate)
     assert_equal(attempted._ok().value, 4)
     assert_equal(value.value, 4)
 

@@ -1,5 +1,5 @@
 """Read callbacks retain shared borrows when mutable overloads are also visible."""
-from fp.data import Result, attempt, attempt_kwargs, raise_on_err
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 
@@ -23,21 +23,21 @@ def fail(value: AttemptRankingInput) raises AttemptRankingFailure -> Int:
 
 def forward_read[A: Movable & Deinitable, R: Movable & Deinitable, //,
                  F: def(A) -> R](function: F, value: A) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt(function, value)
+    return Capture.borrow(value).run(function)
 
 
 def forward_raising[A: Movable & Deinitable, R: Movable & Deinitable,
                     E: Movable & Deinitable, //,
                     F: def(A) raises E -> R](function: F, value: A) -> Result[R, E] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt(function, value)
+    return Capture[E].borrow(value).run(function)
 
 
 def main() raises:
     var owner = AttemptRankingInput(7)
-    var inferred = attempt(read, owner)
+    var inferred = Capture.borrow(owner).run(read)
     comptime assert type_of(inferred) == Result[Int, Never]
     assert_equal(raise_on_err(inferred^), 7)
-    assert_equal(raise_on_err(attempt[type_of(read)](read, owner)), 7)
+    # The explicit F= binding of the removed attempt API has no Capture equivalent.
     assert_equal(raise_on_err(forward_read(read, owner)), 7)
 
     var failed = forward_raising(fail, owner)
@@ -49,13 +49,7 @@ def main() raises:
         code = error.code
     assert_equal(code, 7)
 
-    var explicit_error = attempt[type_of(fail)](fail, owner)
-    code = 0
-    try:
-        _ = raise_on_err(explicit_error^)
-    except error:
-        code = error.code
-    assert_equal(code, 7)
+    # The explicit F= binding of the removed attempt API has no Capture equivalent.
 
     var calls = 0
     def pair(first: AttemptRankingInput, second: AttemptRankingInput) {mut calls} -> Int:
@@ -68,10 +62,10 @@ def main() raises:
 
     # Reusing the same owner requires both parameters to remain shared borrows.
     for _ in range(2):
-        var summed = attempt(pair, owner, owner)
+        var summed = Capture.borrow(owner).borrow(owner).run(pair)
         comptime assert type_of(summed) == Result[Int, Never]
         assert_equal(raise_on_err(summed^), 14)
-        var rejected = attempt(pair_error, owner, owner)
+        var rejected = Capture[AttemptRankingFailure].borrow(owner).borrow(owner).run(pair_error)
         comptime assert type_of(rejected) == Result[Int, AttemptRankingFailure]
         code = 0
         try:
@@ -89,11 +83,11 @@ def main() raises:
         calls += 1
         raise AttemptRankingFailure(first.value + second.value + len(values))
 
-    var empty = attempt_kwargs(keyword_pair, owner, owner)
+    var empty = Capture.borrow(owner).borrow(owner).kwargs[K=Int]().run(keyword_pair)
     comptime assert type_of(empty) == Result[Int, Never]
     assert_equal(raise_on_err(empty^), 14)
-    assert_equal(raise_on_err(attempt_kwargs(keyword_pair, owner, owner, extra=1)), 15)
-    var keyword_failed = attempt_kwargs(keyword_error, owner, owner, extra=1)
+    assert_equal(raise_on_err(Capture.borrow(owner).borrow(owner).kwargs(extra=1).run(keyword_pair)), 15)
+    var keyword_failed = Capture[AttemptRankingFailure].borrow(owner).borrow(owner).kwargs(extra=1).run(keyword_error)
     comptime assert type_of(keyword_failed) == Result[Int, AttemptRankingFailure]
     try:
         _ = raise_on_err(keyword_failed^)

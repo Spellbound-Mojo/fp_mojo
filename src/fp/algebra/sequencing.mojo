@@ -34,8 +34,7 @@ Forward `Compatible` in generic selected-pipeline wrappers and project `Family`,
 the borrowed payload including origins, `CarrierCompatible` checks the effect
 produced by C, and `BindCompatible` is the family's continuation admission.
 `FamilyCompatible` combines the latter two without repeating input equality.
-Legacy Piped keeps its input-and-carrier entry checks; this descriptor does not
-strengthen an existing overload. `ReceiverCompatible` checks for a shared, mutable or consuming callback;
+`ReceiverCompatible` checks for a shared, mutable or consuming callback;
 `InvocationCompatible` adds it to `Compatible` for new wrapper boundaries.
 Families retain repeatability and copy checks.
 

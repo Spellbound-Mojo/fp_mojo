@@ -1,17 +1,16 @@
-from fp.data import mut_owned_kwargs
 # error: aliasing values passed mutably
-from fp.data import Result, attempt_kwargs, raise_on_err
+from fp.data import Result, Capture, raise_on_err
 from std.testing import assert_equal
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(mut_owned_kwargs(function), first, second^, **values^)
+    return Capture.mutable(first).take(second^).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises X -> R](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(mut_owned_kwargs(function), first, second^, **values^)
+    return Capture[X].mutable(first).take(second^).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R](
     function: F, mut first: A, var second: B, /, var **values: K

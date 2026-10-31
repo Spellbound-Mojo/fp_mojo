@@ -1,5 +1,5 @@
 """Keyword no-value callbacks retain literal witnesses through generic forwarding."""
-from fp.data import Result, attempt_kwargs, raise_on_err
+from fp.data import Capture, Result, raise_on_err
 from std.memory import ArcPointer
 from std.testing import assert_equal
 
@@ -16,13 +16,13 @@ struct AttemptVoidToken(Movable):
 
 def capture_pure[K: Movable & Deinitable, R: Movable & Deinitable, //,
                  F: def(var **kwargs: K) -> R](function: F, /, var **values: K) -> Result[R, Never]:
-    return attempt_kwargs(function, **values^)
+    return Capture.kwargs(**values^).run(function)
 
 
 def capture_raising[K: Movable & Deinitable, R: Movable & Deinitable,
                     E: Movable & Deinitable, //,
                     F: def(var **kwargs: K) raises E -> R](function: F, /, var **values: K) -> Result[R, E]:
-    return attempt_kwargs(function, **values^)
+    return Capture[E].kwargs(**values^).run(function)
 
 
 def explicit_value(var **values: Int) -> NoneType:
@@ -34,7 +34,7 @@ def main() raises:
     var calls = 0
     def pure(var **values: Int) {mut calls}:
         calls += 1 + len(values)
-    var empty = attempt_kwargs(pure)
+    var empty = Capture.kwargs[K=Int]().run(pure)
     comptime assert type_of(empty) == Result[type_of(None), Never]
     assert_equal(empty.is_ok(), True)
     var forwarded = capture_pure(pure, function=1, first=2, values=3)
@@ -66,12 +66,12 @@ def main() raises:
     def stopped(var **values: Int) raises StopIteration {mut calls}:
         calls += 1 + len(values)
         raise StopIteration()
-    var stop = attempt_kwargs(stopped)
+    var stop = Capture[StopIteration].kwargs[K=Int]().run(stopped)
     comptime assert type_of(stop) == Result[type_of(None), StopIteration]
     assert_equal(stop.is_err(), True)
     assert_equal(calls, 10)
 
-    var explicit = attempt_kwargs(explicit_value)
+    var explicit = Capture.kwargs[K=Int]().run(explicit_value)
     comptime assert type_of(explicit) == Result[NoneType, Never]
     assert_equal(explicit.is_ok(), True)
 

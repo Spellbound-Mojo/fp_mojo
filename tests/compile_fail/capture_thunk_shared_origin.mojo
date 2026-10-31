@@ -1,6 +1,6 @@
 # error: cannot implicitly convert
 from fp.callables import Thunk
-from fp.data import Capture, Result, attempt_once
+from fp.data import Capture, Result
 @fieldwise_init
 struct View[o: ImmOrigin](Thunk):
     comptime Out = Pointer[String, Self.o]

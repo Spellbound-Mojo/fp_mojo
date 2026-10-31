@@ -62,9 +62,8 @@ compile them through source and precompiled package imports at O0 and O3 with
 | `result_constructors.mojo` | Infer one side of Result construction with `ok[E]` and `err[T]` | [Results tutorial](../tutorial/results.md#construct-a-result-with-one-type-argument) |
 | `results.mojo` | Stored domain errors versus raised callback failures | [Results tutorial](../tutorial/results.md#transform-only-the-active-branch) |
 | `result_transform_generic.mojo` | Generic Result transformations | [Results tutorial](../tutorial/results.md#generic-transformations) |
-| `attempt_adapters.mojo` | Select a native callback argument convention with a borrowed adapter | [fp.data](../reference/data.md#select-a-native-argument-convention) |
-| `attempt_generic.mojo` | A generic transaction helper built on `attempt_kwargs` | [Results tutorial](../tutorial/results.md#generic-transaction-helpers) |
-| `attempt_once.mojo` | Capturing the failure of a consuming thunk | [fp.data](../reference/data.md#attempt_once) |
+| `attempt_generic.mojo` | A generic transaction helper built on `Capture` with forwarded keywords | [Results tutorial](../tutorial/results.md#generic-transaction-helpers) |
+| `attempt_once.mojo` | Capturing a library thunk's outcome with `Capture().run` | [fp.data](../reference/data.md#capture-a-thunks-outcome) |
 | `result_once.mojo` | Consuming handlers in Result transformations and folds | [fp.data](../reference/data.md#Result.fold_once) |
 
 ## Store values in place
@@ -109,7 +108,7 @@ compile them through source and precompiled package imports at O0 and O3 with
 | Example | What it shows | Page |
 |---|---|---|
 | `config_parser.mojo` | Parsing configuration lazily, collecting Results and validating with a fold that stops early | [Application tutorial](../tutorial/application.md#parse-and-validate-configuration) |
-| `job_router.mojo` | Routing a queue of commands with guarded, raising clauses, a context and `attempt` | [Application tutorial](../tutorial/application.md#route-commands-with-guarded-clauses) |
+| `job_router.mojo` | Routing a queue of commands with guarded, raising clauses, a context and `Capture` | [Application tutorial](../tutorial/application.md#route-commands-with-guarded-clauses) |
 
 The [non-empty validation example](../reference/data.md#non-empty-collections-and-validation)
 uses NonEmptyList for both accumulated errors and successful traversal shapes.

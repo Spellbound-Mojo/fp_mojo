@@ -1,18 +1,17 @@
 """Generic Results compose with public Result and lazy iterator operations."""
 from fp.algebra import flat_map, ResultFamily
-from fp.data import Result, attempt, attempt_kwargs, raise_on_err
-from fp.data import consuming, mut_owned, mutating
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R, mutable: Bool = True](
     function: F, mut first: A
 ) -> Result[R, Never]:
-    return attempt[mutable=True](function, first)
+    return Capture.mutable(first).run(function)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A) raises X -> R, mutable: Bool = True](
     function: F, mut first: A
 ) -> Result[R, X]:
-    return attempt[mutable=True](function, first)
+    return Capture[X].mutable(first).run(function)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R, mutable: Bool = True](
     function: F, mut first: A
@@ -27,12 +26,12 @@ def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deini
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R, owned: Bool = True](
     function: F, var first: A
 ) -> Result[R, Never]:
-    return attempt[owned=True](function, first^)
+    return Capture.take(first^).run(function)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R, owned: Bool = True](
     function: F, var first: A
 ) -> Result[R, X]:
-    return attempt[owned=True](function, first^)
+    return Capture[X].take(first^).run(function)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R, owned: Bool = True](
     function: F, var first: A
@@ -47,12 +46,12 @@ def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deini
 def capture_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs[owned=True](function, first^, **values^)
+    return Capture.take(first^).kwargs(**values^).run(function)
 
 def capture_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs[owned=True](function, first^, **values^)
+    return Capture[X].take(first^).kwargs(**values^).run(function)
 
 def forward_kwargs[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
@@ -113,12 +112,12 @@ def first(var value: Value, /, var **options: Int) -> Int:
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B
 ) -> Result[R, Never]:
-    return attempt[mut_owned=True](function, first, second^)
+    return Capture.mutable(first).take(second^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B) raises X -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B
 ) -> Result[R, X]:
-    return attempt[mut_owned=True](function, first, second^)
+    return Capture[X].mutable(first).take(second^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B
@@ -133,12 +132,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B) -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B
 ) -> Result[R, Never]:
-    return attempt[owned_mut=True](function, first^, second)
+    return Capture.take(first^).mutable(second).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B) raises X -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B
 ) -> Result[R, X]:
-    return attempt[owned_mut=True](function, first^, second)
+    return Capture[X].take(first^).mutable(second).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B) -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B
@@ -153,12 +152,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B) -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B
 ) -> Result[R, Never]:
-    return attempt[mut_mut=True](function, first, second)
+    return Capture.mutable(first).mutable(second).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B) raises X -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B
 ) -> Result[R, X]:
-    return attempt[mut_mut=True](function, first, second)
+    return Capture[X].mutable(first).mutable(second).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B) -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B

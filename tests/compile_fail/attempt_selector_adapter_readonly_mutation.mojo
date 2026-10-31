@@ -1,5 +1,6 @@
-# error: no matching function in call to 'attempt'
-from fp.data import attempt
+# error: invalid call to 'mutable'
+# error: cannot be converted
+from fp.data import Capture
 @fieldwise_init
 struct Token(Movable):
     var value: Int
@@ -9,7 +10,7 @@ def update(mut value: Token) -> Int:
     return value.value
 
 def check(value: Token):
-    _ = attempt[mutable=True](update, value)
+    _ = Capture.mutable(value).run(update)
 
 def main():
     check(Token(7))

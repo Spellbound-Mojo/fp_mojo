@@ -374,7 +374,7 @@ family proof. Input identities, errors and origin requirements remain intact.
 | `partial` | A plain function stored directly; the result implements `Thunk`/`Unary`/`Binary` |
 | `map`, `filter_map`, `flat_map`, `scan_left`, folds, reductions | Native callbacks or the operation's unary/binary protocol; owned callbacks and supported shared views use the same driver |
 | `filter`, `find`, `any`, `all` | Native predicates or `BorrowCallable`; candidates are borrowed |
-| `attempt`, `attempt_kwargs`, `attempt_once` | Native calls or an invocable library thunk, then the Result bridge in `fp.data` |
+| `Capture` | Native calls with bound arguments or an invocable library thunk, then the Result bridge in `fp.data` |
 | Result methods and folds | Native, fixed-arity or borrowed callbacks, called on the stored case |
 | `fp.match`, `fp.rewrite`, `fp.when` | Plain functions and lambdas without captures, called through their native thin function type |
 | `while_loop`, `fori_loop`, `scan` | Native callbacks, shared-receiver `Unary`/`Binary`, `BorrowCallable` predicates |

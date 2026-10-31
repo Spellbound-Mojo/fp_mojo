@@ -209,9 +209,8 @@ def _map_native[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & D
                 o: ImmOrigin, Raised: Movable & Deinitable = I.MapError[V, _ErrorProbe[A, R, E]]](
     ref[o] f: F, var value: V
 ) raises Raised -> I.Mapped[V, _NativeUnaryRef[A, R, E, F, raising, o]]:
-    # Native admission belongs to the public signatures. This shared bridge
-    # also serves Piped, whose forwarded F.A/F.R/F.E evidence Mojo 1.1 cannot
-    # equate with A/R/E inside a generic family's associated error alias.
+    # Native admission belongs to the public signatures; this shared bridge
+    # only spells the adapter.
     comptime D = _NativeUnaryRef[A, R, E, F, raising, o]
     comptime assert I.MapError[V, D] == I.MapError[V, _ErrorProbe[A, R, E]]
     comptime assert _ErrorCompatible[Raised, I.MapError[V, D]]

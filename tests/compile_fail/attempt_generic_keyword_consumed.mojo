@@ -1,16 +1,16 @@
 # error: use of uninitialized value
-from fp.data import Result, attempt_kwargs, raise_on_err
+from fp.data import Result, Capture, raise_on_err
 from std.testing import assert_equal
 
 def capture[K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var **kwargs: K) -> R](
     function: F, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(function, **values^)
+    return Capture.kwargs(**values^).run(function)
 
 def capture[K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var **kwargs: K) raises X -> R](
     function: F, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(function, **values^)
+    return Capture[X].kwargs(**values^).run(function)
 
 def forward[K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var **kwargs: K) -> R](
     function: F, /, var **values: K

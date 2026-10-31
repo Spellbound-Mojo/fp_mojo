@@ -1,6 +1,5 @@
 """Two generic returns preserve every admitted argument convention and exact errors."""
-from fp.data import Result, attempt_kwargs, raise_on_err
-from fp.data import mut_owned_kwargs
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -14,12 +13,12 @@ struct Failure(Movable):
 def capture[K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var **kwargs: K) -> R, zero: Bool = True](
     function: F, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs[zero=True](function, **values^)
+    return Capture.kwargs(**values^).run(function)
 
 def capture[K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var **kwargs: K) raises X -> R, zero: Bool = True](
     function: F, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs[zero=True](function, **values^)
+    return Capture[X].kwargs(**values^).run(function)
 
 def forward[K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var **kwargs: K) -> R, zero: Bool = True](
     function: F, /, var **values: K
@@ -34,12 +33,12 @@ def forward[K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deini
 def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> R, read: Bool = True](
     function: F, first: A, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs[read=True](function, first, **values^)
+    return Capture.borrow(first).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) raises X -> R, read: Bool = True](
     function: F, first: A, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs[read=True](function, first, **values^)
+    return Capture[X].borrow(first).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, /, var **kwargs: K) -> R, read: Bool = True](
     function: F, first: A, /, var **values: K
@@ -54,12 +53,12 @@ def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deini
 def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs[owned=True](function, first^, **values^)
+    return Capture.take(first^).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) raises X -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs[owned=True](function, first^, **values^)
+    return Capture[X].take(first^).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, /, var **kwargs: K) -> R, owned: Bool = True](
     function: F, var first: A, /, var **values: K
@@ -74,12 +73,12 @@ def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deini
 def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> R, mutable: Bool = True](
     function: F, mut first: A, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs[mutable=True](function, first, **values^)
+    return Capture.mutable(first).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) raises X -> R, mutable: Bool = True](
     function: F, mut first: A, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs[mutable=True](function, first, **values^)
+    return Capture[X].mutable(first).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, /, var **kwargs: K) -> R, mutable: Bool = True](
     function: F, mut first: A, /, var **values: K
@@ -94,12 +93,12 @@ def forward[A: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> R, read_read: Bool = True](
     function: F, first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs[read_read=True](function, first, second, **values^)
+    return Capture.borrow(first).borrow(second).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) raises X -> R, read_read: Bool = True](
     function: F, first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs[read_read=True](function, first, second, **values^)
+    return Capture[X].borrow(first).borrow(second).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B, /, var **kwargs: K) -> R, read_read: Bool = True](
     function: F, first: A, second: B, /, var **values: K
@@ -114,12 +113,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> R, read_owned: Bool = True](
     function: F, first: A, var second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs[read_owned=True](function, first, second^, **values^)
+    return Capture.borrow(first).take(second^).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) raises X -> R, read_owned: Bool = True](
     function: F, first: A, var second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs[read_owned=True](function, first, second^, **values^)
+    return Capture[X].borrow(first).take(second^).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B, /, var **kwargs: K) -> R, read_owned: Bool = True](
     function: F, first: A, var second: B, /, var **values: K
@@ -134,12 +133,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs[read_mut=True](function, first, second, **values^)
+    return Capture.borrow(first).mutable(second).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) raises X -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt_kwargs[read_mut=True](function, first, second, **values^)
+    return Capture[X].borrow(first).mutable(second).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B, /, var **kwargs: K) -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B, /, var **values: K
@@ -154,12 +153,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> R, owned_read: Bool = True](
     function: F, var first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs[owned_read=True](function, first^, second, **values^)
+    return Capture.take(first^).borrow(second).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) raises X -> R, owned_read: Bool = True](
     function: F, var first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs[owned_read=True](function, first^, second, **values^)
+    return Capture[X].take(first^).borrow(second).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B, /, var **kwargs: K) -> R, owned_read: Bool = True](
     function: F, var first: A, second: B, /, var **values: K
@@ -174,12 +173,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs[owned_owned=True](function, first^, second^, **values^)
+    return Capture.take(first^).take(second^).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) raises X -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs[owned_owned=True](function, first^, second^, **values^)
+    return Capture[X].take(first^).take(second^).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B, /, var **kwargs: K) -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B, /, var **values: K
@@ -194,12 +193,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs[owned_mut=True](function, first^, second, **values^)
+    return Capture.take(first^).mutable(second).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) raises X -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs[owned_mut=True](function, first^, second, **values^)
+    return Capture[X].take(first^).mutable(second).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B, /, var **kwargs: K) -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B, /, var **values: K
@@ -214,12 +213,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs[mut_read=True](function, first, second, **values^)
+    return Capture.mutable(first).borrow(second).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises X -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs[mut_read=True](function, first, second, **values^)
+    return Capture[X].mutable(first).borrow(second).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B, /, var **values: K
@@ -234,12 +233,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs[mut_owned=True](function, first, second^, **values^)
+    return Capture.mutable(first).take(second^).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises X -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs[mut_owned=True](function, first, second^, **values^)
+    return Capture[X].mutable(first).take(second^).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B, /, var **values: K
@@ -254,12 +253,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs[mut_mut=True](function, first, second, **values^)
+    return Capture.mutable(first).mutable(second).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) raises X -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs[mut_mut=True](function, first, second, **values^)
+    return Capture[X].mutable(first).mutable(second).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B, /, var **kwargs: K) -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B, /, var **values: K

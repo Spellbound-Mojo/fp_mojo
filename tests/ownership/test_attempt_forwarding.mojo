@@ -1,6 +1,5 @@
 """Forwarding preserves borrowed inputs, move-only results/errors and callback ownership."""
-from fp.data import attempt, raise_on_err
-from fp.data import consuming
+from fp.data import Capture, raise_on_err
 from std.memory import ArcPointer
 from std.testing import assert_equal
 
@@ -46,7 +45,7 @@ def exercise_1_0_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt[read=True](target, left)
+            var result = Capture[Failure].borrow(left).run(target)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -76,7 +75,7 @@ def exercise_1_0_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt[read=True](target, left)
+            var result = Capture.borrow(left).run(target)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -99,7 +98,7 @@ def exercise_1_1_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt[owned=True](target, left^)
+            var result = Capture[Failure].take(left^).run(target)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -128,7 +127,7 @@ def exercise_1_1_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt[owned=True](target, left^)
+            var result = Capture.take(left^).run(target)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -151,7 +150,7 @@ def exercise_2_0_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt[read_read=True](target, left, right)
+            var result = Capture[Failure].borrow(left).borrow(right).run(target)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -183,7 +182,7 @@ def exercise_2_0_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt[read_read=True](target, left, right)
+            var result = Capture.borrow(left).borrow(right).run(target)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -208,7 +207,7 @@ def exercise_2_1_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt[owned_read=True](target, left^, right)
+            var result = Capture[Failure].take(left^).borrow(right).run(target)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -239,7 +238,7 @@ def exercise_2_1_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt[owned_read=True](target, left^, right)
+            var result = Capture.take(left^).borrow(right).run(target)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -263,7 +262,7 @@ def exercise_2_2_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt[read_owned=True](target, left, right^)
+            var result = Capture[Failure].borrow(left).take(right^).run(target)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -294,7 +293,7 @@ def exercise_2_2_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt[read_owned=True](target, left, right^)
+            var result = Capture.borrow(left).take(right^).run(target)
             var output = raise_on_err(result^)
             observed = output.value
         else:
@@ -318,7 +317,7 @@ def exercise_2_3_0(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed = -1
         if library:
-            var result = attempt[owned_owned=True](target, left^, right^)
+            var result = Capture[Failure].take(left^).take(right^).run(target)
             try:
                 var output = raise_on_err(result^)
                 observed = output.value
@@ -348,7 +347,7 @@ def exercise_2_3_1(library: Bool, fail: Bool, counts: Counts) raises:
         var caught = False
         var observed: Int
         if library:
-            var result = attempt[owned_owned=True](target, left^, right^)
+            var result = Capture.take(left^).take(right^).run(target)
             var output = raise_on_err(result^)
             observed = output.value
         else:

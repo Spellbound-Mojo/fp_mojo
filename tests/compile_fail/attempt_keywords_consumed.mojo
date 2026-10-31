@@ -1,5 +1,5 @@
 # error: use of uninitialized value
-from fp.data import attempt_kwargs
+from fp.data import Capture
 @fieldwise_init
 struct Token(Movable):
     var value: Int
@@ -9,5 +9,5 @@ def target(var **values: Token) -> Int:
 
 def main():
     var token = Token(7)
-    _ = attempt_kwargs(target, value=token^)
+    _ = Capture.kwargs(value=token^).run(target)
     _ = token.value

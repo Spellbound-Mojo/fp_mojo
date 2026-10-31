@@ -1,5 +1,5 @@
 """Native no-value callbacks preserve register arguments through borrowed and stored calls."""
-from fp.data import Result, attempt, consuming, raise_on_err
+from fp.data import Result, Capture, raise_on_err
 from fp.functions import as_unary, pipe
 from std.memory import ArcPointer
 from std.testing import assert_equal
@@ -17,12 +17,12 @@ struct RegisterVoidFailure(Movable):
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var value: A
 ) -> Result[R, Never]:
-    return attempt(consuming(function), value^)
+    return Capture.args(value^).run(function)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, F: def(var A) raises E -> R](
     function: F, var value: A
 ) -> Result[R, E]:
-    return attempt(consuming(function), value^)
+    return Capture[E].args(value^).run(function)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var value: A
@@ -54,9 +54,8 @@ def borrowed(calls: ArcPointer[Int], drops: ArcPointer[Int]) raises:
     var first = forward(callback, 1)
     comptime assert type_of(first) == Result[type_of(None), Never]
     assert_equal(first.is_ok(), True)
-    var saved = consuming(callback)
     assert_equal(drops[], 0)
-    assert_equal(attempt(saved, 2).is_ok(), True)
+    assert_equal(Capture.args(2).run(callback).is_ok(), True)
     assert_equal(calls[], 23)
 
 def stored(calls: ArcPointer[Int], drops: ArcPointer[Int]) raises:

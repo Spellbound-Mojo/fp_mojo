@@ -190,7 +190,7 @@ comptime ProductContract[I: Applicative, V: Movable & Deinitable, W: Movable & D
 
 This specializes Map2Contract with the canonical pair callback. Generic code
 can forward Compatible and name Out and Error without private adapter types.
-OperationCompatible preserves the legacy free and piped admission, while
+OperationCompatible preserves the free-function admission, while
 FamilyCompatible additionally supplies selected-pipeline carrier checks.
 The family retains its ordering, copying, failure and deferral semantics.
 

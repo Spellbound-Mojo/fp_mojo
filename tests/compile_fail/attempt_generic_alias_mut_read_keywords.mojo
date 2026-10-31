@@ -1,16 +1,16 @@
 # error: aliasing values passed mutably
-from fp.data import Result, attempt_kwargs, raise_on_err
+from fp.data import Result, Capture, raise_on_err
 from std.testing import assert_equal
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> R](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs[mut_read=True](function, first, second, **values^)
+    return Capture.mutable(first).borrow(second).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) raises X -> R](
     function: F, mut first: A, second: B, /, var **values: K
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt_kwargs[mut_read=True](function, first, second, **values^)
+    return Capture[X].mutable(first).borrow(second).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B, /, var **kwargs: K) -> R](
     function: F, mut first: A, second: B, /, var **values: K

@@ -1,11 +1,11 @@
 """Generic shared wrappers forward their original exact result and error types."""
 from fp.callables import Thunk,Unary,Binary,BorrowCallable,shared_ref,call_once,invoke_borrowed_once
-from fp.data import Result,attempt_once
+from fp.data import Capture, Result
 from test_shared_ref_shapes import Many
 from std.testing import assert_equal
 
 def capture[F:Thunk](factory:F)->Result[F.Out,F.Error]:
-    return attempt_once(shared_ref(factory))
+    return Capture().run(shared_ref(factory))
 
 def invoke[F:Unary](function:F,var value:F.Arg) raises F.Error -> F.Out:
     return call_once(shared_ref(function),value^)

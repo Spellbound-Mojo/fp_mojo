@@ -1,6 +1,5 @@
 """Mutable forwarding preserves visible changes before success or typed failure."""
-from fp.data import Result, attempt, attempt_kwargs, raise_on_err
-from fp.data import mut_owned, mut_owned_kwargs, mutating
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -26,13 +25,13 @@ def exercise_0_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var code = 0
         if pure:
             if library:
-                var captured: Result[Int, Never] = attempt[mutable=True](success, first)
+                var captured: Result[Int, Never] = Capture.mutable(first).run(success)
                 observed = raise_on_err(captured^)
             else:
                 observed = success(first)
         else:
             if library:
-                var captured: Result[Int, Failure] = attempt[mutable=True](fallible, first)
+                var captured: Result[Int, Failure] = Capture[Failure].mutable(first).run(fallible)
                 try: observed = raise_on_err(captured^)
                 except error: code = error.code
             else:
@@ -64,13 +63,13 @@ def exercise_0_1(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var code = 0
         if pure:
             if library:
-                var captured: Result[Int, Never] = attempt[owned_mut=True](success, first, second)
+                var captured: Result[Int, Never] = Capture.take(first).mutable(second).run(success)
                 observed = raise_on_err(captured^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var captured: Result[Int, Failure] = attempt[owned_mut=True](fallible, first, second)
+                var captured: Result[Int, Failure] = Capture[Failure].take(first).mutable(second).run(fallible)
                 try: observed = raise_on_err(captured^)
                 except error: code = error.code
             else:
@@ -103,13 +102,13 @@ def exercise_0_2(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var code = 0
         if pure:
             if library:
-                var captured: Result[Int, Never] = attempt[owned_mut=True](success, first, second)
+                var captured: Result[Int, Never] = Capture.take(first).mutable(second).run(success)
                 observed = raise_on_err(captured^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var captured: Result[Int, Failure] = attempt[owned_mut=True](fallible, first, second)
+                var captured: Result[Int, Failure] = Capture[Failure].take(first).mutable(second).run(fallible)
                 try: observed = raise_on_err(captured^)
                 except error: code = error.code
             else:
@@ -141,13 +140,13 @@ def exercise_0_3(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var code = 0
         if pure:
             if library:
-                var captured: Result[Int, Never] = attempt[mut_owned=True](success, first, second)
+                var captured: Result[Int, Never] = Capture.mutable(first).take(second).run(success)
                 observed = raise_on_err(captured^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var captured: Result[Int, Failure] = attempt[mut_owned=True](fallible, first, second)
+                var captured: Result[Int, Failure] = Capture[Failure].mutable(first).take(second).run(fallible)
                 try: observed = raise_on_err(captured^)
                 except error: code = error.code
             else:
@@ -180,13 +179,13 @@ def exercise_0_4(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var code = 0
         if pure:
             if library:
-                var captured: Result[Int, Never] = attempt[mut_owned=True](success, first, second)
+                var captured: Result[Int, Never] = Capture.mutable(first).take(second).run(success)
                 observed = raise_on_err(captured^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var captured: Result[Int, Failure] = attempt[mut_owned=True](fallible, first, second)
+                var captured: Result[Int, Failure] = Capture[Failure].mutable(first).take(second).run(fallible)
                 try: observed = raise_on_err(captured^)
                 except error: code = error.code
             else:
@@ -220,13 +219,13 @@ def exercise_0_5(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var code = 0
         if pure:
             if library:
-                var captured: Result[Int, Never] = attempt[mut_mut=True](success, first, second)
+                var captured: Result[Int, Never] = Capture.mutable(first).mutable(second).run(success)
                 observed = raise_on_err(captured^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var captured: Result[Int, Failure] = attempt[mut_mut=True](fallible, first, second)
+                var captured: Result[Int, Failure] = Capture[Failure].mutable(first).mutable(second).run(fallible)
                 try: observed = raise_on_err(captured^)
                 except error: code = error.code
             else:
@@ -261,13 +260,13 @@ def exercise_1_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if count == 0:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mutable=True](success, first)
+                    var captured: Result[Int, Never] = Capture.mutable(first).kwargs[K=Int]().run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mutable=True](fallible, first)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).kwargs[K=Int]().run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -276,13 +275,13 @@ def exercise_1_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 1:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mutable=True](success, first, function=3)
+                    var captured: Result[Int, Never] = Capture.mutable(first).kwargs(function=3).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, function=3)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mutable=True](fallible, first, function=3)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).kwargs(function=3).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -291,13 +290,13 @@ def exercise_1_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 2:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mutable=True](success, first, function=3, first=5)
+                    var captured: Result[Int, Never] = Capture.mutable(first).kwargs(function=3, first=5).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, function=3, first=5)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mutable=True](fallible, first, function=3, first=5)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).kwargs(function=3, first=5).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -332,13 +331,13 @@ def exercise_1_1(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if count == 0:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[owned_mut=True](success, first, second)
+                    var captured: Result[Int, Never] = Capture.take(first).mutable(second).kwargs[K=Int]().run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[owned_mut=True](fallible, first, second)
+                    var captured: Result[Int, Failure] = Capture[Failure].take(first).mutable(second).kwargs[K=Int]().run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -347,13 +346,13 @@ def exercise_1_1(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 1:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[owned_mut=True](success, first, second, function=3)
+                    var captured: Result[Int, Never] = Capture.take(first).mutable(second).kwargs(function=3).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[owned_mut=True](fallible, first, second, function=3)
+                    var captured: Result[Int, Failure] = Capture[Failure].take(first).mutable(second).kwargs(function=3).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -362,13 +361,13 @@ def exercise_1_1(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 2:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[owned_mut=True](success, first, second, function=3, first=5)
+                    var captured: Result[Int, Never] = Capture.take(first).mutable(second).kwargs(function=3, first=5).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3, first=5)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[owned_mut=True](fallible, first, second, function=3, first=5)
+                    var captured: Result[Int, Failure] = Capture[Failure].take(first).mutable(second).kwargs(function=3, first=5).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -404,13 +403,13 @@ def exercise_1_2(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if count == 0:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[owned_mut=True](success, first, second)
+                    var captured: Result[Int, Never] = Capture.take(first).mutable(second).kwargs[K=Int]().run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[owned_mut=True](fallible, first, second)
+                    var captured: Result[Int, Failure] = Capture[Failure].take(first).mutable(second).kwargs[K=Int]().run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -419,13 +418,13 @@ def exercise_1_2(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 1:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[owned_mut=True](success, first, second, function=3)
+                    var captured: Result[Int, Never] = Capture.take(first).mutable(second).kwargs(function=3).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[owned_mut=True](fallible, first, second, function=3)
+                    var captured: Result[Int, Failure] = Capture[Failure].take(first).mutable(second).kwargs(function=3).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -434,13 +433,13 @@ def exercise_1_2(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 2:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[owned_mut=True](success, first, second, function=3, first=5)
+                    var captured: Result[Int, Never] = Capture.take(first).mutable(second).kwargs(function=3, first=5).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3, first=5)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[owned_mut=True](fallible, first, second, function=3, first=5)
+                    var captured: Result[Int, Failure] = Capture[Failure].take(first).mutable(second).kwargs(function=3, first=5).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -475,13 +474,13 @@ def exercise_1_3(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if count == 0:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_owned=True](success, first, second)
+                    var captured: Result[Int, Never] = Capture.mutable(first).take(second).kwargs[K=Int]().run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_owned=True](fallible, first, second)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).take(second).kwargs[K=Int]().run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -490,13 +489,13 @@ def exercise_1_3(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 1:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_owned=True](success, first, second, function=3)
+                    var captured: Result[Int, Never] = Capture.mutable(first).take(second).kwargs(function=3).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_owned=True](fallible, first, second, function=3)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).take(second).kwargs(function=3).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -505,13 +504,13 @@ def exercise_1_3(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 2:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_owned=True](success, first, second, function=3, first=5)
+                    var captured: Result[Int, Never] = Capture.mutable(first).take(second).kwargs(function=3, first=5).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3, first=5)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_owned=True](fallible, first, second, function=3, first=5)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).take(second).kwargs(function=3, first=5).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -547,13 +546,13 @@ def exercise_1_4(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if count == 0:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_owned=True](success, first, second)
+                    var captured: Result[Int, Never] = Capture.mutable(first).take(second).kwargs[K=Int]().run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_owned=True](fallible, first, second)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).take(second).kwargs[K=Int]().run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -562,13 +561,13 @@ def exercise_1_4(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 1:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_owned=True](success, first, second, function=3)
+                    var captured: Result[Int, Never] = Capture.mutable(first).take(second).kwargs(function=3).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_owned=True](fallible, first, second, function=3)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).take(second).kwargs(function=3).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -577,13 +576,13 @@ def exercise_1_4(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 2:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_owned=True](success, first, second, function=3, first=5)
+                    var captured: Result[Int, Never] = Capture.mutable(first).take(second).kwargs(function=3, first=5).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3, first=5)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_owned=True](fallible, first, second, function=3, first=5)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).take(second).kwargs(function=3, first=5).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -620,13 +619,13 @@ def exercise_1_5(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         if count == 0:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_mut=True](success, first, second)
+                    var captured: Result[Int, Never] = Capture.mutable(first).mutable(second).kwargs[K=Int]().run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_mut=True](fallible, first, second)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).mutable(second).kwargs[K=Int]().run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -635,13 +634,13 @@ def exercise_1_5(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 1:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_mut=True](success, first, second, function=3)
+                    var captured: Result[Int, Never] = Capture.mutable(first).mutable(second).kwargs(function=3).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_mut=True](fallible, first, second, function=3)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).mutable(second).kwargs(function=3).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:
@@ -650,13 +649,13 @@ def exercise_1_5(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         elif count == 2:
             if pure:
                 if library:
-                    var captured: Result[Int, Never] = attempt_kwargs[mut_mut=True](success, first, second, function=3, first=5)
+                    var captured: Result[Int, Never] = Capture.mutable(first).mutable(second).kwargs(function=3, first=5).run(success)
                     observed = raise_on_err(captured^)
                 else:
                     observed = success(first, second, function=3, first=5)
             else:
                 if library:
-                    var captured: Result[Int, Failure] = attempt_kwargs[mut_mut=True](fallible, first, second, function=3, first=5)
+                    var captured: Result[Int, Failure] = Capture[Failure].mutable(first).mutable(second).kwargs(function=3, first=5).run(fallible)
                     try: observed = raise_on_err(captured^)
                     except error: code = error.code
                 else:

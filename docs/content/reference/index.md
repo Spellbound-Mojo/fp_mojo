@@ -16,6 +16,10 @@ public contracts name admission, output families and exact native errors.
 
 ## Packages
 
+The root package `fp` re-exports the everyday names listed in
+[Import from source](../start/installation.md#import-from-source); each is the
+same declaration as in the package below.
+
 | Package | Contents |
 |---|---|
 | [`fp.callables`](callables.md) | Callable protocols, receiver modes and `as_unary` |

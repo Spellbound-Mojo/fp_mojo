@@ -362,10 +362,9 @@ name in a stored pointer's type and cannot convert between names, even without
 this library. Direct function declarations and captured callbacks retain their
 existing keyword spelling.
 
-The older `attempt`, `attempt_kwargs`, convention selectors and borrowed
-adapters remain available. Their compiler inference limitations are described
-in the [compatibility reference](../reference/data.md#select-a-native-argument-convention).
-New code can use `Capture` without callback-type hints.
+`Capture` replaces the former `attempt` functions, convention selectors and
+borrowed adapters; the [convention table](../reference/data.md#select-a-native-argument-convention)
+maps each callback shape to its binding.
 
 ## Aggregate a sequence
 

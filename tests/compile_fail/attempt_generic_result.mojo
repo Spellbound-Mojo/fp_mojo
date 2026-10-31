@@ -1,16 +1,16 @@
 # error: cannot implicitly convert
-from fp.data import Result, attempt, raise_on_err
+from fp.data import Result, Capture, raise_on_err
 from std.testing import assert_equal
 
 def capture[R: Movable & Deinitable, //, F: def() -> R](
     function: F
 ) -> Result[R, Never]:
-    return attempt(function)
+    return Capture().run(function)
 
 def capture[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raises X -> R](
     function: F
 ) -> Result[R, X]:
-    return attempt(function)
+    return Capture[X]().run(function)
 
 def forward[R: Movable & Deinitable, //, F: def() -> R](
     function: F

@@ -1,16 +1,16 @@
 # error: origin_of(local)
-from fp.data import Result, attempt, raise_on_err
+from fp.data import Result, Capture, raise_on_err
 from std.testing import assert_equal
 
 def capture[R: Movable & Deinitable, //, F: def() -> R](
     function: F
 ) -> Result[R, Never]:
-    return attempt[zero=True](function)
+    return Capture().run(function)
 
 def capture[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raises X -> R](
     function: F
 ) -> Result[R, X]:
-    return attempt[zero=True](function)
+    return Capture[X]().run(function)
 
 def forward[R: Movable & Deinitable, //, F: def() -> R](
     function: F
@@ -25,12 +25,12 @@ def forward[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raise
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
 ) -> Result[R, Never]:
-    return attempt[owned=True](function, first^)
+    return Capture.take(first^).run(function)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](
     function: F, var first: A
 ) -> Result[R, X]:
-    return attempt[owned=True](function, first^)
+    return Capture[X].take(first^).run(function)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A

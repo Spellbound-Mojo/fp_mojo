@@ -67,7 +67,7 @@ result retains its native type and origins. Errors must match `E`, with
 widening permitted from `Never`, as with `invoke_borrowed`.
 
 Use `shared_ref(callback)` to lend a shared library callable explicitly. For
-example, `attempt_once(shared_ref(factory))` leaves the factory available for
+example, `Capture().run(shared_ref(factory))` leaves the factory available for
 another call, even when it owns noncopyable captures. A stored reference can be
 passed by name repeatedly. It supports the original's shared thunk, unary,
 binary and borrowed-argument shapes, including distinct native error types.

@@ -200,7 +200,7 @@ trait MutableThunk(ThunkContract, Movable, Deinitable):
         ...
 
 trait OnceThunk(ThunkContract, Movable, Deinitable):
-    """A producer that is called at most once, consuming its state; `attempt_once` takes one."""
+    """A producer that is called at most once, consuming its state; `Capture().run` takes one."""
     def call_once(deinit self) raises Self.Error -> Self.Out:
         """Produce a value.
 

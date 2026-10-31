@@ -15,7 +15,7 @@ constructor directly. A bare native `Variant` is not a match subject.
 
 `fold_left(range(1, 6), 0, add)` returns `15` after five calls to `add`.
 `Pair(total, 7)` converts to `Choice[Term]`, and the match calls the `Pair`
-clause, which returns `15 + 7 = 22`. `attempt(checked)` wraps that answer in
+clause, which returns `15 + 7 = 22`. `Capture[InvalidCount]().run(checked)` wraps that answer in
 `Ok`, and `raise_on_err` returns `22` without raising. The program prints
 `fold = 15 ; match = 22 ; callbacks = 5`.
 

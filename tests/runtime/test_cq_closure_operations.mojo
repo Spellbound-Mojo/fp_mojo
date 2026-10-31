@@ -1,5 +1,5 @@
 """Direct controls for operations previously covered only by family integration."""
-from fp.data import Ok, Err, Result, attempt, raise_on_err
+from fp.data import Capture, Ok, Err, Result, raise_on_err
 from fp.iteration import reduce_optional
 from fp.functions import pipe
 from std.testing import assert_equal
@@ -17,7 +17,7 @@ def main() raises:
     assert_equal(failure.is_err(), True)
     check_error_only_folds()
     check_optional_reduction()
-    var captured = attempt(raising_thunk)
+    var captured = Capture().run(raising_thunk)
     var caught = False
     try:
         _ = raise_on_err(captured^)

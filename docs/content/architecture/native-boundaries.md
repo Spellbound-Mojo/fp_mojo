@@ -1305,6 +1305,15 @@ would not reduce for a symbolic `G`, breaking generic wrappers.
 - **Operation contracts** moved from `fp.algebra` to `fp.algebra.contracts`.
   They exist for generic wrappers only, so everyday `fp.algebra` imports no
   longer list them.
+- **`attempt`, `attempt_kwargs`, `attempt_once`** and the borrowed
+  `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs` adapters were
+  removed. `Capture` covers every convention they served, bound before callback
+  admission by `args`, `borrow`, `mutable`, `take` and `kwargs`, and runs library
+  thunks through `Capture().run(thunk^)`, `mut_ref(thunk)` or `shared_ref(thunk)`.
+  The named convention selectors and `F=` adapter binding have no equivalent:
+  they were workarounds for Mojo 1.2 inference crashes that argument-first
+  binding avoids. The one-shot engine remains private as
+  `fp.data._attempt._attempt_once` beneath Capture.
 
 ## Callables and argument packs
 
@@ -1318,7 +1327,7 @@ would not reduce for a symbolic `G`, breaking generic wrappers.
 | No concatenation of unpacked positional arguments, no `Tuple` unpacking into a call, one variadic pack per signature, no public `VariadicPack` constructor. The private `_create_dynamic_pack` erases origins and crashed the compiler when used generically. | One `partial` overload per bound count (up to 8); no nested partials. | Pack concatenation or a public, origin-preserving pack constructor. |
 | Converting a read parameter into an **owned** pack delivers a dangling value for types that are not `ImplicitlyCopyable`. | `partial` forwards remaining arguments as a read pack; owned delivery to plain functions uses fixed signatures. | Correct owned-pack conversion. |
 | A pack-typed function and a fixed-arity function have different calling conventions; `rebind` between them is rejected. Pack-to-pack rebinding that agrees at instantiation works. | `Partial.call` rebinds to the one- or two-element pack type. | — |
-| Keyword packs are homogeneous, cannot be forwarded into named parameters, and parameter names are not reflected. | No keyword binding in `partial`. A call needing keywords or defaults is written as a closure. `attempt_kwargs` forwards only native `**kwargs: K` packs. | Heterogeneous keyword packs forwarded into named parameters, or signature reflection. |
+| Keyword packs are homogeneous, cannot be forwarded into named parameters, and parameter names are not reflected. | No keyword binding in `partial`. A call needing keywords or defaults is written as a closure. `Capture.kwargs` forwards only native `**kwargs: K` packs. | Heterogeneous keyword packs forwarded into named parameters, or signature reflection. |
 | `mut` parameters do not convert to pack-typed signatures. | `partial` rejects `mut` parameters. | — |
 | A factory's `where` clause gives no evidence in its return type: a reference to a generic function with a closure-typed parameter fails there ("lacking evidence"), while a struct with that parameter works. Such a struct constructed inline as another constructor's argument is rejected ("cannot implicitly convert X to X"); built into a local first, it is accepted. | Delivery adapters are structs, and factories build them in a local first. | Where-clause evidence in signatures. |
 | A conditional conformance whose `where` clause inspects a function type directly (`conforms_to(F, def(A) -> R)`) makes the struct's methods `capturing`, which breaks the conformance. | `Composition` takes its arity as an explicit parameter computed by `flow` and `compose`. | — |

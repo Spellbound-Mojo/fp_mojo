@@ -45,7 +45,7 @@ Where each consumer enters:
 | Consumer | Accepts |
 |---|---|
 | `pipe`, `flow`, `compose` | Two to eight plain functions, or library stages; inferred two-stage calls also mix a plain function or stored thin pointer with one library stage directly. `pipe` borrows a shared stage; compositions own their stages. Capturing unary closures use `as_unary`. |
-| `piped(...).then` | Plain functions, closures and `Unary` values, one per call, with no limit |
+| `pipeline(...).then` | Plain functions, closures (after `.raising[E]()` when they raise) and `Unary` values, one per call, with no limit |
 | `flip` | `Binary` values and plain functions with two or more parameters |
 | Lazy `map`, `filter_map`, `flat_map`, `scan_left` | Native callbacks and shared or mutable library unary/binary values |
 | `fori_loop`, `while_loop`, `scan` | Native callbacks and shared-receiver `Unary`/`Binary` values |
@@ -54,7 +54,7 @@ Where each consumer enters:
 | Family `filter` and `filter_not` | Native predicates, shared views and owned `BorrowMutableCallable` or `BorrowCallable`; `mut_ref` preserves caller-owned state. |
 | `while_loop` predicates | Native predicates and `BorrowCallable` |
 | `Result` methods and folds | Native callbacks, `Unary`, `OnceUnary`, `BorrowCallable` and `BorrowOnceCallable` |
-| `attempt_once` | `Thunk`, `MutableThunk` or `OnceThunk`; consuming, then mutable, then shared receiver priority |
+| `Capture().run(thunk)` | `Thunk`, `MutableThunk` or `OnceThunk`; consuming, then mutable, then shared receiver priority |
 | `fp.match` and `fp.rewrite` clauses | Plain functions and lambdas without captures, taking one to three parameters |
 | `fp.algebra`, `fp.effects` | Native functions and closures for `map`, `flat_map`, `traverse`, `modify`, `censor` and `local`; `Unary`, `Binary`, `Thunk` in any receiver mode; `BorrowCallable` for Reader's `local` and `action`, which also takes `BorrowOnceCallable` |
 

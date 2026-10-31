@@ -10,7 +10,7 @@ from fp.callables.protocols import UnaryContract, BinaryContract, ThunkContract
 
 
 # The policy a callback's `Result[T, List[E]]` selects: Validation with list
-# concatenation, exactly as Piped's `par_traverse` infers its default.
+# concatenation, as accumulating Validation traversal infers its default.
 comptime _AccumulatingFor[R: Movable & Deinitable] = ValidationFamily[_ListErrors[R]]
 
 # Guard each projection: a Result whose stored error is a native List.
@@ -32,7 +32,7 @@ struct Accumulate(Applicative):
     non-list error. Native raises still stop immediately.
 
     Only collection is supported: traversing List and other sequence sources,
-    from free functions, Iter, Piped and Pipeline. Other Applicative operations
+    from free functions, Iter and Pipeline. Other Applicative operations
     and single-payload sources are rejected at the call.
     """
     comptime Element[V: Movable & Deinitable] = _NoElement

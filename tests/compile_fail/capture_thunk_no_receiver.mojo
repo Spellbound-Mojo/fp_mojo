@@ -1,6 +1,6 @@
 # error: thunk implements no receiver mode
 from fp.callables import ThunkContract
-from fp.data import Capture, attempt_once
+from fp.data import Capture
 struct Bare(ThunkContract, Movable):
     comptime Out = Int
     def __init__(out self): pass

@@ -122,7 +122,7 @@ def pipe[A: Movable & Deinitable, //, *Fs: Movable & Deinitable](
     Limitations:
         At most eight plain functions per call, because Mojo 1.1 cannot read a
         function's signature from a variadic pack: nest calls, group stages
-        with `flow`, or chain them with `piped`. Longer mixed calls and explicit
+        with `flow`, or chain them with `pipeline(value).then(...)`. Longer mixed calls and explicit
         error/result bindings promote native stages with `as_unary`, as do
         capturing closures in mixed calls. Stages that raise
         different error types are mapped to one type first.

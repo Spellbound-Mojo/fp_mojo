@@ -1,5 +1,5 @@
 """Adapters preserve native no-value, NoneType and explicit Never signatures."""
-from fp.data import Result, attempt, attempt_kwargs, mutating, consuming, mut_owned, mut_owned_kwargs
+from fp.data import Capture, Result
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -57,37 +57,37 @@ def check(var result: Result[type_of(None), AttemptAdapterVoidFailure], expected
 
 def main() raises:
     var value = 0
-    var pure = attempt(mutating(mutable_pure), value)
+    var pure = Capture.mutable(value).run(mutable_pure)
     comptime assert type_of(pure) == Result[type_of(None), Never]
     assert_equal(pure.is_ok(), True)
-    assert_equal(attempt(mutating(mutable_never), value).is_ok(), True)
-    check(attempt(mutating(mutable_raising), value), 0)
+    assert_equal(Capture.mutable(value).run(mutable_never).is_ok(), True)
+    check(Capture.mutable(value).run(mutable_raising), 0)
     assert_equal(value, 3)
     value = -10
-    check(attempt(mutating(mutable_raising), value), -9)
+    check(Capture.mutable(value).run(mutable_raising), -9)
     assert_equal(value, -9)
 
-    assert_equal(attempt(consuming(owned_pure), 1).is_ok(), True)
-    assert_equal(attempt(consuming(owned_never), 1).is_ok(), True)
-    check(attempt(consuming(owned_raising), 1), 0)
-    check(attempt(consuming(owned_raising), -7), -7)
+    assert_equal(Capture.take(1).run(owned_pure).is_ok(), True)
+    assert_equal(Capture.take(1).run(owned_never).is_ok(), True)
+    check(Capture.take(1).run(owned_raising), 0)
+    check(Capture.take(-7).run(owned_raising), -7)
 
     value = 0
-    assert_equal(attempt(mut_owned(mixed_pure), value, 2).is_ok(), True)
-    assert_equal(attempt(mut_owned(mixed_never), value, 2).is_ok(), True)
-    check(attempt(mut_owned(mixed_raising), value, 2), 0)
+    assert_equal(Capture.mutable(value).take(2).run(mixed_pure).is_ok(), True)
+    assert_equal(Capture.mutable(value).take(2).run(mixed_never).is_ok(), True)
+    check(Capture.mutable(value).take(2).run(mixed_raising), 0)
     assert_equal(value, 6)
-    check(attempt(mut_owned(mixed_raising), value, -10), -4)
+    check(Capture.mutable(value).take(-10).run(mixed_raising), -4)
     assert_equal(value, -4)
 
     value = 0
-    assert_equal(attempt_kwargs(mut_owned_kwargs(keywords_pure), value, 2, one=1).is_ok(), True)
-    assert_equal(attempt_kwargs(mut_owned_kwargs(keywords_never), value, 2).is_ok(), True)
-    check(attempt_kwargs(mut_owned_kwargs(keywords_raising), value, 2, one=1), 0)
+    assert_equal(Capture.mutable(value).take(2).kwargs(one=1).run(keywords_pure).is_ok(), True)
+    assert_equal(Capture.mutable(value).take(2).kwargs[K=Int]().run(keywords_never).is_ok(), True)
+    check(Capture.mutable(value).take(2).kwargs(one=1).run(keywords_raising), 0)
     assert_equal(value, 8)
-    check(attempt_kwargs(mut_owned_kwargs(keywords_raising), value, -10), -2)
+    check(Capture.mutable(value).take(-10).kwargs[K=Int]().run(keywords_raising), -2)
     assert_equal(value, -2)
 
-    var explicit = attempt(mutating(explicit_none), value)
+    var explicit = Capture.mutable(value).run(explicit_none)
     comptime assert type_of(explicit) == Result[NoneType, Never]
     assert_equal(explicit.is_ok(), True)

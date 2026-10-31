@@ -1,6 +1,7 @@
 """Typed failure accumulation shared by resource scopes and IO finalization."""
 from std.builtin.rebind import rebind_var
-from fp.data import Result, Ok, Err, NonEmptyList, attempt_once
+from fp.data import Result, Ok, Err, NonEmptyList
+from fp.data._attempt import _attempt_once
 from fp.callables.protocols import OnceThunk, ThunkContract, UnaryContract
 from fp.callables.invoke import _OnceUnaryAvailable, _OnceThunkAvailable
 from fp.callables._receiver import _thunk_once_as
@@ -246,7 +247,7 @@ struct _ExitState[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
 
 def _capture[E: Movable & Deinitable, F: OnceThunk](var function: F
 ) -> Result[F.Out, EffectFailure[E]] where _ErrorCompatible[E, F.Error]:
-    var captured = attempt_once(function^)
+    var captured = _attempt_once(function^)
     if captured.is_ok():
         return Ok(captured^._take_ok())
     comptime if F.Error == Never:

@@ -32,7 +32,7 @@ struct NonEmptyListSemigroup[T: Movable & Deinitable](Semigroup):
     """Ordered concatenation of non-empty lists, moving every element.
 
     There is no empty identity, so this is a Semigroup rather than a Monoid.
-    It can be supplied directly to ValidationFamily and piped par_* methods.
+    It can be supplied directly to ValidationFamily and Pipeline par_* methods.
 
     Parameters:
         T: The element or accumulated error type, including its origins.

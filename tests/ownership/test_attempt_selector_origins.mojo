@@ -1,4 +1,4 @@
-from fp.data import Result, attempt, raise_on_err
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 def identity[V: Movable & Deinitable](var value: V) -> V:
@@ -10,11 +10,11 @@ def fail[V: Movable & Deinitable](var value: V) raises V -> Int:
 def check(owner: List[Int]) raises:
     var view = Span(owner)
     comptime View = type_of(view)
-    var result = attempt[type_of(identity[View]), owned=True](identity[View], view)
+    var result = Capture.take(view).run(identity[View])
     comptime assert type_of(result) == Result[View, Never]
     var returned = raise_on_err(result^)
     assert_equal(Pointer(to=returned[0]) == Pointer(to=owner[0]), True)
-    var failed = attempt[type_of(fail[View]), owned=True](fail[View], view)
+    var failed = Capture.take(view).run(fail[View])
     comptime assert type_of(failed) == Result[Int, View]
     var seen = False
     try: _ = raise_on_err(failed^)

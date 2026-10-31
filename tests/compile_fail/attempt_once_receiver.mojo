@@ -1,7 +1,7 @@
-# error: ThunkContract
+# error: no matching method in call to 'run'
 from fp.functions import Identity
-from fp.data import attempt_once
+from fp.data import Capture
 
 
 def main():
-    _ = attempt_once(Identity[Int]())
+    _ = Capture().run(Identity[Int]())

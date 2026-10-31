@@ -66,7 +66,7 @@ struct RecoverContract[I: ApplicativeError, V: Movable & Deinitable, H: UnaryCon
     """The admission, output and construction error of value-returning recovery.
 
     A generic wrapper forwards `Compatible`, returns `Out` and raises `Error`
-    when calling `piped(value).recover[I](handler)`. This removes the need to
+    when calling `pipeline[I](value).recover(handler)`. This removes the need to
     name the private value-to-pure handler adapter in a public signature.
     Execution remains with the family's recovery primitive. Deferred families
     may construct without raising and retain the handler's error until run.

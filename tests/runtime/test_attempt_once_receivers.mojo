@@ -1,6 +1,6 @@
 """Capture any library thunk through canonical receiver selection and exact metadata."""
 from fp.callables import ThunkContract, Thunk, MutableThunk, OnceThunk, mut_ref
-from fp.data import Capture, Result, attempt_once
+from fp.data import Capture, Result
 from fp.functions import partial
 from std.testing import assert_equal
 
@@ -30,7 +30,7 @@ struct Modes(Thunk, MutableThunk, OnceThunk):
     def call_once(deinit self) -> Int: return 3
 
 def capture[F: ThunkContract & Movable & Deinitable](var callback: F) -> Result[F.Out, F.Error]:
-    return attempt_once(callback^)
+    return Capture().run(callback^)
 
 def capture_context[F: ThunkContract & Movable & Deinitable](var callback: F) -> Result[F.Out, F.Error]:
     return Capture[String]().run(callback^)
@@ -39,16 +39,16 @@ def add(left: Int, right: Int) -> Int: return left + right
 
 def main() raises:
     assert_equal(capture(Shared()).get_or(0), 9)
-    assert_equal(attempt_once(partial(add, 2, 3)).get_or(0), 5)
-    assert_equal(attempt_once(Counter(0)).swap().get_or(0), 1)
+    assert_equal(Capture().run(partial(add, 2, 3)).get_or(0), 5)
+    assert_equal(Capture().run(Counter(0)).swap().get_or(0), 1)
     var counter = Counter(0)
     assert_equal(capture(mut_ref(counter)).swap().get_or(0), 1)
     assert_equal(counter.calls, 1)
-    assert_equal(attempt_once(mut_ref(counter)).get_or(0), 2)
+    assert_equal(Capture().run(mut_ref(counter)).get_or(0), 2)
     assert_equal(counter.calls, 2)
-    assert_equal(attempt_once(Modes(0)).get_or(0), 3)
+    assert_equal(Capture().run(Modes(0)).get_or(0), 3)
     var modes = Modes(0)
-    assert_equal(attempt_once(mut_ref(modes)).get_or(0), 2)
+    assert_equal(Capture().run(mut_ref(modes)).get_or(0), 2)
     assert_equal(modes.calls, 1)
 
     assert_equal(capture_context(Shared()).get_or(0), 9)

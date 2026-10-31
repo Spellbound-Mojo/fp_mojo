@@ -13,7 +13,7 @@ from fp.callables.protocols import ThunkContract, MutableUnary
 from fp.callables._binding import _BoundThunk
 from fp.callables.native import _NativeOwnedArg
 from fp.data._result import Result
-from fp.data._attempt import attempt_once
+from fp.data._attempt import _attempt_once
 from fp._internal.errors import _DefaultErrorAdmits
 
 from fp.callables.products import _OptionalCell
@@ -28,7 +28,7 @@ struct _ArgsZ[E: Movable & Deinitable](Movable):
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_Z[R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_Z[R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def() -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -108,7 +108,7 @@ struct _ArgsK[K: Movable & Deinitable, E: Movable & Deinitable](Movable):
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_K[Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_K[Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -176,7 +176,7 @@ struct _ArgsR[A: Movable & Deinitable, a: ImmOrigin, E: Movable & Deinitable](Mo
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_R[Self.A, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_R[Self.A, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -292,7 +292,7 @@ struct _ArgsRK[A: Movable & Deinitable, a: ImmOrigin, K: Movable & Deinitable, E
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RK[Self.A, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RK[Self.A, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -396,7 +396,7 @@ struct _ArgsM[A: Movable & Deinitable, a: MutOrigin, E: Movable & Deinitable](Mo
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_M[Self.A, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_M[Self.A, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -476,7 +476,7 @@ struct _ArgsMK[A: Movable & Deinitable, a: MutOrigin, K: Movable & Deinitable, E
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MK[Self.A, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MK[Self.A, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -544,7 +544,7 @@ struct _ArgsO[A: Movable & Deinitable, E: Movable & Deinitable](Movable):
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_O[Self.A, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_O[Self.A, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -624,7 +624,7 @@ struct _ArgsOK[A: Movable & Deinitable, K: Movable & Deinitable, E: Movable & De
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OK[Self.A, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OK[Self.A, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -692,7 +692,7 @@ struct _ArgsRR[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RR[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RR[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -880,7 +880,7 @@ struct _ArgsRRK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1056,7 +1056,7 @@ struct _ArgsRM[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, b
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RM[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RM[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, mut Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1172,7 +1172,7 @@ struct _ArgsRMK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, mut Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1276,7 +1276,7 @@ struct _ArgsRO[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, E
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RO[Self.A, Self.B, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RO[Self.A, Self.B, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, var Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1392,7 +1392,7 @@ struct _ArgsROK[A: Movable & Deinitable, B: Movable & Deinitable, a: ImmOrigin, 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROK[Self.A, Self.B, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROK[Self.A, Self.B, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, var Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1496,7 +1496,7 @@ struct _ArgsMR[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MR[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MR[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1612,7 +1612,7 @@ struct _ArgsMRK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1716,7 +1716,7 @@ struct _ArgsMM[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, b
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MM[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MM[Self.A, Self.B, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, mut Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1796,7 +1796,7 @@ struct _ArgsMMK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMK[Self.A, Self.B, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, mut Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1864,7 +1864,7 @@ struct _ArgsMO[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, E
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MO[Self.A, Self.B, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MO[Self.A, Self.B, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, var Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -1944,7 +1944,7 @@ struct _ArgsMOK[A: Movable & Deinitable, B: Movable & Deinitable, a: MutOrigin, 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOK[Self.A, Self.B, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOK[Self.A, Self.B, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, var Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -2012,7 +2012,7 @@ struct _ArgsOR[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, E
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OR[Self.A, Self.B, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OR[Self.A, Self.B, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -2128,7 +2128,7 @@ struct _ArgsORK[A: Movable & Deinitable, B: Movable & Deinitable, b: ImmOrigin, 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORK[Self.A, Self.B, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORK[Self.A, Self.B, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -2232,7 +2232,7 @@ struct _ArgsOM[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, E
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OM[Self.A, Self.B, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OM[Self.A, Self.B, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, mut Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -2312,7 +2312,7 @@ struct _ArgsOMK[A: Movable & Deinitable, B: Movable & Deinitable, b: MutOrigin, 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMK[Self.A, Self.B, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMK[Self.A, Self.B, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, mut Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -2380,7 +2380,7 @@ struct _ArgsOO[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & De
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OO[Self.A, Self.B, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OO[Self.A, Self.B, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -2460,7 +2460,7 @@ struct _ArgsOOK[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & D
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOK[Self.A, Self.B, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOK[Self.A, Self.B, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -2528,7 +2528,7 @@ struct _ArgsRRR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRR[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRR[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -2851,7 +2851,7 @@ struct _ArgsRRRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRRK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRRK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -3171,7 +3171,7 @@ struct _ArgsRRM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRM[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRM[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -3350,7 +3350,7 @@ struct _ArgsRRMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRMK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRMK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -3526,7 +3526,7 @@ struct _ArgsRRO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRO[Self.A, Self.B, Self.A2, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RRO[Self.A, Self.B, Self.A2, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -3705,7 +3705,7 @@ struct _ArgsRROK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RROK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RROK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -3881,7 +3881,7 @@ struct _ArgsRMR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMR[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMR[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, mut Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -4060,7 +4060,7 @@ struct _ArgsRMRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMRK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMRK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -4236,7 +4236,7 @@ struct _ArgsRMM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMM[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMM[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, mut Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -4343,7 +4343,7 @@ struct _ArgsRMMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMMK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMMK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -4447,7 +4447,7 @@ struct _ArgsRMO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMO[Self.A, Self.B, Self.A2, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMO[Self.A, Self.B, Self.A2, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, mut Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -4554,7 +4554,7 @@ struct _ArgsRMOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMOK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RMOK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, mut Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -4658,7 +4658,7 @@ struct _ArgsROR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROR[Self.A, Self.B, Self.A2, Self.a, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROR[Self.A, Self.B, Self.A2, Self.a, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, var Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -4837,7 +4837,7 @@ struct _ArgsRORK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RORK[Self.A, Self.B, Self.A2, Self.a, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_RORK[Self.A, Self.B, Self.A2, Self.a, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, var Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -5013,7 +5013,7 @@ struct _ArgsROM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROM[Self.A, Self.B, Self.A2, Self.a, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROM[Self.A, Self.B, Self.A2, Self.a, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, var Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -5120,7 +5120,7 @@ struct _ArgsROMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROMK[Self.A, Self.B, Self.A2, Self.a, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROMK[Self.A, Self.B, Self.A2, Self.a, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, var Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -5224,7 +5224,7 @@ struct _ArgsROO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROO[Self.A, Self.B, Self.A2, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROO[Self.A, Self.B, Self.A2, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, var Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -5331,7 +5331,7 @@ struct _ArgsROOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROOK[Self.A, Self.B, Self.A2, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ROOK[Self.A, Self.B, Self.A2, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(Self.A, var Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -5435,7 +5435,7 @@ struct _ArgsMRR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRR[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRR[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -5614,7 +5614,7 @@ struct _ArgsMRRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRRK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRRK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -5790,7 +5790,7 @@ struct _ArgsMRM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRM[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRM[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -5897,7 +5897,7 @@ struct _ArgsMRMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRMK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRMK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6001,7 +6001,7 @@ struct _ArgsMRO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRO[Self.A, Self.B, Self.A2, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MRO[Self.A, Self.B, Self.A2, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6108,7 +6108,7 @@ struct _ArgsMROK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MROK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MROK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6212,7 +6212,7 @@ struct _ArgsMMR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMR[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMR[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, mut Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6319,7 +6319,7 @@ struct _ArgsMMRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMRK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMRK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6423,7 +6423,7 @@ struct _ArgsMMM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMM[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMM[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, mut Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6494,7 +6494,7 @@ struct _ArgsMMMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMMK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMMK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6562,7 +6562,7 @@ struct _ArgsMMO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMO[Self.A, Self.B, Self.A2, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMO[Self.A, Self.B, Self.A2, Self.a, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, mut Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6633,7 +6633,7 @@ struct _ArgsMMOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMOK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MMOK[Self.A, Self.B, Self.A2, Self.a, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, mut Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6701,7 +6701,7 @@ struct _ArgsMOR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOR[Self.A, Self.B, Self.A2, Self.a, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOR[Self.A, Self.B, Self.A2, Self.a, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, var Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6808,7 +6808,7 @@ struct _ArgsMORK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MORK[Self.A, Self.B, Self.A2, Self.a, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MORK[Self.A, Self.B, Self.A2, Self.a, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, var Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6912,7 +6912,7 @@ struct _ArgsMOM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOM[Self.A, Self.B, Self.A2, Self.a, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOM[Self.A, Self.B, Self.A2, Self.a, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, var Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -6983,7 +6983,7 @@ struct _ArgsMOMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOMK[Self.A, Self.B, Self.A2, Self.a, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOMK[Self.A, Self.B, Self.A2, Self.a, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, var Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7051,7 +7051,7 @@ struct _ArgsMOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOO[Self.A, Self.B, Self.A2, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOO[Self.A, Self.B, Self.A2, Self.a, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, var Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7122,7 +7122,7 @@ struct _ArgsMOOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOOK[Self.A, Self.B, Self.A2, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_MOOK[Self.A, Self.B, Self.A2, Self.a, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(mut Self.A, var Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7190,7 +7190,7 @@ struct _ArgsORR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORR[Self.A, Self.B, Self.A2, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORR[Self.A, Self.B, Self.A2, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7369,7 +7369,7 @@ struct _ArgsORRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORRK[Self.A, Self.B, Self.A2, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORRK[Self.A, Self.B, Self.A2, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7545,7 +7545,7 @@ struct _ArgsORM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORM[Self.A, Self.B, Self.A2, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORM[Self.A, Self.B, Self.A2, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7652,7 +7652,7 @@ struct _ArgsORMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORMK[Self.A, Self.B, Self.A2, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORMK[Self.A, Self.B, Self.A2, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7756,7 +7756,7 @@ struct _ArgsORO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORO[Self.A, Self.B, Self.A2, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_ORO[Self.A, Self.B, Self.A2, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7863,7 +7863,7 @@ struct _ArgsOROK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OROK[Self.A, Self.B, Self.A2, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OROK[Self.A, Self.B, Self.A2, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -7967,7 +7967,7 @@ struct _ArgsOMR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMR[Self.A, Self.B, Self.A2, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMR[Self.A, Self.B, Self.A2, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, mut Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8074,7 +8074,7 @@ struct _ArgsOMRK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMRK[Self.A, Self.B, Self.A2, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMRK[Self.A, Self.B, Self.A2, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, mut Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8178,7 +8178,7 @@ struct _ArgsOMM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMM[Self.A, Self.B, Self.A2, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMM[Self.A, Self.B, Self.A2, Self.b, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, mut Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8249,7 +8249,7 @@ struct _ArgsOMMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMMK[Self.A, Self.B, Self.A2, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMMK[Self.A, Self.B, Self.A2, Self.b, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, mut Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8317,7 +8317,7 @@ struct _ArgsOMO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMO[Self.A, Self.B, Self.A2, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMO[Self.A, Self.B, Self.A2, Self.b, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, mut Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8388,7 +8388,7 @@ struct _ArgsOMOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMOK[Self.A, Self.B, Self.A2, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OMOK[Self.A, Self.B, Self.A2, Self.b, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, mut Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8456,7 +8456,7 @@ struct _ArgsOOR[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOR[Self.A, Self.B, Self.A2, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOR[Self.A, Self.B, Self.A2, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8563,7 +8563,7 @@ struct _ArgsOORK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OORK[Self.A, Self.B, Self.A2, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OORK[Self.A, Self.B, Self.A2, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8667,7 +8667,7 @@ struct _ArgsOOM[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOM[Self.A, Self.B, Self.A2, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOM[Self.A, Self.B, Self.A2, Self.a2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, mut Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8738,7 +8738,7 @@ struct _ArgsOOMK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOMK[Self.A, Self.B, Self.A2, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOMK[Self.A, Self.B, Self.A2, Self.a2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, mut Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8806,7 +8806,7 @@ struct _ArgsOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable & 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOO[Self.A, Self.B, Self.A2, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOO[Self.A, Self.B, Self.A2, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8880,7 +8880,7 @@ struct _ArgsOOOK[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOK[Self.A, Self.B, Self.A2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOK[Self.A, Self.B, Self.A2, Self.K, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, /, var **kwargs: Self.K) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -8948,7 +8948,7 @@ struct _ArgsOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable &
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOO[Self.A, Self.B, Self.A2, Self.A3, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOO[Self.A, Self.B, Self.A2, Self.A3, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -9019,7 +9019,7 @@ struct _ArgsOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable 
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -9090,7 +9090,7 @@ struct _ArgsOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movable
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -9161,7 +9161,7 @@ struct _ArgsOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movabl
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -9232,7 +9232,7 @@ struct _ArgsOOOOOOOO[A: Movable & Deinitable, B: Movable & Deinitable, A2: Movab
 
     def _run[R: Movable & Deinitable, X: Movable & Deinitable, F: Movable & Deinitable, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:
         var arguments = self._arguments^
-        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, R, X, F, raising]](arguments^, Pointer(to=function)))
+        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, _invoke_OOOOOOOO[Self.A, Self.B, Self.A2, Self.A3, Self.A4, Self.A5, Self.A6, Self.A7, R, X, F, raising]](arguments^, Pointer(to=function)))
 
     @always_inline
     def run[R: Movable & Deinitable, q: ImmOrigin, //, F: def(var Self.A, var Self.B, var Self.A2, var Self.A3, var Self.A4, var Self.A5, var Self.A6, var Self.A7) -> R](deinit self, ref[q] function: F) -> Result[R, Never]:
@@ -9629,7 +9629,7 @@ struct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):
         Returns:
             The callback output in Ok, or its declared error in Err.
         """
-        return attempt_once(function^)
+        return _attempt_once(function^)
     def stateful[S: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](self, ref[q] function: def(mut S, var A) thin -> R, var state: S) -> _Stateful[S, A, R, Never, type_of(function), False]:
         """Own explicit state for repeated calls through a plain native function.
 

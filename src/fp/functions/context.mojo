@@ -278,7 +278,7 @@ struct Pipeline[I: Functor, V: Movable & Deinitable, E: Movable & Deinitable = N
 
     Result-specific methods delegate to Result and update ResultFamily when
     the stored error type changes. Native raised errors remain raised;
-    use Capture to store them. Existing Piped and piped remain available.
+    use Capture to store them.
 
     Parameters:
         I: The selected carrier family.

@@ -1,6 +1,6 @@
 """Shared references retain owners and move payloads, outputs and failures once."""
 from fp.callables import Thunk, shared_ref, call_once, invoke_borrowed_once
-from fp.data import Capture, Result, Ok, Err, attempt_once
+from fp.data import Capture, Result, Ok, Err
 from test_attempt_once_receivers import Shared as Factory
 from test_result_fold_receivers import Shared as Handler
 from test_binary_callback_views_ownership import KeepFirst
@@ -13,7 +13,7 @@ def factory_calls() raises:
     var callback = Factory(Token(6, state), True)
     var reference = shared_ref(callback)
     var copied = reference
-    var failure = attempt_once(reference)
+    var failure = Capture().run(reference)
     assert_equal(failure.is_err(), True)
     _ = failure^
     assert_equal(state[].drops[7], 1)
@@ -91,7 +91,7 @@ struct External[o: ImmOrigin](Thunk):
 
 def external(owner: List[Int], fail: Bool) -> Result[Span[Int, origin_of(owner)], Span[Int, origin_of(owner)]]:
     var callback = External(Span(owner), fail)
-    return attempt_once(shared_ref(callback))
+    return Capture().run(shared_ref(callback))
 
 
 def main() raises:

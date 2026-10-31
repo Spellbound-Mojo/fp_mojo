@@ -242,7 +242,7 @@ def builder(shape, kw):
         + "]"
     )
     out += [
-        f"        return attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, {inv}](arguments^, Pointer(to=function)))\n\n"
+        f"        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, {inv}](arguments^, Pointer(to=function)))\n\n"
     ]
     for kind in (
         "pure",
@@ -323,7 +323,7 @@ from fp.callables.protocols import ThunkContract, MutableUnary
 from fp.callables._binding import _BoundThunk
 from fp.callables.native import _NativeOwnedArg
 from fp.data._result import Result
-from fp.data._attempt import attempt_once
+from fp.data._attempt import _attempt_once
 from fp._internal.errors import _DefaultErrorAdmits
 
 '''
@@ -387,7 +387,7 @@ for name in ("run", "kwargs", "borrow", "mutable", "take"):
 out += [methods]
 out += ["""    @staticmethod
     def run[F: ThunkContract & Movable & Deinitable](var function: F) -> Result[F.Out, F.Error]:
-        return attempt_once(function^)
+        return _attempt_once(function^)
 """]
 # Stateful storage uses the same mutable/owned argument bundle. Its native
 # factory is thin: users pass owned mutable state explicitly, not in captures.

@@ -1,17 +1,16 @@
 """Generic returns preserve exact cleanup and moves, including discarded Results."""
-from fp.data import Result, attempt, attempt_kwargs, raise_on_err
-from fp.data import mut_owned_kwargs, consuming
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, Never]:
-    return attempt_kwargs(mut_owned_kwargs(function), first, second^, **values^)
+    return Capture.mutable(first).take(second^).kwargs(**values^).run(function)
 
 def capture[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) raises X -> R](
     function: F, mut first: A, var second: B, /, var **values: K
 ) -> Result[R, X]:
-    return attempt_kwargs(mut_owned_kwargs(function), first, second^, **values^)
+    return Capture[X].mutable(first).take(second^).kwargs(**values^).run(function)
 
 def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B, /, var **kwargs: K) -> R](
     function: F, mut first: A, var second: B, /, var **values: K
@@ -26,12 +25,12 @@ def forward[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deini
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
 ) -> Result[R, Never]:
-    return attempt(consuming(function), first^)
+    return Capture.take(first^).run(function)
 
 def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](
     function: F, var first: A
 ) -> Result[R, X]:
-    return attempt(consuming(function), first^)
+    return Capture[X].take(first^).run(function)
 
 def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
     function: F, var first: A
@@ -152,12 +151,12 @@ def transfer(var value: Item) -> Item:
 def capture_zero[R: Movable & Deinitable, //, F: def() -> R](
     function: F
 ) -> Result[R, Never]:
-    return attempt(function)
+    return Capture().run(function)
 
 def capture_zero[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raises X -> R](
     function: F
 ) -> Result[R, X]:
-    return attempt(function)
+    return Capture[X]().run(function)
 
 def forward_zero[R: Movable & Deinitable, //, F: def() -> R](
     function: F

@@ -155,7 +155,7 @@ native loop.
   `Copyable`. An internal adapter is `Copyable` exactly when its stored owners
   are; copying never turns a consuming callback into a reusable one.
 - A stored `Err` is data. Native exceptions propagate unchanged and never become
-  stored errors; `attempt` is the explicit conversion.
+  stored errors; `Capture.run` is the explicit conversion.
 
 ## Evaluation order
 

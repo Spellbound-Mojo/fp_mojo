@@ -152,43 +152,26 @@ output origins while preserving positional callback/error bindings.
 
 | Bridge | Behavior |
 |---|---|
-| `attempt(f, args...)` | Calls `f` once and returns `Ok(result)` or `Err(error)`, catching only `f`'s declared error type |
-| `attempt_kwargs(f, args..., **options^)` | The same for a callback declaring a native keyword pack, including an empty pack |
-| `attempt_once(thunk^)` | The same for any invocable library thunk, called once through `call_once` |
+| `Capture[E]()...run(f)` | Binds arguments with their native conventions, calls `f` once and returns `Ok(result)` or `Err(error)`, catching only the declared error type |
+| `Capture().run(thunk^)` | The same for any invocable library thunk, called once through `call_once` |
 | `raise_on_err(r^)` / `r^.raise_on_err()` | Returns the value or raises the stored error with its original type |
 | `collect_results(iterator)` | `Ok(List[T])` of the successes in order, or the first `Err`; stops pulling at the first `Err`. It takes a native iterator, such as `iter(results^)` or a lazy `map` |
 
-`attempt_once` accepts `ThunkContract` metadata with any receiver mode.
-Admission uses the existing callable availability query; execution delegates to
-`call_once`, preserving consuming-first selection and mutable-before-shared
-fallback. `_attempt_core` remains the sole conversion from a raised failure
-to Result. The optional pending owner is emptied before invocation, preserving
-move-only cleanup. `mut_ref(thunk)` consumes only its reference and leaves
-original state available, while fully bound partial applications need no
-consuming adapter. Generic forwarding retains `Result[F.Out, F.Error]`.
-
-`attempt` accepts native functions with zero to two positional arguments, with
-read, owned or `mut` conventions. `attempt_kwargs` handles targets that declare
-a native keyword pack `var **kwargs: K` (homogeneous values or a `StringDict[K]`
-expansion), with zero to two positional prefixes. Mutations a target made
-before failing remain visible. The error type must be stated or inferred
-exactly; neither bridge catches process termination or unrelated failures.
-On Mojo 1.2, optional named convention selectors such as `owned_mut=True`
-exclude incompatible native overload families before operand inference. They
-cover every supported positional convention; keyword-pack selectors describe
-only the positional prefix. Selection adds no runtime branch and preserves
-callback borrowing, moves, mutations, origins and exact errors. Existing
-positional type bindings stay unchanged, and selectors must be `True`.
-
-The borrowed `mutating`, `consuming`, `mut_owned` and `mut_owned_kwargs`
-adapters remain supported. Their private views live in `callables.native`;
-`consuming` reuses the existing native unary view. Selected owned and mutable
-calls reuse those native invocation boundaries, preserving literal no-value
-and explicit `Never` signatures. See the
-[call forms](../reference/data.md#select-a-native-argument-convention) and
-[Mojo 1.2 qualification](native-boundaries.md#promoted-selector-qualification)
-for coverage and the explicit callback-type hint needed to diagnose an
-incompatible selector normally.
+`Capture` binds arguments before callback admission: `args`, `borrow`,
+`mutable`, `take` and `kwargs` fix each operand's type and convention, so no
+convention selector or callback-type hint is needed. Each bound call becomes a
+private `_BoundThunk` that the private one-shot engine
+`fp.data._attempt._attempt_once` runs. That engine accepts `ThunkContract`
+metadata with any receiver mode, so library thunks passed to `run` use the
+same path. Execution delegates to `call_once`, preserving consuming-first
+selection and mutable-before-shared fallback. `_attempt_core` remains the sole
+conversion from a raised failure to Result. The optional pending owner is
+emptied before invocation, preserving move-only cleanup. `mut_ref(thunk)`
+consumes only its reference and leaves original state available, and
+generic forwarding retains `Result[F.Out, F.Error]`. Mutations a target made
+before failing remain visible; capture does not catch process termination or
+unrelated failures. See the
+[call forms](../reference/data.md#select-a-native-argument-convention).
 
 `collect_results` sequences Results and stops at the first `Err`; it does not
 accumulate validation errors. Empty input gives `Ok` of an empty list.

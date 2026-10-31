@@ -1,6 +1,6 @@
 # error: cannot implicitly convert
 from fp.callables import MutableThunk
-from fp.data import Capture, Result, attempt_once
+from fp.data import Capture, Result
 struct Fails(MutableThunk):
     comptime Out = Int
     comptime Error = Int

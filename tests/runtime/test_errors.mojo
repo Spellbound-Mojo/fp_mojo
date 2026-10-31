@@ -1,5 +1,5 @@
 from fp.functions import pipe
-from fp.data import Result, Ok, Err, attempt, raise_on_err
+from fp.data import Capture, Result, Ok, Err, raise_on_err
 from std.testing import assert_equal, assert_true
 
 
@@ -17,7 +17,7 @@ def main() raises:
     def fail() raises Failure {mut calls} -> String:
         calls += 1
         raise Failure(42)
-    var captured = attempt(fail)
+    var captured = Capture[Failure]().run(fail)
     assert_equal(calls, 1)
     assert_true(captured.is_err())
     var code = -1
@@ -29,7 +29,7 @@ def main() raises:
 
     def succeed() raises Failure -> String:
         return "value"
-    var success = attempt(succeed)
+    var success = Capture[Failure]().run(succeed)
     var output: String
     try:
         output = raise_on_err(success^)

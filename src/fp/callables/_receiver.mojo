@@ -124,7 +124,7 @@ struct SharedRef[F: Movable & Deinitable, o: ImmOrigin](
 def shared_ref[F: Movable & Deinitable, o: ImmOrigin](ref[o] function: F) -> SharedRef[F, o]:
     """Borrow a library callback while explicitly selecting its shared receiver.
 
-    For example, `attempt_once(shared_ref(factory))` captures a call while
+    For example, `Capture().run(shared_ref(factory))` captures a call while
     retaining the factory. A stored reference can serve several operations.
     Use `mut_ref` when calls should select the mutable receiver instead.
     Deferred computations retain the callback's origin until they finish.

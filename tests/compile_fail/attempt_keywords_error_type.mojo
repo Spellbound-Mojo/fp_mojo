@@ -1,5 +1,5 @@
 # error: cannot implicitly convert
-from fp.data import Result, attempt_kwargs
+from fp.data import Capture, Result
 @fieldwise_init
 struct Actual(Movable):
     var value: Int
@@ -11,4 +11,4 @@ def target(var **values: Int) raises Actual -> Int:
     raise Actual(7)
 
 def main():
-    var result: Result[Int, Other] = attempt_kwargs(target, one=7)
+    var result: Result[Int, Other] = Capture.kwargs(one=7).run(target)

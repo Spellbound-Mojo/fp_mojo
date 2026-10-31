@@ -29,9 +29,7 @@ selected effect. Use `iterated` for lazy collection stages. Native callback
 borrows retained by a deferred computation must outlive it.
 
 `as_unary` and `as_binary` provide callable values when a native function must
-be stored, such as inside an effect passed to `ap`. Existing `piped(value)`
-and its per-method family selections remain compatibility entry points; their
-signatures and native-error inference follow the compatibility guide.
+be stored, such as inside an effect passed to `ap`.
 
 `kleisli[Family](f).then(g)` composes effectful functions through the family's
 monadic bind. Its `map` transforms successful payloads; ordinary container
