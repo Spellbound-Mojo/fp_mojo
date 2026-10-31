@@ -2617,7 +2617,7 @@ it into `nightly`.
 | Stream | Content | Owns | Depends on |
 |---|---|---|---|
 | **S1 OS layer** (merged) | External calls for `pipe`, `pipe2`, `fcntl`, `poll`, `read`, `write`, `close`, `clock_gettime`, `getrusage`, and the thread owner extracted from `unsafe_start` | New `src/fp/_internal/os.mojo`; `src/fp/effects/fibers.mojo` | None |
-| **S2 Poller** | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
+| **S2 Poller** (merged) | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
 | **S3 Cross-thread qualification** (merged) | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
 | **S4 Concurrent structures** (merged) | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
 | **S5 Engine refactor** (merged) | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
@@ -2973,6 +2973,64 @@ the current-thread profile, with Pass 12's host notifier. Wave 1 is complete.
     `foreign_signal`, `reject_callback_error`, `fiber_snapshot`,
     `spawn_laws`, `fiber_basics`, `fiber_supervisor`, and `callbacks` passed
     40 of 40 from source and package at O0 and O3.
+
+**S2** (Wave 2) was merged on 2026-10-31: the polling system, 12b's core,
+in the private `fp.effects._async.polling`.
+
+- **Interface.** It follows Cats Effect's `PollingSystem` with one POSIX
+  implementation.
+  - `_Poller.poll(timeout)` belongs to the owner thread. It waits on the
+    registered descriptors and a self-pipe and reports ready registrations,
+    an interrupt, expiry, or closing.
+  - An `_Interrupter` copy offers `interrupt()` and `close()` from any
+    thread, so other threads never borrow the poller itself.
+  - Registrations are generation-checked and report readiness once, through
+    a `Signal`; a stale handle is ignored.
+  - `needs_poll()` and `has_registrations()` tell an owner whether it must
+    park in the poller.
+- **Lost-wake handshake.** Interrupts coalesce into one byte. An interrupter
+  publishes its work, fences, reads the pending flag, and writes the byte
+  only after claiming the flag. The owner drains the pipe, clears the flag,
+  fences, and re-checks its work. Either the interrupter sees the cleared
+  flag, or the owner sees the work. A late byte costs one spurious wake,
+  never a lost one. Clearing before draining failed the race test on every
+  run.
+- **Closing.** A users word, with the closed and released bits and a user
+  count, lets `close()` from any thread wake a poll in progress. The last
+  user releases the pipe exactly once.
+- **Timeouts.** Whole milliseconds go to `poll()` and the remainder to a
+  sleep between two nonblocking polls, so no wait ends early, and a wake can
+  be late by under 1 ms.
+- **Deviations from the brief.**
+  - Readiness is reported once; re-arming means registering again.
+  - Registrations outstanding at close are notified on the owner's next
+    poll.
+  - A deregistration from another worker remains a misuse. The module
+    docstring describes the hand-off 13c must add.
+- **Measurements** (O3, ns):
+
+  | Operation | ns |
+  |---|---|
+  | Coalesced `interrupt()` | 6–7 |
+  | Empty `poll(0)` | 470–510 |
+  | `poll(0)` over 16 descriptors | 960–1,120 |
+  | Interrupt then drain | about 2,060 |
+
+  A wake between threads takes 45–47 µs end to end.
+- **Qualification.**
+  - The `poller` client exercised:
+    - 3,000 randomized interrupt-against-park rounds;
+    - 81,000 coalesced interrupts;
+    - read and write readiness;
+    - deregistration and stale handles;
+    - closing in each position;
+    - sub-millisecond timeouts;
+    - a 500 ms idle poll using under 10 ms of thread CPU.
+  - The client passed 200 O3 runs, and qualification with `os_layer` and
+    `wstp_parking` passed 12 of 12.
+  - At merge it passed 50 more O3 runs on the integrator's machine.
+  - The package precompile takes 121–127 s here, over `qualify.py`'s 120 s
+    limit, so that limit is now 300 s.
 
 ## Implementation reference map
 
