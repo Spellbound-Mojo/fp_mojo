@@ -1,4 +1,5 @@
 """Deterministic callback/cancellation interleavings and owned cleanup."""
+from std.atomic import Atomic
 from std.memory import ArcPointer
 from fp.callables import OnceUnary
 from fp.effects import IOContext, CancellationToken, Outcome, EffectFailure
@@ -130,6 +131,19 @@ struct Reenter(Movable):
         _ = self.done.complete(success[Int, Int](8)._outcome())
 
 
+struct LockProbe(Movable):
+    """Record whether the completion's lock is held when this payload is destroyed."""
+    var lock: Pointer[Atomic[UInt8], MutUntrackedOrigin]
+    var held: ArcPointer[Int]
+
+    def __init__(out self, lock: Pointer[Atomic[UInt8], MutUntrackedOrigin], held: ArcPointer[Int]):
+        self.lock = lock
+        self.held = held.copy()
+
+    def __deinit__(deinit self):
+        self.held[] = Int(self.lock[].load())
+
+
 def ownership():
     var stats = ArcPointer(List[Int]([0, 0, 0, 0, 0, 0, 0]))
     var done = Completion[Resource, Failure]()
@@ -147,6 +161,12 @@ def ownership():
     var completed = inner._select(False)
     var outcome = completed.take()
     check(dropped[] == 1 and outcome.take()._take_ok() == 8, "destructors may complete another callback")
+    var probed = Completion[LockProbe, Int]()
+    var lock = Pointer(to=probed._cell[].lock).unsafe_origin_cast[MutUntrackedOrigin]()
+    var held = ArcPointer(-1)
+    _ = probed.complete(None)
+    check(not probed.complete(success[LockProbe, Int](LockProbe(lock, held))._outcome()), "late payload rejected")
+    check(held[] == 0, "rejected payloads are destroyed after the lock is released")
 
 
 def main():
@@ -167,4 +187,4 @@ def main():
     var values = result.take()._take_ok()
     check(values[0] == 42 and values[1] == 7, "structured producer wakes registered callback")
     ownership()
-    print("callbacks: 32 interleavings, immediate/delayed/late completion, cleanup, ownership, structured producer")
+    print("callbacks: 32 interleavings, immediate/delayed/late completion, cleanup, ownership, unlocked rejection, structured producer")

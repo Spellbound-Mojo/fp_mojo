@@ -240,11 +240,15 @@ and has no live deadline, so it awaits external input. With an
 program in tests on the same engine. Treat quiescence as deadlock only when no
 input will arrive.
 
-`IO.async(register, withdrawal)` owns withdrawal after every entered
-registration, including successful completion and registration failure;
-`IO.async_` has none. Copies of `Completion` share one decision; late or
-duplicate payloads are rejected. Delivery remains a cooperative host-thread
-operation. `timeout_to` requests cancellation and drains the source before
+`IO.async(register, withdrawal)` runs withdrawal after every entered
+registration, including successful completion and registration failure, so
+withdrawal is where a registration releases what it registered. This differs
+from Cats Effect, whose `async` finalizer runs only when the waiting fiber is
+canceled. `IO.async_` has no withdrawal. Copies of `Completion` share one
+decision. `complete` may be called from any thread, and writes made before it
+are visible to the continuation that receives the value. Late or duplicate
+payloads are rejected and destroyed on the completing thread, so their
+destructors must not need the polling thread. `timeout_to` requests cancellation and drains the source before
 selecting a surviving source outcome or fallback. A timeout cannot force masked
 work or cleanup to stop.
 
@@ -301,7 +305,7 @@ reported deadline.
 | `flatMap`, `map`, `tailRecM` | `flat_map`, `map`, `tail_rec_m[Async[E]]` | Constant native stack |
 | `attempt`, `handleErrorWith` | `attempt`, `handle_error_with` | Complete failures; mixed cancellation bypasses recovery |
 | `guarantee`, `guaranteeCase`, `onCancel`, `uncancelable` | `guarantee`, `guarantee_case`, `on_cancel`, `IO.uncancelable` | Masked cleanup with the exact exit |
-| `IO.async`, `IO.async_` | `IO.async`, `IO.async_` | Withdrawal runs after every entered registration |
+| `IO.async`, `IO.async_` | `IO.async`, `IO.async_` | Withdrawal runs after every entered registration, not only on cancellation; `complete` from any thread |
 | `IO.cede`, `IO.never`, `IO.sleep`, `IO.canceled` | the same, on `IO[T, E]` | |
 | `IO.monotonic`, `timed`, `timeout`, `delayBy`, `andWait` | `IO[T, E].monotonic()`, `timed`, `timeout`, `delay_by`, `and_wait` | Monotonic `Instant` only; no `realTime` |
 | `both`, `race`, `timeoutTo` | `both`, `race`, `timeout_to` | Cancel and drain; surviving source outcomes can win |

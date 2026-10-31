@@ -54600,7 +54600,7 @@
   },
   "effects.CancellationToken": {
    "aliases": [],
-   "description": "Copies share one flag. Requesting cancellation never kills a thread or\ninterrupts native code. IO observes it at its documented checkpoints.",
+   "description": "Copies share one flag. Requesting cancellation never kills a thread or\ninterrupts native code. IO observes it at its documented checkpoints.\n`cancel` is safe from any thread, and writes made before it are visible to\nthe waiter that observes the cancellation.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -69629,7 +69629,7 @@
      "name": "Error"
     }
    ],
-   "description": "",
+   "description": "Copies may be moved to, used on, and destroyed on another thread, and\n`complete` is safe from any thread. The outcome moves in under the\ncompletion's lock and the polling thread takes it under the same lock, so\nwrites made before `complete` are visible to the continuation receiving the\nvalue. Mojo has no Send or Sync proof: the outcome's value and error may\nmove to, and be destroyed on, either thread, so their destructors must not\nhold locks the other thread needs.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -69650,7 +69650,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "True if accepted. False after completion or withdrawal has closed admission;\nrejected payloads are destroyed outside the metadata lock.",
+       "doc": "True if the outcome was admitted; exactly one outcome is. Admission\ndoes not promise use: if withdrawal races it, the admitted outcome\nis dropped on the polling thread. False after an earlier\ncompletion, after withdrawal began, or after the root finished;\nthe rejected outcome is then destroyed on the calling thread,\noutside the lock.",
        "type": "Bool"
       },
       "signature": "def complete(self, var outcome: Outcome[Self.T, Self.E]) -> Bool",
@@ -73826,7 +73826,7 @@
   },
   "effects.async_runtime.protocols.Signal": {
    "aliases": [],
-   "description": "Copies share a revision. A signal does not establish cross-thread callback\nsafety, device completion, or memory visibility for external work. External\nadapters retain those obligations until they report a terminal outcome.",
+   "description": "Copies share one revision. `notify` and `revision` take the signal's lock,\nso writes a thread makes before `notify` are visible to a thread whose later\n`revision` read observes the change. Read the revision before inspecting\nstate, and touch plain shared state only after observing a change.\n`Wait.changed(signal, revision)` compares revisions when it registers, so a\nnotify landing between the read and the wait is not lost. A notify after a\nwaiter's registration retired, or after its root finished, wakes nothing.\nA signal never moves payloads: external adapters keep ownership of their\ndata, and its thread safety, until they report a terminal outcome.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -73863,7 +73863,7 @@
    "parameters": [],
    "provider": "_internal/waking",
    "signature": "struct Signal(Copyable)",
-   "summary": "Shared readiness notification for cooperative host-thread integration.",
+   "summary": "Shared readiness notification, safe from any thread.",
    "traits": [
     "Copyable"
    ]

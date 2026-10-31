@@ -25,6 +25,8 @@ struct CancellationToken(Copyable):
 
     Copies share one flag. Requesting cancellation never kills a thread or
     interrupts native code. IO observes it at its documented checkpoints.
+    `cancel` is safe from any thread, and writes made before it are visible to
+    the waiter that observes the cancellation.
     """
     var _flag: ArcPointer[Atomic[UInt8]]
     var _event: _Event

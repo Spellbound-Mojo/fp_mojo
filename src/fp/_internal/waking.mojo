@@ -348,11 +348,17 @@ struct _EventState(Movable):
 
 
 struct Signal(Copyable):
-    """Shared readiness notification for cooperative host-thread integration.
+    """Shared readiness notification, safe from any thread.
 
-    Copies share a revision. A signal does not establish cross-thread callback
-    safety, device completion, or memory visibility for external work. External
-    adapters retain those obligations until they report a terminal outcome.
+    Copies share one revision. `notify` and `revision` take the signal's lock,
+    so writes a thread makes before `notify` are visible to a thread whose later
+    `revision` read observes the change. Read the revision before inspecting
+    state, and touch plain shared state only after observing a change.
+    `Wait.changed(signal, revision)` compares revisions when it registers, so a
+    notify landing between the read and the wait is not lost. A notify after a
+    waiter's registration retired, or after its root finished, wakes nothing.
+    A signal never moves payloads: external adapters keep ownership of their
+    data, and its thread safety, until they report a terminal outcome.
     """
     var _cell: ArcPointer[_Cell[_EventState]]
 

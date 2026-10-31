@@ -39,6 +39,14 @@ trait _CompletionType:
 struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _CompletionType):
     """Copies share one terminal decision; the cell survives late callbacks.
 
+    Copies may be moved to, used on, and destroyed on another thread, and
+    `complete` is safe from any thread. The outcome moves in under the
+    completion's lock and the polling thread takes it under the same lock, so
+    writes made before `complete` are visible to the continuation receiving the
+    value. Mojo has no Send or Sync proof: the outcome's value and error may
+    move to, and be destroyed on, either thread, so their destructors must not
+    hold locks the other thread needs.
+
     Parameters:
         T: The exact owned completion value, including external origins.
         E: The exact domain error of the registration and withdrawal scope.
@@ -61,16 +69,25 @@ struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _C
             outcome: The success, complete ordered failure, or cancellation-only value.
 
         Returns:
-            True if accepted. False after completion or withdrawal has closed admission;
-            rejected payloads are destroyed outside the metadata lock."""
+            True if the outcome was admitted; exactly one outcome is. Admission
+            does not promise use: if withdrawal races it, the admitted outcome
+            is dropped on the polling thread. False after an earlier
+            completion, after withdrawal began, or after the root finished;
+            the rejected outcome is then destroyed on the calling thread,
+            outside the lock."""
         var locked = _lock(self._cell, self._mask)
         var guard = locked.take()
         var accepted = not guard.cell[].slot.value().closed
+        var rejected = Optional[Outcome[Self.T, Self.E]]()
         if accepted:
             guard.cell[].slot.value().closed = True
             guard.cell[].slot.value().result = Optional(outcome^)
-        # Never destroy rejected payloads or invoke producers while locked.
+        else:
+            rejected = Optional(outcome^)
         _ = guard^
+        # Never destroy rejected payloads while locked: Mojo destroys a value
+        # after its last use, so the rejection's final use follows the unlock.
+        _ = rejected^
         self._signal.notify()
         return accepted
 
