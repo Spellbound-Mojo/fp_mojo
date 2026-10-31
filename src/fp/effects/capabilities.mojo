@@ -12,7 +12,6 @@ from ._adapt import _lift_as
 from ._timing import _LiftedClock, _LiftedSleep, _timed, _TimedOf, _TimesCompatible, _delay_by, _DelayedOf, _DelaysCompatible, _and_wait, _WaitedOf, _WaitsCompatible
 from fp._internal.time import Duration
 from ._transport import _CensorOp
-from ._interruption import Interruption
 
 
 struct LiftAsk[I: Monad & _Lifting, C: Ask](Ask):
@@ -2418,11 +2417,13 @@ def interruptible[F: BorrowCallContract & Movable & Deinitable, //, I: Blocking]
     return I.interruptible(function^)
 
 
-def interruptible[R: Movable & Deinitable, //, I: Blocking](function: def(Interruption) thin -> R) -> I.Interrupted[_NativeBorrow[Interruption, R, Never, def(Interruption) thin -> R, False]] where I.InterruptibleCompatible[_NativeBorrow[Interruption, R, Never, def(Interruption) thin -> R, False]]:
-    """Run a plain native interruptible function, in any family with Blocking."""
-    return I.interruptible(_NativeBorrow[Interruption, R, Never, def(Interruption) thin -> R, False](function))
+# The handle type is inferred from the function rather than named: this module
+# sits below the handle's, and the family's admission requires an Interruption.
+def interruptible[P: AnyType, R: Movable & Deinitable, //, I: Blocking](function: def(P) thin -> R) -> I.Interrupted[_NativeBorrow[P, R, Never, def(P) thin -> R, False]] where I.InterruptibleCompatible[_NativeBorrow[P, R, Never, def(P) thin -> R, False]]:
+    """Run a plain native function borrowing an Interruption, in any family with Blocking."""
+    return I.interruptible(_NativeBorrow[P, R, Never, def(P) thin -> R, False](function))
 
 
-def interruptible[R: Movable & Deinitable, X: Movable & Deinitable, //, I: Blocking](function: def(Interruption) raises X thin -> R) -> I.Interrupted[_NativeBorrow[Interruption, R, X, def(Interruption) raises X thin -> R, True]] where I.InterruptibleCompatible[_NativeBorrow[Interruption, R, X, def(Interruption) raises X thin -> R, True]]:
-    """Run a raising plain native interruptible function, in any family with Blocking."""
-    return I.interruptible(_NativeBorrow[Interruption, R, X, def(Interruption) raises X thin -> R, True](function))
+def interruptible[P: AnyType, R: Movable & Deinitable, X: Movable & Deinitable, //, I: Blocking](function: def(P) raises X thin -> R) -> I.Interrupted[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]] where I.InterruptibleCompatible[_NativeBorrow[P, R, X, def(P) raises X thin -> R, True]]:
+    """Run a raising plain native function borrowing an Interruption, in any family with Blocking."""
+    return I.interruptible(_NativeBorrow[P, R, X, def(P) raises X thin -> R, True](function))

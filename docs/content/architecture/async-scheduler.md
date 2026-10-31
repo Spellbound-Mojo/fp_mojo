@@ -118,6 +118,48 @@ Its separate performance client verifies zero child polls during idle driving
 with 1, 64 and 512 sleeping children. These results do not qualify a public
 network backend or cross-thread task execution.
 
+## Blocking pool
+
+`IO.blocking` and `IO.interruptible` run on a blocking pool
+(`src/fp/effects/_async/scheduling/blocking_pool.mojo`), after Cats Effect's
+blocking execution context and Erlang's dirty I/O schedulers. Neither touches
+a run loop from another thread: a call is an `IO.async` registration
+(`src/fp/effects/_async/blocking.mojo`) whose register function queues an
+erased job, and the worker completes the registration's `Completion`, so only
+`Completion`'s qualified cross-thread behavior carries the result back.
+`blocking` registers inside a masked region; `interruptible` registers
+unmasked, and its withdrawal, which runs masked after every entered
+registration, cancels the call's token and waits for the worker to report that
+the function returned.
+
+- **Queue.** S4's striped `_ExternalQueue` holds the jobs; workers and
+  submitters pop and push under stripe locks.
+- **Claims.** Idle workers sit on a locked idle list; a submitter takes one
+  and interrupts its poller (see below).
+- **Spawning and retiring.** A submitter that claimed no worker starts one,
+  below `max_workers`, under the worker-list lock. A worker whose idle timeout
+  passes re-reads the queue under the same lock before exiting, so a job is
+  never left without a worker.
+- **Ownership.** The root's `_Scheduler` holds the root's pool and its
+  in-flight count, which the worker decrements with release ordering after its
+  last use of the job; `finish` waits for it with acquire loads before dropping
+  the root's copy. Each worker body holds the pool's core until it returns,
+  and the worker list holds none, so a pool closed on its own worker detaches
+  that worker, which releases the core last.
+
+Each worker owns an S2 `_Poller` and parks in `poll(idle_timeout)`. An idle
+worker publishes its `_Interrupter` on a locked idle list before re-reading
+the queue, and a submitter pushes its job, then claims one entry and
+interrupts it; both pass through the idle list's lock, so no job is missed.
+While an interruptible call runs, its worker's interrupter is published in the
+call's state, so the withdrawal's request wakes `Interruption.sleep`, which
+parks in the same poller. The
+`blocking_pool` client checks other fibers running during a call, results and
+errors, timeouts that wait, interruption, a sleep through the handle woken by
+the request, reuse and retirement against the process's thread count, idle
+workers using almost no CPU, the maximum under a burst, payload destruction exactly
+once, root finish, shared pools, and the last copy dropped on a worker.
+
 ## Work-stealing structures
 
 Pass 13a builds the concurrent structures of the work-stealing pool in
