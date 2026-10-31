@@ -2526,6 +2526,31 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
 10. **Measure first.** S8 begins with a probe comparing the one-shot slot and
     the stack with their locked versions: uncontended, contended, and with
     more threads than cores.
+11. **Performance gates** (decided after S8's first measurements). In a storm
+    where every thread completes one slot, S8's first lock-free one-shot was
+    20–30% slower than a spin lock, because every losing thread wrote the
+    contended cache line. The lock-free design is kept, as the better final
+    architecture:
+    - it needs fewer atomic writes per operation;
+    - a worker never waits on a descheduled thread, but parks its fiber;
+    - a re-entrant completion simply loses instead of deadlocking.
+
+    Its implementation must meet these gates:
+    - **Read before writing.** A party that can see it has lost leaves after
+      one plain read, and only a plausible winner performs a read-modify-write.
+    - **Placement.** Contended words sit on their own cache lines.
+    - **Allocation.** Operations allocate nothing; a node or slot is allocated
+      at most once per owner.
+    - **Realistic benchmarks.** The fiber pair, the run-loop step, a completion
+      from another thread, a join racing a completion, and many fibers starting
+      under one scope must show no regression beyond run-to-run noise against
+      `nightly`.
+    - **Contended microbenchmarks.** Each must be at least as fast as its
+      spin-lock baseline, from 1 to 16 threads.
+
+    A primitive that still fails after tuning uses a lock that spins on reads
+    and then yields, built on the shared `_acquire_lock`, with the reason
+    recorded.
 
 ### Review questions
 
