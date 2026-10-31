@@ -2551,6 +2551,20 @@ Decided on 2026-10-31, after Wave 1, for the races S7 found:
     A primitive that still fails after tuning uses a lock that spins on reads
     and then yields, built on the shared `_acquire_lock`, with the reason
     recorded.
+
+    **Outcome.** S8 tuned both primitives, and every realistic gate passed.
+    - **One-shot slot.** Read-modify-writes per operation, not losers' writes,
+      were the cost; an uncontended complete and take now cost one. It beats
+      the spin lock from 1 to 2 threads and ties at 4.
+    - **Its one loss.** At 8 and 16 threads on 4 cores it is about 11% slower
+      (173 against 155 ns, and 198 against 176), within the spin lock's own
+      run-to-run swing of 98 to 155 ns at 8 threads. On 2026-10-31 the user
+      kept it lock-free everywhere, `Completion` included. A fiber record has a
+      single writer and cannot meet that storm, and a `Completion` meets it
+      only with eight or more simultaneous producers.
+    - **Closable stack.** Intrusive now, it allocates nothing per push and
+      beats the spin lock at every thread count, by 3 to 7 times from 4
+      threads up.
 12. **Wave 2 alongside S8.** S2 and S6 start while S8 is still running.
     - S2 shares no files with S8.
     - S6 builds only on `Completion`'s public behavior and the shared lock
