@@ -24,3 +24,5 @@ from fp._internal.time import Duration, Instant
 from fp.effects._async.racing import RaceResult
 from fp.effects._async.finalization import Poll
 from fp.effects._async.callbacks import Completion
+from fp.effects._async.scheduling.blocking_pool import BlockingPool
+from fp.effects._interruption import Interruption

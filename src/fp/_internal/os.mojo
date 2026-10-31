@@ -700,6 +700,29 @@ struct OSThread[S: Movable & Deinitable](Movable):
         _join(self._handle)
         return self._state^
 
+    def is_current(self) -> Bool:
+        """Whether the calling thread is this thread.
+
+        Returns:
+            True when called from the thread's own body.
+        """
+        return external_call["pthread_equal", c_int](self._handle, external_call["pthread_self", UInt64]()) != 0
+
+    def detach(deinit self) -> ArcPointer[Self.S]:
+        """Let the thread finish on its own, without joining it.
+
+        For a thread that must release its own owner, which cannot join itself.
+        The body must stop using the state before the returned owner is
+        dropped, since nothing waits for it to return.
+
+        Returns:
+            The state's owner.
+        """
+        var status = external_call["pthread_detach", c_int](self._handle)
+        if status != 0:
+            abort("fp._internal.os: pthread_detach failed")
+        return self._state^
+
 
 def _join(handle: UInt64):
     # The owner cannot release the state until the thread has stopped. A failed

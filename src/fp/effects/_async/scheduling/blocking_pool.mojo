@@ -7,12 +7,15 @@ arriving, and retire after `idle_timeout` without work. A job runs one owned
 function and completes the submitting fiber's `Completion` with its outcome;
 the run loop never runs on a worker.
 
-Ownership. A root owns a pool started on first use, or borrows a `BlockingPool`
-shared by several roots. Finishing a root waits for its in-flight calls (their
-callers wait for them anyway, so only the worker's last steps remain), closes a
-pool it owns, and never stops a borrowed one. Closing a pool runs every queued
-job, then stops and joins its workers. The pool is destroyed with its last
-handle, which closes it.
+Ownership. Copies of a `BlockingPool` share one pool, which lives as long as
+its copies. A root holds a copy: the one in its `IORuntimeConfig`, or a
+private pool created with the root, with no threads until the first call.
+Finishing a root waits for its in-flight calls (their callers wait for them
+anyway, so only the worker's last steps remain), then drops its copy. Dropping
+the last copy closes the pool: every queued job runs, then the workers stop and
+are joined; on one of the pool's own workers, that worker is detached instead.
+Each worker body holds a reference to the pool's core until it returns, and
+the worker list holds none, so a detached worker releases the core last.
 
 Cross-thread rules. The pool is reached from the submitting threads and from
 every worker, so every method takes immutable `self`, and its atomics live in
@@ -59,6 +62,7 @@ from fp._internal.cells import _Cell, _lock_cell
 from fp._internal.erased import _Erased
 from fp._internal.os import OSThread, threads_supported
 from fp._internal.time import Duration
+from fp._internal.waking import _Scheduler
 from .external_queue import _ExternalQueue
 from .random import _Random
 
@@ -162,11 +166,13 @@ struct _Words(Movable):
 
 struct _WorkerState(Movable):
     """What a worker thread receives: its pool and its identity."""
-    var core: Pointer[_PoolCore, MutUntrackedOrigin]
+    # Taken by the body when it starts, so the worker list holds no reference
+    # to its own pool; the body keeps the pool alive until it returns.
+    var core: Optional[ArcPointer[_PoolCore]]
     var id: Int
 
-    def __init__(out self, core: Pointer[_PoolCore, MutUntrackedOrigin], id: Int):
-        self.core = core
+    def __init__(out self, var core: ArcPointer[_PoolCore], id: Int):
+        self.core = Optional(core^)
         self.id = id
 
 
@@ -177,6 +183,9 @@ struct _Worker(Movable):
     def __init__(out self, id: Int, var thread: OSThread[_WorkerState]):
         self.id = id
         self.thread = thread^
+
+    def detach(deinit self):
+        _ = self.thread^.detach()
 
 
 struct _Workers(Movable):
@@ -229,11 +238,8 @@ struct _PoolCore(Movable):
     var _workers: Pointer[_Cell[_Workers], MutUntrackedOrigin]
     var max_workers: Int
     var idle_nanoseconds: Int
-    # This core's own address, which workers receive; set by its owner.
-    var _self: Optional[Pointer[_PoolCore, MutUntrackedOrigin]]
 
     def __init__(out self, max_workers: Int, idle_nanoseconds: Int):
-        self._self = None
         self.queue = _ExternalQueue[_Job](4)
         self._words = unsafe_alloc[_Words](1, alignment=64)
         self._words.unsafe_write(_Words())
@@ -243,7 +249,7 @@ struct _PoolCore(Movable):
         self.idle_nanoseconds = idle_nanoseconds
 
     def __deinit__(deinit self):
-        # The owner closed the pool first: no worker or submitter remains.
+        # Closed, and every worker body that held a reference has returned.
         self._words.unsafe_deinit_pointee()
         self._words.unsafe_free()
         self._workers.unsafe_deinit_pointee()
@@ -259,44 +265,6 @@ struct _PoolCore(Movable):
 
     def closed(self) -> Bool:
         return self.words().closed.load[ordering=Ordering.ACQUIRE]() != 0
-
-    # Submission.
-
-    def submit(self, var job: _Job):
-        """Queue a job and make sure a worker will take it.
-
-        Claims an idle worker, else starts one when fewer than the maximum run;
-        at the maximum, the job waits for the first worker to finish its call.
-        """
-        if self.closed():
-            abort("fp.effects: blocking call submitted to a closed BlockingPool")
-        var random = _Random(_seed())
-        self.queue.push(job^, random)
-        fence[Ordering.SEQUENTIAL]()
-        var idle = self.words().idle.load[ordering=Ordering.RELAXED]()
-        while idle > 0:
-            if self.words().idle.compare_exchange[success_ordering=Ordering.SEQUENTIAL, failure_ordering=Ordering.RELAXED](idle, idle - 1):
-                # The claimed worker finds the job on its next queue read.
-                return
-        var joined: List[_Worker]
-        var guard = _lock_cell(self.workers())
-        ref workers = guard.cell[].slot.value()
-        joined = workers.take_exited()
-        if self.words().live.load[ordering=Ordering.RELAXED]() < self.max_workers:
-            var id = workers.next_id
-            workers.next_id += 1
-            try:
-                var thread = OSThread(ArcPointer(_WorkerState(self._self.value(), id)), _worker_main)
-                workers.running.append(_Worker(id, thread^))
-                _ = self.words().live.fetch_add[ordering=Ordering.RELAXED](1)
-                _ = self.words().started.fetch_add[ordering=Ordering.RELAXED](1)
-            except:
-                # A running worker will take the job; with none, it would never run.
-                if self.words().live.load[ordering=Ordering.RELAXED]() == 0:
-                    abort("fp.effects: the blocking pool could not start a worker thread")
-        _ = guard^
-        # Joining exited workers outside the lock: they no longer need it.
-        _ = joined^
 
     # Workers.
 
@@ -342,19 +310,61 @@ struct _PoolCore(Movable):
         return self.words().started.load[ordering=Ordering.RELAXED]()
 
     def close(self):
-        """Run every queued job, then stop and join every worker. Idempotent."""
+        """Run every queued job, then stop and join every worker.
+
+        Called when the last handle is dropped. On one of the pool's own
+        workers, which cannot join itself, that worker is detached instead: it
+        finishes its job, sees the pool closed, and exits on its own, releasing
+        the pool last.
+        """
         self.words().closed.store[ordering=Ordering.SEQUENTIAL](UInt8(1))
         var all: List[_Worker]
         var guard = _lock_cell(self.workers())
         all = guard.cell[].slot.value().take_all()
         _ = guard^
-        # Each worker drains the queue, sees the flag and exits; dropping joins it.
-        _ = all^
-        # A job left by a submitter that raced the close would never run.
-        var random = _Random(_seed())
-        var left = self.queue.pop(random)
-        if left:
-            abort("fp.effects: blocking call submitted while its BlockingPool closed")
+        # Each worker drains the queue, sees the flag and exits.
+        while len(all):
+            var worker = all.pop()
+            if worker.thread.is_current():
+                worker^.detach()
+            else:
+                _ = worker^
+
+
+def _submit(core: ArcPointer[_PoolCore], var job: _Job):
+    """Queue a job and make sure a worker will take it.
+
+    Claims an idle worker, else starts one when fewer than the maximum run;
+    at the maximum, the job waits for the first worker to finish its call.
+    """
+    var random = _Random(_seed())
+    core[].queue.push(job^, random)
+    fence[Ordering.SEQUENTIAL]()
+    var idle = core[].words().idle.load[ordering=Ordering.RELAXED]()
+    while idle > 0:
+        if core[].words().idle.compare_exchange[success_ordering=Ordering.SEQUENTIAL, failure_ordering=Ordering.RELAXED](idle, idle - 1):
+            # The claimed worker finds the job on its next queue read.
+            return
+    var joined: List[_Worker]
+    var guard = _lock_cell(core[].workers())
+    ref workers = guard.cell[].slot.value()
+    joined = workers.take_exited()
+    if core[].words().live.load[ordering=Ordering.RELAXED]() < core[].max_workers:
+        var id = workers.next_id
+        workers.next_id += 1
+        try:
+            var thread = OSThread(ArcPointer(_WorkerState(core.copy(), id)), _worker_main)
+            workers.running.append(_Worker(id, thread^))
+            _ = core[].words().live.fetch_add[ordering=Ordering.RELAXED](1)
+            _ = core[].words().started.fetch_add[ordering=Ordering.RELAXED](1)
+        except:
+            # A running worker will take the job; with none, it would never run.
+            if core[].words().live.load[ordering=Ordering.RELAXED]() == 0:
+                abort("fp.effects: the blocking pool could not start a worker thread")
+    _ = guard^
+    # Joining exited workers outside the lock: they no longer need it.
+    _ = joined^
+
 
 
 def _idle_wait():
@@ -364,8 +374,9 @@ def _idle_wait():
 
 
 def _worker_main(state: Pointer[_WorkerState, MutAnyOrigin]) abi("C") -> OptionalPointer[NoneType, MutUntrackedOrigin]:
-    ref core = state[].core[]
+    var owner = state[].core.take()
     var id = state[].id
+    ref core = owner[]
     var random = _Random(_seed() ^ UInt64(id + 1))
     while True:
         var job = core.queue.pop(random)
@@ -393,57 +404,42 @@ def _worker_main(state: Pointer[_WorkerState, MutAnyOrigin]) abi("C") -> Optiona
 
 
 struct _PoolOwner(Movable):
-    """The one owner of a pool's core; closing and freeing it on destruction."""
-    var _core: Pointer[_PoolCore, MutUntrackedOrigin]
+    """What every copy of a BlockingPool shares: closing the pool when the last is dropped."""
+    var core: ArcPointer[_PoolCore]
 
     def __init__(out self, max_workers: Int, idle_nanoseconds: Int):
-        self._core = unsafe_alloc[_PoolCore](1, alignment=64)
-        self._core.unsafe_write(_PoolCore(max_workers, idle_nanoseconds))
-        self._core[]._self = Optional(self._core)
+        self.core = ArcPointer(_PoolCore(max_workers, idle_nanoseconds))
 
     def __deinit__(deinit self):
-        self._core[].close()
-        self._core.unsafe_deinit_pointee()
-        self._core.unsafe_free()
-
-    @always_inline
-    def core(self) -> ref[MutUntrackedOrigin] _PoolCore:
-        return self._core[]
+        self.core[].close()
 
 
 struct BlockingPool(Copyable):
-    """Worker threads that run blocking calls, shared by the roots that borrow it.
+    """Worker threads that run blocking calls, shared by the roots that hold it.
 
-    `IO.blocking` and `IO.interruptible` run their functions here. Each root
-    owns a pool started on first use, configured by `IORuntimeConfig`; a
-    `BlockingPool` given to `IORuntimeConfig.blocking` is borrowed instead, and
-    can serve several roots at once. Finishing a root waits for its calls but
-    never stops a borrowed pool. Copies share one pool, which closes when the
-    last copy is dropped or `close` is called.
+    `IO.blocking` and `IO.interruptible` run their functions here. A root
+    uses the pool given in `IORuntimeConfig.blocking_pool`, or else a private
+    pool with the defaults. Copies share one pool, which lives as long as its
+    copies: when the last is dropped, it waits for the queued and running
+    calls, then stops and joins its workers. A pool shared by several roots
+    therefore outlives each root that finishes while another copy remains.
 
     Workers start on demand up to `max_workers`; an idle worker is reused for
     the next call and retires after `idle_timeout` without one. At the
     maximum, a call waits in a queue for the first free worker.
+
+    If a call's function holds the last copy, the pool closes on that worker,
+    which cannot join itself: it finishes its call and exits on its own.
     """
     var _owner: ArcPointer[_PoolOwner]
 
-    def __init__(out self, max_workers: Int = _DEFAULT_MAX_WORKERS) raises:
-        """Create a pool with the default 60-second idle timeout.
-
-        Args:
-            max_workers: The positive maximum number of worker threads.
-
-        Raises:
-            Error: `max_workers` is not positive.
-        """
-        self = Self(max_workers, Duration.seconds(_DEFAULT_IDLE_SECONDS))
-
-    def __init__(out self, max_workers: Int, idle_timeout: Duration) raises:
+    def __init__(out self, max_workers: Int = _DEFAULT_MAX_WORKERS, idle_timeout: Duration = _default_idle()) raises:
         """Create a pool; no thread starts until the first call.
 
         Args:
-            max_workers: The positive maximum number of worker threads.
-            idle_timeout: How long a worker waits for a call before retiring.
+            max_workers: The positive maximum number of worker threads; 64 by default.
+            idle_timeout: How long a worker waits for a call before retiring;
+                60 seconds by default.
 
         Raises:
             Error: `max_workers` is not positive.
@@ -453,70 +449,80 @@ struct BlockingPool(Copyable):
             raise Error("BlockingPool max_workers must be positive")
         self._owner = ArcPointer(_PoolOwner(max_workers, idle_timeout.to_nanoseconds()))
 
-    def close(self):
-        """Run every queued call, then stop and join the workers.
-
-        Call it only when no root using the pool can submit another call;
-        a call submitted after `close` aborts. Closing again does nothing.
-        """
-        self._owner[].core().close()
-
     def _submit(self, var job: _Job):
-        self._owner[].core().submit(job^)
+        _submit(self._owner[].core, job^)
 
     def _live(self) -> Int:
         """Started workers that have not retired; a hint for tests."""
-        return self._owner[].core().live()
+        return self._owner[].core[].live()
 
     def _started(self) -> Int:
         """Workers started since creation; a hint for tests."""
-        return self._owner[].core().started()
+        return self._owner[].core[].started()
+
+
+def _default_idle() -> Duration:
+    var idle = Duration()
+    idle._nanoseconds = _DEFAULT_IDLE_SECONDS * 1000000000
+    return idle^
 
 
 struct _RootBlocking(Copyable):
-    """A root's access to its blocking pool; every context under the root shares it.
+    """A root's pool and its calls in flight; every fiber of the root shares them.
 
-    The root's own pool is created on the first call. A borrowed pool is
-    shared from the start. `finish` waits for the root's calls, then closes
-    an owned pool.
+    The root finishes by waiting for its calls, then dropping its copy of the
+    pool, which closes the pool when no other copy remains.
     """
-    var _pool: ArcPointer[_Cell[Optional[BlockingPool]]]
-    var _calls: _Calls
-    var _owned: Bool
-    var _max_workers: Int
-    var _idle_nanoseconds: Int
+    var pool: BlockingPool
+    var calls: _Calls
 
-    def __init__(out self, borrowed: Optional[BlockingPool], max_workers: Int, idle_nanoseconds: Int):
-        self._owned = not borrowed
-        self._pool = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(borrowed.copy())))
-        self._calls = _Calls()
-        self._max_workers = max_workers
-        self._idle_nanoseconds = idle_nanoseconds
-
-    def pool(self) -> BlockingPool:
-        var guard = _lock_cell(self._pool[])
-        ref slot = guard.cell[].slot.value()
-        if not slot:
-            try:
-                slot = Optional(BlockingPool(self._max_workers, Duration.nanoseconds(self._idle_nanoseconds)))
-            except:
-                abort("fp.effects: invalid blocking pool configuration")
-        var pool = slot.value().copy()
-        _ = guard^
-        return pool^
+    def __init__(out self, var pool: BlockingPool):
+        self.pool = pool^
+        self.calls = _Calls()
 
     def submit(self, var body: _Erased, run: _RunJob):
         """Count the call for this root, then queue it."""
-        self._calls.begin()
-        self.pool()._submit(_Job(body^, run, self._calls))
+        self.calls.begin()
+        self.pool._submit(_Job(body^, run, self.calls))
 
-    def finish(self):
-        """Wait for this root's calls; close the pool if the root owns it."""
-        self._calls.wait()
-        if not self._owned:
-            return
-        var guard = _lock_cell(self._pool[])
-        var pool = guard.cell[].slot.value().take() if guard.cell[].slot.value() else Optional[BlockingPool]()
-        _ = guard^
-        if pool:
-            pool.value().close()
+    def finish(deinit self):
+        """Wait for this root's calls, then release its copy of the pool."""
+        self.calls.wait()
+        # Unused fields may be destroyed before a destructor's body: drop the
+        # pool explicitly after the wait.
+        _ = self.pool^
+
+
+# ===------------------------------------------------------------------=== #
+# The root's hook
+# ===------------------------------------------------------------------=== #
+
+
+def _install_blocking(scheduler: ArcPointer[_Scheduler], pool: Optional[BlockingPool]):
+    """Give a new root its pool: the configured one, or a private one with no threads yet."""
+    var chosen: BlockingPool
+    if pool:
+        chosen = pool.value().copy()
+    else:
+        try:
+            chosen = BlockingPool()
+        except:
+            abort("fp.effects: the default blocking pool configuration is invalid")
+    scheduler[].blocking[] = Optional(_Erased(_RootBlocking(chosen^)))
+
+
+def _root_blocking(scheduler: ArcPointer[_Scheduler]) -> _RootBlocking:
+    """The running root's pool and call count; read on the polling thread."""
+    ref slot = scheduler[].blocking[]
+    if not slot:
+        abort("fp.effects: blocking calls run only under a driver")
+    return slot.value().pointer[_RootBlocking]()[].copy()
+
+
+def _finish_blocking(scheduler: ArcPointer[_Scheduler]):
+    """Wait for the root's calls, then drop its copy of the pool."""
+    ref slot = scheduler[].blocking[]
+    if not slot:
+        return
+    var root = slot.take().take[_RootBlocking]()
+    root^.finish()

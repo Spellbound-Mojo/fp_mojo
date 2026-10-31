@@ -9,6 +9,7 @@ from fp.effects._io_core import _settle, _Budget, _Reporter
 from fp.data import Result, Ok
 from fp._internal.waking import _Event as Signal, _Runtime, _Ticket, _Subscription, _Waker, _Clock as Clock, _Notifier
 from .executor import _Executor
+from .scheduling.blocking_pool import BlockingPool, _RootBlocking, _install_blocking, _finish_blocking
 
 
 @fieldwise_init
@@ -369,6 +370,10 @@ struct IORuntimeConfig(Copyable):
     """Whether unjoined fiber failures reach the reporter; on by default."""
     var reporter: def(String) thin
     """The host callback for unhandled fiber failures; standard error by default."""
+    var blocking_pool: Optional[BlockingPool]
+    """The pool running IO.blocking and IO.interruptible calls; None gives the
+    root a private pool with BlockingPool's defaults. Pass one pool to several
+    roots to share it."""
 
     def __init__(out self):
         """The defaults: check every handoff, yield every 1,024 transitions, and
@@ -377,6 +382,7 @@ struct IORuntimeConfig(Copyable):
         self.auto_yield_threshold = 1024
         self.report_unhandled_fiber_errors = True
         self.reporter = _report_to_stderr
+        self.blocking_pool = None
 
     def __init__(out self, cancelation_check_threshold: Int, auto_yield_threshold: Int) raises:
         """Validate a configuration so that yielding never disables checks.
@@ -398,6 +404,7 @@ struct IORuntimeConfig(Copyable):
         self.auto_yield_threshold = auto_yield_threshold
         self.report_unhandled_fiber_errors = True
         self.reporter = _report_to_stderr
+        self.blocking_pool = None
 
 
 struct Task[P: Machine](Movable, not Deinitable):
@@ -417,6 +424,7 @@ struct Task[P: Machine](Movable, not Deinitable):
         self.context._runtime = Optional(runtime.copy())
         self.context._budget = Optional(ArcPointer(_Budget(config.auto_yield_threshold, config.cancelation_check_threshold, config.report_unhandled_fiber_errors, config.reporter)))
         self._executor = _Executor(runtime)
+        _install_blocking(self._executor.scheduler, config.blocking_pool)
         self._slot.prepare(self.context)
         # The root's registration is ready, so installing the hook queues the root.
         runtime.attach(self._executor.root)
@@ -463,6 +471,7 @@ struct Task[P: Machine](Movable, not Deinitable):
     def finish(deinit self) -> Outcome[Self.P.Value, Self.P.Error]:
         # Release the shared scheduler state here, not on a thread whose late
         # wake drops the last reference (see _Scheduler.shutdown).
+        _finish_blocking(self._executor.scheduler)
         self._executor.scheduler[].shutdown()
         return self._slot.take_outcome()
 

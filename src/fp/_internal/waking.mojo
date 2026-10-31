@@ -335,6 +335,11 @@ struct _Scheduler(Movable):
     # Installed before the root is shared and cleared by shutdown after close,
     # so a reader that passed the closed check sees it unchanged.
     var notifier: ArcPointer[Optional[_Notifier]]
+    # The root's blocking pool and its calls in flight (`_RootBlocking`),
+    # erased because the pool lives above this module. Installed before the
+    # root is shared, read by the polling thread only, and taken by the root's
+    # finish, which waits for the calls.
+    var blocking: ArcPointer[Optional[_Erased]]
 
     def __init__(out self):
         self.ready = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_ReadyQueue())))
@@ -345,6 +350,7 @@ struct _Scheduler(Movable):
         self.closed = ArcPointer(Atomic(UInt8(0)))
         self.in_flight = ArcPointer(Atomic(0))
         self.notifier = ArcPointer(Optional[_Notifier](None))
+        self.blocking = ArcPointer(Optional[_Erased](None))
 
     def push(self, var task: ArcPointer[_TaskHeader]) -> Bool:
         """Queue a scheduled task; true when the host must be notified.

@@ -21,6 +21,7 @@ be destroyed on another thread.
 from std.atomic import Atomic
 from std.builtin.rebind import rebind_var
 from std.memory import ArcPointer
+from std.os import abort
 from fp.callables.protocols import ThunkContract, BorrowCallContract, OnceThunk, OnceUnary
 from fp.callables._receiver import _thunk_once_as, _borrow_once_as
 from fp._internal.cells import _Cell, _lock_cell
@@ -32,7 +33,7 @@ from fp.effects.outcomes import _capture
 from fp.effects._interruption import Interruption
 from .callbacks import Completion
 from .kernel import Machine, Step
-from .scheduling.blocking_pool import _RootBlocking
+from .scheduling.blocking_pool import _RootBlocking, _root_blocking
 
 
 # ===------------------------------------------------------------------=== #
@@ -41,7 +42,7 @@ from .scheduling.blocking_pool import _RootBlocking
 
 
 comptime _CallValue[R: Movable & Deinitable] = NoneType if R == type_of(None) else R
-"""A function with no return value produces the unit value, as IO.delay's does."""
+"""A function with no return value produces the unit value; IO.delay shares it."""
 
 
 @fieldwise_init
@@ -66,19 +67,22 @@ struct _BlockingCall[F: ThunkContract & Movable & Deinitable, E: Movable & Deini
     var function: Self.F
     var completion: Completion[_CallValue[Self.F.Out], Self.E]
 
+    def run(deinit self):
+        comptime assert _ErrorCompatible[Self.E, Self.F.Error]
+        var outcome = Optional(_capture[Self.E](_UnitThunk[Self.F](self.function^)))
+        _ = self.completion.complete(outcome^)
+
 
 def _run_blocking[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](var body: _Erased):
     """Run a blocking call on a worker; a rejected outcome is destroyed here."""
     comptime assert _ErrorCompatible[E, F.Error]
-    var call = body^.take[_BlockingCall[F, E]]()
-    var outcome = Optional(_capture[E](_UnitThunk[F](call.function^)))
-    _ = call.completion.complete(outcome^)
+    body^.take[_BlockingCall[F, E]]().run()
 
 
 struct _ReturnState[E: Movable & Deinitable](Movable):
     """Whether an interruptible function returned, and who waits for it."""
     var returned: Bool
-    var waiter: Optional[Completion[NoneType, E]]
+    var waiter: Optional[Completion[NoneType, Self.E]]
 
     def __init__(out self):
         self.returned = False
@@ -98,8 +102,7 @@ struct _Interrupt[E: Movable & Deinitable](Copyable):
         """The function returned: release the fiber's withdrawal if it waits."""
         var guard = _lock_cell(self.state[])
         guard.cell[].slot.value().returned = True
-        var waiter = guard.cell[].slot.value().waiter^
-        guard.cell[].slot.value().waiter = None
+        var waiter = guard.cell[].slot.value().waiter.take() if guard.cell[].slot.value().waiter else Optional[Completion[NoneType, Self.E]]()
         _ = guard^
         if waiter:
             var unit: NoneType = None
@@ -139,15 +142,17 @@ struct _InterruptibleCall[F: BorrowCallContract & Movable & Deinitable, E: Movab
     var completion: Completion[Self.F.Result, Self.E]
     var interrupt: _Interrupt[Self.E]
 
+    def run(deinit self):
+        comptime assert _ErrorCompatible[Self.E, Self.F.Failure]
+        var outcome = Optional(_capture[Self.E](_LendInterruption[Self.F](self.function^, self.interrupt.token.copy())))
+        _ = self.completion.complete(outcome^)
+        self.interrupt.returned()
+
 
 def _run_interruptible[F: BorrowCallContract & Movable & Deinitable, E: Movable & Deinitable](var body: _Erased):
     """Run an interruptible call on a worker, then report its return."""
     comptime assert _ErrorCompatible[E, F.Failure]
-    var call = body^.take[_InterruptibleCall[F, E]]()
-    var interrupt = call.interrupt.copy()
-    var outcome = Optional(_capture[E](_LendInterruption[F](call.function^, interrupt.token)))
-    _ = call.completion.complete(outcome^)
-    interrupt.returned()
+    body^.take[_InterruptibleCall[F, E]]().run()
 
 
 @fieldwise_init
@@ -198,4 +203,7 @@ struct _CurrentBlocking[E: Movable & Deinitable](Machine, Defaultable):
         pass
 
     def poll(mut self, context: IOContext[Self.E]) -> Step[_RootBlocking, Self.E]:
-        return Step[_RootBlocking, Self.E].ready(Optional(Result[_RootBlocking, EffectFailure[Self.E]](Ok(_root_blocking(context)))))
+        if not context._runtime:
+            abort("fp.effects: blocking calls run only under a driver")
+        var root = _root_blocking(context._runtime.value().scheduler())
+        return Step[_RootBlocking, Self.E].ready(Optional(Result[_RootBlocking, EffectFailure[Self.E]](Ok(root^))))

@@ -38,6 +38,9 @@ from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep
 from .time import Duration, Instant
 from .racing import RaceResult, _winner, _loser
 from .io import EvalIO as _EvalIO
+from .blocking import _CallValue, _CurrentBlocking, _SubmitBlocking, _SubmitInterruptible, _AwaitReturn, _Interrupt
+from .scheduling.blocking_pool import _RootBlocking
+from fp.effects._interruption import Interruption
 from .callbacks import Callback as _Callback, Completion, _CallbackUnit
 from .erased import _ErasedMachine
 from .finalization import Poll
@@ -1387,6 +1390,106 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         return Self.async_(NativeUnary[Completion[Self.T, Self.E], type_of(None), Never, def(var Completion[Self.T, Self.E]) thin, False](register))
 
     @staticmethod
+    def blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self where _DelayValue[F.Out] == Self.T and _OnceThunkAvailable[F] and _ErrorCompatible[Self.E, F.Error] and _Admitted[F]:
+        """Run a blocking function on the root's blocking pool when the IO reaches it.
+
+        The fiber suspends while a pool worker runs the function, so other
+        fibers keep running; it resumes with the function's result or error.
+        Like Cats Effect's `blocking`, the call cannot be canceled: a
+        cancellation or timeout waits for the function to return. Mojo has no
+        Send or Sync proof: the caller asserts that the function, its result
+        and its error may move to, be used on, and be destroyed on another
+        thread. Use interruptible for a function that can stop early.
+
+        Parameters:
+            F: An owned once-callable producing T, or no value when T is
+                NoneType, with error E or none.
+
+        Args:
+            function: The function, consumed; it runs once, on a pool worker.
+
+        Returns:
+            An IO producing the function's result; its error becomes the failure.
+        """
+        return Self._blocking(function^)
+
+    # Every overload shares this body; the native ones cannot restate the
+    # generic overload's constraints on their adapter types.
+    @staticmethod
+    def _blocking[F: ThunkContract & Movable & Deinitable](var function: F) -> Self:
+        comptime assert _DelayValue[F.Out] == Self.T and _ErrorCompatible[Self.E, F.Error]
+        return rebind_var[Self](IO[_RootBlocking, Self.E]._lifted(_CurrentBlocking[Self.E]()).flat_map(_StartBlocking[F, Self.E](function^)))
+
+    @staticmethod
+    def blocking[R: Movable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T and not conforms_to(R, RegisterPassable):
+        """Run a native blocking function on the root's blocking pool."""
+        return Self._blocking(_NativeThunk[R, Never, def() thin -> R, False](function))
+
+    @staticmethod
+    def blocking[R: RegisterPassable & Deinitable, //](function: def() thin -> R) -> Self where R == Self.T:
+        """Run a native blocking function on the root's blocking pool."""
+        return Self._blocking(_NativeThunk[R, Never, def() thin -> R, False](function))
+
+    @staticmethod
+    def blocking[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X] and not conforms_to(R, RegisterPassable):
+        """Run a raising native blocking function; its error becomes the failure."""
+        return Self._blocking(_NativeThunk[R, X, def() raises X thin -> R, True](function))
+
+    @staticmethod
+    def blocking(function: def() thin) -> Self where Self.T == NoneType:
+        """Run a native blocking function with no return value; the IO produces None."""
+        return Self._blocking(_NativeThunk[type_of(None), Never, def() thin, False](function))
+
+    @staticmethod
+    def blocking[X: Movable & Deinitable, //](function: def() raises X thin) -> Self where Self.T == NoneType and _ErrorCompatible[Self.E, X]:
+        """Run a raising native blocking function with no return value; its error becomes the failure."""
+        return Self._blocking(_NativeThunk[type_of(None), X, def() raises X thin, True](function))
+
+    @staticmethod
+    def blocking[R: RegisterPassable & Deinitable, X: Movable & Deinitable, //](function: def() raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]:
+        """Run a raising native blocking function; its error becomes the failure."""
+        return Self._blocking(_NativeThunk[R, X, def() raises X thin -> R, True](function))
+
+    @staticmethod
+    def interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self where F.Payload == Interruption and F.Result == Self.T and _OnceBorrowAvailable[F] and _ErrorCompatible[Self.E, F.Failure] and _Admitted[F]:
+        """Run a blocking function that can stop early, on the root's blocking pool.
+
+        The function borrows an Interruption handle for the call. On
+        cancellation the handle reports the request, which stays visible, and
+        cancellation completes when the function returns; its late result is
+        then rejected and destroyed on the worker. No signal is sent, as in
+        Cats Effect on Scala Native: a function blocked outside the handle is
+        not woken. The caller asserts that the function, its result and its
+        error may move to, be used on, and be destroyed on another thread.
+
+        Parameters:
+            F: An owned once-callable borrowing an Interruption and producing
+                T, with error E or none.
+
+        Args:
+            function: The function, consumed; it runs once, on a pool worker.
+
+        Returns:
+            An IO producing the function's result, or canceled after it returns.
+        """
+        return Self._interruptible(function^)
+
+    @staticmethod
+    def _interruptible[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self:
+        comptime assert F.Payload == Interruption and F.Result == Self.T and _ErrorCompatible[Self.E, F.Failure]
+        return rebind_var[Self](IO[_RootBlocking, Self.E]._lifted(_CurrentBlocking[Self.E]()).flat_map(_StartInterruptible[F, Self.E](function^)))
+
+    @staticmethod
+    def interruptible[R: Movable & Deinitable, //](function: def(Interruption) thin -> R) -> Self where R == Self.T:
+        """Run a native interruptible function on the root's blocking pool."""
+        return Self._interruptible(_NativeBorrow[Interruption, R, Never, def(Interruption) thin -> R, False](function))
+
+    @staticmethod
+    def interruptible[R: Movable & Deinitable, X: Movable & Deinitable, //](function: def(Interruption) raises X thin -> R) -> Self where R == Self.T and _ErrorCompatible[Self.E, X]:
+        """Run a raising native interruptible function; its error becomes the failure."""
+        return Self._interruptible(_NativeBorrow[Interruption, R, X, def(Interruption) raises X thin -> R, True](function))
+
+    @staticmethod
     def eval_io[P: ReaderAction](var program: P) -> Self where IOContract[P].Compatible and P.Value == Self.T and IOContract[P].Error == Self.E:
         """Run a synchronous IO program inside this IO's context when reached.
 
@@ -1925,8 +2028,8 @@ comptime _CaseFinalizer[F: Movable & Deinitable, E: Movable & Deinitable] = (
     and _Admitted[F]) if conforms_to(F, BorrowCallContract) else False
 
 
-# A function with no return value produces the unit value.
-comptime _DelayValue[R: Movable & Deinitable] = NoneType if R == type_of(None) else R
+# A function with no return value produces the unit value (shared with blocking).
+comptime _DelayValue[R: Movable & Deinitable] = _CallValue[R]
 
 
 @fieldwise_init
@@ -1943,6 +2046,42 @@ struct _Delay[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](
             return rebind_var[Self.Out](IO[NoneType, Self.E].pure(unit))
         else:
             return rebind_var[Self.Out](IO[Self.F.Out, Self.E].pure(_thunk_once_as[Self.Error](self.function^)))
+
+
+@fieldwise_init
+struct _StartBlocking[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    """Register a blocking call on the root's pool inside a masked region."""
+    var function: Self.F
+    comptime Arg = _RootBlocking
+    comptime Out = IO[_DelayValue[Self.F.Out], Self.E]
+
+    def call_once(deinit self, var root: _RootBlocking) -> Self.Out:
+        return Self.Out.uncancelable(_MaskedBlocking[Self.F, Self.E](self.function^, root^))
+
+
+@fieldwise_init
+struct _MaskedBlocking[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    """The masked registration: its wait ignores cancellation, as Cats Effect's blocking."""
+    var function: Self.F
+    var root: _RootBlocking
+    comptime Arg = Poll[Self.E]
+    comptime Out = IO[_DelayValue[Self.F.Out], Self.E]
+
+    def call_once(deinit self, var poll: Poll[Self.E]) -> Self.Out:
+        return Self.Out.async_(_SubmitBlocking[Self.F, Self.E](self.function^, self.root^))
+
+
+@fieldwise_init
+struct _StartInterruptible[F: BorrowCallContract & Movable & Deinitable, E: Movable & Deinitable](OnceUnary):
+    """Register an interruptible call; its withdrawal interrupts and waits for the return."""
+    var function: Self.F
+    comptime Arg = _RootBlocking
+    comptime Out = IO[Self.F.Result, Self.E]
+
+    def call_once(deinit self, var root: _RootBlocking) -> Self.Out:
+        var interrupt = _Interrupt[Self.E]()
+        var withdrawal = IO[NoneType, Self.E].async_(_AwaitReturn[Self.E](interrupt.copy()))
+        return Self.Out.`async`(_SubmitInterruptible[Self.F, Self.E](self.function^, root^, interrupt^), withdrawal^)
 
 
 struct _Cede[E: Movable & Deinitable](Machine, Defaultable):
