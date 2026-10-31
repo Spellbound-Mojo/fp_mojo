@@ -1,7 +1,7 @@
 """Native boundaries for shared effectful folds and conditional composition."""
 from itertools import product
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions
+from native_signatures import MD, callable_protocol, callable_metadata, native_adapter, admissions, closure
 from operation_specs import EFFECT_REDUCTIONS, EffectChoice
 
 START = '# --- effect syntax (generated) ---\n'
@@ -43,12 +43,13 @@ def folds(mode, array=False):
                 if factory.kind == 'library':
                     metadata = callable_metadata(operation.mode, cb)
             elif native:
-                params = ([f'A: {MD}', f'B: {MD}'] if fold else ['P: AnyType']) + [f'R: {MD}', 'o: ImmOrigin']
-                error = ('X' if fold else 'E') if kind == 'raising' else 'Never'
+                # Iter and Piped closures come from the shared catalog.
+                form = closure(operation.mode, kind == 'raising', names=(
+                    {'C': 'F', 'X': 'X', 'in0': 'A', 'in1': 'B'} if fold else {'C': 'F', 'X': 'E', 'in0': 'P'}))
+                params = list(form.parameters)
+                error = form.error
                 elem = 'B' if fold else f'downcast[P, {MD}]'
-                cb = native_adapter(operation.mode, ['A', 'B'] if fold else ['P'], 'R', error, 'F', kind == 'raising', origin='o')
-                build = f'{cb}(Pointer(to=function))'
-                arg = 'ref[o] function: F'
+                cb, build, arg = form.type, form.build, form.argument
                 effect = 'R'
             else:
                 params = [f'F: {callable_protocol("binary")} & {MD}' if fold else f'C: {callable_protocol("borrow", repeatable=True)}']
@@ -66,11 +67,8 @@ def folds(mode, array=False):
             if mode == 'free': params += [f'V: {MD}']
             if array: params += ['N: Int']
             params += ['//', 'G: Monad']
-            if kind == 'raising': params += [f'{error}: {MD}']
             if kind == 'catalog': params += list(factory.explicit)
-            if native:
-                bound = f'_RaisingBinary[A, B, R, X]' if fold and kind == 'raising' else '_Binary[A, B, R]' if fold else '_RaisingBorrowing[P, R, E]' if kind == 'raising' else '_Borrowing[P, R]'
-                params += ['F: '+bound]
+            if native: params += list(form.explicit)
             hint = 'Z' if fold else 'X'
             params += [f'{hint}: AnyType = _InferError']
             source = 'V' if mode == 'free' else 'Self.I' if mode == 'iter' else 'Self.Value'
@@ -133,14 +131,13 @@ def conditional(mode, family=None):
                 args += [f'var {label}: {typ}']
                 types.append(typ); values.append(label+'^'); results.append(typ+'.Out'); errors.append(typ+'.Error')
             else:
-                params += [f'{result}: {MD}', f'{origin}: ImmOrigin']
-                err = error if kind == 'raising' else 'Never'
-                errors.append(err)
-                if kind == 'raising': explicit += [f'{error}: {MD}']
-                explicit += [f'{typ}: '+(f'_RaisingThunk[{result}, {error}]' if kind == 'raising' else f'_Thunk[{result}]')]
-                cb = native_adapter('thunk', [], result, err, typ, kind == 'raising', origin=origin)
-                types.append(cb); values.append(f'{cb}(Pointer(to={label}))'); results.append(result)
-                args += [f'ref[{origin}] {label}: {typ}']
+                form = closure('thunk', kind == 'raising', arg=label,
+                               names={'C': typ, 'R': result, 'X': error, 'o': origin})
+                params += list(form.parameters)
+                errors.append(form.error)
+                explicit += list(form.explicit)
+                types.append(form.type); values.append(form.build); results.append(result)
+                args += [form.argument]
         if mode == 'free': params += [f'V: {MD}']
         if family == 'Result': params += [f'Failure: {MD}']
         params += ['//']
@@ -204,10 +201,10 @@ def searches(mode, array=False):
                 if factory.kind=='library':
                     metadata=callable_metadata(operation.mode, cb)
             elif native:
-                params=['P: AnyType' if borrowing else f'A: {MD}',f'R: {MD}','o: ImmOrigin']
+                form=closure(operation.mode, kind=='raising', names={'C': 'F', 'X': 'E', 'in0': 'P' if borrowing else 'A'})
+                params=list(form.parameters)
                 elem=f'downcast[P, {MD}]' if borrowing else 'A'
-                cb=native_adapter(operation.mode, ['P' if borrowing else 'A'], 'R', error, 'F', kind == 'raising', origin='o')
-                build=f'{cb}(Pointer(to=function))';arg='ref[o] function: F';effect='R';fe=error
+                cb,build,arg=form.type,form.build,form.argument;effect='R';fe=error
             else:
                 params=[f'C: {callable_protocol("borrow", repeatable=True)}'] if borrowing else [f'F: {callable_protocol("owned")} & {MD}']
                 cb='C' if borrowing else 'F';build='function^';arg=f'var function: {cb}'
@@ -217,11 +214,8 @@ def searches(mode, array=False):
             if mode=='free':params+=[f'V: {MD}']
             if array:params+=['N: Int']
             params+=['//','G: Monad']+(['M: Monoid'] if folding else [])
-            if kind=='raising':params+=[f'E: {MD}']
             if kind=='catalog':params+=list(factory.explicit)
-            if native:
-                bound=(f'_RaisingBorrowing[P, R, E]' if kind=='raising' else '_Borrowing[P, R]') if borrowing else ('_RaisingUnary[A, R, E]' if kind=='raising' else '_Unary[A, R]')
-                params+=['F: '+bound]
+            if native:params+=list(form.explicit)
             params+=['X: AnyType = _InferError']
             source='V' if mode=='free' else 'Self.I' if mode=='iter' else 'Self.Value'
             value='source^' if mode=='free' else 'self._iterator^' if mode=='iter' else 'self.value^'

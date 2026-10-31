@@ -61,7 +61,7 @@ def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Dein
     var source_iter = _native_zip(source^, other^)
     return ZipWithIterator[A, B, R, _Source[V], _Source[W], def(var A, var B) thin -> R](function, source_iter^, False)
 
-def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable, //, F: _Binary[A, B, R]](var source: V, var other: W, var function: F) -> ZipWithIterator[A, B, R, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B:
+def zip_with[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, V: Movable & Deinitable, W: Movable & Deinitable, //, F: def(var A, var B) -> R](var source: V, var other: W, var function: F) -> ZipWithIterator[A, B, R, _Source[V], _Source[W], F] where _Source[V].Element == A and _Source[W].Element == B:
     """Lazily combine pairs using native left-to-right zip followed by map.
     """
     var source_iter = _native_zip(source^, other^)

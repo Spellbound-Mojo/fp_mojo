@@ -1,7 +1,7 @@
 """Thin terminal admission signatures shared by free functions and fluent APIs."""
 from combinator_docs import document_first_methods
 from operation_specs import TERMINALS
-from native_signatures import MD, callback, callable_protocol, callable_metadata, native_adapter
+from native_signatures import MD, callback, callable_protocol, callable_metadata, native_adapter, closure
 
 START = '# --- terminal syntax (generated) ---\n'
 END = '# --- end terminal syntax ---\n'
@@ -46,12 +46,11 @@ def terminal_methods(mode, carrier=None):
             if carrier: params += list(carrier.parameters)
             if name in {'fold_map', 'combine_all'}: explicit.append('M: Monoid')
             if native:
-                if kind == 'raising': explicit.append(f'E: {MD}')
-                bound = '_RaisingBorrowing[P, R, E]' if borrowing and kind == 'raising' else '_Borrowing[P, R]' if borrowing else '_RaisingUnary[A, R, E]' if kind == 'raising' else '_Unary[A, R]'
-                explicit.append('F: '+bound)
-                error = 'E' if kind == 'raising' else 'Never'
-                cb = native_adapter('borrow' if borrowing else 'owned', ['P' if borrowing else 'A'], 'R', error, 'F', kind == 'raising', origin='o')
-                build, arg = f'{cb}(Pointer(to=function))', 'ref[o] function: F'
+                # Closures come from the shared catalog; the surface relates the input.
+                form = closure('borrow' if borrowing else 'owned', kind == 'raising',
+                               names={'C': 'F', 'X': 'E', 'in0': 'P' if borrowing else 'A'})
+                explicit += list(form.explicit)
+                error, cb, build, arg = form.error, form.type, form.build, form.argument
             elif kind == 'library':
                 error, cb = metadata.error, 'C' if borrowing else 'F'
                 build, arg = 'function^', f'var function: {cb}'

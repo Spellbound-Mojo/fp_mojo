@@ -170,30 +170,18 @@ def callback(mode, kind, arg="function", second=False):
             metadata.error,
             mode,
         )
-    params = (
-        [] if mode == "thunk" else [f"{p}: " + ("AnyType" if mode == "borrow" else MD)]
-    ) + [f"{r}: {MD}", f"{o}: ImmOrigin"]
-    error = x if kind == "raising" else "Never"
-    base = {"borrow": "Borrowing", "owned": "Unary", "thunk": "Thunk"}[mode]
-    native_args = (f"{p}, " if mode != "thunk" else "") + r
-    trait = (
-        f"_Raising{base}[{native_args}, {x}]"
-        if kind == "raising"
-        else f"_{base}[{native_args}]"
-    )
-    explicit = ([f"{x}: {MD}"] if kind == "raising" else []) + [f"{f}: {trait}"]
-    typ = native_adapter(
-        mode, [p] if mode != "thunk" else [], r, error, f, kind == "raising", origin=o
-    )
+    # Closures: the catalog's form, under this description's names.
+    form = closure(mode, kind == "raising", arg=arg,
+                   names={"C": f, "R": r, "X": x, "o": o, "in0": p})
     return Callback(
-        params,
-        explicit,
-        f"ref[{o}] {arg}: {f}",
-        typ,
-        f"{typ}(Pointer(to={arg}))",
-        p,
-        r,
-        error,
+        list(form.parameters),
+        list(form.explicit),
+        form.argument,
+        form.type,
+        form.build,
+        form.inputs[0] if form.inputs else p,
+        form.result,
+        form.error,
         mode,
     )
 
@@ -449,7 +437,7 @@ _NATIVE = {"owned": "Unary", "borrow": "Borrowing", "binary": "Binary", "thunk":
 
 
 def admissions(mode, elements=(), *, arg="function", fixed_error=None, known_closure=False,
-               library=True, view=True, repeatable=False, names=None, result_register=None):
+               library=True, view=True, plain=True, repeatable=False, names=None, result_register=None):
     """Every form an entry point declares for one callback, and nothing else.
 
     `elements` are the callback's operand types, already known from earlier
@@ -468,6 +456,11 @@ def admissions(mode, elements=(), *, arg="function", fixed_error=None, known_clo
     - plain functions, pure with memory and register results (stored
       register-result pointers need the split) and raising with one result
       bound. Borrowed register payloads carry their own evidence.
+
+    An element of None leaves that input fresh and unrelated: the surface
+    relates it itself (a carrier-specific method compares `Self.Value` with the
+    carrier spelled over it), and plain functions, which need the element, are
+    not offered.
 
     `names` renames C (the closure type), L (the library type, default C), R,
     X, o and the fresh inputs in0, in1, so a surface keeps its public
@@ -496,7 +489,7 @@ def admissions(mode, elements=(), *, arg="function", fixed_error=None, known_clo
             (shared.payload,) if shared.payload else (), shared.result, shared.error, ()))
     # Closures, borrowed in place.
     inputs = elements if known_closure else fresh
-    relations = () if known_closure else tuple(f"{e} == {i}" for e, i in zip(elements, inputs))
+    relations = () if known_closure else tuple(f"{e} == {i}" for e, i in zip(elements, inputs) if e is not None)
     input_params = () if known_closure else tuple(
         (f"{i}: AnyType" if convention == "r" else f"{i}: {MD}") for i in inputs)
     spelled = ", ".join((i if convention == "r" else "var " + i) for i in inputs)
@@ -511,6 +504,8 @@ def admissions(mode, elements=(), *, arg="function", fixed_error=None, known_clo
             f"ref[{o}] {arg}: {C}", adapter, f"{adapter}(Pointer(to={arg}))", tuple(inputs), R, error,
             relations + ((guard,) if guard else ())))
     # Plain functions, copied into an owned callable.
+    if not plain or any(e is None for e in elements):
+        return out
     operands = [Operand(e, convention, read_parameter=names.get(f"read{i}", f"{C}P{i}"))
                 for i, e in enumerate(elements)]
     for raising in (False, True):
@@ -773,3 +768,19 @@ def native_dispatch(
         else:
             out += indent + f"    return {call}\n"
     return out
+
+
+def closure(mode, raising, *, elements=None, names=None, arg="function", fixed_error=None, never=False):
+    """One borrowed closure form from the catalog, for a surface's own layout.
+
+    `elements` defaults to fresh inputs the surface relates itself. With
+    `fixed_error`, `raising` selects `raises <fixed_error>` and `never` the
+    explicit `raises Never` form.
+    """
+    elements = [None] * len(CALLBACK_SHAPES[mode].inputs) if elements is None else elements
+    forms = [f for f in admissions(mode, elements, arg=arg, fixed_error=fixed_error, library=False,
+                                   view=False, plain=False, names=names) if f.kind == "closure"]
+    if fixed_error:
+        return forms[2] if never else forms[1] if raising else forms[0]
+    return forms[1] if raising else forms[0]
+

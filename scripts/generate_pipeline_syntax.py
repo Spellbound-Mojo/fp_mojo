@@ -7,7 +7,7 @@ independent of the supported container count.
 """
 from dataclasses import dataclass
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, native_adapter, callback
+from native_signatures import MD, callable_protocol, native_adapter, callback, closure
 
 START = '    # --- container methods (generated) ---\n'
 END = '    # --- end container methods ---\n'
@@ -76,10 +76,7 @@ def map_methods(carrier):
     source, result, family = carrier.value('T'), carrier.value('U'), carrier.instance('T')
     for raising in (False, True):
         parameters = [f'T: {MD}', f'U: {MD}', *carrier.parameters, '//']
-        effect = ' raises E' if raising else ''
-        if raising:
-            parameters.append(f'E: {MD}')
-        parameters.append(f'F: def(var T){effect} -> U')
+        parameters += closure('owned', raising, names={'C': 'F', 'X': 'E', 'in0': 'T', 'R': 'U'}).explicit
         operation = f'_family_map[{family}' + (', X=E]' if raising else ']')
         out.append(forward('map', parameters, 'ref function: F', result, source,
                            operation, 'function', f'Map {carrier.name} payloads immediately, preserving the native container.',
@@ -113,10 +110,7 @@ def filter_methods(carrier, name, description):
     source, family = carrier.value('T'), carrier.instance('T')
     for raising in (False, True):
         parameters = [f'T: {MD}', f'R: {MD}', *carrier.parameters, '//']
-        effect = ' raises E' if raising else ''
-        if raising:
-            parameters.append(f'E: {MD}')
-        parameters.append(f'F: def(T){effect} -> R')
+        parameters += closure('borrow', raising, names={'C': 'F', 'X': 'E', 'in0': 'T'}).explicit
         operation = f'_family_{name}[{family}' + (', E=E]' if raising else ']')
         out.append(forward(name, parameters, 'ref predicate: F', source, source,
                            operation, 'predicate', f'{description} {carrier.name} payloads immediately, preserving their container.',
@@ -229,12 +223,9 @@ def observe_methods(carrier=None):
                 params += [f'R: {MD}', *(carrier.parameters if carrier else ()), 'o: ImmOrigin', '//']
                 if not carrier:
                     params.append('I: Functor')
-                if kind == 'raising':
-                    params.append(f'E: {MD}')
-                params.append('F: _RaisingBorrowing[P, R, E]' if kind == 'raising' else 'F: _Borrowing[P, R]')
-                error = 'E' if kind == 'raising' else 'Never'
-                bridge = native_adapter('borrow', ['P'], 'R', error, 'F', kind == 'raising', origin='o')
-                arg, build = 'ref[o] function: F', f'{bridge}(Pointer(to=function))'
+                form = closure('borrow', kind == 'raising', names={'C': 'F', 'X': 'E', 'in0': 'P'})
+                params += list(form.explicit)
+                error, bridge, arg, build = form.error, form.type, form.argument, form.build
             else:
                 params += [f'C: {callable_protocol("borrow")} & {MD}', *(carrier.parameters if carrier else ('//', 'I: Functor'))]
                 error, bridge, arg, build = 'C.Failure', 'C', 'var function: C', 'function^'
@@ -285,17 +276,16 @@ def algebra_methods(carrier=None, *, iteration=False):
             elif name == 'traverse':
                 params.append('G: Applicative')
             error = 'E' if kind == 'raising' else 'Never'
-            if kind == 'raising':
-                params.append(f'E: {MD}')
             if native:
-                params.append('F: _RaisingUnary[A, R, E]' if kind == 'raising' else 'F: _Unary[A, R]')
+                form = closure('owned', kind == 'raising', names={'C': 'F', 'X': 'E', 'in0': 'A'})
+                params += list(form.explicit)
             if parallel:
                 params = [p for p in params if p != '//' and not p.startswith('S:')] + ['//', f'S: Semigroup = _ListErrors[{target}]']
             elem = 'A' if native else 'F._View[o].Arg' if kind == 'view' else 'F.Arg'
             source = carrier.value(elem) if carrier else 'Self.I' if iteration else 'Self.Value'
             family = carrier.instance(elem) if carrier else 'ListFamily' if iteration else 'I'
-            callback = native_adapter('owned', ['A'], 'R', error, 'F', kind == 'raising', origin='o') if native else 'F._View[o]' if kind == 'view' else 'F'
-            build = f'{callback}(Pointer(to=function))' if native else 'function._unary_view()' if kind == 'view' else 'function^'
+            callback = form.type if native else 'F._View[o]' if kind == 'view' else 'F'
+            build = form.build if native else 'function._unary_view()' if kind == 'view' else 'function^'
             target_family = 'ValidationFamily[S]' if parallel else 'G'
             args = f'{target_family}, {source}, {callback}' if operation == 'traverse' else f'{source}, {callback}'
             result = f'{family}.{result_alias}[{args}]'

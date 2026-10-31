@@ -1,6 +1,6 @@
 """Admission for fluent applicative combination; execution belongs to families."""
 from combinator_docs import document_first_methods
-from native_signatures import MD, callable_protocol, native_adapter
+from native_signatures import MD, callable_protocol, native_adapter, closure
 
 
 
@@ -19,10 +19,12 @@ def methods(carrier=None, result=False):
         params += ['//']
         if not carrier and not result: params += ['I: Applicative']
         error='X' if kind=='raising' else 'Never'
-        if kind=='raising': params += [f'{error}: {MD}']
-        if native: params += [f'F: _RaisingBinary[A, B, R, {error}]' if kind=='raising' else 'F: _Binary[A, B, R]']
-        cb=native_adapter('binary', ['A', 'B'], 'R', error, 'F', kind == 'raising', origin='o') if native else 'F'
-        build=f'{cb}(Pointer(to=function))' if native else 'function^'
+        if native:
+            # Closures come from the shared catalog.
+            form = closure('binary', kind == 'raising', names={'C': 'F', 'X': error, 'in0': 'A', 'in1': 'B'})
+            params += list(form.explicit)
+        cb=form.type if native else 'F'
+        build=form.build if native else 'function^'
         if result:
             left=f'Result[{a}, Self.E]';right=f'Result[{b}, Self.E]';output=f'Result[{r}, Self.E]'
             raised=error if native else 'F.Error'

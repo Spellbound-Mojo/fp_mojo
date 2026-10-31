@@ -1,5 +1,5 @@
 """Native n-argument boundaries and bounded type inference; execution is shared."""
-from native_signatures import native_dispatch, native_invocation, argument
+from native_signatures import native_dispatch, native_invocation, argument, closure
 
 MD = 'Movable & Deinitable'
 MAX = 8
@@ -234,8 +234,10 @@ def _method_sections(*, result, explicit, parallel, policy, native=True):
                 explicit_parameters.append(f'X: {MD}')
             sig = f'_RaisingNary{n}[{", ".join(names)}, R, X]' if raising else f'_Nary{n}[{", ".join(names)}, R]'
             if n <= 2:
-                prefix = '_RaisingUnary' if n == 1 and raising else '_Unary' if n == 1 else '_RaisingBinary' if raising else '_Binary'
-                sig = f'{prefix}[{", ".join(names)}, R' + (', X]' if raising else ']')
+                # One- and two-argument callbacks are catalog shapes.
+                form = closure('owned' if n == 1 else 'binary', raising,
+                               names={'C': 'F', 'X': 'X', **{f'in{i}': a for i, a in enumerate(names)}})
+                sig = form.explicit[-1].split(': ', 1)[1]
             explicit_parameters.append('F: ' + sig)
             if parallel:
                 # Validation fixes its native callback before the explicit

@@ -231,7 +231,7 @@ def combine_all_optional[S: Semigroup, V: Movable & Deinitable](var source: V) r
     """
     return _map_accumulate[_Source[V], Identity[S.Value], _OptionalCombine[S], S.Error](Identity[S.Value](), _source(source^), Optional[S.Value]())
 
-def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Borrowing[P, R]](var source: V, ref[o] predicate: F) raises Never -> Int where _Source[V].Element == downcast[P, Movable & Deinitable] and R == Bool:
+def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: def(P) -> R](var source: V, ref[o] predicate: F) raises Never -> Int where _Source[V].Element == downcast[P, Movable & Deinitable] and R == Bool:
     """Count accepted candidates, borrowing each once; empty input returns zero.
 
     This is a consuming terminal. Native callbacks are borrowed in place;
@@ -259,7 +259,7 @@ def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & 
     """
     return _count_where(_NativeBorrowRef[P, R, Never, F, False, o](Pointer(to=predicate)), source^)
 
-def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingBorrowing[P, R, E]](var source: V, ref[o] predicate: F) raises E -> Int where _Source[V].Element == downcast[P, Movable & Deinitable] and R == Bool:
+def count_where[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, E: Movable & Deinitable, F: def(P) raises E -> R](var source: V, ref[o] predicate: F) raises E -> Int where _Source[V].Element == downcast[P, Movable & Deinitable] and R == Bool:
     """Count accepted candidates, borrowing each once; empty input returns zero.
     """
     return _count_where(_NativeBorrowRef[P, R, E, F, True, o](Pointer(to=predicate)), source^)
@@ -274,7 +274,7 @@ def count_where[C: _BorrowViewable, o: ImmOrigin, V: Movable & Deinitable](var s
     """
     return _count_where(predicate._borrow_view(), source^)
 
-def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: _Unary[A, R]](var source: V, ref[o] function: F) raises Never -> NoneType where _Source[V].Element == A and R == NoneType:
+def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, F: def(var A) -> R](var source: V, ref[o] function: F) raises Never -> NoneType where _Source[V].Element == A and R == NoneType:
     """Move each element into a callback returning NoneType, then return None.
 
     This is a consuming terminal. Native callbacks are borrowed in place;
@@ -302,7 +302,7 @@ def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: 
     """
     return _for_each(_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), source^)
 
-def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](var source: V, ref[o] function: F) raises E -> NoneType where _Source[V].Element == A and R == NoneType:
+def for_each[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, E: Movable & Deinitable, F: def(var A) raises E -> R](var source: V, ref[o] function: F) raises E -> NoneType where _Source[V].Element == A and R == NoneType:
     """Move each element into a callback returning NoneType, then return None.
     """
     return _for_each(_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), source^)
@@ -317,7 +317,7 @@ def for_each[F: _UnaryViewable, o: ImmOrigin, V: Movable & Deinitable](var sourc
     """
     return _for_each(function._unary_view(), source^)
 
-def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, F: _Unary[A, R]](var source: V, ref[o] function: F) raises M.Error -> M.Value where _Source[V].Element == A and R == Optional[M.Value]:
+def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, F: def(var A) -> R](var source: V, ref[o] function: F) raises M.Error -> M.Value where _Source[V].Element == A and R == Optional[M.Value]:
     """Map to Optional monoid values, skip absence and combine present values in order.
 
     This is a consuming terminal. Native callbacks are borrowed in place;
@@ -346,7 +346,7 @@ def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin,
     """
     return _collect_fold[M=M, E=M.Error](_NativeUnaryRef[A, R, Never, F, False, o](Pointer(to=function)), source^)
 
-def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, E: Movable & Deinitable, F: _RaisingUnary[A, R, E]](var source: V, ref[o] function: F) raises E -> M.Value where _Source[V].Element == A and R == Optional[M.Value] and _ErrorCompatible[E, M.Error]:
+def collect_fold[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, V: Movable & Deinitable, //, M: Monoid, E: Movable & Deinitable, F: def(var A) raises E -> R](var source: V, ref[o] function: F) raises E -> M.Value where _Source[V].Element == A and R == Optional[M.Value] and _ErrorCompatible[E, M.Error]:
     """Map to Optional monoid values, skip absence and combine present values in order.
     """
     return _collect_fold[M=M, E=E](_NativeUnaryRef[A, R, E, F, True, o](Pointer(to=function)), source^)

@@ -959,11 +959,11 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return self^.flat_map(_ResultRetain[Self.T, Self.E, C, False](function^))
 
-    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
+    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
         """Sequence a borrowed Result projection and retain the original success value."""
         return self^.flat_tap(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function)))
 
-    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
+    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
         """Sequence a borrowed Result projection and retain the original success value."""
         return self^.flat_tap(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function)))
 
@@ -990,11 +990,11 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return self^.flat_map(_ResultRetain[Self.T, Self.E, C, True](function^))
 
-    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
+    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
         """Sequence a borrowed Result projection and retain both success values."""
         return self^.flat_pair_with(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function)))
 
-    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
+    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
         """Sequence a borrowed Result projection and retain both success values."""
         return self^.flat_pair_with(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function)))
 
@@ -1021,11 +1021,11 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return self^.flat_map(_IgnoreInput[Self.T, C](function^))
 
-    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> R where R == Result[downcast[R, _ResultType].Value, Self.E]:
+    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> R where R == Result[downcast[R, _ResultType].Value, Self.E]:
         """On success, call a zero-argument factory and return its Result."""
         return self^.flat_map(_BorrowedUnary[Self.T, _IgnoreInput[Self.T, _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[Self.T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))))
 
-    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> R where R == Result[downcast[R, _ResultType].Value, Self.E]:
+    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> R where R == Result[downcast[R, _ResultType].Value, Self.E]:
         """On success, call a zero-argument factory and return its Result."""
         return self^.flat_map(_BorrowedUnary[Self.T, _IgnoreInput[Self.T, _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[Self.T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))))
 
@@ -1052,11 +1052,11 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return self^.flat_map(_ResultRetain[Self.T, Self.E, _IgnoreInput[Self.T, C], False](_IgnoreInput[Self.T, C](function^)))
 
-    def before[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]:
+    def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]:
         """On success, call a zero-argument factory and retain the original value."""
         return self^.flat_map(_ResultRetain[Self.T, Self.E, _IgnoreInput[Self.T, _NativeThunkRef[R, Never, C, False, o]], False](_IgnoreInput[Self.T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))))
 
-    def before[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingThunk[R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]:
+    def before[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]:
         """On success, call a zero-argument factory and retain the original value."""
         return self^.flat_map(_ResultRetain[Self.T, Self.E, _IgnoreInput[Self.T, _NativeThunkRef[R, X, C, True, o]], False](_IgnoreInput[Self.T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))))
 
@@ -1085,11 +1085,11 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return _conditional_result[Self.T, Self.E, C, _BorrowedUnary[Self.T, G], Self.T, G.Result, G.Failure, _CommonError[C.Failure, G.Failure], True, True, False, _call_transform[Self.T, _BorrowedUnary[Self.T, G]]](self^, predicate^, _BorrowedUnary[Self.T, G](make_error^))
 
-    def ensure[C: BorrowCallContract & Movable & Deinitable, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, G: _Borrowing[Q, S]](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, Never] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and Q == Self.T and S == Self.E:
+    def ensure[C: BorrowCallContract & Movable & Deinitable, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Q) -> S](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, Never] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and Q == Self.T and S == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(predicate^, _NativeBorrowRef[Q, S, Never, G, False, q](Pointer(to=make_error)))
 
-    def ensure[C: BorrowCallContract & Movable & Deinitable, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingBorrowing[Q, S, Y]](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and Q == Self.T and S == Self.E:
+    def ensure[C: BorrowCallContract & Movable & Deinitable, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(Q) raises Y -> S](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and Q == Self.T and S == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(predicate^, _NativeBorrowRef[Q, S, Y, G, True, q](Pointer(to=make_error)))
 
@@ -1097,35 +1097,35 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(predicate^, make_error._borrow_view())
 
-    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[Never, G.Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G.Payload == Self.T and G.Result == Self.E:
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(P) -> R](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[Never, G.Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G.Payload == Self.T and G.Result == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), make_error^)
 
-    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, C: _Borrowing[P, R], G: _Borrowing[Q, S]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, Never] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, G: def(Q) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, Never] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), _NativeBorrowRef[Q, S, Never, G, False, q](Pointer(to=make_error)))
 
-    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, C: _Borrowing[P, R], Y: Movable & Deinitable, G: _RaisingBorrowing[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, Y: Movable & Deinitable, G: def(Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), _NativeBorrowRef[Q, S, Y, G, True, q](Pointer(to=make_error)))
 
-    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), make_error._borrow_view())
 
-    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[X, G.Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G.Payload == Self.T and G.Result == Self.E:
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[X, G.Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G.Payload == Self.T and G.Result == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), make_error^)
 
-    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], G: _Borrowing[Q, S]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, Never] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, G: def(Q) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, Never] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), _NativeBorrowRef[Q, S, Never, G, False, q](Pointer(to=make_error)))
 
-    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Y: Movable & Deinitable, G: _RaisingBorrowing[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, Y: Movable & Deinitable, G: def(Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), _NativeBorrowRef[Q, S, Y, G, True, q](Pointer(to=make_error)))
 
-    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), make_error._borrow_view())
 
@@ -1133,11 +1133,11 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(predicate._borrow_view(), make_error^)
 
-    def ensure[C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, G: _Borrowing[Q, S]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Never] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and Q == Self.T and S == Self.E:
+    def ensure[C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Q) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Never] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and Q == Self.T and S == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(predicate._borrow_view(), _NativeBorrowRef[Q, S, Never, G, False, q](Pointer(to=make_error)))
 
-    def ensure[C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingBorrowing[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and Q == Self.T and S == Self.E:
+    def ensure[C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and Q == Self.T and S == Self.E:
         """Keep an accepted success or construct a stored error from its borrowed value."""
         return self^.ensure(predicate._borrow_view(), _NativeBorrowRef[Q, S, Y, G, True, q](Pointer(to=make_error)))
 
@@ -1164,13 +1164,13 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return _result_transform[Self.T, Self.E, Self.T, Self.E, C, False, True, True](function^, self^)
 
-    def recover[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where A == Self.E and R == Self.T:
+    def recover[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A) -> R](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where A == Self.E and R == Self.T:
         """Recover a stored error as a success, retaining the Result error type."""
         def invoke_recovery(var payload: Self.E, callback: C) raises Never capturing -> Self.T:
             return rebind_var[Self.T](callback(rebind_var[A](payload^)))
         return _transform_result[Self.T, Self.E, Self.T, Self.E, Never, False, True, Self.E, Self.T, C, invoke_recovery, True](self^, function)
 
-    def recover[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingUnary[A, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where A == Self.E and R == Self.T:
+    def recover[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(var A) raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where A == Self.E and R == Self.T:
         """Recover a stored error as a success, retaining the Result error type."""
         def invoke_recovery(var payload: Self.E, callback: C) raises X capturing -> Self.T:
             return rebind_var[Self.T](callback(rebind_var[A](payload^)))
@@ -1195,11 +1195,11 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return self^.map_err(_ObserveOnce[Self.E, C, False](function^))
 
-    def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.E:
+    def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.E:
         """Inspect a borrowed stored error and retain the Result."""
         return self^.tap_err(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function)))
 
-    def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.E:
+    def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.E:
         """Inspect a borrowed stored error and retain the Result."""
         return self^.tap_err(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function)))
 
@@ -1228,13 +1228,13 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return _conditional_result[Self.T, Self.E, C, G, Self.E, G.Out, G.Error, _CommonError[C.Failure, G.Error], False, True, True, _call_transform[Self.E, G]](self^, predicate^, function^)
 
-    def recover_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: _Unary[Q, S]](deinit self, var predicate: C, ref[q] function: G) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Self.T:
+    def recover_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Q) -> S](deinit self, var predicate: C, ref[q] function: G) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Self.T:
         """Recover a matching stored error as a success."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, C, Pointer[G, q], Q, S, Never, C.Failure, False, True, True, invoke_recovery](self^, predicate^, Pointer(to=function))
 
-    def recover_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, var predicate: C, ref[q] function: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Self.T:
+    def recover_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, var predicate: C, ref[q] function: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Self.T:
         """Recover a matching stored error as a success."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](payload^)
@@ -1244,43 +1244,43 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Recover a matching stored error as a success."""
         return self^.recover_if(predicate^, function._unary_view())
 
-    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[Never, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Self.T:
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(P) -> R](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[Never, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Self.T:
         """Recover a matching stored error as a success."""
         return self^.recover_if(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), function^)
 
-    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: _Borrowing[P, R], G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises Never -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises Never -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
         """Recover a matching stored error as a success."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, Never, C, False, o], Pointer[G, q], Q, S, Never, Never, False, True, True, invoke_recovery](self^, _NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), Pointer(to=function))
 
-    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: _Borrowing[P, R], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
         """Recover a matching stored error as a success."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, Never, C, False, o], Pointer[G, q], Q, S, Y, _CommonError[Never, Y], False, True, True, invoke_recovery](self^, _NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), Pointer(to=function))
 
-    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:
         """Recover a matching stored error as a success."""
         return self^.recover_if(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), function._unary_view())
 
-    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[X, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Self.T:
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[X, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Self.T:
         """Recover a matching stored error as a success."""
         return self^.recover_if(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), function^)
 
-    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises X -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises X -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
         """Recover a matching stored error as a success."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, X, C, True, o], Pointer[G, q], Q, S, Never, X, False, True, True, invoke_recovery](self^, _NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), Pointer(to=function))
 
-    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
         """Recover a matching stored error as a success."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, X, C, True, o], Pointer[G, q], Q, S, Y, _CommonError[X, Y], False, True, True, invoke_recovery](self^, _NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), Pointer(to=function))
 
-    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:
         """Recover a matching stored error as a success."""
         return self^.recover_if(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), function._unary_view())
 
@@ -1288,13 +1288,13 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Recover a matching stored error as a success."""
         return self^.recover_if(predicate._borrow_view(), function^)
 
-    def recover_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Self.T:
+    def recover_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Self.T:
         """Recover a matching stored error as a success."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, C._BorrowView[o], Pointer[G, q], Q, S, Never, C._BorrowView[o].Failure, False, True, True, invoke_recovery](self^, predicate._borrow_view(), Pointer(to=function))
 
-    def recover_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Self.T:
+    def recover_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Self.T:
         """Recover a matching stored error as a success."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](payload^)
@@ -1325,13 +1325,13 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """
         return _conditional_result[Self.T, Self.E, C, G, Self.E, G.Out, G.Error, _CommonError[C.Failure, G.Error], False, False, True, _call_transform[Self.E, G]](self^, predicate^, function^)
 
-    def or_else_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: _Unary[Q, S]](deinit self, var predicate: C, ref[q] function: G) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+    def or_else_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Q) -> S](deinit self, var predicate: C, ref[q] function: G) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, C, Pointer[G, q], Q, S, Never, C.Failure, False, False, True, invoke_recovery](self^, predicate^, Pointer(to=function))
 
-    def or_else_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, var predicate: C, ref[q] function: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+    def or_else_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, var predicate: C, ref[q] function: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](payload^)
@@ -1341,43 +1341,43 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Continue a matching stored error with a Result."""
         return self^.or_else_if(predicate^, function._unary_view())
 
-    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[Never, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(P) -> R](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[Never, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         return self^.or_else_if(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), function^)
 
-    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: _Borrowing[P, R], G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises Never -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises Never -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, Never, C, False, o], Pointer[G, q], Q, S, Never, Never, False, False, True, invoke_recovery](self^, _NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), Pointer(to=function))
 
-    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: _Borrowing[P, R], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, Never, C, False, o], Pointer[G, q], Q, S, Y, _CommonError[Never, Y], False, False, True, invoke_recovery](self^, _NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), Pointer(to=function))
 
-    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: _Borrowing[P, R]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         return self^.or_else_if(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), function._unary_view())
 
-    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[X, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[X, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         return self^.or_else_if(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), function^)
 
-    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises X -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises X -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, X, C, True, o], Pointer[G, q], Q, S, Never, X, False, False, True, invoke_recovery](self^, _NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), Pointer(to=function))
 
-    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X], Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, X, C, True, o], Pointer[G, q], Q, S, Y, _CommonError[X, Y], False, False, True, invoke_recovery](self^, _NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), Pointer(to=function))
 
-    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: _RaisingBorrowing[P, R, X]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         return self^.or_else_if(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), function._unary_view())
 
@@ -1385,13 +1385,13 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Continue a matching stored error with a Result."""
         return self^.or_else_if(predicate._borrow_view(), function^)
 
-    def or_else_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: _Unary[Q, S]](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+    def or_else_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
             return context[](payload^)
         return _conditional_result[Self.T, Self.E, C._BorrowView[o], Pointer[G, q], Q, S, Never, C._BorrowView[o].Failure, False, False, True, invoke_recovery](self^, predicate._borrow_view(), Pointer(to=function))
 
-    def or_else_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: _RaisingUnary[Q, S, Y]](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+    def or_else_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
         """Continue a matching stored error with a Result."""
         def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
             return context[](payload^)
@@ -1803,17 +1803,17 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, G._View[q].Out, C._View[o].Error, G._View[q].Error, _CommonError[C._View[o].Error, G._View[q].Error], C._View[o], G._View[q], False, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G._View[q]]](self^, on_ok._unary_view(), on_err._unary_view()))
 
     @always_inline
-    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _Unary[A, R]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A) -> R](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:
         """Native form of `value_or`; borrow the callback and keep its exact error."""
         return self^.value_or(_NativeUnaryRef[A, R, Never, C, False, o](Pointer(to=on_err)))
 
     @always_inline
-    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingUnary[A, R, Never]](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A) raises Never -> R](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:
         """Native form of `value_or`; borrow the callback and keep its exact error."""
         return self^.value_or(_NativeUnaryRef[A, R, Never, C, True, o](Pointer(to=on_err)))
 
     @always_inline
-    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingUnary[A, R, Error]](deinit self, ref[o] on_err: C) raises Error -> Self.T where A == Self.E and R == Self.T:
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A) raises Error -> R](deinit self, ref[o] on_err: C) raises Error -> Self.T where A == Self.E and R == Self.T:
         """Native form of `value_or`; borrow the callback and keep its exact error."""
         return self^.value_or(_NativeUnaryRef[A, R, Error, C, True, o](Pointer(to=on_err)))
 
@@ -1828,17 +1828,17 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         return self^.value_or(NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
 
     @always_inline
-    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _Thunk[R]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:
         """Native form of `get_or_else`; borrow the callback and keep its exact error."""
         return self^.get_or_else(_NativeThunkRef[R, Never, C, False, o](Pointer(to=make_default)))
 
     @always_inline
-    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingThunk[R, Never]](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:
         """Native form of `get_or_else`; borrow the callback and keep its exact error."""
         return self^.get_or_else(_NativeThunkRef[R, Never, C, True, o](Pointer(to=make_default)))
 
     @always_inline
-    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: _RaisingThunk[R, Error]](deinit self, ref[o] make_default: C) raises Error -> Self.T where R == Self.T:
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Error -> R](deinit self, ref[o] make_default: C) raises Error -> Self.T where R == Self.T:
         """Native form of `get_or_else`; borrow the callback and keep its exact error."""
         return self^.get_or_else(_NativeThunkRef[R, Error, C, True, o](Pointer(to=make_default)))
 

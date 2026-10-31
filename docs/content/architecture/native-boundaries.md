@@ -1033,8 +1033,17 @@ their own kind loops.
   `flat_map` have 8 overloads (was 9), and `context.mojo` has 1,874 methods
   (was 2,213). `Iter.traverse` and `Iter.traverse_void` take their
   plain-function forms from the catalog with the known element (`traverse` 11,
-  was 16). `Iter`'s closure, library and view forms and all of `Piped`'s are
-  already the minimum, so they keep their generator-local spelling.
+  was 16).
+- `Iter`, `Piped` and the `Result` methods take every closure form from the
+  catalog's `closure()`, whose fresh inputs a surface relates itself (an element
+  of None). The traversal, effect, terminal, sequencing, iterator, container,
+  n-ary and applicative generators, and the shared `callback()` description,
+  no longer spell closure bounds; the change was spelling only (`_Unary[A, R]`
+  became the `def(var A) -> R` it aliases). Documented hand-written overloads
+  keep their text, and `tests/tooling/test_closure_catalog_conformance.py`
+  holds every closure bound in `chaining.mojo` and `pipeline.mojo` to the
+  catalog form for its shape. Mutating callbacks, the indexed map (read index,
+  owned element) and three-to-eight-argument callbacks are not catalog shapes.
 - The other free functions keep their native overloads and change order only.
   `scripts/value_first.py` holds the order rule; `generate_plain_overloads.py`
   passes every generated module through it, so emitters cannot drift.
