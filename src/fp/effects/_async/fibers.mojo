@@ -18,10 +18,10 @@ from std.atomic import Atomic, Ordering
 from std.builtin.rebind import downcast
 from std.memory import ArcPointer
 from std.os import abort
-from std.time import sleep
 from fp.callables import OnceUnary
 from fp.data import Result, Ok
 from fp._internal.erased import _Erased
+from fp._internal.cells import _acquire_lock, _release_lock
 from fp._internal.waking import _Event as Signal, _Runtime, _TaskHeader, _FiberView
 from fp.effects import CancellationToken, IOContext, Outcome, EffectFailure
 from fp.effects.outcomes import _failure_as
@@ -210,15 +210,11 @@ struct _Scope[E: Movable & Deinitable](Movable):
         self.fiber = -1
 
     def acquire(mut self):
-        while True:
-            var expected = UInt8(0)
-            # Acquire: the previous holder's list updates are visible.
-            if self.lock.compare_exchange[failure_ordering=Ordering.RELAXED, success_ordering=Ordering.ACQUIRE](expected, UInt8(1)):
-                return
-            sleep(0.0)
+        # Acquire: the previous holder's list updates are visible.
+        _acquire_lock[256, Ordering.ACQUIRE, Ordering.RELAXED](self.lock)
 
     def release(mut self):
-        self.lock.store[ordering=Ordering.RELEASE](UInt8(0))
+        _release_lock[Ordering.RELEASE](self.lock)
 
     def count(self) -> Int:
         # Acquire pairs with a completing child's decrement, so its published
