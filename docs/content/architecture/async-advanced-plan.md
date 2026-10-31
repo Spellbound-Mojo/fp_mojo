@@ -31,15 +31,21 @@ part of these passes. Existing validation combinators retain their meaning.
 - Embeddable host services, explicit execution profiles, bounded diagnostic
   storage, and controllable scheduling for reproducible qualification.
 
-All implementation remains pure Mojo, using supported native mechanisms. No C
-backend, direct FFI integration, compiler coroutine dependency, compiler patch,
-or standard-library modification is planned. Operations keep snake_case names.
-The first fiber implementation remains cooperative on one host thread;
-lightweight fibers do not require one OS thread per fiber or multicore execution.
+Implementation prefers pure Mojo, using supported native mechanisms. Where the
+standard library lacks a facility and its absence would harm users, the library
+calls POSIX operating-system interfaces directly through Mojo's external calls:
+to park and wake threads, wait on file descriptors, run worker threads, or read
+the wall clock (decided on 2026-10-31). The library targets POSIX systems;
+Linux is qualified first and macOS later. No C sources, compiler coroutine
+dependency, compiler patch, or standard-library modification is planned.
+Operations keep snake_case names. Through Pass 12 each root runs its fibers
+cooperatively on one thread; Pass 13 adds a multi-threaded work-stealing runtime
+and keeps the single-threaded one selectable. Lightweight fibers never require
+one OS thread per fiber.
 
 GPU work, concurrent collections, and a wholesale port of the Cats Effect
-standard library are outside this plan. Execution-context and external-completion
-support are a later, separately qualified stage of capability coverage.
+standard library are outside this plan. Host integration, external completion,
+and blocking work are Pass 12; parallel execution contexts are Pass 13.
 
 ## What to learn from Scala Native and Cats Effect
 
@@ -307,13 +313,16 @@ merely because it supports delay and cancellation. Third-party providers should
 compile generic clients without importing runtime internals; unsupported
 capabilities should fail at their public constraint boundary.
 
-The first async provider stays on one host thread. Execution-context, blocking,
-interruptible, and foreign-thread capabilities are added only with a supported
-pure-Mojo provider and an explicit transfer/synchronization contract. Reusing
-the old unsafe OS-thread backend does not establish safe payload transfer.
-Native capability research is library work; compiler or stdlib changes are not
-deliverables. If a provider is unavailable, preserve the usable narrower profile
-and report the precise outstanding capability instead of declaring full parity.
+Through Pass 12 the async provider runs each root on one thread; Pass 13 adds
+a multi-threaded work-stealing runtime. Blocking, interruptible, foreign-thread,
+and execution-context capabilities each come with an explicit transfer and
+synchronization contract. Where the standard library lacks a facility, POSIX
+interfaces are called directly, and the OS-thread code behind `unsafe_start`
+becomes the one owner of thread creation. Mojo has no Send or Sync proof, so a
+value that crosses threads carries a documented caller obligation. Compiler or
+standard-library changes are not deliverables. If a provider is unavailable on
+a platform, preserve the usable narrower profile and report the precise
+outstanding capability instead of declaring full parity.
 
 ## Runtime services, scheduling, and observability
 
@@ -354,10 +363,11 @@ an interrupted or expired wait. New work or an earlier deadline must trigger
 the provider's wakeup protocol. External callbacks should schedule work rather
 than recursively enter the interpreter.
 
-Use controlled test providers before integrating a real platform poller. Replace
-the current idle-sleep fallback only when a supported pure-Mojo provider can
-meet this contract; no direct epoll/kqueue FFI implementation is authorized by
-this architectural reference.
+Use controlled test providers before integrating a real platform poller. The
+first poller uses POSIX `poll()` with a self-pipe, which runs unchanged on Linux
+and macOS; epoll and kqueue may follow behind the same interface when
+measurements justify them (decided on 2026-10-31). It replaces the idle-sleep
+fallback once it meets this contract.
 
 ### Cancellation checks and yielding budgets
 
@@ -411,7 +421,7 @@ pin an entire completed program. Reuse storage only after native payload
 destruction and release of outstanding access rights; preserve alignment,
 origins, generation protection, and exactly-once destruction. Bulk memory
 release is not a substitute for running destructors or draining external work.
-Pass 13 records whether measured allocation cost justifies pooling and retains
+Pass 14 records whether measured allocation cost justifies pooling and retains
 the simpler representation if it does not.
 
 ### Logical fiber diagnostics
@@ -436,7 +446,7 @@ automatic deadlock detection or retaining unbounded histories.
 Extend manual time into a controllable test host using the same interpreter and
 scheduler mechanisms. The [Cats Effect test runtime](https://typelevel.org/cats-effect/docs/core/test-runtime)
 is the reference for making time and execution progress testable without real
-sleeps. Develop these controls alongside Passes 8–11 and qualify them in Pass 13.
+sleeps. Develop these controls alongside Passes 8–11 and qualify them in Pass 14.
 
 Allow single-step execution, controlled external event delivery, and virtual
 time advancement when runnable work is exhausted. Retain seeds or explicit
@@ -462,14 +472,16 @@ cross-thread memory correctness.
 | **9 — General lightweight fibers** | Add typed handles, start/join/cancel, completion observers, `cede`, `never`, dynamic scoped ownership, and bounded diagnostic snapshots. Generalize canonical task storage rather than wrapping the homogeneous nursery. | Heterogeneous children progress independently; joining parks; all shutdown paths drain; each failure is joined or reported exactly once; sequential spawn/join churn reuses storage; diagnostic handles do not retain payloads or completed graphs. |
 | **10 — Cancellation and spawn capabilities** | Add generic error/defer/cancellation/spawn contracts and provider forwarding; expose `race_pair` with settled ownership rules and a `Supervisor` that owns fibers beyond one program's lifetime. Reuse them for existing higher-level operations where contracts match. | Generic clients use minimal capabilities across actual and test providers; law/admission checks pass; no duplicate masking, error, or child-draining policy. |
 | **11 — Coordination and temporal capabilities** | Add generic Ref/Deferred access and time/sleep/timeout contracts over canonical owners. Specify unique identity and clock domains; extend controlled scheduling to event delivery and virtual time. Audit ownership-sensitive derived operations. | Reproducible manual-time and cancellation laws respecting promised event ordering; no polling loop masquerading as suspension; no async collection API additions. |
-| **12 — Complete integration capabilities where supported** | Implement pure-Mojo host-service and external-completion providers, with explicit event-waiting, interruption, shutdown, and blocking/interruptible support boundaries. Separate completion notification from payload transfer and external synchronization. | Every advertised Sync/Async operation has a real provider and tests; owned/borrowed service teardown, wake-before-park, and supported publication contracts pass. Otherwise publish the narrower profile and exact blocked obligation. No C fallback or implicit thread-safety assertion. |
-| **13 — Advanced preview qualification** | Publish the provider/semantic matrix, migration guidance, runnable examples, and retained evidence. Qualify controlled schedule replay and diagnostic overhead; compare lifecycle, storage, and performance with the foundation. Evaluate pooling only against the allocation baseline. | Source/package O0/O3 checks, public generic clients, ownership rejections, bounded-stack, responsiveness, replay, and storage checks pass; any pooling preserves prompt reclamation and exact destruction. Run a separately scheduled overnight qualification before making sustained-load claims. |
+| **12 — POSIX host integration** | A POSIX polling system (`poll()` and a self-pipe) owned by each root; completion and notification safe from other threads; `run` parking until the next deadline or wake; a host notifier for embedding loops; a blocking worker pool with `blocking` and `interruptible`; a low-level file-descriptor readiness API for library authors; and wall-clock time. | Every advertised `Sync` and `Async` operation has a real provider and tests on Linux; wake before park, publication, owned and borrowed teardown, and cancellation of blocking work pass; nothing polls on a timer where it could park; remaining gaps are published with their exact obligation. |
+| **13 — Multi-threaded work-stealing runtime** | A work-stealing compute pool after Cats Effect's: per-worker queues, stealing, polling and timers integrated per worker, and blocking hand-off; the payload thread-safety contract and an audit of every shared structure; the single-threaded runtime kept selectable for tests and embedding. | Fibers run in parallel with the same outcomes, laws, and ownership guarantees; the runtime's own structures are race-free under stress; throughput and latency are measured against the single-threaded runtime; `TestControl` stays deterministic. |
+| **14 — Advanced preview qualification** | Publish the provider/semantic matrix, migration guidance, runnable examples, and retained evidence. Qualify controlled schedule replay and diagnostic overhead; compare lifecycle, storage, and performance with the foundation. Evaluate pooling only against the allocation baseline. | Source/package O0/O3 checks, public generic clients, ownership rejections, bounded-stack, responsiveness, replay, and storage checks pass; any pooling preserves prompt reclamation and exact destruction. Run a separately scheduled overnight qualification before making sustained-load claims. |
 
 Pass 7a is the first implementation step. Its scope is small feasibility
 experiments, not an unreviewed public API migration. Passes 8–11
-form the first useful advanced-runtime milestone. Pass 12 can remain incomplete
-without blocking qualification of that explicitly narrower milestone; it must
-not be counted complete merely because callback syntax exists.
+form the first useful advanced-runtime milestone. Pass 12 integrates it with
+POSIX hosts, and Pass 13 makes it multi-threaded; Pass 14 qualifies the result
+as a preview. Neither integration pass counts as complete merely because an
+operation's syntax exists.
 
 Each implemented pass gets targeted validation, a commit and push to shared
 `nightly`, and an updated status in this page. Fetch and integrate other agents'
@@ -1822,7 +1834,7 @@ owners and of Cats Effect's derived operations; nothing has been built.
    promised orderings are written down, not randomized: queued elements are
    FIFO, a fiber's binds run in order, and `race_pair` checks the left side
    first. The ready-fiber order is unspecified. Seeded exploration of that
-   order and replay traces remain Pass 13 qualification.
+   order and replay traces remain Pass 14 qualification.
 6. **No polling.** Every new waiting operation suspends on a signal or a timer,
    so a waiting program reports `runnable == False` and spends no transitions
    until woken.
@@ -2008,7 +2020,7 @@ count, and the event-ordering record.
   slot order decides, so it is recorded as unspecified with waiter order. The
   promised orderings are a fiber's own steps, FIFO queue values, the left side
   of a race finishing in the same tick, and every `Deferred` reader receiving
-  the value. Seeded exploration of the unspecified orders stays in Pass 13.
+  the value. Seeded exploration of the unspecified orders stays in Pass 14.
 - **Clients.** `test_control` covers virtual sleeps, `tick` against
   `advance`, `tick_one`, `tick_for`, a read that nothing can complete
   reporting a deadlock and then resuming when the test completes it, two
@@ -2045,7 +2057,7 @@ out.
   and cancellation; the `MonadCancel` and `GenSpawn` laws are Pass 10's. The
   promised orderings are recorded in the guide, and every check depends only
   on them. Met for the single-threaded cooperative host; seeded exploration of
-  the unspecified orders remains Pass 13 qualification.
+  the unspecified orders remains Pass 14 qualification.
 - **Gate: no polling loop presented as suspension.** Every async waiting
   operation, `Deferred.get`, `Queue` offers and takes, `Semaphore.acquire`,
   sleeps, and timeouts, suspends on a signal or a timer: the parked read in
@@ -2070,45 +2082,67 @@ out.
 
 ## Pass 12 proposal
 
-Pass 12 integrates the runtime with its host where Mojo 1.2 allows it, and
-publishes the narrower profile, with the exact blocked obligation, where it
-does not. The plan requires host-service ownership, an execution-context
-contract, and execution profiles to be specified first; this proposal does
-that, then proposes what to build. Nothing has been built.
+Pass 12 integrates the runtime with POSIX hosts: a root parks instead of
+polling on a timer, other threads can complete its work and wake it, blocking
+calls run on worker threads, file descriptors can be awaited, and wall-clock
+time is available. Each root still runs its fibers on one thread; Pass 13
+builds the multi-threaded runtime on this foundation. This proposal replaces
+an earlier draft that assumed no direct operating-system calls; it was
+rewritten after the review decisions below. Nothing has been built.
+
+### Pass 12 review decisions
+
+Decided on 2026-10-31:
+
+1. **Operating-system interfaces.** The library may call POSIX interfaces
+   directly where that improves the user's experience; pure Mojo stays
+   preferred where it suffices. The target is POSIX systems: Linux is
+   qualified now, macOS later.
+2. **Poller.** POSIX `poll()` with a self-pipe, for portability. epoll and
+   kqueue may follow behind the same interface when measurements justify them.
+3. **Values that cross threads.** Plain names such as `IO.blocking`, with the
+   caller's obligation documented, as for `unsafe_start`: Mojo has no Send or
+   Sync proof.
+4. **`interruptible`.** Cats Effect's semantics without POSIX signals: on
+   cancellation the function sees a cancellation request and is woken from any
+   wait it makes through the library, and cancellation completes when it
+   returns. Cats Effect sends `Thread.interrupt` and also waits for the
+   function to return; Scala Native's interrupt sets a flag, unparks the
+   thread, and wakes a sleep through a self-pipe, without signals, so it does
+   not wake a thread blocked in `read()` either. Erlang's alternative, letting
+   observers move on while native work finishes in the background, would
+   conflict with owners waiting for their fibers, and is not adopted.
+5. **File descriptors.** A low-level readiness API for library authors in
+   `fp.effects.async_runtime.protocols`; no socket or TCP API in the public
+   interface.
+6. **Threading.** A multi-threaded work-stealing runtime is worth building for
+   Cats Effect parity: Cats Effect's default runtime and the BEAM both run one
+   scheduler per logical processor. It becomes Pass 13, with a payload
+   thread-safety contract; the qualification pass becomes Pass 14.
+7. **macOS** is deferred; POSIX compatibility is the goal now.
 
 ### Current state
 
 - **Host boundary.** `Driver.poll` is nonblocking and reports completion,
-  readiness, the earliest deadline, and quiescence; the host decides when to
-  call it again. The blocking `run` drives the same `Driver` and idles in
-  1 ms sleeps, whatever the next deadline. `TestControl` drives a manual
-  clock. There is no way for a host to learn that an external event made the
-  root runnable except by polling.
-- **Notification state.** `Signal`, the wake registry, `Completion` admission,
-  `CancellationToken`, and the manual clock keep their state behind atomic
-  spin locks, and wake registrations are generation-checked. The design
-  anticipates other threads, but nothing has been qualified across threads:
-  `Signal`'s documentation disclaims cross-thread callback safety and memory
-  visibility, and `Completion.complete` is documented as a cooperative
-  host-thread operation. `CancellationToken.cancel` sets an atomic flag and
-  notifies a `Signal`, so a canceled waiter wakes through the same path.
-- **Threads.** The only threads are the synchronous family's `unsafe_start`,
-  which starts a Linux OS thread through `pthread_create` and puts every
-  thread-safety obligation on the caller, since Mojo has no Send or Sync
-  proof. The synchronous `Ref`, `Deferred`, `Semaphore`, and `Queue` are
-  qualified under contention from such threads (`test_coordination`). The
-  async run loop, its fibers, and every `IO` value are confined to the polling
-  thread.
-- **Platform.** The [scheduler](async-scheduler.md) records the inspected Mojo
-  1.2 standard library: no wait or notify on `Atomic`, no readiness
-  registration on file descriptors, no public `std.net`, unfinished async
-  primitives kept private, and only timed sleep for waiting. Pass 11 recorded
-  that there is no wall-clock source either. This plan does not authorize a C
-  backend or direct readiness FFI.
-- **Cats Effect `Sync` and `Async`.** `delay`, `defer`, `monotonic`, `async`,
-  `async_`, `never`, `sleep`, and the timeouts have providers. `blocking`,
+  readiness, the earliest deadline, and quiescence. The blocking `run` drives
+  the same `Driver` and idles in 1 ms sleeps, whatever the next deadline, so an
+  idle program still wakes a thousand times a second and a timer can be late by
+  up to 1 ms. `TestControl` drives a manual clock. A host learns that an
+  external event made the root runnable only by polling.
+- **Notification state.** `Signal`, wake registrations, `Completion`
+  admission, `CancellationToken`, and the manual clock keep their state behind
+  atomic spin locks, and wake registrations are generation-checked, but none of
+  it is qualified across threads; `Signal`'s documentation disclaims
+  cross-thread use. `CancellationToken.cancel` notifies a `Signal`, so a
+  canceled waiter wakes through the same path as any external event.
+- **Threads.** `unsafe_start` starts a Linux OS thread with `pthread_create`
+  for the synchronous family and puts every thread-safety obligation on the
+  caller. The synchronous coordination owners are qualified under contention
+  from such threads (`test_coordination`). The async run loop, its fibers, and
+  every `IO` value are confined to the polling thread.
+- **Missing operations.** Of Cats Effect's `Sync` and `Async`: `blocking`,
   `interruptible`, `interruptibleMany`, `realTime`, `evalOn`, `startOn`,
-  `backgroundOn`, and `executionContext` do not.
+  `backgroundOn`, and `executionContext`.
 
 ### Proposal
 
@@ -2116,123 +2150,202 @@ that, then proposes what to build. Nothing has been built.
 
    | State | Profile | Rule |
    |---|---|---|
-   | Run loop, fibers, `IO` values, `Ref`/`Deferred`/`Queue`/`Semaphore` operations, `Driver`, `TestControl` | Confined to the polling thread | Never touched from another thread |
-   | `Signal`, wake registrations, `Completion` admission, `CancellationToken`, manual `Clock` | Shared notification state | Safe from any thread once qualified in 12a; locks give each operation a total order |
-   | Payloads moved by `Completion.complete` | Transferred once, under the completion's lock | The caller asserts the payload may move to and be destroyed on the polling thread |
-   | Work running on other threads | Not provided by the async runtime | `unsafe_start` remains a synchronous-family tool with its own obligations |
+   | Run loop, fibers, `IO` values, `Ref`/`Deferred`/`Queue`/`Semaphore` operations, `Driver`, `TestControl` | Confined to the root's polling thread | Never touched from another thread |
+   | `Signal`, wake registrations, `Completion` admission, `CancellationToken`, manual `Clock`, the poller's wake | Shared notification state | Safe from any thread; locks give each operation a total order |
+   | Payloads moved by `Completion.complete`, functions and results moved to and from blocking workers | Transferred once under a lock | The caller asserts the value may move to, and be destroyed on, the other thread |
+   | Blocking worker threads | Owned by a blocking pool | Run one function at a time; never touch a run loop |
 
-   Locks stay on in every profile. Removing them for a proven thread-confined
-   profile is a measured optimization for Pass 13, not a semantic change.
-2. **Host services.** A root owns its run loop, wake registry, and budget; it
-   borrows its clock, cancellation token, and, after 12b, a host notifier.
-   Finishing a root retires its registrations, so a late notification from
-   another thread finds a stale generation and does nothing, and it never
-   stops a borrowed service: a shared clock, token, or notifier outlives the
-   root. Initialization acquires nothing that can fail. The execution-context
-   contract is that a root has exactly one execution context, the thread that
-   polls it. There is no executor to shift onto, so `evalOn` and its
-   relatives have no provider, which the profile records.
-3. **Foreign-thread notification (12a).** Qualify `Signal.notify`,
+   Locks stay on in every profile; eliding them for proven thread confinement
+   is a measured optimization, not a semantic change.
+2. **Host services.** A root owns its run loop, wake registry, budget, and
+   poller. It borrows its clock, cancellation token, and host notifier, and
+   either owns a blocking pool, started on first use, or borrows one shared by
+   several roots. Finishing a root retires its registrations, closes what it
+   owns, and waits for its in-flight blocking calls, since their callers wait
+   for them; it never stops a borrowed service. A late notification from
+   another thread finds a stale generation and does nothing. The
+   execution-context contract for Pass 12 is one context per root, the thread
+   that polls it; Pass 13 adds the compute pool that `evalOn` and its
+   relatives can target.
+3. **Notification from other threads.** Qualify `Signal.notify`,
    `Completion.complete`, and `CancellationToken.cancel` from threads other
    than the polling thread:
    - **Ordering.** Everything the notifying thread wrote before the call
      happens before the polling thread's continuation that observes it,
      because both sides pass through the same lock.
    - **Wake before park.** A notification between the polling thread reading a
-     revision and registering its wait is not lost: registration compares
-     revisions under the lock and wakes at once, as on one thread.
+     revision and parking is not lost: registration compares revisions under
+     the lock, and the root's wake hook interrupts a parked poller.
    - **Payload transfer.** `complete` moves the outcome into the completion
-     under its lock; the polling thread takes it under the same lock. Late or
-     duplicate payloads are destroyed on the calling thread, outside the lock.
+     under its lock; the polling thread takes it under the same lock. A late or
+     duplicate payload is destroyed on the calling thread, outside the lock.
    - **Teardown with producers in flight.** A completion delivered after its
      registration was withdrawn, or after the root finished, is rejected and
      wakes nothing.
-
-   The documentation of `Signal` and `Completion` changes from disclaiming
-   cross-thread use to stating these guarantees and the caller's payload
-   obligation.
-4. **Host notifier (12b).** A `Driver` and `TestControl` may be given a host
-   notifier, called from whichever thread delivers an external event when that
-   event makes the root runnable. It lets an application's own event loop,
-   which may park with mechanisms outside this library, learn when to poll
-   again instead of polling on a timer. The notifier must be nonblocking,
+4. **Polling system.** After Cats Effect's `PollingSystem`, a private interface
+   with one POSIX implementation:
+   - `poll(timeout)` waits on the registered descriptors and a self-pipe, with
+     the timeout to the next deadline or none, and reports ready descriptors,
+     an interrupt, or expiry.
+   - `interrupt()` is safe from any thread: it sets an atomic flag and writes
+     one byte to the pipe only when the flag was clear, so wakes coalesce; the
+     poller drains the pipe and clears the flag before the next poll.
+   - Descriptors are registered for read or write interest; a registration is
+     removed when its waiter completes or is canceled.
+   - The pipe's ends are nonblocking and close-on-exec, set through `fcntl`
+     for portability.
+   - `poll()` waits in whole milliseconds. A deadline less than 1 ms away is
+     waited with `nanosleep`, which can delay an external wake by under 1 ms.
+5. **Root wake hook.** The wake registry reports, from whichever thread
+   notifies, when an external event makes the root runnable. The hook
+   interrupts the root's poller, or calls the host notifier when a `Driver` is
+   embedded in an application's own loop. The notifier must be nonblocking,
    callable from any thread, and must not reenter the `Driver`; it is never
-   called after `finish` returns, and `finish` waits for a call already in
-   progress. Deadlines need no notifier: they are set during a poll and
-   reported in `Progress`.
-5. **Narrower profile (12c).** The guide publishes a provider matrix listing
-   every Cats Effect `Sync` and `Async` operation with its provider or its
-   blocked obligation:
-   - `blocking`, `interruptible`, `interruptibleMany`: no public pure-Mojo
-     worker thread, no way to park or interrupt one, and no Send or Sync proof
-     for what would move to it.
-   - `evalOn`, `startOn`, `backgroundOn`, `executionContext`: one execution
-     context per root.
-   - `realTime`: no wall-clock source.
-   - Parking in `run`: no wait or notify primitive, so `run` keeps polling.
-     It will, however, never sleep past the next deadline: it sleeps for the
-     shorter of 1 ms and the time to that deadline.
-   - Network readiness: no public `std.net` or readiness registration.
-
-   Each entry names the standard-library facility whose arrival would unblock
-   it.
+   called after `finish` returns, and `finish` waits for a call in progress.
+6. **`run` parks.** `run` polls the `Driver` while work is runnable, then waits
+   in the poller until the next deadline, an external wake, or a ready
+   descriptor. An idle program uses no CPU, and a program that can never
+   continue waits forever, as in Cats Effect.
+7. **Blocking pool.** After Cats Effect's blocking execution context and
+   Erlang's dirty I/O schedulers:
+   - `IO.blocking(f)` runs an owned function on a worker thread and resumes the
+     fiber with its result through a `Completion`. Like Cats Effect's, it
+     cannot be canceled; a timeout waits for it.
+   - `IO.interruptible(f)` passes the function an interruption handle. On
+     cancellation the handle reports the request, and waits made through it,
+     such as sleeping or waiting for a descriptor, wake at once; cancellation
+     completes when the function returns. Cats Effect's `interruptibleMany`
+     repeats a one-shot interrupt; a cancellation request here stays visible,
+     so it needs no separate operation.
+   - Workers start on demand, idle threads are reused and retired after a
+     timeout, and a configurable maximum bounds them.
+   - Thread creation, joining, and the platform check move from `unsafe_start`
+     into one private owner that both use.
+   - Functions follow the `IO` callback rule: owned library callables and plain
+     functions, never closures or borrowed views.
+8. **Descriptor readiness.** `await_readable[E](fd)` and
+   `await_writable[E](fd)`, free functions in
+   `fp.effects.async_runtime.protocols`, return an `IO` that registers interest
+   with the root's poller and suspends until the descriptor is ready;
+   cancellation removes the registration. The caller owns the descriptor and keeps it open
+   and nonblocking. Library authors build pipes, sockets, or process I/O on top;
+   no socket API is published.
+9. **Wall-clock time.** `real_time` reads `clock_gettime(CLOCK_REALTIME)` and
+   returns nanoseconds since the Unix epoch, in a small wall-clock type, since a
+   `Duration` holds at most about 31 years. `Timing` gains it for `Async` and
+   `SyncIO`; under `TestControl` it starts at the epoch and moves with virtual
+   time, as in Cats Effect.
+10. **Provider matrix.** The guide lists every Cats Effect `Sync` and `Async`
+    operation with its provider, or with its exact obligation: `evalOn`,
+    `startOn`, `backgroundOn`, and `executionContext` until Pass 13; macOS
+    until it is qualified.
 
 ### Steps
 
-1. **12a:** the execution profiles and host-service contract in the
-   documentation, and foreign-thread qualification of `Signal`, `Completion`,
-   and `CancellationToken`.
-2. **12b:** the host notifier for `Driver` and `TestControl`, with its
-   teardown rule.
-3. **12c:** the provider matrix and blocked obligations in the guide, and the
-   deadline-capped idle in `run`.
+1. **12a:** the execution profiles and host-service contract; qualification of
+   `Signal`, `Completion`, and `CancellationToken` from other threads; the root
+   wake hook.
+2. **12b:** the polling system, `run` parking, and the host notifier.
+3. **12c:** the blocking pool with `blocking` and `interruptible`, and the
+   shared OS-thread owner.
+4. **12d:** descriptor readiness, wall-clock time, and the provider matrix.
 
 ### Gate and clients
 
-From the delivery table: every advertised `Sync` or `Async` operation has a
-real provider and tests; owned and borrowed service teardown, wake before
-park, and the supported publication contracts pass; everything else is
-published as the narrower profile with its exact blocked obligation; no C
-fallback and no implicit thread-safety assertion.
+From the delivery table: every advertised `Sync` and `Async` operation has a
+real provider and tests on Linux; wake before park, publication, owned and
+borrowed teardown, and cancellation of blocking work pass; nothing polls on a
+timer where it could park; remaining gaps are published with their exact
+obligation.
 
-- `foreign_completion`: an OS thread from `unsafe_start` completes an
-  `IO.async` registration while the host polls, many times with randomized
-  delays on both sides; every program completes within a bound, so no wake is
-  lost, with the value written before the call; a second completion and one
-  after the root finished are rejected.
-- `foreign_signal`: an OS thread notifies a `Signal` that a custom leaf waits
-  on, and cancels a token that a waiting fiber observes; data written before
-  the call is visible after it.
-- `host_notifier`: the notifier runs when a foreign thread completes a
-  registration, not when nothing external happens, never after `finish`, and
-  `finish` waits for an in-flight call.
-- `run_idle`: `run` completes a sleep of less than 1 ms without oversleeping
-  to the next millisecond.
-- These clients run on Linux x86-64 only, like `unsafe_start`; they join every
-  thread they start before finishing.
+- `foreign_completion`: an OS thread completes an `IO.async` registration
+  while the host polls or parks, many times with varied delays on both sides;
+  every program completes within a bound, so no wake is lost, with the value
+  written before the call; late and duplicate completions are rejected.
+- `foreign_signal`: an OS thread notifies a `Signal` a custom leaf waits on and
+  cancels a token a waiting fiber observes; data written before the call is
+  visible after it.
+- `poller`: interrupts racing a park, coalesced interrupts, descriptor
+  readiness on pipes, registrations removed on completion and cancellation,
+  and closing.
+- `run_parks`: an idle `run` uses almost no CPU over a long sleep, measured
+  with `getrusage`, and timers fire close to their deadlines.
+- `host_notifier`: the notifier runs on external wakes only, never after
+  `finish`, and `finish` waits for an in-flight call.
+- `blocking_pool`: blocking work runs on another thread while other fibers keep
+  running; results and errors return; a timeout waits for `blocking`; an
+  interrupted function wakes from a wait and cancellation completes after it
+  returns; idle workers are reused and retired; finishing a root waits for its
+  calls.
+- `descriptor_readiness` and `real_time` cover the remaining operations, and
+  the stress harness gains cross-thread wake scenarios.
+- Rejections: closures given to `blocking`, and `interruptible` handles used
+  outside their function.
 
 ### Review questions
 
-1. **Payloads from other threads.** Qualify `Completion.complete` with any
-   payload, under a documented caller obligation like `unsafe_start`'s, or only
-   notification (`Signal`, `Completion[NoneType]`, cancellation), with values
-   passed through the already qualified synchronous `Ref` or `Queue`?
-   Recommendation: any payload, documented, since wrapping callback-based
-   foreign APIs is the main use, and the transfer itself is ordered by the
-   lock.
-2. **Notifier shape.** An erased notifier given to `Driver`'s constructor, so
+1. **Notifier shape.** An erased notifier given to `Driver`'s constructor, so
    `Driver[P]` keeps its type, or a type parameter `Driver[P, N]`?
-   Recommendation: erased, with the notifier a copyable value whose
-   thread-safety the host asserts.
-3. **Blocking work.** Record `blocking` and `interruptible` as blocked, or
-   offer an explicitly unsafe `IO.unsafe_blocking` over `unsafe_start`'s OS
-   threads? Recommendation: record them as blocked; the host can run blocking
-   work on its own threads and complete an `IO.async` registration, which 12a
-   qualifies.
-4. **Scope.** Build 12a through 12c, or record only the profiles and blocked
-   obligations and move to Pass 13? Recommendation: build them; 12a closes the
-   largest gap, completion from other threads, without new platform
-   assumptions.
+   Recommendation: erased, with the host asserting its thread safety.
+2. **Blocking pool ownership.** Each root owns a pool started on first use and
+   may borrow a shared one, or one process-wide default pool? Recommendation:
+   per root with an optional shared pool, which avoids a global singleton and
+   gives teardown a single owner.
+3. **Capability.** Add a `Blocking` capability with `blocking[I]` and
+   `interruptible[I]`, provided by `Async[E]` through the pool and by
+   `SyncIO[E]` inline, since the synchronous family already blocks its thread?
+   Recommendation: yes, matching Cats Effect, where both belong to `Sync`.
+
+## Pass 13 proposal (sketch)
+
+A multi-threaded work-stealing runtime, after Cats Effect's work-stealing pool
+and the BEAM's per-processor schedulers. This sketch fixes the direction; a
+full proposal with measurements follows Pass 12, which provides the parking,
+cross-thread wakes, and blocking pool it builds on.
+
+- **Scheduling.** One compute worker per logical processor by default, as in
+  Cats Effect's work-stealing pool, whose design this pass follows:
+  - Each worker owns a fixed-capacity, lock-free ring buffer with one producer
+    and many consumers; Cats Effect uses 256 entries. When it is full, half of
+    it moves to a shared external queue in batches, which also receives work
+    submitted from outside the pool.
+  - An idle worker looks in its own queue, then the external queue. With
+    permission to search, it steals expired timers, then takes half of another
+    worker's queue, scanning from a random worker. At most half the workers
+    search at once, to limit contention.
+  - A worker with nothing to do parks: in its poller when it has descriptor
+    registrations, otherwise on a condition variable, with a timeout to its
+    next timer. A parked worker is woken only when no worker is searching and
+    not all are active.
+  - Timers live in a heap per worker, changed only by its owner. Other workers
+    may run expired timers when stealing, and cancellation from another thread
+    is counted and cleaned up by the owner later.
+- **Blocking hand-off.** When a fiber starts blocking work on a worker, the
+  worker hands its local queue to a cached or new replacement thread and runs
+  the call inline, as Cats Effect's `prepareForBlocking` does; afterwards the
+  thread waits to be reused and exits after an idle timeout. This replaces
+  Pass 12's separate pool for `blocking` on the compute pool.
+- **Fibers.** A fiber runs on one worker at a time and moves between workers as
+  data. The fiber host table and inbox become per-worker queues; the transition
+  budget becomes per worker; joins, claims, owner draining, and `Supervisor`
+  become concurrent protocols over the existing records.
+- **Payload thread safety.** Everything stored in an `IO`, in fiber state, or
+  moved through a `Completion` must be safe to move to, and be destroyed on,
+  another thread. Fibers share state only through `Ref`, `Deferred`, `Queue`,
+  `Semaphore`, or types their authors synchronize; sharing an `ArcPointer` to
+  unsynchronized mutable data becomes a data race, and the guide says so. The
+  pass audits every shared structure in the runtime, researches compile-time
+  rejection of payloads that are known to be thread-confined, and adopts Send
+  and Sync if Mojo adds them.
+- **Promises.** A fiber's own steps stay ordered. The left-wins tie of
+  `race_pair` and other same-tick promises become best effort under real
+  parallelism and are restated.
+- **Selection.** The runtime is chosen in `IORuntimeConfig`; the
+  single-threaded runtime stays available, and `TestControl` keeps using it so
+  tests stay deterministic.
+- **Measurements first.** Atomic overhead on the run-loop step, local-queue and
+  stealing throughput, wake latency, and comparisons with the single-threaded
+  runtime decide queue sizes and spinning policy before the engine changes.
 
 ## Implementation reference map
 
@@ -2243,6 +2356,10 @@ Use the following inspected snapshots, not moving branches:
   not a stable API or a requirement to implement stackful continuations.
 - **Cats Effect:** [`de84c01f76b2f42fcee9d43aba66c82992add103`](https://github.com/typelevel/cats-effect/commit/de84c01f76b2f42fcee9d43aba66c82992add103),
   covering its shared effect interpreter, native platform setup, and test tools.
+
+- **Scala Native threads (Passes 12–13):** [`eb3f3b85680c2913be221747fcb398e2b1f370ef`](https://github.com/scala-native/scala-native/commit/eb3f3b85680c2913be221747fcb398e2b1f370ef),
+  the `main` branch inspected on 2026-10-31 for its POSIX thread
+  implementation.
 
 These snapshots were inspected independently; they are not a verified dependency
 pair and neither becomes a dependency of FP Mojo. Follow the named symbols and
@@ -2256,7 +2373,8 @@ over upstream implementation choices.
 | 7, 12 | [VirtualThreadScheduler.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/runtime/VirtualThreadScheduler.scala#L9): `execute`, `schedule`, `Cancellable`, `afterYieldOnCarrier` | Separate scheduling, delayed work, and host notifications. Adapt the service boundary to Mojo's owned/borrowed services; do not copy JVM-shaped virtual-thread or carrier assumptions. |
 | 7, 12 | [LinktimeInfo.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/meta/LinktimeInfo.scala#L8): `isMultithreadingEnabled`, `target`, platform predicates | Make execution-profile selection explicit. Use supported Mojo compile-time mechanisms; platform or single-thread selection is not proof that shared handles need no synchronization. |
 | 12 | [Blocker.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/runtime/Blocker.scala#L14): `apply`, `begin`, `end` | Pair entry/exit accounting for supported blocking regions, including failure. Scala Native inserts some calls through its compiler; our library must use explicit provider boundaries, with no compiler changes or assumption that marking a call makes it nonblocking. |
-| 8 baseline, 13 evaluation | [Zone.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/unsafe/Zone.scala#L13): `alloc`, `close`, `Zone.acquire` | Give allocations an explicit owner and scope. Its raw allocation model does not establish Mojo payload destruction, origins, or prompt per-frame reclamation; retain those obligations when evaluating typed pools. |
+| 12–13 | [PosixThread.scala](https://github.com/scala-native/scala-native/blob/eb3f3b85680c2913be221747fcb398e2b1f370ef/javalib/src/main/scala/java/lang/impl/PosixThread.scala): `park`, `unpark`, `interrupt`, `sleepInterruptible` | Parking on a condition variable with a monotonic clock, and an interruptible sleep that waits in `poll()` on a self-pipe the interrupter writes to. The model for Pass 12's interruption handle and worker parking; interruption sets a flag and wakes library-level waits, without signals. |
+| 8 baseline, 14 evaluation | [Zone.scala](https://github.com/scala-native/scala-native/blob/b961982edab83915bcbbda559117f0a89d2f3e10/nativelib/src/main/scala/scala/scalanative/unsafe/Zone.scala#L13): `alloc`, `close`, `Zone.acquire` | Give allocations an explicit owner and scope. Its raw allocation model does not establish Mojo payload destruction, origins, or prompt per-frame reclamation; retain those obligations when evaluating typed pools. |
 
 ### Cats Effect interpreter and native-host references
 
@@ -2266,9 +2384,14 @@ over upstream implementation choices.
 | 8 | [IOFiber.scala: runLoop](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L210), [succeeded](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L1210), and [failed](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L1270) | Trace continuation push/pop and return to the run loop. Upstream also uses bounded recursive fast paths via `MaxStackDepth`; do not mistake every helper for a loop or copy its casts. Prove all our runtime-owned unwind and disposal paths independently. |
 | 8 | [IORuntimeConfig.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/IORuntimeConfig.scala#L22), together with `IOFiber.runLoop` | Inspect `cancelationCheckThreshold`, `autoYieldThreshold`, and their validation. Borrow separate policies and accounting; determine thresholds from our transition costs rather than copying numeric defaults. |
 | 9–10 | [IOFiber.scala: cancel/join](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L197), [prepareFiberForCancelation](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L1132), and [done](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/IOFiber.scala#L1092) | Follow cancellation through suspended finalizers to completion publication and execution-state release. Upstream caches a reusable join outcome; our exclusive move-only result transfer and unobserved-error accounting require their own design. |
-| 7, 12 | [IORuntimeBuilder.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/IORuntimeBuilder.scala#L26): `setCompute`, `setBlocking`, `setScheduler`, `addShutdownHook`; [native IORuntimeCompanionPlatform.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/native/src/main/scala/cats/effect/unsafe/IORuntimeCompanionPlatform.scala#L30): `createWorkStealingComputeThreadPool`, `createDefaultPollingSystem`, `createDefaultBlockingExecutionContext` | Study service assembly and teardown ownership separately from effect evaluation. Pools, global setup, and platform bindings are reference implementations, not authorization to add FFI or thread-unsafe payload execution. |
+| 7, 12 | [IORuntimeBuilder.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/IORuntimeBuilder.scala#L26): `setCompute`, `setBlocking`, `setScheduler`, `addShutdownHook`; [native IORuntimeCompanionPlatform.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/native/src/main/scala/cats/effect/unsafe/IORuntimeCompanionPlatform.scala#L30): `createWorkStealingComputeThreadPool`, `createDefaultPollingSystem`, `createDefaultBlockingExecutionContext` | Study service assembly and teardown ownership separately from effect evaluation. Its pools and platform bindings are the model for Passes 12–13; values moved between threads still need this plan's documented transfer contract. |
 | 7, 12 | [PollingSystem.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/PollingSystem.scala#L36): `makePoller`, `poll`, `processReadyEvents`, `needsPoll`, `interrupt`, `closePoller`, `PollResult` | Specify wait/interrupt/ready-batch lifecycle before choosing a provider. The interface alone does not prove a lost-wakeup-free handshake; qualify that protocol against our generation and revision owners. |
-| 9, 13 | [FiberInfo.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/FiberInfo.scala#L21): `state`, `trace`, `pretty`; [FiberMonitorShared.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/FiberMonitorShared.scala#L21): `toFiberInfo`, `printFibers` | Borrow diagnostic vocabulary and presentation. `FiberInfo` explicitly retains the underlying fiber: our bounded snapshots must copy permitted metadata without retaining its payloads or execution graph. |
+| 12 | [IOFiberPlatform.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/IOFiberPlatform.scala): `interruptibleImpl`; [Sync.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel/shared/src/main/scala/cats/effect/kernel/Sync.scala): `blocking`, `interruptible`, `interruptibleMany` | Cancellation of interruptible work completes only after the function returns; `blocking` is uncancelable. Adopt the semantics; replace `Thread.interrupt` with a cancellation handle that wakes the library's own waits. |
+| 12 | [EpollSystem.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/native/src/main/scala/cats/effect/unsafe/EpollSystem.scala): `FileDescriptorPollerImpl`, `registerFileDescriptor`, `pollReadRec`, `interrupt`; [SleepSystem.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/SleepSystem.scala) | A descriptor-readiness API for library authors and the poller's interrupt through a file descriptor. Pass 12 uses `poll()` and a self-pipe behind the same kind of interface; epoll and kqueue ([KqueueSystem.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/native/src/main/scala/cats/effect/unsafe/KqueueSystem.scala)) are later backends. |
+| 13 | [WorkStealingThreadPool.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/WorkStealingThreadPool.scala): `notifyParked`, `transitionWorkerToSearching`, `stealFromOtherWorkerThread`, `stealTimers`; [WorkerThread.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/WorkerThread.scala): `run`, `lookForWork`, `parkLoop`, `prepareForBlocking` | The work-finding order, the cap on searching workers, wake conditions, parking in the poller or on a condition variable, and the blocking hand-off of a worker's queue. Mojo's ownership must replace the JVM's shared references: a fiber's state moves between workers as an owned value. |
+| 13 | [LocalQueue.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/LocalQueue.scala): `enqueue`, `dequeue`, `stealInto`; [LocalQueueConstants.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/native/src/main/scala/cats/effect/unsafe/LocalQueueConstants.scala); [ScalQueue.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/ScalQueue.scala) | A 256-entry lock-free ring with one producer and many consumers, stealing half, and spilling half to the external queue in batches of 32. Measure our own sizes; the atomics and their orderings need their own proof under Mojo's memory model. |
+| 13 | [TimerHeap.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/jvm-native/src/main/scala/cats/effect/unsafe/TimerHeap.scala): `steal`, `packIfNeeded` | One timer heap per worker, changed only by its owner, with stealing of expired timers and deferred cleanup of cancellations made from other threads. Reuse the generation checks of our wake registry. |
+| 9, 14 | [FiberInfo.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/FiberInfo.scala#L21): `state`, `trace`, `pretty`; [FiberMonitorShared.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/core/shared/src/main/scala/cats/effect/unsafe/FiberMonitorShared.scala#L21): `toFiberInfo`, `printFibers` | Borrow diagnostic vocabulary and presentation. `FiberInfo` explicitly retains the underlying fiber: our bounded snapshots must copy permitted metadata without retaining its payloads or execution graph. |
 
 ### Capability laws and deterministic qualification references
 
@@ -2283,9 +2406,9 @@ conveniences; the concurrent collection functions remain outside this plan.
 
 | Passes | Source and entry points | Concrete lesson and adaptation boundary |
 |---|---|---|
-| 7, 10, 13 | [MonadCancelLaws.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/laws/shared/src/main/scala/cats/effect/laws/MonadCancelLaws.scala#L24): `uncancelablePollIsIdentity`, `uncancelableFinalizers`, `canceledAssociatesLeftOverFlatMap` | Enumerate cancellation/masking equations before claiming an instance. Translate each into observable native outcomes and ownership events; record differences rather than weakening error/cancellation state to pass it. |
-| 9–10, 13 | [GenSpawnLaws.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/laws/shared/src/main/scala/cats/effect/laws/GenSpawnLaws.scala#L23): `fiberJoinIsGuaranteeCase`, `uncancelableStartIsCancelable`, `raceCanceledIdentityLeft` | Review join/finalization, child mask independence, and race cancellation together. Reusable Scala effects and outcomes cannot be substituted for consuming Mojo recipes without an admission/ownership analysis. |
-| 8–11, 13 | [TestControl.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/testkit/shared/src/main/scala/cats/effect/testkit/TestControl.scala#L123): `results`, `tickOne`, `advance`, `tickAll`, `seed`, `isDeadlocked`; [TestContext.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel-testkit/shared/src/main/scala/cats/effect/kernel/testkit/TestContext.scala#L62): `schedule`, `tickOne`, `advance` | Reproduce time and event interleavings through the real engine. Upstream randomizes some task ordering and its deadlock observation also covers external-scheduler waits; preserve our FIFO promises and distinguish quiescence from proven deadlock. |
+| 7, 10, 14 | [MonadCancelLaws.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/laws/shared/src/main/scala/cats/effect/laws/MonadCancelLaws.scala#L24): `uncancelablePollIsIdentity`, `uncancelableFinalizers`, `canceledAssociatesLeftOverFlatMap` | Enumerate cancellation/masking equations before claiming an instance. Translate each into observable native outcomes and ownership events; record differences rather than weakening error/cancellation state to pass it. |
+| 9–10, 14 | [GenSpawnLaws.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/laws/shared/src/main/scala/cats/effect/laws/GenSpawnLaws.scala#L23): `fiberJoinIsGuaranteeCase`, `uncancelableStartIsCancelable`, `raceCanceledIdentityLeft` | Review join/finalization, child mask independence, and race cancellation together. Reusable Scala effects and outcomes cannot be substituted for consuming Mojo recipes without an admission/ownership analysis. |
+| 8–11, 14 | [TestControl.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/testkit/shared/src/main/scala/cats/effect/testkit/TestControl.scala#L123): `results`, `tickOne`, `advance`, `tickAll`, `seed`, `isDeadlocked`; [TestContext.scala](https://github.com/typelevel/cats-effect/blob/de84c01f76b2f42fcee9d43aba66c82992add103/kernel-testkit/shared/src/main/scala/cats/effect/kernel/testkit/TestContext.scala#L62): `schedule`, `tickOne`, `advance` | Reproduce time and event interleavings through the real engine. Upstream randomizes some task ordering and its deadlock observation also covers external-scheduler waits; preserve our FIFO promises and distinguish quiescence from proven deadlock. |
 
 ### Local owners and starting checks
 
@@ -2299,8 +2422,9 @@ upstream examples.
 | 7a–9 | `src/fp/_internal/erased.mojo` (`_Erased`), `src/fp/effects/_async/erased.mojo` (`_ErasedMachine`) | `erased_storage`, `erased_depth`; probes under `experiments/async-state-machines/probes/` |
 | 7–9, 12 | `src/fp/_internal/waking.mojo` (`_Runtime`, `Signal`, registrations), `src/fp/effects/_async/host.mojo` (`Driver`, `Clock`), `children.mojo`, `nurseries.mojo` | `host_admission`, `scheduler`, `children`, `nurseries`, `instant_clock`, `instant_timers` |
 | 9–11 | `src/fp/effects/outcomes.mojo`, `finalization.mojo`, `protocols.mojo`, `capabilities.mojo`, `coordination.mojo`; resumable owners under `src/fp/effects/_async/` | `async_masking`, `async_finalization`, `selection_policies`, `async_coordination`, `public_generic` |
-| 12 | `src/fp/effects/_async/callbacks.mojo`, `host.mojo`, and the same wake registry | `callbacks`, `callback_origins`, `instant_cleanup` |
-| 13 | `experiments/async-state-machines/qualify.py` and `stress.py`; `scripts/fp_tools/cases.py` (`CompileCase`, `execute_case`, `audit_case`) and `runs.py` (`RunContext`) | Extend existing inventories and auditors; keep overnight runs separately scheduled. |
+| 12 | `src/fp/effects/_async/callbacks.mojo` (`Completion`, `Callback`), `host.mojo` (`Driver`, `TestControl`), `kernel.mojo` (`run`), the same wake registry, and `src/fp/effects/fibers.mojo` (`unsafe_start`, the OS-thread owner to share) | `callbacks`, `callback_origins`, `instant_cleanup`, `io_stepping`, `test_control`, `test_coordination` |
+| 13 | `src/fp/effects/_async/engine.mojo` (`_RunLoop`, the fiber host), `fibers.mojo` (`_Fibers`, `_Inbox`, records and claims), `supervisor.mojo`, and `src/fp/_internal/waking.mojo` | `fiber_basics`, `fiber_drain`, `fiber_race_pair`, `fiber_supervisor`, `spawn_laws`, and the stress harness |
+| 14 | `experiments/async-state-machines/qualify.py` and `stress.py`; `scripts/fp_tools/cases.py` (`CompileCase`, `execute_case`, `audit_case`) and `runs.py` (`RunContext`) | Extend existing inventories and auditors; keep overnight runs separately scheduled. |
 
 Check names refer to clients under `experiments/async-state-machines/tests/`.
 The [composition qualification example](async-composition.md#qualification-and-limits)
@@ -2377,7 +2501,9 @@ lightweight fibers first, owner-held running work with a consuming result join,
 and native outcome-preserving capabilities. Transition budgets, fiber
 diagnostics, and controllable test scheduling accompany their runtime passes.
 Host-service ownership, an `ExecutionContext` contract, and execution profiles
-are specified before Pass 12. Real platform providers remain separately
-qualified, and allocation pooling follows evidence. The [Pass 7b review decisions](#review-decisions)
+are specified before Pass 12. Since 2026-10-31, POSIX interfaces may be called
+directly where the standard library lacks a facility, a multi-threaded
+work-stealing runtime is Pass 13, and real platform providers remain separately
+qualified, Linux first; allocation pooling follows evidence. The [Pass 7b review decisions](#review-decisions)
 settle failure reporting, removal of the recipe names, and naming. Concurrent collection
 operations remain deferred throughout.
