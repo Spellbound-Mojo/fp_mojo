@@ -376,7 +376,7 @@ struct _IOInterruptible[E: Movable & Deinitable, F: BorrowCallContract & Movable
         if env.canceled():
             return None
         comptime assert Self.F.Payload == Interruption and _ErrorCompatible[Self.E, Self.F.Failure]
-        return _settle(Optional(_capture[Self.E](_LendInterruption[Self.F](self.function^, env._token.copy()))), env)
+        return _settle(Optional(_capture[Self.E](_LendInterruption[Self.F](self.function^, env._token.copy(), None))), env)
 
 
 struct SyncIO[E: Movable & Deinitable](Defer, Raise, Cancel, Timing, Blocking, not Deinitable):

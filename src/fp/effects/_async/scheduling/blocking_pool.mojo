@@ -24,34 +24,33 @@ borrow a shared object mutably from two threads"). The job queue is S4's
 `_ExternalQueue`; the worker list is a `_Cell` locked with the shared
 `_lock_cell`.
 
+Parking. Each worker owns an S2 `_Poller` and parks in `poll(idle_timeout)`.
+An idle worker publishes its `_Interrupter` on the idle list (a `_Cell` locked
+with `_lock_cell`) before re-reading the queue; a submitter pushes its job, then
+takes one entry off the idle list and interrupts it. Both steps pass through the
+idle list's lock, so either the submitter finds the worker's entry and wakes
+it, or the worker's re-read, which follows its publication, finds the job. A
+woken worker removes its own entry, if still there, and re-reads the queue; an
+interrupt that finds no job, or one left over from an interruptible call, is a
+spurious wake. A worker running a call passes its poller to the call, so an
+`Interruption` waits in it too.
+
 Memory ordering of each atomic operation:
 
-- `idle` counts workers waiting for a job, less the claims submitters made on
-  them. A submitter pushes its job (under a stripe lock), executes
-  `fence[SEQUENTIAL]`, then claims with a SEQUENTIAL compare-exchange. A worker
-  that goes idle increments it with a SEQUENTIAL `fetch_add` before re-reading
-  the queue. Every queue push and pop also passes through the stripe lock, so
-  either the submitter sees the idle worker and claims it, or the worker's
-  queue read sees the job; neither loses it. A worker leaving idle with a job
-  decrements it only when positive (SEQUENTIAL compare-exchange); a claim has
-  otherwise consumed its entry.
 - `live` (started, not retired workers) and the worker list change only under
   the worker-list lock, which orders spawning against retiring: a retiring
-  worker re-reads the queue under the lock after leaving idle, and a submitter
-  that found no idle worker decides whether to spawn under the same lock.
-  Loads outside the lock are RELAXED hints for tests.
+  worker re-reads the queue under that lock, and a submitter that found no
+  idle worker decides whether to start one under the same lock. Loads outside
+  the lock are RELAXED hints for tests.
 - `started` counts every worker ever started; RELAXED, a test hint.
-- `closed` is stored SEQUENTIAL by `close` and loaded ACQUIRE by workers and
-  submitters; a worker that sees it with an empty queue exits.
+- `closed` is stored SEQUENTIAL by `close`, which then takes the idle list's
+  lock and interrupts every parked worker; workers load it ACQUIRE after
+  publishing themselves on the idle list, so a worker either sees the flag or
+  is interrupted. A worker that sees it with an empty queue exits.
 - A root's in-flight count (`_Calls`) is incremented RELAXED before the job is
   published (the queue lock orders it), and decremented RELEASE by the worker
   after its last use of the job; the root's finish loads it ACQUIRE, so
   everything the worker did happens before the root returns.
-
-Idle workers wait in `_idle_wait`. Until the S2 poller is on `nightly`, that is
-a short sleep, so an idle pool wakes about a thousand times a second until
-its workers retire; the poller replaces it, with submitters interrupting the
-claimed worker.
 """
 from std.atomic import Atomic, Ordering, fence
 from std.memory import ArcPointer, OwnedPointer
@@ -63,6 +62,7 @@ from fp._internal.erased import _Erased
 from fp._internal.os import OSThread, threads_supported
 from fp._internal.time import Duration
 from fp._internal.waking import _Scheduler
+from ..polling import _Poller, _Interrupter
 from .external_queue import _ExternalQueue
 from .random import _Random
 
@@ -116,7 +116,21 @@ struct _Calls(Copyable):
 # ===------------------------------------------------------------------=== #
 
 
-comptime _RunJob = def(var _Erased) thin
+struct _WorkerContext(Copyable):
+    """What a call receives from the worker running it: the worker's poller and its interrupter.
+
+    The poller belongs to the worker thread; only a call running on that
+    worker waits in it. The interrupter may be published to other threads.
+    """
+    var poller: Pointer[_Poller, MutUntrackedOrigin]
+    var interrupter: _Interrupter
+
+    def __init__(out self, poller: Pointer[_Poller, MutUntrackedOrigin], var interrupter: _Interrupter):
+        self.poller = poller
+        self.interrupter = interrupter^
+
+
+comptime _RunJob = def(var _Erased, _WorkerContext) thin
 """Run an erased call on a worker: call the function and complete its fiber."""
 
 
@@ -131,9 +145,9 @@ struct _Job(Movable):
         self.run = run
         self.calls = calls.copy()
 
-    def execute(deinit self):
+    def execute(deinit self, worker: _WorkerContext):
         """Run the call; the root's count drops after the worker's last use of it."""
-        self.run(self.body^)
+        self.run(self.body^, worker)
         self.calls.end()
 
 
@@ -144,8 +158,6 @@ struct _Job(Movable):
 
 struct _Words(Movable):
     """The pool's atomics, each on its own cache line."""
-    var idle: Atomic[Int]
-    var _pad0: Array[Int, 7]
     var live: Atomic[Int]
     var _pad1: Array[Int, 7]
     var started: Atomic[Int]
@@ -154,8 +166,6 @@ struct _Words(Movable):
     var _pad3: Array[Int, 7]
 
     def __init__(out self):
-        self.idle = Atomic(0)
-        self._pad0 = Array[Int, 7](fill=0)
         self.live = Atomic(0)
         self._pad1 = Array[Int, 7](fill=0)
         self.started = Atomic(0)
@@ -231,11 +241,21 @@ struct _Retirement(Movable):
         self.retired = retired
 
 
+struct _Parked(Copyable):
+    var id: Int
+    var interrupter: _Interrupter
+
+    def __init__(out self, id: Int, interrupter: _Interrupter):
+        self.id = id
+        self.interrupter = interrupter.copy()
+
+
 struct _PoolCore(Movable):
     """The shared state of one pool: reached from submitters and workers, always immutably."""
     var queue: _ExternalQueue[_Job]
     var _words: Pointer[_Words, MutUntrackedOrigin]
     var _workers: Pointer[_Cell[_Workers], MutUntrackedOrigin]
+    var _idle: Pointer[_Cell[List[_Parked]], MutUntrackedOrigin]
     var max_workers: Int
     var idle_nanoseconds: Int
 
@@ -245,6 +265,8 @@ struct _PoolCore(Movable):
         self._words.unsafe_write(_Words())
         self._workers = unsafe_alloc[_Cell[_Workers]](1, alignment=64)
         self._workers.unsafe_write(_Cell(Atomic(UInt8(0)), Optional(_Workers())))
+        self._idle = unsafe_alloc[_Cell[List[_Parked]]](1, alignment=64)
+        self._idle.unsafe_write(_Cell(Atomic(UInt8(0)), Optional(List[_Parked]())))
         self.max_workers = max_workers
         self.idle_nanoseconds = idle_nanoseconds
 
@@ -254,6 +276,8 @@ struct _PoolCore(Movable):
         self._words.unsafe_free()
         self._workers.unsafe_deinit_pointee()
         self._workers.unsafe_free()
+        self._idle.unsafe_deinit_pointee()
+        self._idle.unsafe_free()
 
     @always_inline
     def words(self) -> ref[MutUntrackedOrigin] _Words:
@@ -266,36 +290,60 @@ struct _PoolCore(Movable):
     def closed(self) -> Bool:
         return self.words().closed.load[ordering=Ordering.ACQUIRE]() != 0
 
-    # Workers.
+    @always_inline
+    def idle(self) -> ref[MutUntrackedOrigin] _Cell[List[_Parked]]:
+        return self._idle[]
 
-    def _leave_idle(self):
-        """A worker with a job stops counting as idle, unless a claim already did that."""
-        var idle = self.words().idle.load[ordering=Ordering.RELAXED]()
-        while idle > 0:
-            if self.words().idle.compare_exchange[success_ordering=Ordering.SEQUENTIAL, failure_ordering=Ordering.RELAXED](idle, idle - 1):
-                return
+    # Parking.
+
+    def _park(self, id: Int, interrupter: _Interrupter):
+        """Publish an idle worker, before it re-reads the queue."""
+        var guard = _lock_cell(self.idle())
+        guard.cell[].slot.value().append(_Parked(id, interrupter))
+        _ = guard^
+
+    def _unpark(self, id: Int) -> Bool:
+        """Withdraw a worker's entry; False when a submitter or close took it."""
+        var guard = _lock_cell(self.idle())
+        ref parked = guard.cell[].slot.value()
+        var found = False
+        for i in range(len(parked)):
+            if parked[i].id == id:
+                _ = parked.pop(i)
+                found = True
+                break
+        _ = guard^
+        return found
+
+    def _claim(self) -> Optional[_Interrupter]:
+        """Take the most recently parked worker, which is the warmest."""
+        var guard = _lock_cell(self.idle())
+        ref parked = guard.cell[].slot.value()
+        var claimed = Optional[_Interrupter]()
+        if len(parked):
+            claimed = Optional(parked.pop().interrupter.copy())
+        _ = guard^
+        return claimed^
+
+    def _wake_all(self):
+        var guard = _lock_cell(self.idle())
+        var parked = guard.cell[].slot.value().copy()
+        guard.cell[].slot.value().clear()
+        _ = guard^
+        for entry in parked:
+            entry.interrupter.interrupt()
 
     def _try_retire(self, id: Int, mut random: _Random) -> _Retirement:
-        """Leave the pool unless a job arrived or a submitter claimed this worker.
+        """Leave the pool unless a job arrived; the worker is not parked.
 
         Decided under the worker-list lock, which submitters take to decide
         whether to start a worker, so a job is never left with no worker to run
-        it. A claimed worker goes back to its loop: the claim consumed its idle
-        entry, and it counts itself again if it finds nothing.
+        it.
         """
         var guard = _lock_cell(self.workers())
-        var idle = self.words().idle.load[ordering=Ordering.RELAXED]()
-        var left = False
-        while idle > 0:
-            if self.words().idle.compare_exchange[success_ordering=Ordering.SEQUENTIAL, failure_ordering=Ordering.RELAXED](idle, idle - 1):
-                left = True
-                break
-        if not left and not self.closed():
-            # Mojo destroys a value after its last use: keep the lock held to here.
-            _ = guard^
-            return _Retirement(None, False)
         var job = self.queue.pop(random)
         if job:
+            # Mojo destroys a value after its last use: keep the lock held to here.
             _ = guard^
             return _Retirement(job^, False)
         _ = self.words().live.fetch_sub[ordering=Ordering.RELAXED](1)
@@ -318,6 +366,7 @@ struct _PoolCore(Movable):
         the pool last.
         """
         self.words().closed.store[ordering=Ordering.SEQUENTIAL](UInt8(1))
+        self._wake_all()
         var all: List[_Worker]
         var guard = _lock_cell(self.workers())
         all = guard.cell[].slot.value().take_all()
@@ -339,12 +388,11 @@ def _submit(core: ArcPointer[_PoolCore], var job: _Job):
     """
     var random = _Random(_seed())
     core[].queue.push(job^, random)
-    fence[Ordering.SEQUENTIAL]()
-    var idle = core[].words().idle.load[ordering=Ordering.RELAXED]()
-    while idle > 0:
-        if core[].words().idle.compare_exchange[success_ordering=Ordering.SEQUENTIAL, failure_ordering=Ordering.RELAXED](idle, idle - 1):
-            # The claimed worker finds the job on its next queue read.
-            return
+    var claimed = core[]._claim()
+    if claimed:
+        # The claimed worker finds the job on its next queue read.
+        claimed.value().interrupt()
+        return
     var joined: List[_Worker]
     var guard = _lock_cell(core[].workers())
     ref workers = guard.cell[].slot.value()
@@ -367,40 +415,50 @@ def _submit(core: ArcPointer[_PoolCore], var job: _Job):
 
 
 
-def _idle_wait():
-    # Until S2's poller merges: a short sleep. The poller replaces this with a
-    # park that submitters interrupt.
-    sleep(0.0005)
-
-
 def _worker_main(state: Pointer[_WorkerState, MutAnyOrigin]) abi("C") -> OptionalPointer[NoneType, MutUntrackedOrigin]:
     var owner = state[].core.take()
     var id = state[].id
     ref core = owner[]
     var random = _Random(_seed() ^ UInt64(id + 1))
+    var poller: _Poller
+    try:
+        poller = _Poller()
+    except:
+        abort("fp.effects: a blocking worker could not create its poller")
+    var worker = _WorkerContext(Pointer(to=poller).unsafe_origin_cast[MutUntrackedOrigin](), poller.interrupter())
+    var deadline = Int(monotonic()) + core.idle_nanoseconds
     while True:
         var job = core.queue.pop(random)
         if job:
-            job.take().execute()
+            job.take().execute(worker)
+            deadline = Int(monotonic()) + core.idle_nanoseconds
             continue
-        # Idle: count it, then re-read the queue (see the module's ordering notes).
-        _ = core.words().idle.fetch_add[ordering=Ordering.SEQUENTIAL](1)
-        var deadline = monotonic() + core.idle_nanoseconds
-        while True:
-            var found = core.queue.pop(random)
-            if found:
-                core._leave_idle()
-                found.take().execute()
+        if core.closed() or Int(monotonic()) >= deadline:
+            var decision = core._try_retire(id, random)
+            if decision.retired:
                 break
-            if core.closed() or monotonic() >= deadline:
-                var decision = core._try_retire(id, random)
-                if decision.retired:
-                    return None
-                if decision.job:
-                    decision.job.take().execute()
-                # Claimed, or ran the last job: back to the main loop.
-                break
-            _idle_wait()
+            decision.job.take().execute(worker)
+            deadline = Int(monotonic()) + core.idle_nanoseconds
+            continue
+        # Publish, then re-read the queue (see the module's parking notes).
+        core._park(id, worker.interrupter)
+        var found = core.queue.pop(random)
+        if found:
+            _ = core._unpark(id)
+            found.take().execute(worker)
+            deadline = Int(monotonic()) + core.idle_nanoseconds
+            continue
+        if not core.closed():
+            var remaining = max(deadline - Int(monotonic()), 0)
+            try:
+                _ = poller.poll(Optional(Duration.nanoseconds(remaining)))
+            except:
+                abort("fp.effects: a blocking worker's poll failed")
+        _ = core._unpark(id)
+    # Keep the poller, which calls borrowed through `worker`, alive until here.
+    _ = worker^
+    _ = poller^
+    return None
 
 
 struct _PoolOwner(Movable):

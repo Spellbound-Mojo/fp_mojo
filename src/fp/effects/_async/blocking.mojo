@@ -33,7 +33,8 @@ from fp.effects.outcomes import _capture
 from fp.effects._interruption import _LendInterruption
 from .callbacks import Completion
 from .kernel import Machine, Step
-from .scheduling.blocking_pool import _RootBlocking, _root_blocking
+from .scheduling.blocking_pool import _RootBlocking, _root_blocking, _WorkerContext
+from .polling import _Interrupter
 
 
 # ===------------------------------------------------------------------=== #
@@ -73,7 +74,7 @@ struct _BlockingCall[F: ThunkContract & Movable & Deinitable, E: Movable & Deini
         _ = self.completion.complete(outcome^)
 
 
-def _run_blocking[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](var body: _Erased):
+def _run_blocking[F: ThunkContract & Movable & Deinitable, E: Movable & Deinitable](var body: _Erased, worker: _WorkerContext):
     """Run a blocking call on a worker; a rejected outcome is destroyed here."""
     comptime assert _ErrorCompatible[E, F.Error]
     body^.take[_BlockingCall[F, E]]().run()
@@ -83,10 +84,13 @@ struct _ReturnState[E: Movable & Deinitable](Movable):
     """Whether an interruptible function returned, and who waits for it."""
     var returned: Bool
     var waiter: Optional[Completion[NoneType, Self.E]]
+    # The running worker's interrupter, published while the function runs.
+    var worker: Optional[_Interrupter]
 
     def __init__(out self):
         self.returned = False
         self.waiter = None
+        self.worker = None
 
 
 struct _Interrupt[E: Movable & Deinitable](Copyable):
@@ -98,10 +102,23 @@ struct _Interrupt[E: Movable & Deinitable](Copyable):
         self.token = CancellationToken()
         self.state = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_ReturnState[Self.E]())))
 
+    def started(self, worker: _Interrupter):
+        """Publish the worker before the function runs, so a request can wake its waits.
+
+        Under the state's lock, as `await_return`'s read: either the
+        withdrawal sees the worker and interrupts it, or the token's request,
+        made before the withdrawal's lock, is visible to the function's next
+        `requested()` check.
+        """
+        var guard = _lock_cell(self.state[])
+        guard.cell[].slot.value().worker = Optional(worker.copy())
+        _ = guard^
+
     def returned(self):
         """The function returned: release the fiber's withdrawal if it waits."""
         var guard = _lock_cell(self.state[])
         guard.cell[].slot.value().returned = True
+        guard.cell[].slot.value().worker = None
         var waiter = guard.cell[].slot.value().waiter.take() if guard.cell[].slot.value().waiter else Optional[Completion[NoneType, Self.E]]()
         _ = guard^
         if waiter:
@@ -113,9 +130,13 @@ struct _Interrupt[E: Movable & Deinitable](Copyable):
         self.token.cancel()
         var guard = _lock_cell(self.state[])
         var done = guard.cell[].slot.value().returned
+        var worker = guard.cell[].slot.value().worker.copy()
         if not done:
             guard.cell[].slot.value().waiter = Optional(completion.copy())
         _ = guard^
+        if worker:
+            # Wakes a wait made through the handle; otherwise a spurious wake.
+            worker.value().interrupt()
         if done:
             var unit: NoneType = None
             _ = completion.complete(Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit))))
@@ -128,17 +149,18 @@ struct _InterruptibleCall[F: BorrowCallContract & Movable & Deinitable, E: Movab
     var completion: Completion[Self.F.Result, Self.E]
     var interrupt: _Interrupt[Self.E]
 
-    def run(deinit self):
+    def run(deinit self, worker: _WorkerContext):
         comptime assert _ErrorCompatible[Self.E, Self.F.Failure]
-        var outcome = Optional(_capture[Self.E](_LendInterruption[Self.F](self.function^, self.interrupt.token.copy())))
+        self.interrupt.started(worker.interrupter)
+        var outcome = Optional(_capture[Self.E](_LendInterruption[Self.F](self.function^, self.interrupt.token.copy(), Optional(worker.poller))))
         _ = self.completion.complete(outcome^)
         self.interrupt.returned()
 
 
-def _run_interruptible[F: BorrowCallContract & Movable & Deinitable, E: Movable & Deinitable](var body: _Erased):
+def _run_interruptible[F: BorrowCallContract & Movable & Deinitable, E: Movable & Deinitable](var body: _Erased, worker: _WorkerContext):
     """Run an interruptible call on a worker, then report its return."""
     comptime assert _ErrorCompatible[E, F.Failure]
-    body^.take[_InterruptibleCall[F, E]]().run()
+    body^.take[_InterruptibleCall[F, E]]().run(worker)
 
 
 @fieldwise_init

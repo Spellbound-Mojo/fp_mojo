@@ -17,9 +17,10 @@ from std.os import abort, getenv
 from std.time import monotonic, sleep
 from fp.callables import OnceThunk, OnceUnary, BorrowCallable
 from fp._internal.erased import _Erased
+from fp._internal.os import getrusage, RUSAGE_SELF
 from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Interruption, BlockingPool, IORuntimeConfig, Duration, run
-from fp.effects._async.scheduling.blocking_pool import _RootBlocking
+from fp.effects._async.scheduling.blocking_pool import _RootBlocking, _WorkerContext
 
 
 def check(condition: Bool, message: String):
@@ -230,6 +231,24 @@ def interruption():
     check(value_of(run(IO[Int, Int].interruptible(quick))) == 0, "an uninterrupted call sees no request")
 
 
+def sleeper(handle: Interruption) -> Int:
+    # Woken by the request long before the ten seconds pass.
+    return 1 if handle.sleep(ms(10_000)) else 2
+
+
+def sleeps_out(handle: Interruption) -> Int:
+    return 1 if handle.sleep(ms(5)) else 2
+
+
+def interrupted_sleep():
+    var started = Int(monotonic())
+    var raced = value_of(run(IO[Int, Int].interruptible(sleeper).timeout_to(ms(5), IO[Int, Int].pure(-1))))
+    var elapsed = Int(monotonic()) - started
+    check(raced == -1, "the canceled sleeper's fallback runs")
+    check(elapsed < 2_000_000_000, String("a wait through the handle wakes on the request, took ", elapsed))
+    check(value_of(run(IO[Int, Int].interruptible(sleeps_out))) == 1, "an uninterrupted sleep runs its whole duration")
+
+
 def quick(handle: Interruption) -> Int:
     return 1 if handle.requested() else 0
 
@@ -255,6 +274,16 @@ def reuse_and_retire() raises:
     check(pool._live() == 0, "an idle worker retires after the timeout")
     check(value_of(run(IO[Int, Int].blocking(nothing), config_with(pool))) == 1, "a call after retirement starts a worker")
     check(pool._started() == 2, "a new worker started after retirement")
+    # Idle workers park in their pollers: four idle workers use almost no CPU.
+    var parked = BlockingPool(4, Duration.seconds(10))
+    _ = value_of(run(IO[Int, Int].pure(0).flat_map(Burst(ArcPointer(Gauge()), 4)), config_with(parked)))
+    var before = getrusage(RUSAGE_SELF)
+    sleep(0.3)
+    var after = getrusage(RUSAGE_SELF)
+    var used = (after.user_nanoseconds + after.system_nanoseconds) - (before.user_nanoseconds + before.system_nanoseconds)
+    check(parked._live() >= 2, "several idle workers are parked")
+    check(used < 30_000_000, String("idle workers park without spinning, used ns: ", used))
+    _ = parked^
     _ = pool^
     check(wait_until_threads(base), "dropping the last copy joins every worker")
 
@@ -460,7 +489,7 @@ struct Holder(Movable):
         self.done = done.copy()
 
 
-def run_holder(var body: _Erased):
+def run_holder(var body: _Erased, worker: _WorkerContext):
     var holder = body^.take[Holder]()
     sleep(0.005)
     var done = holder.done.copy()
@@ -486,6 +515,7 @@ def main() raises:
     results_and_errors()
     timeout_waits()
     interruption()
+    interrupted_sleep()
     reuse_and_retire()
     maximum()
     ledger_rounds()
