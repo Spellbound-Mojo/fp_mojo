@@ -18,6 +18,7 @@ from .layers import ResultT
 from .outcomes import EffectFailure, Outcome, _capture, _finish
 from fp._internal.time import Instant
 from fp._internal.waking import _Event, _Clock, _Runtime, _Ticket
+from fp._internal.cells import _LockWaiter
 
 
 struct CancellationToken(Copyable):
@@ -58,12 +59,21 @@ comptime _Reporter = def(String) thin
 
 
 struct _Budget(Movable):
-    """Interpreter transitions shared by every run loop under one root.
+    """One executor's transition slice, and the root's read-only configuration.
 
-    The root refills the slice before each root poll; run loops draw from it and
-    yield when it is spent. It also carries the root's fiber failure reporting
-    and the number of live external registrations, those of IO.async awaiting
-    their completion. The state is confined to the root's polling thread.
+    `remaining` and `consumed` are the slice: they belong to the executor that
+    runs the loop (`_Executor` in `_async/executor.mojo`), which hands it to
+    each task it runs through the task's context, and only that executor's
+    thread touches them. The current-thread executor refills it once per root
+    poll, so the tasks of one turn share it; a work-stealing worker would own
+    its own and refill it per task run (the executor's `begin_run` hook).
+
+    Everything else is fixed at construction and only read afterwards, so it
+    may be read from any thread: the thresholds, whether unhandled fiber
+    failures are reported, and the reporter, which any worker may call,
+    concurrently. `registrations` points at the scheduler's atomic count of
+    live external registrations (`_Scheduler.registrations`), which callbacks
+    change from any thread.
     """
     var remaining: Int
     var consumed: Int
@@ -71,22 +81,22 @@ struct _Budget(Movable):
     var check_threshold: Int
     var report: Bool
     var reporter: _Reporter
-    var registrations: Int
+    var registrations: ArcPointer[Atomic[Int]]
 
-    def __init__(out self, yield_threshold: Int, check_threshold: Int, report: Bool, reporter: _Reporter):
+    def __init__(out self, yield_threshold: Int, check_threshold: Int, report: Bool, reporter: _Reporter, registrations: ArcPointer[Atomic[Int]]):
         self.remaining = yield_threshold
         self.consumed = 0
         self.yield_threshold = yield_threshold
         self.check_threshold = check_threshold
         self.report = report
         self.reporter = reporter
-        self.registrations = 0
+        self.registrations = registrations.copy()
 
     def refill(mut self):
         self.remaining = self.yield_threshold
 
 
-struct IOContext[E: Movable & Deinitable](_IOContextType, Copyable):
+struct IOContext[E: Movable & Deinitable](_IOContextType, _LockWaiter, Copyable):
     """A borrowed execution context for custom IO endpoints.
 
     Masking is local to a context value; token copies share only the atomic

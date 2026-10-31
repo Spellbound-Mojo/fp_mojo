@@ -106,7 +106,10 @@ still running then, it is reported when the child completes. An unjoined
 success is destroyed. The reporter is `IORuntimeConfig.reporter`, a host
 function taking one formatted line: the errors when `E` is `Writable`,
 otherwise their count and type. It writes to standard error by default, and
-`report_unhandled_fiber_errors = False` turns reporting off. A fiber that
+`report_unhandled_fiber_errors = False` turns reporting off. A custom reporter
+may be called from any thread that settles a fiber, and from several at once
+once fibers run in parallel, so it must be safe there; lines written by
+concurrent calls may interleave. A fiber that
 joins its own handle aborts; longer join cycles are not detected.
 
 Fibers run on the host thread. Each fiber, like the root program, is a task of
@@ -125,7 +128,10 @@ the same way, so one owner drains every child.
 that calls it, so they can outlive that fiber. When the body ends, a masked
 release cancels the supervised fibers that are still live and waits for them,
 as Cats Effect does by default; `await_on_release=True` waits for them to
-finish instead. Supervising after release aborts.
+finish instead. Release first closes the supervisor: a `supervise` that loses
+the race with release, or runs after it, returns a fiber that is already
+canceled. Its program never runs, and joining it yields a cancellation, as
+starting observes cancellation elsewhere.
 
 `Driver.fibers()` lists the live fibers under the root between polls, like Cats
 Effect's fiber dump: each `FiberInfo` names an internal slot, its owner's slot

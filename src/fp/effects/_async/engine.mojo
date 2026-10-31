@@ -29,12 +29,12 @@ from fp._internal.errors import _ErrorCompatible
 from fp.data import Result, Ok, Err, NonEmptyList, Left, Right
 from fp.effects import IOContext, Outcome, EffectFailure, ExitCase
 from fp.effects.outcomes import _failure_as, _finish, _ExitState, _zip_outcomes
-from fp.effects._io_core import _settle, IOContract, canceled as _cancel_request
+from fp.effects._io_core import _settle, IOContract, _Reporter, canceled as _cancel_request
 from fp.effects.protocols import ReaderAction, Defer, Raise, Spawn, Concurrent, Temporal
 from fp.effects._timing import _SleepSource, _timed, _delay_by, _and_wait
 from fp.effects.finalization import Poll as _SyncPoll
 from fp.effects.coordination import Ref as _Ref, Deferred as _Deferred, _RefInspect, _Copy
-from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep
+from .kernel import Machine, Step, Wait, _Slot, _tick, Sleep as _Sleep, _report_to_stderr
 from .time import Duration, Instant
 from .racing import RaceResult, _winner, _loser
 from .io import EvalIO as _EvalIO
@@ -257,6 +257,10 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
     var pending: List[_Spawn[Self.E]]
     # A terminal step held while the scope's children drain.
     var held: Optional[Step[_Erased, Self.E]]
+    # The root's failure reporting, read from the budget's shared, read-only
+    # configuration when a segment starts; records started here are fixed to it.
+    var report: Bool
+    var reporter: _Reporter
 
     def __init__(out self, var program: _Program[Self.E]):
         self.state = _EVALUATE
@@ -274,13 +278,17 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
         self.scope = None
         self.pending = List[_Spawn[Self.E]]()
         self.held = None
+        self.report = True
+        self.reporter = _report_to_stderr
         program^.install_into(self)
 
     def spawn(mut self, var program: _Program[Self.E], var record: ArcPointer[_FiberRecord[Self.E]], owner: Optional[ArcPointer[_Scope[Self.E]]] = None) -> ArcPointer[_Scope[Self.E]]:
         """Start a child owned by this loop's scope, or by a supervisor's.
 
         The child is admitted to the executor when this run segment ends.
-        Returns the child's own scope, which owns the fibers it starts.
+        Returns the child's own scope, which owns the fibers it starts. A
+        closed owner, a released supervisor's, refuses the child: its record
+        completes canceled at once and the program never runs.
         """
         var parent: ArcPointer[_Scope[Self.E]]
         if owner:
@@ -289,11 +297,19 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
             if not self.scope:
                 self.scope = Optional(ArcPointer(_Scope[Self.E]()))
             parent = self.scope.value().copy()
-        var child = _RunLoop[Self.E](program^)
         var scope = ArcPointer(_Scope[Self.E]())
+        if not parent[].adopt(record):
+            record[].token.cancel()
+            record[].complete(Outcome[_Erased, Self.E]())
+            return scope^
+        var child = _RunLoop[Self.E](program^)
         child.scope = Optional(scope.copy())
         self.pending.append(_Spawn[Self.E](_Leaf[Self.E](_FiberLoop[Self.E](OwnedPointer(child^))), record^, scope.copy(), parent^))
         return scope^
+
+    def record(self) -> ArcPointer[_FiberRecord[Self.E]]:
+        """A new fiber record with the root's reporting configuration, fixed at creation."""
+        return ArcPointer(_FiberRecord[Self.E](self.report, self.reporter))
 
     def admit(mut self, context: IOContext[Self.E]):
         """Admit the fibers started during this segment, in start order."""
@@ -362,8 +378,11 @@ struct _RunLoop[E: Movable & Deinitable](Movable):
     def run(mut self, context: IOContext[Self.E]) -> Step[_Erased, Self.E]:
         var budget = _BUDGET
         if context._budget:
-            budget = context._budget.value()[].remaining
-            self.check_every = context._budget.value()[].check_threshold
+            ref shared = context._budget.value()[]
+            budget = shared.remaining
+            self.check_every = shared.check_threshold
+            self.report = shared.report
+            self.reporter = shared.reporter
         while True:
             # Region boundaries switch the effective context; reselect it then.
             self.switched = False
@@ -563,8 +582,9 @@ struct Fiber[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
     def __init__(out self, *, var _record: ArcPointer[_FiberRecord[Self.E]]):
         self._claim = _Claim[Self.E](_record^)
 
-    def _into_record(deinit self) -> ArcPointer[_FiberRecord[Self.E]]:
-        return self._claim^.keep()
+    def _take_outcome(deinit self) -> Outcome[_Erased, Self.E]:
+        """Take the finished child's outcome; the same step consumes the claim."""
+        return self._claim^.take()
 
     def join(deinit self) -> IO[Outcome[Self.T, Self.E], Self.E]:
         """Wait for the child and its cleanup to finish, then take its outcome.
@@ -1454,7 +1474,7 @@ struct IO[T: Movable & Deinitable, E: Movable & Deinitable](Machine, _FamilyCarr
         """
         def invoke(var callable: _Erased, loop: MutOpaquePointer[_]):
             ref run = _loop_at[Self.E](loop)
-            var record = ArcPointer(_FiberRecord[Self.E]())
+            var record = run.record()
             _ = run.spawn(callable^.take[_Program[Self.E]](), record.copy())
             run.set_value(_Erased(Fiber[Self.T, Self.E](_record=record^)))
 
@@ -1802,9 +1822,9 @@ struct _PairJoin[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & 
         if context.canceled():
             self.stop()
         if self.winner < 0:
-            if left.done:
+            if left.done():
                 self.winner = 0
-            elif right.done:
+            elif right.done():
                 self.winner = 1
             comptime if Self.policy != _BOTH:
                 if self.winner >= 0:
@@ -1812,9 +1832,9 @@ struct _PairJoin[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & 
         comptime if Self.policy == _BOTH:
             if _unsuccessful(left) or _unsuccessful(right):
                 self.stop()
-        if left.done and right.done:
-            var left_outcome = _typed[Self.T](self.left.take()._into_record()[].outcome.take())
-            var right_outcome = _typed[Self.U](self.right.take()._into_record()[].outcome.take())
+        if left.done() and right.done():
+            var left_outcome = _typed[Self.T](self.left.take()._take_outcome())
+            var right_outcome = _typed[Self.U](self.right.take()._take_outcome())
             comptime if Self.policy == _BOTH:
                 return Step[Self.Value, Self.E].ready(rebind_var[Outcome[Self.Value, Self.E]](_zip_outcomes(left_outcome^, right_outcome^)))
             else:
@@ -1875,15 +1895,15 @@ struct _TimeoutJoin[T: Movable & Deinitable, E: Movable & Deinitable, prefer_sou
             self.stopping = True
             source.token.cancel()
         if self.winner < 0:
-            if source.done:
+            if source.done():
                 self.winner = 0
             elif now >= self.deadline.value():
                 self.winner = 1
                 if not self.stopping:
                     self.stopping = True
                     source.token.cancel()
-        if source.done:
-            var outcome = _typed[Self.T](self.source.take()._into_record()[].outcome.take())
+        if source.done():
+            var outcome = _typed[Self.T](self.source.take()._take_outcome())
             var selected = self.winner
             comptime if Self.prefer_source:
                 if selected == 1 and outcome:

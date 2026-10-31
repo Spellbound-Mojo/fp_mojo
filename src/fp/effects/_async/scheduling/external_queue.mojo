@@ -98,8 +98,8 @@ struct _ExternalQueue[T: Movable & Deinitable](Movable):
         """Append one element to a random stripe."""
         ref stripe = self._stripe(random.below(self._count))
         var guard = _lock_cell(stripe.cell)
-        guard.cell[].slot.value().append(item^)
-        stripe.length.store[ordering=Ordering.RELAXED](len(guard.cell[].slot.value()))
+        guard.value().append(item^)
+        stripe.length.store[ordering=Ordering.RELAXED](len(guard.value()))
 
     def _push_ring(self, buffer: Pointer[Self.T, MutUntrackedOrigin], start: UInt32, count: Int, mask: UInt32, batch: Int, mut random: _Random):
         """Move `count` initialized ring slots from `start` into stripes, `batch` per lock.
@@ -114,8 +114,8 @@ struct _ExternalQueue[T: Movable & Deinitable](Movable):
             var guard = _lock_cell(stripe.cell)
             for i in range(offset, end):
                 var slot = Int((start + UInt32(i)) & mask)
-                guard.cell[].slot.value().append(buffer.unsafe_offset(slot).unsafe_take_pointee())
-            stripe.length.store[ordering=Ordering.RELAXED](len(guard.cell[].slot.value()))
+                guard.value().append(buffer.unsafe_offset(slot).unsafe_take_pointee())
+            stripe.length.store[ordering=Ordering.RELAXED](len(guard.value()))
             offset = end
 
     def pop(self, mut random: _Random) -> Optional[Self.T]:
@@ -126,12 +126,12 @@ struct _ExternalQueue[T: Movable & Deinitable](Movable):
             if stripe.length.load[ordering=Ordering.RELAXED]() == 0:
                 continue
             var guard = _lock_cell(stripe.cell)
-            var length = len(guard.cell[].slot.value())
+            var length = len(guard.value())
             if length == 0:
                 continue
             stripe.length.store[ordering=Ordering.RELAXED](length - 1)
             try:
-                return Optional(guard.cell[].slot.value().popleft())
+                return Optional(guard.value().popleft())
             except:
                 abort("external queue stripe emptied under its lock")
         return None
@@ -149,16 +149,16 @@ struct _ExternalQueue[T: Movable & Deinitable](Movable):
             if stripe.length.load[ordering=Ordering.RELAXED]() == 0:
                 continue
             var guard = _lock_cell(stripe.cell)
-            var length = len(guard.cell[].slot.value())
+            var length = len(guard.value())
             if length == 0:
                 continue
             var take = min(length, limit)
             stripe.length.store[ordering=Ordering.RELAXED](length - take)
             try:
-                var head = guard.cell[].slot.value().popleft()
+                var head = guard.value().popleft()
                 for j in range(1, take):
                     var slot = Int((start + UInt32(j - 1)) & mask)
-                    buffer.unsafe_offset(slot).unsafe_write(guard.cell[].slot.value().popleft())
+                    buffer.unsafe_offset(slot).unsafe_write(guard.value().popleft())
                 moved = take - 1
                 return Optional(head^)
             except:

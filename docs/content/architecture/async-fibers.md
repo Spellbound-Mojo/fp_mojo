@@ -62,17 +62,22 @@ reused: a million sequential start/join cycles use one slot.
 
 ## Joins and failures
 
-The right to an outcome is one claim. The handle holds it, `join` moves it into
-the join leaf, and the leaf moves it with the outcome into a delivery that the
-join's own map frame unwraps. A canceled joiner's leaf takes nothing. If a
-handoff observes cancellation between the leaf and that frame, dropping the
-delivery returns the outcome to the record.
+The outcome lives in a lock-free one-shot slot (`src/fp/_internal/oneshot.mojo`):
+the fiber's task is its only writer, and the right to the outcome is one claim.
+The handle holds the claim, `join` moves it into the join leaf, and the leaf
+takes the published outcome in the same atomic step that consumes the claim,
+into a delivery that the join's own map frame unwraps. A canceled joiner's leaf
+takes nothing. If a handoff observes cancellation between the leaf and that
+frame, the dropped delivery disposes of the outcome itself.
 
-Dropping the last claim releases the record. A released failure goes to the
-runtime's reporter at once, or when the child completes; a released success is
-destroyed. So each failure is joined or reported exactly once. The root's
-`IORuntimeConfig` supplies the reporter and whether reporting is on, and each
-record copies them on admission. `IOContext` carries the running fiber's
+Dropping the last claim releases the record. Exactly one party disposes of an
+outcome nobody joins, decided by one compare-exchange on the slot's state: the
+release, when the outcome is already published, or the completing task, when
+the release came first. A disposed failure goes to the runtime's reporter on
+that party's thread; a disposed success is destroyed. So each failure is joined
+or reported exactly once. The root's `IORuntimeConfig` supplies the reporter
+and whether reporting is on, and each record is created with them, before its
+handle exists. `done` is a lock-free acquire load of the slot's state. `IOContext` carries the running fiber's
 identity, so the join leaf aborts a direct self-join.
 
 ## Supervisors
@@ -80,18 +85,26 @@ identity, so the join leaf aborts a direct self-join.
 `Supervisor[E].scoped(body)` starts a parked supervisor fiber owned by the
 caller's run loop and runs the body on that loop. `supervise(io)` starts `io`
 with the supervisor fiber's scope as its owner, so the fiber that called
-`supervise` can finish without draining it. Release is the body's finalizer: it
-stops the parked program, and the supervisor fiber's task, as any owner,
-cancels the supervised fibers and completes only after they finish; awaiting
-release first waits for them.
+`supervise` can finish without draining it. A scope lists its children on a
+closable lock-free stack (`src/fp/_internal/closable_stack.mojo`); adoption
+pushes unless the stack is closed. Release is the body's finalizer: it closes
+the supervisor's stack with one atomic step and cancels the live children, or,
+awaiting release, waits for the scope's live count to reach zero; then it stops
+the parked program, a `CancellationToken`, and waits for the supervisor fiber,
+whose task drains its scope as any owner does. A `supervise` refused by the
+closed stack completes its record canceled at once, and its program never runs.
+An owner's drain closes its own scope the same way before canceling.
 
 ## Diagnostics
 
 `Driver.fibers()` lists the live fibers under the root between polls, from the
-executor's table of live fibers' metadata: each entry's slot, the slot of the
-fiber whose run loop started it (0 for the root program), and whether it is
-runnable (scheduled), suspended (idle), or draining its children. The table
-holds no payloads, and a task leaves it when it completes. Fibers started by an
+scheduler's lock-free diagnostic slots (`src/fp/_internal/fiber_slots.mojo`):
+each slot's index, the slot of the fiber whose run loop started it (0 for the
+root program), and whether it is runnable (scheduled), suspended (idle), or
+draining its children. A fiber takes a slot from a lock-free free-index stack
+when it is admitted and returns it when it completes; no lock is taken. Slots
+hold no payloads. The snapshot reads live tasks' states, so it runs only
+between polls on the driving thread. Fibers started by an
 `IO` lifted into a leaf are listed under the fiber running that leaf. Slots are
 reused, so an index is not an identity.
 
@@ -102,4 +115,8 @@ reused, so an index is not an identity.
 storage reuse under a 1 MiB stack, and snapshots. `public_reject_fiber_moved`
 and `public_reject_fiber_error` reject a join of a moved handle and a child with
 another error type. The scheduler, coordination, erased-storage, and workload
-clients run their dynamic children as fibers.
+clients run their dynamic children as fibers. `race_oneshot`, `race_stack`,
+`race_record`, `race_supervisor`, and `race_registrations` drive the one-shot
+slot, the closable stack, the record's protocol, scope adoption against
+release, and the registration count from several OS threads, with ledgers that
+prove each value is destroyed, and each failure joined or reported, exactly once.
