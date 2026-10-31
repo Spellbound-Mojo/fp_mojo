@@ -2497,7 +2497,7 @@ it into `nightly`.
 |---|---|---|---|
 | **S1 OS layer** (merged) | External calls for `pipe`, `pipe2`, `fcntl`, `poll`, `read`, `write`, `close`, `clock_gettime`, `getrusage`, and the thread owner extracted from `unsafe_start` | New `src/fp/_internal/os.mojo`; `src/fp/effects/fibers.mojo` | None |
 | **S2 Poller** | The polling interface and its `poll()`-and-self-pipe backend, with registration, coalesced interrupts, and closing (12b's core) | New `_async/polling.mojo` | S1 |
-| **S3 Cross-thread qualification** | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
+| **S3 Cross-thread qualification** (merged) | `Signal`, `Completion`, and `CancellationToken` from other threads: ordering, wake before park, payloads, teardown (12a) | New clients; documentation in `waking.mojo` and `callbacks.mojo` | None; uses `unsafe_start` |
 | **S4 Concurrent structures** | The local ring, external queue, per-worker timer heap, and parking protocol, with stress tests and measurements (13a) | New `_async/scheduling/` modules and clients | S1 for threads, or `unsafe_start` until it lands |
 | **S5 Engine refactor** | Fibers as scheduled tasks on the current-thread profile, per-fiber wake registries with the wake hook, ownership in records, `Supervisor`, diagnostics, the host notifier (13b, 12a's hook) | `engine.mojo`, `fibers.mojo`, `supervisor.mojo`, `kernel.mojo`, `waking.mojo` | None |
 | **S6 Blocking** | The blocking pool, `blocking`, `interruptible` with its handle, and the `Blocking` capability (12c) | New `_async/blocking.mojo`; additions to `protocols.mojo` and `capabilities.mojo` | S1, S3 |
@@ -2580,6 +2580,58 @@ continues.
   and `test_coordination` passed from source and from the package at O0 and
   O3: 12 of 12. The `EINTR` restarts are untested, since no test raises a
   signal.
+
+**S3** (Wave 1) was merged on 2026-10-31: `Signal`, `Completion`, and
+`CancellationToken` qualified from other threads.
+
+- **Clients.** In both, OS threads started with `unsafe_start` act on a root
+  that the main thread polls through `Driver`.
+  - `foreign_completion` completes `IO.async` registrations from another
+    thread:
+    - a thousand rounds with randomized delays on both sides and no lost
+      wake;
+    - plain data written before `complete` is visible to the continuation;
+    - accepted payloads are destroyed exactly once, on the polling thread;
+    - duplicate, late, and withdrawn completions are rejected, and their
+      payloads are destroyed on the completing thread;
+    - completions race a real-time timeout, and all three results occur:
+      accepted and used, rejected, and accepted then dropped by the
+      withdrawal.
+  - `foreign_signal` notifies `Signal`s and cancels `CancellationToken`s from
+    another thread:
+    - a notify lands at varied points between a leaf's revision read and its
+      wait;
+    - two waiters share one signal;
+    - one to three notifies per round;
+    - a cancellation wakes a parked leaf, a root in `never().guarantee`, or a
+      root joining a waiting child.
+- **Bug fixed.** `Completion.complete` documented that a rejected outcome is
+  destroyed outside the lock, but Mojo destroyed it after its last use, inside
+  the lock. A destructor that completed the same completion would then spin
+  forever. The rejected outcome now moves into a local that is dropped after
+  the unlock. The `callbacks` client records the lock state from a rejected
+  payload's destructor: the check fails on the old code and passes now.
+- **Contracts.** The docstrings of `Signal`, `Completion`, and
+  `CancellationToken` now state their cross-thread contract: they are safe
+  from any thread, writes before `notify`, `complete`, or `cancel` are visible
+  to the observer, and rejected payloads are destroyed on the completing
+  thread. `Completion` also states the caller's obligation that its value and
+  error may be destroyed on either thread.
+- **Notes for later streams.**
+  - `IO.async`'s withdrawal runs after every entered registration, not only on
+    cancellation as in Cats Effect. It is documented, and the guide's Cats
+    Effect mapping should make the difference prominent.
+  - A root that finishes while a foreign `notify` runs can have its wake state
+    destroyed on that foreign thread, so S5 keeps that state free of anything
+    tied to the polling thread.
+  - Wake before park against a real poller waits for S2 and the wake hook.
+- **Qualification.** The new clients took 70–84 s to compile, so `os_layer`,
+  `foreign_completion`, and `foreign_signal` received 360 s compile timeouts.
+  The S3 branch passed 8 of 8 (`foreign_completion` and `foreign_signal`); 200
+  runs of each client at O0 and 200 at O3 passed, as did 300 runs under load.
+  After the fix, `callbacks`, `foreign_completion`, `foreign_signal`, and
+  `test_control` passed 16 of 16 from source and package at O0 and O3; the
+  run's input check flagged only the plan and guide prose edited during it.
 
 ## Implementation reference map
 
