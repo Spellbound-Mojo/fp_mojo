@@ -18,14 +18,14 @@ def txg_select[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & De
                F: def(var A) raises E -> Optional[Optional[B]]](
     ref function: F, var source: List[A]
 ) raises E -> Optional[List[B]]:
-    return traverse_filter[OptionalFamily, E=E, X=E](source^, function)
+    return traverse_filter[OptionalFamily, X=E](source^, function)
 
 
 def txg_filter[A: Movable & Deinitable, E: Movable & Deinitable, //,
                F: def(A) raises E -> Optional[Bool]](
     ref function: F, var source: List[A]
 ) raises E -> Optional[List[A]]:
-    return filter_effect[OptionalFamily, E=E, X=E](source^, function)
+    return filter_effect[OptionalFamily, X=E](source^, function)
 
 
 @fieldwise_init

@@ -73,14 +73,22 @@ def free_traverse():
     element = f'downcast[_Source[V].Element, {MD}]'
     for form in admissions('owned', [element], library=False, names={'X': 'E', 'C': 'F', 'in0': 'A'}):
         D = form.type
-        params = [*form.parameters, f'V: {MD}', '//', 'G: Applicative', *form.explicit]
+        target = '_ViewTarget[F, o]' if form.kind == 'view' else f'_InferredApplicative[{form.result}]'
+        params = [*form.parameters, f'V: {MD}', *form.explicit, '//', f'G: Applicative = {target}']
         guards = [*form.conditions, f'G.CollectCompatible[V, {D}]']
         if form.kind == 'view':
             guards.insert(0, f'_Source[V].Element == {D}.Arg')
+            raised = f'G.CollectError[V, {D}]'
+        else:
+            # A defaulted target's error must reduce in the raises clause; the
+            # probe names only the callback's result and error (see algebra).
+            probe_input = 'NoneType' if form.kind == 'thin' else form.inputs[0]
+            raised = f'G.CollectError[V, _ErrorProbe[{probe_input}, {form.result}, {form.error}]]'
         out.append(f'''
-def traverse[{', '.join(params)}](var source: V, {form.argument}) raises G.CollectError[V, {D}] -> G.Collected[V, {D}] where {' and '.join(guards)}:
+def traverse[{', '.join(params)}](var source: V, {form.argument}) raises {raised} -> G.Collected[V, {D}] where {' and '.join(guards)}:
     """Traverse with a {form.kind} callback; G.collect executes."""
-    return G.collect({form.build}, source^)
+    comptime assert G.CollectError[V, {D}] == {raised}
+    return _traverse_as[ListFamily, G, V, {D}, {raised}]({form.build}, source^)
 ''')
     return ''.join(out)
 
@@ -153,6 +161,11 @@ def methods(mode, carrier=None, *, inferred=False):
             elif native: native_params = list(form.explicit)
             if inferred:
                 params += native_params + ['X: AnyType = _InferError', '//']
+            elif mode == 'free':
+                # The target defaults from the callback result, so the callback
+                # types precede it in the inferred region.
+                params += native_params + ['//']
+                native_params = []
             elif params: params += ['//']
             if mode=='piped' and not carrier:
                 params += ['S: Traversable' + (' & ' + operation.source_capability if post else '')]
@@ -160,8 +173,10 @@ def methods(mode, carrier=None, *, inferred=False):
                 # Sequence has no callback parameters after G, so its existing
                 # slot can infer from the complete element without a new overload.
                 family_parameter = 'G: Applicative'
-                if mode == 'iter' and sequence:
+                if mode in ('iter', 'free') and sequence:
                     family_parameter += f' = _InferredApplicative[{elem}]'
+                elif mode == 'free':
+                    family_parameter += f' = _InferredApplicative[{factory.result}]'
                 elif mode == 'iter' and name in ('traverse_tap', 'filter_effect') and kind == 'library':
                     family_parameter += ' = _InferredApplicative[C.Result]'
                 elif mode == 'iter' and name in ('flat_traverse', 'traverse_filter') and kind == 'library':

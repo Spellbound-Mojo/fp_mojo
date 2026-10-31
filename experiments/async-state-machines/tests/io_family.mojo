@@ -130,7 +130,7 @@ def iteration():
     check(len(flat.take()._take_ok()) == 6, "free flat_traverse owns a plain function")
     var found = run(find_map_effect[Async[Int]](small.copy(), above_one))
     check(found.take()._take_ok().value() == 2, "free find_map_effect owns a plain function")
-    var total = run(fold_map_effect[Async[Int], IntSumMonoid](small.copy(), twice))
+    var total = run(fold_map_effect[IntSumMonoid, Async[Int]](small.copy(), twice))
     check(total.take()._take_ok() == 12, "free fold_map_effect owns a plain function")
     var kept = run(traverse_filter[Async[Int]](small.copy(), above_one))
     check(len(kept.take()._take_ok()) == 2, "free traverse_filter owns a plain function")

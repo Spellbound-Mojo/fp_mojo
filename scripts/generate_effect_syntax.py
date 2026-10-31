@@ -66,9 +66,14 @@ def folds(mode, array=False):
                 initial = 'initial^' if acc == 'A' else f'rebind_var[{acc}](initial^)'
             if mode == 'free': params += [f'V: {MD}']
             if array: params += ['N: Int']
-            params += ['//', 'G: Monad']
-            if kind == 'catalog': params += list(factory.explicit)
-            if native: params += list(form.explicit)
+            if mode == 'free':
+                # Value-first calls infer the target Monad from the callback's
+                # result, so the callback types precede it in the inferred region.
+                params += list(factory.explicit) + ['//', 'G: Monad = ' + source_default('Monad', effect)]
+            else:
+                params += ['//', 'G: Monad']
+                if kind == 'catalog': params += list(factory.explicit)
+                if native: params += list(form.explicit)
             hint = 'Z' if fold else 'X'
             params += [f'{hint}: AnyType = _InferError']
             source = 'V' if mode == 'free' else 'Self.I' if mode == 'iter' else 'Self.Value'
@@ -217,9 +222,13 @@ def searches(mode, array=False):
                 effect=metadata.result;fe=metadata.error
             if mode=='free':params+=[f'V: {MD}']
             if array:params+=['N: Int']
-            params+=['//','G: Monad']+(['M: Monoid'] if folding else [])
-            if kind=='catalog':params+=list(factory.explicit)
-            if native:params+=list(form.explicit)
+            if mode=='free':
+                # The Monoid cannot be inferred, so it precedes the defaulted target.
+                params+=list(factory.explicit)+['//']+(['M: Monoid'] if folding else [])+['G: Monad = '+source_default('Monad', effect)]
+            else:
+                params+=['//','G: Monad']+(['M: Monoid'] if folding else [])
+                if kind=='catalog':params+=list(factory.explicit)
+                if native:params+=list(form.explicit)
             params+=['X: AnyType = _InferError']
             source='V' if mode=='free' else 'Self.I' if mode=='iter' else 'Self.Value'
             value='source^' if mode=='free' else 'self._iterator^' if mode=='iter' else 'self.value^'

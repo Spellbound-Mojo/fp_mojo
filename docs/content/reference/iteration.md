@@ -321,6 +321,18 @@ family. It collects successful payloads into a List inside that effect.
 `.traverse_void(callback)` infers the same target and discards successful
 payloads without building an output list.
 
+The free functions infer the same target: `traverse(source, callback)`,
+`traverse_void(source, callback)`, and likewise `flat_traverse`,
+`traverse_filter`, `traverse_tap`, `filter_effect`, the effectful searches and
+folds. `sequence(source)` and its variants infer it from the source's
+elements. A single bracketed family overrides the target; `fold_map_effect`
+takes its Monoid first, `fold_map_effect[M](source, function)`, and an explicit
+target second. A raising native callback that the target's error does not name
+directly, such as a raising plain function to these operations other than
+`traverse`, or a raising borrowing closure to `traverse_tap`, `filter_effect`,
+`any_effect`, `all_effect` or `find_effect`, names its error with `X=`
+(`Z=` for `fold_effect`), as in `any_effect[X=String](source, predicate)`.
+
 <!-- example: docs/examples/fluent_effects.mojo -->
 
 Result inference selects ordinary fail-fast Result behavior. Choose
@@ -446,13 +458,14 @@ Existing positional and named family/error arguments keep their meaning.
 
 | Operation | Callback or input | Result |
 |---|---|---|
-| `find_effect[G](source, predicate)` | Borrowed element → `G[Bool]` | `G[Optional[element]]` |
-| `find_map_effect[G](source, function)` | Owned element → `G[Optional[B]]` | `G[Optional[B]]` |
-| `fold_map_effect[G, M](source, function)` | Owned element → `G[M.Value]` | `G[M.Value]` |
-| `sequence_filter[G](source)` | Elements already contain `G[Optional[B]]` | Effect containing present values |
+| `find_effect(source, predicate)` | Borrowed element → `G[Bool]` | `G[Optional[element]]` |
+| `find_map_effect(source, function)` | Owned element → `G[Optional[B]]` | `G[Optional[B]]` |
+| `fold_map_effect[M](source, function)` | Owned element → `G[M.Value]` | `G[M.Value]` |
+| `sequence_filter(source)` | Elements already contain `G[Optional[B]]` | Effect containing present values |
 
 The first three are consuming Monad terminals, also available on `Iter` and
-`Piped`. Searches stop each live branch at its first match. Empty input and a
+`Piped`. `G`, the effect family, is inferred from the callback result or the
+elements; name it to choose another. Searches stop each live branch at its first match. Empty input and a
 successful search with no match lift `None`; an absent or failed outer effect
 still represents effect failure. List branches retain their first match while
 other branches continue. Existing family copying requirements still apply:

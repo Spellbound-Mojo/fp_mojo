@@ -59,13 +59,13 @@ def main() raises:
     var failed=iterated(i6_owned_source(drops,True)).find_map_effect[ResultFamily[String]](I6OwnedMapper(I6Owner("keep",drops),calls))
     assert_true(failed.is_err());assert_equal(calls[],2);assert_equal(drops[],4)
     drops[]=0
-    var combined=fold_map_effect[ResultFamily[String],ListMonoid[I6Owner]](i6_owned_source(drops),i6_list).raise_on_err()
+    var combined=fold_map_effect[ListMonoid[I6Owner], ResultFamily[String]](i6_owned_source(drops),i6_list).raise_on_err()
     assert_equal(combined[0].text,"first");assert_equal(combined[1].text,"keep");assert_equal(combined[2].text,"unvisited")
     assert_equal(drops[],0)
     _=combined^
     assert_equal(drops[],3)
     drops[]=0
-    var failure=fold_map_effect[ResultFamily[String],ListMonoid[I6Owner]](i6_owned_source(drops,True),i6_list)
+    var failure=fold_map_effect[ListMonoid[I6Owner], ResultFamily[String]](i6_owned_source(drops,True),i6_list)
     assert_true(failure.is_err());assert_equal(drops[],3)
     drops[]=0
     var effects=List[Result[Optional[I6Owner],String]]()

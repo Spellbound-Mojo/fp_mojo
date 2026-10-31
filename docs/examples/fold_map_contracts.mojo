@@ -13,7 +13,7 @@ struct Text(Unary):
 def forward[I: Monad, M: Monoid, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](
     var function: F, var source: V
 ) raises FoldMapContract[I, M, V, F].Error -> FoldMapContract[I, M, V, F].Out where FoldMapContract[I, M, V, F].Compatible:
-    return fold_map_effect[I, M](source^, function^)
+    return fold_map_effect[M, I](source^, function^)
 
 def main() raises:
     var result = forward[OptionalFamily, StringMonoid](Text(), List[Int]([1, 2]))

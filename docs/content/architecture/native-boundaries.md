@@ -1143,6 +1143,17 @@ Implementation, phase 2: the free `fp.algebra` operations listed in the
 families; `pure`, `fail`, `empty` and `combine` have no source value and keep
 explicit families.
 
+Phase 3: the free `fp.iteration` traversals, searches and folds default their
+target from the callback result (`_InferredApplicative` for Applicative
+targets, `_SourceFamily` of the result for Monad targets), and the `sequence`
+variants from the source's elements. `fold_map_effect` takes its Monoid first,
+`[M, G]`, because the Monoid cannot be inferred. The free `traverse` names its
+native error through `_ErrorProbe` and executes through `_traverse_as`. With
+explicit or inferred targets alike, a raising plain function to the other
+operations, and a raising borrowing closure to `traverse_tap`, `filter_effect`,
+`any_effect`, `all_effect` and `find_effect`, needs its error named with `X=`;
+their contract errors do not reduce from the callback. This predates inference.
+
 ## Callables and argument packs
 
 | Mojo 1.1 behavior | Library consequence | Replacement trigger |
