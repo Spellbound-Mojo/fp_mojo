@@ -511,7 +511,7 @@ struct Driver[P: Machine](Movable, not Deinitable):
         delivered while no poll runs reach it.
         """
         self = Self(program^, token, clock, config)
-        self.task._executor.scheduler[].notifier = Optional(notifier^)
+        self.task._executor.scheduler[].notifier[] = Optional(notifier^)
 
     def cancel(self):
         self.task.cancel()

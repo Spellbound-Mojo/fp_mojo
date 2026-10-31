@@ -13,6 +13,12 @@ children atomically: when a fiber's program is terminal, its task cancels the
 children of its scope and completes only after the count reaches zero, so fibers
 never outlive their owner. An IO polled as a leaf drains the scope of its own
 run loop the same way before completing.
+
+A scope is used by several tasks at once, so its methods take immutable `self`
+and its atomics live in separate allocations: a `mut` borrow is exclusive in
+Mojo, and an inline atomic reached through concurrent exclusive borrows can
+lose updates. A record's plain fields are not yet safe under parallel runs;
+the work-stealing profile must make its terminal state one atomic decision.
 """
 from std.atomic import Atomic, Ordering
 from std.builtin.rebind import downcast
@@ -193,58 +199,64 @@ struct _Scope[E: Movable & Deinitable](Movable):
     wakes an owner draining its children. The list keeps their records so the
     owner can cancel them; it is guarded by `lock`, and completed records are
     pruned as children are added.
+
+    Children complete on their own tasks, so several threads may use one scope
+    at once: every method takes immutable `self`, and the counter, the lock
+    and the list live in their own allocations (see the module docstring).
     """
-    var live: Atomic[Int]
+    var live: ArcPointer[Atomic[Int]]
     var signal: Signal
-    var lock: Atomic[UInt8]
-    var children: List[ArcPointer[_FiberRecord[Self.E]]]
+    var lock: ArcPointer[Atomic[UInt8]]
+    var children: ArcPointer[List[ArcPointer[_FiberRecord[Self.E]]]]
     # The diagnostic slot of the fiber whose run loop owns this scope; 0 for
-    # the root program, -1 until the first child is admitted.
+    # the root program, -1 until set. Written only by the admitting thread
+    # before the scope is shared with another fiber.
     var fiber: Int
 
     def __init__(out self):
-        self.live = Atomic(0)
+        self.live = ArcPointer(Atomic(0))
         self.signal = Signal()
-        self.lock = Atomic(UInt8(0))
-        self.children = List[ArcPointer[_FiberRecord[Self.E]]]()
+        self.lock = ArcPointer(Atomic(UInt8(0)))
+        self.children = ArcPointer(List[ArcPointer[_FiberRecord[Self.E]]]())
         self.fiber = -1
 
-    def acquire(mut self):
+    def acquire(self):
         # Acquire: the previous holder's list updates are visible.
-        _acquire_lock[256, Ordering.ACQUIRE, Ordering.RELAXED](self.lock)
+        _acquire_lock[256, Ordering.ACQUIRE, Ordering.RELAXED](self.lock[])
 
-    def release(mut self):
-        _release_lock[Ordering.RELEASE](self.lock)
+    def release(self):
+        _release_lock[Ordering.RELEASE](self.lock[])
 
     def count(self) -> Int:
         # Acquire pairs with a completing child's decrement, so its published
         # outcome is visible once the count reads zero.
-        return self.live.load[ordering=Ordering.ACQUIRE]()
+        return self.live[].load[ordering=Ordering.ACQUIRE]()
 
-    def adopt(mut self, record: ArcPointer[_FiberRecord[Self.E]]):
+    def adopt(self, record: ArcPointer[_FiberRecord[Self.E]]):
         self.acquire()
-        if len(self.children) > 2 * self.count() + 8:
+        ref children = self.children[]
+        if len(children) > 2 * self.count() + 8:
             var kept = List[ArcPointer[_FiberRecord[Self.E]]]()
-            for child in self.children:
+            for child in children:
                 if not child[].done:
                     kept.append(child.copy())
-            self.children = kept^
-        self.children.append(record.copy())
-        _ = self.live.fetch_add[ordering=Ordering.ACQUIRE_RELEASE](1)
+            children = kept^
+        children.append(record.copy())
+        _ = self.live[].fetch_add[ordering=Ordering.ACQUIRE_RELEASE](1)
         self.release()
 
-    def child_completed(mut self):
+    def child_completed(self):
         """A child completed: the last one wakes a draining owner."""
         # Acquire-release orders the child's published outcome before the
         # owner's acquire load of the count.
-        if self.live.fetch_sub[ordering=Ordering.ACQUIRE_RELEASE](1) == 1:
+        if self.live[].fetch_sub[ordering=Ordering.ACQUIRE_RELEASE](1) == 1:
             self.signal.notify()
 
-    def cancel_children(mut self):
+    def cancel_children(self):
         """Request cancellation of every live child, outside the list's lock."""
         self.acquire()
         var tokens = List[CancellationToken]()
-        for child in self.children:
+        for child in self.children[]:
             if not child[].done:
                 tokens.append(child[].token.copy())
         self.release()

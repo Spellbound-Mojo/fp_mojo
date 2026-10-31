@@ -12,6 +12,14 @@ module never runs. The `_Scheduler`, shared by every registry under one root,
 holds the ready queue, the timer heap, the host notifier, and the diagnostic
 table of live fibers. Wakes may arrive from any thread; everything else is
 confined to the thread that drives the root (the current-thread profile).
+
+Objects reached from several threads at once (`_Scheduler`, a header's
+state) are used only through immutable `self`, and their atomics and mutable
+state live in separate allocations behind pointers. A `mut` borrow is
+exclusive in Mojo, so the compiler may assume nothing else touches the
+borrowed struct during the call; an atomic stored inline in a struct that
+several threads borrow mutably can lose concurrent updates. Lock-guarded
+state lives in `_Cell`s, reached through their own pointers.
 """
 from std.atomic import Atomic, Ordering
 from std.collections import BinaryHeap, Deque
@@ -152,7 +160,10 @@ struct _TaskHeader(Movable):
     body, while the state is running or notified. Between runs the body stays
     here, so moving the entry between workers moves that right with it.
     """
-    var state: Atomic[UInt8]
+    # Its own allocation: wakes on other threads compare-and-swap it while the
+    # executor holds the header, and an inline atomic reached through an
+    # exclusive (`mut`) borrow may lose those updates.
+    var state: ArcPointer[Atomic[UInt8]]
     # The executor turn in which the task last ran; touched only by the executor.
     var turn: UInt64
     var body: _Erased
@@ -162,7 +173,7 @@ struct _TaskHeader(Movable):
     var registry: Optional[_Runtime]
 
     def __init__(out self, var body: _Erased, run: _TaskRun):
-        self.state = Atomic(_IDLE)
+        self.state = ArcPointer(Atomic(_IDLE))
         self.turn = 0
         self.body = body^
         self.run = run
@@ -179,17 +190,17 @@ struct _TaskHeader(Movable):
     def begin_run(mut self):
         # The queue lock that handed over the entry already ordered the body's
         # writes before this point (acquire); relaxed suffices for the marker.
-        self.state.store[ordering=Ordering.RELAXED](_RUNNING)
+        self.state[].store[ordering=Ordering.RELAXED](_RUNNING)
 
     def finish(mut self):
         """Mark the task done and destroy its body now, not when the last reference goes."""
-        self.state.store[ordering=Ordering.RELEASE](_DONE)
+        self.state[].store[ordering=Ordering.RELEASE](_DONE)
         self.body = _Erased()
         self.registry = None
 
     def runnable(self) -> Bool:
         """Whether the task is scheduled, running, or notified, for diagnostics."""
-        var state = self.state.load[ordering=Ordering.ACQUIRE]()
+        var state = self.state[].load[ordering=Ordering.ACQUIRE]()
         return state == _SCHEDULED or state == _RUNNING or state == _NOTIFIED
 
 
@@ -200,14 +211,14 @@ def _schedule(task: ArcPointer[_TaskHeader], scheduler: ArcPointer[_Scheduler]) 
     that lock. Returns whether the host must be notified.
     """
     # Acquire pairs with the release of the park that made the task idle.
-    var state = task[].state.load[ordering=Ordering.ACQUIRE]()
+    var state = task[].state[].load[ordering=Ordering.ACQUIRE]()
     while True:
         if state == _IDLE:
             # Acquire-release: the push publishes the task to the executor.
-            if task[].state.compare_exchange[failure_ordering=Ordering.ACQUIRE, success_ordering=Ordering.ACQUIRE_RELEASE](state, _SCHEDULED):
+            if task[].state[].compare_exchange[failure_ordering=Ordering.ACQUIRE, success_ordering=Ordering.ACQUIRE_RELEASE](state, _SCHEDULED):
                 return scheduler[].push(task.copy())
         elif state == _RUNNING:
-            if task[].state.compare_exchange[failure_ordering=Ordering.ACQUIRE, success_ordering=Ordering.ACQUIRE_RELEASE](state, _NOTIFIED):
+            if task[].state[].compare_exchange[failure_ordering=Ordering.ACQUIRE, success_ordering=Ordering.ACQUIRE_RELEASE](state, _NOTIFIED):
                 return False
         else:
             # Already scheduled or notified, or done: one entry at most.
@@ -314,26 +325,28 @@ struct _Scheduler(Movable):
     var ready: ArcPointer[_Cell[_ReadyQueue]]
     var timers: ArcPointer[_Cell[_TimerState]]
     # Deadlines currently armed in every registry, to bound the heap's tombstones.
-    var live_timers: Atomic[Int]
+    var live_timers: ArcPointer[Atomic[Int]]
     var fibers: ArcPointer[_Cell[_FiberTable]]
     # Whether the root is being polled; set and read sequentially consistently
     # with the queue's contents (see push and the driver's poll).
-    var polling: Atomic[UInt8]
-    var closed: Atomic[UInt8]
-    var in_flight: Atomic[Int]
-    var notifier: Optional[_Notifier]
+    var polling: ArcPointer[Atomic[UInt8]]
+    var closed: ArcPointer[Atomic[UInt8]]
+    var in_flight: ArcPointer[Atomic[Int]]
+    # Installed before the root is shared and cleared by shutdown after close,
+    # so a reader that passed the closed check sees it unchanged.
+    var notifier: ArcPointer[Optional[_Notifier]]
 
     def __init__(out self):
         self.ready = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_ReadyQueue())))
         self.timers = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_TimerState())))
-        self.live_timers = Atomic(0)
+        self.live_timers = ArcPointer(Atomic(0))
         self.fibers = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_FiberTable())))
-        self.polling = Atomic(UInt8(0))
-        self.closed = Atomic(UInt8(0))
-        self.in_flight = Atomic(0)
-        self.notifier = None
+        self.polling = ArcPointer(Atomic(UInt8(0)))
+        self.closed = ArcPointer(Atomic(UInt8(0)))
+        self.in_flight = ArcPointer(Atomic(0))
+        self.notifier = ArcPointer(Optional[_Notifier](None))
 
-    def push(mut self, var task: ArcPointer[_TaskHeader]) -> Bool:
+    def push(self, var task: ArcPointer[_TaskHeader]) -> Bool:
         """Queue a scheduled task; true when the host must be notified.
 
         The host is told only when the queue was empty and no poll is running:
@@ -346,9 +359,9 @@ struct _Scheduler(Movable):
         var was_empty = len(queue) == 0
         queue.push(task^)
         _ = guard^
-        return was_empty and self.polling.load[ordering=Ordering.SEQUENTIAL]() == 0
+        return was_empty and self.polling[].load[ordering=Ordering.SEQUENTIAL]() == 0
 
-    def pop(mut self) -> Optional[ArcPointer[_TaskHeader]]:
+    def pop(self) -> Optional[ArcPointer[_TaskHeader]]:
         var guard = _lock_metadata(self.ready)
         return guard.cell[].slot.value().pop()
 
@@ -356,33 +369,32 @@ struct _Scheduler(Movable):
         var guard = _lock_metadata(self.ready)
         return len(guard.cell[].slot.value())
 
-    def set_polling(mut self, polling: Bool):
-        self.polling.store[ordering=Ordering.SEQUENTIAL](UInt8(1) if polling else UInt8(0))
+    def set_polling(self, polling: Bool):
+        self.polling[].store[ordering=Ordering.SEQUENTIAL](UInt8(1) if polling else UInt8(0))
 
-    def notify_host(mut self):
+    def notify_host(self):
         """Call the notifier unless the driver finished; `close` waits for this call.
 
-        Entering increments `in_flight` before reading `closed`, and closing
-        sets `closed` before reading `in_flight`, both sequentially consistent:
-        either the call sees the driver closed, or close sees the call and waits.
+        Entering increments `in_flight` before reading `closed` or the
+        notifier, and closing sets `closed` before reading `in_flight`, both
+        sequentially consistent: either the call sees the driver closed, or
+        close sees the call and waits for it.
         """
-        if not self.notifier:
-            return
-        _ = self.in_flight.fetch_add[ordering=Ordering.SEQUENTIAL](1)
-        if self.closed.load[ordering=Ordering.SEQUENTIAL]() == 0:
-            ref notifier = self.notifier.value()
+        _ = self.in_flight[].fetch_add[ordering=Ordering.SEQUENTIAL](1)
+        if self.closed[].load[ordering=Ordering.SEQUENTIAL]() == 0 and self.notifier[]:
+            ref notifier = self.notifier[].value()
             var call = notifier.call
             call(notifier.target)
         # Release: the call happens before close observes the count.
-        _ = self.in_flight.fetch_sub[ordering=Ordering.RELEASE](1)
+        _ = self.in_flight[].fetch_sub[ordering=Ordering.RELEASE](1)
 
-    def close(mut self):
+    def close(self):
         """Stop notifying the host and wait for a call in progress."""
-        self.closed.store[ordering=Ordering.SEQUENTIAL](1)
-        while self.in_flight.load[ordering=Ordering.SEQUENTIAL]() != 0:
+        self.closed[].store[ordering=Ordering.SEQUENTIAL](1)
+        while self.in_flight[].load[ordering=Ordering.SEQUENTIAL]() != 0:
             sleep(0.0)
 
-    def shutdown(mut self):
+    def shutdown(self):
         """Release what a finished root shares, on the thread that drives it.
 
         A waker retained by another thread may hold the last reference to a
@@ -402,14 +414,14 @@ struct _Scheduler(Movable):
         var fibers = _lock_metadata(self.fibers)
         fibers.cell[].slot.value() = _FiberTable()
         _ = fibers^
-        self.notifier = None
+        self.notifier[] = None
 
-    def push_timer(mut self, deadline: Instant, var target: _Waker):
+    def push_timer(self, deadline: Instant, var target: _Waker):
         var guard = _lock_metadata(self.timers)
         ref timers = guard.cell[].slot.value()
         timers.sequence = _next_generation(timers.sequence)
         timers.heap.push(_Timer(deadline.copy(), timers.sequence, target^))
-        if len(timers.heap) > 2 * self.live_timers.load[ordering=Ordering.RELAXED]() + 32:
+        if len(timers.heap) > 2 * self.live_timers[].load[ordering=Ordering.RELAXED]() + 32:
             var retained = BinaryHeap[_Timer]()
             while len(timers.heap):
                 var timer = timers.heap.pop()
@@ -417,7 +429,7 @@ struct _Scheduler(Movable):
                     retained.push(timer^)
             timers.heap = retained^
 
-    def fire_due(mut self, now: Instant) -> Bool:
+    def fire_due(self, now: Instant) -> Bool:
         """Fire the earliest live due timer; false when none is due."""
         while True:
             var guard = _lock_metadata(self.timers)
@@ -429,7 +441,7 @@ struct _Scheduler(Movable):
             if timer.target.fire():
                 return True
 
-    def next_deadline(mut self) -> Optional[Instant]:
+    def next_deadline(self) -> Optional[Instant]:
         """The earliest live deadline, discarding stale entries above it."""
         while True:
             var guard = _lock_metadata(self.timers)
@@ -444,7 +456,7 @@ struct _Scheduler(Movable):
         var guard = _lock_metadata(self.timers)
         return len(guard.cell[].slot.value().heap)
 
-    def register_fiber(mut self, owner: Int, task: ArcPointer[_TaskHeader]) -> Int:
+    def register_fiber(self, owner: Int, task: ArcPointer[_TaskHeader]) -> Int:
         """Record a live fiber; returns its slot, from 1."""
         var guard = _lock_metadata(self.fibers)
         ref table = guard.cell[].slot.value()
@@ -456,11 +468,11 @@ struct _Scheduler(Movable):
             table.entries.append(Optional(_FiberEntry(owner, False, task.copy())))
         return index + 1
 
-    def set_draining(mut self, fiber: Int):
+    def set_draining(self, fiber: Int):
         var guard = _lock_metadata(self.fibers)
         guard.cell[].slot.value().entries[fiber - 1].value().draining = True
 
-    def release_fiber(mut self, fiber: Int):
+    def release_fiber(self, fiber: Int):
         var guard = _lock_metadata(self.fibers)
         ref table = guard.cell[].slot.value()
         table.entries[fiber - 1] = None
@@ -566,7 +578,7 @@ struct _ReadyState(Movable):
         if self.nodes[index].deadline:
             self.nodes[index].deadline = None
             self.live_timers -= 1
-            _ = self.scheduler[].live_timers.fetch_sub[ordering=Ordering.RELAXED](1)
+            _ = self.scheduler[].live_timers[].fetch_sub[ordering=Ordering.RELAXED](1)
 
 
 def _notify(notify: Bool, scheduler: ArcPointer[_Scheduler]):
@@ -627,10 +639,10 @@ struct _Runtime(Copyable):
         var notify = False
         # A notified task whose wake was consumed during the run parks: the list decides.
         if state.nodes[0].first >= 0:
-            task[].state.store[ordering=Ordering.RELEASE](_SCHEDULED)
+            task[].state[].store[ordering=Ordering.RELEASE](_SCHEDULED)
             notify = state.scheduler[].push(task.copy())
         else:
-            task[].state.store[ordering=Ordering.RELEASE](_IDLE)
+            task[].state[].store[ordering=Ordering.RELEASE](_IDLE)
         var scheduler = state.scheduler.copy()
         _ = guard^
         _notify(notify, scheduler)
@@ -717,7 +729,7 @@ struct _Runtime(Copyable):
         if deadline:
             state.nodes[index].deadline = deadline.copy()
             state.live_timers += 1
-            _ = state.scheduler[].live_timers.fetch_add[ordering=Ordering.RELAXED](1)
+            _ = state.scheduler[].live_timers[].fetch_add[ordering=Ordering.RELAXED](1)
         if runnable:
             state.nodes[index].own_ready = True
         var notify = state.reconcile(index)
