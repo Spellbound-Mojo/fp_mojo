@@ -111,15 +111,15 @@ struct _Interrupt[E: Movable & Deinitable](Copyable):
         `requested()` check.
         """
         var guard = _lock_cell(self.state[])
-        guard.cell[].slot.value().worker = Optional(worker.copy())
+        guard.value().worker = Optional(worker.copy())
         _ = guard^
 
     def returned(self):
         """The function returned: release the fiber's withdrawal if it waits."""
         var guard = _lock_cell(self.state[])
-        guard.cell[].slot.value().returned = True
-        guard.cell[].slot.value().worker = None
-        var waiter = guard.cell[].slot.value().waiter.take() if guard.cell[].slot.value().waiter else Optional[Completion[NoneType, Self.E]]()
+        guard.value().returned = True
+        guard.value().worker = None
+        var waiter = guard.value().waiter.take() if guard.value().waiter else Optional[Completion[NoneType, Self.E]]()
         _ = guard^
         if waiter:
             var unit: NoneType = None
@@ -129,10 +129,10 @@ struct _Interrupt[E: Movable & Deinitable](Copyable):
         """Request interruption, then complete `completion` once the function returned."""
         self.token.cancel()
         var guard = _lock_cell(self.state[])
-        var done = guard.cell[].slot.value().returned
-        var worker = guard.cell[].slot.value().worker.copy()
+        var done = guard.value().returned
+        var worker = guard.value().worker.copy()
         if not done:
-            guard.cell[].slot.value().waiter = Optional(completion.copy())
+            guard.value().waiter = Optional(completion.copy())
         _ = guard^
         if worker:
             # Wakes a wait made through the handle; otherwise a spurious wake.

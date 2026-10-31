@@ -52540,7 +52540,7 @@
      "name": "Error"
     }
    ],
-   "description": "Copies may be moved to, used on, and destroyed on another thread, and\n`complete` is safe from any thread. The outcome moves in under the\ncompletion's lock and the polling thread takes it under the same lock, so\nwrites made before `complete` are visible to the continuation receiving the\nvalue. Mojo has no Send or Sync proof: the outcome's value and error may\nmove to, and be destroyed on, either thread, so their destructors must not\nhold locks the other thread needs.",
+   "description": "Copies may be moved to, used on, and destroyed on another thread, and\n`complete` is safe from any thread. The decision is a lock-free one-shot\nslot (`fp._internal.oneshot`): the first `complete` claims it, writes the\noutcome and publishes it with release ordering, and the registration takes\nit with acquire ordering, so writes made before `complete` are visible to\nthe continuation receiving the value. Mojo has no Send or Sync proof: the\noutcome's value and error may move to, and be destroyed on, either thread,\nso their destructors must not hold locks the other thread needs.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -52561,7 +52561,7 @@
       "raises": false,
       "raises_doc": "",
       "returns": {
-       "doc": "True if the outcome was admitted; exactly one outcome is. Admission\ndoes not promise use: if withdrawal races it, the admitted outcome\nis dropped on the polling thread. False after an earlier\ncompletion, after withdrawal began, or after the root finished;\nthe rejected outcome is then destroyed on the calling thread,\noutside the lock.",
+       "doc": "True if the outcome was admitted; exactly one outcome is. Admission\ndoes not promise use: if withdrawal races it, the admitted outcome\nis dropped on the polling thread. False after an earlier\ncompletion, after withdrawal began, or after the root finished;\nthe rejected outcome is then destroyed on the calling thread,\nholding nothing another thread waits for.",
        "type": "Bool"
       },
       "signature": "def complete(self, var outcome: Outcome[Self.T, Self.E]) -> Bool",
@@ -54688,7 +54688,7 @@
      "type": "Bool"
     },
     {
-     "description": "The host callback for unhandled fiber failures; standard error by default.",
+     "description": "The host callback for unhandled fiber failures; standard error by default. It may be called from any thread that disposes of a fiber's outcome, and\nfrom several at once once fibers run in parallel.",
      "name": "reporter",
      "type": "def(String) thin -> None"
     }
@@ -56187,7 +56187,7 @@
   },
   "effects.async_runtime.Supervisor": {
    "aliases": [],
-   "description": "The counterpart of Cats Effect's Supervisor. Run a body with one through\n`Supervisor[E].scoped(body)` and start fibers with `supervise`. When the\nbody ends, release cancels the supervised fibers that are still live and\nwaits for them; with `await_on_release`, it waits for them to finish\ninstead. Copies share one supervisor. Supervising after release is a\nprotocol violation.",
+   "description": "The counterpart of Cats Effect's Supervisor. Run a body with one through\n`Supervisor[E].scoped(body)` and start fibers with `supervise`. When the\nbody ends, release cancels the supervised fibers that are still live and\nwaits for them; with `await_on_release`, it waits for them to finish\ninstead. Copies share one supervisor, and may supervise from any fiber.\nA supervise that loses the race with release, or runs after it, returns\na fiber that is already canceled; its program never runs.",
    "fields": [],
    "kind": "struct",
    "methods": {
@@ -56278,7 +56278,7 @@
         "variadic": false
        }
       ],
-      "description": "The fiber is not drained when the program that started it finishes; it\nruns until it completes, is canceled, or the supervisor is released.\nStarting observes cancellation, like start.",
+      "description": "The fiber is not drained when the program that started it finishes; it\nruns until it completes, is canceled, or the supervisor is released.\nStarting observes cancellation, like start. Once release has begun,\nthe returned fiber is already canceled and the program never runs.",
       "error": "",
       "parameters": [
        {

@@ -299,13 +299,13 @@ struct _PoolCore(Movable):
     def _park(self, id: Int, interrupter: _Interrupter):
         """Publish an idle worker, before it re-reads the queue."""
         var guard = _lock_cell(self.idle())
-        guard.cell[].slot.value().append(_Parked(id, interrupter))
+        guard.value().append(_Parked(id, interrupter))
         _ = guard^
 
     def _unpark(self, id: Int) -> Bool:
         """Withdraw a worker's entry; False when a submitter or close took it."""
         var guard = _lock_cell(self.idle())
-        ref parked = guard.cell[].slot.value()
+        ref parked = guard.value()
         var found = False
         for i in range(len(parked)):
             if parked[i].id == id:
@@ -318,7 +318,7 @@ struct _PoolCore(Movable):
     def _claim(self) -> Optional[_Interrupter]:
         """Take the most recently parked worker, which is the warmest."""
         var guard = _lock_cell(self.idle())
-        ref parked = guard.cell[].slot.value()
+        ref parked = guard.value()
         var claimed = Optional[_Interrupter]()
         if len(parked):
             claimed = Optional(parked.pop().interrupter.copy())
@@ -327,8 +327,8 @@ struct _PoolCore(Movable):
 
     def _wake_all(self):
         var guard = _lock_cell(self.idle())
-        var parked = guard.cell[].slot.value().copy()
-        guard.cell[].slot.value().clear()
+        var parked = guard.value().copy()
+        guard.value().clear()
         _ = guard^
         for entry in parked:
             entry.interrupter.interrupt()
@@ -347,7 +347,7 @@ struct _PoolCore(Movable):
             _ = guard^
             return _Retirement(job^, False)
         _ = self.words().live.fetch_sub[ordering=Ordering.RELAXED](1)
-        guard.cell[].slot.value().exited.append(id)
+        guard.value().exited.append(id)
         _ = guard^
         return _Retirement(None, True)
 
@@ -369,7 +369,7 @@ struct _PoolCore(Movable):
         self._wake_all()
         var all: List[_Worker]
         var guard = _lock_cell(self.workers())
-        all = guard.cell[].slot.value().take_all()
+        all = guard.value().take_all()
         _ = guard^
         # Each worker drains the queue, sees the flag and exits.
         while len(all):
@@ -395,7 +395,7 @@ def _submit(core: ArcPointer[_PoolCore], var job: _Job):
         return
     var joined: List[_Worker]
     var guard = _lock_cell(core[].workers())
-    ref workers = guard.cell[].slot.value()
+    ref workers = guard.value()
     joined = workers.take_exited()
     if core[].words().live.load[ordering=Ordering.RELAXED]() < core[].max_workers:
         var id = workers.next_id
@@ -517,6 +517,13 @@ struct BlockingPool(Copyable):
     def _started(self) -> Int:
         """Workers started since creation; a hint for tests."""
         return self._owner[].core[].started()
+
+    def _parked(self) -> Int:
+        """Workers on the idle list now; a hint for tests."""
+        var guard = _lock_cell(self._owner[].core[].idle())
+        var count = len(guard.value())
+        _ = guard^
+        return count
 
 
 def _default_idle() -> Duration:

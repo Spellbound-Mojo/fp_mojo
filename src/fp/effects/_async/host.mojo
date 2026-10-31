@@ -343,10 +343,7 @@ struct TestControl[P: Machine](Movable, not Deinitable):
             abort("a manual clock advances forward")
 
     def _registrations(self) -> Int:
-        ref budget = self._driver._driver.task.context._budget
-        if not budget:
-            return 0
-        return budget.value()[].registrations
+        return self._driver._driver.task._executor.scheduler[].registered()
 
 
 def run[P: Machine](var program: P, token: CancellationToken) -> Outcome[P.Value, P.Error]:

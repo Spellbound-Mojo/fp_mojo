@@ -70,6 +70,16 @@ def wait_until_threads(expected: Int) -> Bool:
     return False
 
 
+def wait_until_parked(pool: BlockingPool, expected: Int) -> Bool:
+    """Wait for workers to park: reuse is decided by whether one is parked."""
+    var deadline = Int(monotonic()) + 2_000_000_000
+    while Int(monotonic()) < deadline:
+        if pool._parked() == expected:
+            return True
+        sleep(0.0005)
+    return False
+
+
 def config_with(pool: BlockingPool) -> IORuntimeConfig:
     var config = IORuntimeConfig()
     config.blocking_pool = Optional(pool.copy())
@@ -349,6 +359,7 @@ def reuse_and_retire() raises:
     var pool = BlockingPool(4, ms(40))
     for _ in range(10):
         check(value_of(run(IO[Int, Int].blocking(nothing), config_with(pool))) == 1, "a sequential call returns")
+        check(wait_until_parked(pool, 1), "the worker parks after its call")
     check(pool._started() == 1, String("sequential calls reuse one worker, started ", pool._started()))
     check(pool._live() == 1, "the worker is still idle before the timeout")
     check(os_threads() == base + 1, "one worker thread exists")
@@ -393,7 +404,12 @@ struct Measured(OnceThunk):
         while now > peak:
             if self.gauge[].peak.compare_exchange(peak, now):
                 break
-        sleep(0.003)
+        # Force the overlap rather than hope for it: hold each call until the
+        # maximum ran at once, so the peak is exactly the maximum.
+        var deadline = Int(monotonic()) + 2_000_000_000
+        while self.gauge[].peak.load() < 3 and Int(monotonic()) < deadline:
+            sleep(0.0002)
+        sleep(0.001)
         _ = self.gauge[].running.fetch_sub(1)
         _ = self.gauge[].done.fetch_add(1)
         return 1
@@ -432,7 +448,7 @@ def maximum():
         var total = value_of(run(IO[Int, Int].pure(0).flat_map(Burst(gauge.copy(), calls)), config_with(pool)))
         check(total == calls and gauge[].done.load() == calls, "every call of the burst ran")
         check(gauge[].peak.load() <= 3, String("at most the maximum ran at once, peak ", gauge[].peak.load()))
-        check(gauge[].peak.load() >= 2, "the burst ran calls in parallel")
+        check(gauge[].peak.load() == 3, "the burst ran the maximum in parallel")
         check(pool._started() <= 3, "no more than the maximum started")
     except:
         abort("blocking pool: a valid pool")
@@ -553,6 +569,7 @@ def shared_pool() raises:
     var pool = BlockingPool(2, Duration.seconds(10))
     check(value_of(run(IO[Int, Int].blocking(nothing), config_with(pool))) == 1, "the first root's call")
     check(pool._live() == 1, "the shared pool survives the first root's finish")
+    check(wait_until_parked(pool, 1), "the shared worker parks")
     check(value_of(run(IO[Int, Int].blocking(nothing), config_with(pool))) == 1, "the second root's call")
     check(pool._started() == 1, "the second root reused the shared worker")
 

@@ -131,17 +131,21 @@ struct Reenter(Movable):
         _ = self.done.complete(success[Int, Int](8)._outcome())
 
 
-struct LockProbe(Movable):
-    """Record whether the completion's lock is held when this payload is destroyed."""
-    var lock: Pointer[Atomic[UInt8], MutUntrackedOrigin]
-    var held: ArcPointer[Int]
+struct SelfProbe(Movable):
+    """Complete and select the same completion from this payload's destructor.
 
-    def __init__(out self, lock: Pointer[Atomic[UInt8], MutUntrackedOrigin], held: ArcPointer[Int]):
-        self.lock = lock
-        self.held = held.copy()
+    Under a lock held while the payload was destroyed, this would wait forever.
+    """
+    var done: Completion[SelfProbe, Int]
+    var accepted: ArcPointer[Int]
+
+    def __init__(out self, done: Completion[SelfProbe, Int], accepted: ArcPointer[Int]):
+        self.done = done.copy()
+        self.accepted = accepted.copy()
 
     def __deinit__(deinit self):
-        self.held[] = Int(self.lock[].load())
+        self.accepted[] = Int(self.done.complete(None))
+        _ = self.done._select(False)
 
 
 def ownership():
@@ -161,12 +165,11 @@ def ownership():
     var completed = inner._select(False)
     var outcome = completed.take()
     check(dropped[] == 1 and outcome.take()._take_ok() == 8, "destructors may complete another callback")
-    var probed = Completion[LockProbe, Int]()
-    var lock = Pointer(to=probed._cell[].lock).unsafe_origin_cast[MutUntrackedOrigin]()
-    var held = ArcPointer(-1)
+    var probed = Completion[SelfProbe, Int]()
+    var accepted = ArcPointer(-1)
     _ = probed.complete(None)
-    check(not probed.complete(success[LockProbe, Int](LockProbe(lock, held))._outcome()), "late payload rejected")
-    check(held[] == 0, "rejected payloads are destroyed after the lock is released")
+    check(not probed.complete(success[SelfProbe, Int](SelfProbe(probed, accepted))._outcome()), "late payload rejected")
+    check(accepted[] == 0, "a rejected payload's destructor may use the same completion")
 
 
 def main():

@@ -1,5 +1,5 @@
 """Typed single-completion registration with owned, suspending withdrawal."""
-from std.atomic import Atomic
+from std.atomic import Atomic, Ordering
 from std.memory import ArcPointer
 from std.builtin.rebind import downcast, rebind_var
 from std.os import abort
@@ -8,8 +8,7 @@ from fp.callables.invoke import _OnceUnaryAvailable
 from fp.callables._binding import _OwnedUnary
 from fp._internal.errors import _ErrorCompatible
 from fp.effects import IOContext, CancellationToken, Outcome
-from fp.effects.coordination import _Cell, _lock, _try_lock
-from fp.effects._io_core import _Budget
+from fp._internal.oneshot import _OneShot, _CLAIMED, _CLOSED
 from fp.effects.outcomes import _discard, _capture, _finish, _failure_as, _ExitState
 from fp.effects._io_core import _settle
 from .kernel import Machine, Step, Wait, Signal, _Slot, _tick
@@ -18,17 +17,6 @@ from .kernel import Machine, Step, Wait, Signal, _Slot, _tick
 # Both native no-result signatures and explicit unit values are admissible.
 # Registration discards its unit through the canonical result owner.
 comptime _CallbackUnit[T: Movable & Deinitable] = T == NoneType or T == type_of(None)
-
-
-@fieldwise_init
-struct _CompletionState[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
-    var closed: Bool
-    var result: Optional[Outcome[Self.T, Self.E]]
-
-    def take(mut self) -> Optional[Outcome[Self.T, Self.E]]:
-        if self.result:
-            return Optional(self.result.take())
-        return None
 
 
 trait _CompletionType:
@@ -40,12 +28,13 @@ struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _C
     """Copies share one terminal decision; the cell survives late callbacks.
 
     Copies may be moved to, used on, and destroyed on another thread, and
-    `complete` is safe from any thread. The outcome moves in under the
-    completion's lock and the polling thread takes it under the same lock, so
-    writes made before `complete` are visible to the continuation receiving the
-    value. Mojo has no Send or Sync proof: the outcome's value and error may
-    move to, and be destroyed on, either thread, so their destructors must not
-    hold locks the other thread needs.
+    `complete` is safe from any thread. The decision is a lock-free one-shot
+    slot (`fp._internal.oneshot`): the first `complete` claims it, writes the
+    outcome and publishes it with release ordering, and the registration takes
+    it with acquire ordering, so writes made before `complete` are visible to
+    the continuation receiving the value. Mojo has no Send or Sync proof: the
+    outcome's value and error may move to, and be destroyed on, either thread,
+    so their destructors must not hold locks the other thread needs.
 
     Parameters:
         T: The exact owned completion value, including external origins.
@@ -53,14 +42,12 @@ struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _C
     """
     comptime Value = Self.T
     comptime Error = Self.E
-    var _cell: ArcPointer[_Cell[_CompletionState[Self.T, Self.E]]]
+    var _shot: ArcPointer[_OneShot[Outcome[Self.T, Self.E]]]
     var _signal: Signal
-    var _mask: IOContext[Self.E]
 
     def __init__(out self):
-        self._cell = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(_CompletionState[Self.T, Self.E](False, None))))
+        self._shot = ArcPointer(_OneShot[Outcome[Self.T, Self.E]]())
         self._signal = Signal()
-        self._mask = IOContext[Self.E](CancellationToken(), True)
 
     def complete(self, var outcome: Outcome[Self.T, Self.E]) -> Bool:
         """Offer an owned terminal outcome once through the cooperative host boundary.
@@ -74,41 +61,36 @@ struct Completion[T: Movable & Deinitable, E: Movable & Deinitable](Copyable, _C
             is dropped on the polling thread. False after an earlier
             completion, after withdrawal began, or after the root finished;
             the rejected outcome is then destroyed on the calling thread,
-            outside the lock."""
-        var locked = _lock(self._cell, self._mask)
-        var guard = locked.take()
-        var accepted = not guard.cell[].slot.value().closed
-        var rejected = Optional[Outcome[Self.T, Self.E]]()
-        if accepted:
-            guard.cell[].slot.value().closed = True
-            guard.cell[].slot.value().result = Optional(outcome^)
-        else:
-            rejected = Optional(outcome^)
-        _ = guard^
-        # Never destroy rejected payloads while locked: Mojo destroys a value
-        # after its last use, so the rejection's final use follows the unlock.
-        _ = rejected^
+            holding nothing another thread waits for."""
+        if not self._shot[].try_claim():
+            # Rejected: destroyed here, with nothing locked, before returning.
+            _ = outcome^
+            return False
+        # The registration never releases its right, so publication keeps nothing.
+        _ = self._shot[].publish(outcome^)
         self._signal.notify()
-        return accepted
+        return True
 
     def _select(self, cancel: Bool) -> Optional[Outcome[Self.T, Self.E]]:
-        var locked = _try_lock(self._cell)
-        if not locked:
-            return None
-        var guard = locked.take()
-        if not guard.cell[].slot.value().closed and cancel:
-            guard.cell[].slot.value().closed = True
-            guard.cell[].slot.value().result = Optional(Outcome[Self.T, Self.E]())
-        var selected = guard.cell[].slot.value().take()
-        _ = guard^
-        return selected^
+        """The admitted outcome, a cancellation if `cancel` closes first, or none yet.
+
+        None while nothing is admitted and `cancel` is false, and while an
+        admitted outcome is still being written; its writer notifies the signal.
+        """
+        if cancel:
+            var before = self._shot[].close()
+            if not before & _CLAIMED:
+                if before & _CLOSED:
+                    return None
+                return Optional(Outcome[Self.T, Self.E]())
+        return self._shot[].take()
 
     def _registration_failed(self, var failed: Outcome[NoneType, Self.E]) -> Outcome[Self.T, Self.E]:
-        var locked = _lock(self._cell, self._mask)
-        var guard = locked.take()
-        guard.cell[].slot.value().closed = True
-        var selected = guard.cell[].slot.value().take()
-        _ = guard^
+        _ = self._shot[].close()
+        # A completion that claimed the slot first is admitted: wait for its
+        # write, which is a move on the completing thread, then use it.
+        self._shot[].wait_published()
+        var selected = self._shot[].take()
         self._signal.notify()
         if selected:
             return _finish(selected.take(), failed^)
@@ -125,9 +107,9 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
     var completed: Optional[_ExitState[Self.Value, Self.Error]]
     var masked: Optional[IOContext[Self.Error]]
     var phase: Int
-    # The root's budget while this registration is live, so the root can tell
-    # waiting for an external event from waiting for nothing.
-    var counted: Optional[ArcPointer[_Budget]]
+    # The scheduler's count of live registrations while this one is live, so
+    # the root can tell waiting for an external event from waiting for nothing.
+    var counted: Optional[ArcPointer[Atomic[Int]]]
 
     def __init__(out self, var register: Self.F, var cleanup: Self.C):
         comptime assert Self.F.Arg == Completion[Self.Value, Self.Error] and _CallbackUnit[Self.F.Out]
@@ -146,7 +128,9 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
 
     def _uncount(mut self):
         if self.counted:
-            self.counted.value()[].registrations -= 1
+            # Release: the registration's last accesses happen before a reader
+            # that acquires the lower count. The drop may run on any thread.
+            _ = self.counted.value()[].fetch_sub[ordering=Ordering.RELEASE](1)
             self.counted = None
 
     def poll(mut self, context: IOContext[Self.Error]) -> Step[Self.Value, Self.Error]:
@@ -164,8 +148,11 @@ struct Callback[F: UnaryContract & Movable & Deinitable, C: Machine](Machine):
                 else:
                     self.phase = 1
                     if context._budget:
-                        context._budget.value()[].registrations += 1
-                        self.counted = context._budget.copy()
+                        var counter = context._budget.value()[].registrations.copy()
+                        # Release: the registration is published before a
+                        # reader that acquires the higher count.
+                        _ = counter[].fetch_add[ordering=Ordering.RELEASE](1)
+                        self.counted = Optional(counter^)
                 return .pending(Wait())
             case 1:
                 var revision = self.completion._signal.revision()
