@@ -1,12 +1,14 @@
-"""Private POSIX layer: pipes, nonblocking reads, poll, clocks, sleep, processors, CPU time and threads."""
+"""Private POSIX layer: pipes, nonblocking reads, poll, clocks, CPU time and threads."""
 from std.atomic import Atomic
 from std.ffi import ErrNo
 from std.memory import ArcPointer
 from std.os import abort
+from std.sys.info import num_logical_cores
+from std.time import monotonic, sleep
 from fp._internal.os import (
     CLOCK_MONOTONIC, CLOCK_REALTIME, OSThread, POLLIN, POLLOUT, Pipe, PollFd, RUSAGE_SELF, RUSAGE_THREAD,
-    clock_gettime, getrusage, is_close_on_exec, is_nonblocking, monotonic_nanoseconds, nanosleep,
-    online_processors, poll, read, realtime_nanoseconds, set_close_on_exec, set_nonblocking, write,
+    clock_gettime, getrusage, is_close_on_exec, is_nonblocking, poll, read, realtime_nanoseconds,
+    set_close_on_exec, set_nonblocking, write,
 )
 
 comptime millisecond = 1_000_000
@@ -91,9 +93,9 @@ def polling() raises:
     # Timeout: read interest alone with nothing written.
     var idle = List[PollFd]()
     idle.append(PollFd(pipe.read_end.fd, POLLIN))
-    var started = monotonic_nanoseconds()
+    var started = Int(monotonic())
     check(poll(idle, 30) == 0 and not idle[0].ready(), "expiry reports no descriptors")
-    check(monotonic_nanoseconds() - started >= 30 * millisecond, "the timeout elapses before expiry")
+    check(Int(monotonic()) - started >= 30 * millisecond, "the timeout elapses before expiry")
     # Hang-up: the read end becomes readable when the writer closes.
     var read_end = pipe^.into_read_end()
     idle[0] = PollFd(read_end.fd, POLLIN)
@@ -104,7 +106,7 @@ def polling() raises:
 
 
 def clocks() raises:
-    var first = monotonic_nanoseconds()
+    var first = Int(monotonic())
     var second = clock_gettime(CLOCK_MONOTONIC)
     check(0 <= Int(second.nanoseconds) < 1_000_000_000 and second.total_nanoseconds() >= first, "monotonic clock")
     # 2026-01-01T00:00:00Z; the wall clock agrees with clock_gettime.
@@ -116,29 +118,24 @@ def clocks() raises:
         abort("an unknown clock must fail")
     except error:
         check(error.errno == ErrNo.EINVAL and error.call == "clock_gettime", "unknown clock reports EINVAL")
-    var started = monotonic_nanoseconds()
-    nanosleep(20 * millisecond)
-    check(monotonic_nanoseconds() - started >= 20 * millisecond, "nanosleep sleeps at least its duration")
-    nanosleep(0)
-    nanosleep(-1)
-    print("clocks and nanosleep: ok")
+    print("clocks: ok")
 
 
 def processors_and_cpu_time() raises:
-    check(online_processors() >= 1, "at least one processor is online")
+    check(num_logical_cores() >= 1, "at least one processor")
     # Idle: sleeping costs the thread almost no CPU time.
     var before = getrusage(RUSAGE_THREAD)
-    nanosleep(200 * millisecond)
+    sleep(0.2)
     var idle = getrusage(RUSAGE_THREAD).total_nanoseconds() - before.total_nanoseconds()
     check(0 <= idle < 50 * millisecond, String("an idle thread uses no CPU: ", idle, " ns"))
     # Busy: spinning on the clock is charged to this thread and the process.
-    var spin_until = monotonic_nanoseconds() + 100 * millisecond
-    while monotonic_nanoseconds() < spin_until:
+    var spin_until = Int(monotonic()) + 100 * millisecond
+    while Int(monotonic()) < spin_until:
         pass
     var busy = getrusage(RUSAGE_THREAD)
     check(busy.total_nanoseconds() - before.total_nanoseconds() >= 50 * millisecond, "spinning is charged to the thread")
     check(getrusage(RUSAGE_SELF).total_nanoseconds() >= busy.total_nanoseconds(), "the process includes its threads")
-    print("processor count and getrusage: ok")
+    print("getrusage: ok")
 
 
 @fieldwise_init
@@ -149,35 +146,28 @@ struct Work(Movable):
 
 
 def body(state: Pointer[Work, MutAnyOrigin]) abi("C") -> OptionalPointer[NoneType, MutUntrackedOrigin]:
-    nanosleep(5 * millisecond)
+    sleep(0.005)
     for _ in range(state[].steps):
         _ = state[].shared[].fetch_add(1)
     state[].finished.store(1)
     return None
 
 
-def start(state: ArcPointer[Work]) raises -> OSThread:
-    return OSThread(body, Pointer[Work, MutAnyOrigin](to=state[]))
-
-
 def threads() raises:
     var shared = ArcPointer(Atomic[Int64](0))
-    var states = List[ArcPointer[Work]]()
-    var workers = List[OSThread]()
+    var workers = List[OSThread[Work]]()
     for _ in range(4):
-        states.append(ArcPointer(Work(shared.copy(), 10_000, Atomic[Int64](0))))
-        workers.append(start(states[len(states) - 1]))
+        workers.append(OSThread(ArcPointer(Work(shared.copy(), 10_000, Atomic[Int64](0))), body))
+    check(workers[0].state()[].steps == 10_000, "the owner borrows the state while the thread runs")
     while len(workers) > 0:
-        workers.pop().join()
-    for state in states:
-        check(state[].finished.load() == 1, "join waits for the body")
+        var state = workers.pop().join()
+        check(state[].finished.load() == 1 and state.count() == 1, "join waits for the body and returns the sole owner")
     check(shared[].load() == 40_000, "every thread ran to completion")
-    # Dropping an unjoined owner joins it; the state outlives the thread.
+    # Dropping an unjoined owner joins it before releasing the state.
     var observed = ArcPointer(Atomic[Int64](0))
-    var state = ArcPointer(Work(observed.copy(), 1, Atomic[Int64](0)))
-    var dropped = start(state)
+    var dropped = OSThread(ArcPointer(Work(observed.copy(), 1, Atomic[Int64](0))), body)
     _ = dropped^
-    check(state[].finished.load() == 1 and observed[].load() == 1, "dropping joins the thread")
+    check(observed[].load() == 1, "dropping joins the thread")
     print("threads through the shared owner: ok")
 
 

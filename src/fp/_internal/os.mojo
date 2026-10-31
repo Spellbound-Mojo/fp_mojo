@@ -1,9 +1,11 @@
 """Private POSIX layer: thin typed wrappers over operating-system calls.
 
 The library calls POSIX directly only where the standard library lacks a
-facility: descriptors and a self-pipe, `poll`, clocks and `nanosleep`, the
-online processor count, CPU-time accounting, and the joinable OS-thread owner
-shared by `unsafe_start` and the blocking pool. Every wrapper is a single
+facility: descriptors and a self-pipe, `poll`, `clock_gettime` for the wall
+clock, process and thread CPU time, and the joinable OS-thread owner shared by
+`unsafe_start` and the blocking pool. Monotonic time is `std.time.monotonic()`,
+processor counts are `std.sys.info.num_logical_cores()`, and sleeping is
+`std.time.sleep`. Every wrapper is a single
 external call plus the retry or error policy documented on it; no C sources.
 
 Platform-dependent constants and structure layouts are selected at compile
@@ -13,7 +15,9 @@ unverified until macOS is qualified. Using a Linux-only facility on another
 target is a compile-time error.
 """
 from std.ffi import ErrNo, c_int, external_call, get_errno
+from std.memory import ArcPointer
 from std.os import abort
+from std.time import monotonic
 from std.sys.info import CompilationTarget, is_64bit, platform_map, size_of
 
 
@@ -72,6 +76,8 @@ comptime F_GETFL: c_int = 3
 comptime F_SETFL: c_int = 4
 comptime FD_CLOEXEC: c_int = 1
 comptime O_NONBLOCK: c_int = c_int(platform_map[T=Int, "O_NONBLOCK", linux=0o4000, macos=0x0004]())
+comptime _O_CLOEXEC: c_int = c_int(_linux_only["O_CLOEXEC", linux=0o2000000]())
+"""Used only for pipe2 on Linux."""
 
 
 def _fcntl(fd: c_int, command: c_int, argument: c_int) raises OSError -> c_int:
@@ -135,10 +141,6 @@ def is_close_on_exec(fd: c_int) raises OSError -> Bool:
 
 def set_close_on_exec(fd: c_int, enabled: Bool = True) raises OSError:
     """Set or clear FD_CLOEXEC, preserving the other descriptor flags.
-
-    Pipes are created with pipe() and then marked, rather than with pipe2(),
-    which macOS lacks; a concurrent fork and exec between the two calls can
-    inherit the descriptor.
 
     Args:
         fd: An open descriptor.
@@ -298,18 +300,28 @@ struct Pipe(Movable):
     def open_self_pipe() raises OSError -> Self:
         """Create a self-pipe: both ends nonblocking and close-on-exec.
 
+        Linux sets both flags atomically with pipe2. Elsewhere pipe() is
+        followed by fcntl, and a concurrent fork and exec between the calls
+        can inherit the descriptors.
+
         Returns:
             The owned ends; on failure any created end is closed.
 
         Raises:
-            OSError: From pipe or fcntl.
+            OSError: From pipe2, pipe or fcntl.
         """
-        var pipe = Self.open()
-        set_nonblocking(pipe.read_end.fd)
-        set_nonblocking(pipe.write_end.fd)
-        set_close_on_exec(pipe.read_end.fd)
-        set_close_on_exec(pipe.write_end.fd)
-        return pipe^
+        comptime if CompilationTarget.is_linux():
+            var ends = Array[c_int, 2](fill=-1)
+            if external_call["pipe2", c_int](ends.unsafe_ptr(), _O_CLOEXEC | O_NONBLOCK) != 0:
+                raise OSError.last("pipe2")
+            return Self(OwnedFd(adopt=ends[0]), OwnedFd(adopt=ends[1]))
+        else:
+            var pipe = Self.open()
+            set_nonblocking(pipe.read_end.fd)
+            set_nonblocking(pipe.write_end.fd)
+            set_close_on_exec(pipe.read_end.fd)
+            set_close_on_exec(pipe.write_end.fd)
+            return pipe^
 
     def into_read_end(deinit self) -> OwnedFd:
         """Close the write end and keep the read end, which then reaches end of file.
@@ -448,7 +460,8 @@ def poll(mut descriptors: List[PollFd], timeout_milliseconds: Int) raises OSErro
     """Wait until a descriptor is ready or the timeout expires.
 
     A signal interrupting the wait (EINTR) restarts it with the time remaining
-    against the monotonic clock, so the call never returns early on EINTR.
+    against `std.time.monotonic()`, the clock of `Instant`, so the call never
+    returns early on EINTR.
 
     Args:
         descriptors: The interest list; each entry's revents is overwritten.
@@ -465,7 +478,7 @@ def poll(mut descriptors: List[PollFd], timeout_milliseconds: Int) raises OSErro
     comptime assert size_of[PollFd]() == 8, "struct pollfd is eight bytes"
     comptime maximum = Int(Int32.MAX)
     var timeout = min(timeout_milliseconds, maximum)
-    var deadline = monotonic_nanoseconds() + timeout * 1_000_000 if timeout > 0 else 0
+    var deadline = Int(monotonic()) + timeout * 1_000_000 if timeout > 0 else 0
     while True:
         for i in range(len(descriptors)):
             descriptors[i].revents = 0
@@ -476,7 +489,7 @@ def poll(mut descriptors: List[PollFd], timeout_milliseconds: Int) raises OSErro
         if error.errno != ErrNo.EINTR:
             raise error^
         if timeout > 0:
-            var remaining = deadline - monotonic_nanoseconds()
+            var remaining = deadline - Int(monotonic())
             # Round up so the retry never wakes before the deadline.
             timeout = max(0, (remaining + 999_999) // 1_000_000)
 
@@ -506,18 +519,6 @@ struct TimeSpec(Copyable, Defaultable, TrivialRegisterPassable):
         """Create a zero time."""
         self.seconds = 0
         self.nanoseconds = 0
-
-    @staticmethod
-    def from_nanoseconds(total: Int) -> Self:
-        """Split a nonnegative nanosecond count.
-
-        Args:
-            total: A nonnegative count.
-
-        Returns:
-            The normalized seconds and nanoseconds.
-        """
-        return Self(Int64(total // _nanoseconds_per_second), Int64(total % _nanoseconds_per_second))
 
     def total_nanoseconds(self) -> Int:
         """Combine into nanoseconds; exact for about 292 years either side of zero.
@@ -552,17 +553,8 @@ def _read_clock[clock: c_int]() -> Int:
     try:
         return clock_gettime(clock).total_nanoseconds()
     except error:
-        # POSIX requires both clocks; failure means a broken platform.
+        # POSIX requires the clock; failure means a broken platform.
         abort(String("fp._internal.os: ", error))
-
-
-def monotonic_nanoseconds() -> Int:
-    """Read CLOCK_MONOTONIC, which never moves backwards; its zero is unspecified.
-
-    Returns:
-        Nanoseconds since an arbitrary fixed point.
-    """
-    return _read_clock[CLOCK_MONOTONIC]()
 
 
 def realtime_nanoseconds() -> Int:
@@ -574,52 +566,9 @@ def realtime_nanoseconds() -> Int:
     return _read_clock[CLOCK_REALTIME]()
 
 
-def nanosleep(nanoseconds: Int):
-    """Sleep the calling thread for at least a duration, resuming after signals.
-
-    EINTR continues with the remaining time nanosleep reports. Nonpositive
-    durations return at once.
-
-    Args:
-        nanoseconds: The duration to sleep.
-    """
-    comptime assert size_of[TimeSpec]() == 16, "struct timespec is sixteen bytes on 64-bit targets"
-    if nanoseconds <= 0:
-        return
-    var request = TimeSpec.from_nanoseconds(nanoseconds)
-    var remaining = TimeSpec()
-    while external_call["nanosleep", c_int](Pointer(to=request), Pointer(to=remaining)) != 0:
-        var error = OSError.last("nanosleep")
-        if error.errno != ErrNo.EINTR:
-            # Only EFAULT or EINVAL remain, both impossible for these values.
-            abort(String("fp._internal.os: ", error))
-        request = remaining
-
-
 # ===------------------------------------------------------------------=== #
-# Processors and CPU time
+# CPU time
 # ===------------------------------------------------------------------=== #
-
-comptime _SC_NPROCESSORS_ONLN: c_int = c_int(platform_map[T=Int, "_SC_NPROCESSORS_ONLN", linux=84, macos=58]())
-
-
-def online_processors() raises OSError -> Int:
-    """Count the processors currently online, as sysconf reports them.
-
-    This can exceed the processors this process may run on under an affinity
-    mask or a container CPU quota.
-
-    Returns:
-        A positive count.
-
-    Raises:
-        OSError: When sysconf cannot report the count.
-    """
-    var count = external_call["sysconf", Int](_SC_NPROCESSORS_ONLN)
-    if count < 1:
-        raise OSError.last("sysconf")
-    return count
-
 
 comptime RUSAGE_SELF: c_int = 0
 comptime RUSAGE_THREAD: c_int = c_int(_linux_only["RUSAGE_THREAD", linux=1]())
@@ -692,47 +641,64 @@ comptime ThreadEntry[S: AnyType] = def(Pointer[S, MutAnyOrigin]) abi("C") thin -
 """A C-ABI thread body receiving the shared state; it must not raise."""
 
 
-struct OSThread(Movable):
-    """An owned, joinable OS thread, joined exactly once: explicitly or when dropped.
+struct OSThread[S: Movable & Deinitable](Movable):
+    """An owned, joinable OS thread and the state its body receives.
 
-    The thread runs a C-ABI body on a pointer that POSIX retains outside
-    Mojo's origin analysis. The caller keeps the pointee alive and at one
-    address, such as inside an ArcPointer, until the thread is joined, and
-    makes that owner's final use explicit after the join, since Mojo may
-    destroy a value after its last visible use. Mojo has no Send or Sync
-    proof: the caller also ensures that everything the pointee holds may be
-    used and destroyed on another thread, and synchronizes shared access.
+    The owner keeps the state's ArcPointer, so its allocation stays at one
+    address, and releases it only after the thread is joined, whether joined
+    explicitly or dropped. Mojo has no Send or Sync proof: the caller ensures
+    that everything the state holds may be used and destroyed on another
+    thread, and synchronizes access shared with the body.
+
+    Parameters:
+        S: The state shared by the owner and the thread body.
     """
 
+    var _state: ArcPointer[Self.S]
     var _handle: UInt64
 
-    def __init__[S: AnyType](out self, entry: ThreadEntry[S], state: Pointer[S, MutAnyOrigin]) raises OSError:
-        """Start a thread running `entry(state)`.
-
-        Parameters:
-            S: The state the body receives.
+    def __init__(out self, var state: ArcPointer[Self.S], entry: ThreadEntry[Self.S]) raises OSError:
+        """Start a thread running `entry` on a pointer to the shared state.
 
         Args:
+            state: The shared state, kept until the thread is joined.
             entry: The thread body, which must not raise.
-            state: The pointer passed to the body; it must stay valid until
-                the thread is joined.
 
         Raises:
             OSError: The error number pthread_create returned, such as EAGAIN.
-                No thread was started.
+                No thread started, and the state is released.
         """
         comptime assert threads_supported, "OS threads are qualified only on 64-bit Linux"
         self._handle = 0
-        var status = external_call["pthread_create", c_int](Pointer(to=self._handle), OptionalPointer[NoneType, ImmUntrackedOrigin](), entry, state)
+        # POSIX retains this exact pointer, invisible to Mojo's origin analysis.
+        var pointer = Pointer[Self.S, MutAnyOrigin](to=state[])
+        var status = external_call["pthread_create", c_int](Pointer(to=self._handle), OptionalPointer[NoneType, ImmUntrackedOrigin](), entry, pointer)
         if status != 0:
             raise OSError("pthread_create", ErrNo(status))
+        self._state = state^
 
     def __deinit__(deinit self):
         _join(self._handle)
+        # Unused fields may be destroyed before this destructor's body: make
+        # the allocation's final use explicit after joining the thread.
+        _ = self._state^
 
-    def join(deinit self):
-        """Wait for the body to return; afterwards the thread holds no pointer."""
+    def state(self) -> ref[self._state] ArcPointer[Self.S]:
+        """Borrow the state's owner while the thread may still run.
+
+        Returns:
+            The owner; the caller synchronizes access with the body.
+        """
+        return self._state
+
+    def join(deinit self) -> ArcPointer[Self.S]:
+        """Wait for the body to return.
+
+        Returns:
+            The state's owner, no longer used by the thread.
+        """
         _join(self._handle)
+        return self._state^
 
 
 def _join(handle: UInt64):

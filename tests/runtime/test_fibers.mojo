@@ -179,7 +179,7 @@ def fiber_test_linux() raises:
     var release = ArcPointer(Atomic(UInt8(0)))
     var protected = unsafe_start(guarantee(FiberTestWait(ready.copy()), delay[Int](FiberLifetimeFinalizer(entered.copy(), release.copy()))))
     fiber_test_ready(ready)
-    var state_owner = protected._state.copy()
+    var state_owner = protected._thread.state().copy()
     var observer = unsafe_start(delay[Error](FiberObserveLifetime(state_owner^, entered.copy(), release.copy())))
     _ = protected^
     var observation = observer^.join()
