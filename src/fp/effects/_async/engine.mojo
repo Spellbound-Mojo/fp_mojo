@@ -536,7 +536,7 @@ def _box_step[V: Movable & Deinitable, E: Movable & Deinitable](var step: Step[V
 
 @fieldwise_init
 struct _FiberLoop[E: Movable & Deinitable](Machine):
-    """A fiber's own run loop, polled as an erased leaf of its host."""
+    """A fiber's own run loop, polled through the slot of its task."""
     comptime Value = _Erased
     comptime Error = Self.E
     var loop: OwnedPointer[_RunLoop[Self.E]]

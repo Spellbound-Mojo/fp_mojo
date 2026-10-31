@@ -114,7 +114,7 @@ def _fiber_infos(views: List[_FiberView]) -> List[FiberInfo]:
 
 
 struct _FiberRecord[E: Movable & Deinitable](Movable):
-    """What a fiber's handle shares with its host, typed only by E."""
+    """What a fiber's handle shares with its task, typed only by E."""
     var token: CancellationToken
     var signal: Signal
     # The settled outcome; a success holds the handle's T, erased.
