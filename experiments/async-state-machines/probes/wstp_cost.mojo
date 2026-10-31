@@ -12,7 +12,7 @@ from std.memory import ArcPointer
 from std.memory.alloc import unsafe_alloc
 from std.os import abort
 from std.time import perf_counter_ns, sleep
-from fp._internal.cells import _Cell, _lock_metadata
+from fp._internal.cells import _Cell, _acquire_lock, _release_lock
 from fp.effects import unsafe_start, Fiber, IO, IOContext, Outcome, ReaderAction
 from fp.effects._async.scheduling.external_queue import _ExternalQueue
 from fp.effects._async.scheduling.local_queue import _LocalQueue
@@ -155,7 +155,7 @@ def external_uncontended():
     for i in range(n):
         external.push(i, random)
         total += external.pop(random).value()
-    report("external push+pop pair (_lock_metadata stripes)", perf_counter_ns() - t, n)
+    report("external push+pop pair (_lock_cell stripes)", perf_counter_ns() - t, n)
     # The same work under a hand-written lock that borrows the cell instead of
     # copying its ArcPointer, to price the shared guard's reference counting.
     var cell = ArcPointer(_Cell(Atomic(UInt8(0)), Optional(Deque[Int]())))
@@ -372,7 +372,78 @@ def contended() raises:
     sink(UInt64(total))
 
 
+struct LockRig(Movable):
+    """Four stripes of the external queue's shape, locked directly with the shared loop."""
+    var cells: List[_Cell[Deque[Int]]]
+    var go: Atomic[Int]
+    var ready: Atomic[Int]
+
+    def __init__(out self):
+        self.cells = List[_Cell[Deque[Int]]]()
+        for _ in range(4):
+            self.cells.append(_Cell(Atomic(UInt8(0)), Optional(Deque[Int]())))
+        self.go = Atomic(0)
+        self.ready = Atomic(0)
+
+
+@fieldwise_init
+struct LockWorker[spins: Int](ReaderAction):
+    """Push and pop on a random stripe under `_acquire_lock[spins]`, as the external queue does."""
+    var rig: ArcPointer[LockRig]
+    var seed: Int
+    var pairs: Int
+    comptime Family = IO[Error]
+    comptime Env = IOContext[Error]
+    comptime Value = NoneType
+    comptime Out[o: ImmOrigin] = Outcome[NoneType, Error]
+
+    def run[o: ImmOrigin](deinit self, ref[o] context: Self.Env) -> Self.Out[o]:
+        var random = _Random(UInt64(self.seed))
+        var total = 0
+        _ = self.rig[].ready.fetch_add(1)
+        while self.rig[].go.load[ordering=Ordering.ACQUIRE]() == 0:
+            pass
+        for i in range(self.pairs):
+            ref first = self.rig[].cells[random.below(4)]
+            _acquire_lock[Self.spins, Ordering.ACQUIRE, Ordering.RELAXED](first.lock)
+            first.slot.value().append(i)
+            _release_lock[Ordering.RELEASE](first.lock)
+            ref second = self.rig[].cells[random.below(4)]
+            _acquire_lock[Self.spins, Ordering.ACQUIRE, Ordering.RELAXED](second.lock)
+            if len(second.slot.value()) > 0:
+                try:
+                    total += second.slot.value().popleft()
+                except:
+                    abort("empty")
+            _release_lock[Ordering.RELEASE](second.lock)
+        sink(UInt64(total))
+        return Outcome[NoneType, Error](None)
+
+
+def lock_variant[spins: Int](label: String) raises:
+    comptime pairs = 500_000
+    var rig = ArcPointer(LockRig())
+    var workers = List[Fiber[LockWorker[spins]]]()
+    for i in range(4):
+        workers.append(unsafe_start(LockWorker[spins](rig.copy(), i + 70, pairs)))
+    while rig[].ready.load() < 4:
+        sleep(0.0001)
+    var t = perf_counter_ns()
+    rig[].go.store[ordering=Ordering.RELEASE](1)
+    while workers:
+        _ = workers.pop().join()
+    report(label, perf_counter_ns() - t, pairs)
+
+
+def lock_variants() raises:
+    print("Four threads, each doing push+pop pairs on 4 stripes; ns per pair per thread:")
+    lock_variant[0]("  yield after every failed attempt (_lock_metadata's loop)")
+    lock_variant[64]("  64 spins, then yield (_lock_cell)")
+    lock_variant[1 << 40]("  spin only, never yield")
+
+
 def main() raises:
+    lock_variants()
     atomic_costs()
     ring_uncontended()
     external_uncontended()

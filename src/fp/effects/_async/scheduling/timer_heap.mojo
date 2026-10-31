@@ -139,18 +139,19 @@ struct _TimerNode(Movable):
 
 
 struct _HeapShared(Movable):
-    """The words other threads touch: the published length and earliest deadline share
-    one 64-byte line, which a thief reads first; the cancellation counter has its own."""
-    var size: Atomic[Int]
+    """The words other threads touch, each on its own 64-byte line."""
     var earliest: Atomic[UInt64]
-    var _padding_after_size: Array[Int, 6]
+    var _padding_after_earliest: Array[Int, 7]
+    var size: Atomic[Int]
+    var _padding_after_size: Array[Int, 7]
     var canceled: Atomic[UInt64]
     var _padding_after_canceled: Array[Int, 7]
 
     def __init__(out self):
-        self.size = Atomic(0)
         self.earliest = Atomic(UInt64.MAX)
-        self._padding_after_size = Array[Int, 6](fill=0)
+        self._padding_after_earliest = Array[Int, 7](fill=0)
+        self.size = Atomic(0)
+        self._padding_after_size = Array[Int, 7](fill=0)
         self.canceled = Atomic(UInt64(0))
         self._padding_after_canceled = Array[Int, 7](fill=0)
 
