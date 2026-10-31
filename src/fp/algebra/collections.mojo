@@ -9,6 +9,7 @@ owners; only construction and insertion differ between containers here.
 from std.builtin.rebind import rebind_var
 from std.collections import Array, Deque, LinkedList, StringDict, KeyElement
 from std.collections.dict import DictEntry
+from std.iter import IterableOwned
 from std.hash import Hasher, default_comp_time_hasher
 from std.memory import MaybeUninit
 from fp._internal.native_collections import _empty_deque_like, _take_string_dict, _string_dict_from_native
@@ -17,7 +18,8 @@ from fp.callables.protocols import BorrowCallContract, UnaryContract, Unary, Mut
 from fp.callables.invoke import call_repeated, RepeatableUnary
 from .protocols import Functor, RebindingFunctor, Filterable, FunctorFilter, _Accumulate, _map_accumulate
 from .filtering import _Select, _Keep
-from .instances import _ListElement, ListFamily
+from .instances import _ListElement, ListFamily, _NativeFamily, IdentityFamily
+from .protocols import _FamilyCarrier
 from fp.iteration._advance import _next_optional, _buffer_owned
 from fp.iteration.reductions import _Terminal
 from fp.iteration.adapters import map as _lazy_map
@@ -223,6 +225,22 @@ struct _DictInsert[K: KeyElement & Deinitable, T: Movable & Deinitable, H: Hashe
         var value = value_slot^.unsafe_assume_init()
         acc[key^] = value^
         return acc^
+
+
+# Piped's default capability family: the native carriers _NativeFamily
+# recognizes plus the std sequences above. Effect carriers and bare values get
+# _NoContainerFamily, which conforms to no capability, so a defaulted family
+# admits nothing and an explicit family still binds.
+struct _NoContainerFamily:
+    pass
+
+
+comptime _ContainerFamily[V: Movable & Deinitable] = (
+    _DequeFamily if conforms_to(V, IterableOwned) and V == Deque[_ListElement[V]] else
+    _LinkedListFamily if conforms_to(V, IterableOwned) and V == LinkedList[_ListElement[V]] else
+    _NoContainerFamily if conforms_to(V, _FamilyCarrier) or _NativeFamily[V] == IdentityFamily else
+    _NativeFamily[V]
+)
 
 
 struct _DictFamily[K: KeyElement & Deinitable, A: Movable & Deinitable, H: Hasher & Defaultable & Deinitable](RebindingFunctor, Filterable, FunctorFilter):
