@@ -1,6 +1,8 @@
 {
-  "version": 1,
   "examples": {
+    "docs/examples/absence_and_looping.mojo": {
+      "stdout": "name: guest\ncount: 10 state: 7\nloop: 100000\n"
+    },
     "docs/examples/algebra_choices.mojo": {
       "stdout": "mapped price: 36\nmap: outer present = True ; inner present = False\nflat_map: present = False\ncombined price: 36 ; missing quantity: False\napplied price: 36\nlist combinations: 10 20 20 40\n"
     },
@@ -10,26 +12,74 @@
     "docs/examples/algebra_traversal.mojo": {
       "stdout": "traverse: items = 3 ; calls = 3\nfailed traversal: present = False ; calls = 2\nsequence: 1 3\nempty traversal: present = True ; items = 0\n"
     },
+    "docs/examples/ap_contracts.mojo": {
+      "stdout": "applied: 7\n"
+    },
     "docs/examples/attempt_generic.mojo": {
       "stdout": "generic attempt: receipt=3; declined=-2; balance=-2; calls=2\n"
     },
     "docs/examples/attempt_once.mojo": {
-      "stdout": "message: used once\nerror: 7\n"
+      "stdout": "message: used once\nerror: 7\nbound result: 5\ncounter error: 1\ncounter value: 2\nretained calls: 2\nshared result: 5\nshared again: 5\n"
+    },
+    "docs/examples/attempt_selectors.mojo": {
+      "stdout": "length: 4\nbalance: 13\nfailed: True ; balance: -8\n"
+    },
+    "docs/examples/boolean_contracts.mojo": {
+      "stdout": "any: True\nall: False\n"
+    },
+    "docs/examples/borrowed_projections.mojo": {
+      "stdout": "reader port: 8080\nlifted port: 8080\nstate port: 8080\n"
     },
     "docs/examples/callable_pipeline.mojo": {
-      "stdout": "total=10\n"
+      "stdout": "total=10\nwith fee: total=12\nreused fee: 5\n"
     },
     "docs/examples/callable_pipeline_generic.mojo": {
       "stdout": "generic pipeline: 3; error: -7\n"
     },
+    "docs/examples/callback_reuse.mojo": {
+      "stdout": "eager: [3, 6]\nlazy: [3, 6, 9]\ntotal: 18\nmoved: [3, 6]\n"
+    },
+    "docs/examples/capture_arguments.mojo": {
+      "stdout": "books: 41\ninvalid quantity\npurchased books ; balance: 6\n"
+    },
+    "docs/examples/capture_context.mojo": {
+      "stdout": "ready\npaid: 6\ndeclined: -2\nsaved state: 15\ntraversal error: -10 ; state: -10\n"
+    },
+    "docs/examples/capture_native.mojo": {
+      "stdout": "payment: 3; declined: -2; balance: -2\ncount: 5\n"
+    },
     "docs/examples/chained_pipeline.mojo": {
       "stdout": "total: $58.30\ninvalid price: 19.99\n"
+    },
+    "docs/examples/collection_families.mojo": {
+      "stdout": "array lengths: 1 2\nqueue label: 42\n"
+    },
+    "docs/examples/combinators.mojo": {
+      "stdout": "sum of positive squares = 50\nowned replacement: [7, 11]\nowned attachment: 7 [2, 3]\n"
+    },
+    "docs/examples/combine_effects.mojo": {
+      "stdout": "Hello Mojo!\nitems: 1 2 3\nchoices: ab aB Ab AB\n"
+    },
+    "docs/examples/composable_monoids.mojo": {
+      "stdout": "report: 3 abc\ntotals: 5 4\n"
+    },
+    "docs/examples/composition_reuse.mojo": {
+      "stdout": "mapped: [4, 6]\nreused: 8\nvalidated: 2 3\nfallback: unavailable\nmixed: [6, 9]\nmirrored: 9\nrunning: [0, 2, 8, 22]\nextended: price=6! price=9!\nextended reverse: price=9\ncombined: price=18!\npair stage: 8\ntagged: 6 order-7\nsecond: 6 ready!\nsplit: price=6 ready!\nuntupled: price=8 paid!\nmerge: price=6 12\n"
     },
     "docs/examples/config_parser.mojo": {
       "stdout": "ready: batch=12, workers=4\n"
     },
     "docs/examples/control_flow.mojo": {
-      "stdout": "while: 16\nfori: 10\nscan: 6 [6, 5, 3]\n"
+      "stdout": "while: 16\nfori: 10\nscan: 6 [6, 5, 3]\nmutable fori: 20 calls: 4\nmutable while: 10 calls: 4\nstateful predicate: 6 checks: 4 steps: 3\nowned fori: 20\nowned scan: 14 [1, 5, 14]\nowned while: 6\n"
+    },
+    "docs/examples/dictionary_values.mojo": {
+      "stdout": "lengths: 2 1\n"
+    },
+    "docs/examples/effectful_reductions.mojo": {
+      "stdout": "total: 16\nlarge value found\nall positive: True\nnegative input failed: True\n"
+    },
+    "docs/examples/effectful_sums.mojo": {
+      "stdout": "total: 27\nerror: invalid amount\nparsed: 2\nknown: 5\n"
     },
     "docs/examples/effects_reader.mojo": {
       "stdout": "before run: calls = 0\nstandard total: 41\nfree shipping total: 36 ; original shipping: 5\nafter both runs: calls = 2\n"
@@ -40,17 +90,80 @@
     "docs/examples/effects_writer.mojo": {
       "stdout": "notice: ready\nvalue: 5\nlog: [start; fee +2]\nlog copied by listen: start; fee +2\n"
     },
+    "docs/examples/environment_capabilities.mojo": {
+      "stdout": "reader config: 5\nscoped config: 8 ; state: 42\nenvironment after scope: 5\ninner config: 5\nouter config: 100\n"
+    },
+    "docs/examples/error_recovery.mojo": {
+      "stdout": "retried: 42\nentries: 3 0 5\nouter: connection failed\nselected: 0 ; kept: denied\nselected retry: 42\ninspection kept: original\nResult observer: observer failed\nValidation observer: [observer failed, original]\n"
+    },
+    "docs/examples/expression.mojo": {
+      "stdout": "(1 * 6 + (4 + 0)) = 10\n(6 + 4) = 10\n7\n4611686018427387904\n1000000\n"
+    },
+    "docs/examples/file_tree.mojo": {
+      "stdout": "home/{notes.txt, photos/{a.jpg, b.jpg}, latest@, broken@}\n10120\n"
+    },
+    "docs/examples/find_contracts.mojo": {
+      "stdout": "retained match: 2\n"
+    },
+    "docs/examples/find_map_contracts.mojo": {
+      "stdout": "first match: 2\n"
+    },
+    "docs/examples/fluent_contracts.mojo": {
+      "stdout": "kept: 1 3\n"
+    },
+    "docs/examples/fluent_effects.mojo": {
+      "stdout": "combined: 7\npaired: 3 4\napplied: 18\ncombined three: 12\nflat tuple: (3, 4, 5)\nretained: [1, 2, 3]\nall checked: True\nsource error preserved: True\n"
+    },
+    "docs/examples/fold_contracts.mojo": {
+      "stdout": "folded: 13\nstaged: 13\n"
+    },
+    "docs/examples/fold_map_contracts.mojo": {
+      "stdout": "mapped fold: 12\n"
+    },
     "docs/examples/foundations.mojo": {
       "stdout": "fold = 15 ; match = 22 ; callbacks = 5\n"
     },
     "docs/examples/generic_fold.mojo": {
       "stdout": "scalar= 6 ; document= native functional composition\n"
     },
+    "docs/examples/if_contracts.mojo": {
+      "stdout": "selected: 14\n"
+    },
+    "docs/examples/inferred_fold.mojo": {
+      "stdout": "total: 16\nerror: negative amount\nsteps: 2\n"
+    },
+    "docs/examples/inferred_monoid_fold.mojo": {
+      "stdout": "hello!world!\nerror: empty word\ntransformed: 2\n"
+    },
+    "docs/examples/inferred_queries.mojo": {
+      "stdout": "any: True\nall: False\nfirst: 2\nlabel: item-3\n"
+    },
+    "docs/examples/inferred_traversal.mojo": {
+      "stdout": "total: 15\nerror: invalid quantity\ngathered: 2 4\n"
+    },
+    "docs/examples/io_execution.mojo": {
+      "stdout": "program ready\nread\nfinalize\nvalue: 42\nfinalize\ncanceled: True\n"
+    },
+    "docs/examples/ior_validation.mojo": {
+      "stdout": "value: 0\nwarning: zero accepted\nindependent diagnostics: 3\nsequential diagnostics: 2\n"
+    },
     "docs/examples/iteration.mojo": {
-      "stdout": "0\n2\n8\n"
+      "stdout": "0\n2\n8\nweighted: [0, 2, 6, 12]\nagain: [10, 12, 16]\ninitial: [5]\nstateful: [1, 3, 6]\nchanging weights: [0, 1, 5, 14]\nweighted fold: 14\npipeline fold: 14\nnext weight: 4\n"
+    },
+    "docs/examples/iteration_alignment.mojo": {
+      "stdout": "[both=0,10, left=1]\n[both=0,10, right=11, right=12]\npresent: True True\npresent: True False\nmoved: [both=0,10]\n"
+    },
+    "docs/examples/iteration_branching.mojo": {
+      "stdout": "before consuming: 0\naccepted: 0 2 4\nrejected backlog: 1 3\nclassified: 5\nbounded accepted: 0 2\noverflow(branch=1,capacity=1)\nsibling also failed: True\nafter closing sibling: 0 2 4\nclassified: 0 2\nreused classifier: 2\n"
     },
     "docs/examples/iteration_chaining.mojo": {
       "stdout": "codepoints: 10\n0 4\n1 5\n2 6\n"
+    },
+    "docs/examples/iteration_effect_search.mojo": {
+      "stdout": "find: 3\nfind map: found 2\nfold map: 123\nsequence filter: [1, 3]\n"
+    },
+    "docs/examples/iteration_expansion.mojo": {
+      "stdout": "before consuming: 0\nvalues: [13, 24] ; predicate calls: 4\nzip: [(0, 10, 20), (1, 11, 21)]\nselected fold: 024\nnon-empty: 3 ; empty first: False\nunder three: [0, 1, 2]\nsuffix: [3, 4]\ncounted: 3\nselected again: 02\nitem: 0\nitem: 1\nindexed again: [10, 21]\npaired: [3, 14]\n"
     },
     "docs/examples/iteration_filtering_generic.mojo": {
       "stdout": "generic filtering: 2, 2!, 4; tail unevaluated\n"
@@ -58,44 +171,234 @@
     "docs/examples/iteration_generic.mojo": {
       "stdout": "generic lazy snapshots: 0, 2, 6; source preserved\n"
     },
+    "docs/examples/iteration_scan_map.mojo": {
+      "stdout": "before consuming: 0\n[total=1, total=3, total=6]\nsteps: 3\nempty: []\nsteps after empty: 3\nprices: [3, 9, 18]\nreused: [13, 19]\nfinal total: 18\ncollected: [3, 9, 18]\nmoved: [3, 9]\n"
+    },
+    "docs/examples/job_router.mojo": {
+      "stdout": "dispatched 1; deferred; deferred; dispatch failed for job 3\n"
+    },
+    "docs/examples/kleisli.mojo": {
+      "stdout": "accepted: 8\naccepted: 9\naccepted: 12\n"
+    },
+    "docs/examples/map2_contracts.mojo": {
+      "stdout": "combined: 7\n"
+    },
+    "docs/examples/mapping_error_observation.mojo": {
+      "stdout": "before run\nobserved: unavailable\nretained: unavailable\n"
+    },
+    "docs/examples/monad_sequencing.mojo": {
+      "stdout": "retained: [1, 1, 3, 3]\npaired: [(1, 11), (1, 21), (3, 13), (3, 23)]\nbefore: [1, 1, 2, 2]\nfollowed_by: [7, 8, 7, 8]\noptional present: False\nshared before: [1, 1, 2, 2]\nshared next: [7, 8, 7, 8]\n"
+    },
+    "docs/examples/native_callback_reuse.mojo": {
+      "stdout": "first: item-2\nagain: item-3\nmoved: item-4\nrunning: [0, 1, 3, 6]\nzipped: [3, 5]\ncaptured binary: sum=5 sum=9\ncaptured predicate: [0, 1, 2]\nreused predicate: [1, 2]\nstateful predicate: [1, 3]\nstateful projection: [(1, 2), (2, 4), (3, 6)]\nfamily projection: [(1, 2), (2, 4), (3, 6)]\nborrowed mutable predicate: [1, 3]\nretained calls: 5\ncontinued predicate: [0, 2]\ntotal calls: 8\nfamily mutable filter: [1, 3]\nfamily mutable filter_not: [0, 2]\nfamily retained calls: 16\naudited values: [0, 1, 2]\nobservations: 3\n"
+    },
+    "docs/examples/non_empty_reductions.mojo": {
+      "stdout": "reduced: 5\nlabels: 123\nshortest: b\n"
+    },
+    "docs/examples/non_empty_validation.mojo": {
+      "stdout": "errors: 2\n-1 must be positive\n-2 must be positive\nfirst: 2 count: 3\n"
+    },
+    "docs/examples/operation_contracts.mojo": {
+      "stdout": "gathered: 3 7\nfilled: 7 11\ndiscarded: True\nattached: 3 [7, 11]\nobserved: [3, 7]\nfiltered: [8]\npresent: [8]\nexpanded: [3, 30]\n"
+    },
     "docs/examples/optional.mojo": {
       "stdout": "optional total = 42\n"
     },
+    "docs/examples/optional_default.mojo": {
+      "stdout": "configured: example.org\ndefault: localhost\ndefaults computed: 1\nreused defaults: localhost localhost\nreused error: localhost\n"
+    },
+    "docs/examples/optional_result.mojo": {
+      "stdout": "https://example.org\nhost is missing\n"
+    },
+    "docs/examples/parallel_validation.mojo": {
+      "stdout": "total: 9\nerrors: -2 must be positive; -4 must be positive;\nerrors: -3 must be positive; -5 must be positive;\nvalues: 1 4 9\npair: 2 3\nerrors: -3 must be positive; -4 must be positive;\n"
+    },
     "docs/examples/partial.mojo": {
-      "stdout": "8\n8\n15\n18\n"
+      "stdout": "8\n8\n15\nmapped: 12\nreused: 18\nfiltered: [3, 4]\nrejected: [1, 2]\n18\n"
+    },
+    "docs/examples/pipeline_quickstart.mojo": {
+      "stdout": "42\n"
+    },
+    "docs/examples/product_contracts.mojo": {
+      "stdout": "paired: 3 four\n"
+    },
+    "docs/examples/pure_construction.mojo": {
+      "stdout": "pure construction: direct=7; deferred=11\n"
     },
     "docs/examples/quickstart.mojo": {
       "stdout": "42\n"
     },
+    "docs/examples/recovery_contract.mojo": {
+      "stdout": "recovered: 4\ndeferred: 7\n"
+    },
+    "docs/examples/resource_scopes.mojo": {
+      "stdout": "recipe ready\nopen: left\nopen: right\nclose: right\nclose: left\nvalue: left+right\nopen: left\nclose: left\nreleased without a body: True\n"
+    },
+    "docs/examples/result_combinators.mojo": {
+      "stdout": "checked: 8\n8\nrejected -2\n0\n"
+    },
+    "docs/examples/result_constructors.mojo": {
+      "stdout": "accepted: 42\nfallback: 7\n"
+    },
     "docs/examples/result_once.mojo": {
-      "stdout": "used once: value 12\n"
+      "stdout": "used once: value 12\nfolded: 12\nhandler calls: 1 0\nborrowed fold: 9\nstill ok: True\nmixed error: 12\nmixed success: 22\nnative success: 24\nnative error: 24\n"
+    },
+    "docs/examples/result_outcomes.mojo": {
+      "stdout": "observed error: False\ninvoice: 4\nobserved error: True\ndefault invoice\nobserved error: True\nfailed: code 5\n"
     },
     "docs/examples/result_transform_generic.mojo": {
       "stdout": "accepted\nnotice 107\nraised 90\n"
     },
+    "docs/examples/result_values.mojo": {
+      "stdout": "value: 42\nusing zero: negative count\nfallback: 0\npipeline: 8\ndefault: 7\noptional: 5\nreason: negative count\nsummary: invalid: negative count\nflattened: 6\nflattened error: negative count\nfilled: accepted\nvoid: True\nvoid error: negative count\nattached: items 5\n"
+    },
     "docs/examples/results.mojo": {
       "stdout": "ok: 42\ndomain: expected a positive value\nraised: callback failed\n"
     },
-    "docs/examples/state_result.mojo": {
-      "stdout": "ResultT[State]: failed, returned state = 15\nStateT[Result]: failed, no state payload\n"
+    "docs/examples/reusable_projections.mojo": {
+      "stdout": "direct total: 18\niterator total: 18\npipeline total: 18\nlargest quantity: 3\navailable quotes: [3, 6]\nquoted total: 18\n"
     },
-    "docs/examples/terminal_generic.mojo": {
-      "stdout": "entries:012 ; rejected: -7 ; first even: 4\n"
+    "docs/examples/reusable_result_handlers.mojo": {
+      "stdout": "observed: missing\nrecovered: 0\nobserved: fatal\nretained: fatal\n"
     },
-    "docs/examples/expression.mojo": {
-      "stdout": "(1 * 6 + (4 + 0)) = 10\n(6 + 4) = 10\n7\n4611686018427387904\n1000000\n"
+    "docs/examples/selected_conditional_recovery.mojo": {
+      "stdout": "before run: 0\nrecovered: 14\npreserved: denied ; handled: 1\nretried: 9\n"
+    },
+    "docs/examples/selected_error_mapping.mojo": {
+      "stdout": "error code: 7\nvalidation: name missing; age invalid\n"
+    },
+    "docs/examples/selected_error_observation.mojo": {
+      "stdout": "before run: 0\ndeferred: 24 ; observed: 1\nResult observer: audit\nValidation observer: audit original\n"
+    },
+    "docs/examples/selected_layer_error_mapping.mojo": {
+      "stdout": "error: first\nvalue: 2\nerror: last\noutputs: 5 20 4\nstill absent: True\n"
+    },
+    "docs/examples/selected_outcome_observation.mojo": {
+      "stdout": "before run: 0\nrecovered: 10 ; observed: 1\naccepted: 6 ; observed: 2\nobserver failure: audit failed\n"
+    },
+    "docs/examples/selected_outcomes.mojo": {
+      "stdout": "before run: 0\nrecovered: 14 ; handled: 1\npreserved: handler failure ; opposite calls: 0\nchanged error: 7\n"
+    },
+    "docs/examples/selected_pipeline.mojo": {
+      "stdout": "accepted: 8\nrecovered: 6\nraised: 90\n"
+    },
+    "docs/examples/selected_recovery.mojo": {
+      "stdout": "changed error: 5\ndeferred: 14\ngeneric effect: 9\n"
+    },
+    "docs/examples/selected_transport_error_mapping.mojo": {
+      "stdout": "before run: 0\nreader error: 7 ; calls: 1\nstate: 4 9\nwriter: saved 5\n"
+    },
+    "docs/examples/selected_validation_workflow.mojo": {
+      "stdout": "before run: 0\nrecovered: 10 ; observed: 1\naccepted: 6 ; observed: 1\n"
+    },
+    "docs/examples/selected_workflow.mojo": {
+      "stdout": "total: 34\ninvalid amount\ntransport: 503\n"
+    },
+    "docs/examples/selection_contracts.mojo": {
+      "stdout": "selected: 3 7\ncombined: 10\n"
+    },
+    "docs/examples/selective_recovery.mojo": {
+      "stdout": "observed: retry\nvalue: 42\nobserved: missing\nvalue: 0\nobserved: fatal\nerror: fatal\n"
+    },
+    "docs/examples/sequencing_contracts.mojo": {
+      "stdout": "paired: 2 12\ndeferred: 3 13\n"
     },
     "docs/examples/shapes.mojo": {
       "stdout": "a circle 3.0 12.0\na rectangle 6.0 24.0\na square 4.0 16.0\nsomething else 0.0 0.0\nTrue False\n"
     },
-    "docs/examples/file_tree.mojo": {
-      "stdout": "home/{notes.txt, photos/{a.jpg, b.jpg}, latest@, broken@}\n10120\n"
+    "docs/examples/shared_outcomes.mojo": {
+      "stdout": "observed failure: False\nobserved failure: True\nobserved failure: True\nvalue=8\nfailed: nonpositive\nvalue=0\n"
+    },
+    "docs/examples/single_value_deferred.mojo": {
+      "stdout": "deferred single traversal: answer=17; absent=True\n"
+    },
+    "docs/examples/single_value_traversal.mojo": {
+      "stdout": "single traversal: ticket=7; absent=True\n"
+    },
+    "docs/examples/state_result.mojo": {
+      "stdout": "ResultT[State]: failed, returned state = 15\nStateT[Result]: failed, no state payload\n"
+    },
+    "docs/examples/stateful_capabilities.mojo": {
+      "stdout": "state: 13\nunder reader: 13\nnested put: 25 ; success: True\ninner update: outer = 100 ; inner = 13\nouter update: outer = 103 ; inner = 10\nselected read: 10\n"
+    },
+    "docs/examples/terminal_generic.mojo": {
+      "stdout": "entries:012 ; rejected: -7 ; first even: 4\n"
     },
     "docs/examples/traffic_light.mojo": {
       "stdout": "green\namber\nred\ngreen\nred\nred with a queue of 5 | outage 7 | normal\n"
     },
-    "docs/examples/job_router.mojo": {
-      "stdout": "dispatched 1; deferred; deferred; dispatch failed for job 3\n"
+    "docs/examples/transformer_recovery.mojo": {
+      "stdout": "StateT[Result]: recovered value = 0 ; state = 10\nResultT[State]: recovered value = 0 ; state = 15\n"
+    },
+    "docs/examples/traversal_composition.mojo": {
+      "stdout": "kept: [10, 2, 20, 30]\nselected: [20]\nsequenced: [1, 10, 2, 20]\neffects succeeded: True\niterated selection: [2, 4]\niterated expansion: [1, 10, 2, 20]\niterated present values: [20, 40]\n"
+    },
+    "docs/examples/value_defaults.mojo": {
+      "stdout": "count: 0\nhost: localhost\ndefaults computed: 1\n"
+    },
+    "docs/examples/writer_capabilities.mojo": {
+      "stdout": "output: [saved] ; observed: [saved]\nnested output: [nested] ; observed: [nested] ; state: 42\nfailed: True ; retained output: [attempted]\n"
+    },
+    "docs/examples/coordination.mojo": {
+      "stdout": "counter: 1\ndeferred: ready\nprotected: 42\nqueue: first second\n"
+    },
+    "docs/examples/io_finalization.mojo": {
+      "stdout": "released after success\nresult: 42\nreleased after cancellation\ncanceled: True\n"
+    },
+    "docs/examples/io_resources.mojo": {
+      "stdout": "open session\nclose session after use\ncompleted: True\nopen session\nclose session after cancellation\ncanceled: True\n"
+    },
+    "docs/examples/state_outputs.mojo": {
+      "stdout": "value: ticket 10\nfinal state: 11\noptional value: ticket 12\nstate present: False\n"
+    },
+    "docs/examples/writer_outputs.mojo": {
+      "stdout": "both: quoted 3\nprice: 5\nlog: ready\noptional price: 7\nlog present: False\n"
+    },
+    "docs/examples/async_callback_timeout.mojo": {
+      "stdout": "withdrawn\n-1\n"
+    },
+    "docs/examples/async_error_recovery.mojo": {
+      "stdout": "42\n"
+    },
+    "docs/examples/async_host_cancel.mojo": {
+      "stdout": "released\ncanceled: True\n"
+    },
+    "docs/examples/async_iteration.mojo": {
+      "stdout": "42\n"
+    },
+    "docs/examples/async_resources.mojo": {
+      "stdout": "release: 21\nrelease: 20\n42\n"
+    },
+    "docs/examples/async_runtime.mojo": {
+      "stdout": "profile: work_stealing(2)\n1 -> 2\n2 -> 6\n3 -> 12\nlive fibers: 0\n"
+    },
+    "docs/examples/async_sequencing.mojo": {
+      "stdout": "42\n"
+    },
+    "docs/examples/async_test_control.mojo": {
+      "stdout": "next deadline in ms: 5000\nresult: 7\n"
+    },
+    "docs/examples/async_fibers.mojo": {
+      "stdout": "joined: 42\nchild cleanup ran\ncanceled: True\nboth: 42\nleft won the race: True\nsupervised: 42\n"
+    },
+    "docs/examples/async_coordination.mojo": {
+      "stdout": "counter: 2\ndeferred readers: 84\nqueue: 1 2 3 4\nwith permit: 7\npermits after: 1\n"
+    },
+    "docs/examples/async_par_traverse.mojo": {
+      "stdout": "squares: 1 4 9 16\nbounded: 25 36 49\nsequenced: 10 20\nfailed with: 3\nvalidation errors: 2\n"
+    },
+    "docs/examples/async_blocking.mojo": {
+      "stdout": "blocking: 42\ninterrupted: -1\none at a time: 84\n"
+    },
+    "docs/examples/async_thread_safety.mojo": {
+      "stdout": "atomic counter: 1000\nref counter: 1000\n"
+    },
+    "docs/examples/async_capabilities.mojo": {
+      "stdout": "ref: 42\njoined: 7\ntimed sleep >= 5 ms: True\nwall clock after 2020: True\n"
+    },
+    "docs/examples/async_descriptors.mojo": {
+      "stdout": "read: 42\n"
     }
-  }
+  },
+  "version": 1
 }

@@ -3,16 +3,20 @@ import re
 from fp_tools.runtime import ROOT, PIN, sha, normalized
 from fp_tools.cases import CompileCase, audit_case
 from fp_tools.runs import audit_run_paths
+from fp_tools.artifacts import audit_library_binding
 
 def inventory(filter='', root=ROOT):
     paths = sorted((root/'tests/compile_fail').glob('*.mojo'))
     return [str(p.relative_to(root)) for p in paths if filter in str(p.relative_to(root))]
 
 
-def audit_report(report, *, folder, optimization, include, filter='', werror=False, expected_inputs, root=ROOT):
+def audit_report(report, *, folder, optimization, include, filter='', werror=False,
+                 expected_inputs, expected_library_inputs, root=ROOT):
     failures = []
     expected = inventory(filter, root)
     try:
+        failures += audit_library_binding(report, include=include,
+                                          expected_inputs=expected_library_inputs, root=root)
         timeout = report.get('compile_timeout', 180)
         if type(timeout) is not int or timeout <= 0:
             raise ValueError('invalid compilation timeout')

@@ -3,20 +3,29 @@
 A run consumes the state and returns the base carrier of Tuple[value, state].
 Each operation is one struct whose run delegates to the base family.
 """
+
+from fp.algebra._admission import _CarrierBind, _CarrierCombine
+from fp.algebra._contracts import MapContract, BindContract
 from std.builtin.rebind import rebind_var, rebind, downcast
 from std.utils import Variant
-from fp.algebra.protocols import (Monad, _Lifting, _Accumulate, _BindFirst, _Lazy, _Item, _iterator, _next_item, _start_as)
+from fp.algebra.errors import _Continue
+from fp.algebra.protocols import (Functor, _fold_as, _pure, ApplicativeError, ErrorMapping, _UnaryView, Monad, _Accumulate, _AccumulatePair, _LiveAccumulator, _BindFirst, _Lazy, _start_as)
 from fp.algebra.instances import IdentityFamily
-from fp.callables.protocols import (UnaryContract, BinaryContract, ThunkContract, Unary, OnceUnary, MutableUnary)
-from fp.callables.invoke import call_once, call_repeated, RepeatableUnary
-from fp.callables.native import NativeUnary, as_unary, _Unary, _RaisingUnary
+from fp.callables.protocols import (BorrowCallContract, UnaryContract, BinaryContract, ThunkContract, OnceUnary, MutableUnary, Binary, MutableBinary)
+from fp.callables.invoke import call_once, RepeatableUnary, RepeatableBinary
+from fp.callables._receiver import _OnceBorrowAvailable, _borrow_once_as, _binary_repeated_as, _unary_once_as
 from std.memory import MaybeUninit
-from fp.callables.products import _take_pair
-from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
-from .protocols import StateAction, _StateFamily, _admit_endpoint, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
-from ._adapt import _state_run_as, _map_as, _flat_map_as
+from fp.callables.products import _take_pair, _MapPair, _WithSecond as _WithState
+from fp._internal.errors import _CommonErrorCompatible, _CommonError, _ErrorCompatible
+from .protocols import Project, Stateful, Local, Listen, _CarrierOp, _LocalLifting, StateAction, StateFamily, _EndpointCompatible, _FAMILY_MISMATCH, _CHOICE_FAMILY, _CHOICE_VALUE
+from ._adapt import _op_as, _state_run_as, _map_as, _flat_map_as
+
+from ._transport import _BimapOp, _LocalOp, _ListenOp, _ListenMapped, _ListenPair
 
 
+# Recipe admission supplies child execution requirements. Common-error
+# projection still needs explicit _ErrorCompatible evidence at invocation:
+# Mojo 1.2 does not derive it from _CommonErrorCompatible alone.
 comptime _Action[V: Movable & Deinitable] = downcast[V, StateAction]
 
 
@@ -28,7 +37,41 @@ struct _StatePure[M: Monad, S: Movable & Deinitable, T: Movable & Deinitable](St
     comptime Value = Self.T
     comptime Out = Self.M.Pure[Tuple[Self.T, Self.S]]
     def run(deinit self, var state: Self.State) -> Self.Out:
-        return Self.M.pure(Tuple(self.value^, state^))
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
+        return _pure[Self.M](Tuple(self.value^, state^))
+
+
+@fieldwise_init
+struct _StateFail[M: Monad, S: Movable & Deinitable, A: Movable & Deinitable](StateAction, Copyable where conforms_to(downcast[M, ApplicativeError].Failure, Copyable)):
+    """Owned-state boundary for a deferred base failure; the state is dropped."""
+    comptime Errors = downcast[Self.M, ApplicativeError]
+    var error: Self.Errors.Failure
+    comptime Family = StateT[Self.M, Self.S]
+    comptime State = Self.S
+    comptime Value = Self.A
+    comptime Out = Self.Errors.Failed[Tuple[Self.A, Self.S]]
+    comptime Error = Self.Errors.FailError[Tuple[Self.A, Self.S]]
+    def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
+        return Self.Errors.fail[Tuple[Self.A, Self.S]](self.error^)
+
+
+@fieldwise_init
+struct _StateProject[M: Monad, S: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](
+    StateAction, Copyable where conforms_to(F, Copyable)
+):
+    var function: Self.F
+    comptime Family = StateT[Self.M, Self.S]
+    comptime State = Self.S
+    comptime Value = Self.F.Result
+    comptime Out = Self.M.Pure[Tuple[Self.Value, Self.S]]
+    comptime Error = Self.F.Failure
+    def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self.F.Payload == Self.S
+        # State owns its input, unlike Reader's borrowed run boundary. End the
+        # projection borrow before moving the unchanged state into its carrier.
+        var projected = _borrow_once_as[Self.Error](state, self.function^)
+        return _pure[Self.M]((projected^, state^))
 
 
 @fieldwise_init
@@ -38,8 +81,9 @@ struct _StateGet[M: Monad, S: Copyable & Deinitable](StateAction, Copyable, Defa
     comptime Value = Self.S
     comptime Out = Self.M.Pure[Tuple[Self.S, Self.S]]
     def run(deinit self, var state: Self.State) -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         var copy = state.copy()
-        return Self.M.pure(Tuple(copy^, state^))
+        return _pure[Self.M](Tuple(copy^, state^))
 
 
 @fieldwise_init
@@ -53,19 +97,11 @@ struct _StateModify[M: Monad, S: Movable & Deinitable, F: UnaryContract & Movabl
     comptime Out = Self.M.Pure[Tuple[NoneType, Self.S]]
     comptime Error = Self.F.Error
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert Self.F.Arg == Self.S and Self.F.Out == Self.S, "modify: the callback must map the state to a new state"
         var updated = rebind_var[Self.S](call_once(self.function^, rebind_var[Self.F.Arg](state^)))
         var nothing: NoneType = None
-        return Self.M.pure(Tuple(nothing, updated^))
-
-
-@fieldwise_init
-struct _Replace[S: Movable & Deinitable](OnceUnary, Copyable where conforms_to(S, Copyable)):
-    var value: Self.S
-    comptime Arg = Self.S
-    comptime Out = Self.S
-    def call_once(deinit self, var arg: Self.Arg) -> Self.Out:
-        return self.value^
+        return _pure[Self.M](Tuple(nothing, updated^))
 
 
 @fieldwise_init
@@ -80,21 +116,9 @@ struct _StateEndpoint[M: Monad, S: Movable & Deinitable, T: Movable & Deinitable
     comptime Out = Self.F.Out
     comptime Error = Self.F.Error
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert Self.F.Arg == Self.S, "action: the endpoint must consume the State"
         return call_once(self.function^, rebind_var[Self.F.Arg](state^))
-
-
-@fieldwise_init
-struct _WithState[A: Movable & Deinitable, S: Movable & Deinitable](OnceUnary, MutableUnary where conforms_to(S, Copyable)):
-    """Pair each base payload with the state; repeated pairing copies it."""
-    var state: Self.S
-    comptime Arg = Self.A
-    comptime Out = Tuple[Self.A, Self.S]
-    def call_once(deinit self, var arg: Self.Arg) -> Self.Out:
-        return Tuple(arg^, self.state^)
-    def call_mut(mut self, var arg: Self.Arg) -> Self.Out:
-        comptime C = downcast[Self.S, Copyable & Deinitable]
-        return Tuple(arg^, rebind_var[Self.S](rebind[C](self.state).copy()))
 
 
 @fieldwise_init
@@ -105,79 +129,69 @@ struct _StateLift[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable](St
     comptime State = Self.S
     comptime Value = Self.M.Element[Self.V]
     comptime Pair = _WithState[Self.Value, Self.S]
-    comptime Out = Self.M.Mapped[Self.V, Self.Pair]
-    comptime Error = Self.M.MapError[Self.V, Self.Pair]
+    comptime _BaseOp = MapContract[Self.M,Self.V,Self.Pair]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = Self._BaseOp.Error
+    comptime _RunCompatible = Self._BaseOp.FamilyCompatible
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         return Self.M.map(Self.Pair(state^), self.value^)
 
 
-@fieldwise_init
-struct _MapFirst[F: UnaryContract & Movable & Deinitable, S: Movable & Deinitable](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
-):
-    """Map the value of a (value, state) pair."""
-    var function: Self.F
-    comptime Arg = Tuple[Self.F.Arg, Self.S]
-    comptime Out = Tuple[Self.F.Out, Self.S]
-    comptime Error = Self.F.Error
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
-        var value_part = value_slot^.unsafe_assume_init()
-        var state_part = state_slot^.unsafe_assume_init()
-        var value = call_once(self.function^, value_part^)
-        return Tuple(value^, state_part^)
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert RepeatableUnary[Self.F]
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
-        var value_part = value_slot^.unsafe_assume_init()
-        var state_part = state_slot^.unsafe_assume_init()
-        var value = call_repeated(self.function, value_part^)
-        return Tuple(value^, state_part^)
+comptime _MapFirst[F: UnaryContract & Movable & Deinitable, S: Movable & Deinitable] = _MapPair[F, S, True]
 
 
 @fieldwise_init
-struct _StateContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, S: Movable & Deinitable](
-    OnceUnary, MutableUnary where RepeatableUnary[F], Copyable where conforms_to(F, Copyable)
+struct _StateContinue[I: AnyType, F: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, recover: Bool = False](
+    OnceUnary, MutableUnary where RepeatableUnary[F] and (not recover or conforms_to(S, Copyable)),
+    Copyable where conforms_to(F, Copyable) and conforms_to(S if recover else NoneType, Copyable)
 ):
-    """Call F with the value, then run its computation on the paired state."""
+    """Run F's action on the carried state, or on the saved recovery input.
+
+    Repeated recovery copies the saved input for each error branch. A single
+    call transfers that input; ordinary bind still accepts move-only state.
+    """
     var function: Self.F
+    comptime Saved = Self.S if Self.recover else NoneType
+    var initial: Self.Saved
     comptime Action = _Action[Self.F.Out]
-    comptime Arg = Tuple[Self.F.Arg, Self.S]
+    comptime Arg = Self.F.Arg if Self.recover else Tuple[Self.F.Arg, Self.S]
     comptime Out = Self.Action.Out
     comptime Error = _CommonError[Self.F.Error, Self.Action.Error]
+    comptime _RunCompatible = Self.Action._RunCompatible & _CommonErrorCompatible[Self.F.Error, Self.Action.Error]
+
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error]
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
-        var value_part = value_slot^.unsafe_assume_init()
-        var state_part = state_slot^.unsafe_assume_init()
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](call_once(self.function^, value_part^))
-        except error:
-            _propagate_error[Self.Error](error^)
+        var value_part: Self.F.Arg
+        var state_part: Self.S
+        comptime if Self.recover:
+            value_part = rebind_var[Self.F.Arg](arg^)
+            state_part = rebind_var[Self.S](self.initial^)
+        else:
+            var value_slot = MaybeUninit[Self.F.Arg]()
+            var state_slot = MaybeUninit[Self.S]()
+            _take_pair(rebind_var[Tuple[Self.F.Arg, Self.S]](arg^), value_slot, state_slot)
+            value_part = value_slot^.unsafe_assume_init()
+            state_part = state_slot^.unsafe_assume_init()
+        var action = rebind_var[Self.Action](_unary_once_as[Self.Error](self.function^, value_part^))
+        comptime assert Self.Action._RunCompatible
         return _state_run_as[Self.Error](action^, rebind_var[Self.Action.State](state_part^))
+
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
-        comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error]
         comptime assert RepeatableUnary[Self.F]
-        var value_slot = MaybeUninit[Self.F.Arg]()
-        var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
-        var value_part = value_slot^.unsafe_assume_init()
-        var state_part = state_slot^.unsafe_assume_init()
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](call_repeated(self.function, value_part^))
-        except error:
-            _propagate_error[Self.Error](error^)
-        return _state_run_as[Self.Error](action^, rebind_var[Self.Action.State](state_part^))
+        comptime View = _UnaryView[Self.F, origin_of(self.function)]
+        comptime Next = _StateContinue[Self.I, View, Self.S, Self.recover]
+        comptime assert Next.Arg == Self.Arg and Next.Out == Self.Out
+        comptime assert _ErrorCompatible[Self.Error, Next.Error]
+        var initial: Next.Saved
+        comptime if Self.recover:
+            comptime C = downcast[Self.S, Copyable & Deinitable]
+            initial = rebind_var[Next.Saved](rebind[C](self.initial).copy())
+        else:
+            initial = rebind_var[Next.Saved](None)
+        return rebind_var[Self.Out](_unary_once_as[Self.Error](Next(View(Pointer(to=self.function)), initial^), rebind_var[Next.Arg](arg^)))
 
 
 @fieldwise_init
@@ -193,8 +207,11 @@ struct _StatePrepare[I: AnyType, M: Monad, S: Movable & Deinitable, F: BinaryCon
     comptime Action = _Action[Self.G.Out]
     comptime Combine = _MapFirst[_BindFirst[Self.F], Self.S]
     comptime Arg = Tuple[Self.F.First, Self.S]
-    comptime Out = Self.M.Mapped[Self.Action.Out, Self.Combine]
-    comptime Error = _CommonError[Self.G.Error, _CommonError[Self.Action.Error, Self.M.MapError[Self.Action.Out, Self.Combine]]]
+    comptime _BaseOp = MapContract[Self.M,Self.Action.Out,Self.Combine]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = _CommonError[Self.G.Error, _CommonError[Self.Action.Error, Self._BaseOp.Error]]
+    comptime _RunCompatible = Self.Action._RunCompatible & Self._BaseOp.FamilyCompatible & _CommonErrorCompatible[Self.Action.Error, Self._BaseOp.Error] & _CommonErrorCompatible[Self.G.Error, _CommonError[Self.Action.Error, Self._BaseOp.Error]]
+
     @staticmethod
     def _combine(var action: Self.Action, var function: Self.F, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert Self.Action.Family == Self.I, _FAMILY_MISMATCH
@@ -204,24 +221,17 @@ struct _StatePrepare[I: AnyType, M: Monad, S: Movable & Deinitable, F: BinaryCon
         _take_pair(arg^, value_slot, state_slot)
         var value_part = value_slot^.unsafe_assume_init()
         var state_part = state_slot^.unsafe_assume_init()
+        comptime assert Self.Action._RunCompatible
         var based = _state_run_as[Self.Error](action^, rebind_var[Self.Action.State](state_part^))
         return _map_as[Self.Error, Self.M](Self.Combine(_BindFirst[Self.F](function^, value_part^)), based^)
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](self.right^.take())
-        except error:
-            _propagate_error[Self.Error](error^)
+        var action = rebind_var[Self.Action](self.right^.take[Self.Error]())
         return Self._combine(action^, self.function^, arg^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         comptime assert conforms_to(Self.F, Copyable), "map2: repeated branches copy the callback and the right computation"
         comptime assert _ErrorCompatible[Self.Error, Self.G.Error]
-        var action: Self.Action
-        try:
-            action = rebind_var[Self.Action](self.right.copy_value())
-        except error:
-            _propagate_error[Self.Error](error^)
+        var action = rebind_var[Self.Action](self.right.copy_value[Self.Error]())
         comptime C = downcast[Self.F, Copyable & Deinitable]
         var function = rebind_var[Self.F](rebind[C](self.function).copy())
         return Self._combine(action^, function^, arg^)
@@ -237,16 +247,20 @@ struct _StateMap[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCont
     comptime State = Self.S
     comptime Value = Self.F.Out
     comptime Step = _MapFirst[Self.F, Self.S]
-    comptime Out = Self.M.Mapped[Self.A.Out, Self.Step]
-    comptime Error = _CommonError[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Step]]
+    comptime _BaseOp = MapContract[Self.M,Self.A.Out,Self.Step]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = _CommonError[Self.A.Error, Self._BaseOp.Error]
+    comptime _RunCompatible = Self.A._RunCompatible & Self._BaseOp.FamilyCompatible & _CommonErrorCompatible[Self.A.Error, Self._BaseOp.Error]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.M.MapError[Self.A.Out, Self.Step]]
         var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](state^))
         return _map_as[Self.Error, Self.M](Self.Step(self.function^), base^)
 
 
 @fieldwise_init
-struct _StateBind[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryContract & Movable & Deinitable](
+struct _StateBind[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryContract & Movable & Deinitable, recover: Bool = False](
     StateAction, Copyable where conforms_to(A, Copyable) and conforms_to(F, Copyable)
 ):
     var source: Self.A
@@ -254,14 +268,29 @@ struct _StateBind[M: Monad, S: Movable & Deinitable, A: StateAction, F: UnaryCon
     comptime Family = StateT[Self.M, Self.S]
     comptime State = Self.S
     comptime Value = _Action[Self.F.Out].Value
-    comptime Next = _StateContinue[Self.Family, Self.F, Self.S]
-    comptime Out = Self.M.Bound[Self.A.Out, Self.Next]
-    comptime Error = _CommonError[Self.A.Error, Self.M.BindError[Self.A.Out, Self.Next]]
+    comptime Next = _StateContinue[Self.Family, Self.F, Self.S, Self.recover]
+    comptime Operation = _Continue[Self.M, Self.recover]
+    comptime Out = Self.Operation.Out[Self.A.Out, Self.Next]
+    comptime Error = _CommonError[Self.A.Error, Self.Operation.Error[Self.A.Out, Self.Next]]
+    comptime _BaseCompatible = Self.Operation.FamilyCompatible[Self.A.Out, Self.Next]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.Next._RunCompatible & Self._BaseCompatible & _CommonErrorCompatible[Self.A.Error, Self.Operation.Error[Self.A.Out, Self.Next]]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _Action[Self.F.Out].Family == Self.Family, _FAMILY_MISMATCH
-        comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.M.BindError[Self.A.Out, Self.Next]]
-        var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](state^))
-        return _flat_map_as[Self.Error, Self.M](Self.Next(self.function^), base^)
+        comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.Operation.Error[Self.A.Out, Self.Next]]
+        var source_state: Self.S
+        var saved: Self.Next.Saved
+        comptime if Self.recover:
+            comptime assert conforms_to(Self.S, Copyable), "StateT recovery requires Copyable input state"
+            comptime C = downcast[Self.S, Copyable & Deinitable]
+            source_state = rebind_var[Self.S](rebind[C](state).copy())
+            saved = rebind_var[Self.Next.Saved](state^)
+        else:
+            source_state = state^
+            saved = rebind_var[Self.Next.Saved](None)
+        var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](source_state^))
+        return Self.Operation.apply[Self.Error](Self.Next(self.function^, saved^), base^)
 
 
 @fieldwise_init
@@ -277,9 +306,12 @@ struct _StateCombine[M: Monad, S: Movable & Deinitable, A: StateAction, F: Binar
     comptime State = Self.S
     comptime Value = Self.F.Out
     comptime Next = _StatePrepare[Self.Family, Self.M, Self.S, Self.F, Self.G]
-    comptime Out = Self.M.Bound[Self.A.Out, Self.Next]
-    comptime Error = _CommonError[Self.A.Error, Self.M.BindError[Self.A.Out, Self.Next]]
+    comptime _BaseOp = BindContract[Self.M,Self.A.Out,Self.Next]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = _CommonError[Self.A.Error, Self._BaseOp.Error]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.Next._RunCompatible & Self._BaseOp.FamilyCompatible & _CommonErrorCompatible[Self.A.Error, Self._BaseOp.Error]
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert _Action[Self.G.Out].Family == Self.Family, _FAMILY_MISMATCH
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.M.BindError[Self.A.Out, Self.Next]]
         var base = _state_run_as[Self.Error](self.source^, rebind_var[Self.A.State](state^))
@@ -287,24 +319,12 @@ struct _StateCombine[M: Monad, S: Movable & Deinitable, A: StateAction, F: Binar
         return _flat_map_as[Self.Error, Self.M](next^, base^)
 
 
-@fieldwise_init
-struct _Live[K: _Accumulate, S: Movable & Deinitable, o: MutOrigin](Unary):
-    """Identity on a branch's (accumulator, state) that records whether the
-    base carrier has a live branch."""
-    var live: Pointer[Bool, Self.o]
-    comptime Arg = Tuple[Self.K.Acc, Self.S]
-    comptime Out = Tuple[Self.K.Acc, Self.S]
-    def call(self, var arg: Self.Arg) -> Self.Out:
-        if Self.K.live(arg[0]):
-            self.live[] = True
-        return arg^
+struct _StateLive[K: _LiveAccumulator, S: Movable & Deinitable](_LiveAccumulator):
+    comptime Acc = Tuple[Self.K.Acc, Self.S]
 
-
-@fieldwise_init
-struct _LiveShape[K: _Accumulate, S: Movable & Deinitable](UnaryContract):
-    # The type and error of `_Live`, without its scoped pointer.
-    comptime Arg = Tuple[Self.K.Acc, Self.S]
-    comptime Out = Tuple[Self.K.Acc, Self.S]
+    @staticmethod
+    def live(ref acc: Self.Acc) -> Bool:
+        return Self.K.live(acc[0])
 
 
 @fieldwise_init
@@ -318,13 +338,8 @@ struct _FoldState[K: _Accumulate, S: Movable & Deinitable](
     comptime Error = Self.K.Error
     @staticmethod
     def _fold(var acc: Self.K.Acc, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        var value_slot = MaybeUninit[Self.K.Item]()
-        var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
-        var value_part = value_slot^.unsafe_assume_init()
-        var state_part = state_slot^.unsafe_assume_init()
-        var combined = Self.K.combine(acc^, value_part^)
-        return Tuple(combined^, state_part^)
+        comptime F = _BindFirst[_AccumulatePair[Self.K]]
+        return call_once(_MapFirst[F, Self.S](F(_AccumulatePair[Self.K](), acc^)), arg^)
     def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
         return Self._fold(self.acc^, arg^)
     def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
@@ -333,37 +348,30 @@ struct _FoldState[K: _Accumulate, S: Movable & Deinitable](
 
 
 @fieldwise_init
-struct _StateStep[I: AnyType, M: Monad, S: Movable & Deinitable, K: _Accumulate, A: StateAction](
-    OnceUnary, MutableUnary where conforms_to(A, Copyable) and conforms_to(K.Acc, Copyable)
-):
-    """Run one prepared computation on a live branch's state and fold its value;
-    an inactive branch carries unchanged. Every live branch receives the same
-    prepared computation."""
-    var action: Self.A
-    comptime Arg = Tuple[Self.K.Acc, Self.S]
+struct _StateTraverseStep[I: AnyType, M: Monad, S: Movable & Deinitable, K: _Accumulate, A: StateAction](Binary, Copyable, Defaultable):
+    """Run a prepared action on one live branch; the shared driver owns liveness
+    and copies the action only when the base invokes the step repeatedly."""
+    comptime First = Tuple[Self.K.Acc, Self.S]
+    comptime Second = Self.A
     comptime Fold = _FoldState[Self.K, Self.S]
-    comptime Out = Self.M.Mapped[Self.A.Out, Self.Fold]
-    comptime Error = _CommonError[Self.A.Error, Self.M.MapError[Self.A.Out, Self.Fold]]
-    @staticmethod
-    def _step(var action: Self.A, var arg: Self.Arg) raises Self.Error -> Self.Out:
+    comptime _BaseOp = MapContract[Self.M,Self.A.Out,Self.Fold]
+    comptime Out = Self._BaseOp.Out
+    comptime Error = _CommonError[Self.A.Error, Self._BaseOp.Error]
+    comptime _RunCompatible = Self.A._RunCompatible & Self._BaseOp.FamilyCompatible & (Self.M.Pure[Self.First] == Self.Out) & _CommonErrorCompatible[Self.A.Error, Self._BaseOp.Error]
+
+    def call(self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
         comptime assert Self.A.Family == Self.I, _FAMILY_MISMATCH
         comptime assert Self.A.Value == Self.K.Item, "traverse: every produced computation must have the accumulated value type"
-        comptime assert Self.M.Pure[Self.Arg] == Self.Out, "traverse: State traversal needs a base whose carrier type stays the same across steps"
+        comptime assert Self.M.Pure[Self.First] == Self.Out, "traverse: State traversal needs a base whose carrier type stays the same across steps"
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.M.MapError[Self.A.Out, Self.Fold]]
-        if not Self.K.live(arg[0]):
-            return rebind_var[Self.Out](Self.M.pure(arg^))
         var value_slot = MaybeUninit[Self.K.Acc]()
         var state_slot = MaybeUninit[Self.S]()
-        _take_pair(arg^, value_slot, state_slot)
+        _take_pair(first^, value_slot, state_slot)
         var value_part = value_slot^.unsafe_assume_init()
         var state_part = state_slot^.unsafe_assume_init()
-        var based = _state_run_as[Self.Error](action^, rebind_var[Self.A.State](state_part^))
+        comptime assert Self.A._RunCompatible
+        var based = _state_run_as[Self.Error](second^, rebind_var[Self.A.State](state_part^))
         return _map_as[Self.Error, Self.M](Self.Fold(value_part^), based^)
-    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        return Self._step(self.action^, arg^)
-    def call_mut(mut self, var arg: Self.Arg) raises Self.Error -> Self.Out:
-        comptime C = downcast[Self.A, Copyable & Deinitable]
-        return Self._step(rebind_var[Self.A](rebind[C](self.action).copy()), arg^)
 
 
 @fieldwise_init
@@ -371,49 +379,74 @@ struct _StateLoop[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, F:
                   K: _Accumulate](
     StateAction, Copyable where conforms_to(V, Copyable) and conforms_to(F, Copyable)
 ):
-    """One deferred traversal. When run, each step first checks that the base
-    carrier has a live branch, then pulls one item, prepares its computation
-    once, and binds it across the branches: live branches run it on their own
-    state and fold its value, inactive branches carry."""
+    """Prepare each computation once and bind it through the shared dependent loop."""
     var source: Self.V
     var function: Self.F
     comptime Family = StateT[Self.M, Self.S]
     comptime State = Self.S
     comptime Produced = _Action[Self.F.Out]
     comptime Value = Self.K.Acc
-    comptime Pair = Tuple[Self.K.Acc, Self.S]
-    comptime Acc = Self.M.Pure[Self.Pair]
-    comptime Step = _StateStep[Self.Family, Self.M, Self.S, Self.K, Self.Produced]
-    comptime Out = Self.Acc
-    comptime Error = _CommonError[Self.K.Error, _CommonError[Self.F.Error, _CommonError[
-        Self.M.MapError[Self.Acc, _LiveShape[Self.K, Self.S]], Self.M.BindError[Self.Acc, Self.Step]]]]
+    comptime Policy = _StateLive[Self.K, Self.S]
+    comptime Step = _StateTraverseStep[Self.Family, Self.M, Self.S, Self.K, Self.Produced]
+    comptime Out = Self.M.Pure[Self.Policy.Acc]
+    comptime Error = _CommonError[Self.K.Error, Self.M._FoldError[Self.V, Self.F, Self.Step, Self.Policy]]
+    comptime _RunCompatible = Self.Step._RunCompatible & Self.M._FoldCompatible[Self.V, Self.F, Self.Step, Self.Policy] & (Self.M._Folded[Self.V, Self.F, Self.Step, Self.Policy] == Self.Out) & _CommonErrorCompatible[Self.K.Error, Self.M._FoldError[Self.V, Self.F, Self.Step, Self.Policy]]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime E = Self.Error
-        comptime assert RepeatableUnary[Self.F], "traverse: the callback must be repeatable"
         comptime assert Self.Produced.Family == Self.Family, _FAMILY_MISMATCH
-        comptime assert _Item[Self.V] == Self.F.Arg, "traverse: callback argument must be the source element"
-        comptime assert Self.M.Bound[Self.Acc, Self.Step] == Self.Acc and Self.M.Mapped[Self.Acc, _LiveShape[Self.K, Self.S]] == Self.Acc, "traverse: State traversal needs a base whose carrier type stays the same across steps"
-        comptime assert _ErrorCompatible[E, Self.K.Error] and _ErrorCompatible[E, Self.F.Error] and _ErrorCompatible[E, Self.M.BindError[Self.Acc, Self.Step]]
-        var iterator = _iterator(self.source^)
-        var function = self.function^
-        var result = Self.M.pure(Tuple(_start_as[E, Self.K](), state^))
-        while True:
-            var live = False
-            comptime Probe = _Live[Self.K, Self.S, origin_of(live)]
-            comptime assert Self.M.MapError[Self.Acc, Probe] == Self.M.MapError[Self.Acc, _LiveShape[Self.K, Self.S]]
-            comptime assert _ErrorCompatible[E, Self.M.MapError[Self.Acc, Probe]]
-            result = rebind_var[Self.Acc](_map_as[E, Self.M](Probe(Pointer(to=live)), result^))
-            if not live:
-                return result^
-            var item = _next_item[Self.V](iterator)
-            if not item:
-                return result^
-            var produced: Self.Produced
-            try:
-                produced = rebind_var[Self.Produced](call_repeated(function, rebind_var[Self.F.Arg](item.unsafe_take())))
-            except error:
-                _propagate_error[E](error^)
-            result = rebind_var[Self.Acc](_flat_map_as[E, Self.M](Self.Step(produced^), result^))
+        # Preserve traversal's existing stable-base contract; the dependent
+        # fold hook additionally serves folds whose target is State itself.
+        comptime assert Self.M._Folded[Self.V, Self.F, Self.Step, Self.Policy] == Self.Out, "traverse: State traversal needs a base whose carrier type stays the same across steps"
+        comptime assert _ErrorCompatible[E, Self.K.Error]
+        var initial = Tuple(_start_as[E, Self.K](), state^)
+        return rebind_var[Self.Out](_fold_as[E, Self.M, Self.V, Self.F, Self.Step, Self.Policy](
+            self.function^, Self.Step(), initial^, self.source^))
+
+
+@fieldwise_init
+struct _StateFoldStep[I: AnyType, S: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](MutableBinary):
+    """A dependent step carries its accumulator and the State state separately."""
+    var function: Self.F
+    comptime First = Tuple[Self.F.First, Self.S]
+    comptime Second = Self.F.Second
+    comptime Action = _Action[Self.F.Out]
+    comptime Out = Self.Action.Out
+    comptime Error = _CommonError[Self.F.Error, Self.Action.Error]
+    comptime _RunCompatible = RepeatableBinary[Self.F] & Self.Action._RunCompatible & _CommonErrorCompatible[Self.F.Error, Self.Action.Error]
+
+    def call_mut(mut self, var first: Self.First, var second: Self.Second) raises Self.Error -> Self.Out:
+        comptime assert RepeatableBinary[Self.F] and Self.Action.Family == Self.I
+        comptime assert _ErrorCompatible[Self.Error, Self.F.Error] and _ErrorCompatible[Self.Error, Self.Action.Error]
+        var acc_slot = MaybeUninit[Self.F.First]()
+        var state_slot = MaybeUninit[Self.S]()
+        _take_pair(first^, acc_slot, state_slot)
+        var acc = acc_slot^.unsafe_assume_init()
+        var state = state_slot^.unsafe_assume_init()
+        var action = rebind_var[Self.Action](_binary_repeated_as[Self.Error](self.function, acc^, second^))
+        comptime assert Self.Action._RunCompatible
+        return _state_run_as[Self.Error](action^, rebind_var[Self.Action.State](state^))
+
+
+@fieldwise_init
+struct _StateFold[M: Monad, S: Movable & Deinitable, V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator](StateAction):
+    var prepare: Self.P
+    var function: Self.F
+    var initial: Self.K.Acc
+    var source: Self.V
+    comptime Family = StateT[Self.M, Self.S]
+    comptime State = Self.S
+    comptime Value = Self.K.Acc
+    comptime Step = _StateFoldStep[Self.Family, Self.S, Self.F]
+    comptime Policy = _StateLive[Self.K, Self.S]
+    comptime Out = Self.M._Folded[Self.V, Self.P, Self.Step, Self.Policy]
+    comptime Error = Self.M._FoldError[Self.V, Self.P, Self.Step, Self.Policy]
+    comptime _RunCompatible = Self.Step._RunCompatible & Self.M._FoldCompatible[Self.V, Self.P, Self.Step, Self.Policy]
+
+    def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
+        return _fold_as[Self.Error, Self.M, Self.V, Self.P, Self.Step, Self.Policy](self.prepare^, Self.Step(self.function^), Tuple(self.initial^, state^), self.source^)
 
 
 @fieldwise_init
@@ -428,7 +461,10 @@ struct _StateChoice[M: Monad, A: StateAction, B: StateAction](
     comptime Value = Self.A.Value
     comptime Out = Self.M._Joined[Self.A.Out, Self.B.Out]
     comptime Error = _CommonError[Self.A.Error, Self.B.Error]
+    comptime _RunCompatible = Self.A._RunCompatible & Self.B._RunCompatible & Self.M._JoinCompatible[Self.A.Out, Self.B.Out] & _CommonErrorCompatible[Self.A.Error, Self.B.Error]
+
     def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
         comptime assert Self.B.Family == Self.A.Family and Self.B.State == Self.A.State, _CHOICE_FAMILY
         comptime assert Self.B.Value == Self.A.Value, _CHOICE_VALUE
         comptime assert _ErrorCompatible[Self.Error, Self.A.Error] and _ErrorCompatible[Self.Error, Self.B.Error]
@@ -440,7 +476,29 @@ struct _StateChoice[M: Monad, A: StateAction, B: StateAction](
         return Self.M._join_right[Self.A.Out, Self.B.Out](right^)
 
 
-struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting):
+@fieldwise_init
+struct _StateHoist[A: Movable & Deinitable, S: StateAction, H: _CarrierOp, Target: Functor = S.Family](
+    StateAction, Copyable where conforms_to(S, Copyable) and conforms_to(H, Copyable)
+):
+    """Run the original source, then apply an operation into the admitted family."""
+    var source: Self.S
+    var operation: Self.H
+    comptime Family = Self.Target
+    comptime State = Self.S.State
+    comptime Value = Self.A
+    comptime Out = Self.H.Applied[Self.S.Out]
+    comptime Error = _CommonError[Self.S.Error, Self.H.Error[Self.S.Out]]
+    comptime _RunCompatible = Self.S._RunCompatible & Self.H.Compatible[Self.S.Out] & _CommonErrorCompatible[Self.S.Error, Self.H.Error[Self.S.Out]]
+
+    def run(deinit self, var state: Self.State) raises Self.Error -> Self.Out:
+        comptime assert Self._RunCompatible, "run: incompatible State recipe"
+        comptime E = Self.Error
+        comptime assert _ErrorCompatible[E, Self.S.Error] and _ErrorCompatible[E, Self.H.Error[Self.S.Out]]
+        var base = _state_run_as[E](self.source^, state^)
+        return _op_as[E](self.operation^, base^)
+
+
+struct StateT[M: Monad, S: Movable & Deinitable](Project, StateFamily, Stateful, _LocalLifting, ApplicativeError where conforms_to(M, ApplicativeError) and conforms_to(S, Copyable), ErrorMapping where conforms_to(M, ErrorMapping)):
     """State over the base Monad `M`: a computation consumes a state `S` when run and returns an `M` carrier of `(value, state)`.
 
     Computations are built as for `ReaderT` and run with `run`. Traversal is one
@@ -451,13 +509,202 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting):
     the same across steps, as it does for Identity, Optional, Result and List;
     a deferred base is a compile error there.
 
+    Stored-error recovery is available when M implements ApplicativeError
+    and S is Copyable. Ordinary State operations still accept move-only state.
+
     Parameters:
         M: The base Monad.
         S: The state's type.
     """
+    comptime Family = Self
+    comptime Input = Self.S
+    comptime ProjectCompatible[F: BorrowCallContract & Movable & Deinitable] = F.Payload == Self.S and _OnceBorrowAvailable[F]
+    comptime Projected[F: BorrowCallContract & Movable & Deinitable] = _StateProject[Self.M, Self.S, F]
+    comptime ProjectError[F: BorrowCallContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def project[F: BorrowCallContract & Movable & Deinitable](var function: F) -> Self.Projected[F]:
+        """Construct a deferred projection without copying the selected input.
+
+        Parameters:
+            F: A borrowing callback admitted by ProjectCompatible.
+
+        Args:
+            function: The projection, consumed; it runs once when the action runs.
+
+        Returns:
+            A deferred carrier of F.Result, including its exact error and origins.
+        """
+        comptime assert Self.ProjectCompatible[F], "project: incompatible selected input or callback"
+        return Self.Projected[F](function^)
+
+    comptime GetAvailable = conforms_to(Self.S, Copyable)
+    comptime Got = _StateGet[Self.M, downcast[Self.S, Copyable & Deinitable]]
+    comptime GetError = Never
+    comptime ModifyCompatible[F: UnaryContract & Movable & Deinitable] = F.Arg == Self.S and F.Out == Self.S
+    comptime Modified[F: UnaryContract & Movable & Deinitable] = _StateModify[Self.M, Self.S, F]
+    comptime ModifyError[F: UnaryContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def get() -> Self.Got:
+        """Construct a read of this layer's copyable state.
+
+        Returns:
+            A deferred state read; construction does not copy the state.
+        """
+        comptime assert Self.GetAvailable, "get: state must be Copyable"
+        return Self.Got()
+
+    @staticmethod
+    def modify[F: UnaryContract & Movable & Deinitable](var f: F) -> Self.Modified[F]:
+        """Construct an update of this layer's state using the State kernel.
+
+        Parameters:
+            F: A consuming state-to-state callback.
+
+        Args:
+            f: The transformation, consumed.
+
+        Returns:
+            A deferred update with NoneType payload.
+        """
+        comptime assert Self.ModifyCompatible[F], "modify: the callback must map the state to a new state"
+        return Self.Modified[F](f^)
+
+    comptime _HoistCompatible[V: Movable & Deinitable, H: _CarrierOp] = Self.CarrierCompatible[V] and H.Compatible[_Action[V].Out] and _ErrorCompatible[_CommonError[_Action[V].Error, H.Error[_Action[V].Out]], H.Error[_Action[V].Out]]
+    comptime _HoistedAs[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp, Target: StateFamily] = _StateHoist[A, _Action[V], H, Target]
+    comptime _Hoisted[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Self._HoistedAs[A,V,H,Self]
+    comptime _HoistError[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp] = Never
+    comptime _Listening[C: Listen, A: Movable & Deinitable] = _ListenMapped[C, Tuple[A, Self.S], _ListenPair[Self.S, A, C.Log.Value, False]]
+    @staticmethod
+    def _hoist[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp](var op: H, var value: V) -> Self._Hoisted[A, V, H]:
+        return Self._hoist_as[A,V,H,Self](op^,value^)
+
+    @staticmethod
+    def _hoist_as[A: Movable & Deinitable, V: Movable & Deinitable, H: _CarrierOp, Target: StateFamily](var op: H, var value: V) -> Self._HoistedAs[A,V,H,Target]:
+        return Self._HoistedAs[A,V,H,Target](rebind_var[_Action[V]](value^),op^)
+
+    comptime _ScopeCompatible[C: Local, V: Movable & Deinitable] = Self.CarrierCompatible[V] and C.LocalCompatible[_Action[V].Out]
+    comptime _Scoped[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Self._Hoisted[Self.Element[V], V, _LocalOp[C, F]]
+    comptime _ScopeError[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def _scope[C: Local, V: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable](var f: F, var value: V) -> Self._Scoped[C, V, F]:
+        """Transport a selected base scope through State.
+
+        Parameters:
+            C: The selected base Local capability.
+            V: This State family's computation type.
+            F: The selected environment transformation type.
+
+        Args:
+            f: The transformation, consumed.
+            value: The computation, consumed.
+
+        Returns:
+            A State action that scopes its produced base carrier when run.
+        """
+        comptime assert C.Family == Self.Base and Self._ScopeCompatible[C, V]
+        return Self._hoist[Self.Element[V]](_LocalOp[C, F](f^), value^)
+
+    comptime _Errors = downcast[Self.M, ApplicativeError]
+    comptime _Mapping = downcast[Self.M, ErrorMapping]
+    # Mapping does not require recovery. Both capabilities share one Failure
+    # when present; an error-mapping-only base uses its own exact witness.
+    comptime Failure = Self._Errors.Failure if conforms_to(Self.M, ApplicativeError) else Self._Mapping.Failure
+    comptime _ErrorCarrier[V: Movable & Deinitable] = Self.CarrierCompatible[V] and Self._Errors._ErrorCarrier[_Action[V].Out]
+    comptime ErrorCarrierCompatible[V: Movable & Deinitable] = Self._Mapping.ErrorCarrierCompatible[_Action[V].Out] if Self.CarrierCompatible[V] else False
+    # A base may map into a non-Monad. Retain that real candidate for normal
+    # target rejection; only an actual Monad can be wrapped in this layer.
+    comptime _DefaultErrorBase[A: Movable & Deinitable, E: Movable & Deinitable] = Self._Mapping.DefaultErrorTarget[Tuple[A, Self.S],E]
+    comptime DefaultErrorTarget[A: Movable & Deinitable, E: Movable & Deinitable] = StateT[downcast[Self._DefaultErrorBase[A,E],Monad],Self.S] if conforms_to(Self._DefaultErrorBase[A,E],Monad) else Self._DefaultErrorBase[A,E]
+    comptime _BimapTarget[Target: ErrorMapping] = (Target == StateT[downcast[Target, StateFamily].Base,Self.S] and conforms_to(downcast[Target, StateFamily].Base,ErrorMapping)) if conforms_to(Target,StateFamily) else False
+    comptime _MappingOperation[Target: ErrorMapping, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = _BimapOp[Self._Mapping,downcast[downcast[Target, StateFamily].Base,ErrorMapping],_MapFirst[F, Self.S],G]
+    comptime BimapCompatible[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistCompatible[V,Self._MappingOperation[Target,F,G]] if Self._BimapTarget[Target] else False
+    comptime Bimapped[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistedAs[F.Out,V,Self._MappingOperation[Target,F,G],downcast[Target,StateFamily]]
+    comptime BimapError[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable] = Self._HoistError[F.Out,V,Self._MappingOperation[Target,F,G]]
+
+    @staticmethod
+    def bimap[Target: ErrorMapping, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](var on_ok: F, var on_err: G, var source: V) raises Self.BimapError[Target,V,F,G] -> Self.Bimapped[Target,V,F,G]:
+        """Defer one selected base-outcome transformation, retaining owned state.
+
+        Parameters:
+            Target: The admitted destination with the same environment, state or log.
+            V: The source carrier type, including origins.
+            F: The consuming success callback type.
+            G: The consuming stored-error callback type.
+
+        Args:
+            on_ok: The callback selected by an original success.
+            on_err: The callback selected by an original stored error.
+            source: The source carrier, consumed once.
+
+        Returns:
+            A destination State action; construction neither runs nor copies state.
+
+        Raises:
+            Nothing at construction; running preserves the source and base errors.
+        """
+        comptime assert Self.BimapCompatible[Target,V,F,G]
+        return Self._hoist_as[F.Out,V,Self._MappingOperation[Target,F,G],downcast[Target,StateFamily]](Self._MappingOperation[Target,F,G](_MapFirst[F, Self.S](on_ok^),on_err^),source^)
+
+    comptime Failed[A: Movable & Deinitable] = _StateFail[Self.M, Self.S, A]
+    comptime FailError[A: Movable & Deinitable] = Never
+    comptime Handled[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = _StateBind[Self.M, Self.S, _Action[V], H, True]
+    comptime HandleError[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable] = Never
+
+    @staticmethod
+    def fail[A: Movable & Deinitable](var error: Self.Failure) -> Self.Failed[A]:
+        """Defer construction of a base failure; no state payload survives it.
+
+        Parameters:
+            A: The absent success payload type.
+
+        Args:
+            error: The selected base error, consumed with its exact origins.
+
+        Returns:
+            A deferred computation; base failure construction runs only at run.
+        """
+        # Normalize the capability-conditional alias without changing origins.
+        comptime assert Self.Failure == Self._Errors.Failure
+        return Self.Failed[A](rebind_var[Self._Errors.Failure](error^))
+
+    @staticmethod
+    def or_else[V: Movable & Deinitable, H: UnaryContract & Movable & Deinitable](var handler: H, var source: V) -> Self.Handled[V, H]:
+        """Run recovery on the saved input state at this boundary.
+
+        Parameters:
+            V: The State computation of this family.
+            H: The handler consuming the selected stored error and returning
+                this family with the same success type; repeatable for branching.
+
+        Args:
+            handler: The handler, consumed and skipped on success.
+            source: The source, consumed with its native origins.
+
+        Returns:
+            A deferred State computation that saves its input and runs the source
+            on a copy. Recovery uses the saved state; repeated branches copy it.
+            This capability requires Copyable state.
+        """
+        comptime assert conforms_to(Self.S, Copyable), "StateT recovery requires Copyable input state"
+        comptime assert Self._Handles[V, H], "or_else: State family or payload mismatch"
+        return Self.Handled[V, H](rebind_var[_Action[V]](source^), handler^)
+
     comptime Base = Self.M
     comptime StateType = Self.S
+    comptime EndpointCompatible[T: Movable & Deinitable, F: Movable & Deinitable] = (
+        downcast[F, UnaryContract].Arg == Self.S and
+        _EndpointCompatible[Self.M, Tuple[T, Self.S], downcast[F, UnaryContract].Out]
+    ) if conforms_to(F, UnaryContract) else False
+    comptime RunCompatible[V: Movable & Deinitable] = Self.CarrierCompatible[V] & _Action[V]._RunCompatible if conforms_to(V, StateAction) else False
     comptime Element[V: Movable & Deinitable] = _Action[V].Value
+    comptime CarrierCompatible[V: Movable & Deinitable] = (_Action[V].Family == Self and _Action[V].State == Self.S and Self.M.CarrierCompatible[_Action[V].Out] and Self.M.Element[_Action[V].Out] == Tuple[Self.Element[V], Self.S]) if conforms_to(V, StateAction) else False
+    comptime MapCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[V]
+    comptime BindCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _CarrierBind[Self, V, F]
+    comptime CombineCompatible[V: Movable & Deinitable, F: BinaryContract & Movable & Deinitable, G: ThunkContract & Movable & Deinitable] = _CarrierCombine[Self, V, F, G]
+    comptime CollectCompatible[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Self.CarrierCompatible[F.Out]
     comptime Mapped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = _StateMap[Self.M, Self.S, _Action[V], F]
     comptime MapError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
     comptime Pure[A: Movable & Deinitable] = _StatePure[Self.M, Self.S, A]
@@ -467,6 +714,12 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting):
     comptime BindError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable] = Never
     comptime _Looped[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = _StateLoop[Self.M, Self.S, V, F, K]
     comptime _LoopError[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, K: _Accumulate] = Never
+    comptime _Folded[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = _StateFold[Self.M, Self.S, V, P, F, K]
+    comptime _FoldError[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator] = Never
+    @staticmethod
+    def _fold[V: Movable & Deinitable, P: UnaryContract & Movable & Deinitable, F: BinaryContract & Movable & Deinitable, K: _LiveAccumulator](var prepare: P, var step: F, var initial: K.Acc, var source: V) -> Self._Folded[V, P, F, K]:
+        return Self._Folded[V, P, F, K](prepare^, step^, initial^, source^)
+    comptime _JoinCompatible[L: Movable & Deinitable, R: Movable & Deinitable] = Self.CarrierCompatible[L] and Self.CarrierCompatible[R] and Self.Element[L] == Self.Element[R]
     comptime _Joined[L: Movable & Deinitable, R: Movable & Deinitable] = _StateChoice[Self.M, _Action[L], _Action[R]]
     comptime Lifted[V: Movable & Deinitable] = _StateLift[Self.M, Self.S, V]
     comptime Endpoint[T: Movable & Deinitable, F: Movable & Deinitable] = _StateEndpoint[
@@ -488,7 +741,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting):
         Returns:
             The mapping computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.MapCompatible[V, F], _FAMILY_MISMATCH
         return Self.Mapped[V, F](rebind_var[_Action[V]](value^), f^)
 
     @staticmethod
@@ -525,7 +778,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting):
         Returns:
             The combining computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.CombineCompatible[V, F, G], _FAMILY_MISMATCH
         return Self.Combined[V, F, G](rebind_var[_Action[V]](left^), f^, right^)
 
     @staticmethod
@@ -543,7 +796,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting):
         Returns:
             The bound computation; nothing runs now.
         """
-        comptime assert _Action[V].Family == Self, _FAMILY_MISMATCH
+        comptime assert Self.BindCompatible[V, F], _FAMILY_MISMATCH
         return Self.Bound[V, F](rebind_var[_Action[V]](value^), f^)
 
     @staticmethod
@@ -592,7 +845,7 @@ struct StateT[M: Monad, S: Movable & Deinitable](_StateFamily, _Lifting):
         """
         comptime assert conforms_to(F, UnaryContract), "action: a State endpoint must be a unary callback consuming the state"
         comptime D = downcast[F, UnaryContract & Movable & Deinitable]
-        _admit_endpoint[Self.M, Tuple[T, Self.S], D.Out]()
+        comptime assert Self.EndpointCompatible[T, F], "action: native result differs from declared carrier"
         return Self.Endpoint[T, F](rebind_var[D](f^))
 
 
@@ -604,60 +857,5 @@ Parameters:
 """
 
 
-def get[I: _StateFamily]() -> _StateGet[I.Base, downcast[I.StateType, Copyable & Deinitable]] where conforms_to(I.StateType, Copyable):
-    """A State computation whose payload is a copy of the state, which is kept.
-
-    Parameters:
-        I: The State family; its state must be `Copyable`.
-
-    Returns:
-        The computation.
-    """
-    return _StateGet[I.Base, downcast[I.StateType, Copyable & Deinitable]]()
-
-
-def modify[F: UnaryContract & Movable & Deinitable, //, I: _StateFamily](var f: F) -> _StateModify[I.Base, I.StateType, F]:
-    """A State computation that replaces the state with `f(state)`; its payload is `None`.
-
-    Other overloads take a native function or closure directly.
-
-    Parameters:
-        F: The callback's type: a library `Unary` value from state to state.
-        I: The State family.
-
-    Args:
-        f: The callback, consumed.
-
-    Returns:
-        The computation.
-    """
-    return _StateModify[I.Base, I.StateType, F](f^)
-
-
-def modify[A: Movable & Deinitable, R: Movable & Deinitable, //, I: _StateFamily, F: _Unary[A, R]](
-    var f: F
-) -> _StateModify[I.Base, I.StateType, NativeUnary[A, R, Never, F, False]] where A == I.StateType and R == I.StateType:
-    """Replace the state with f(state), for a native function or closure."""
-    return modify[I](as_unary(f^))
-
-
-def modify[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //, I: _StateFamily, F: _RaisingUnary[A, R, E]](
-    var f: F
-) -> _StateModify[I.Base, I.StateType, NativeUnary[A, R, E, F, True]] where A == I.StateType and R == I.StateType:
-    """Raising form of the native modify; its error type is kept."""
-    return modify[I](as_unary(f^))
-
-
-def put[I: _StateFamily](var state: I.StateType) -> _StateModify[I.Base, I.StateType, _Replace[I.StateType]]:
-    """A State computation that replaces the state; the previous state is destroyed.
-
-    Parameters:
-        I: The State family.
-
-    Args:
-        state: The new state, consumed.
-
-    Returns:
-        The computation.
-    """
-    return modify[I](_Replace[I.StateType](state^))
+# Preserve the original module import path; capabilities owns the public API.
+from .capabilities import get, modify, put

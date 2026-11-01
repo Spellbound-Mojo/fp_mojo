@@ -84,7 +84,7 @@ def core(x: Int) -> Output:
     captured += 100
     result[4] = Int64(bound(3) + bound(4))
     var count = abs(x) % 5
-    result[5] = Int64(fold_left(step, x, range(1, count + 1)))
+    result[5] = Int64(fold_left(range(1, count + 1), x, step))
     var value: Result[Int, Int] = Ok(x)
     if x < 0:
         value = Err(-x)
@@ -101,7 +101,7 @@ def core(x: Int) -> Output:
     comptime assert type_of(lanes) == Vector
     comptime for lane in range(4):
         result[8 + lane] = Int64(lanes[lane])
-    result[12] = Int64(fold_left(step, x, range(0)))
+    result[12] = Int64(fold_left(range(0), x, step))
     result[13] = Int64(flow[Int]()(x))
     result[14] = Int64(captured)
     result[15] = Int64(value.is_ok())

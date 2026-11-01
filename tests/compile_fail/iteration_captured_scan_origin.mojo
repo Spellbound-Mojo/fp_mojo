@@ -12,8 +12,8 @@ def main() raises:
     var local: List[Int] = [1, 2]
     var offset = 2
     def callback(var value: Int) {var offset} -> Int: return value + offset
-    var expected = map(callback, borrowed(anchor))
-    var candidate = map(callback, borrowed(anchor))
+    var expected = map(borrowed(anchor), callback)
+    var candidate = map(borrowed(anchor), callback)
     var mapped: type_of(expected) = candidate^
     assert_equal(mapped.__next__(), 3)
     assert_equal(mapped.__next__(), 4)
@@ -21,8 +21,8 @@ def main() raises:
     def step(var total: Int, var value: Int) {var offset, mut steps} -> Int:
         steps += 1
         return total + value + offset
-    var expected_scan = scan_left(step, 0, borrowed(anchor))
-    var candidate_scan = scan_left(step, 0, borrowed(local))
+    var expected_scan = scan_left(borrowed(anchor), 0, step)
+    var candidate_scan = scan_left(borrowed(local), 0, step)
     var scanned: type_of(expected_scan) = candidate_scan^
     assert_equal(scanned.__next__(), 0)
     assert_equal(steps, 0)

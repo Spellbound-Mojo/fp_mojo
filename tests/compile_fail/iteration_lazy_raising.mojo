@@ -6,4 +6,4 @@ def failing(var value: Int) raises Int -> Int:
     raise value
 
 def main():
-    _ = map(failing, iter(range(3)))
+    _ = map(iter(range(3)), failing)

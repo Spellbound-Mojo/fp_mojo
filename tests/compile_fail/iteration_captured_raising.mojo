@@ -11,5 +11,5 @@ def main():
     def scanning(var acc: Int, var value: Int) raises StopIteration {var boundary} -> Int:
         if value == boundary: raise StopIteration()
         return acc + value
-    _ = map(mapping, iter(range(3)))
-    _ = scan_left(scanning, 0, iter(range(3)))
+    _ = map(iter(range(3)), mapping)
+    _ = scan_left(iter(range(3)), 0, scanning)

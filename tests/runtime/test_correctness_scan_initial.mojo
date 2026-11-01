@@ -6,7 +6,7 @@ from std.testing import assert_equal
 def subtract(var a: Int, var b: Int) -> Int: return a - b
 
 def main() raises:
-    var scan = scan_left(subtract, 7, iter([2, 3]))
+    var scan = scan_left(iter([2, 3]), 7, subtract)
     assert_equal(scan.__next__(), 7)
     assert_equal(scan.__next__(), 5)
     assert_equal(scan.__next__(), 2)

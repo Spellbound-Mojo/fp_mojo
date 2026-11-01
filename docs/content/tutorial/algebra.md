@@ -12,10 +12,13 @@ collects optional results with `traverse` and `sequence`.
 
 ## Choose an instance
 
-An *instance* supplies the operations for a particular family of values. Select
-it in square brackets: `map[OptionalFamily](f, value)` maps an `Optional`, while
-`map[ListFamily](f, values^)` maps a list. The values keep their native types;
-selecting an instance does not wrap them in another container.
+An *instance* supplies the operations for a particular family of values. Each
+operation infers it from the value it receives: `map(value, f)` maps an
+`Optional` with `OptionalFamily`, and `map(values^, f)` maps a list with
+`ListFamily`. The values keep their native types; the instance does not wrap
+them in another container. Name an instance in square brackets when the value
+has no family of its own (`map[IdentityFamily](3, f)`) or to choose another
+policy for the same carrier.
 
 | Instance | A value in that family | What `map` transforms |
 |---|---|---|
@@ -39,7 +42,7 @@ free of side effects.
 
 When a function already works specifically with `Result`, its methods remain
 convenient: `value^.map(f)` uses the same implementation as
-`map[ResultFamily[E]](f, value^)`. Use the family interface when the context is
+`map[ResultFamily[E]](value^, f)`. Use the family interface when the context is
 a parameter of your code or when combining it with other algebra operations.
 
 ## Choose the operation by what the next step needs
@@ -65,7 +68,7 @@ describes the dependency between your steps: a price calculation may only need
 `map` calls it and returns a present total of 36.
 
 Mapping preserves the outer context. `in_stock(8)` returns an empty
-`Optional`, so `map[OptionalFamily](in_stock, Optional(8))` produces a present
+`Optional`, so `map(Optional(8), in_stock)` produces a present
 `Optional` containing that empty `Optional`. Its type is
 `Optional[Optional[Int]]`.
 
@@ -107,7 +110,7 @@ forms every pair, in left-major order. Prices `[10, 20]` and quantities
 
 ## Collect results with traverse and sequence
 
-`traverse[ListFamily, OptionalFamily]` transforms a list of inputs into one
+`traverse[OptionalFamily, ListFamily]` transforms a list of inputs into one
 optional list of outputs. The first family names the source shape; the second
 names the context returned by the callback.
 

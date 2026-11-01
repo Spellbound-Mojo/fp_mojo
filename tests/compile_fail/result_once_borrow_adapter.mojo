@@ -1,4 +1,4 @@
-# error: BorrowOnceCallable
+# error: BorrowCallContract
 from fp.data import Result, Ok
 from result_once_support import Address
 

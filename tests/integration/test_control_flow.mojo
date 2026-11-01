@@ -12,11 +12,11 @@ def loop[A: Movable & Deinitable, F: def(var Int, var A) -> A](
 
 
 def scanning[A: Movable & Deinitable, X: Movable & Deinitable,
-             Y: Movable & Deinitable, I: Iterator,
-             F: def(var A, var X) -> Tuple[A, Y]](
+             Y: Movable & Deinitable, R: Movable & Deinitable, I: Iterator,
+             F: def(var A, var X) -> R](
     callback: F, var initial: A, var source: I
-) raises ScanLengthError -> Tuple[A, List[Y]] where I.Element == X:
-    return scan(callback, initial^, source^)
+) raises ScanLengthError -> Tuple[A, List[Y]] where I.Element == X and R == Tuple[A, Y]:
+    return scan[Y=Y](callback, initial^, source^)
 
 
 def annotate(var index: Int, var value: String) -> String:

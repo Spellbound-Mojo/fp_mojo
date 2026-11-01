@@ -1,4 +1,4 @@
-# error: invalid call to 'fold_left': lacking evidence to prove correctness
+# error: no matching function in call to 'fold_left'
 from fp.iteration import fold_left, reduce, reduce_optional, fold_until
 from fp.iteration import find, any, all
 from fp.data import ControlFlow, Continue
@@ -12,7 +12,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     def step(var acc: A, var item: Int) raises B -> A: return acc
     try:
-        _ = fold_left[A=A, E=A](step, a, iter(range(1)))
+        _ = fold_left[A=A, E=A](iter(range(1)), a, step)
     except: pass
 
 def main():

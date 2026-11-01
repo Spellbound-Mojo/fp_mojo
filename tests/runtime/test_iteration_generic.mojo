@@ -7,7 +7,7 @@ from std.testing import assert_equal
 
 def mapped[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //,
            F: def(var T) -> U](var function: F, var source: I) -> MapIterator[T, U, I, F] where I.Element == T:
-    return map(function^, source^)
+    return map(source^, function^)
 
 
 def mapped_again[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //,
@@ -17,7 +17,7 @@ def mapped_again[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, 
 
 def scanned[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator, //,
             F: def(var A, var T) -> A](var function: F, var initial: A, var source: I) -> ScanIterator[A, T, I, F] where I.Element == T:
-    return scan_left(function^, initial^, source^)
+    return scan_left(source^, initial^, function^)
 
 
 def scanned_again[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator, //,
@@ -101,13 +101,13 @@ def exercise(mode: Int, length: Int, count: Int) raises:
 def thin_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator](
     function: def(var T) thin -> U, var source: I
 ) -> MapIterator[T, U, I] where I.Element == T:
-    return map(function, source^)
+    return map(source^, function)
 
 
 def thin_scan[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator](
     function: def(var A, var T) thin -> A, var initial: A, var source: I
 ) -> ScanIterator[A, T, I] where I.Element == T:
-    return scan_left(function, initial^, source^)
+    return scan_left(source^, initial^, function)
 
 
 def double(var value: Int) -> Int: return value * 2

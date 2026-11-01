@@ -1,0 +1,2 @@
+wstp_stress: seed 1
+wstp_stress: every round kept its value, its races' winners and its payloads and failures exactly once, on both profiles

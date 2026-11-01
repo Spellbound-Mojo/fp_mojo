@@ -24,24 +24,24 @@ def vectors[dtype: DType, width: Int]() raises:
         first[lane] = Scalar[dtype](lane + 1)
         second[lane] = Scalar[dtype](10 + lane)
     var values: List[V] = [first, second]
-    var result = fold_left(add_vector[dtype, width], V(0), iter(values))
+    var result = fold_left(iter(values), V(0), add_vector[dtype, width])
     comptime assert type_of(result) == V
     comptime for lane in range(width):
         assert_equal(result[lane], Scalar[dtype](11 + 2 * lane))
     # Horizontal collapse is an explicit caller operation.
     assert_equal(result.reduce_add(), Scalar[dtype](11 * width + width * (width - 1)))
     var empty = List[V]()
-    assert_equal(fold_left(add_vector[dtype, width], first, iter(empty)), first)
-    var states = collect_list(scan_left(add_vector[dtype, width], V(0), iter(values)))
+    assert_equal(fold_left(iter(empty), first, add_vector[dtype, width]), first)
+    var states = collect_list(scan_left(iter(values), V(0), add_vector[dtype, width]))
     assert_equal(len(states), 3)
     assert_equal(states[1], first)
     assert_equal(states[2], result)
 
 def main() raises:
     var scalar: List[Int] = [1, 2, 3]
-    assert_equal(fold_left(add_int, 0, iter(scalar)), 6)
+    assert_equal(fold_left(iter(scalar), 0, add_int), 6)
     var text: List[String] = ["a", "b", "c"]
-    assert_equal(fold_left(add_text, String("s"), iter(text)), "sabc")
+    assert_equal(fold_left(iter(text), String("s"), add_text), "sabc")
     vectors[DType.int32, 2]()
     vectors[DType.int32, 4]()
     vectors[DType.float32, 4]()

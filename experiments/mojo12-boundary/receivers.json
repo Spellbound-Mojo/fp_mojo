@@ -1,0 +1,46 @@
+[
+  {
+    "source": "clients/receiver_exact_all_owned.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_exact_borrowed.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_exact_owned.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_native_mutable.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_native_shared.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_owned_mut_owned_kwargs_nonraising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_owned_mut_owned_kwargs_raising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_owned_mut_owned_nonraising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_owned_mut_owned_raising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_owned_nonraising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/receiver_owned_raising.mojo",
+    "kind": "positive"
+  }
+]

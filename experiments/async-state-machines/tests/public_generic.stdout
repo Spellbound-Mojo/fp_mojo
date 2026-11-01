@@ -1,0 +1,1 @@
+io generic: Pipeline and tail_rec_m return IO through public contracts, native thin callbacks

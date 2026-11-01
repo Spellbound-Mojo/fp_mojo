@@ -1,8 +1,8 @@
-# error: no matching function in call to 'attempt'
-from fp.data import attempt
+# error: no matching method in call to 'run'
+from fp.data import Capture
 
 def target(var **values: Int) -> Int:
     return len(values)
 
 def main():
-    _ = attempt(target, one=String("wrong"))
+    _ = Capture.kwargs(one=String("wrong")).run(target)

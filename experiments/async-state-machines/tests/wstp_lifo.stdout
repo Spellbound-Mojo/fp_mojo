@@ -1,0 +1,1 @@
+wstp_lifo: the LIFO slot is bounded, never stolen, flushed to the ring, reaches parked workers, and loses no wake

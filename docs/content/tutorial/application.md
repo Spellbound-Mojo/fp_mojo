@@ -58,8 +58,8 @@ The queue holds four commands, and the program prints
 4. `Submit(Job(3, 5))` passes the guard, and `dispatch` raises
    `DispatchFailure(3)`.
 
-A lazy `map` callback cannot raise, so `routed` calls `route` through `attempt`,
-which keeps the failure as an `Err` that `outcome` formats. The trace records
+A lazy `map` callback cannot raise, so `routed` calls `route` through
+`Capture.borrow(command).borrow(trace).run(route)`, which keeps the failure as an `Err` that `outcome` formats. The trace records
 the order of the calls:
 `check 1, dispatch 1, check 2, defer, defer, check 3, dispatch 3`.
 

@@ -1,9 +1,22 @@
 """Typed result values stored in place: a native Variant of `Ok` and `Err`."""
-from fp.callables.protocols import Unary, OnceUnary, OnceThunk, UnaryContract, BorrowCallable, BorrowOnceCallable
-from fp.callables.invoke import call_once, invoke_borrowed, invoke_borrowed_once
+from fp.callables.native import _NativeThunkRef
+from fp.callables.native import _NativeOwnedArg, NativeUnary, NativeBorrow, _NativeThunk
+from fp.callables._conditional import _guard_owned
+from fp.callables._views import _UnaryViewable, _BorrowViewable
+from fp.callables._retention import _Retain
+from fp.callables._transforms import _Retained, _ObserveOnce, _Fill, _TupleWith
+from fp.callables.protocols import Binary
+from fp.callables._identity import Identity
+from fp.callables.protocols import Unary, OnceUnary, UnaryContract, BorrowCallable
+from fp.callables.invoke import call_once, invoke_borrowed, invoke_borrowed_once, _OnceUnaryAvailable, _OnceBorrowAvailable
 from fp.adt.data import Cases, Data, Value, _ChoiceType
 from std.builtin.rebind import rebind_var, downcast
 from fp._internal.errors import _CommonError, _ErrorCompatible, _propagate_error
+from fp.callables.protocols import BorrowCallContract, ThunkContract, Thunk
+from fp.callables.native import (_call_native, _call_native_borrow, _Unary, _RaisingUnary, _Borrowing, _RaisingBorrowing,
+                                 _NativeBorrowRef, _NativeUnaryRef, _Thunk, _RaisingThunk)
+from fp.callables._receiver import _SharedThunkRef, _SharedBorrowRef, _SharedUnaryRef, _borrow_once_as, _thunk_once_as, _unary_once_as
+from fp.callables._transforms import _IgnoreInput, _BorrowedUnary, _ValueThunk
 
 
 trait _ResultType:
@@ -83,6 +96,16 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
     `fold_once` and `fold_owned_once`). A generic wrapper names a raising
     callback's error with `X=`, as in `value^.map[X=X](callback)`.
 
+    `flat_tap` and `flat_pair_with` borrow the success payload for a Result
+    projection, then move the original into the successful output. `followed_by`
+    and `before` take zero-argument Result factories, skipped on Err. `ensure`
+    borrows an Ok payload for a predicate and, only on rejection, an error
+    factory. `recover` consumes an error to produce an Ok of the same success
+    type, retaining the declared error type. `tap_err` borrows an Err payload
+    for inspection. These operations require no payload copies and run eagerly.
+    Owned library callbacks are consumed, including skipped callback owners;
+    named shared forms and native callbacks are borrowed in place.
+
     Parameters:
         T: The success value's type.
         E: The stored error's type.
@@ -159,22 +182,141 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             return self^._take_ok()
         raise self^._take_err()
 
+    def value_or[C: UnaryContract & Movable & Deinitable](
+        deinit self, var on_err: C
+    ) raises C.Error -> Self.T where C.Arg == Self.E and C.Out == Self.T:
+        """Return the success value, or consume the error to produce a fallback.
+
+        This is Cats Either's `valueOr`: the result is a plain `T`. The handler
+        runs only on Err. The Result and owned library handlers are consumed;
+        a skipped owned handler is destroyed. Native handlers and shared
+        callable chains are borrowed; an explicit move consumes the chain.
+        Plain functions infer their native error. Captured handlers support
+        non-raising, Never and Error directly; select a custom native error with
+        `pipeline(result^).raising[X]().value_or(handler)`. Library handlers
+        retain their declared error without an extra context.
+
+        Parameters:
+            C: The handler, retaining its receiver mode and native error type.
+
+        Args:
+            on_err: A handler consuming `E` and returning exactly `T`.
+
+        Returns:
+            The success value or the handler's value, moved out without copying.
+
+        Raises:
+            The handler's exact native error; Never for non-raising handlers.
+        """
+        return _fold_result_owned[Self.T, Self.E, Self.T, C.Error, Never, C.Error,
+            Identity[Self.T], C, _call_transform[Self.T, Identity[Self.T]],
+            _call_transform[Self.E, C, Self.T]](self^, Identity[Self.T](), on_err^)
+
+    def value_or[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] on_err: F
+    ) raises F._View[o].Error -> Self.T where F._View[o].Arg == Self.E and F._View[o].Out == Self.T:
+        """Borrow a reusable handler and return its value only on Err."""
+        return self^.value_or(on_err._unary_view())
+
+    def get_or(deinit self, var default_value: Self.T) -> Self.T:
+        """Return the success value or an already evaluated default.
+
+        Both the Result and the default are consumed. On Ok, the unused default
+        is destroyed. Argument expressions evaluate normally before this call;
+        use `get_or_else(factory)` to construct a default only on Err.
+
+        Args:
+            default_value: The fallback value, with the exact success type and origins.
+
+        Returns:
+            The success value or default, moved out without copying.
+        """
+        return self^.get_or_else(_ValueThunk[Self.T](default_value^))
+
+    def get_or_else[C: ThunkContract & Movable & Deinitable](
+        deinit self, var make_default: C
+    ) raises C.Error -> Self.T where C.Out == Self.T:
+        """Return the success value, or call a zero-argument default factory.
+
+        Like Cats Either's `getOrElse`, evaluation of the default is lazy.
+        Mojo expresses that explicitly with a factory: it runs only on Err.
+        The Result and an owned library factory are consumed, including
+        destruction of a skipped factory. Named shared factories and native
+        factories are borrowed in place; a move or temporary retains ownership.
+        Plain functions infer their native error. For a captured factory raising
+        a custom error, use `pipeline(result^).raising[X]().get_or_else(factory)`.
+        Non-raising, Never and Error closures work directly. Library factories
+        retain their declared error without an extra context.
+
+        Parameters:
+            C: The factory, retaining its receiver mode and native error type.
+
+        Args:
+            make_default: A zero-argument factory returning exactly `T`.
+
+        Returns:
+            The success value or the factory's value, moved out without copying.
+
+        Raises:
+            The factory's exact native error; Never for non-raising factories.
+        """
+        return self^.value_or(_IgnoreInput[Self.E, C](make_default^))
+
+    def get_or_else[C: Thunk](deinit self, make_default: C) raises C.Error -> Self.T where C.Out == Self.T:
+        """Borrow a reusable shared factory and invoke it only on Err."""
+        return self^.get_or_else(_SharedThunkRef[C, origin_of(make_default)](Pointer(to=make_default)))
+
+    def swap(deinit self) -> Result[Self.E, Self.T]:
+        """Exchange success and stored failure, moving the active payload.
+
+        Like Cats Either/EitherT's `swap`, Ok becomes Err and Err becomes Ok.
+        Calling swap twice restores the original case, payload and type.
+        This neither raises a stored error nor changes the payload's origins.
+
+        Returns:
+            A Result with the success and error types exchanged, without copying.
+        """
+        def failure(var value: Self.T) -> Result[Self.E, Self.T]:
+            return Err(value^)
+        def success(var error: Self.E) -> Result[Self.E, Self.T]:
+            return Ok(error^)
+        return self^.fold_owned(failure, success)
+
+    def to_optional(deinit self) -> Optional[Self.T]:
+        """Consume the Result, keeping its success in a native Optional.
+
+        An Err becomes an empty Optional and its error is destroyed. Like
+        Cats Either's `toOption`, this deliberately discards error information.
+        The success payload moves without copying, preserving its origins.
+
+        Returns:
+            An Optional containing the success value, or an empty Optional.
+        """
+        def present(var value: Self.T) -> Optional[Self.T]:
+            return Optional[Self.T](value^)
+        def absent(var error: Self.E) -> Optional[Self.T]:
+            return Optional[Self.T]()
+        return self^.fold_owned(present, absent)
+
     # Folds borrow the Result, or consume it with `fold_owned`, and call the
     # callback for its case with the payload. Native callbacks are borrowed;
     # library callbacks are borrowed or, in the `_once` forms, consumed.
-    def fold[R: Movable & Deinitable, //,
-             F: def(Self.T) -> R, G: def(Self.E) -> R](
+    def fold[S: Movable & Deinitable, V: Movable & Deinitable, P: AnyType, Q: AnyType, //,
+             F: def(P) -> S, G: def(Q) -> V, R: Movable & Deinitable = S](
         self, on_ok: F, on_err: G
-    ) -> R:
+    ) -> R where S == R and V == R and P == Self.T and Q == Self.E:
         """Call `on_ok` with the value or `on_err` with the error, borrowed, and return its result.
 
         Exactly one callback runs. The two callbacks return the same type; when
         both raise, they raise one error type, or one of them nothing.
 
         Parameters:
-            R: The result type of both callbacks.
+            S: The success callback result, inferred with its origins.
+            V: The error callback result, inferred with its origins.
+            P: The success callback input type, equal to the stored value type.
+            Q: The error callback input type, equal to the stored error type.
             F: The success callback's type: a plain function or a closure.
             G: The error callback's type: a plain function or a closure.
+            R: The requested result type; defaults to S, and both callbacks must match it.
 
         Args:
             on_ok: The callback for `Ok`, borrowed.
@@ -184,19 +326,23 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The result of the callback that ran.
         """
         if self.is_ok():
-            return on_ok(self._ok().value)
-        return on_err(self._err().value)
+            return rebind_var[R](_call_native_borrow[P, S, Never, F, False](on_ok, rebind[P](self._ok().value)))
+        return rebind_var[R](_call_native_borrow[Q, V, Never, G, False](on_err, rebind[Q](self._err().value)))
 
-    def fold_owned[R: Movable & Deinitable, //,
-                   F: def(var Self.T) -> R, G: def(var Self.E) -> R](
+    def fold_owned[S: Movable & Deinitable, V: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, //,
+                   F: def(var A) -> S, G: def(var B) -> V, R: Movable & Deinitable = S](
         deinit self, on_ok: F, on_err: G
-    ) -> R:
+    ) -> R where S == R and V == R and A == Self.T and B == Self.E:
         """Consume the Result and move its value or error into the matching callback.
 
         Parameters:
-            R: The result type of both callbacks.
+            S: The success callback result, inferred with its origins.
+            V: The error callback result, inferred with its origins.
+            A: The success callback input type, equal to the stored value type.
+            B: The error callback input type, equal to the stored error type.
             F: The success callback's type: a plain function or a closure.
             G: The error callback's type: a plain function or a closure.
+            R: The requested result type; defaults to S, and both callbacks must match it.
 
         Args:
             on_ok: The callback for `Ok`, borrowed; it receives the value.
@@ -205,119 +351,286 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         Returns:
             The result of the callback that ran.
         """
-        if self.is_ok():
-            return on_ok(self^._take_ok())
-        return on_err(self^._take_err())
+        def invoke_ok(var payload: Self.T, function: F) raises Never capturing -> R:
+            return rebind_var[R](_call_native[A, S, Never, F, False](function, rebind_var[A](payload^)))
+        def invoke_err(var payload: Self.E, function: G) raises Never capturing -> R:
+            return rebind_var[R](_call_native[B, V, Never, G, False](function, rebind_var[B](payload^)))
+        return _fold_result_owned[Self.T, Self.E, R, Never, Never, Never,
+            Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
+            _borrowed_transform[Self.T, R, Never, F, origin_of(on_ok), invoke_ok],
+            _borrowed_transform[Self.E, R, Never, G, origin_of(on_err), invoke_err]](
+                self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def fold[R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(Self.T) raises X -> R,
-             G: def(Self.E) -> R](
+    def fold[S: Movable & Deinitable, V: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, //,
+             F: def(P) raises X -> S,
+             G: def(Q) -> V, R: Movable & Deinitable = S](
         self, on_ok: F, on_err: G
-    ) raises X -> R:
+    ) raises X -> R where S == R and V == R and P == Self.T and Q == Self.E:
         """Fold with a raising success callback."""
         if self.is_ok():
-            return on_ok(self._ok().value)
-        return on_err(self._err().value)
+            return rebind_var[R](_call_native_borrow[P, S, X, F, True](on_ok, rebind[P](self._ok().value)))
+        return rebind_var[R](_call_native_borrow[Q, V, Never, G, False](on_err, rebind[Q](self._err().value)))
 
-    def fold[R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(Self.T) -> R,
-             G: def(Self.E) raises X -> R](
+    def fold[S: Movable & Deinitable, V: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, //,
+             F: def(P) -> S,
+             G: def(Q) raises X -> V, R: Movable & Deinitable = S](
         self, on_ok: F, on_err: G
-    ) raises X -> R:
+    ) raises X -> R where S == R and V == R and P == Self.T and Q == Self.E:
         """Fold with a raising error callback."""
         if self.is_ok():
-            return on_ok(self._ok().value)
-        return on_err(self._err().value)
+            return rebind_var[R](_call_native_borrow[P, S, Never, F, False](on_ok, rebind[P](self._ok().value)))
+        return rebind_var[R](_call_native_borrow[Q, V, X, G, True](on_err, rebind[Q](self._err().value)))
 
-    def fold[R: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //,
-             F: def(Self.T) raises X -> R,
-             G: def(Self.E) raises Y -> R](
+    def fold[S: Movable & Deinitable, V: Movable & Deinitable, P: AnyType, Q: AnyType, X: Movable & Deinitable, Y: Movable & Deinitable, //,
+             F: def(P) raises X -> S,
+             G: def(Q) raises Y -> V, R: Movable & Deinitable = S](
         self, on_ok: F, on_err: G
-    ) raises _ResultFailure[X, Y] -> R where X == Never or Y == Never or X == Y:
+    ) raises _ResultFailure[X, Y] -> R where S == R and V == R and P == Self.T and Q == Self.E and (X == Never or Y == Never or X == Y):
         """Fold with two raising callbacks, which raise one error type."""
         comptime assert _ErrorCompatible[_ResultFailure[X, Y], X] and _ErrorCompatible[_ResultFailure[X, Y], Y]
         if self.is_ok():
             try:
-                return on_ok(self._ok().value)
+                return rebind_var[R](_call_native_borrow[P, S, X, F, True](on_ok, rebind[P](self._ok().value)))
             except error:
                 _propagate_error[_ResultFailure[X, Y]](error^)
         try:
-            return on_err(self._err().value)
+            return rebind_var[R](_call_native_borrow[Q, V, Y, G, True](on_err, rebind[Q](self._err().value)))
         except error:
             _propagate_error[_ResultFailure[X, Y]](error^)
 
-    def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(var Self.T) raises X -> R,
-             G: def(var Self.E) -> R](
+    def fold_owned[S: Movable & Deinitable, V: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, //,
+             F: def(var A) raises X -> S,
+             G: def(var B) -> V, R: Movable & Deinitable = S](
         deinit self, on_ok: F, on_err: G
-    ) raises X -> R:
+    ) raises X -> R where S == R and V == R and A == Self.T and B == Self.E:
         """Consuming fold with a raising success callback."""
-        if self.is_ok():
-            return on_ok(self^._take_ok())
-        return on_err(self^._take_err())
+        def invoke_ok(var payload: Self.T, function: F) raises X capturing -> R:
+            return rebind_var[R](_call_native[A, S, X, F, True](function, rebind_var[A](payload^)))
+        def invoke_err(var payload: Self.E, function: G) raises Never capturing -> R:
+            return rebind_var[R](_call_native[B, V, Never, G, False](function, rebind_var[B](payload^)))
+        return _fold_result_owned[Self.T, Self.E, R, X, X, Never,
+            Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
+            _borrowed_transform[Self.T, R, X, F, origin_of(on_ok), invoke_ok],
+            _borrowed_transform[Self.E, R, Never, G, origin_of(on_err), invoke_err]](
+                self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, //,
-             F: def(var Self.T) -> R,
-             G: def(var Self.E) raises X -> R](
+    def fold_owned[S: Movable & Deinitable, V: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, //,
+             F: def(var A) -> S,
+             G: def(var B) raises X -> V, R: Movable & Deinitable = S](
         deinit self, on_ok: F, on_err: G
-    ) raises X -> R:
+    ) raises X -> R where S == R and V == R and A == Self.T and B == Self.E:
         """Consuming fold with a raising error callback."""
-        if self.is_ok():
-            return on_ok(self^._take_ok())
-        return on_err(self^._take_err())
+        def invoke_ok(var payload: Self.T, function: F) raises Never capturing -> R:
+            return rebind_var[R](_call_native[A, S, Never, F, False](function, rebind_var[A](payload^)))
+        def invoke_err(var payload: Self.E, function: G) raises X capturing -> R:
+            return rebind_var[R](_call_native[B, V, X, G, True](function, rebind_var[B](payload^)))
+        return _fold_result_owned[Self.T, Self.E, R, X, Never, X,
+            Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
+            _borrowed_transform[Self.T, R, Never, F, origin_of(on_ok), invoke_ok],
+            _borrowed_transform[Self.E, R, X, G, origin_of(on_err), invoke_err]](
+                self^, Pointer(to=on_ok), Pointer(to=on_err))
 
-    def fold_owned[R: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //,
-             F: def(var Self.T) raises X -> R,
-             G: def(var Self.E) raises Y -> R](
+    def fold_owned[S: Movable & Deinitable, V: Movable & Deinitable, A: Movable & Deinitable, B: Movable & Deinitable, X: Movable & Deinitable, Y: Movable & Deinitable, //,
+             F: def(var A) raises X -> S,
+             G: def(var B) raises Y -> V, R: Movable & Deinitable = S](
         deinit self, on_ok: F, on_err: G
-    ) raises _ResultFailure[X, Y] -> R where X == Never or Y == Never or X == Y:
+    ) raises _ResultFailure[X, Y] -> R where S == R and V == R and A == Self.T and B == Self.E and (X == Never or Y == Never or X == Y):
         """Consuming fold with two raising callbacks, which raise one error type."""
-        comptime assert _ErrorCompatible[_ResultFailure[X, Y], X] and _ErrorCompatible[_ResultFailure[X, Y], Y]
-        if self.is_ok():
-            try:
-                return on_ok(self^._take_ok())
-            except error:
-                _propagate_error[_ResultFailure[X, Y]](error^)
-        try:
-            return on_err(self^._take_err())
-        except error:
-            _propagate_error[_ResultFailure[X, Y]](error^)
+        def invoke_ok(var payload: Self.T, function: F) raises X capturing -> R:
+            return rebind_var[R](_call_native[A, S, X, F, True](function, rebind_var[A](payload^)))
+        def invoke_err(var payload: Self.E, function: G) raises Y capturing -> R:
+            return rebind_var[R](_call_native[B, V, Y, G, True](function, rebind_var[B](payload^)))
+        return _fold_result_owned[Self.T, Self.E, R, _ResultFailure[X, Y], X, Y,
+            Pointer[F, origin_of(on_ok)], Pointer[G, origin_of(on_err)],
+            _borrowed_transform[Self.T, R, X, F, origin_of(on_ok), invoke_ok],
+            _borrowed_transform[Self.E, R, Y, G, origin_of(on_err), invoke_err]](
+                self^, Pointer(to=on_ok), Pointer(to=on_err))
 
     def fold[F: BorrowCallable, G: BorrowCallable](self, on_ok: F, on_err: G
     ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
         """Fold with two `BorrowCallable` handlers."""
-        comptime Z = _ResultFailure[F.Failure, G.Failure]
-        comptime assert _ErrorCompatible[Z, F.Failure] and _ErrorCompatible[Z, G.Failure]
-        if self.is_ok():
-            return invoke_borrowed[Z](self._ok().value, on_ok)
-        return rebind_var[F.Result](invoke_borrowed[Z](self._err().value, on_err))
+        return self.fold_once(_SharedBorrowRef[F,origin_of(on_ok)](Pointer(to=on_ok)), _SharedBorrowRef[G,origin_of(on_err)](Pointer(to=on_err)))
 
     def fold_owned[F: Unary, G: Unary](deinit self, on_ok: F, on_err: G
     ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
         """Consuming fold with two library `Unary` handlers."""
-        comptime Z = _ResultFailure[F.Error, G.Error]
-        comptime assert _ErrorCompatible[Z, F.Error] and _ErrorCompatible[Z, G.Error]
-        if self.is_ok():
-            try:
-                return on_ok.call(rebind_var[F.Arg](self^._take_ok()))
-            except error:
-                _propagate_error[Z](error^)
-        try:
-            return rebind_var[F.Out](on_err.call(rebind_var[G.Arg](self^._take_err())))
-        except error:
-            _propagate_error[Z](error^)
+        return self^.fold_owned_once(_SharedUnaryRef[F,origin_of(on_ok)](Pointer(to=on_ok)), _SharedUnaryRef[G,origin_of(on_err)](Pointer(to=on_err)))
 
-    def fold_once[F: BorrowOnceCallable, G: BorrowOnceCallable](self, var on_ok: F, var on_err: G
+    def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](self, var on_ok: F, var on_err: G
     ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
-        """Fold with two consuming handlers: borrow the payload, and call only the selected handler.
+        """Fold with library handlers whose ownership follows their arguments.
 
-        Both handlers move in; the one that does not run is destroyed. No
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result and its payload remain borrowed throughout the call.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, consumed.
+            on_err: The error handler, consumed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self.fold_once(on_ok^, on_err^)
+
+    def fold[F: BorrowCallable, G: BorrowCallContract & Movable & Deinitable](self, on_ok: F, var on_err: G
+    ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result and its payload remain borrowed throughout the call.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, borrowed.
+            on_err: The error handler, consumed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self.fold_once(_SharedBorrowRef[F,origin_of(on_ok)](Pointer(to=on_ok)), on_err^)
+
+    def fold[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallable](self, var on_ok: F, on_err: G
+    ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result and its payload remain borrowed throughout the call.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, consumed.
+            on_err: The error handler, borrowed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self.fold_once(on_ok^, _SharedBorrowRef[G,origin_of(on_err)](Pointer(to=on_err)))
+
+    def fold_owned[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: F, var on_err: G
+    ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result is consumed and its payload moves into the selected handler.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, consumed.
+            on_err: The error handler, consumed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self^.fold_owned_once(on_ok^, on_err^)
+
+    def fold_owned[F: Unary, G: UnaryContract & Movable & Deinitable](deinit self, on_ok: F, var on_err: G
+    ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result is consumed and its payload moves into the selected handler.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, borrowed.
+            on_err: The error handler, consumed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self^.fold_owned_once(_SharedUnaryRef[F,origin_of(on_ok)](Pointer(to=on_ok)), on_err^)
+
+    def fold_owned[F: UnaryContract & Movable & Deinitable, G: Unary](deinit self, var on_ok: F, on_err: G
+    ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
+        """Fold with library handlers whose ownership follows their arguments.
+
+        Named shared handlers stay borrowed. A moved or temporary handler is
+        consumed, including the inactive handler. Only the selected handler
+        runs: consuming receivers take priority, then mutable, then shared.
+        Pass `mut_ref(handler)` to retain its original state. Shared borrowed
+        handlers keep shared invocation, including when paired with an owner.
+        The Result is consumed and its payload moves into the selected handler.
+
+        Parameters:
+            F: The success handler, with the exact success payload and output types.
+            G: The error handler, returning the same output and a compatible error.
+
+        Args:
+            on_ok: The success handler, consumed.
+            on_err: The error handler, borrowed.
+
+        Returns:
+            The selected handler's result, preserving its external origins.
+
+        Raises:
+            The exact common callback error; errors must match or one be Never.
+        """
+        return self^.fold_owned_once(on_ok^, _SharedUnaryRef[G,origin_of(on_err)](Pointer(to=on_err)))
+
+    def fold_once[F: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](self, var on_ok: F, var on_err: G
+    ) raises _ResultFailure[F.Failure, G.Failure] -> F.Result where F.Payload == Self.T and G.Payload == Self.E and F.Result == G.Result and (F.Failure == Never or G.Failure == Never or F.Failure == G.Failure):
+        """Consume two handlers, borrow the payload and call only the selected handler.
+
+        Both handlers move in; the one that does not run is destroyed. The
+        selected handler uses consuming, then mutable, then shared receiver
+        priority. Pass `mut_ref(handler)` to retain its original state. No
         `Copyable` requirement is added. A result may refer to owners that
         outlive the call, never into a consumed handler.
 
         Parameters:
-            F: The success handler's type, a `BorrowOnceCallable` taking `T`.
-            G: The error handler's type, a `BorrowOnceCallable` taking `E`.
+            F: The success handler's type, an invocable `BorrowCallContract` taking `T`.
+            G: The error handler's type, an invocable `BorrowCallContract` taking `E`.
 
         Args:
             on_ok: The handler for `Ok`, consumed.
@@ -330,19 +643,24 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The error of the handler that ran; both raise one error type, or
             one of them nothing.
         """
+        comptime assert _OnceBorrowAvailable[F] and _OnceBorrowAvailable[G], "Result fold: both handlers must implement a receiver mode"
         comptime Z = _ResultFailure[F.Failure, G.Failure]
         comptime assert _ErrorCompatible[Z, F.Failure] and _ErrorCompatible[Z, G.Failure]
         if self.is_ok():
             return invoke_borrowed_once[Z](self._ok().value, on_ok^)
         return rebind_var[F.Result](invoke_borrowed_once[Z](self._err().value, on_err^))
 
-    def fold_owned_once[F: OnceUnary, G: OnceUnary](deinit self, var on_ok: F, var on_err: G
+    def fold_owned_once[F: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: F, var on_err: G
     ) raises _ResultFailure[F.Error, G.Error] -> F.Out where F.Arg == Self.T and G.Arg == Self.E and F.Out == G.Out and (F.Error == Never or G.Error == Never or F.Error == G.Error):
-        """Consume the Result and two consuming handlers, and move the payload into the selected one.
+        """Consume the Result and two handlers, moving its payload into the selected one.
+
+        Handlers may use any receiver mode: consuming wins, then mutable,
+        then shared. Only the selected handler runs; both owners are
+        destroyed. Pass `mut_ref(handler)` to retain a reusable original.
 
         Parameters:
-            F: The success handler's type, a `OnceUnary` taking `T`.
-            G: The error handler's type, a `OnceUnary` taking `E`.
+            F: The success handler's type, an invocable `UnaryContract` taking `T`.
+            G: The error handler's type, an invocable `UnaryContract` taking `E`.
 
         Args:
             on_ok: The handler for `Ok`, consumed.
@@ -355,28 +673,21 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             The error of the handler that ran; both raise one error type, or
             one of them nothing.
         """
-        comptime Z = _ResultFailure[F.Error, G.Error]
-        comptime assert _ErrorCompatible[Z, F.Error] and _ErrorCompatible[Z, G.Error]
-        if self.is_ok():
-            try:
-                return on_ok^.call_once(rebind_var[F.Arg](self^._take_ok()))
-            except error:
-                _propagate_error[Z](error^)
-        try:
-            return rebind_var[F.Out](on_err^.call_once(rebind_var[G.Arg](self^._take_err())))
-        except error:
-            _propagate_error[Z](error^)
+        comptime assert _OnceUnaryAvailable[F] and _OnceUnaryAvailable[G], "Result fold: both handlers must implement a receiver mode"
+        return _fold_result_owned[Self.T, Self.E, F.Out, _ResultFailure[F.Error, G.Error], F.Error, G.Error, F, G,
+            _call_transform[Self.T, F], _call_transform[Self.E, G, F.Out]](self^, on_ok^, on_err^)
 
     # Transformations consume the Result. Native callbacks are borrowed and
     # library Unary callbacks move in; each is called at most once, and both
     # enter the shared owned transformation below the struct.
-    def map[U: Movable & Deinitable, //, F: def(var Self.T) -> U](deinit self, function: F) -> Result[U, Self.E]:
+    def map[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> U](deinit self, function: F) -> Result[U, Self.E] where A == Self.T:
         """Transform the success value; an error passes through and `function` does not run.
 
         `map` keeps a returned `Result` as nested data; `flat_map` sequences.
 
         Parameters:
             U: The new success type.
+            A: The callback input type, including origins.
             F: The callback's type: a plain function or a closure.
 
         Args:
@@ -386,25 +697,114 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `Ok(function(value))`, or the original `Err`.
         """
         def apply(var payload: Self.T, callback: F) raises Never capturing -> U:
-            return callback(payload^)
+            return _call_native[A, U, Never, F, False](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, U, Self.E, Never, True, True, Self.T, U, F, apply](self^, function)
 
-    def map[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.T) raises X -> U](
+    def map[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> U](
         deinit self, function: F
-    ) raises X -> Result[U, Self.E]:
+    ) raises X -> Result[U, Self.E] where A == Self.T:
         """Raising form of `map`; the callback's error type is kept."""
         def apply(var payload: Self.T, callback: F) raises X capturing -> U:
-            return callback(payload^)
+            return _call_native[A, U, X, F, True](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, U, Self.E, X, True, True, Self.T, U, F, apply](self^, function)
+
+    def map[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
+    ) raises F._View[o].Error -> Result[F._View[o].Out, Self.E] where F._View[o].Arg == Self.T:
+        """Apply a borrowed callable view to the success value."""
+        return self^.map(function._unary_view())
 
     def map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F
     ) raises F.Error -> Result[F.Out, Self.E] where F.Arg == Self.T:
         """Transform the success value with a library unary callback."""
         return _result_transform[Self.T, Self.E, F.Out, Self.E, F, True, True](function^, self^)
 
-    def flat_map[U: Movable & Deinitable, //, F: def(var Self.T) -> Result[U, Self.E]](
+    def fill[U: Movable & Deinitable](deinit self, var value: U) -> Result[U, Self.E]:
+        """Replace a success with an already evaluated value; preserve a stored error.
+
+        Consumes both the Result and the replacement without copying. On Ok,
+        the old payload is destroyed and the replacement moves into Ok. On
+        Err, the replacement is destroyed and the original error moves through.
+        Both output types retain their exact origins. No stored error is raised.
+        This is Cats `Functor.as`, named `fill` throughout this library.
+
+        Parameters:
+            U: The replacement type, inferred from the value.
+
+        Args:
+            value: The replacement, consumed even when the Result is Err.
+
+        Returns:
+            `Ok(value)`, or the original `Err`.
+        """
+        return self^.map(_Fill[Self.T, U](value^))
+
+    def void(deinit self) -> Result[NoneType, Self.E]:
+        """Discard a success payload while preserving success or the stored error.
+
+        Consumes the Result without copying or raising its error. This is
+        `fill(None)`, following Cats `Functor.void`. The stored error retains
+        its exact type and origins.
+
+        Returns:
+            `Ok(None)`, or the original `Err`.
+        """
+        return self^.fill[NoneType](None)
+
+    def tuple_left[U: Movable & Deinitable](deinit self, var value: U) -> Result[Tuple[U, Self.T], Self.E]:
+        """Attach an already evaluated value before a success payload.
+
+        Consumes both values without copying. On Ok, both move into the pair;
+        on Err, the attachment is destroyed and the stored error moves through.
+        Payload, attachment and error retain their exact origins. This follows
+        Cats `Functor.tupleLeft`; no stored error is raised.
+
+        Parameters:
+            U: The attachment type, inferred from the value.
+
+        Args:
+            value: The attachment, consumed even when the Result is Err.
+
+        Returns:
+            `Ok((value, payload))`, or the original `Err`.
+        """
+        return self^.map(_TupleWith[Self.T, U, True](value^))
+
+    def tuple_right[U: Movable & Deinitable](deinit self, var value: U) -> Result[Tuple[Self.T, U], Self.E]:
+        """Attach an already evaluated value after a success payload.
+
+        Consumes both values without copying. On Ok, both move into the pair;
+        on Err, the attachment is destroyed and the stored error moves through.
+        Payload, attachment and error retain their exact origins. This follows
+        Cats `Functor.tupleRight`; no stored error is raised.
+
+        Parameters:
+            U: The attachment type, inferred from the value.
+
+        Args:
+            value: The attachment, consumed even when the Result is Err.
+
+        Returns:
+            `Ok((payload, value))`, or the original `Err`.
+        """
+        return self^.map(_TupleWith[Self.T, U, False](value^))
+
+    def flatten(deinit self) -> Self.T where conforms_to(Self.T, _ResultType) and Self.T == Result[downcast[Self.T, _ResultType].Value, Self.E]:
+        """Remove one nested Result layer, preserving success or either stored error.
+
+        For `Result[Result[U, E], E]`, return `Result[U, E]`. Both layers must
+        have the same complete error type, including borrowed origins. Map
+        different error types explicitly before flattening. This is bind with
+        identity, as in Cats `FlatMap.flatten`, and never raises a stored error.
+        Payloads and errors are moved without copying.
+
+        Returns:
+            The inner Result on outer success, or the original outer error.
+        """
+        return self^.flat_map(Identity[Self.T]())
+
+    def flat_map[U: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Result[U, Self.E]](
         deinit self, function: F
-    ) -> Result[U, Self.E]:
+    ) -> Result[U, Self.E] where A == Self.T:
         """Continue with the Result the callback returns; an error passes through.
 
         The callback's stored error type must be exactly `E`; combine different
@@ -412,6 +812,7 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
 
         Parameters:
             U: The new success type.
+            A: The callback input type, including origins.
             F: The callback's type: a plain function or a closure returning `Result[U, E]`.
 
         Args:
@@ -421,32 +822,44 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `function(value)`, or the original `Err`.
         """
         def apply(var payload: Self.T, callback: F) raises Never capturing -> Result[U, Self.E]:
-            return callback(payload^)
+            return _call_native[A, Result[U, Self.E], Never, F, False](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, U, Self.E, Never, True, False, Self.T, Result[U, Self.E], F, apply](
             self^, function)
 
-    def flat_map[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.T) raises X -> Result[U, Self.E]](
+    def flat_map[U: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> Result[U, Self.E]](
         deinit self, function: F
-    ) raises X -> Result[U, Self.E]:
+    ) raises X -> Result[U, Self.E] where A == Self.T:
         """Raising form of `flat_map`; the callback's error type is kept."""
         def apply(var payload: Self.T, callback: F) raises X capturing -> Result[U, Self.E]:
-            return callback(payload^)
+            return _call_native[A, Result[U, Self.E], X, F, True](callback, rebind_var[A](payload^))
         return _transform_result[Self.T, Self.E, U, Self.E, X, True, False, Self.T, Result[U, Self.E], F, apply](
             self^, function)
 
+    def flat_map[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
+    ) raises F._View[o].Error -> F._View[o].Out where F._View[o].Arg == Self.T and F._View[o].Out == Result[downcast[F._View[o].Out, _ResultType].Value, Self.E]:
+        """Apply a borrowed callable view to the success value."""
+        return self^.flat_map(function._unary_view())
+
+    # Keep the origin-bearing result equality at admission. A body assertion
+    # alone accepted mismatched stored-error origins in Mojo 1.2 probes.
     def flat_map[F: UnaryContract & Movable & Deinitable](deinit self, var function: F
-    ) raises F.Error -> F.Out where F.Arg == Self.T:
+    ) raises F.Error -> F.Out where F.Arg == Self.T and F.Out == Result[downcast[F.Out, _ResultType].Value, Self.E]:
         """Continue with a library unary callback returning a Result."""
         comptime U = downcast[F.Out, _ResultType].Value
         comptime assert F.Out == Result[U, Self.E], "flat_map: callback must return a Result with the same error type"
         return rebind_var[F.Out](_result_transform[Self.T, Self.E, U, Self.E, F, True, False](function^, self^))
 
-    def map_err[U: Movable & Deinitable, //, F: def(var Self.E) -> U](deinit self, function: F) -> Result[Self.T, U]:
+    def map_err[Q: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Q, U: Movable & Deinitable = Q](deinit self, function: F) -> Result[Self.T, U] where A == Self.E and Q == U:
         """Transform the stored error; a success passes through and `function` does not run.
 
+        Named shared callable chains are borrowed without copying captures.
+        An explicit move transfers the handler to the consuming library form.
+
         Parameters:
-            U: The new error type.
+            Q: The callback result, inferred with its origins.
+            A: The callback input type, including origins.
             F: The callback's type: a plain function or a closure.
+            U: The requested new error type; it must match the callback result.
 
         Args:
             function: The callback, borrowed; it runs at most once.
@@ -455,15 +868,15 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `Err(function(error))`, or the original `Ok`.
         """
         def apply(var payload: Self.E, callback: F) raises Never capturing -> U:
-            return callback(payload^)
+            return rebind_var[U](_call_native[A, Q, Never, F, False](callback, rebind_var[A](payload^)))
         return _transform_result[Self.T, Self.E, Self.T, U, Never, False, True, Self.E, U, F, apply](self^, function)
 
-    def map_err[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.E) raises X -> U](
+    def map_err[Q: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> Q, U: Movable & Deinitable = Q](
         deinit self, function: F
-    ) raises X -> Result[Self.T, U]:
+    ) raises X -> Result[Self.T, U] where A == Self.E and Q == U:
         """Raising form of `map_err`; the callback's error type is kept."""
         def apply(var payload: Self.E, callback: F) raises X capturing -> U:
-            return callback(payload^)
+            return rebind_var[U](_call_native[A, Q, X, F, True](callback, rebind_var[A](payload^)))
         return _transform_result[Self.T, Self.E, Self.T, U, X, False, True, Self.E, U, F, apply](self^, function)
 
     def map_err[F: UnaryContract & Movable & Deinitable](deinit self, var function: F
@@ -471,16 +884,23 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         """Transform the error with a library unary callback."""
         return _result_transform[Self.T, Self.E, Self.T, F.Out, F, False, True](function^, self^)
 
-    def or_else[U: Movable & Deinitable, //, F: def(var Self.E) -> Result[Self.T, U]](
+    def map_err[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
+    ) raises F._View[o].Error -> Result[Self.T, F._View[o].Out] where F._View[o].Arg == Self.E:
+        """Borrow a reusable stored-error mapper without copying its captures."""
+        return self^.map_err(function._unary_view())
+
+    def or_else[Q: Movable & Deinitable, A: Movable & Deinitable, //, F: def(var A) -> Q, U: Movable & Deinitable = downcast[Q, _ResultType].Error](
         deinit self, function: F
-    ) -> Result[Self.T, U]:
+    ) -> Result[Self.T, U] where A == Self.E and Q == Result[Self.T, U]:
         """Recover from the stored error with the Result the callback returns; a success passes through.
 
         The callback's success type must be exactly `T`.
 
         Parameters:
-            U: The new error type.
+            Q: The callback result, inferred with its origins.
+            A: The callback input type, including origins.
             F: The callback's type: a plain function or a closure returning `Result[T, U]`.
+            U: The requested new error type; it must match the callback result.
 
         Args:
             function: The callback, borrowed; it runs at most once.
@@ -489,16 +909,16 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
             `function(error)`, or the original `Ok`.
         """
         def apply(var payload: Self.E, callback: F) raises Never capturing -> Result[Self.T, U]:
-            return callback(payload^)
+            return rebind_var[Result[Self.T, U]](_call_native[A, Q, Never, F, False](callback, rebind_var[A](payload^)))
         return _transform_result[Self.T, Self.E, Self.T, U, Never, False, False, Self.E, Result[Self.T, U], F, apply](
             self^, function)
 
-    def or_else[U: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var Self.E) raises X -> Result[Self.T, U]](
+    def or_else[Q: Movable & Deinitable, A: Movable & Deinitable, //, X: Movable & Deinitable, F: def(var A) raises X -> Q, U: Movable & Deinitable = downcast[Q, _ResultType].Error](
         deinit self, function: F
-    ) raises X -> Result[Self.T, U]:
+    ) raises X -> Result[Self.T, U] where A == Self.E and Q == Result[Self.T, U]:
         """Raising form of `or_else`; the callback's error type is kept."""
         def apply(var payload: Self.E, callback: F) raises X capturing -> Result[Self.T, U]:
-            return callback(payload^)
+            return rebind_var[Result[Self.T, U]](_call_native[A, Q, X, F, True](callback, rebind_var[A](payload^)))
         return _transform_result[Self.T, Self.E, Self.T, U, X, False, False, Self.E, Result[Self.T, U], F, apply](
             self^, function)
 
@@ -510,467 +930,1215 @@ struct Result[T: Movable & Deinitable, E: Movable & Deinitable](
         return rebind_var[F.Out](_result_transform[Self.T, Self.E, Self.T, U, F, False, False](function^, self^))
 
 
-def attempt[T: Movable & Deinitable, //, F: def() -> T](function: F) -> Result[T, Never]:
-    """Call `function` once and capture its outcome: `Ok(result)`, or `Err(error)` for its declared error.
 
-    Overloads take zero, one or two positional arguments with their native read,
-    `var` or `mut` conventions, and a native keyword pack `var **kwargs: K` after
-    them (homogeneous values, or a `StringDict[K]` expanded with
-    `**options^`). Pass consumed arguments with `^`. Changes made through a `mut`
-    argument before a failure remain visible. Every declared positional
-    parameter must be supplied, including defaulted ones; other call shapes
-    are written as a closure passed to the zero-argument form.
 
-    The function is borrowed and reusable. A returned `Result` is ordinary
-    success data, and a declared `StopIteration` is captured like any other
-    error; process aborts are never caught.
+    def or_else[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
+    ) raises F._View[o].Error -> F._View[o].Out where F._View[o].Arg == Self.E:
+        """Recover through a borrowed callable view, preserving the success type."""
+        return self^.or_else(function._unary_view())
+
+    # --- Result combinators (generated) ---
+    # Generated by scripts/generate_result_syntax.py; execution stays in Result and shared callable adapters.
+
+    def flat_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]:
+        """Sequence a borrowed Result projection and retain the original success value.
+
+        The projection runs only on Ok. Its Err replaces the success; its Ok payload is discarded. The original payload is moved, never copied. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+
+        Args:
+            function: The callback, consumed and invoked at most once on the selected branch.
+
+        Returns:
+            Sequence a borrowed Result projection and retain the original success value.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return self^.flat_map(_ResultRetain[Self.T, Self.E, C, False](function^))
+
+    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
+        """Sequence a borrowed Result projection and retain the original success value."""
+        return self^.flat_tap(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function)))
+
+    def flat_tap[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
+        """Sequence a borrowed Result projection and retain the original success value."""
+        return self^.flat_tap(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function)))
+
+    def flat_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:
+        """Sequence a borrowed Result projection and retain the original success value."""
+        return self^.flat_tap(function._borrow_view())
+
+    def flat_pair_with[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Tuple[Self.T, downcast[C.Result, _ResultType].Value], Self.E] where C.Payload == Self.T and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]:
+        """Sequence a borrowed Result projection and retain both success values.
+
+        The projection runs only on Ok. Its Err replaces the success; its Ok payload is paired with the moved original. Neither payload needs Copyable. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+
+        Args:
+            function: The callback, consumed and invoked at most once on the selected branch.
+
+        Returns:
+            Sequence a borrowed Result projection and retain both success values.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return self^.flat_map(_ResultRetain[Self.T, Self.E, C, True](function^))
+
+    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
+        """Sequence a borrowed Result projection and retain both success values."""
+        return self^.flat_pair_with(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function)))
+
+    def flat_pair_with[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Tuple[Self.T, downcast[R, _ResultType].Value], Self.E] where P == Self.T and R == Result[downcast[R, _ResultType].Value, Self.E]:
+        """Sequence a borrowed Result projection and retain both success values."""
+        return self^.flat_pair_with(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function)))
+
+    def flat_pair_with[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Tuple[Self.T, downcast[C._BorrowView[o].Result, _ResultType].Value], Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:
+        """Sequence a borrowed Result projection and retain both success values."""
+        return self^.flat_pair_with(function._borrow_view())
+
+    def followed_by[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> C.Out where C.Out == Result[downcast[C.Out, _ResultType].Value, Self.E]:
+        """On success, call a zero-argument factory and return its Result.
+
+        The factory runs at most once and is skipped on Err. The preceding success payload is discarded. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Named shared thunk factories remain borrowed; an explicit move retains the owning form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+
+        Args:
+            function: The callback, consumed and invoked at most once on the selected branch.
+
+        Returns:
+            On success, call a zero-argument factory and return its Result.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return self^.flat_map(_IgnoreInput[Self.T, C](function^))
+
+    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> R where R == Result[downcast[R, _ResultType].Value, Self.E]:
+        """On success, call a zero-argument factory and return its Result."""
+        return self^.flat_map(_BorrowedUnary[Self.T, _IgnoreInput[Self.T, _NativeThunkRef[R, Never, C, False, o]]](_IgnoreInput[Self.T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))))
+
+    def followed_by[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> R where R == Result[downcast[R, _ResultType].Value, Self.E]:
+        """On success, call a zero-argument factory and return its Result."""
+        return self^.flat_map(_BorrowedUnary[Self.T, _IgnoreInput[Self.T, _NativeThunkRef[R, X, C, True, o]]](_IgnoreInput[Self.T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))))
+
+    def followed_by[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _SharedThunkRef[C, o].Error -> _SharedThunkRef[C, o].Out where _SharedThunkRef[C, o].Out == Result[downcast[_SharedThunkRef[C, o].Out, _ResultType].Value, Self.E]:
+        """On success, call a zero-argument factory and return its Result."""
+        return self^.followed_by(_SharedThunkRef[C, o](Pointer(to=function)))
+
+    def before[C: ThunkContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Result[Self.T, Self.E] where C.Out == Result[downcast[C.Out, _ResultType].Value, Self.E]:
+        """On success, call a zero-argument factory and retain the original value.
+
+        The factory runs at most once and is skipped on Err. Its Err replaces the success; its Ok payload is discarded. The original payload is moved, never copied. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Named shared thunk factories remain borrowed; an explicit move retains the owning form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+
+        Args:
+            function: The callback, consumed and invoked at most once on the selected branch.
+
+        Returns:
+            On success, call a zero-argument factory and retain the original value.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return self^.flat_map(_ResultRetain[Self.T, Self.E, _IgnoreInput[Self.T, C], False](_IgnoreInput[Self.T, C](function^)))
+
+    def before[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]:
+        """On success, call a zero-argument factory and retain the original value."""
+        return self^.flat_map(_ResultRetain[Self.T, Self.E, _IgnoreInput[Self.T, _NativeThunkRef[R, Never, C, False, o]], False](_IgnoreInput[Self.T, _NativeThunkRef[R, Never, C, False, o]](_NativeThunkRef[R, Never, C, False, o](Pointer(to=function)))))
+
+    def before[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def() raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E]:
+        """On success, call a zero-argument factory and retain the original value."""
+        return self^.flat_map(_ResultRetain[Self.T, Self.E, _IgnoreInput[Self.T, _NativeThunkRef[R, X, C, True, o]], False](_IgnoreInput[Self.T, _NativeThunkRef[R, X, C, True, o]](_NativeThunkRef[R, X, C, True, o](Pointer(to=function)))))
+
+    def before[C: Thunk, o: ImmOrigin](deinit self, ref[o] function: C) raises _SharedThunkRef[C, o].Error -> Result[Self.T, Self.E] where _SharedThunkRef[C, o].Out == Result[downcast[_SharedThunkRef[C, o].Out, _ResultType].Value, Self.E]:
+        """On success, call a zero-argument factory and retain the original value."""
+        return self^.before(_SharedThunkRef[C, o](Pointer(to=function)))
+
+    def ensure[C: BorrowCallContract & Movable & Deinitable, G: BorrowCallContract & Movable & Deinitable](deinit self, var predicate: C, var make_error: G) raises _CommonError[C.Failure, G.Failure] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and G.Payload == Self.T and G.Result == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value.
+
+        The predicate runs only on Ok; the error factory runs only when the predicate returns False. Both borrow the success payload. The original Err passes through unchanged. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+            G: The selected continuation type, retaining its receiver and native error.
+
+        Args:
+            predicate: The consumed borrowing predicate returning Bool.
+            make_error: The consumed borrowing factory returning the stored error type.
+
+        Returns:
+            Keep an accepted success or construct a stored error from its borrowed value.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return _conditional_result[Self.T, Self.E, C, _BorrowedUnary[Self.T, G], Self.T, G.Result, G.Failure, _CommonError[C.Failure, G.Failure], True, True, False, _call_transform[Self.T, _BorrowedUnary[Self.T, G]]](self^, predicate^, _BorrowedUnary[Self.T, G](make_error^))
+
+    def ensure[C: BorrowCallContract & Movable & Deinitable, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Q) -> S](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, Never] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and Q == Self.T and S == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(predicate^, _NativeBorrowRef[Q, S, Never, G, False, q](Pointer(to=make_error)))
+
+    def ensure[C: BorrowCallContract & Movable & Deinitable, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(Q) raises Y -> S](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and Q == Self.T and S == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(predicate^, _NativeBorrowRef[Q, S, Y, G, True, q](Pointer(to=make_error)))
+
+    def ensure[C: BorrowCallContract & Movable & Deinitable, G: _BorrowViewable, q: ImmOrigin](deinit self, var predicate: C, ref[q] make_error: G) raises _CommonError[C.Failure, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where C.Payload == Self.T and C.Result == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(predicate^, make_error._borrow_view())
+
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, C: def(P) -> R](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[Never, G.Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G.Payload == Self.T and G.Result == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), make_error^)
+
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, G: def(Q) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, Never] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), _NativeBorrowRef[Q, S, Never, G, False, q](Pointer(to=make_error)))
+
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, Y: Movable & Deinitable, G: def(Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), _NativeBorrowRef[Q, S, Y, G, True, q](Pointer(to=make_error)))
+
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[Never, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), make_error._borrow_view())
+
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[X, G.Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G.Payload == Self.T and G.Result == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), make_error^)
+
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, G: def(Q) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, Never] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), _NativeBorrowRef[Q, S, Never, G, False, q](Pointer(to=make_error)))
+
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, Y: Movable & Deinitable, G: def(Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and Q == Self.T and S == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), _NativeBorrowRef[Q, S, Y, G, True, q](Pointer(to=make_error)))
+
+    def ensure[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[X, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where P == Self.T and R == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), make_error._borrow_view())
+
+    def ensure[C: _BorrowViewable, o: ImmOrigin, G: BorrowCallContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var make_error: G) raises _CommonError[C._BorrowView[o].Failure, G.Failure] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and G.Payload == Self.T and G.Result == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(predicate._borrow_view(), make_error^)
+
+    def ensure[C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, G: def(Q) -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Never] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and Q == Self.T and S == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(predicate._borrow_view(), _NativeBorrowRef[Q, S, Never, G, False, q](Pointer(to=make_error)))
+
+    def ensure[C: _BorrowViewable, o: ImmOrigin, Q: AnyType, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and Q == Self.T and S == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(predicate._borrow_view(), _NativeBorrowRef[Q, S, Y, G, True, q](Pointer(to=make_error)))
+
+    def ensure[C: _BorrowViewable, o: ImmOrigin, G: _BorrowViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] make_error: G) raises _CommonError[C._BorrowView[o].Failure, G._BorrowView[q].Failure] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.T and C._BorrowView[o].Result == Bool and G._BorrowView[q].Payload == Self.T and G._BorrowView[q].Result == Self.E:
+        """Keep an accepted success or construct a stored error from its borrowed value."""
+        return self^.ensure(predicate._borrow_view(), make_error._borrow_view())
+
+    def recover[C: UnaryContract & Movable & Deinitable](deinit self, var function: C) raises C.Error -> Result[Self.T, Self.E] where C.Arg == Self.E and C.Out == Self.T:
+        """Recover a stored error as a success, retaining the Result error type.
+
+        The callback consumes the error and returns the original success type. Ok passes through unchanged. This returns Result[T, E], not an unwrapped value. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared callable chains may instead be borrowed by passing their name; an explicit move retains the consuming form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+
+        Args:
+            function: The callback, consumed and invoked at most once on the selected branch.
+
+        Returns:
+            Recover a stored error as a success, retaining the Result error type.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return _result_transform[Self.T, Self.E, Self.T, Self.E, C, False, True, True](function^, self^)
+
+    def recover[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A) -> R](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where A == Self.E and R == Self.T:
+        """Recover a stored error as a success, retaining the Result error type."""
+        def invoke_recovery(var payload: Self.E, callback: C) raises Never capturing -> Self.T:
+            return rebind_var[Self.T](callback(rebind_var[A](payload^)))
+        return _transform_result[Self.T, Self.E, Self.T, Self.E, Never, False, True, Self.E, Self.T, C, invoke_recovery, True](self^, function)
+
+    def recover[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(var A) raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where A == Self.E and R == Self.T:
+        """Recover a stored error as a success, retaining the Result error type."""
+        def invoke_recovery(var payload: Self.E, callback: C) raises X capturing -> Self.T:
+            return rebind_var[Self.T](callback(rebind_var[A](payload^)))
+        return _transform_result[Self.T, Self.E, Self.T, Self.E, X, False, True, Self.E, Self.T, C, invoke_recovery, True](self^, function)
+
+    def tap_err[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.E:
+        """Inspect a borrowed stored error and retain the Result.
+
+        The inspector runs only on Err. Its return value is discarded; the error is moved back unchanged. Ok passes through without inspection. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+
+        Args:
+            function: The callback, consumed and invoked at most once on the selected branch.
+
+        Returns:
+            Inspect a borrowed stored error and retain the Result.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return self^.map_err(_ObserveOnce[Self.E, C, False](function^))
+
+    def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where P == Self.E:
+        """Inspect a borrowed stored error and retain the Result."""
+        return self^.tap_err(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=function)))
+
+    def tap_err[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where P == Self.E:
+        """Inspect a borrowed stored error and retain the Result."""
+        return self^.tap_err(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=function)))
+
+    def tap_err[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E:
+        """Inspect a borrowed stored error and retain the Result."""
+        return self^.tap_err(function._borrow_view())
+
+    def recover_if[C: BorrowCallContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var predicate: C, var function: G) raises _CommonError[C.Failure, G.Error] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and G.Arg == Self.E and G.Out == Self.T:
+        """Recover a matching stored error as a success.
+
+        Only Err runs the borrowing predicate. On True, the recovery consumes the error and returns the success type. On False, the original error remains. The stored error type stays unchanged. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form. Shared callable chains may instead be borrowed by passing their name; an explicit move retains the consuming form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+            G: The selected continuation type, retaining its receiver and native error.
+
+        Args:
+            predicate: The consumed borrowing predicate returning Bool.
+            function: The recovery, consumed and called only for matching errors; it consumes the stored error.
+
+        Returns:
+            Recover a matching stored error as a success.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return _conditional_result[Self.T, Self.E, C, G, Self.E, G.Out, G.Error, _CommonError[C.Failure, G.Error], False, True, True, _call_transform[Self.E, G]](self^, predicate^, function^)
+
+    def recover_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Q) -> S](deinit self, var predicate: C, ref[q] function: G) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Self.T:
+        """Recover a matching stored error as a success."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, C, Pointer[G, q], Q, S, Never, C.Failure, False, True, True, invoke_recovery](self^, predicate^, Pointer(to=function))
+
+    def recover_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, var predicate: C, ref[q] function: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Self.T:
+        """Recover a matching stored error as a success."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, C, Pointer[G, q], Q, S, Y, _CommonError[C.Failure, Y], False, True, True, invoke_recovery](self^, predicate^, Pointer(to=function))
+
+    def recover_if[C: BorrowCallContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var predicate: C, ref[q] function: G) raises _CommonError[C.Failure, G._View[q].Error] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:
+        """Recover a matching stored error as a success."""
+        return self^.recover_if(predicate^, function._unary_view())
+
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(P) -> R](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[Never, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Self.T:
+        """Recover a matching stored error as a success."""
+        return self^.recover_if(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), function^)
+
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises Never -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
+        """Recover a matching stored error as a success."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, Never, C, False, o], Pointer[G, q], Q, S, Never, Never, False, True, True, invoke_recovery](self^, _NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), Pointer(to=function))
+
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
+        """Recover a matching stored error as a success."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, Never, C, False, o], Pointer[G, q], Q, S, Y, _CommonError[Never, Y], False, True, True, invoke_recovery](self^, _NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), Pointer(to=function))
+
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:
+        """Recover a matching stored error as a success."""
+        return self^.recover_if(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), function._unary_view())
+
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[X, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Self.T:
+        """Recover a matching stored error as a success."""
+        return self^.recover_if(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), function^)
+
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises X -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
+        """Recover a matching stored error as a success."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, X, C, True, o], Pointer[G, q], Q, S, Never, X, False, True, True, invoke_recovery](self^, _NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), Pointer(to=function))
+
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Self.T:
+        """Recover a matching stored error as a success."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, X, C, True, o], Pointer[G, q], Q, S, Y, _CommonError[X, Y], False, True, True, invoke_recovery](self^, _NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), Pointer(to=function))
+
+    def recover_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:
+        """Recover a matching stored error as a success."""
+        return self^.recover_if(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), function._unary_view())
+
+    def recover_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[C._BorrowView[o].Failure, G.Error] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and G.Arg == Self.E and G.Out == Self.T:
+        """Recover a matching stored error as a success."""
+        return self^.recover_if(predicate._borrow_view(), function^)
+
+    def recover_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Self.T:
+        """Recover a matching stored error as a success."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, C._BorrowView[o], Pointer[G, q], Q, S, Never, C._BorrowView[o].Failure, False, True, True, invoke_recovery](self^, predicate._borrow_view(), Pointer(to=function))
+
+    def recover_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Self.T:
+        """Recover a matching stored error as a success."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, C._BorrowView[o], Pointer[G, q], Q, S, Y, _CommonError[C._BorrowView[o].Failure, Y], False, True, True, invoke_recovery](self^, predicate._borrow_view(), Pointer(to=function))
+
+    def recover_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, G._View[q].Error] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Self.T:
+        """Recover a matching stored error as a success."""
+        return self^.recover_if(predicate._borrow_view(), function._unary_view())
+
+    def or_else_if[C: BorrowCallContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var predicate: C, var function: G) raises _CommonError[C.Failure, G.Error] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result.
+
+        Only Err runs the borrowing predicate. On True, the recovery consumes the error and returns Result[T, E]; on False, the original error remains. Both success and stored error types stay unchanged. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form. Shared callable chains may instead be borrowed by passing their name; an explicit move retains the consuming form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+            G: The selected continuation type, retaining its receiver and native error.
+
+        Args:
+            predicate: The consumed borrowing predicate returning Bool.
+            function: The recovery, consumed and called only for matching errors; it consumes the stored error.
+
+        Returns:
+            Continue a matching stored error with a Result.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return _conditional_result[Self.T, Self.E, C, G, Self.E, G.Out, G.Error, _CommonError[C.Failure, G.Error], False, False, True, _call_transform[Self.E, G]](self^, predicate^, function^)
+
+    def or_else_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Q) -> S](deinit self, var predicate: C, ref[q] function: G) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, C, Pointer[G, q], Q, S, Never, C.Failure, False, False, True, invoke_recovery](self^, predicate^, Pointer(to=function))
+
+    def or_else_if[C: BorrowCallContract & Movable & Deinitable, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, var predicate: C, ref[q] function: G) raises _CommonError[C.Failure, Y] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, C, Pointer[G, q], Q, S, Y, _CommonError[C.Failure, Y], False, False, True, invoke_recovery](self^, predicate^, Pointer(to=function))
+
+    def or_else_if[C: BorrowCallContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var predicate: C, ref[q] function: G) raises _CommonError[C.Failure, G._View[q].Error] -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        return self^.or_else_if(predicate^, function._unary_view())
+
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(P) -> R](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[Never, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        return self^.or_else_if(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), function^)
+
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises Never -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, Never, C, False, o], Pointer[G, q], Q, S, Never, Never, False, False, True, invoke_recovery](self^, _NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), Pointer(to=function))
+
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, C: def(P) -> R, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, Never, C, False, o], Pointer[G, q], Q, S, Y, _CommonError[Never, Y], False, False, True, invoke_recovery](self^, _NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), Pointer(to=function))
+
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(P) -> R](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[Never, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        return self^.or_else_if(_NativeBorrowRef[P, R, Never, C, False, o](Pointer(to=predicate)), function._unary_view())
+
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[X, G.Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        return self^.or_else_if(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), function^)
+
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises X -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, X, C, True, o], Pointer[G, q], Q, S, Never, X, False, False, True, invoke_recovery](self^, _NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), Pointer(to=function))
+
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, Y] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, _NativeBorrowRef[P, R, X, C, True, o], Pointer[G, q], Q, S, Y, _CommonError[X, Y], False, False, True, invoke_recovery](self^, _NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), Pointer(to=function))
+
+    def or_else_if[P: AnyType, R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(P) raises X -> R](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[X, G._View[q].Error] -> Result[Self.T, Self.E] where P == Self.E and R == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        return self^.or_else_if(_NativeBorrowRef[P, R, X, C, True, o](Pointer(to=predicate)), function._unary_view())
+
+    def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] predicate: C, var function: G) raises _CommonError[C._BorrowView[o].Failure, G.Error] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and G.Arg == Self.E and G.Out == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        return self^.or_else_if(predicate._borrow_view(), function^)
+
+    def or_else_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Q) -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, C._BorrowView[o], Pointer[G, q], Q, S, Never, C._BorrowView[o].Failure, False, False, True, invoke_recovery](self^, predicate._borrow_view(), Pointer(to=function))
+
+    def or_else_if[C: _BorrowViewable, o: ImmOrigin, Q: Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Q) raises Y -> S](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, Y] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and Q == Self.E and S == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        def invoke_recovery(var payload: Q, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](payload^)
+        return _conditional_result[Self.T, Self.E, C._BorrowView[o], Pointer[G, q], Q, S, Y, _CommonError[C._BorrowView[o].Failure, Y], False, False, True, invoke_recovery](self^, predicate._borrow_view(), Pointer(to=function))
+
+    def or_else_if[C: _BorrowViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] predicate: C, ref[q] function: G) raises _CommonError[C._BorrowView[o].Failure, G._View[q].Error] -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Bool and G._View[q].Arg == Self.E and G._View[q].Out == Result[Self.T, Self.E]:
+        """Continue a matching stored error with a Result."""
+        return self^.or_else_if(predicate._borrow_view(), function._unary_view())
+
+    def flat_tap_err[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Self.E and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]:
+        """Sequence a borrowed error projection and retain the original error on success.
+
+        The projection runs only on Err and must return Result[U, E]. Its Ok payload is discarded and the original error is retained; its Err replaces that error. Ok passes through unchanged. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+
+        Args:
+            function: The callback, consumed and invoked at most once on the selected branch.
+
+        Returns:
+            Sequence a borrowed error projection and retain the original error on success.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return self^.or_else(_ResultRetain[Self.T, Self.E, C, False, False, True](function^))
+
+    def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Self.E) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:
+        """Sequence a borrowed error projection and retain the original error on success."""
+        return self^.flat_tap_err(_NativeBorrowRef[Self.E, R, Never, C, False, o](Pointer(to=function)))
+
+    def flat_tap_err[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Self.E) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:
+        """Sequence a borrowed error projection and retain the original error on success."""
+        return self^.flat_tap_err(_NativeBorrowRef[Self.E, R, X, C, True, o](Pointer(to=function)))
+
+    def flat_tap_err[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Self.E and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:
+        """Sequence a borrowed error projection and retain the original error on success."""
+        return self^.flat_tap_err(function._borrow_view())
+
+    def attempt_tap[C: BorrowCallContract & Movable & Deinitable](deinit self, var function: C) raises C.Failure -> Result[Self.T, Self.E] where C.Payload == Result[Self.T, Self.E] and C.Result == Result[downcast[C.Result, _ResultType].Value, Self.E]:
+        """Sequence an observer of the whole Result and retain its outcome on observer success.
+
+        The observer borrows the entire Result, runs once on either branch and returns Result[U, E]. Its Ok payload is discarded and the original Result is retained; its Err replaces the original outcome. Native raised errors remain raised. Native errors propagate unchanged; they never become stored Err values. Native callbacks are borrowed in place; library callbacks are consumed and use their declared receiver mode. Shared partial predicates and observers may instead be borrowed by name; an explicit move retains the owning form.
+
+        Parameters:
+            C: The callback type, retaining its receiver, input, result and native error.
+
+        Args:
+            function: The callback, consumed and invoked at most once on the selected branch.
+
+        Returns:
+            Sequence an observer of the whole Result and retain its outcome on observer success.
+
+        Raises:
+            The exact callback error; Never for non-raising callbacks. Two callbacks must share a native error type, or one must be non-raising.
+        """
+        return _ResultRetain[Self.T, Self.E, C, False, True](function^).call_once(self^)
+
+    def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, C: def(Result[Self.T, Self.E]) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises Never -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:
+        """Sequence an observer of the whole Result and retain its outcome on observer success."""
+        return self^.attempt_tap(_NativeBorrowRef[Result[Self.T, Self.E], R, Never, C, False, o](Pointer(to=function)))
+
+    def attempt_tap[R: Movable & Deinitable, o: ImmOrigin, //, X: Movable & Deinitable, C: def(Result[Self.T, Self.E]) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value](deinit self, ref[o] function: C) raises X -> Result[Self.T, Self.E] where R == Result[downcast[R, _ResultType].Value, Self.E] and U == downcast[R, _ResultType].Value:
+        """Sequence an observer of the whole Result and retain its outcome on observer success."""
+        return self^.attempt_tap(_NativeBorrowRef[Result[Self.T, Self.E], R, X, C, True, o](Pointer(to=function)))
+
+    def attempt_tap[C: _BorrowViewable, o: ImmOrigin](deinit self, ref[o] function: C) raises C._BorrowView[o].Failure -> Result[Self.T, Self.E] where C._BorrowView[o].Payload == Result[Self.T, Self.E] and C._BorrowView[o].Result == Result[downcast[C._BorrowView[o].Result, _ResultType].Value, Self.E]:
+        """Sequence an observer of the whole Result and retain its outcome on observer success."""
+        return self^.attempt_tap(function._borrow_view())
+
+    def map_both[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> Result[C.Out, G.Out] where C.Arg == Self.T and G.Arg == Self.E and (C.Error == Never or G.Error == Never or C.Error == G.Error):
+        """Transform either payload, preserving its Result constructor.
+
+        The selected handler consumes its payload. The success and stored error types may both change. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added. Named shared callable chains are borrowed; move either handler explicitly to transfer its captures.
+
+        Parameters:
+            C: The success handler type.
+            G: The error handler type.
+
+        Args:
+            on_ok: The handler consuming the success payload.
+            on_err: The handler consuming the error payload.
+
+        Returns:
+            Transform either payload, preserving its Result constructor.
+
+        Raises:
+            The selected handler native error, unchanged. Both must share an error type, or one must be non-raising.
+        """
+        return _result_both[Self.T, Self.E, C.Out, G.Out, C.Out, G.Out, C.Error, G.Error, _CommonError[C.Error, G.Error], C, G, True, False, _call_transform[Self.T, C], _call_transform[Self.E, G]](self^, on_ok^, on_err^)
+
+    def map_both[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises C.Error -> Result[C.Out, S] where C.Arg == Self.T:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C.Out, S, C.Out, S, C.Error, Never, C.Error, C, Pointer[G, q], True, False, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err))
+
+    def map_both[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Y] -> Result[C.Out, S] where C.Arg == Self.T and (C.Error == Never or Y == Never or C.Error == Y):
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C.Out, S, C.Out, S, C.Error, Y, _CommonError[C.Error, Y], C, Pointer[G, q], True, False, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err))
+
+    def map_both[C: UnaryContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, G._View[q].Error] -> Result[C.Out, G._View[q].Out] where C.Arg == Self.T and G._View[q].Arg == Self.E and (C.Error == Never or G._View[q].Error == Never or C.Error == G._View[q].Error):
+        """Transform either payload, preserving its Result constructor."""
+        return _result_both[Self.T, Self.E, C.Out, G._View[q].Out, C.Out, G._View[q].Out, C.Error, G._View[q].Error, _CommonError[C.Error, G._View[q].Error], C, G._View[q], True, False, _call_transform[Self.T, C], _call_transform[Self.E, G._View[q]]](self^, on_ok^, on_err._unary_view())
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> Result[R, G.Out] where G.Arg == Self.E:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, G.Out, R, G.Out, Never, G.Error, G.Error, Pointer[C, o], G, True, False, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^)
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Result[R, S]:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, R, S, R, S, Never, Never, Never, Pointer[C, o], Pointer[G, q], True, False, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Result[R, S]:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, R, S, R, S, Never, Y, Y, Pointer[C, o], Pointer[G, q], True, False, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var Self.T) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises G._View[q].Error -> Result[R, G._View[q].Out] where G._View[q].Arg == Self.E:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, G._View[q].Out, R, G._View[q].Out, Never, G._View[q].Error, G._View[q].Error, Pointer[C, o], G._View[q], True, False, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view())
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Result[R, G.Out] where G.Arg == Self.E and (X == Never or G.Error == Never or X == G.Error):
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, G.Out, R, G.Out, X, G.Error, _CommonError[X, G.Error], Pointer[C, o], G, True, False, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^)
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Result[R, S]:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, R, S, R, S, X, Never, X, Pointer[C, o], Pointer[G, q], True, False, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Result[R, S] where (X == Never or Y == Never or X == Y):
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, R, S, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], True, False, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def map_both[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> Result[R, G._View[q].Out] where G._View[q].Arg == Self.E and (X == Never or G._View[q].Error == Never or X == G._View[q].Error):
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, G._View[q].Out, R, G._View[q].Out, X, G._View[q].Error, _CommonError[X, G._View[q].Error], Pointer[C, o], G._View[q], True, False, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view())
+
+    def map_both[C: _UnaryViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._View[o].Error, G.Error] -> Result[C._View[o].Out, G.Out] where C._View[o].Arg == Self.T and G.Arg == Self.E and (C._View[o].Error == Never or G.Error == Never or C._View[o].Error == G.Error):
+        """Transform either payload, preserving its Result constructor."""
+        return _result_both[Self.T, Self.E, C._View[o].Out, G.Out, C._View[o].Out, G.Out, C._View[o].Error, G.Error, _CommonError[C._View[o].Error, G.Error], C._View[o], G, True, False, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G]](self^, on_ok._unary_view(), on_err^)
+
+    def map_both[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises C._View[o].Error -> Result[C._View[o].Out, S] where C._View[o].Arg == Self.T:
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C._View[o].Out, S, C._View[o].Out, S, C._View[o].Error, Never, C._View[o].Error, C._View[o], Pointer[G, q], True, False, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err))
+
+    def map_both[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Y] -> Result[C._View[o].Out, S] where C._View[o].Arg == Self.T and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y):
+        """Transform either payload, preserving its Result constructor."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C._View[o].Out, S, C._View[o].Out, S, C._View[o].Error, Y, _CommonError[C._View[o].Error, Y], C._View[o], Pointer[G, q], True, False, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err))
+
+    def map_both[C: _UnaryViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, G._View[q].Error] -> Result[C._View[o].Out, G._View[q].Out] where C._View[o].Arg == Self.T and G._View[q].Arg == Self.E and (C._View[o].Error == Never or G._View[q].Error == Never or C._View[o].Error == G._View[q].Error):
+        """Transform either payload, preserving its Result constructor."""
+        return _result_both[Self.T, Self.E, C._View[o].Out, G._View[q].Out, C._View[o].Out, G._View[q].Out, C._View[o].Error, G._View[q].Error, _CommonError[C._View[o].Error, G._View[q].Error], C._View[o], G._View[q], True, False, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G._View[q]]](self^, on_ok._unary_view(), on_err._unary_view())
+
+    def redeem[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> Result[C.Out, Self.E] where C.Arg == Self.T and G.Arg == Self.E and C.Out == G.Out and (C.Error == Never or G.Error == Never or C.Error == G.Error):
+        """Turn either branch into a success with a common value type.
+
+        Both handlers return the same value type. The selected result is wrapped in Ok, retaining the original stored error type. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added. Named shared callable chains are borrowed; move either handler explicitly to transfer its captures.
+
+        Parameters:
+            C: The success handler type.
+            G: The error handler type.
+
+        Args:
+            on_ok: The handler consuming the success payload.
+            on_err: The handler consuming the error payload.
+
+        Returns:
+            Turn either branch into a success with a common value type.
+
+        Raises:
+            The selected handler native error, unchanged. Both must share an error type, or one must be non-raising.
+        """
+        return _result_both[Self.T, Self.E, C.Out, Self.E, C.Out, G.Out, C.Error, G.Error, _CommonError[C.Error, G.Error], C, G, True, True, _call_transform[Self.T, C], _call_transform[Self.E, G]](self^, on_ok^, on_err^)
+
+    def redeem[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises C.Error -> Result[C.Out, Self.E] where C.Arg == Self.T and C.Out == S:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C.Out, Self.E, C.Out, S, C.Error, Never, C.Error, C, Pointer[G, q], True, True, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err))
+
+    def redeem[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Y] -> Result[C.Out, Self.E] where C.Arg == Self.T and C.Out == S and (C.Error == Never or Y == Never or C.Error == Y):
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C.Out, Self.E, C.Out, S, C.Error, Y, _CommonError[C.Error, Y], C, Pointer[G, q], True, True, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err))
+
+    def redeem[C: UnaryContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, G._View[q].Error] -> Result[C.Out, Self.E] where C.Arg == Self.T and G._View[q].Arg == Self.E and C.Out == G._View[q].Out and (C.Error == Never or G._View[q].Error == Never or C.Error == G._View[q].Error):
+        """Turn either branch into a success with a common value type."""
+        return _result_both[Self.T, Self.E, C.Out, Self.E, C.Out, G._View[q].Out, C.Error, G._View[q].Error, _CommonError[C.Error, G._View[q].Error], C, G._View[q], True, True, _call_transform[Self.T, C], _call_transform[Self.E, G._View[q]]](self^, on_ok^, on_err._unary_view())
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> Result[R, Self.E] where G.Arg == Self.E and R == G.Out:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, G.Out, Never, G.Error, G.Error, Pointer[C, o], G, True, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^)
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> Result[R, Self.E] where R == S:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, S, Never, Never, Never, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> Result[R, Self.E] where R == S:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, S, Never, Y, Y, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var Self.T) -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises G._View[q].Error -> Result[R, Self.E] where G._View[q].Arg == Self.E and R == G._View[q].Out:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, G._View[q].Out, Never, G._View[q].Error, G._View[q].Error, Pointer[C, o], G._View[q], True, True, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view())
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> Result[R, Self.E] where G.Arg == Self.E and R == G.Out and (X == Never or G.Error == Never or X == G.Error):
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, G.Out, X, G.Error, _CommonError[X, G.Error], Pointer[C, o], G, True, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^)
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> Result[R, Self.E] where R == S:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, S, X, Never, X, Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> Result[R, Self.E] where R == S and (X == Never or Y == Never or X == Y):
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], True, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err))
+
+    def redeem[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> Result[R, Self.E] where G._View[q].Arg == Self.E and R == G._View[q].Out and (X == Never or G._View[q].Error == Never or X == G._View[q].Error):
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return _result_both[Self.T, Self.E, R, Self.E, R, G._View[q].Out, X, G._View[q].Error, _CommonError[X, G._View[q].Error], Pointer[C, o], G._View[q], True, True, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view())
+
+    def redeem[C: _UnaryViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._View[o].Error, G.Error] -> Result[C._View[o].Out, Self.E] where C._View[o].Arg == Self.T and G.Arg == Self.E and C._View[o].Out == G.Out and (C._View[o].Error == Never or G.Error == Never or C._View[o].Error == G.Error):
+        """Turn either branch into a success with a common value type."""
+        return _result_both[Self.T, Self.E, C._View[o].Out, Self.E, C._View[o].Out, G.Out, C._View[o].Error, G.Error, _CommonError[C._View[o].Error, G.Error], C._View[o], G, True, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G]](self^, on_ok._unary_view(), on_err^)
+
+    def redeem[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises C._View[o].Error -> Result[C._View[o].Out, Self.E] where C._View[o].Arg == Self.T and C._View[o].Out == S:
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C._View[o].Out, Self.E, C._View[o].Out, S, C._View[o].Error, Never, C._View[o].Error, C._View[o], Pointer[G, q], True, True, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err))
+
+    def redeem[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Y] -> Result[C._View[o].Out, Self.E] where C._View[o].Arg == Self.T and C._View[o].Out == S and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y):
+        """Turn either branch into a success with a common value type."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return _result_both[Self.T, Self.E, C._View[o].Out, Self.E, C._View[o].Out, S, C._View[o].Error, Y, _CommonError[C._View[o].Error, Y], C._View[o], Pointer[G, q], True, True, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err))
+
+    def redeem[C: _UnaryViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, G._View[q].Error] -> Result[C._View[o].Out, Self.E] where C._View[o].Arg == Self.T and G._View[q].Arg == Self.E and C._View[o].Out == G._View[q].Out and (C._View[o].Error == Never or G._View[q].Error == Never or C._View[o].Error == G._View[q].Error):
+        """Turn either branch into a success with a common value type."""
+        return _result_both[Self.T, Self.E, C._View[o].Out, Self.E, C._View[o].Out, G._View[q].Out, C._View[o].Error, G._View[q].Error, _CommonError[C._View[o].Error, G._View[q].Error], C._View[o], G._View[q], True, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G._View[q]]](self^, on_ok._unary_view(), on_err._unary_view())
+
+    def redeem_with[C: UnaryContract & Movable & Deinitable, G: UnaryContract & Movable & Deinitable](deinit self, var on_ok: C, var on_err: G) raises _CommonError[C.Error, G.Error] -> C.Out where C.Arg == Self.T and G.Arg == Self.E and C.Out == G.Out and (C.Error == Never or G.Error == Never or C.Error == G.Error):
+        """Continue either branch with the selected handler Result.
+
+        Both handlers return the same Result type, which may change both success and stored error types. Only the original branch selects a handler; a returned Err never invokes the other handler. Execution is immediate. Native handlers are borrowed in place; library handlers are consumed and use their declared receiver mode, including disposal of the skipped handler. Payloads, captures and native raised errors keep their ownership and origins. No Copyable requirement is added. Named shared callable chains are borrowed; move either handler explicitly to transfer its captures.
+
+        Parameters:
+            C: The success handler type.
+            G: The error handler type.
+
+        Args:
+            on_ok: The handler consuming the success payload.
+            on_err: The handler consuming the error payload.
+
+        Returns:
+            Continue either branch with the selected handler Result.
+
+        Raises:
+            The selected handler native error, unchanged. Both must share an error type, or one must be non-raising.
+        """
+        return rebind_var[C.Out](_result_both[Self.T, Self.E, downcast[C.Out, _ResultType].Value, downcast[C.Out, _ResultType].Error, C.Out, G.Out, C.Error, G.Error, _CommonError[C.Error, G.Error], C, G, False, True, _call_transform[Self.T, C], _call_transform[Self.E, G]](self^, on_ok^, on_err^))
+
+    def redeem_with[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises C.Error -> C.Out where C.Arg == Self.T and C.Out == S:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[C.Out](_result_both[Self.T, Self.E, downcast[C.Out, _ResultType].Value, downcast[C.Out, _ResultType].Error, C.Out, S, C.Error, Never, C.Error, C, Pointer[G, q], False, True, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err)))
+
+    def redeem_with[C: UnaryContract & Movable & Deinitable, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, Y] -> C.Out where C.Arg == Self.T and C.Out == S and (C.Error == Never or Y == Never or C.Error == Y):
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[C.Out](_result_both[Self.T, Self.E, downcast[C.Out, _ResultType].Value, downcast[C.Out, _ResultType].Error, C.Out, S, C.Error, Y, _CommonError[C.Error, Y], C, Pointer[G, q], False, True, _call_transform[Self.T, C], invoke_on_err](self^, on_ok^, Pointer(to=on_err)))
+
+    def redeem_with[C: UnaryContract & Movable & Deinitable, G: _UnaryViewable, q: ImmOrigin](deinit self, var on_ok: C, ref[q] on_err: G) raises _CommonError[C.Error, G._View[q].Error] -> C.Out where C.Arg == Self.T and G._View[q].Arg == Self.E and C.Out == G._View[q].Out and (C.Error == Never or G._View[q].Error == Never or C.Error == G._View[q].Error):
+        """Continue either branch with the selected handler Result."""
+        return rebind_var[C.Out](_result_both[Self.T, Self.E, downcast[C.Out, _ResultType].Value, downcast[C.Out, _ResultType].Error, C.Out, G._View[q].Out, C.Error, G._View[q].Error, _CommonError[C.Error, G._View[q].Error], C, G._View[q], False, True, _call_transform[Self.T, C], _call_transform[Self.E, G._View[q]]](self^, on_ok^, on_err._unary_view()))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, C: def(var Self.T) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises G.Error -> R where R == Result[U, V] and G.Arg == Self.E and R == G.Out:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, G.Out, Never, G.Error, G.Error, Pointer[C, o], G, False, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, G: def(var Self.E) -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Never -> R where R == Result[U, V] and R == S:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, Never, Never, Never, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, C: def(var Self.T) -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises Y -> R where R == Result[U, V] and R == S:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, Never, Y, Y, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, C: def(var Self.T) -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises G._View[q].Error -> R where R == Result[U, V] and G._View[q].Arg == Self.E and R == G._View[q].Out:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises Never capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, G._View[q].Out, Never, G._View[q].Error, G._View[q].Error, Pointer[C, o], G._View[q], False, True, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view()))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[X, G.Error] -> R where R == Result[U, V] and G.Arg == Self.E and R == G.Out and (X == Never or G.Error == Never or X == G.Error):
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, G.Out, X, G.Error, _CommonError[X, G.Error], Pointer[C, o], G, False, True, invoke_on_ok, _call_transform[Self.E, G]](self^, Pointer(to=on_ok), on_err^))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, G: def(var Self.E) -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises X -> R where R == Result[U, V] and R == S:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, X, Never, X, Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, Y] -> R where R == Result[U, V] and R == S and (X == Never or Y == Never or X == Y):
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, S, X, Y, _CommonError[X, Y], Pointer[C, o], Pointer[G, q], False, True, invoke_on_ok, invoke_on_err](self^, Pointer(to=on_ok), Pointer(to=on_err)))
+
+    def redeem_with[R: Movable & Deinitable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin, //, X: Movable & Deinitable, C: def(var Self.T) raises X -> R, U: Movable & Deinitable = downcast[R, _ResultType].Value, V: Movable & Deinitable = downcast[R, _ResultType].Error](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[X, G._View[q].Error] -> R where R == Result[U, V] and G._View[q].Arg == Self.E and R == G._View[q].Out and (X == Never or G._View[q].Error == Never or X == G._View[q].Error):
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_ok(var payload: Self.T, var context: Pointer[C, o]) raises X capturing -> R:
+            return context[](rebind_var[Self.T](payload^))
+        return rebind_var[R](_result_both[Self.T, Self.E, downcast[R, _ResultType].Value, downcast[R, _ResultType].Error, R, G._View[q].Out, X, G._View[q].Error, _CommonError[X, G._View[q].Error], Pointer[C, o], G._View[q], False, True, invoke_on_ok, _call_transform[Self.E, G._View[q]]](self^, Pointer(to=on_ok), on_err._unary_view()))
+
+    def redeem_with[C: _UnaryViewable, o: ImmOrigin, G: UnaryContract & Movable & Deinitable](deinit self, ref[o] on_ok: C, var on_err: G) raises _CommonError[C._View[o].Error, G.Error] -> C._View[o].Out where C._View[o].Arg == Self.T and G.Arg == Self.E and C._View[o].Out == G.Out and (C._View[o].Error == Never or G.Error == Never or C._View[o].Error == G.Error):
+        """Continue either branch with the selected handler Result."""
+        return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, G.Out, C._View[o].Error, G.Error, _CommonError[C._View[o].Error, G.Error], C._View[o], G, False, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G]](self^, on_ok._unary_view(), on_err^))
+
+    def redeem_with[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, G: def(var Self.E) -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises C._View[o].Error -> C._View[o].Out where C._View[o].Arg == Self.T and C._View[o].Out == S:
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Never capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, S, C._View[o].Error, Never, C._View[o].Error, C._View[o], Pointer[G, q], False, True, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err)))
+
+    def redeem_with[C: _UnaryViewable, o: ImmOrigin, S: Movable & Deinitable, q: ImmOrigin, //, Y: Movable & Deinitable, G: def(var Self.E) raises Y -> S](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, Y] -> C._View[o].Out where C._View[o].Arg == Self.T and C._View[o].Out == S and (C._View[o].Error == Never or Y == Never or C._View[o].Error == Y):
+        """Continue either branch with the selected handler Result."""
+        def invoke_on_err(var payload: Self.E, var context: Pointer[G, q]) raises Y capturing -> S:
+            return context[](rebind_var[Self.E](payload^))
+        return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, S, C._View[o].Error, Y, _CommonError[C._View[o].Error, Y], C._View[o], Pointer[G, q], False, True, _call_transform[Self.T, C._View[o]], invoke_on_err](self^, on_ok._unary_view(), Pointer(to=on_err)))
+
+    def redeem_with[C: _UnaryViewable, o: ImmOrigin, G: _UnaryViewable, q: ImmOrigin](deinit self, ref[o] on_ok: C, ref[q] on_err: G) raises _CommonError[C._View[o].Error, G._View[q].Error] -> C._View[o].Out where C._View[o].Arg == Self.T and G._View[q].Arg == Self.E and C._View[o].Out == G._View[q].Out and (C._View[o].Error == Never or G._View[q].Error == Never or C._View[o].Error == G._View[q].Error):
+        """Continue either branch with the selected handler Result."""
+        return rebind_var[C._View[o].Out](_result_both[Self.T, Self.E, downcast[C._View[o].Out, _ResultType].Value, downcast[C._View[o].Out, _ResultType].Error, C._View[o].Out, G._View[q].Out, C._View[o].Error, G._View[q].Error, _CommonError[C._View[o].Error, G._View[q].Error], C._View[o], G._View[q], False, True, _call_transform[Self.T, C._View[o]], _call_transform[Self.E, G._View[q]]](self^, on_ok._unary_view(), on_err._unary_view()))
+
+    @always_inline
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A) -> R](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:
+        """Native form of `value_or`; borrow the callback and keep its exact error."""
+        return self^.value_or(_NativeUnaryRef[A, R, Never, C, False, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A) raises Never -> R](deinit self, ref[o] on_err: C) raises Never -> Self.T where A == Self.E and R == Self.T:
+        """Native form of `value_or`; borrow the callback and keep its exact error."""
+        return self^.value_or(_NativeUnaryRef[A, R, Never, C, True, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[A: Movable & Deinitable, R: Movable & Deinitable, o: ImmOrigin, //, C: def(var A) raises Error -> R](deinit self, ref[o] on_err: C) raises Error -> Self.T where A == Self.E and R == Self.T:
+        """Native form of `value_or`; borrow the callback and keep its exact error."""
+        return self^.value_or(_NativeUnaryRef[A, R, Error, C, True, o](Pointer(to=on_err)))
+
+    @always_inline
+    def value_or[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where not conforms_to(R, RegisterPassable) and R == Self.T:
+        """Plain raising form of `value_or`; infer the exact native error."""
+        return self^.value_or(NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def value_or[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises X -> Self.T where R == Self.T:
+        """Plain raising form of `value_or`; infer the exact native error."""
+        return self^.value_or(NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() -> R](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:
+        """Native form of `get_or_else`; borrow the callback and keep its exact error."""
+        return self^.get_or_else(_NativeThunkRef[R, Never, C, False, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Never -> R](deinit self, ref[o] make_default: C) raises Never -> Self.T where R == Self.T:
+        """Native form of `get_or_else`; borrow the callback and keep its exact error."""
+        return self^.get_or_else(_NativeThunkRef[R, Never, C, True, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, o: ImmOrigin, //, C: def() raises Error -> R](deinit self, ref[o] make_default: C) raises Error -> Self.T where R == Self.T:
+        """Native form of `get_or_else`; borrow the callback and keep its exact error."""
+        return self^.get_or_else(_NativeThunkRef[R, Error, C, True, o](Pointer(to=make_default)))
+
+    @always_inline
+    def get_or_else[R: Movable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where not conforms_to(R, RegisterPassable) and R == Self.T:
+        """Plain raising form of `get_or_else`; infer the exact native error."""
+        return self^.get_or_else(_NativeThunk[R, X, type_of(make_default), True](make_default))
+
+    @always_inline
+    def get_or_else[R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, make_default: def() raises X thin -> R) raises X -> Self.T where R == Self.T:
+        """Plain raising form of `get_or_else`; infer the exact native error."""
+        return self^.get_or_else(_NativeThunk[R, X, type_of(make_default), True](make_default))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, var on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable](self, var on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable](self, var on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, var on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, var on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(on_ok^, NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: C, on_err: def(A) raises X thin -> R) raises _CommonError[C.Failure, X] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: Movable & Deinitable](self, on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: RegisterPassable & Deinitable](self, on_ok: C, on_err: def(Self.E) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and not conforms_to(Self.E, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: C, on_err: def(A) thin -> R) raises _CommonError[C.Failure, Never] -> C.Result where C.Payload == Self.T and C.Result == R and A == Self.E and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(_SharedBorrowRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeBorrow[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: Movable & Deinitable](self, on_ok: def(Self.T) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, R: RegisterPassable & Deinitable](self, on_ok: def(Self.T) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: def(A) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallContract & Movable & Deinitable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: def(A) thin -> R, var on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold[C: BorrowCallable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(Self.T) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](self, on_ok: def(A) raises X thin -> R, on_err: C) raises _CommonError[X, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or X == Never or C.Failure == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: Movable & Deinitable](self, on_ok: def(Self.T) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, R: RegisterPassable & Deinitable](self, on_ok: def(Self.T) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and not conforms_to(Self.T, TrivialRegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: Movable & Deinitable](self, on_ok: def(A) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and not conforms_to(R, RegisterPassable) and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold[C: BorrowCallable, A: TrivialRegisterPassable, R: RegisterPassable & Deinitable](self, on_ok: def(A) thin -> R, on_err: C) raises _CommonError[Never, C.Failure] -> R where C.Payload == Self.E and C.Result == R and A == Self.T and (C.Failure == Never or Never == Never or C.Failure == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self.fold_once(NativeBorrow[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedBorrowRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(on_ok^, NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(on_ok^, NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(on_ok^, NativeUnary[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable](deinit self, var on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(on_ok^, NativeUnary[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold_owned[C: Unary, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(_SharedUnaryRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold_owned[C: Unary, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) raises X thin -> R) raises _CommonError[C.Error, X] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(_SharedUnaryRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeUnary[Self.E, R, X, type_of(on_err), True](on_err))
+
+    @always_inline
+    def fold_owned[C: Unary, R: Movable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(_SharedUnaryRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeUnary[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold_owned[C: Unary, R: RegisterPassable & Deinitable](deinit self, on_ok: C, on_err: def(var _NativeOwnedArg[Self.E]) thin -> R) raises _CommonError[C.Error, Never] -> C.Out where C.Arg == Self.T and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(_SharedUnaryRef[C, origin_of(on_ok)](Pointer(to=on_ok)), NativeUnary[Self.E, R, Never, type_of(on_err), False](on_err))
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, var on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, X, type_of(on_ok), True](on_ok), on_err^)
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, var on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold_owned[C: UnaryContract & Movable & Deinitable, R: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, var on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, Never, type_of(on_ok), False](on_ok), on_err^)
+
+    @always_inline
+    def fold_owned[C: Unary, R: Movable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedUnaryRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold_owned[C: Unary, R: RegisterPassable & Deinitable, X: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) raises X thin -> R, on_err: C) raises _CommonError[X, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or X == Never or C.Error == X):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, X, type_of(on_ok), True](on_ok), _SharedUnaryRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold_owned[C: Unary, R: Movable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and not conforms_to(R, RegisterPassable) and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedUnaryRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    @always_inline
+    def fold_owned[C: Unary, R: RegisterPassable & Deinitable](deinit self, on_ok: def(var _NativeOwnedArg[Self.T]) thin -> R, on_err: C) raises _CommonError[Never, C.Error] -> R where C.Arg == Self.E and C.Out == R and (C.Error == Never or Never == Never or C.Error == Never):
+        """Mix a plain function with a library handler; preserve its shared or owned receiver."""
+        return self^.fold_owned_once(NativeUnary[Self.T, R, Never, type_of(on_ok), False](on_ok), _SharedUnaryRef[C, origin_of(on_err)](Pointer(to=on_err)))
+
+    # --- end Result combinators ---
+
+    def recover[F: _UnaryViewable, o: ImmOrigin](deinit self, ref[o] function: F
+    ) raises F._View[o].Error -> Result[Self.T, Self.E] where F._View[o].Arg == Self.E and F._View[o].Out == Self.T:
+        """Borrow a reusable handler and lift its fallback value only on Err."""
+        return self^.recover(function._unary_view())
+
+
+
+def ok[T: Movable & Deinitable, //, E: Movable & Deinitable](var value: T) -> Result[T, E]:
+    """Create a successful Result, inferring the payload type from its value.
+
+    `ok[MyError](value)` supplies only the missing error type, like Cats'
+    `asRight`. The value moves into Ok without copying or changing its origins.
+    Ok and Err constructors still convert directly when a Result type is known.
 
     Parameters:
-        T: The result type.
-        F: The function's type: a plain function or a closure.
+        T: The success type, inferred from the consumed value.
+        E: The stored error type, supplied explicitly.
 
     Args:
-        function: The function, borrowed; it runs once.
+        value: The success payload, consumed.
 
     Returns:
-        `Ok(result)`; a pure function never produces `Err`, so the error type
-        is `Never`.
+        A complete Result[T, E] containing Ok(value).
     """
-    return _attempt_core[T, Never, F, _attempt_native_pure[T, F]](function)
+    return _keep_ok[T, E](value^)
 
 
-def attempt[T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def() raises E -> T](function: F) -> Result[T, E]:
-    """Call once and retain the exact native error as an Err payload."""
-    return _attempt_core[T, E, F, _attempt_native[T, E, F]](function)
+def err[E: Movable & Deinitable, //, T: Movable & Deinitable](var error: E) -> Result[T, E]:
+    """Create a failed Result, inferring the error type from its value.
 
+    `err[MyValue](error)` supplies only the missing success type, like Cats'
+    `asLeft`. The error moves into Err without being raised, copied or changing
+    its origins. Ok and Err constructors remain available for typed returns.
 
-def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A) -> T](
-    function: F, first: A
-) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
-    """Capture a pure call once; its error channel is Never."""
-    return Result[T, Never](Ok(function(first)))
+    Parameters:
+        E: The stored error type, inferred from the consumed error.
+        T: The success type, supplied explicitly.
 
+    Args:
+        error: The stored error payload, consumed.
 
-def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A) raises E -> T](
-    function: F, first: A
-) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
-    """Invoke once with native argument conventions and retain the exact typed error."""
-    try: return Result[T, E](Ok(function(first)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A) -> T](
-    function: F, var first: A
-) -> Result[T, Never]:
-    """Capture a pure call once; its error channel is Never."""
-    return Result[T, Never](Ok(function(first^)))
-
-
-def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A) raises E -> T](
-    function: F, var first: A
-) -> Result[T, E]:
-    """Invoke once with native argument conventions and retain the exact typed error."""
-    try: return Result[T, E](Ok(function(first^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, B) -> T](
-    function: F, first: A, second: B
-) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    """Capture a pure call once; its error channel is Never."""
-    return Result[T, Never](Ok(function(first, second)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, B) raises E -> T](
-    function: F, first: A, second: B
-) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    """Invoke once with native argument conventions and retain the exact typed error."""
-    try: return Result[T, E](Ok(function(first, second)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, B) -> T](
-    function: F, var first: A, second: B
-) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):
-    """Capture a pure call once; its error channel is Never."""
-    return Result[T, Never](Ok(function(first^, second)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, B) raises E -> T](
-    function: F, var first: A, second: B
-) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):
-    """Invoke once with native argument conventions and retain the exact typed error."""
-    try: return Result[T, E](Ok(function(first^, second)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, var B) -> T](
-    function: F, first: A, var second: B
-) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
-    """Capture a pure call once; its error channel is Never."""
-    return Result[T, Never](Ok(function(first, second^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, var B) raises E -> T](
-    function: F, first: A, var second: B
-) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
-    """Invoke once with native argument conventions and retain the exact typed error."""
-    try: return Result[T, E](Ok(function(first, second^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, var B) -> T](
-    function: F, var first: A, var second: B
-) -> Result[T, Never]:
-    """Capture a pure call once; its error channel is Never."""
-    return Result[T, Never](Ok(function(first^, second^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, var B) raises E -> T](
-    function: F, var first: A, var second: B
-) -> Result[T, E]:
-    """Invoke once with native argument conventions and retain the exact typed error."""
-    try: return Result[T, E](Ok(function(first^, second^)))
-    except error: return Result[T, E](Err(error^))
-
-
-# Native keyword packs are owned homogeneous dictionaries. Fixed prefixes keep
-# their native argument conventions; all bridge arguments are positional-only.
-def attempt[K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var **kwargs: K) -> T](
-    function: F, /, var **values: K
-) -> Result[T, Never]:
-    """Forward native keyword values once; preserve the selected native error channel."""
-    return Result[T, Never](Ok(function(**values^)))
-
-
-def attempt[K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var **kwargs: K) raises E -> T](
-    function: F, /, var **values: K
-) -> Result[T, E]:
-    """Forward native keyword values once; preserve the selected native error channel."""
-    try: return Result[T, E](Ok(function(**values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, /, var **kwargs: K) -> T](
-    function: F, first: A, /, var **values: K
-) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
-    """Forward native keyword values once; preserve the selected native error channel."""
-    return Result[T, Never](Ok(function(first, **values^)))
-
-
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, /, var **kwargs: K) raises E -> T](
-    function: F, first: A, /, var **values: K
-) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
-    """Forward native keyword values once; preserve the selected native error channel."""
-    try: return Result[T, E](Ok(function(first, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, /, var **kwargs: K) -> T](
-    function: F, var first: A, /, var **values: K
-) -> Result[T, Never]:
-    """Forward native keyword values once; preserve the selected native error channel."""
-    return Result[T, Never](Ok(function(first^, **values^)))
-
-
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, /, var **kwargs: K) raises E -> T](
-    function: F, var first: A, /, var **values: K
-) -> Result[T, E]:
-    """Forward native keyword values once; preserve the selected native error channel."""
-    try: return Result[T, E](Ok(function(first^, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, B, /, var **kwargs: K) -> T](
-    function: F, first: A, second: B, /, var **values: K
-) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    """Forward native keyword values once; preserve the selected native error channel."""
-    return Result[T, Never](Ok(function(first, second, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, B, /, var **kwargs: K) raises E -> T](
-    function: F, first: A, second: B, /, var **values: K
-) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    """Forward native keyword values once; preserve the selected native error channel."""
-    try: return Result[T, E](Ok(function(first, second, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, B, /, var **kwargs: K) -> T](
-    function: F, var first: A, second: B, /, var **values: K
-) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):
-    """Forward native keyword values once; preserve the selected native error channel."""
-    return Result[T, Never](Ok(function(first^, second, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, B, /, var **kwargs: K) raises E -> T](
-    function: F, var first: A, second: B, /, var **values: K
-) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):
-    """Forward native keyword values once; preserve the selected native error channel."""
-    try: return Result[T, E](Ok(function(first^, second, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, var B, /, var **kwargs: K) -> T](
-    function: F, first: A, var second: B, /, var **values: K
-) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
-    """Forward native keyword values once; preserve the selected native error channel."""
-    return Result[T, Never](Ok(function(first, second^, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, var B, /, var **kwargs: K) raises E -> T](
-    function: F, first: A, var second: B, /, var **values: K
-) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
-    """Forward native keyword values once; preserve the selected native error channel."""
-    try: return Result[T, E](Ok(function(first, second^, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, var B, /, var **kwargs: K) -> T](
-    function: F, var first: A, var second: B, /, var **values: K
-) -> Result[T, Never]:
-    """Forward native keyword values once; preserve the selected native error channel."""
-    return Result[T, Never](Ok(function(first^, second^, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, var B, /, var **kwargs: K) raises E -> T](
-    function: F, var first: A, var second: B, /, var **values: K
-) -> Result[T, E]:
-    """Forward native keyword values once; preserve the selected native error channel."""
-    try: return Result[T, E](Ok(function(first^, second^, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-# Mutable prefixes retain exclusive native borrows on success and failure.
-def attempt[A: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A) -> T](
-    function: F, mut first: A
-) -> Result[T, Never]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first)))
-
-
-def attempt[A: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A) raises E -> T](
-    function: F, mut first: A
-) -> Result[T, E]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, mut B) -> T](
-    function: F, first: A, mut second: B
-) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, second)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, mut B) raises E -> T](
-    function: F, first: A, mut second: B
-) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, second)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, mut B) -> T](
-    function: F, var first: A, mut second: B
-) -> Result[T, Never]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first^, second)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, mut B) raises E -> T](
-    function: F, var first: A, mut second: B
-) -> Result[T, E]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first^, second)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, B) -> T](
-    function: F, mut first: A, second: B
-) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, second)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, B) raises E -> T](
-    function: F, mut first: A, second: B
-) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, second)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, var B) -> T](
-    function: F, mut first: A, var second: B
-) -> Result[T, Never]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, second^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, var B) raises E -> T](
-    function: F, mut first: A, var second: B
-) -> Result[T, E]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, second^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, mut B) -> T](
-    function: F, mut first: A, mut second: B
-) -> Result[T, Never]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, second)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, mut B) raises E -> T](
-    function: F, mut first: A, mut second: B
-) -> Result[T, E]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, second)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, /, var **kwargs: K) -> T](
-    function: F, mut first: A, /, var **values: K
-) -> Result[T, Never]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, **values^)))
-
-
-def attempt[A: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, /, var **kwargs: K) raises E -> T](
-    function: F, mut first: A, /, var **values: K
-) -> Result[T, E]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(A, mut B, /, var **kwargs: K) -> T](
-    function: F, first: A, mut second: B, /, var **values: K
-) -> Result[T, Never] where not conforms_to(A, TrivialRegisterPassable):
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, second, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(A, mut B, /, var **kwargs: K) raises E -> T](
-    function: F, first: A, mut second: B, /, var **values: K
-) -> Result[T, E] where not conforms_to(A, TrivialRegisterPassable):
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, second, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(var A, mut B, /, var **kwargs: K) -> T](
-    function: F, var first: A, mut second: B, /, var **values: K
-) -> Result[T, Never]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first^, second, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(var A, mut B, /, var **kwargs: K) raises E -> T](
-    function: F, var first: A, mut second: B, /, var **values: K
-) -> Result[T, E]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first^, second, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, B, /, var **kwargs: K) -> T](
-    function: F, mut first: A, second: B, /, var **values: K
-) -> Result[T, Never] where not conforms_to(B, TrivialRegisterPassable):
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, second, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, B, /, var **kwargs: K) raises E -> T](
-    function: F, mut first: A, second: B, /, var **values: K
-) -> Result[T, E] where not conforms_to(B, TrivialRegisterPassable):
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, second, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, var B, /, var **kwargs: K) -> T](
-    function: F, mut first: A, var second: B, /, var **values: K
-) -> Result[T, Never]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, second^, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, var B, /, var **kwargs: K) raises E -> T](
-    function: F, mut first: A, var second: B, /, var **values: K
-) -> Result[T, E]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, second^, **values^)))
-    except error: return Result[T, E](Err(error^))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, //,
-            F: def(mut A, mut B, /, var **kwargs: K) -> T](
-    function: F, mut first: A, mut second: B, /, var **values: K
-) -> Result[T, Never]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    return Result[T, Never](Ok(function(first, second, **values^)))
-
-
-def attempt[A: Movable & Deinitable, B: Movable & Deinitable, K: Movable & Deinitable, T: Movable & Deinitable, E: Movable & Deinitable, //,
-            F: def(mut A, mut B, /, var **kwargs: K) raises E -> T](
-    function: F, mut first: A, mut second: B, /, var **values: K
-) -> Result[T, E]:
-    """Forward once, preserving caller mutation and the exact native error channel."""
-    try: return Result[T, E](Ok(function(first, second, **values^)))
-    except error: return Result[T, E](Err(error^))
+    Returns:
+        A complete Result[T, E] containing Err(error).
+    """
+    return _keep_err[T, E](error^)
 
 
 def raise_on_err[T: Movable & Deinitable, E: Movable & Deinitable](
@@ -1002,26 +2170,97 @@ def _keep_err[T: Movable & Deinitable, E: Movable & Deinitable](var error: E) ->
     return Result[T, E](Err(error^))
 
 
-def attempt_once[F: OnceThunk](var function: F) -> Result[F.Out, F.Error]:
-    """Consume a `OnceThunk`, call it once and capture its outcome.
+@fieldwise_init
+struct _ResultRetainFinish[T: Movable & Deinitable, E: Movable & Deinitable,
+                          U: Movable & Deinitable, paired: Bool](Binary, Defaultable):
+    comptime First = Self.T
+    comptime Second = Result[Self.U, Self.E]
+    comptime Keep = _Retained[Self.T, Self.U, Self.paired]
+    comptime Out = Result[Self.Keep.Out, Self.E]
+    def call(self, var value: Self.T, var produced: Self.Second) -> Self.Out:
+        return produced^.map(Self.Keep(value^))
 
-    Receiver state, results and errors may be move-only; unused state is
-    destroyed on every path. References in the result or error must belong to
-    owners that outlive the thunk.
 
-    Parameters:
-        F: The thunk's type.
+@fieldwise_init
+struct _ResultRetain[T: Movable & Deinitable, E: Movable & Deinitable,
+                     C: BorrowCallContract & Movable & Deinitable, paired: Bool, whole: Bool = False, failed: Bool = False](OnceUnary):
+    """Sequence a borrowed projection, restoring the selected source constructor.
 
-    Args:
-        function: The thunk, consumed.
-
-    Returns:
-        `Ok(result)`, or `Err(error)` for its declared error.
+    Retention shares the bind/traversal adapter. Result's native transformation
+    only unwraps the retained Result for whole-outcome observers.
     """
-    var pending = Optional(function^)
-    var context = Pointer(to=pending)
-    return _attempt_core[F.Out, F.Error, type_of(context),
-        _attempt_consuming[F, origin_of(pending)]](context)
+    var function: Self.C
+    comptime Arg = Result[Self.T, Self.E] if Self.whole else Self.E if Self.failed else Self.T
+    comptime U = downcast[Self.C.Result, _ResultType].Value
+    comptime Value = Tuple[Self.T, Self.U] if Self.paired else Self.T
+    comptime Out = Result[Self.Value, Self.E]
+    comptime Error = Self.C.Failure
+    def call_once(deinit self, var arg: Self.Arg) raises Self.Error -> Self.Out:
+        comptime assert not Self.paired or not (Self.whole or Self.failed)
+        comptime assert Self.C.Payload == Self.Arg, "Result retention: callback must borrow the selected payload"
+        comptime assert Self.C.Result == Result[Self.U, Self.E], "Result retention: callback must return a Result with the same error type"
+        comptime Retain = _Retain[Self.Arg, Self.C, _ResultRetainFinish[Self.Arg, Self.E, Self.U, Self.paired]]
+        comptime assert _ErrorCompatible[Self.Error, Retain.Error]
+        var retained = _unary_once_as[Self.Error](Retain(self.function^), arg^)
+        comptime if Self.failed:
+            return rebind_var[Self.Out](_result_transform[Self.E, Self.E, Self.T, Self.E, Identity[Self.E], True, True, False](
+                Identity[Self.E](), rebind_var[Result[Self.E, Self.E]](retained^)))
+        elif not Self.whole:
+            comptime assert type_of(retained) == Self.Out
+            return rebind_var[Self.Out](retained^)
+        else:
+            # A whole-outcome observer unwraps the retained Result.
+            # Failed observer effects keep their Err.
+            comptime assert type_of(retained) == Result[Self.Arg, Self.E]
+            return _result_transform[Self.Arg, Self.E, Self.Value, Self.E, Identity[Self.Arg], True, False, True](
+                Identity[Self.Arg](), rebind_var[Result[Self.Arg, Self.E]](retained^))
+
+
+@fieldwise_init
+struct _ResultConditional[C: BorrowCallContract & Movable & Deinitable, G: Movable & Deinitable](Movable):
+    var predicate: Self.C
+    var function: Self.G
+    def apply[T: Movable & Deinitable, E: Movable & Deinitable,
+              P: Movable & Deinitable, Q: Movable & Deinitable,
+              Y: Movable & Deinitable, X: Movable & Deinitable,
+              success: Bool, wrap: Bool, wrap_ok: Bool,
+              continuation: def(var P, var Self.G) raises Y capturing -> Q](
+        deinit self, var payload: P
+    ) raises X capturing -> Result[T, E]:
+        comptime assert P == (T if success else E)
+        comptime assert Self.C.Payload == P and Self.C.Result == Bool, "Result predicate must borrow the selected payload and return Bool"
+        comptime assert _ErrorCompatible[X, Self.C.Failure] and _ErrorCompatible[X, Y], "Result conditional: incompatible native errors"
+        def keep(var value: P) raises X capturing -> Result[T, E]:
+            return _transformed[T, E, P, success, True](value^)
+        def apply(var value: P, var function: Self.G) raises X capturing -> Result[T, E]:
+            try:
+                return _transformed[T, E, Q, wrap_ok, wrap](continuation(value^, function^))
+            except error:
+                _propagate_error[X](error^)
+        return _guard_owned[P, Self.C, Self.G, Result[T, E], X, not success, keep, apply](payload^, self.predicate^, self.function^)
+
+
+def _conditional_result[T: Movable & Deinitable, E: Movable & Deinitable,
+                        C: BorrowCallContract & Movable & Deinitable, G: Movable & Deinitable,
+                        P: Movable & Deinitable, Q: Movable & Deinitable,
+                        Y: Movable & Deinitable, X: Movable & Deinitable,
+                        success: Bool, wrap: Bool, wrap_ok: Bool,
+                        apply: def(var P, var G) raises Y capturing -> Q](
+    var subject: Result[T, E], var predicate: C, var function: G
+) raises X -> Result[T, E]:
+    """Guard one owned payload, retaining it or applying a continuation.
+
+    Ensure retains accepted successes; selective recovery retains rejected
+    errors. Native continuations enter through the existing owned-context
+    boundary: a capturing native signature cannot conform to Unary on Mojo 1.1.
+    Library continuations use _call_transform and its canonical receiver dispatch.
+    Constructor selection and Result validation stay in _transformed.
+    """
+    comptime Context = _ResultConditional[C, G]
+    def invoke(var payload: P, var context: Context) raises X capturing -> Result[T, E]:
+        return context^.apply[T, E, P, Q, Y, X, success, wrap, wrap_ok, apply](payload^)
+    return _transform_result_owned[T, E, T, E, X, success, False, P, Result[T, E], Context, invoke](
+        subject^, Context(predicate^, function^))
 
 
 # Native callbacks borrow the caller's context; library unary callbacks move
@@ -1030,11 +2269,11 @@ def _transform_result[T: Movable & Deinitable, E: Movable & Deinitable,
                       U: Movable & Deinitable, V: Movable & Deinitable,
                       X: Movable & Deinitable, success: Bool, wrap: Bool,
                       P: Movable & Deinitable, Q: Movable & Deinitable, Context: AnyType,
-                      apply: def(var P, Context) raises X capturing -> Q](
+                      apply: def(var P, Context) raises X capturing -> Q, wrap_ok: Bool = success](
     var subject: Result[T, E], context: Context
 ) raises X -> Result[U, V] where (E == V if success else T == U):
     return _transform_result_owned[T,E,U,V,X,success,wrap,P,Q,Pointer[Context,origin_of(context)],
-        _borrowed_transform[P,Q,X,Context,origin_of(context),apply]](subject^,Pointer(to=context))
+        _borrowed_transform[P,Q,X,Context,origin_of(context),apply],wrap_ok](subject^,Pointer(to=context))
 
 
 def _borrowed_transform[P:Movable & Deinitable,Q:Movable & Deinitable,X:Movable & Deinitable,
@@ -1046,22 +2285,82 @@ def _borrowed_transform[P:Movable & Deinitable,Q:Movable & Deinitable,X:Movable 
 
 def _transform_result_owned[T:Movable & Deinitable,E:Movable & Deinitable,U:Movable & Deinitable,V:Movable & Deinitable,
                             X:Movable & Deinitable,success:Bool,wrap:Bool,P:Movable & Deinitable,Q:Movable & Deinitable,
-                            C:Movable & Deinitable,callback:def(var P,var C) raises X capturing -> Q](
+                            C:Movable & Deinitable,callback:def(var P,var C) raises X capturing -> Q,wrap_ok:Bool=success](
     var subject:Result[T,E],var context:C
 ) raises X -> Result[U,V] where (E == V if success else T == U):
-    """Transform one case with `callback` (wrapped, or a Result itself); the other passes through."""
+    """Transform one case with `callback`; the other passes through.
+
+    wrap_ok selects the constructor independently of the input case: recover
+    transforms Err into Ok through this same branch and ownership mechanism.
+    """
     comptime assert (T if success else E) == P, "Result: exact callback input required"
-    if subject.is_ok():
-        var value = subject^._take_ok()
-        comptime if success:
-            return _transformed[U,V,Q,success,wrap](callback(rebind_var[P](value^), context^))
-        else:
-            return _keep_ok[U,V](rebind_var[U](value^))
-    var error = subject^._take_err()
     comptime if success:
-        return _keep_err[U,V](rebind_var[V](error^))
+        return _fold_result_owned[T, E, Result[U, V], X, X, Never, C, NoneType,
+            _transformed_call[P, Q, U, V, X, C, wrap_ok, wrap, callback, T],
+            _preserved_result[E, U, V, False]](subject^, context^, NoneType())
     else:
-        return _transformed[U,V,Q,success,wrap](callback(rebind_var[P](error^), context^))
+        return _fold_result_owned[T, E, Result[U, V], X, Never, X, NoneType, C,
+            _preserved_result[T, U, V, True],
+            _transformed_call[P, Q, U, V, X, C, wrap_ok, wrap, callback, E]](subject^, NoneType(), context^)
+
+
+def _fold_result_owned[T: Movable & Deinitable, E: Movable & Deinitable,
+                       R: Movable & Deinitable, Z: Movable & Deinitable,
+                       X: Movable & Deinitable, Y: Movable & Deinitable,
+                       C: Movable & Deinitable, G: Movable & Deinitable,
+                       apply_ok: def(var T, var C) raises X capturing -> R,
+                       apply_err: def(var E, var G) raises Y capturing -> R](
+    var subject: Result[T, E], var on_ok: C, var on_err: G
+) raises Z -> R:
+    """Select one owned payload and context; dispose of the inactive context.
+
+    Owned folds and transformations share this branch boundary. Each native
+    signature enters through a context adapter; no callback needs Copyable.
+    """
+    comptime assert _ErrorCompatible[Z, X] and _ErrorCompatible[Z, Y], "Result fold: incompatible native errors"
+    if subject.is_ok():
+        try:
+            return apply_ok(subject^._take_ok(), on_ok^)
+        except error:
+            _propagate_error[Z](error^)
+    try:
+        return apply_err(subject^._take_err(), on_err^)
+    except error:
+        _propagate_error[Z](error^)
+
+
+def _transformed_call[P: Movable & Deinitable, Q: Movable & Deinitable,
+                      U: Movable & Deinitable, V: Movable & Deinitable,
+                      X: Movable & Deinitable, C: Movable & Deinitable,
+                      success: Bool, wrap: Bool,
+                      apply: def(var P, var C) raises X capturing -> Q, A: Movable & Deinitable = P](
+    var payload: A, var context: C
+) raises X capturing -> Result[U, V]:
+    comptime assert A == P, "Result: exact callback input required"
+    return _transformed[U, V, Q, success, wrap](apply(rebind_var[P](payload^), context^))
+
+
+def _preserved_result[P: Movable & Deinitable, U: Movable & Deinitable,
+                      V: Movable & Deinitable, success: Bool](
+    var payload: P, var unused: NoneType
+) raises Never capturing -> Result[U, V]:
+    return _transformed[U, V, P, success, True](payload^)
+
+
+def _result_both[T: Movable & Deinitable, E: Movable & Deinitable,
+                 U: Movable & Deinitable, V: Movable & Deinitable,
+                 P: Movable & Deinitable, Q: Movable & Deinitable,
+                 X: Movable & Deinitable, Y: Movable & Deinitable, Z: Movable & Deinitable,
+                 C: Movable & Deinitable, G: Movable & Deinitable,
+                 wrap: Bool, recover: Bool,
+                 apply_ok: def(var T, var C) raises X capturing -> P,
+                 apply_err: def(var E, var G) raises Y capturing -> Q](
+    var subject: Result[T, E], var on_ok: C, var on_err: G
+) raises Z -> Result[U, V]:
+    """Map, recover or sequence either branch through the owned fold."""
+    return _fold_result_owned[T, E, Result[U, V], Z, X, Y, C, G,
+        _transformed_call[T, P, U, V, X, C, True, wrap, apply_ok],
+        _transformed_call[E, Q, U, V, Y, G, recover, wrap, apply_err]](subject^, on_ok^, on_err^)
 
 
 def _transformed[U:Movable & Deinitable,V:Movable & Deinitable,Q:Movable & Deinitable,success:Bool,wrap:Bool](
@@ -1079,50 +2378,19 @@ def _transformed[U:Movable & Deinitable,V:Movable & Deinitable,Q:Movable & Deini
         return _keep_err[U,V](rebind_var[V](output^))
 
 
-def _attempt_core[R: Movable & Deinitable, E: Movable & Deinitable, C: AnyType,
-                  apply: def(C) raises E capturing -> R](context: C) -> Result[R,E]:
-    try:
-        return Result[R,E](Ok(apply(context)))
-    except error:
-        return Result[R,E](Err(error^))
-
-
-def _attempt_consuming[F: OnceThunk, origin: MutOrigin](
-    context: Pointer[Optional[F], origin]
-) raises F.Error capturing -> F.Out:
-    # _attempt_core borrows its native context; this boundary moves the pending
-    # owner into call_once. Result/error conversion stays shared.
-    var function = context[].take()
-    return function^.call_once()
-
-
-def _attempt_native[R: Movable & Deinitable, E: Movable & Deinitable,
-                    F: def() raises E -> R](function: F) raises E capturing -> R:
-    return function()
-
-
-# Pure and raising native traits cannot be substituted through an enclosing
-# generic function on Mojo 1.1. Both ABI adapters use the same Result bridge.
-def _attempt_native_pure[R: Movable & Deinitable, F: def() -> R](
-    function: F
-) raises Never capturing -> R:
-    return function()
-
-
-
-
-def _call_transform[P:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](
+def _call_transform[P:Movable & Deinitable,F:UnaryContract & Movable & Deinitable,
+                    Q:Movable & Deinitable = F.Out](
     var payload:P,var function:F
-) raises F.Error capturing -> F.Out:
-    comptime assert F.Arg == P
-    return call_once(function^,rebind_var[F.Arg](payload^))
+) raises F.Error capturing -> Q:
+    comptime assert F.Arg == P and F.Out == Q
+    return rebind_var[Q](call_once(function^,rebind_var[F.Arg](payload^)))
 
 
 def _result_transform[T:Movable & Deinitable,E:Movable & Deinitable,
                       U:Movable & Deinitable,V:Movable & Deinitable,
-                      F:UnaryContract & Movable & Deinitable,success:Bool,wrap:Bool](
+                      F:UnaryContract & Movable & Deinitable,success:Bool,wrap:Bool,wrap_ok:Bool=success](
     var function:F,var value:Result[T,E]
 ) raises F.Error -> Result[U,V] where (E == V if success else T == U):
     comptime P = T if success else E
     return _transform_result_owned[T,E,U,V,F.Error,success,wrap,P,F.Out,F,
-        _call_transform[P,F]](value^,function^)
+        _call_transform[P,F],wrap_ok](value^,function^)

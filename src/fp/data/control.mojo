@@ -43,9 +43,16 @@ struct Continue[T: Movable & Deinitable](Movable, Copyable where conforms_to(T, 
         return self.value^
 
 
-struct _ControlCases[B: Movable & Deinitable, C: Movable & Deinitable](Data):
+trait _ControlShape(Data):
+    comptime BreakValue: Movable & Deinitable
+    comptime ContinueValue: Movable & Deinitable
+
+
+struct _ControlCases[B: Movable & Deinitable, C: Movable & Deinitable](_ControlShape):
     """ControlFlow's data type: its two constructors, neither recursive."""
     comptime Layer[R: Value] = Cases[Break[Self.B], Continue[Self.C]]
+    comptime BreakValue = Self.B
+    comptime ContinueValue = Self.C
 
 
 comptime ControlFlow[B: Movable & Deinitable, C: Movable & Deinitable] = Choice[_ControlCases[B, C]]

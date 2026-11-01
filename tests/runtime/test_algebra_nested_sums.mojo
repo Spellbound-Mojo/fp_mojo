@@ -1,5 +1,5 @@
 """Mixed sums preserve earlier Writer and State effects on either failure."""
-from algebra_support.nested import Base, Logged, Stack, Next, Endpoint, Emit, endpoint, finish, assert_payload
+from algebra_support.nested import FinishCompatible, Base, Logged, Stack, Next, Endpoint, Emit, endpoint, finish, assert_payload
 from fp.algebra import flat_map
 from fp.effects import Reader, State, run, run_writer
 from fp._internal.errors import _propagate_error
@@ -8,20 +8,19 @@ from std.builtin.rebind import rebind, rebind_var
 from std.testing import assert_equal
 
 
-def check[optional_first:Bool,stateful:Bool]() raises:
+def check[optional_first:Bool,stateful:Bool,o:ImmOrigin](ref[o] environment:Int=10) raises where Stack[optional_first,stateful].Element[Endpoint[optional_first,stateful]] == Next[optional_first,stateful].Arg and Stack[optional_first,stateful].BindCompatible[Endpoint[optional_first,stateful],Next[optional_first,stateful]] and FinishCompatible[stateful,Stack[optional_first,stateful].Bound[Endpoint[optional_first,stateful],Next[optional_first,stateful]],o]:
     for source_failure in [0,1,2,4]:
         for next_failure in range(5):
             var trace=ArcPointer(List[Int]())
             comptime C=Stack[optional_first,stateful].Bound[Endpoint[optional_first,stateful],Next[optional_first,stateful]]
             var value:C
             try:
-                value=flat_map[Stack[optional_first,stateful]](Next[optional_first,stateful](trace,next_failure),endpoint[optional_first,stateful](trace,1,5,source_failure))
+                value=flat_map[Stack[optional_first,stateful]](endpoint[optional_first,stateful](trace,1,5,source_failure),Next[optional_first,stateful](trace,next_failure))
             except error:
                 comptime assert type_of(error)==Never
                 _propagate_error[Never](error^)
             assert_equal(len(trace[]),0)
             var caught=0
-            var environment=10
             var result=Optional[Emit[optional_first,stateful].Output]()
             try:
                 result=Optional(finish[optional_first,stateful](value^,environment))

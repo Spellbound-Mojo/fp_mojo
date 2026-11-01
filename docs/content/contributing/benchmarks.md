@@ -27,6 +27,15 @@ with the commands, diagnostics, timings and outcomes. A timeout prints
 stops at the first failure, so measure slow programs one at a time. `--timeout`
 accepts up to 180 seconds.
 
+On Linux the memory budget samples the compiler process and its descendants
+using `/proc` parent IDs. It includes children launched by other threads and
+works when the mount omits `task/*/children`. Exceeding the sampled budget
+terminates the command's process group. RSS samples are not an atomic measure
+of unique physical memory: shared pages can appear in several processes, and
+brief peaks can occur between samples. The report separately retains the native
+timer's peak RSS. Older reports on mounts without child lists retained that
+timer measurement but could undercount the sampled process tree.
+
 **Always measure cold.** The shared project cache keeps compiled parameter work: a
 build that takes minutes from an empty cache can take seconds warm.
 

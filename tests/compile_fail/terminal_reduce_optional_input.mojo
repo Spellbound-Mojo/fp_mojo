@@ -1,4 +1,4 @@
-# error: no matching function in call to 'reduce_optional'
+# error: cannot prove constraint for candidate
 from fp.iteration import fold_left, reduce, reduce_optional, fold_until
 from fp.iteration import find, any, all
 from fp.data import ControlFlow, Continue
@@ -11,7 +11,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime B = type_of(b)
     print(a[0], b[0])
     def step(var acc: B, var item: A) -> B: return acc
-    _ = reduce_optional[T=A](step, iter(List[A]()))
+    _ = reduce_optional[T=A](iter(List[A]()), step)
 
 def main():
     var first: List[Int] = [11]

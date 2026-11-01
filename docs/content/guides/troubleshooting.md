@@ -4,7 +4,7 @@ Start by checking the compiler and the import path, then run a known example
 next to your program:
 
 ```sh
-pixi run mojo --version                                   # Mojo 1.1.0 (8189361e)
+pixi run mojo --version                                   # Mojo 1.2.0 (2016d0cd)
 pixi run mojo run -I src docs/examples/quickstart.mojo    # prints 42
 pixi run mojo run -I src my_program.mojo
 ```
@@ -21,8 +21,8 @@ trigger the failure.
 | Cannot import fp | `src` or the package directory is missing from `-I`. Follow the source or package commands in [installation](../start/installation.md). |
 | A copied value is required | A value that is not implicitly copyable was passed without a transfer. Choose an explicit `.copy()` or `^`, according to the semantics you intend. |
 | Incompatible native error | A callback, projection or fallback raises a different error type. Map errors explicitly and select one common `E`. |
-| `cannot call function that may raise '...Error' in context that supports an error type of 'Error'` when running a Reader or State computation | Mojo 1.1 does not reduce the computation's error alias in a plain `raises` context. Run it inside `try`/`except`; the caught error keeps its exact type. |
-| `invalid redefinition of 'def(...)'`, or `cannot implicitly convert 'T' value to 'T'`, in a program with several modules | Two modules define a type with the same name and spell the same function type over it, and Mojo 1.1 treats the two function types as one. Rename the type in one module ([native boundaries](../architecture/native-boundaries.md#known-compiler-defects)); in the test suite, the build names the module to change. |
+| `cannot call function that may raise '...Error' in context that supports an error type of 'Error'` when running a Reader or State computation | Certain compiler contexts do not reduce the computation's error alias in a plain `raises` context. Run it inside `try`/`except`; the caught error keeps its exact type. |
+| `invalid redefinition of 'def(...)'`, or `cannot implicitly convert 'T' value to 'T'`, in a program with several modules | Two modules define a type with the same name and spell the same function type over it, and the compiler treats the two function types as one. Rename the type in one module ([native boundaries](../architecture/native-boundaries.md#known-compiler-defects)); in the test suite, the build names the module to change. |
 | `pipe: stage N should take X, return Y and raise …; it takes …` (or `flow:`, `compose:`) | Stage N's input, result or error does not fit the chain; stages count from 0 in the order they run. Fix that stage's types, or map its error to the chain's error. |
 | `pipe: stage N must take one argument` | A closure or library value is mixed with native functions that are not promoted. Promote the native functions with `as_unary`. |
 | `no matching function in call to 'match'` | A clause is not a plain function or a lambda without captures, or the clauses have more than three parameters. Pass the data a clause needs with `context=` instead of capturing it, and give each clause one parameter per subject, plus the context. |
@@ -37,7 +37,10 @@ trigger the failure.
 | Generic pipeline result cannot convert to `R` | The inferred type expression has not been resolved to the declared result. Use the [checked generic wrapper](../tutorial/pipelines.md#forward-through-a-generic-function) with an explicit `E`, or an explicit `Results` path. |
 | `partial` rejects the target | The function captures, has a `mut` or owned remaining parameter, or binds more than eight arguments. Write a native closure with an explicit capture list; see [partial](../reference/functions.md#partial). |
 | The first build is slow, later ones fast | Mojo caches compiled parameter work. Measure compile time with an empty `MODULAR_CACHE_DIR`; see [benchmarks](../contributing/benchmarks.md). |
-| O0 works, O3 fails for owned mutable capture | A known Mojo 1.1 lost-update defect affects certain encodings. Use an explicit mutable borrowed context instead of owned mutable closure state; see [native boundaries](../architecture/native-boundaries.md#known-compiler-defects). |
+| O0 works, O3 fails for owned mutable capture | A known compiler lost-update defect affects certain encodings. Use an explicit mutable borrowed context instead of owned mutable closure state; see [native boundaries](../architecture/native-boundaries.md#known-compiler-defects). |
+| `constraint failed: OS threads are qualified only on 64-bit Linux` | The multi-threaded work-stealing pool (`OSThread`, `BlockingPool`, POSIX poller) is qualified on 64-bit Linux. On macOS or non-Linux environments, test async logic deterministically using `TestControl` virtual time or single-threaded execution. |
+| `constraint failed: cannot erase '...': it reaches a 'Pointer' field ... not ThreadTransferable` | Erased async payloads must be safe to move and destroy across worker threads. Ensure custom structs own their allocations, or explicitly conform to `ThreadTransferable` if internally synchronized (see [thread safety](../architecture/async-thread-safety.md)). |
+| `cannot infer type parameter` in `traverse` | `traverse` infers target and source families automatically. Pass `traverse(collection^, func)` without explicit type arguments, or verify the callback returns an applicative carrier matching the source collection. |
 
 ## Diagnose a match
 
@@ -64,8 +67,8 @@ with the compiler version, optimization level, target, source and diagnostics.
 Pair an invalid program with a nearby valid one, and never run an invalid
 program if the compiler unexpectedly accepts it.
 
-[Native Mojo boundaries](../architecture/native-boundaries.md) lists the
-Mojo 1.1 limitations and defects, along with supported alternatives that preserve
+[Native Mojo boundaries](../architecture/native-boundaries.md) lists known compiler
+limitations and boundaries, along with supported alternatives that preserve
 callback types and origins.
 
 ## Result fold does not compile

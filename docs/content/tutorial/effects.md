@@ -7,14 +7,14 @@ values that you can compose with the algebra operations from
 
 | Effect | What passes between steps | How to get the result |
 |---|---|---|
-| `Reader[R]` | A shared environment of type `R` | `run` borrows the environment and returns the payload |
-| `State[S]` | A state of type `S`, updated by each step | `run` consumes the initial state and returns `(payload, final_state)` |
-| `Writer[W]` | Output combined by the monoid `W` | `run_writer` returns `(log, payload)` |
+| `Reader[R]` | A shared environment of type `R` | Pipeline `.run(environment)` borrows the environment and returns the payload |
+| `State[S]` | A state of type `S`, updated by each step | Pipeline `.run(state)` consumes the initial state and returns `(payload, final_state)` |
+| `Writer[W]` | Output combined by the monoid `W` | Pipeline `.run()` returns the base carrier of `(log, payload)` |
 
 Reader and State are deferred: constructing a computation does not execute its
 steps. Writer over the default `IdentityFamily` combines its values eagerly;
-`run_writer` unwraps the result. Writer over a deferred base follows that base's
-evaluation rules.
+`.run()` unwraps the result. Writer over a deferred base follows that base's
+evaluation rules; unwrapping does not execute that base.
 
 ## Read configuration with Reader
 
@@ -24,10 +24,11 @@ charge.
 
 <!-- example: docs/examples/effects_reader.mojo -->
 
-`PricingReader` is an alias for `Reader[TutorialPricing]`. `ask` produces a
-computation that copies the environment into its payload, and `map` transforms
-that payload with `quote`. Because `ask` copies, the configuration implements
-`Copyable`. Reader's `run` itself only borrows the environment.
+`PricingReader` is an alias for `Reader[TutorialPricing]`.
+`asks[PricingReader](quote)` projects a price directly from the borrowed
+configuration. The configuration only needs `Movable`; neither the projection
+nor Reader's `run` copies it. Use `ask` when the payload should be a copy of
+the whole environment.
 
 Building `standard` leaves `calls` at zero. Running it with a unit price of 12
 and shipping of 5 calls `quote` once and returns `12 * 3 + 5 = 41`.
@@ -37,23 +38,21 @@ the unit price and changes shipping to zero, so the promotional quote is 36.
 The original configuration still has shipping of 5. The temporary environment
 exists only for that run; `local` rejects a base whose result would keep it.
 
-### Keep borrowed callbacks alive until the run
+### Keep captured references alive until the run
 
-`map[PricingReader](quote, ...)` borrows the native closure. The computation
-must run while `quote` is alive and unmoved. Its captured `calls` variable must
-also remain alive and stable. In the example, both runs finish in the scope
-that owns the closure and counter.
+`asks` owns its callback value, including the callback's concrete captures.
+Here `quote` captures a reference to `calls`, so both runs finish while that
+counter is alive and stable. Owning a callback does not extend the life of
+anything it borrows. Transfer a callback with owned captures using `^`.
 
-To store a native callback by value, adapt it with `as_unary`; use
-`as_unary(f^)` when transferring a callback with owned captures. The computation
-then owns that callable value. Any references the callable captures still keep
-their own origin restrictions. Owning the callable does not extend the life of
-the values it borrows. These are caller obligations; the pinned compiler does
-not reject every invalid owner reassignment.
+Native closures passed to `.map`, `flat_map` and `traverse` over deferred
+Reader or State instances are borrowed until execution; plain functions are
+copied. Keep a closure alive and unmoved, or store it by value with `as_unary`; `as_unary(f^)` transfers
+owned captures. Captured references retain their origin restrictions in either
+case. These are caller obligations; the pinned compiler does not reject every
+invalid owner reassignment.
 
-The same rules apply to native callbacks passed to `flat_map` and `traverse`
-over deferred Reader or State instances. See
-[ownership and errors](../start/ownership.md) for the shared conventions.
+See [ownership and errors](../start/ownership.md) for the shared conventions.
 
 ## Pass an evolving counter through State
 
@@ -63,15 +62,16 @@ allocating the next number does.
 
 <!-- example: docs/examples/effects_state.mojo -->
 
-`get` reads a copy of the current state. Mapping `ticket` over it returns the
-payload `"ticket 10"` and leaves the state at 10. `run` therefore returns
-`("ticket 10", 10)`.
+`inspect[CounterState](ticket)` borrows the current state to format a ticket.
+It returns the payload `"ticket 10"` and moves the unchanged state onward, so
+`run` returns `("ticket 10", 10)`. This projection also works for move-only
+state. Use `get` when the payload should be a copy of the whole state.
 
-`modify(increment)` changes the state and returns `None`. `flat_map` then calls
-`read_counter`, whose `get` sees the updated value. Starting from 10, the
-computation returns `(11, 11)`. The helper's return annotation,
-`type_of(get[CounterState]())`, names the concrete deferred computation it
-returns, rather than the `Int` that a later run will produce.
+`modify(increment)` changes the state and returns `None`.
+`.product_r(get[CounterState]())` combines that transition with a state read
+and keeps the read's payload. Both recipes exist before combination, but their
+execution remains deferred until `.run(10)`, which returns `(11, 11)`.
+Use `.followed_by(factory)` when constructing the next recipe must also wait.
 
 `put(0)` replaces the state. Sequencing another `get` after it returns `(0, 0)`.
 Each call to `run` in this example starts a separate computation from state 10;
@@ -80,6 +80,12 @@ state as the next run's initial state.
 
 State's `run` consumes both the computation and the initial state. An `Int`
 can be copied implicitly; move a state with owned resources using `^`.
+
+When only one output matters, finish with `.run_value(initial_state)` for the
+payload or `.run_state(initial_state)` for the final state. These keep the
+base effect and consume the unused output without copying it. See
+[State execution outputs](../reference/effects.md#choose-a-state-execution-output)
+for a complete example, including Optional state computations.
 
 ## Accumulate output with Writer
 
@@ -90,12 +96,15 @@ are appended in execution order.
 <!-- example: docs/examples/effects_writer.mojo -->
 
 `tell("ready")` records a log with a `None` payload. It does not print anything;
-the example unwraps the value with `run_writer` and prints the log itself.
+the example selects the log with `.run_log()` and prints it. Use `.run_value()`
+when only the payload is needed, or `.run()` for both outputs. These keep the
+base effect and move the selected output without copying the other one.
 
 `writer` constructs a Writer value from `(log, payload)`. The initial value has
-log `"start; "` and payload 3. `flat_map(add_fee, ...)` passes 3 to `add_fee`,
-which returns payload 5 and log `"fee +2"`. Writer combines the logs into
-`"start; fee +2"`.
+log `"start; "` and payload 3. `.map(add_fee)` changes the payload to 5,
+and `.tell("fee +2")` appends output, producing log `"start; fee +2"`.
+The callback is an ordinary `Int`-to-`Int` function. Use `flat_map` when the
+next computation itself produces both a payload and a log.
 
 `listen` keeps that log and pairs the payload with a copy of it. `censor` then
 formats the outer log with brackets. The final result is:
@@ -121,6 +130,9 @@ failure:
 <!-- example: docs/examples/state_result.mojo -->
 
 Both computations set the state to 15 and then fail with `Err("rejected")`.
+`product_r` sequences the two recipes and retains the failure's result. StateT
+recipes infer their family; `pipeline[Keep]` explicitly selects the erased
+ResultT layer before combining it with another computation of that layer.
 `ResultT[State[Int], String]` returns `(Err("rejected"), 15)`, so the caller can
 inspect the state reached before failure. Its outer Result is a value inside
 State's computation; run it with `run[State[Int]]`.
@@ -148,3 +160,10 @@ For other transformer combinations and their result shapes, see
 [algebra reference](../reference/algebra.md) describes the shared operations,
 and the [architecture chapter](../architecture/algebra.md) explains how
 deferred computations preserve their types, ownership and origins.
+
+## Where to go next
+
+This concludes the foundational tutorial covering pure pipelines, data types,
+algebra, and synchronous effects. To explore asynchronous execution,
+lightweight fibers, and structured concurrency, continue with the
+[Async Runtime Guide](../guides/async-runtime.md).

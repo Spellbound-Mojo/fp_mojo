@@ -1,4 +1,4 @@
-"""Functional loops and scans over native Mojo values: `while_loop`, `fori_loop` and `scan`.
+"""Functional loops and scans over native Mojo values: `while_loop`, `while_loop_mut`, `fori_loop`, `fori_loop_mut` and `scan`.
 
 They follow the sequential value semantics of JAX's control-flow operations,
 without tensor stacking, tracing, autodiff or a JIT. Branch with Mojo's `if`.
@@ -7,10 +7,31 @@ The carry may be any value: a scalar, a SIMD value, a string, a container or a
 move-only owner. Its type stays fixed, and nothing copies it. A callback is a
 plain function or a closure, with separate pure and raising overloads, or a
 shared-receiver library value: `Unary` for a `while_loop` body, `Binary` taking
-`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`, whose
-output type is then named, `scan[Y](step, ...)`. A `while_loop` predicate may
+`(Int, carry)` for a `fori_loop` body, and a `Binary` step for `scan`. A
+scan infers its output type; `scan[Y](step, ...)` selects it explicitly.
+Owned scan steps may also be `MutableBinary`, with mutable invocation preferred;
+`mut_ref(step)` retains the original state. A `while_loop` predicate may
 be a `BorrowCallable`. A call needing keywords or defaults is written as a
 closure. Callbacks keep one receiver throughout.
+
+Use `fori_loop_mut` to borrow a named library body exclusively and retain its
+mutable state after the call. It accepts shared or mutable binary callbacks,
+preferring mutable invocation when both are available. `fori_loop` also owns
+moved or temporary repeatable bodies with that preference; `mut_ref(body)`
+retains the original state. Named shared bodies keep their borrowed behavior.
+Both forms share bounds, unrolling and errors.
+
+Ordinary `while_loop(predicate, body^, carry)` owns a repeatable library body;
+mutable invocation wins over shared. It accepts owned or borrowed predicates
+through the same boundary. `mut_ref` retains either original receiver. Named
+shared predicate/body pairs keep their borrowed shared calls.
+
+`while_loop_mut(predicate, body, carry)` borrows a named unary body exclusively
+with the same repeated receiver preference. It also owns shared or mutable
+borrowing predicates; pass `mut_ref(predicate)` to retain their updated state.
+Named shared `BorrowCallable` predicates, plain functions and stored thin
+pointers keep their borrowed admission. Capturing predicates
+and pointer aliases use `BorrowSignature[A, Bool, E].capture(callback)`.
 
 Errors stop the loop at once. A predicate and a body must raise one error type,
 including any embedded origins, or one of them nothing. Nothing retries or
@@ -24,5 +45,5 @@ loop: `fori_loop[lower, upper, unroll=0](body, initial)` or
 a negative factor and an invalid static length are compile errors.
 `while_loop` has no unroll parameter.
 """
-from .loops import while_loop, fori_loop
+from .loops import while_loop, while_loop_mut, fori_loop, fori_loop_mut
 from .scan import scan, ScanLengthError, ScanStepError, ScanError

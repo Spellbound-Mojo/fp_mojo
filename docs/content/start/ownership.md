@@ -31,8 +31,7 @@ a map callback, and the value is destroyed after the call. Declare a parameter
 - **Borrowing APIs** keep the source value and its origins. They never produce a
   reference that outlives the owner.
 - **Consuming APIs** make consumption visible through `var` parameters, `deinit`
-  methods or a separately named operation (`fold_owned`, `attempt_once`,
-  `fold_owned_once`). Consuming an iterator is not the
+  methods or a separately named operation (`fold_owned`, `Capture.take`). Consuming an iterator is not the
   same as consuming the collection it borrows from.
 - **Copying APIs** require `Copyable` only when their semantics need a copy,
   for example the snapshots of `scan_left` or the bound
@@ -48,11 +47,17 @@ receives a reference to the stored constructor or value. To move a value out,
 use the type's consuming methods: `Result.fold_owned`, `Choice.unwrap`,
 `Optional.take`.
 
-For iteration, pass a native iterator or an owned collection. `fold_left(add, 0,
-values^)` consumes the collection, as `iter(values^)` does, and receives owned
+For iteration, pass a native iterator or an owned collection. `fold_left(values^, 0,
+add)` consumes the collection, as `iter(values^)` does, and receives owned
 elements; `iter(values)` borrows it and yields whatever the standard iterator
 yields for a borrowed collection. A collection passed without `^` is an implicit
 copy, which Mojo rejects for `List`.
+
+`Result.fold` borrows the payload; `fold_owned` consumes it. In either method,
+a named shared library handler is borrowed, while a moved or temporary handler
+is consumed. Mix those forms freely, and use `mut_ref(handler)` to retain mutable
+state. Handler ownership is independent of payload ownership; the `_once`
+methods remain available when you want to explicitly consume both handlers.
 
 ## Keep callable state
 
@@ -71,11 +76,118 @@ Each callable protocol states how its receiver is used:
 | Access | Protocol examples | Meaning |
 |---|---|---|
 | Shared | `Unary`, `Binary`, `Thunk`, `BorrowCallable` | The callable is read; it can be called any number of times. |
-| Exclusive | `MutableUnary`, `MutableBinary`, `MutableThunk` | The callable is mutated in place; calls are sequential. |
+| Exclusive | `MutableUnary`, `MutableBinary`, `MutableThunk`, `BorrowMutableCallable` | The callable is mutated in place; calls are sequential. |
 | Consuming | `OnceUnary`, `OnceBinary`, `OnceThunk`, `BorrowOnceCallable` | The callable is consumed by its single call. |
 
 Argument conventions are independent of receiver access: a shared callable can
 consume its arguments, and a consuming callable can borrow them.
+
+## Choose a callback form
+
+Start with a native function or closure. Use a library callable when you need
+partial application, composition or a reusable owner for captured state.
+
+| Need | Form | Contract |
+|---|---|---|
+| Call an existing function or capture local values | Native function or closure | The operation's signature determines whether it borrows or owns the callback. Captured references retain their origins. |
+| Bind leading positional arguments | `partial(function, prefix...)` | Copies the bound arguments when built and on every invocation; the remaining arguments are borrowed. Use a closure for keyword binding or owned/mutable remaining arguments. |
+| Compose ordinary transformations | `flow(first, second)` or `compose(second, first)` | Passes each whole result to the next stage; `flow` reads left to right. |
+| Compute two results from one input | `merge(left, right)` | Requires the same copyable input type; copies once for the left callback and transfers the original to the right. |
+| Transform both pair elements | `split(left, right)` | Infers both types, moves both elements, and invokes the callbacks left to right through ordinary composition. |
+| Transform one pair element | `first[Other](callback)` or `second[Other](callback)` | Moves the untouched element through without copying it; callback receiver modes, errors and origins are preserved. |
+| Apply a binary callback to a pair | `tupled(function)` | Owns the callback, consumes both pair elements without copies, and retains shared, mutable or consuming receiver requirements. |
+| Compose functions returning an effect | `kleisli[Family](first).then(second)` | Uses that family's bind: for example, Result stops at Err and Optional stops at absence. |
+| Store a native unary callback as a library value | `as_unary(function)` or `as_unary(closure^)` | Owns the callback without changing its argument, result or error types. Shared callback entry points can borrow the adapter later. |
+| Store a plain binary function as a library value | `as_binary(function)` or `as_binary(pointer)` | Copies a thin pointer into an adapter with two owned arguments. Supported binary iterator operations borrow a named adapter. |
+| Store a binary closure as a library value | `BinarySignature[A, B, R, E].capture(closure^)` | Selects the two input types, result and error before capturing the closure. `E` defaults to `Never`; the adapter retains the closure's ownership and origins. |
+| Reuse a captured predicate or projection | `BorrowSignature[A, R, E].capture(callback^)` | Owns the callback and its captures; named uses borrow the adapter and each call reads the payload. `E` defaults to `Never`. |
+| Keep predicate state between calls | `BorrowMutableCallable` | `invoke_mut(mut self, ref payload)` mutates the receiver while borrowing each payload. Family and iterator filtering, prefixes, partition, search and count own one callback for their entire run; `mut_ref` retains that state in the caller. |
+| Lend a shared callback explicitly | `shared_ref(callback)` | Selects shared calls in every supported shape. Copying or consuming the reference leaves the original intact; a deferred operation retains its origin. |
+| Inspect or reuse callback state after an operation | `mut_ref(callback)` | Lends a named callback exclusively to an operation that owns its callback. The reference retains every repeatable shape and the original origin; consuming it leaves the original intact. |
+| Retain callback state across a conditional loop | `while_loop_mut(predicate, body, carry)` | Borrows a named unary body exclusively and retains its state. Pass `mut_ref(predicate)` to retain mutable predicate state too; the predicate only reads the carry. |
+| Transfer callback state into a scan | `scan(step^, carry, source)` | Owns a repeatable step and infers its output; `mut_ref(step)` retains updated state. |
+| Transfer callback state into a while loop | `while_loop(predicate, body^, carry)` | Owns the repeatable body; owned predicates use the same receiver rule. Pass `mut_ref` to retain either callback. |
+| Transfer callback state into a counted loop | `fori_loop(lower, upper, body^, carry)` | Owns a shared or mutable repeatable body; mutable invocation wins, and empty bounds still consume it. |
+| Retain callback state across a counted loop | `fori_loop_mut(lower, upper, body, carry)` | Borrows a named library body exclusively; state remains in the caller, including after an error. |
+| Capture one library call as a Result | `Capture().run(thunk^)`, `Capture().run(shared_ref(thunk))` or `Capture().run(mut_ref(thunk))` | Move the thunk or explicitly lend its shared or mutable receiver. A reference keeps the original state available, including after failure. |
+| Control receiver mutation or consumption explicitly | A callable struct | Implement the shared, mutable or consuming protocol required by the operation. |
+
+A two-stage `flow` or `compose` can combine a plain function or stored thin
+pointer with a library stage directly, in either order. For example,
+`flow(add, partial(scale, 2))` adds two arguments and scales their sum.
+The composition owns the library stage and a copy of the pointer; no callback
+runs during construction. Unary capturing closures still use `as_unary` when
+stored as composition stages.
+
+Append more stages with `chain^.then(next)`, or chain `.then(...)` calls directly
+on a temporary composition. The old chain and the new stage move into the
+result; no callback runs and no capture is copied. Receiver capabilities still
+follow every stage, including mutable and consuming stages.
+
+For an existing unary chain, `chain^.compose(before)` transfers the same stages
+and adds a new first step. It can change the entry to zero, one or two arguments.
+Both extension methods preserve state already held by mutable stages and
+retain the origins embedded in inputs and outputs.
+
+For immediate application, `pipe(value, first, second)` accepts a plain
+function or stored thin pointer beside a shared library stage. It borrows
+the library stage for the call, so a named partial remains available afterward.
+The [immediate pipeline example](../reference/functions.md#other-pipeline-entry-points)
+reuses one surcharge callback with formatting and totaling functions.
+
+These choices do not change the operation. Mapping a callback that returns a
+Result keeps that Result as an element; `traverse` gathers effectful results,
+and `flat_map` sequences a returned carrier. A lazy `filter_map` removes one
+Optional layer. A stored Err is data; a native raised error remains a separate
+failure channel.
+
+## Reuse callbacks by name
+
+For operations with shared callback support, pass a named unary `partial`,
+`as_unary` adapter, shared unary `flow`/`compose` chain or compatible shared
+Kleisli chain directly. The operation borrows the callback without copying its
+captures. Pass `callback^` to transfer it through an owned overload. A custom
+callable's shared receiver protocol alone does not promise this automatic
+adaptation; use the ownership form documented by the operation.
+
+For `zip_with`, `map_with_index`, `scan_map` and `scan_left`, a two-argument partial, shared binary
+composition or binary `flip` wrapper supports the same named reuse. The
+[indexed mapping example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
+uses one partial in both operations.
+
+<!-- example: docs/examples/callback_reuse.mojo -->
+
+`pending` holds shared borrows of `price` and `affordable` without invoking
+them. The eager pipeline can use both callbacks while that lazy chain exists.
+It keeps prices `3` and `6`; consuming `pending` also keeps `9`. The reduction
+then reuses `price` to produce `18`. The final `price^` transfers the partial
+into `owned`, which produces `[3, 6]`.
+
+Callback ownership and payload ownership are separate choices:
+
+| Operation in the example | Callback receiver | Input payload |
+|---|---|---|
+| `map(price)` | Borrowed | Consumed by mapping; Partial's native target reads it during the call |
+| `filter(affordable)` | Borrowed | Borrowed by the predicate, then retained or discarded by filtering |
+| `map(price^)` | Owned by the iterator | Consumed by mapping |
+
+A unary partial supports both payload conventions. An `as_unary` adapter has
+an owned-argument contract, so it cannot replace a borrowing predicate or key
+merely because its receiver is reusable. Partial's bound-prefix copies still
+occur on every actual native call; callback admission adds no copy.
+
+Keep a borrowed callback alive and unmoved while an iterator, branch handle,
+deferred computation or returned view still needs it. An immediate operation
+returning an independent value releases the borrow when it finishes. Consuming
+or abandoning a lazy operation releases its callback view; owning a callback
+through `^` transfers responsibility for destroying it. Moving an owner does
+not extend the lifetime of references captured inside it.
+
+The reference for each operation specifies the admitted callback shape,
+receiver modes and errors. Lazy callbacks must be non-raising; terminal
+operations may propagate their declared native errors. Shared calls can be
+repeated; a consuming-only callback cannot be used where an operation needs
+multiple calls.
 
 ## Keep failure channels apart
 
@@ -98,7 +210,7 @@ Every operation follows these rules:
 
 1. Higher-order operations propagate callback failures unchanged. They never
    catch an error silently, turn it into an empty Optional or return `Err`
-   unless the operation is an explicit bridge (`attempt`, `attempt_once`,
+   unless the operation is an explicit bridge (`Capture.run`,
    `raise_on_err`).
 2. The first failure stops the operation: later stages, elements, cases and
    callbacks do not run.

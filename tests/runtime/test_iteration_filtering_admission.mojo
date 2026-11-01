@@ -7,5 +7,5 @@ def main() raises:
     var offset = 3
     def predicate(value: Int) {var offset} -> Bool:
         return value > offset
-    assert_equal(len(collect_list(filter(predicate, iter(range(3))))), 0)
-    assert_equal(collect_list(filter(predicate, iter(range(6)))), [4, 5])
+    assert_equal(len(collect_list(filter(iter(range(3)), predicate))), 0)
+    assert_equal(collect_list(filter(iter(range(6)), predicate)), [4, 5])

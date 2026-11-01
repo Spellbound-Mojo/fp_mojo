@@ -11,9 +11,24 @@ import docs_contract
 class DocumentationContractTests(unittest.TestCase):
     def test_complete_reviewed_inventory(self):
         result = docs_contract.audit_docs()
-        self.assertEqual(result['exports'], 136)
-        self.assertEqual(result['modules'], 9)
-        self.assertEqual(result['examples'], 32)
+        self.assertEqual(result['exports'], 508)
+        self.assertEqual(result['modules'], 12)
+        self.assertEqual(result['examples'], 133)
+
+    def test_relocated_identity_keeps_its_public_reference(self):
+        rendered = docs_contract.package_page('functions', 'reference/functions.md')
+        self.assertTrue('{ #Identity .api-name }' in rendered, 'Missing Identity reference entry')
+        self.assertTrue('downloads/src/fp/callables/_identity.mojo' in rendered, 'Missing relocated source link')
+        self.assertFalse('callables.md#Identity' in rendered, 'Identity was linked to its private implementation package')
+        self.assertTrue('callables.md#as_unary' in rendered, 'Missing existing as_unary re-export link')
+        self.assertFalse('{ #as_unary .api-name }' in rendered, 'Duplicate as_unary reference entry')
+        self.assertTrue('callables.md#as_binary' in rendered, 'Missing as_binary re-export link')
+        self.assertFalse('{ #as_binary .api-name }' in rendered, 'Duplicate as_binary reference entry')
+
+    def test_relocated_identity_docstring_is_still_audited(self):
+        api = docs_contract.data('api.json')
+        api['entries']['functions.Identity']['summary'] = ''
+        self.assertIn('Identity: summary', docs_contract.api_problems('functions', api))
 
     def test_literal_directive_in_code_is_not_expanded(self):
         text = '# Authoring\n\n```text\n<!-- api: not_a_module -->\n```\n'
@@ -40,6 +55,32 @@ class DocumentationContractTests(unittest.TestCase):
         with patch.object(docs_contract, 'data', changed):
             with self.assertRaisesRegex(AssertionError, 'executable example'):
                 docs_contract.audit_docs()
+
+    def test_missing_pipeline_contract_rejected(self):
+        original = docs_contract.data
+        def changed(name):
+            value = original(name)
+            if name == 'compatibility.json':
+                value['pipeline'][0]['methods'].pop()
+            return value
+        with patch.object(docs_contract, 'data', changed):
+            with self.assertRaisesRegex(AssertionError, 'Unclassified Pipeline method'):
+                docs_contract.audit_docs()
+
+    def test_missing_migration_assignment_rejected(self):
+        # Model an operation still missing from Pipeline even when the current
+        # catalog has completed migration. A pending group must account for it.
+        from compatibility_contract import audit_compatibility
+        catalog = docs_contract.data('compatibility.json')
+        exports = docs_contract.data('public-exports.json')
+        name = next(name for name in catalog['legacy_methods']
+                    if name in exports['exports']['functions.Pipeline']['methods'])
+        exports['exports']['functions.Pipeline']['methods'].pop(name)
+        for group in catalog['pipeline']:
+            if name in group['methods']:
+                group['methods'].remove(name)
+        with self.assertRaisesRegex(AssertionError, 'migration inventory'):
+            audit_compatibility(catalog, exports)
 
 
 if __name__ == '__main__':

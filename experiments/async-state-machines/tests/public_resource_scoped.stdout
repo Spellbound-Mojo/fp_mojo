@@ -1,0 +1,1 @@
+resource scoped: per-poll loans of a move-only resource, release with the exact exit

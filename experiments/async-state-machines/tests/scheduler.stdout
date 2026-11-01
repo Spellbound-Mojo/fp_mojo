@@ -1,0 +1,1 @@
+scheduler: deterministic wakes, FIFO budgets, stale generations, timer bounds, manual time, masked cleanup

@@ -21,5 +21,5 @@ def second(var x: Int) raises E2 -> Int:
     raise E2(x)
 
 
-def main() raises E1:
+def main() raises:
     _ = flow(as_unary(first), as_unary(second))

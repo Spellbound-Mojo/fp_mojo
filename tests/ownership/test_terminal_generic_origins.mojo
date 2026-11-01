@@ -5,97 +5,97 @@ from fp.data import ControlFlow, Continue, Break
 from std.iter import Iterator, iter
 from std.testing import assert_equal, assert_true, assert_false
 def fold_left_pure1[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, //, F: def(var A, var T) -> A](f: F, var initial: A, var source: I) -> A where I.Element == T:
-    return fold_left(f, initial^, source^)
+    return fold_left(source^, initial^, f)
 
 def fold_left_pure2[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, //, F: def(var A, var T) -> A](f: F, var initial: A, var source: I) -> A where I.Element == T:
     return fold_left_pure1(f, initial^, source^)
 
 def reduce_initial_pure1[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, //, F: def(var A, var T) -> A](f: F, var initial: A, var source: I) -> A where I.Element == T:
-    return reduce(f, source^, initial=initial^)
+    return reduce(source^, f, initial=initial^)
 
 def reduce_initial_pure2[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, //, F: def(var A, var T) -> A](f: F, var initial: A, var source: I) -> A where I.Element == T:
     return reduce_initial_pure1(f, initial^, source^)
 
 def reduce_optional_pure1[T: Movable & Deinitable, I: Iterator, //, F: def(var T, var T) -> T](f: F, var source: I) -> Optional[T] where I.Element == T:
-    return reduce_optional(f, source^)
+    return reduce_optional(source^, f)
 
 def reduce_optional_pure2[T: Movable & Deinitable, I: Iterator, //, F: def(var T, var T) -> T](f: F, var source: I) -> Optional[T] where I.Element == T:
     return reduce_optional_pure1(f, source^)
 
 def reduce_pure1[T: Movable & Deinitable, I: Iterator, //, F: def(var T, var T) -> T](f: F, var source: I) raises EmptyReductionError -> T where I.Element == T:
-    return reduce(f, source^)
+    return reduce(source^, f)
 
 def reduce_pure2[T: Movable & Deinitable, I: Iterator, //, F: def(var T, var T) -> T](f: F, var source: I) raises EmptyReductionError -> T where I.Element == T:
     return reduce_pure1(f, source^)
 
 def fold_until_pure1[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, //, F: def(var A, var T) -> ControlFlow[B, A]](f: F, var initial: A, var source: I) -> ControlFlow[B, A] where I.Element == T:
-    return fold_until(f, initial^, source^)
+    return fold_until(source^, initial^, f)
 
 def fold_until_pure2[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, //, F: def(var A, var T) -> ControlFlow[B, A]](f: F, var initial: A, var source: I) -> ControlFlow[B, A] where I.Element == T:
     return fold_until_pure1(f, initial^, source^)
 
 def find_pure1[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Optional[T] where I.Element == T:
-    return find(f, source^)
+    return find(source^, f)
 
 def find_pure2[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Optional[T] where I.Element == T:
     return find_pure1(f, source^)
 
 def any_pure1[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Bool where I.Element == T:
-    return any(f, source^)
+    return any(source^, f)
 
 def any_pure2[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Bool where I.Element == T:
     return any_pure1(f, source^)
 
 def all_pure1[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Bool where I.Element == T:
-    return all(f, source^)
+    return all(source^, f)
 
 def all_pure2[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](f: F, var source: I) -> Bool where I.Element == T:
     return all_pure1(f, source^)
 
 def fold_left_error1[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> A](f: F, var initial: A, var source: I) raises E -> A where I.Element == T:
-    return fold_left[E=E](f, initial^, source^)
+    return fold_left[E=E](source^, initial^, f)
 
 def fold_left_error2[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> A](f: F, var initial: A, var source: I) raises E -> A where I.Element == T:
     return fold_left_error1[E=E](f, initial^, source^)
 
 def reduce_initial_error1[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> A](f: F, var initial: A, var source: I) raises E -> A where I.Element == T:
-    return reduce[E=E](f, source^, initial=initial^)
+    return reduce[E=E](source^, f, initial=initial^)
 
 def reduce_initial_error2[A: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> A](f: F, var initial: A, var source: I) raises E -> A where I.Element == T:
     return reduce_initial_error1[E=E](f, initial^, source^)
 
 def reduce_optional_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var T, var T) raises E -> T](f: F, var source: I) raises E -> Optional[T] where I.Element == T:
-    return reduce_optional[E=E](f, source^)
+    return reduce_optional[E=E](source^, f)
 
 def reduce_optional_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var T, var T) raises E -> T](f: F, var source: I) raises E -> Optional[T] where I.Element == T:
     return reduce_optional_error1[E=E](f, source^)
 
 def reduce_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var T, var T) raises E -> T](f: F, var source: I) raises ReductionError[E] -> T where I.Element == T:
-    return reduce[E=E](f, source^)
+    return reduce[E=E](source^, f)
 
 def reduce_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var T, var T) raises E -> T](f: F, var source: I) raises ReductionError[E] -> T where I.Element == T:
     return reduce_error1[E=E](f, source^)
 
 def fold_until_error1[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[B, A]](f: F, var initial: A, var source: I) raises E -> ControlFlow[B, A] where I.Element == T:
-    return fold_until[E=E](f, initial^, source^)
+    return fold_until[E=E](source^, initial^, f)
 
 def fold_until_error2[A: Movable & Deinitable, B: Movable & Deinitable, T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(var A, var T) raises E -> ControlFlow[B, A]](f: F, var initial: A, var source: I) raises E -> ControlFlow[B, A] where I.Element == T:
     return fold_until_error1[E=E](f, initial^, source^)
 
 def find_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Optional[T] where I.Element == T:
-    return find[E=E](f, source^)
+    return find[E=E](source^, f)
 
 def find_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Optional[T] where I.Element == T:
     return find_error1[E=E](f, source^)
 
 def any_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
-    return any[E=E](f, source^)
+    return any[E=E](source^, f)
 
 def any_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
     return any_error1[E=E](f, source^)
 
 def all_error1[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
-    return all[E=E](f, source^)
+    return all[E=E](source^, f)
 
 def all_error2[T: Movable & Deinitable, I: Iterator, E: Movable & Deinitable, //, F: def(T) raises E -> Bool](f: F, var source: I) raises E -> Bool where I.Element == T:
     return all_error1[E=E](f, source^)

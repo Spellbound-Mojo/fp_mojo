@@ -12,6 +12,7 @@ import uuid
 
 from fp_tools.cases import CompileCase, execute_case
 from fp_tools.library import add_library_arguments, library_include
+from fp_tools.artifacts import library_inputs, library_binding
 from fp_tools.runs import RunContext
 from fp_tools.runtime import ROOT, write_json, positive_int
 from compile_fail_contract import audit_report, inventory
@@ -34,6 +35,7 @@ def main():
         parser.error('No fixtures selected')
     run = RunContext.start(args.output or f'.cache/compile-fail/{uuid.uuid4().hex}', 'compile-fail')
     include, package = library_include(args, run.folder)
+    library_before = library_inputs(include)
     cases = [CompileCase.from_source(path, int(args.optimization), include=include, werror=args.werror,
                                      reject=tuple(re.findall(r'^# error: (.+)$', (ROOT / path).read_text(), re.M)),
                                      compile_timeout=args.compile_timeout)
@@ -52,12 +54,14 @@ def main():
 
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         records = list(pool.map(check, cases))
-    report = dict(**run.metadata(), optimization=args.optimization, filter=args.filter,
+    report = dict(**run.metadata(), **library_binding(include, library_before),
+                  optimization=args.optimization, filter=args.filter,
                   include=include, package_compilation=package, werror=args.werror,
                   compile_timeout=args.compile_timeout, jobs=args.jobs,
                   tests=records, declared_inventory=declared)
     audit = audit_report(report, folder=run.folder, optimization=args.optimization, include=include,
-                         filter=args.filter, werror=args.werror, expected_inputs=run.before)
+                         filter=args.filter, werror=args.werror, expected_inputs=run.before,
+                         expected_library_inputs=library_before)
     report['audit_failures'] = audit
     write_json(run.folder / 'report.json', report)
     failures = sum(not item['passed'] for item in records)

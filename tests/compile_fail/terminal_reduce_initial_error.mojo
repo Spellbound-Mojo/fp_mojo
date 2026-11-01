@@ -1,4 +1,4 @@
-# error: invalid call to 'reduce': lacking evidence to prove correctness
+# error: no matching function in call to 'reduce'
 from fp.iteration import fold_left, reduce, reduce_optional, fold_until
 from fp.iteration import find, any, all
 from fp.data import ControlFlow, Continue
@@ -12,7 +12,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     def step(var acc: A, var item: Int) raises B -> A: return acc
     try:
-        _ = reduce[A=A, E=A](step, iter(range(1)), initial=a)
+        _ = reduce[A=A, E=A](iter(range(1)), step, initial=a)
     except: pass
 
 def main():

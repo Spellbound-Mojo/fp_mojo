@@ -13,7 +13,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     var subject = Result[A, Int](Ok(a))
     try:
-        _ = flat_map[ResultFamily[type_of(subject).Error], X=A](keep_raising[A, Int, B], subject^)
+        _ = flat_map[ResultFamily[type_of(subject).Error], X=A](subject^, keep_raising[A, Int, B])
     except: pass
 
 def main():

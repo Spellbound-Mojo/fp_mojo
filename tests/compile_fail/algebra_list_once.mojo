@@ -1,4 +1,4 @@
-# error: List callbacks must be repeatable
+# error: no matching function in call to 'map'
 from fp.algebra import map, ListFamily
 from fp.callables import OnceUnary
 
@@ -12,4 +12,4 @@ struct Once(OnceUnary):
 
 def main():
     var values:List[Int]=[1,2]
-    _=map[ListFamily](Once(3),values^)
+    _=map[ListFamily](values^,Once(3))

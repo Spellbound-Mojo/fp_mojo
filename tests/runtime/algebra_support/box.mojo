@@ -96,5 +96,5 @@ def twice(var x:Int)->Int:
     return x*2
 
 def generic_map[I:Functor,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var function:F,var value:V) raises I.MapError[V,F] -> I.Mapped[V,F]:
-    return map[I](function^,value^)
+    return map[I](value^,function^)
 

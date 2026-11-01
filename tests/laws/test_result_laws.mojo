@@ -48,16 +48,16 @@ def g(var value: Int) -> Result[Int, String]:
 
 
 def chained(var value: Int) -> Result[Int, String]:
-    return flat_map[ResultFamily[type_of(f(value)).Error]](g, f(value))
+    return flat_map[ResultFamily[type_of(f(value)).Error]](f(value), g)
 
 
 def check_value(value: Int) raises:
     var r = pure(value)
-    equal(map[ResultFamily[type_of(r.copy()).Error]](id_int, r.copy()), r)
-    equal(map[ResultFamily[type_of(map[ResultFamily[type_of(r.copy()).Error]](plus_one, r.copy())).Error]](triple, map[ResultFamily[type_of(r.copy()).Error]](plus_one, r.copy())), map[ResultFamily[type_of(r.copy()).Error]](combined, r.copy()))
-    equal(flat_map[ResultFamily[type_of(pure(value)).Error]](f, pure(value)), f(value))
-    equal(flat_map[ResultFamily[type_of(r.copy()).Error]](pure, r.copy()), r)
-    equal(flat_map[ResultFamily[type_of(flat_map[ResultFamily[type_of(r.copy()).Error]](f, r.copy())).Error]](g, flat_map[ResultFamily[type_of(r.copy()).Error]](f, r.copy())), flat_map[ResultFamily[type_of(r.copy()).Error]](chained, r.copy()))
+    equal(map[ResultFamily[type_of(r.copy()).Error]](r.copy(), id_int), r)
+    equal(map[ResultFamily[type_of(map[ResultFamily[type_of(r.copy()).Error]](r.copy(), plus_one)).Error]](map[ResultFamily[type_of(r.copy()).Error]](r.copy(), plus_one), triple), map[ResultFamily[type_of(r.copy()).Error]](r.copy(), combined))
+    equal(flat_map[ResultFamily[type_of(pure(value)).Error]](pure(value), f), f(value))
+    equal(flat_map[ResultFamily[type_of(r.copy()).Error]](r.copy(), pure), r)
+    equal(flat_map[ResultFamily[type_of(flat_map[ResultFamily[type_of(r.copy()).Error]](r.copy(), f)).Error]](flat_map[ResultFamily[type_of(r.copy()).Error]](r.copy(), f), g), flat_map[ResultFamily[type_of(r.copy()).Error]](r.copy(), chained))
 
 
 def main() raises:
@@ -65,6 +65,6 @@ def main() raises:
     for value in range(-5, 6):
         check_value(value)
     var failed = Result[Int, String](Err(String("negative")))
-    equal(map[ResultFamily[type_of(failed.copy()).Error]](id_int, failed.copy()), failed)
-    equal(flat_map[ResultFamily[type_of(failed.copy()).Error]](pure, failed.copy()), failed)
-    equal(flat_map[ResultFamily[type_of(flat_map[ResultFamily[type_of(failed.copy()).Error]](f, failed.copy())).Error]](g, flat_map[ResultFamily[type_of(failed.copy()).Error]](f, failed.copy())), flat_map[ResultFamily[type_of(failed.copy()).Error]](chained, failed.copy()))
+    equal(map[ResultFamily[type_of(failed.copy()).Error]](failed.copy(), id_int), failed)
+    equal(flat_map[ResultFamily[type_of(failed.copy()).Error]](failed.copy(), pure), failed)
+    equal(flat_map[ResultFamily[type_of(flat_map[ResultFamily[type_of(failed.copy()).Error]](failed.copy(), f)).Error]](flat_map[ResultFamily[type_of(failed.copy()).Error]](failed.copy(), f), g), flat_map[ResultFamily[type_of(failed.copy()).Error]](failed.copy(), chained))

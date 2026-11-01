@@ -44,10 +44,10 @@ def exercise(library: Bool, mode: Int, length: Int, target: Int, fail_at: Int,
     try:
         if library:
             if mode == 0:
-                var output = find(predicate, source^)
+                var output = find(source^, predicate)
                 return output.value().value if output else -1
-            if mode == 1: return Int(any(predicate, source^))
-            return Int(all(predicate, source^))
+            if mode == 1: return Int(any(source^, predicate))
+            return Int(all(source^, predicate))
         while True:
             var item: IterationTerminalsToken
             try: item = source.__next__()
@@ -86,9 +86,9 @@ def main() raises:
     for mode in range(3):
         var caught = False
         try:
-            if mode == 0: _ = find(stop, iter(range(1)))
-            elif mode == 1: _ = any(stop, iter(range(1)))
-            else: _ = all(stop, iter(range(1)))
+            if mode == 0: _ = find(iter(range(1)), stop)
+            elif mode == 1: _ = any(iter(range(1)), stop)
+            else: _ = all(iter(range(1)), stop)
         except: caught = True
         assert_equal(caught, True)
     # Non-raising stateful closures and empty identities use the pure overloads.
@@ -96,14 +96,14 @@ def main() raises:
     def even(value: Int) {mut calls} -> Bool:
         calls += 1
         return value % 2 == 0
-    var found = find(even, iter(range(1, 6)))
+    var found = find(iter(range(1, 6)), even)
     assert_equal(found.take(), 2)
     assert_equal(calls, 2)
-    assert_equal(any(even, iter(range(0))), False)
-    assert_equal(all(even, iter(range(0))), True)
+    assert_equal(any(iter(range(0)), even), False)
+    assert_equal(all(iter(range(0)), even), True)
     assert_equal(calls, 2)
-    assert_equal(any(even, iter(range(1, 6))), True)
-    assert_equal(all(even, iter(range(1, 6))), False)
+    assert_equal(any(iter(range(1, 6)), even), True)
+    assert_equal(all(iter(range(1, 6)), even), False)
     assert_equal(calls, 5)
     var drops = ArcPointer(0)
     var values: List[IterationTerminalsToken] = [IterationTerminalsToken(1, drops), IterationTerminalsToken(2, drops)]

@@ -1,7 +1,7 @@
 # error: cannot implicitly convert
 # error: Actual
 # error: Other
-from fp.data import Result, attempt
+from fp.data import Capture, Result
 @fieldwise_init
 struct Actual(Movable):
     var code: Int
@@ -11,5 +11,5 @@ struct Other(Movable):
 
 def fail(value: Int) raises Actual -> Int: raise Actual(value)
 def main():
-    var result: Result[Int, Other] = attempt(fail, 42)
+    var result: Result[Int, Other] = Capture.borrow(42).run(fail)
     _ = result^

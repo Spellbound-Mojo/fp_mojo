@@ -1,68 +1,12 @@
 # Installation and first run
 
-Install `fp_mojo` in a Pixi project, or run the library from a source checkout.
-Both routes use the same imports, such as `from fp.functions import pipe`.
-
-FP Mojo is verified with Mojo 1.1.0 on Linux x86-64 and macOS arm64. The steps
-below select that compiler. The development checkout also pins Python 3.14
-through [Pixi](https://pixi.sh).
-
-## Install the package
-
-Install [Pixi](https://pixi.sh) if it is not already on your `PATH`. Then create
-a project with the Mojo and
-[Modular community](https://github.com/modular/modular-community) channels:
-
-```sh
-pixi init fp-start \
-  --channel https://conda.modular.com/max \
-  --channel https://repo.prefix.dev/modular-community \
-  --channel conda-forge
-cd fp-start
-pixi add fp_mojo "mojo==1.1.0"
-```
-
-Run the remaining commands from `fp-start`, the directory containing the new
-`pixi.toml`. Pixi installs the precompiled `fp` package where Mojo can find it,
-so no source checkout or `-I` flag is needed.
-
-Save the following program as `quickstart.mojo` beside `pixi.toml`, or use its
-Download link and place the downloaded file there:
-
-<!-- source: docs/examples/quickstart.mojo -->
-
-Run it with:
-
-```sh
-pixi run mojo run quickstart.mojo
-```
-
-The program prints `42`. `pipe(21, twice)` passes 21 to `twice`, and the
-assertion checks the result before printing it.
-
-For an existing Pixi project, keep its current settings and add any missing
-channels to its `[workspace]` section:
-
-```toml
-[workspace]
-channels = ["https://conda.modular.com/max", "https://repo.prefix.dev/modular-community", "conda-forge"]
-```
-
-Then run `pixi add fp_mojo "mojo==1.1.0"` in that project and save the same
-program beside its `pixi.toml`.
-
-### Run the tutorial examples
-
-Each example on the site has a Download link. Save the file in your Pixi
-project and run it by name, for example:
-
-```sh
-pixi run mojo run algebra_choices.mojo
-```
-
-The command shown inside an example's frame runs its maintained copy from a
-repository checkout. Use the downloaded file's name, as above, when working
-with the installed package.
+Install the [published package](#install-the-package), or work from a
+[source checkout](#work-from-a-checkout). FP Mojo 1.0.2 requires Mojo 1.2.0;
+the `nightly` development checkout pins Mojo 1.2.0 and Python 3.14 through
+[Pixi](https://pixi.sh). FP Mojo 1.0.0 and 1.0.1 require Mojo 1.1.0. See the
+[compatibility guide](../guides/compatibility.md) and
+[support and limitations](../guides/status.md) for platform support, migration
+details, and known compiler boundaries.
 
 ## Work from a checkout
 
@@ -77,24 +21,31 @@ Then clone the repository, install the locked environment and run the
 quickstart:
 
 ```sh
-git clone https://github.com/Spellbound-Mojo/fp_mojo.git
+git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
 cd fp_mojo
 pixi install --locked
 pixi run mojo --version
-pixi run mojo run -I src docs/examples/quickstart.mojo
+pixi run mojo run -I src docs/examples/pipeline_quickstart.mojo
 ```
 
-The compiler reports `Mojo 1.1.0 (8189361e)` and the program prints `42`. Use
+The compiler reports `Mojo 1.2.0 (2016d0cd)` and the program prints `42`. Use
 the project environment even if another Mojo is installed on your system.
-Pixi downloads Mojo from `conda.modular.com`; where that host is unreachable, the
-PyPI wheel `mojo==1.1.0` is the same compiler build.
+Pixi downloads Mojo from `conda.modular.com`. The optional `device` environment
+uses MAX 26.7.0, whose compiler dependency matches Mojo 1.2.0.
 
 ## Import from source
 
 The package lives in `src/fp`. Pass `-I src` so imports such as
-`from fp.functions import pipe` resolve. Import each name from the package that
-owns it. The package root `fp` re-exports only `match`, `rewrite` and `when`, so
-`import fp` is enough to write `fp.match(...)`.
+`from fp.functions import pipe` resolve. The package root `fp` re-exports the
+everyday names, so most programs need one import:
+`from fp import pipeline, iterated, Result, Ok, Err, Capture, map, filter`.
+It also provides `pipeline_values`, `flow`, `partial`, `flat_map`, `traverse`,
+`sequence`, `fold_map`, `combine_all`, `sum_by`, `find_map`, the canonical
+monoids (`StringMonoid`, `ListMonoid`, `IntSumMonoid`, `IntProductMonoid`),
+`Accumulate`, `ValidationFamily`, `match`, `when` and `rewrite`. `map` and
+`filter` there are the eager family operations of `fp.algebra`; the lazy forms
+are `iterated(source).map(f)` or `fp.iteration.map`. Import anything else from
+the package that owns it; `import fp` is enough to write `fp.match(...)`.
 
 ```sh
 pixi run mojo run -I src docs/examples/callable_pipeline.mojo
@@ -126,6 +77,63 @@ Rebuild the package after changing the library sources. `pixi run build` does th
 same into a fresh directory and also runs an example against the result (see
 [development](../contributing/development.md)).
 
+## Install the package
+
+This installs the published FP Mojo 1.0.2 release for Mojo 1.2.
+
+Install [Pixi](https://pixi.sh) if it is not already on your `PATH`. Then create
+a project with the Mojo and
+[Modular community](https://github.com/modular/modular-community) channels:
+
+```sh
+pixi init fp-start \
+  --channel https://conda.modular.com/max \
+  --channel https://repo.prefix.dev/modular-community \
+  --channel conda-forge
+cd fp-start
+pixi add fp_mojo "mojo==1.2.0"
+```
+
+Run the remaining commands from `fp-start`, the directory containing the new
+`pixi.toml`. Pixi installs the precompiled `fp` package where Mojo can find it,
+so no source checkout or `-I` flag is needed.
+
+Save the following program as `quickstart.mojo` beside `pixi.toml`, or use its
+Download link and place the downloaded file there:
+
+<!-- source: docs/examples/quickstart.mojo -->
+
+Run it with:
+
+```sh
+pixi run mojo run quickstart.mojo
+```
+
+The program prints `42`. `pipe(21, twice)` passes 21 to `twice`, and the
+assertion checks the result before printing it.
+
+For an existing Pixi project, keep its current settings and add any missing
+channels to its `[workspace]` section:
+
+```toml
+[workspace]
+channels = ["https://conda.modular.com/max", "https://repo.prefix.dev/modular-community", "conda-forge"]
+```
+
+Then run `pixi add fp_mojo "mojo==1.2.0"` in that project and save the same
+program beside its `pixi.toml`.
+
+### Run the tutorial examples
+
+The tutorials' maintained example files live in the repository. Follow the
+[checkout route](#work-from-a-checkout) and run them from the repository root:
+
+```sh
+pixi run mojo run -I src docs/examples/combinators.mojo
+```
+
+Each example's frame includes the corresponding command and a Download link.
+
 ## Build this documentation site
 
 MkDocs lives in a separate locked `docs` environment:
@@ -141,3 +149,11 @@ search index.
 
 Next, read [ownership and errors](ownership.md) or start the
 [pipeline tutorial](../tutorial/pipelines.md).
+
+## Async preview from nightly
+
+The pure-Mojo async preview is available from the pinned Mojo 1.2 checkout on
+Linux x86-64. Import `fp.effects.async_runtime` for `IO` and host
+execution, or `fp.effects.async_runtime.protocols` for custom machines. The
+released Mojo 1.1 package does not contain this preview. Follow the
+[async guide](../guides/async-runtime.md) for executable examples and boundaries.

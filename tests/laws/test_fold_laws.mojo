@@ -11,7 +11,7 @@ def main() raises:
     # Concatenation law needs no associativity; subtraction makes that visible.
     for length in range(10):
         for cut in range(length + 1):
-            var all = fold_left(subtract, 100, iter(range(length)))
-            var left = fold_left(subtract, 100, iter(range(cut)))
-            var right = fold_left(subtract, left, iter(range(cut, length)))
+            var all = fold_left(iter(range(length)), 100, subtract)
+            var left = fold_left(iter(range(cut)), 100, subtract)
+            var right = fold_left(iter(range(cut, length)), left, subtract)
             assert_equal(all, right)

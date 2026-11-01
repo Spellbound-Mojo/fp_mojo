@@ -1,0 +1,4 @@
+scheduler: fairness, heterogeneous types, parking, wake race, cancellation, timer, 100000 yields
+scope matrix: 64 cases; unopened cancellation; exact destruction
+suspended scopes: moved at three lifecycle boundaries
+borrowed captures: passed

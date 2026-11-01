@@ -1,38 +1,118 @@
 """Public packages and declaration providers; paths are relative to src/fp."""
 import re
 
-PUBLIC_PACKAGES = ('callables', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'effects', 'matching')
+PUBLIC_PACKAGES = ('callables', 'functions', 'adt', 'data', 'iteration', 'control', 'algebra', 'algebra.contracts', 'effects', 'matching', 'effects.async_runtime', 'effects.async_runtime.protocols')
+
+
+def split_public_name(name, packages=PUBLIC_PACKAGES):
+    """Separate a reviewed namespace from its declaration or type method."""
+    matches = [p for p in packages if name.startswith(p + '.')]
+    if not matches:
+        raise ValueError('Unknown public namespace: ' + name)
+    package = max(matches, key=len)
+    return package, name[len(package) + 1:]
 
 # Public operations declared as compile-time callable values rather than `def`.
-# The algebra entries are ordinary functions since the core simplification (CS-2).
+# The algebra entries are ordinary functions since the core simplification.
 CALLABLE_ENTRIES = frozenset()
 
 # Keep declarations at their physical owner; package initializers only re-export.
 SOURCE_MODULES = (
-    *(( 'callables', 'callables/' + name) for name in ('protocols', 'invoke', 'native')),
+    *(( 'callables', 'callables/' + name) for name in ('protocols', 'invoke', 'native', '_receiver')),
     ('functions', 'functions/pipeline'),
+    ('functions', 'functions/context'),
+    ('functions', 'functions/_recovery'),
+    ('functions', 'functions/_outcomes'),
     ('functions', 'functions/composition'),
+    ('functions', 'callables/_identity'),
+    ('functions', 'functions/kleisli'),
     ('functions', 'functions/flipped'),
+    ('functions', 'functions/tupled'),
+    ('functions', 'functions/untupled'),
+    ('functions', 'callables/products'),
+    ('functions', 'functions/products'),
     ('functions', 'functions/partial'),
     ('iteration', 'iteration/folds'),
+    ('iteration', 'iteration/non_empty'),
     ('iteration', 'iteration/adapters'),
     ('iteration', 'iteration/chaining'),
+    ('iteration', 'iteration/derived'),
+    ('iteration', 'iteration/reductions'),
+    ('iteration', 'iteration/effectful'),
+    ('iteration', 'iteration/prefixes'),
+    ('iteration', 'iteration/indexed'),
+    ('iteration', 'iteration/terminals'),
+    ('iteration', 'iteration/branching'),
+    ('iteration', 'iteration/alignment'),
+    ('iteration', 'iteration/scans'),
     ('control', 'control/loops'),
     ('control', 'control/scan'),
-    *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'instances', '_derived', 'monoids')),
-    *(( 'effects', 'effects/' + name) for name in ('protocols', 'reader', 'state', 'writer', 'layers', 'operations')),
+    *(( 'algebra', 'algebra/' + name) for name in ('protocols', 'operations', 'filtering', 'conditional', 'errors', 'error_mapping', 'instances', 'collections', '_primitive_contracts', '_contracts', 'sequencing', '_outcomes', '_derived', '_traversal', 'monoids', 'validation', 'accumulate', 'non_empty', 'ior', 'absence', 'looping', 'parallel')),
+    *(( 'effects', 'effects/' + name) for name in ('protocols', 'reader', 'state', 'writer', 'layers', 'operations', 'capabilities', 'projections', 'outcomes', 'resources', '_io_core', '_native_resource_io', 'scoped', 'finalization', 'effectful_resources', 'fibers', 'coordination', '_interruption')),
     ('data', 'data/_result'),
+    ('data', 'data/_attempt'),
+    ('data', 'data/_capture'),
     ('data', 'data/result'),
+    ('data', 'data/non_empty_list'),
     ('data', 'data/control'),
+    ('data', 'data/ior'),
     ('adt', 'adt/data'),
     ('matching', 'matching/clauses'),
     ('matching', 'matching/matcher'),
 )
 
+ASYNC_PROVIDERS = (
+    ('effects.async_runtime', 'effects/_async/engine', ('IO', 'Async', 'AsyncPar', 'Fiber', 'Background', 'RaceWinner', 'RacePairResult', 'Ref', 'Deferred')),
+    ('effects.async_runtime', 'effects/_async/fibers', ('FiberInfo', 'FiberStatus')),
+    ('effects.async_runtime', 'effects/_async/supervisor', ('Supervisor',)),
+    ('effects.async_runtime', 'effects/_async/engine', ('Resource',)),
+    ('effects.async_runtime', 'effects/_async/coordination', ('Queue', 'Semaphore')),
+    ('effects.async_runtime', 'effects/_async/host', ('Clock', 'Driver', 'TestControl', 'run')),
+    ('effects.async_runtime', 'effects/_async/runtime', ('Runtime', 'ExecutionContext')),
+    ('effects.async_runtime', 'effects/_async/executor', ('ScheduleTrace',)),
+    ('effects.async_runtime', 'effects/_async/profile', ('Profile',)),
+    ('effects.async_runtime', 'effects/_async/kernel', ('Progress', 'IORuntimeConfig')),
+    ('effects.async_runtime', '_internal/time', ('Duration', 'Instant', 'SystemTime')),
+    ('effects.async_runtime', 'effects/_async/racing', ('RaceResult',)),
+    ('effects.async_runtime', 'effects/_async/finalization', ('Poll',)),
+    ('effects.async_runtime', 'effects/_async/callbacks', ('Completion',)),
+    ('effects.async_runtime', 'effects/_async/scheduling/blocking_pool', ('BlockingPool',)),
+    ('effects.async_runtime', 'effects/_interruption', ('Interruption',)),
+    ('effects.async_runtime.protocols', 'effects/_async/kernel', ('Machine',)),
+    ('effects.async_runtime.protocols', 'effects/_async/scopes', ('ScopedMachine', 'CleanupMachine')),
+    ('effects.async_runtime.protocols', 'effects/_async/kernel', ('Step', 'Wait')),
+    ('effects.async_runtime.protocols', '_internal/waking', ('Signal',)),
+    ('effects.async_runtime.protocols', 'effects/async_runtime/protocols', ('Context',)),
+    ('effects.async_runtime.protocols', 'effects/_async/descriptors', ('await_readable', 'await_writable')),
+    ('effects.async_runtime', '_internal/os', ('OSError',)),
+)
+
+def _contract(name):
+    return name.endswith('Contract')
+
+
+def _not_contract(name):
+    return not name.endswith('Contract')
+
+
+def admits(names, name):
+    """Whether a provider's name filter (None, a collection or a predicate) admits a name."""
+    return names is None or (names(name) if callable(names) else name in names)
+
+
 def declaration_providers():
+    yield from ASYNC_PROVIDERS
     for package, provider in SOURCE_MODULES:
-        yield package, provider, None
-    yield 'functions', 'callables/native', ('as_unary',)
+        # Operation contracts are published under fp.algebra.contracts,
+        # at their physical owners; the algebra package keeps everything else.
+        if package == 'algebra':
+            yield 'algebra', provider, _not_contract
+            yield 'algebra.contracts', provider, _contract
+        else:
+            yield package, provider, None
+    yield 'functions', 'callables/native', ('as_unary', 'as_binary')
+    # The payload thread-safety marker and assertion share one private owner with the walk.
+    yield 'effects', '_internal/thread_safety', ('ThreadTransferable', 'assert_thread_transferable')
 
 
 def public_providers(root):
@@ -40,12 +120,27 @@ def public_providers(root):
     for package, provider, names in declaration_providers():
         for name in re.findall(r'^(?:def|struct|trait|comptime) `?([A-Za-z]\w*)',
                                (root / f'src/fp/{provider}.mojo').read_text(), re.M):
-            if names is not None and name not in names:
+            if not admits(names, name):
                 continue
             key = package + '.' + name
             if key in result and result[key] != provider:
                 raise ValueError('Ambiguous public declaration: ' + key)
             result[key] = provider
+    return result
+
+
+def reexported_names(root, packages):
+    """Each public name a package's __init__.mojo imports, as package.name."""
+    result = set()
+    for package in packages:
+        init = root / 'src/fp' / package.replace('.', '/') / '__init__.mojo'
+        if not init.is_file():
+            continue
+        for body in re.findall(r'^from [\w.]+ import (\([^)]*\)|.+)$', init.read_text(), re.M):
+            for item in body.strip('()').split(','):
+                name = item.split(' as ')[-1].strip().strip('`')
+                if name and not name.startswith('_'):
+                    result.add(package + '.' + name)
     return result
 
 

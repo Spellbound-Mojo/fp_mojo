@@ -47,7 +47,7 @@ def step(var state: Snapshot, var value: Input) -> Snapshot:
 def exercise(length: Int, take_count: Int, copies: Counter, drops: Counter) raises:
     var pulls = ArcPointer(0)
     var calls = ArcPointer(0)
-    var scanned = scan_left(step, Snapshot(copies, drops), Source(0, length, pulls, calls))
+    var scanned = scan_left(Source(0, length, pulls, calls), Snapshot(copies, drops), step)
     assert_equal(pulls[], 0)
     assert_equal(copies[], 0)
     assert_equal(calls[], 0)
@@ -84,6 +84,6 @@ def main() raises:
             exercise(length, take_count, copies, drops)
             assert_equal(copies[], take_count)
             assert_equal(drops[], take_count + 1)
-    var states = collect_list(scan_left(append, String("s"), iter(range(3))))
+    var states = collect_list(scan_left(iter(range(3)), String("s"), append))
     var expected: List[String] = ["s", "s0", "s01", "s012"]
     assert_equal(states, expected)

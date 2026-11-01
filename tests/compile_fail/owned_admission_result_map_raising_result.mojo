@@ -14,7 +14,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     var subject = Result[A, Int](Ok(a))
     try:
-        var mapped: Result[B, Int] = map[ResultFamily[type_of(subject).Error], X=B](identity_raising[A, B], subject^)
+        var mapped: Result[B, Int] = map[ResultFamily[type_of(subject).Error], X=B](subject^, identity_raising[A, B])
         _ = mapped^
     except: pass
 

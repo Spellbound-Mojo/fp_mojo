@@ -6,12 +6,13 @@ from pathlib import Path
 
 from export_contract import audit_exports
 from fp_tools.runtime import ROOT
-from module_layout import PUBLIC_PACKAGES
-from api_reference import package_markdown
+from module_layout import PUBLIC_PACKAGES, split_public_name
+from api_reference import package_markdown, documentation_owners
+from compatibility_contract import audit_compatibility, compatibility_markdown
 
 CONTENT = ROOT / 'docs/content'
 EXAMPLES = ROOT / 'docs/examples'
-DIRECTIVE = re.compile(r'<!--\s*(api|example|source):\s*([^>]*?)\s*-->')
+DIRECTIVE = re.compile(r'<!--\s*(api|example|source|compatibility):\s*([^>]*?)\s*-->')
 FENCE = re.compile(r'(^```[^\n]*\n.*?^```[ \t]*$)', re.M | re.S)
 
 
@@ -65,6 +66,8 @@ def render_markdown(text, page):
             return package_page(value, page)
         if kind == 'example':
             return example_markdown(value, page)
+        if kind == 'compatibility':
+            return compatibility_markdown(value, data('compatibility.json'))
         return source_markdown(value, page)
     return ''.join(part if index % 2 else DIRECTIVE.sub(replace, part)
                    for index, part in enumerate(FENCE.split(text)))
@@ -73,6 +76,7 @@ def render_markdown(text, page):
 def api_problems(package, api):
     from api_reference import primaries
     problems = []
+    owners = documentation_owners(api)
     if not api['packages'][package]['summary']:
         problems.append('package docstring')
     def check(label, overloads):
@@ -86,8 +90,8 @@ def api_problems(package, api):
             if o['raises'] and not o['raises_doc']:
                 problems.append(f'{label}: raised error')
     for full, entry in api['entries'].items():
-        owner, name = full.split('.', 1)
-        if owner != package or entry['provider'].split('/')[0] != package:
+        owner, name = split_public_name(full, api['packages'])
+        if owner != package or owners[full] != package:
             continue
         if entry['kind'] == 'function':
             check(name, entry['overloads'])
@@ -103,6 +107,7 @@ def api_problems(package, api):
 def audit_docs():
     reviewed = audit_exports()
     exports = data('public-exports.json')
+    audit_compatibility(data('compatibility.json'), exports)
     modules, examples = [], set()
     pages = sorted(CONTENT.rglob('*.md'))
     for page in pages:
@@ -120,6 +125,8 @@ def audit_docs():
                 path = ROOT / value
                 assert path.is_file() and path.suffix == '.mojo' and path.is_relative_to(EXAMPLES), \
                     f'Source directive must name a file in docs/examples: {page}: {value}'
+            elif kind == 'compatibility':
+                compatibility_markdown(value, data('compatibility.json'))
     # Every public package has one reference page rendered from its docstrings.
     assert sorted(modules) == sorted(PUBLIC_PACKAGES), 'API package pages differ from the public packages'
     api = data('api.json')

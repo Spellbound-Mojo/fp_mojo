@@ -41,7 +41,7 @@ def exercise(mode: Int, library: Bool, copies: ArcPointer[Int], drops: ArcPointe
             return pipe[Path](value^, copy_stage, read_stage)
         return read(duplicate(value))
     if mode == 1:
-        if library: return read(fold_left(append, value^, iter(range(4))))
+        if library: return read(fold_left(iter(range(4)), value^, append))
         for i in range(4): value = append(value^, i)
         return read(value)
     var subject: Choice[LargeData] = value^

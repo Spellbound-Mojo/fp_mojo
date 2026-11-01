@@ -210,13 +210,13 @@ def flips() raises:
 def consumers() raises:
     # Compositions and partials are library values accepted by higher-order APIs.
     var xs: List[Int] = [1, 2, 3]
-    var mapped = collect_list(map(flow(as_unary(twice), as_unary(inc)), iter(xs)))
+    var mapped = collect_list(map(iter(xs), flow(as_unary(twice), as_unary(inc))))
     assert_equal(mapped[2], 7)
-    assert_equal(fold_left(flow(partial(add), as_unary(twice)), 0, iter(xs)), 22)
+    assert_equal(fold_left(iter(xs), 0, flow(partial(add), as_unary(twice))), 22)
     assert_equal(fori_loop(0, 3, flow(partial(add), as_unary(inc)), 0), 6)
     var err = Result[Int, Int](Err(4)).map_err(flow(as_unary(twice), as_unary(label)))
     assert_true(not err.is_ok())
-    assert_equal(algebra_map[OptionalFamily](flow(as_unary(inc), as_unary(twice)), Optional(3)).value(), 8)
+    assert_equal(algebra_map[OptionalFamily](Optional(3), flow(as_unary(inc), as_unary(twice))).value(), 8)
 
 
 def main() raises:

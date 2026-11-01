@@ -1,5 +1,5 @@
 """Direct controls for operations previously covered only by family integration."""
-from fp.data import Ok, Err, Result, attempt, raise_on_err
+from fp.data import Capture, Ok, Err, Result, raise_on_err
 from fp.iteration import reduce_optional
 from fp.functions import pipe
 from std.testing import assert_equal
@@ -17,7 +17,7 @@ def main() raises:
     assert_equal(failure.is_err(), True)
     check_error_only_folds()
     check_optional_reduction()
-    var captured = attempt(raising_thunk)
+    var captured = Capture().run(raising_thunk)
     var caught = False
     try:
         _ = raise_on_err(captured^)
@@ -81,14 +81,14 @@ def check_optional_reduction() raises:
         var values = List[Int]()
         for i in range(length):
             values.append(5 - i)
-        var actual = reduce_optional(subtract, iter(values^))
+        var actual = reduce_optional(iter(values^), subtract)
         assert_equal(Bool(actual), length != 0)
         if actual:
             assert_equal(actual.value(), 5 if length == 1 else 1 if length == 2 else -2)
     var failing: List[Int] = [5, -7, 3]
     var observed = 0
     try:
-        _ = reduce_optional(subtract, iter(failing^))
+        _ = reduce_optional(iter(failing^), subtract)
     except error:
         comptime assert type_of(error) == Int
         observed = error

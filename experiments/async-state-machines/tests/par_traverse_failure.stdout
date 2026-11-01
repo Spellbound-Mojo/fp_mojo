@@ -1,0 +1,1 @@
+par_traverse failure: the first failure stops the rest; errors in element order; finalizers once; cancellation drains

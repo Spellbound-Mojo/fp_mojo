@@ -1,0 +1,1 @@
+race supervisor: adoption races release on four threads; supervising after release yields a canceled fiber that never runs

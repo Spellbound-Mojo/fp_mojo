@@ -1,4 +1,5 @@
-# error: algebra: Optional carrier required
+# error: no matching function
+# error: MapCompatible
 from fp.algebra import map, OptionalFamily
 
 def twice(value: Int) -> Int:
@@ -6,4 +7,4 @@ def twice(value: Int) -> Int:
 
 def main() raises:
     var values: List[Int] = [1, 2]
-    _ = map[OptionalFamily](twice, values^)
+    _ = map[OptionalFamily](values^, twice)

@@ -1,7 +1,7 @@
 """Route a queue of commands with guarded clauses, a trace context and a typed failure."""
 import fp
 from fp.adt import Data, Cases, Node, Value
-from fp.data import Result, Ok, Err, attempt
+from fp.data import Result, Ok, Err, Capture
 from fp.iteration import map, collect_list
 from std.memory import ArcPointer
 from std.testing import assert_equal
@@ -82,10 +82,10 @@ def main() raises:
     var trace = Trace(List[String]())
     var queue: List[C] = [Submit(Job(1, 4)), Retry(Job(2, 6)), Cancel(Job(4, 1)), Submit(Job(3, 5))]
 
-    # A lazy callback cannot raise, so `attempt` keeps each failure as an `Err`.
+    # A lazy callback cannot raise, so `Capture` keeps each failure as an `Err`.
     def routed(var command: C) {trace} -> String:
-        return outcome(attempt(route, command, trace))
-    var outcomes = collect_list(map(routed, queue^))
+        return outcome(Capture.borrow(command).borrow(trace).run(route))
+    var outcomes = collect_list(map(queue^, routed))
 
     assert_equal(outcomes, ["dispatched 1", "deferred", "deferred", "dispatch failed for job 3"])
     assert_equal(trace[], ["check 1", "dispatch 1", "check 2", "defer", "defer", "check 3", "dispatch 3"])

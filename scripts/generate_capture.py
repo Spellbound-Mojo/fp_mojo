@@ -1,0 +1,586 @@
+"""Generate finite native capture signatures; execution stays in canonical callables.
+
+Mojo argument conventions are part of a function type. Each argument bundle
+therefore has one storage layout and invocation boundary per native shape.
+The generator enumerates those shapes; it never generates Result handling.
+"""
+
+from dataclasses import dataclass
+from itertools import product
+import re
+from generate_nary_syntax import MAX as MAX_OWNED
+from native_signatures import (
+    MD,
+    Operand,
+    variants,
+    argument,
+    factory_pointer,
+    native_dispatch,
+    native_invocation,
+)
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+OUTPUT = ROOT / "src/fp/data/_capture.mojo"
+ARGUMENT_OUTPUT = ROOT / "src/fp/callables/_arguments.mojo"
+MODES = {
+    "r": ("borrow", "ImmOrigin"),
+    "m": ("mutable", "MutOrigin"),
+    "o": ("take", None),
+}
+MAX_MIXED = 3
+SHAPES = [shape for n in range(MAX_MIXED + 1) for shape in product(MODES, repeat=n)]
+SHAPES += [("o",) * n for n in range(MAX_MIXED + 1, MAX_OWNED + 1)]
+ARGUMENT_TYPES = ("A", "B", *(f"A{i}" for i in range(2, MAX_OWNED)))
+ARGUMENT_NAMES = ("first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth")
+
+
+def keyword_shapes(shape):
+    # Mixed conventions and keyword packs share one finite native boundary.
+    # Larger owned calls reuse the native tuple adapter without a new ABI.
+    return (False, True) if len(shape) <= MAX_MIXED else (False,)
+
+
+def tag(shape, kw=False):
+    return "".join(shape).upper() + ("K" if kw else "") or "Z"
+
+
+def params(shape, kw=False, context=True):
+    p = [f"{c}: {MD}" for c in ARGUMENT_TYPES[: len(shape)]]
+    p += [f"{c.lower()}: {MODES[m][1]}" for c, m in zip(ARGUMENT_TYPES, shape) if m != "o"]
+    if kw:
+        p += [f"K: {MD}"]
+    if context:
+        p += [f"E: {MD}"]
+    return p
+
+
+def names(shape, kw=False, context=True, prefix=""):
+    p = list(ARGUMENT_TYPES[: len(shape)]) + [c.lower() for c, m in zip(ARGUMENT_TYPES, shape) if m != "o"]
+    if kw:
+        p += ["K"]
+    if context:
+        p += ["E"]
+    return [prefix + x for x in p]
+
+
+def typename(shape, kw=False, prefix="", error=None):
+    ps = names(shape, kw, prefix=prefix)
+    if error:
+        ps[-1] = error
+    return "_Args" + tag(shape, kw) + "[" + ", ".join(ps) + "]"
+
+
+def storage_type(shape, kw=False, prefix=""):
+    ps = names(shape, kw, False, prefix)
+    return "_Arguments" + tag(shape, kw) + ("[" + ", ".join(ps) + "]" if ps else "")
+
+
+def storage(shape, kw):
+    ps = params(shape, kw, False)
+    declaration = (
+        "_Arguments" + tag(shape, kw) + ("[" + ", ".join(ps) + "]" if ps else "")
+    )
+    out = [f"@fieldwise_init\nstruct {declaration}(Movable):\n"]
+    for field in fields(shape, kw):
+        typ = field.type
+        for x in names(shape, kw, False):
+            typ = re.sub(r"\b" + x + r"\b", "Self." + x, typ)
+        out += [f"    var {field.name}: {typ}\n"]
+    out += [transitions(shape, kw, stored=True)]
+    return "".join(out)
+
+
+@dataclass(frozen=True)
+class StorageField:
+    """Stored ownership is independent of how the Mojo type is rendered.
+
+    Borrowed operands store copyable pointers; consumed operands and keyword
+    dictionaries store owners. Constructors and transitions share this fact.
+    """
+
+    name: str
+    type: str
+    owned: bool
+
+    def transfer(self, prefix=""):
+        return prefix + self.name + ("^" if self.owned else "")
+
+
+def fields(shape, kw=False):
+    out = []
+    for c, m in zip(ARGUMENT_TYPES, shape):
+        out.append(
+            StorageField(c.lower() + "_value", c if m == "o" else f"Pointer[{c}, {c.lower()}]", m == "o")
+        )
+    if kw:
+        out.append(StorageField("options", "StringDict[K]", True))
+    return out
+
+
+def sig(shape, kw=False, prefix=""):
+    p = [argument(prefix + c, m) for c, m in zip(ARGUMENT_TYPES, shape)]
+    if kw:
+        if p:
+            p += ["/"]
+        p += [f"var **kwargs: {prefix}K"]
+    return ", ".join(p)
+
+
+def native(shape, kw):
+    nm = tag(shape, kw)
+    ps = params(shape, kw, False) + [
+        f"R: {MD}",
+        f"E: {MD}",
+        f"F: {MD}",
+        "raising: Bool",
+    ]
+    shape_type = storage_type(shape, kw)
+    header = f'def _invoke_{nm}[{", ".join(ps)}](function: F, var arguments: {shape_type}) raises E -> R:\n'
+    if len(shape) > 2 and all(m == "o" for m in shape) and not kw:
+        # The existing n-ary boundary owns tuple extraction and native calls.
+        # Capture only binds its arguments and adds the canonical catch boundary.
+        types = list(ARGUMENT_TYPES[: len(shape)])
+        adapter = f"_NativeNary{len(shape)}[" + ", ".join(
+            types + ["R", "E", "F", "raising", "origin_of(function)"]
+        ) + "]"
+        values = ", ".join(field.transfer("arguments.") for field in fields(shape))
+        return header + f"    return {adapter}(Pointer(to=function)).call(({values}))\n\n"
+    values = [
+        "arguments." + c.lower() + "_value" + ("[]" if m != "o" else "")
+        for c, m in zip(ARGUMENT_TYPES, shape)
+    ]
+    delegated = native_invocation(
+        shape, list(ARGUMENT_TYPES[: len(shape)]), values,
+        keyword="K" if kw else None, keyword_value="arguments.options",
+    )
+    if delegated is not None:
+        return header + "    return " + delegated + "\n\n"
+    return (
+        header
+        + native_dispatch(
+            shape,
+            list(ARGUMENT_TYPES[: len(shape)]),
+            values,
+            keyword="K" if kw else None,
+            keyword_value="arguments.options",
+        )
+        + "\n"
+    )
+
+
+def transitions(shape, kw, *, stored):
+    if kw:
+        return ""
+    out = []
+    type_name = storage_type if stored else typename
+    if len(shape) <= MAX_MIXED:
+        target = type_name(shape, True, "Self.").replace("Self.K", "K")
+        if stored:
+            values = [field.transfer("self.") for field in fields(shape)] + ["values^"]
+            construct = f"{target}({', '.join(values)})"
+        else:
+            construct = f"{target}(self._arguments^.kwargs(**values^))"
+        out += [
+            f"    def kwargs[K: {MD}, //](deinit self, /, var **values: K) -> {target}:\n        return {construct}\n\n"
+        ]
+    modes = {}
+    if len(shape) < MAX_MIXED:
+        modes = MODES
+    elif all(m == "o" for m in shape) and len(shape) < MAX_OWNED:
+        modes = {"o": MODES["o"]}
+    if modes:
+        c = ARGUMENT_TYPES[len(shape)]
+        for m, (name, origin) in modes.items():
+            ps = (
+                [f"{c}: {MD}"] + ([f"{c.lower()}: {origin}"] if origin else []) + ["//"]
+            )
+            target = (
+                type_name(shape + (m,), False, "Self.")
+                .replace("Self." + c, c)
+                .replace("Self." + c.lower(), c.lower())
+            )
+            if stored:
+                values = [field.transfer("self.") for field in fields(shape)]
+                values += ["Pointer(to=value)" if origin else "value^"]
+                construct = f"{target}({', '.join(values)})"
+            else:
+                construct = f"{target}(self._arguments^.{name}(value{'^' if not origin else ''}))"
+            convention = "ref[" + c.lower() + "]" if origin else "var"
+            out += [
+                f"    def {name}[{', '.join(ps)}](deinit self, {convention} value: {c}) -> {target}:\n        return {construct}\n\n"
+            ]
+    return "".join(out)
+
+
+def builder(shape, kw):
+    out = [
+        f'@fieldwise_init\nstruct _Args{tag(shape,kw)}[{", ".join(params(shape,kw))}](Movable):\n'
+    ]
+    stored = storage_type(shape, kw, "Self.")
+    out += [f"    var _arguments: {stored}\n"]
+    inputs, values = [], []
+    for field in fields(shape, kw):
+        typ = field.type
+        for x in names(shape, kw, False):
+            typ = re.sub(r"\b" + x + r"\b", "Self." + x, typ)
+        inputs += [("var " if field.owned else "") + field.name + ": " + typ]
+        values += [field.transfer()]
+    out += [
+        f'    def __init__(out self{", " if inputs else ""}{", ".join(inputs)}):\n        self._arguments = {stored}({", ".join(values)})\n\n'
+    ]
+    out += [
+        f"    def _run[R: {MD}, X: {MD}, F: {MD}, raising: Bool, q: ImmOrigin](deinit self, ref[q] function: F) -> Result[R, X]:\n"
+    ]
+    # The error belongs to invocation, not to argument storage.
+    out += ["        var arguments = self._arguments^\n"]
+    inv = (
+        "_invoke_"
+        + tag(shape, kw)
+        + "["
+        + ", ".join(names(shape, kw, False, "Self.") + ["R", "X", "F", "raising"])
+        + "]"
+    )
+    out += [
+        f"        return _attempt_once(_BoundThunk[type_of(arguments), R, X, F, q, {inv}](arguments^, Pointer(to=function)))\n\n"
+    ]
+    for kind in (
+        "pure",
+        "raising",
+        "pure_void",
+        "raising_void",
+        "never",
+        "never_void",
+    ):
+        err = "Self.E" if kind in ("raising", "raising_void") else "Never"
+        raised = kind not in ("pure", "pure_void")
+        result = "type_of(None)" if kind.endswith("void") else "R"
+        gen = ([f"R: {MD}"] if not kind.endswith("void") else []) + ["q: ImmOrigin"]
+        effect = " raises " + err if raised else ""
+        typ = f'def({sig(shape,kw,"Self.")}){effect}' + (
+            "" if kind.endswith("void") else " -> R"
+        )
+        gen += ["//", f"F: {typ}"]
+        arg = "ref[q] function: F"
+        condition = " where Self.E != Never" if kind in ("never", "never_void") else ""
+        bracket = "[" + ", ".join(gen) + "]" if gen else ""
+        out += [
+            f"    def run{bracket}(deinit self, {arg}) -> Result[{result}, {err}]{condition}:\n        return self^._run[{result}, {err}, type_of(function), {raised}](function)\n\n"
+        ]
+    # The literal Never specialization resolves the native read/read tie with
+    # the selected-error closure signature. It retains the same ABI evidence
+    # as inferred-error thin calls, including generic selected error contexts.
+    operands = [
+        Operand("Self." + c, m, read_parameter="P" if i == 0 else "Q" if i == 1 else f"P{i}")
+        for i, (c, m) in enumerate(zip(ARGUMENT_TYPES, shape))
+    ]
+    for native_kind in ("pure", "raising", "never"):
+        raising = native_kind != "pure"
+        for void in (False, True):
+            for abi in variants(operands, None if void else "R"):
+                gen = [name + ": " + bound for name, bound in abi.parameters]
+                if native_kind == "raising":
+                    gen += ["X: " + MD]
+                err = "X" if native_kind == "raising" else "Never"
+                result = "type_of(None)" if void else "R"
+                args = [argument(t, m, thin=True) for t, m in zip(abi.payloads, shape)]
+                if kw:
+                    if args:
+                        args += ["/"]
+                    args += ["var **kwargs: Self.K"]
+                typ = (
+                    "def("
+                    + ", ".join(args)
+                    + ")"
+                    + (" raises " + err if raising else "")
+                    + " thin"
+                    + ("" if void else " -> R")
+                )
+                conditions = list(abi.conditions) + (
+                    ["_DefaultErrorAdmits[Self.E, X]"] if native_kind == "raising" else []
+                )
+                condition = " where " + " and ".join(conditions) if conditions else ""
+                bracket = "[" + ", ".join(gen + ["//"]) + "]" if gen else ""
+                out += [
+                    f"    def run{bracket}(deinit self, function: {typ}) -> Result[{result}, {err}]{condition}:\n        return self^._run[{result}, {err}, type_of(function), {raising}](function)\n\n"
+                ]
+    out += [transitions(shape, kw, stored=False)]
+    return "".join(out)
+
+
+header = '''"""Argument-first native capture admission, generated by scripts/generate_capture.py.
+
+Select native errors and bind argument conventions before admitting a callback.
+Borrowed slots retain their origins; consumed slots and keyword packs are owned.
+Native run admission inlines to retain closure storage across generic forwards
+at O0 on Mojo 1.2; callers need no annotation. Storage, consuming transitions
+and invocation belong to callables._arguments. Its _invoke consumes the bundle,
+so native cleanup handles a partially transferred value if the callback raises.
+No allocation or type erasure is added.
+"""
+from std.collections import StringDict
+from fp.callables.protocols import ThunkContract, MutableUnary
+from fp.callables._binding import _BoundThunk
+from fp.callables.native import _NativeOwnedArg
+from fp.data._result import Result
+from fp.data._attempt import _attempt_once
+from fp._internal.errors import _DefaultErrorAdmits
+
+'''
+argument_imports = [
+    name
+    for shape in SHAPES
+    for kw in keyword_shapes(shape)
+    for name in ("_Arguments" + tag(shape, kw), "_invoke_" + tag(shape, kw))
+]
+out = [
+    header,
+    "from fp.callables._arguments import " + ", ".join(argument_imports) + "\n\n",
+]
+argument_output = [
+    '"""Consumed native argument storage and invocation, generated by generate_capture.py.\n\nNo error-selection metadata or Result dependency belongs to these bundles.\nCapture and legacy attempt share their ownership, origins and invocation.\n"""\nfrom std.builtin.rebind import rebind, rebind_var, downcast\nfrom std.collections import StringDict\nfrom .native import (_NativeOwnedArg, _call_native_binary, _call_native, _call_native_borrow, _call_native_thunk, _call_native_keywords, _NativeMutatingRef, _NativeMutOwnedRef, _NativeMutatingKeywordsRef, _NativeMutOwnedKeywordsRef)\n\n'
+]
+argument_output += ["from ._nary import " + ", ".join(f"_NativeNary{n}" for n in range(3, MAX_OWNED + 1)) + "\n\n"]
+for shape in SHAPES:
+    for kw in keyword_shapes(shape):
+        declaration = native(shape, kw)
+        invoke_header, body = declaration.split("\n", 1)
+        body = body.replace("arguments.", "self.")
+        for x in names(shape, kw, False):
+            body = re.sub(r"\b" + x + r"\b", "Self." + x, body)
+        method = f"    def _invoke[R: {MD}, E: {MD}, F: {MD}, raising: Bool](deinit self, function: F) raises E -> R:\n"
+        method += "".join("    " + line + "\n" for line in body.splitlines())
+        argument_output += [
+            storage(shape, kw),
+            method,
+            invoke_header
+            + "\n    return arguments^._invoke[R, E, F, raising](function)\n\n",
+        ]
+        out += [builder(shape, kw)]
+
+
+def arguments_source():
+    return (
+        "\n".join(line.rstrip() for line in "".join(argument_output).splitlines()).rstrip()
+        + "\n"
+    )
+
+
+out += ["struct Capture[E: Movable & Deinitable = Error]:\n"]
+# Reuse zero-builder methods as static admission/factories.
+b = builder((), False)
+start = b.index("    def run[")
+methods = b[start:]
+
+methods = (
+    methods.replace("deinit self, ", "")
+    .replace("(deinit self, /, ", "(/, ")
+    .replace("(deinit self)", "()")
+)
+methods = methods.replace("](/, var **values:", "](var **values:")
+methods = methods.replace("return self^._run[", "return _ArgsZ[Self.E]()._run[")
+methods = methods.replace("self._arguments^.", "_ArgumentsZ().")
+for name in ("run", "kwargs", "borrow", "mutable", "take"):
+    methods = re.sub(
+        r"    def " + name + r"\b", r"    @staticmethod\n    def " + name, methods
+    )
+out += [methods]
+out += ["""    @staticmethod
+    def run[F: ThunkContract & Movable & Deinitable](var function: F) -> Result[F.Out, F.Error]:
+        return _attempt_once(function^)
+"""]
+# Stateful storage uses the same mutable/owned argument bundle. Its native
+# factory is thin: users pass owned mutable state explicitly, not in captures.
+state_class = """struct _Stateful[S: Movable & Deinitable, A: Movable & Deinitable,
+                R: Movable & Deinitable, E: Movable & Deinitable,
+                F: Movable & Deinitable, raising: Bool](MutableUnary):
+    var _state: Self.S
+    var _function: _OptionalCell[Self.F]
+    comptime Arg = Self.A
+    comptime Out = Result[Self.R, Self.E]
+    comptime Error = Never
+    def __init__(out self, var function: Self.F, var state: Self.S):
+        self._function = Optional(function^)
+        self._state = state^
+    def state(ref self) -> ref[self._state] Self.S:
+        return self._state
+    def into_state(deinit self) -> Self.S:
+        return self._state^
+    def run(mut self, var value: Self.A) -> Result[Self.R, Self.E]:
+        var arguments = _ArgsMO[Self.S, Self.A, origin_of(self._state), Self.E](Pointer(to=self._state), value^)
+        return arguments^._run[Self.R, Self.E, Self.F, Self.raising](self._function.value())
+    def call_mut(mut self, var value: Self.Arg) -> Self.Out:
+        return self.run(value^)
+
+"""
+state_factory = ""
+for raising in (False, True):
+    for void in (False, True):
+        operands = [Operand("S", "m"), Operand("A", "o", known=False)]
+        for abi in variants(operands, None if void else "R"):
+            gen = ["S: " + MD] + [name + ": " + bound for name, bound in abi.parameters]
+            if raising:
+                gen += ["X: " + MD]
+            err = "X" if raising else "Never"
+            result = "type_of(None)" if void else "R"
+            args = [
+                argument(t, op.convention, thin=True, known=op.known)
+                for t, op in zip(abi.payloads, operands)
+            ]
+            typ = (
+                "def("
+                + ", ".join(args)
+                + ")"
+                + (" raises X" if raising else "")
+                + " thin"
+                + ("" if void else " -> R")
+            )
+            pointer = factory_pointer(abi)
+            conditions = list(pointer.conditions) + (
+                ["_DefaultErrorAdmits[Self.E, X]"] if raising else []
+            )
+            condition = " where " + " and ".join(conditions) if conditions else ""
+            gen += [name + ": " + bound for name, bound in pointer.parameters]
+            target = f"_Stateful[S, A, {result}, {err}, type_of(function), {raising}]"
+            state_factory += f'    @staticmethod\n    def stateful[{", ".join(gen+['//'])}]({pointer.argument}: {typ}, var state: S) -> {target}{condition}:\n        return {target}(function, state^)\n'
+out += [state_factory]
+for n in range(MAX_OWNED + 1):
+    shape = ("o",) * n
+    types = ARGUMENT_TYPES[:n]
+    names_ = ARGUMENT_NAMES[:n]
+    gen = "[" + ", ".join([f"{t}: {MD}" for t in types] + ["//"]) + "]" if n else ""
+    args = ", ".join(f"var {name}: {t}" for name, t in zip(names_, types))
+    result = typename(shape, error="Self.E")
+    values = ", ".join(name + "^" for name in names_)
+    out += [f"    @staticmethod\n    def args{gen}({args}) -> {result}:\n        return {result}({values})\n\n"]
+out += [state_class]
+out.insert(1, "from fp.callables.products import _OptionalCell\n\n")
+
+
+def source():
+    text = document("".join(out)).replace(
+        "    def run[", "    @always_inline\n    def run["
+    )
+    # A native callback must never infer the context's E. Mojo leaves metatype
+    # defaults unbound during static overload selection, so direct run/stateful
+    # admission requires an already constructed, zero-size context receiver.
+    start = text.index("struct Capture[")
+    end = text.index("\nstruct _Stateful[", start)
+    root = text[start:end].replace(
+        "struct Capture[E: Movable & Deinitable = Error]:",
+        "@fieldwise_init\nstruct Capture[E: Movable & Deinitable = Error](ImplicitlyCopyable):",
+    )
+    root = re.sub(
+        r"    @staticmethod\n((?:    @always_inline\n)?    def (?:run|stateful)[^\n]*)",
+        r"\1",
+        root,
+    )
+    lines = root.splitlines(keepends=True)
+    for i, line in enumerate(lines):
+        if line.startswith(("    def run", "    def stateful")):
+            pivot = line.index("](") + 2 if "](" in line else line.index("(") + 1
+            lines[i] = line[:pivot] + "self, " + line[pivot:]
+    return (
+        "\n".join(
+            line.rstrip()
+            for line in (text[:start] + "".join(lines) + text[end:]).splitlines()
+        )
+        + "\n"
+    )
+
+
+def document(text):
+    """Document every root overload; the private bundle contract is in the guide."""
+    pos = text.index("struct Capture[")
+    before, public = text[:pos], text[pos:]
+    public = public.replace(
+        "struct Capture[E: Movable & Deinitable = Error]:\n",
+        'struct Capture[E: Movable & Deinitable = Error]:\n    """Select native errors, bind arguments, and capture one call as a Result.\n\n    `Capture[E].mutable(state).take(value^).run(callback)` fixes the error type,\n    argument types and ownership before callback inference. Use `borrow` for\n    shared access, `mutable` for exclusive access, and `take` for consumption.\n    Up to three mixed positional operands can be followed by `kwargs`. `args` binds\n    zero to eight consumed operands, or extend an owned bundle with `take`. The bundle is movable and runs once.\n    An unused bundle destroys its owned arguments without calling anything.\n\n    Construct `Capture[E]()` before direct `run` or `stateful` admission.\n    This fixes E before a native callback is matched. A reusable context such\n    as `var capture = Capture[E]()` also provides `capture.args(...)`,\n    `capture.borrow(...)`, `capture.mutable(...)`, `capture.take(...)` and\n    `capture.kwargs(...)`; it stores no arguments and is reusable after errors.\n\n    Pure functions produce `Result[R, Never]`; raising closures retain E.\n    Raising plain functions keep their own error under the default Error\n    context; any other selected E must match it.\n    No-value callbacks return `Result[None, E]`. Native callbacks are borrowed\n    for the call; library thunk owners are consumed and retain their own error.\n    Thunks use consuming, mutable, then shared receiver priority. Pass\n    `mut_ref(thunk)` to retain a reusable owner and its updated state.\n    Empty keyword packs require K or a typed dictionary. `stateful` owns an\n    explicit state value for repeated calls through a plain native function.\n    Its owner is a mutable unary callable returning Result without raising.\n    Pass mut_ref(owner) to map or traverse while retaining its state, or move\n    owner into the operation. Mapping keeps outcomes; traversal stops on Err.\n    Existing `attempt` entry points remain available for compatibility.\n\n    Parameters:\n        E: The native closure error type, selected before inference; Error by default.\n    """\n',
+    )
+    descriptions = {
+        "run": (
+            "Call once and retain the exact outcome.",
+            "The callback output in Ok, or its declared error in Err.",
+        ),
+        "borrow": (
+            "Bind a shared positional argument before selecting a callback.",
+            "A consumed-once bundle borrowing the original value and origin.",
+        ),
+        "mutable": (
+            "Bind an exclusive positional argument before selecting a callback.",
+            "A consumed-once bundle retaining exclusive access to the original value.",
+        ),
+        "take": (
+            "Move a positional argument into a pending call.",
+            "A consumed-once bundle owning the argument.",
+        ),
+        "kwargs": (
+            "Move a homogeneous native keyword pack into a pending call.",
+            "A consumed-once bundle owning the keyword dictionary.",
+        ),
+        "args": (
+            "Bind consumed positional arguments for a single call.",
+            "A consumed-once argument bundle; owned positional calls support up to eight operands. Mixed conventions and keyword packs support at most three positional operands.",
+        ),
+        "stateful": (
+            "Own explicit state for repeated calls through a plain native function.",
+            "A movable mutable unary callable returning Result, with run(value), state() and into_state() methods.",
+        ),
+    }
+    parameter_docs = {
+        "A": "The first argument type, including its origins.",
+        "B": "The second argument type, including its origins.",
+        "S": "The owned state type, including its origins.",
+        "R": "The callback result type, inferred from the callback.",
+        "X": "The inferred native callback error type.",
+        "P": "The native register read type, equal to the bound argument.",
+        "Q": "The second native register read type, equal to the bound argument.",
+        "K": "The keyword value type, inferred from nonempty values or supplied explicitly.",
+        "F": "The exact callback type, preserving its native signature and captures.",
+        "a": "The first argument origin, inferred from the bound value.",
+        "q": "The callback origin, inferred from the borrowed function.",
+    }
+    parameter_docs.update({t: f"The {name} argument type, including its origins." for t, name in zip(ARGUMENT_TYPES, ARGUMENT_NAMES)})
+    argument_docs = {
+        "function": "The callback to invoke; native callbacks are borrowed, library thunk owners consumed.",
+        "state": "The explicit state, moved into the reusable owner.",
+        "value": "The value to bind using this method’s ownership convention.",
+        "first": "The first value, consumed.",
+        "second": "The second value, consumed.",
+        "values": "The homogeneous keyword values, consumed.",
+    }
+
+    argument_docs.update({name: f"The {name} value, consumed." for name in ARGUMENT_NAMES})
+
+    def add(match):
+        signature, name = match.group(0), match.group(1)
+        summary, returns = descriptions[name]
+        params = (
+            signature.split("](", 1)[0].split("[", 1)[1]
+            if "[" in signature.split("(", 1)[0]
+            else ""
+        )
+        parameters = re.findall(r"(?:^|, )([A-Za-z][A-Za-z0-9]*):", params)
+        # Parse argument names from the signature separately from native type parameters.
+        names = [n for n in argument_docs if re.search(r"\b" + n + r":", signature)]
+        docs = ['        """' + summary + "\n"]
+        if parameters:
+            docs += ["\n        Parameters:\n"] + [
+                "            " + p + ": " + parameter_docs[p] + "\n" for p in parameters
+            ]
+        if names:
+            docs += ["\n        Args:\n"] + [
+                "            " + n + ": " + argument_docs[n] + "\n" for n in names
+            ]
+        docs += ["\n        Returns:\n            " + returns + '\n        """\n']
+        return signature + "".join(docs)
+
+    root, tail = public.split("struct _Stateful[", 1)
+    root = re.sub(r"    def (\w+)[^\n]+:\n", add, root)
+    return before + root + "struct _Stateful[" + tail
+
+
+if __name__ == "__main__":
+    OUTPUT.write_text(source())
+    ARGUMENT_OUTPUT.write_text(arguments_source())
+    print(f"wrote {OUTPUT.relative_to(ROOT)} and {ARGUMENT_OUTPUT.relative_to(ROOT)}")

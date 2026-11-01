@@ -8,7 +8,7 @@ def fail(var value: Int) raises Int -> Int:
 def main():
     var value = Result[Int, Int](Ok(1))
     try:
-        _ = map[ResultFamily[type_of(value).Error]](fail, value^)
+        _ = map[ResultFamily[type_of(value).Error]](value^, fail)
     except:
         pass
     _ = value.is_ok()

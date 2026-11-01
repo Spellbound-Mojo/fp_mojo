@@ -53,7 +53,7 @@ def step(var acc: CorrectnessInstancesResource, var item: Int) -> CorrectnessIns
     return acc^
 
 def scan(length: Int, take: Int, ledger: ArcPointer[Ledger]) raises:
-    var source = scan_left(step, CorrectnessInstancesResource(7, ledger), iter(range(length)))
+    var source = scan_left(iter(range(length)), CorrectnessInstancesResource(7, ledger), step)
     var retained = List[CorrectnessInstancesResource]()
     for _ in range(take):
         retained.append(source.__next__())
@@ -73,7 +73,7 @@ def choose(var value: CorrectnessInstancesResource) -> Result[CorrectnessInstanc
 def collection(length: Int, ledger: ArcPointer[Ledger]) raises:
     var values = List[CorrectnessInstancesResource]()
     for i in range(length): values.append(CorrectnessInstancesResource(i, ledger))
-    var result = collect_results(map(choose, iter(values^)))
+    var result = collect_results(map(iter(values^), choose))
     if length > 2:
         debug_assert[assert_mode="safe"](result.is_err(), "first Err not retained")
         # Prefix and unconsumed tail have been released; only the error lives.

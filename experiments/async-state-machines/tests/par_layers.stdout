@@ -1,0 +1,1 @@
+par layers: OptionalT and ResultT run every element and settle absent or on the first stored error; base failure and cancellation drain

@@ -1,0 +1,1 @@
+wstp_parallel: CPU-bound fibers run in parallel and speed up with 2 and 4 workers

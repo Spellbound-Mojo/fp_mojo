@@ -1,0 +1,14 @@
+dropped after failure
+reported: unhandled fiber failure: 1
+dropped before failure
+reported: unhandled fiber failure: 2
+joined failure
+canceled joiner
+reported: unhandled fiber failure: 4
+dropped delivery
+reported: unhandled fiber failure: 5
+dropped success
+disabled
+not writable
+reported: unhandled fiber failure: 1 error(s) of type fiber_reporting.Plain
+fiber reporting: dropped handles, joins, canceled joiners, deliveries, successes

@@ -34,13 +34,9 @@ struct Next[retain:Bool](OnceUnary):
         var value=argument+self.capture.value
         if self.fail:
             raise Token[3](value,self.capture.trace)
-        try:
-            return pure[Self.I](value)
-        except error:
-            comptime assert type_of(error)==Never
-            _propagate_error[Token[3]](error^)
+        return pure[Self.I](value)
 
-def check[retain:Bool]() raises:
+def check[retain:Bool]() raises where Stack[retain].Element[Source[retain]] == Next[retain].Arg and Stack[retain].BindCompatible[Source[retain],Next[retain]] and Base[retain].RunCompatible[Stack[retain].Bound[Source[retain],Next[retain]]]:
     comptime I=Stack[retain]
     comptime C=I.Bound[Source[retain],Next[retain]]
     comptime Out=Tuple[Data,Token[0]] if retain else Result[Tuple[Int,Token[0]],Token[2]]
@@ -50,7 +46,7 @@ def check[retain:Bool]() raises:
             var data=Data(Err(Token[2](9,trace))) if stored_failure else Data(Ok(3))
             var computation:C
             try:
-                computation=flat_map[I](Next[retain](Token[1](10,trace),native_failure),source[retain](data^))
+                computation=flat_map[I](source[retain](data^),Next[retain](Token[1](10,trace),native_failure))
             except error:
                 comptime assert type_of(error)==Never
                 _propagate_error[Never](error^)

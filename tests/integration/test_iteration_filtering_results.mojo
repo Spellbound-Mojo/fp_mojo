@@ -28,7 +28,7 @@ def optional_results(stop: Bool, tokens: ArcPointer[Int], errors: ArcPointer[Int
         if value == 2: return Optional(Item(Err(FilteringFailure(42, errors))))
         return Optional(Item(Ok(Token(value * 10, tokens))))
     if stop:
-        var result = collect_results(filter_map(callback, iter(range(4))))
+        var result = collect_results(filter_map(iter(range(4)), callback))
         assert_equal(result.is_err(), True)
         assert_equal(calls, 3)
         assert_equal(tokens[], 1)
@@ -39,7 +39,7 @@ def optional_results(stop: Bool, tokens: ArcPointer[Int], errors: ArcPointer[Int
             assert_equal(error.code, 42)
         assert_equal(caught, True)
     else:
-        var values = collect_list(filter_map(callback, iter(range(4))))
+        var values = collect_list(filter_map(iter(range(4)), callback))
         assert_equal(len(values), 3)
         assert_equal(values[0].is_err(), False)
         assert_equal(values[1].is_err(), True)
@@ -59,7 +59,7 @@ def flat_results(stop: Bool, tokens: ArcPointer[Int], errors: ArcPointer[Int]) r
             if value == 1: result.append(Item(Err(FilteringFailure(42, errors))))
         return result^
     if stop:
-        var result = collect_results(flat_map(callback, iter(range(3))))
+        var result = collect_results(flat_map(iter(range(3)), callback))
         assert_equal(result.is_err(), True)
         assert_equal(calls, 2)
         assert_equal(tokens[], 1)
@@ -70,7 +70,7 @@ def flat_results(stop: Bool, tokens: ArcPointer[Int], errors: ArcPointer[Int]) r
             assert_equal(error.code, 42)
         assert_equal(caught, True)
     else:
-        var values = collect_list(flat_map(callback, iter(range(3))))
+        var values = collect_list(flat_map(iter(range(3)), callback))
         assert_equal(len(values), 3)
         assert_equal(values[0].is_err(), False)
         assert_equal(values[1].is_err(), True)
@@ -101,9 +101,9 @@ def main() raises:
     def pair(var value: Int) {mut expansions} -> List[Int]:
         expansions += 1
         return [value, value + 1]
-    var selected = filter(positive, iter(range(6)))
-    var mapped = filter_map(twice_even, selected^)
-    var flattened = flat_map(pair, mapped^)
+    var selected = filter(iter(range(6)), positive)
+    var mapped = filter_map(selected^, twice_even)
+    var flattened = flat_map(mapped^, pair)
     assert_equal(predicates, 0)
     assert_equal(optionals, 0)
     assert_equal(expansions, 0)

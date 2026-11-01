@@ -44,8 +44,8 @@ struct Produce(Unary):
                 raise Error("producer failure")
         return Result[Int,Int](Ok(item+1))
 
-def generic_traverse[S:Traversable,G:Applicative,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var function:F,var source:V) raises S.TraverseError[G,V,F] -> S.Traversed[G,V,F]:
-    return traverse[S,G](function^,source^)
+def generic_traverse[S:Traversable,G:Applicative,V:Movable & Deinitable,F:UnaryContract & Movable & Deinitable](var function:F,var source:V) raises S.TraverseError[G,V,F] -> S.Traversed[G,V,F] where S.Element[V] == F.Arg and S.TargetCompatible[G,V,F]:
+    return traverse[G, S](source^,function^)
 
 
 from fp.algebra import Monad
@@ -58,6 +58,8 @@ def check_traversal[S:Traversable]() raises:
     for count in [0,2,5]:
         for failure in range(3):
             var pulls=0
+            comptime assert S.Element[Counted[origin_of(pulls)]] == Produce.Arg
+            comptime assert S.TargetCompatible[ResultApplicative,Counted[origin_of(pulls)],Produce]
             var calls=ArcPointer(Int(0))
             var caught=False
             var message=String()

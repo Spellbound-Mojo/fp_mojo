@@ -1,0 +1,8 @@
+# error: BorrowCallContract
+from fp.callables import invoke_borrowed_once
+from fp.data import Result, Ok, Err
+from result_fold_receiver_support import Handler, Bare
+def value(x: Int) -> Int: return x
+def main():
+    var callback = value
+    _ = invoke_borrowed_once[Never](1,callback)

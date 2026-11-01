@@ -1,0 +1,1 @@
+capability spawn: generic defer on SyncIO and Async; start, join, cancel, cede and never on Async

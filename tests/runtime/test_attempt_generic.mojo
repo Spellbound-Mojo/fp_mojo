@@ -1,5 +1,5 @@
 """Two generic returns preserve every admitted argument convention and exact errors."""
-from fp.data import Result, attempt, raise_on_err
+from fp.data import Capture, Result, raise_on_err
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -10,265 +10,265 @@ struct Input(Movable):
 struct AttemptFailure(Movable):
     var code: Int
 
-def capture[R: Movable & Deinitable, //, F: def() -> R](
+def capture[R: Movable & Deinitable, //, F: def() -> R, zero: Bool = True](
     function: F
 ) -> Result[R, Never]:
-    return attempt(function)
+    return Capture().run(function)
 
-def capture[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raises X -> R](
+def capture[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raises X -> R, zero: Bool = True](
     function: F
 ) -> Result[R, X]:
-    return attempt(function)
+    return Capture[X]().run(function)
 
-def forward[R: Movable & Deinitable, //, F: def() -> R](
+def forward[R: Movable & Deinitable, //, F: def() -> R, zero: Bool = True](
     function: F
 ) -> Result[R, Never]:
-    return capture(function)
+    return capture[zero=True](function)
 
-def forward[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raises X -> R](
+def forward[R: Movable & Deinitable, X: Movable & Deinitable, //, F: def() raises X -> R, zero: Bool = True](
     function: F
 ) -> Result[R, X]:
-    return capture(function)
+    return capture[zero=True](function)
 
-def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A) -> R](
+def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A) -> R, read: Bool = True](
     function: F, first: A
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt(function, first)
+    return Capture.borrow(first).run(function)
 
-def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A) raises X -> R](
+def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A) raises X -> R, read: Bool = True](
     function: F, first: A
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt(function, first)
+    return Capture[X].borrow(first).run(function)
 
-def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A) -> R](
+def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A) -> R, read: Bool = True](
     function: F, first: A
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first)
+    return capture[read=True](function, first)
 
-def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A) raises X -> R](
+def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A) raises X -> R, read: Bool = True](
     function: F, first: A
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first)
+    return capture[read=True](function, first)
 
-def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
+def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R, owned: Bool = True](
     function: F, var first: A
 ) -> Result[R, Never]:
-    return attempt(function, first^)
+    return Capture.take(first^).run(function)
 
-def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](
+def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R, owned: Bool = True](
     function: F, var first: A
 ) -> Result[R, X]:
-    return attempt(function, first^)
+    return Capture[X].take(first^).run(function)
 
-def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R](
+def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A) -> R, owned: Bool = True](
     function: F, var first: A
 ) -> Result[R, Never]:
-    return capture(function, first^)
+    return capture[owned=True](function, first^)
 
-def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R](
+def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A) raises X -> R, owned: Bool = True](
     function: F, var first: A
 ) -> Result[R, X]:
-    return capture(function, first^)
+    return capture[owned=True](function, first^)
 
-def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R](
+def capture[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R, mutable: Bool = True](
     function: F, mut first: A
 ) -> Result[R, Never]:
-    return attempt(function, first)
+    return Capture.mutable(first).run(function)
 
-def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A) raises X -> R](
+def capture[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A) raises X -> R, mutable: Bool = True](
     function: F, mut first: A
 ) -> Result[R, X]:
-    return attempt(function, first)
+    return Capture[X].mutable(first).run(function)
 
-def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R](
+def forward[A: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A) -> R, mutable: Bool = True](
     function: F, mut first: A
 ) -> Result[R, Never]:
-    return capture(function, first)
+    return capture[mutable=True](function, first)
 
-def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A) raises X -> R](
+def forward[A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A) raises X -> R, mutable: Bool = True](
     function: F, mut first: A
 ) -> Result[R, X]:
-    return capture(function, first)
+    return capture[mutable=True](function, first)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B) -> R, read_read: Bool = True](
     function: F, first: A, second: B
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return attempt(function, first, second)
+    return Capture.borrow(first).borrow(second).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B) raises X -> R, read_read: Bool = True](
     function: F, first: A, second: B
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return attempt(function, first, second)
+    return Capture[X].borrow(first).borrow(second).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, B) -> R, read_read: Bool = True](
     function: F, first: A, second: B
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first, second)
+    return capture[read_read=True](function, first, second)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, B) raises X -> R, read_read: Bool = True](
     function: F, first: A, second: B
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable) and not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first, second)
+    return capture[read_read=True](function, first, second)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B) -> R, read_owned: Bool = True](
     function: F, first: A, var second: B
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt(function, first, second^)
+    return Capture.borrow(first).take(second^).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B) raises X -> R, read_owned: Bool = True](
     function: F, first: A, var second: B
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt(function, first, second^)
+    return Capture[X].borrow(first).take(second^).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, var B) -> R, read_owned: Bool = True](
     function: F, first: A, var second: B
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, second^)
+    return capture[read_owned=True](function, first, second^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, var B) raises X -> R, read_owned: Bool = True](
     function: F, first: A, var second: B
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, second^)
+    return capture[read_owned=True](function, first, second^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B) -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt(function, first, second)
+    return Capture.borrow(first).mutable(second).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B) raises X -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return attempt(function, first, second)
+    return Capture[X].borrow(first).mutable(second).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(A, mut B) -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B
 ) -> Result[R, Never] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, second)
+    return capture[read_mut=True](function, first, second)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(A, mut B) raises X -> R, read_mut: Bool = True](
     function: F, first: A, mut second: B
 ) -> Result[R, X] where not conforms_to(A, TrivialRegisterPassable):
-    return capture(function, first, second)
+    return capture[read_mut=True](function, first, second)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B) -> R, owned_read: Bool = True](
     function: F, var first: A, second: B
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt(function, first^, second)
+    return Capture.take(first^).borrow(second).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B) raises X -> R, owned_read: Bool = True](
     function: F, var first: A, second: B
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt(function, first^, second)
+    return Capture[X].take(first^).borrow(second).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, B) -> R, owned_read: Bool = True](
     function: F, var first: A, second: B
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first^, second)
+    return capture[owned_read=True](function, first^, second)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, B) raises X -> R, owned_read: Bool = True](
     function: F, var first: A, second: B
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first^, second)
+    return capture[owned_read=True](function, first^, second)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B) -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B
 ) -> Result[R, Never]:
-    return attempt(function, first^, second^)
+    return Capture.take(first^).take(second^).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B) raises X -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B
 ) -> Result[R, X]:
-    return attempt(function, first^, second^)
+    return Capture[X].take(first^).take(second^).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, var B) -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B
 ) -> Result[R, Never]:
-    return capture(function, first^, second^)
+    return capture[owned_owned=True](function, first^, second^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, var B) raises X -> R, owned_owned: Bool = True](
     function: F, var first: A, var second: B
 ) -> Result[R, X]:
-    return capture(function, first^, second^)
+    return capture[owned_owned=True](function, first^, second^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B) -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B
 ) -> Result[R, Never]:
-    return attempt(function, first^, second)
+    return Capture.take(first^).mutable(second).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B) raises X -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B
 ) -> Result[R, X]:
-    return attempt(function, first^, second)
+    return Capture[X].take(first^).mutable(second).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(var A, mut B) -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B
 ) -> Result[R, Never]:
-    return capture(function, first^, second)
+    return capture[owned_mut=True](function, first^, second)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var A, mut B) raises X -> R, owned_mut: Bool = True](
     function: F, var first: A, mut second: B
 ) -> Result[R, X]:
-    return capture(function, first^, second)
+    return capture[owned_mut=True](function, first^, second)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B) -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt(function, first, second)
+    return Capture.mutable(first).borrow(second).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B) raises X -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return attempt(function, first, second)
+    return Capture[X].mutable(first).borrow(second).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, B) -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B
 ) -> Result[R, Never] where not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first, second)
+    return capture[mut_read=True](function, first, second)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, B) raises X -> R, mut_read: Bool = True](
     function: F, mut first: A, second: B
 ) -> Result[R, X] where not conforms_to(B, TrivialRegisterPassable):
-    return capture(function, first, second)
+    return capture[mut_read=True](function, first, second)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B
 ) -> Result[R, Never]:
-    return attempt(function, first, second^)
+    return Capture.mutable(first).take(second^).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B) raises X -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B
 ) -> Result[R, X]:
-    return attempt(function, first, second^)
+    return Capture[X].mutable(first).take(second^).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, var B) -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B
 ) -> Result[R, Never]:
-    return capture(function, first, second^)
+    return capture[mut_owned=True](function, first, second^)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, var B) raises X -> R, mut_owned: Bool = True](
     function: F, mut first: A, var second: B
 ) -> Result[R, X]:
-    return capture(function, first, second^)
+    return capture[mut_owned=True](function, first, second^)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B) -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B) -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B
 ) -> Result[R, Never]:
-    return attempt(function, first, second)
+    return Capture.mutable(first).mutable(second).run(function)
 
-def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B) raises X -> R](
+def capture[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B) raises X -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B
 ) -> Result[R, X]:
-    return attempt(function, first, second)
+    return Capture[X].mutable(first).mutable(second).run(function)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B) -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //, F: def(mut A, mut B) -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B
 ) -> Result[R, Never]:
-    return capture(function, first, second)
+    return capture[mut_mut=True](function, first, second)
 
-def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B) raises X -> R](
+def forward[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, //, F: def(mut A, mut B) raises X -> R, mut_mut: Bool = True](
     function: F, mut first: A, mut second: B
 ) -> Result[R, X]:
-    return capture(function, first, second)
+    return capture[mut_mut=True](function, first, second)
 
 def check_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
     var calls = 0
@@ -286,13 +286,13 @@ def check_0(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success)
+                var result: Result[String, Never] = forward[zero=True](success)
                 observed = raise_on_err(result^)
             else:
                 observed = success()
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure)
+                var result: Result[String, AttemptFailure] = forward[zero=True](failure)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -320,13 +320,13 @@ def check_1(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first)
+                var result: Result[String, Never] = forward[read=True](success, first)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first)
+                var result: Result[String, AttemptFailure] = forward[read=True](failure, first)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -355,13 +355,13 @@ def check_2(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first^)
+                var result: Result[String, Never] = forward[owned=True](success, first^)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first^)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first^)
+                var result: Result[String, AttemptFailure] = forward[owned=True](failure, first^)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -391,13 +391,13 @@ def check_3(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first)
+                var result: Result[String, Never] = forward[mutable=True](success, first)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first)
+                var result: Result[String, AttemptFailure] = forward[mutable=True](failure, first)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -427,13 +427,13 @@ def check_4(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first, second)
+                var result: Result[String, Never] = forward[read_read=True](success, first, second)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first, second)
+                var result: Result[String, AttemptFailure] = forward[read_read=True](failure, first, second)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -464,13 +464,13 @@ def check_5(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first, second^)
+                var result: Result[String, Never] = forward[read_owned=True](success, first, second^)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first, second^)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first, second^)
+                var result: Result[String, AttemptFailure] = forward[read_owned=True](failure, first, second^)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -502,13 +502,13 @@ def check_6(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first, second)
+                var result: Result[String, Never] = forward[read_mut=True](success, first, second)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first, second)
+                var result: Result[String, AttemptFailure] = forward[read_mut=True](failure, first, second)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -539,13 +539,13 @@ def check_7(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first^, second)
+                var result: Result[String, Never] = forward[owned_read=True](success, first^, second)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first^, second)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first^, second)
+                var result: Result[String, AttemptFailure] = forward[owned_read=True](failure, first^, second)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -575,13 +575,13 @@ def check_8(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first^, second^)
+                var result: Result[String, Never] = forward[owned_owned=True](success, first^, second^)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first^, second^)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first^, second^)
+                var result: Result[String, AttemptFailure] = forward[owned_owned=True](failure, first^, second^)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -612,13 +612,13 @@ def check_9(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first^, second)
+                var result: Result[String, Never] = forward[owned_mut=True](success, first^, second)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first^, second)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first^, second)
+                var result: Result[String, AttemptFailure] = forward[owned_mut=True](failure, first^, second)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -650,13 +650,13 @@ def check_10(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first, second)
+                var result: Result[String, Never] = forward[mut_read=True](success, first, second)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first, second)
+                var result: Result[String, AttemptFailure] = forward[mut_read=True](failure, first, second)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -689,13 +689,13 @@ def check_11(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first, second^)
+                var result: Result[String, Never] = forward[mut_owned=True](success, first, second^)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first, second^)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first, second^)
+                var result: Result[String, AttemptFailure] = forward[mut_owned=True](failure, first, second^)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:
@@ -729,13 +729,13 @@ def check_12(library: Bool, pure: Bool, fail: Bool, count: Int) raises:
         var error_code = 0
         if pure:
             if library:
-                var result: Result[String, Never] = forward(success, first, second)
+                var result: Result[String, Never] = forward[mut_mut=True](success, first, second)
                 observed = raise_on_err(result^)
             else:
                 observed = success(first, second)
         else:
             if library:
-                var result: Result[String, AttemptFailure] = forward(failure, first, second)
+                var result: Result[String, AttemptFailure] = forward[mut_mut=True](failure, first, second)
                 try: observed = raise_on_err(result^)
                 except error: error_code = error.code
             else:

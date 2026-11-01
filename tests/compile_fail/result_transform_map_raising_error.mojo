@@ -1,5 +1,5 @@
 from fp.algebra import map, ResultFamily
-# error: invalid call to 'map_raising2': lacking evidence to prove correctness
+# error: invalid call to 'map_raising2': value passed to 'callback' cannot be converted
 from fp.data import Result, Ok, Err
 
 def identity[T: Movable & Deinitable](var value: T) -> T: return value^
@@ -16,7 +16,7 @@ def success_count_raising[T: Movable & Deinitable, E: Movable & Deinitable, X: M
 def recovery_count[T: Movable & Deinitable, E: Movable & Deinitable](var value: E) -> Result[T, Int]: return Result[T, Int](Err(1))
 def recovery_count_raising[T: Movable & Deinitable, E: Movable & Deinitable, X: Movable & Deinitable](var value: E) raises X -> Result[T, Int]: return Result[T, Int](Err(1))
 def map_raising1[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var T) raises X -> U](var value: Result[T, E], callback: F) raises X -> Result[U, E]:
-    return map[ResultFamily[type_of(value).Error], X=X](callback, value^)
+    return map[ResultFamily[type_of(value).Error], X=X](value^, callback)
 def map_raising2[T: Movable & Deinitable, E: Movable & Deinitable, U: Movable & Deinitable, X: Movable & Deinitable, //, F: def(var T) raises X -> U](var value: Result[T, E], callback: F) raises X -> Result[U, E]:
     return map_raising1[X=X](value^, callback)
 

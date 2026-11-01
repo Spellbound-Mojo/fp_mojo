@@ -1,0 +1,1 @@
+wstp_shutdown: dropping the last copy joins every worker after abandoned fibers drain; copies keep the runtime; a last copy dropped on a worker detaches it

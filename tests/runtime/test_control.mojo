@@ -30,16 +30,16 @@ def add(var left: Int, var right: Int) -> Int:
 
 
 def main() raises:
-    var stopped = fold_until(step, 0, Source())
+    var stopped = fold_until(Source(), 0, step)
     assert_true(stopped.isa[Break[String]]())
     assert_equal(stopped[Break[String]].value, "6")
-    var exhausted = fold_until(step, 5, iter(range(0)))
+    var exhausted = fold_until(iter(range(0)), 5, step)
     assert_equal(exhausted[Continue[Int]].value, 5)
-    assert_equal(reduce(add, iter(range(4))), 6)
-    assert_equal(reduce(add, iter(range(4)), initial=10), 16)
+    assert_equal(reduce(iter(range(4)), add), 6)
+    assert_equal(reduce(iter(range(4)), add, initial=10), 16)
     var caught = False
     try:
-        _ = reduce(add, iter(range(0)))
+        _ = reduce(iter(range(0)), add)
     except:
         caught = True
     assert_true(caught)

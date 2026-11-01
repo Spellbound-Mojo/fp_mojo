@@ -40,7 +40,7 @@ def exercise(library: Bool, length: Int, count: Int, complete: Bool,
     var source = Outer(0, length, trace)
     var output = List[Int]()
     if library:
-        var flattened = flat_map(expand, source^)
+        var flattened = flat_map(source^, expand)
         var forwarded = transfer(flattened^)
         assert_equal(calls, 0)
         assert_equal(len(trace[]), 0)

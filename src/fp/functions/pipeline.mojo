@@ -2,15 +2,17 @@
 
 A stage is a plain function, a closure promoted with `as_unary`, or a `Unary`
 library value such as a `Partial` or a `Composition`. Each stage's own contract
-fixes its types. `piped(value).then(f)` chains stages one call at a time, with no
-stage limit and no promotion.
+fixes its types. `pipeline(value).then(f)` chains stages one call at a time,
+with no stage limit.
 """
-
+from fp.callables.native import _call_native_never, _Thin1F, NativeUnary
 from std.builtin.variadics import TypeList
 from std.builtin.rebind import rebind_var
+from fp.data import Result
 from fp.callables.protocols import Unary
-from fp.callables.native import _Thin1F
 from fp._internal.errors import _CommonError
+from ._pipeline import _PipelineRunner, _pipe_at
+from .composition import Composition
 from ._stages import _Plan, _check_stage, _stage_shared
 
 
@@ -46,7 +48,10 @@ def pipe[A: Movable, R: Movable, //,
 def pipe[A: Movable, R: Movable, E: AnyType, //,
          F: def(var A) raises E -> R](var value: A, function: F) raises E -> R:
     """Apply one raising stage; its error type is kept."""
-    return function(value^)
+    comptime if E == Never:
+        return _call_native_never[A, R, F](function, value^)
+    else:
+        return function(value^)
 
 
 def pipe[A: Movable & Deinitable, F: Unary](
@@ -56,109 +61,9 @@ def pipe[A: Movable & Deinitable, F: Unary](
     return function.call(rebind_var[F.Arg](value^))
 
 
-struct Piped[T: Movable & Deinitable](Movable):
-    """A value in an eager chained pipeline, started by `piped(value)`.
-
-    Each `then` applies one stage immediately, as `pipe(value, f)` does, and
-    infers that stage's types from its own call, so a chain has no stage limit
-    and takes plain functions, closures and library `Unary` values alike. `get`
-    ends the chain.
-
-    Parameters:
-        T: The type of the value the chain holds.
-    """
-    var value: Self.T
-    """The value the chain holds."""
-
-    def __init__(out self, var value: Self.T):
-        self.value = value^
-
-    def then[R: Movable & Deinitable, //, F: def(var Self.T) -> R](deinit self, function: F) -> Piped[R]:
-        """Apply a pure stage and continue the chain with its result.
-
-        Parameters:
-            R: The stage's result type.
-            F: The stage's type: a plain function or a closure.
-
-        Args:
-            function: The stage, borrowed; it runs once, now.
-
-        Returns:
-            The chain, holding the stage's result.
-        """
-        return Piped[R](pipe(self.value^, function))
-
-    def then[R: Movable & Deinitable, //, E: AnyType, F: def(var Self.T) raises E -> R](
-        deinit self, function: F
-    ) raises E -> Piped[R]:
-        """Apply a raising stage; its error stops the chain with its own type.
-
-        Limitations:
-            Generic code that forwards a raising callback states its error,
-            `then[E=X](f)`; Mojo 1.1 cannot infer it from a forwarded callback.
-
-        Parameters:
-            R: The stage's result type.
-            E: The stage's error type.
-            F: The stage's type: a plain function or a closure that raises `E`.
-
-        Args:
-            function: The stage, borrowed; it runs once, now.
-
-        Returns:
-            The chain, holding the stage's result.
-
-        Raises:
-            The stage's error, unchanged; later stages do not run.
-        """
-        # Forwarded through `pipe`, the error would be the callback's `F.E`, which
-        # Mojo 1.1 cannot prove equal to `E`; the native call is the same one.
-        return Piped[R](function(self.value^))
-
-    def then[F: Unary](deinit self, function: F) raises F.Error -> Piped[F.Out] where F.Arg == Self.T:
-        """Apply a library `Unary` value, such as a partial or a composition."""
-        return Piped[F.Out](pipe(self.value^, function))
-
-    def get(deinit self) -> Self.T:
-        """End the chain and return the value.
-
-        Returns:
-            The value the chain holds, moved out.
-        """
-        return self.value^
-
-
-def piped[T: Movable & Deinitable](var value: T) -> Piped[T]:
-    """Start an eager chained pipeline: `piped(value).then(f).then(g).get()`.
-
-    The chain returns `g(f(value))`. Each stage runs once, when its `then` is
-    called, so a chain has no limit on its length, and closures need no
-    `as_unary`. Unlike `pipe`, the stages need not share one error type: each
-    `then` raises its own.
-
-    Parameters:
-        T: The input type.
-
-    Args:
-        value: The input, consumed.
-
-    Returns:
-        A chain holding `value`.
-    """
-    return Piped[T](value^)
-
-
-trait _PipelineRunner:
-    # Native environment packs are forwarded, never assembled or copied.
-    # Concrete runners prove their own environment types before projection.
-    @staticmethod
-    def apply[index: Int, R: Movable & Deinitable, E: Movable & Deinitable,
-              A: Movable & Deinitable, *Environment: Movable & Deinitable](
-        var value: A, *environment: *Environment
-    ) raises E -> R:
-        ...
-
-
+# Value names the whole pipeline payload, leaving T available for its elements.
+# Mojo 1.1's captured-function evidence needs the canonical T/U parameter names
+# in the lazy signatures below, including callbacks with origin-bearing results.
 struct _ImmediateRunner(_PipelineRunner):
     @staticmethod
     def apply[index: Int, R: Movable & Deinitable, E: Movable & Deinitable,
@@ -167,20 +72,6 @@ struct _ImmediateRunner(_PipelineRunner):
     ) raises E -> R:
         comptime assert _check_stage[index, Environment[index], A, R, E]()
         return _stage_shared[R, E](environment[index], value^)
-
-
-def _pipe_at[index: Int, Results: TypeList[Trait=Movable & Deinitable, ...],
-             E: Movable & Deinitable, D: _PipelineRunner,
-             A: Movable & Deinitable, *Environment: Movable & Deinitable](
-    var value: A, *environment: *Environment
-) raises E -> Results[Results.length - 1]:
-    """Apply stage `index` and every later stage, left to right."""
-    var result = D.apply[index, Results[index], E](value^, *environment)
-    comptime if index + 1 == Results.length:
-        comptime assert Results[index] == Results[Results.length - 1]
-        return rebind_var[Results[Results.length - 1]](result^)
-    else:
-        return _pipe_at[index + 1, Results, E, D](result^, *environment)
 
 
 def pipe[A: Movable & Deinitable, //,
@@ -209,9 +100,11 @@ def pipe[A: Movable & Deinitable, //,
     return pipe[_Plan[*Fs].Results, E](value^, *functions)
 
 
+# Mojo 1.2 ranks an unconstrained pack ahead of fixed thin signatures. Admit
+# the inferred pack only for the library stages that its planner can inspect.
 def pipe[A: Movable & Deinitable, //, *Fs: Movable & Deinitable](
     var value: A, *functions: *Fs
-) raises _Plan[*Fs].Failure -> _PipelineResult[A, _Plan[*Fs].Results] where Fs.length >= 2:
+) raises _Plan[*Fs].Failure -> _PipelineResult[A, _Plan[*Fs].Results] where Fs.length >= 2 and Fs.all_conforms_to[Unary]():
     """Apply stages to `value` left to right and return the last result.
 
     Each stage runs once, in order, and receives the previous stage's result as
@@ -222,11 +115,16 @@ def pipe[A: Movable & Deinitable, //, *Fs: Movable & Deinitable](
     previous result is a compile error that names the stage. `pipe[E=Failure]`
     states the common error, and `pipe[Results, E]` every result type.
 
+    An inferred two-stage call can mix a plain function or stored thin pointer
+    with a shared library stage directly, in either position. The library
+    stage is borrowed and remains reusable after the call.
+
     Limitations:
         At most eight plain functions per call, because Mojo 1.1 cannot read a
         function's signature from a variadic pack: nest calls, group stages
-        with `flow`, or chain them with `piped`. Plain functions mixed with
-        library values are promoted with `as_unary`. Stages that raise
+        with `flow`, or chain them with `pipeline(value).then(...)`. Longer mixed calls and explicit
+        error/result bindings promote native stages with `as_unary`, as do
+        capturing closures in mixed calls. Stages that raise
         different error types are mapped to one type first.
 
     Parameters:
@@ -304,4 +202,144 @@ def pipe[A0: Movable & Deinitable, A1: Movable & Deinitable, A2: Movable & Deini
 ) raises _CommonError[_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[E0, E1], E2], E3], E4], E5], E6], E7] -> A8:
     """Apply 8 plain functions in order."""
     return pipe[E=_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[_CommonError[E0, E1], E2], E3], E4], E5], E6], E7]](value^, _Thin1F[A0, A1, E0](f0), _Thin1F[P1, A2, E1](f1), _Thin1F[P2, A3, E2](f2), _Thin1F[P3, A4, E3](f3), _Thin1F[P4, A5, E4](f4), _Thin1F[P5, A6, E5](f5), _Thin1F[P6, A7, E6](f6), _Thin1F[P7, A8, E7](f7))
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: Unary, q: ImmOrigin, //](
+    var value: V, ref[q] function: def(var A) thin -> R, stage: F
+) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, R, Never, type_of(function), False](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //](
+    var value: V, function: def(var A) thin -> R, stage: F
+) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result where not conforms_to(A, RegisterPassable):
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, R, Never, type_of(function), False](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Unary, //](
+    var value: V, function: def(var A) thin -> R, stage: F
+) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result where not conforms_to(R, RegisterPassable):
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, R, Never, type_of(function), False](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //](
+    var value: V, function: def(var A) thin -> R, stage: F
+) raises _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, R, Never, type_of(function), False], F].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, R, Never, type_of(function), False](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, //](
+    var value: V, function: def(var A) thin, stage: F
+) raises _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Failure -> _Plan[NativeUnary[A, type_of(None), Never, type_of(function), False], F].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, type_of(None), Never, type_of(function), False](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //](
+    var value: V, ref[q] function: def(var A) raises X thin -> R, stage: F
+) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, R, X, type_of(function), True](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+    var value: V, function: def(var A) raises X thin -> R, stage: F
+) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result where not conforms_to(A, RegisterPassable):
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, R, X, type_of(function), True](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+    var value: V, function: def(var A) raises X thin -> R, stage: F
+) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result where not conforms_to(R, RegisterPassable):
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, R, X, type_of(function), True](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+    var value: V, function: def(var A) raises X thin -> R, stage: F
+) raises _Plan[NativeUnary[A, R, X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, R, X, type_of(function), True], F].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, R, X, type_of(function), True](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+    var value: V, function: def(var A) raises X thin, stage: F
+) raises _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Failure -> _Plan[NativeUnary[A, type_of(None), X, type_of(function), True], F].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, NativeUnary[A, type_of(None), X, type_of(function), True](function), stage)
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, F: Unary, q: ImmOrigin, //](
+    var value: V, stage: F, ref[q] function: def(var A) thin -> R
+) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //](
+    var value: V, stage: F, function: def(var A) thin -> R
+) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result where not conforms_to(A, RegisterPassable):
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Unary, //](
+    var value: V, stage: F, function: def(var A) thin -> R
+) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result where not conforms_to(R, RegisterPassable):
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Unary, //](
+    var value: V, stage: F, function: def(var A) thin -> R
+) raises _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, R, Never, type_of(function), False]].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, F: Unary, //](
+    var value: V, stage: F, function: def(var A) thin
+) raises _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Failure -> _Plan[F, NativeUnary[A, type_of(None), Never, type_of(function), False]].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, q: ImmOrigin, //](
+    var value: V, stage: F, ref[q] function: def(var A) raises X thin -> R
+) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, R, X, type_of(function), True](function))
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+    var value: V, stage: F, function: def(var A) raises X thin -> R
+) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result where not conforms_to(A, RegisterPassable):
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, R, X, type_of(function), True](function))
+
+
+def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+    var value: V, stage: F, function: def(var A) raises X thin -> R
+) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result where not conforms_to(R, RegisterPassable):
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, R, X, type_of(function), True](function))
+
+
+def pipe[V: Movable & Deinitable, A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+    var value: V, stage: F, function: def(var A) raises X thin -> R
+) raises _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, R, X, type_of(function), True]].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, R, X, type_of(function), True](function))
+
+
+def pipe[V: Movable & Deinitable, A: Movable & Deinitable, X: Movable & Deinitable, F: Unary, //](
+    var value: V, stage: F, function: def(var A) raises X thin
+) raises _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Failure -> _Plan[F, NativeUnary[A, type_of(None), X, type_of(function), True]].Result:
+    """Apply a plain function or stored pointer beside one borrowed library stage."""
+    return pipe(value^, stage, NativeUnary[A, type_of(None), X, type_of(function), True](function))
 # --- end plain-function overloads ---

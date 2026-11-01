@@ -1,0 +1,10 @@
+coalesced interrupts: one byte, one wake
+interrupts racing a park: no lost wake in every round
+read readiness: notified once, removed on completion
+write readiness: waits while full, notified when writable
+registrations: removed on completion and cancellation, stale handles rejected
+close during a poll: woken, registrations notified, pipe released
+close on the owner and on drop: released once, registrations notified
+close racing interrupts: released exactly once after every user left
+timeouts: honored, including sub-millisecond deadlines
+idle poll: no CPU over 500 ms

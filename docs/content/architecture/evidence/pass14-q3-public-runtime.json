@@ -1,0 +1,48 @@
+{
+  "format_version": 1,
+  "label": "pass14-q3-public-runtime",
+  "kind": "qualification",
+  "source_commit": "713b83d751ff29c5187500c7cc5b46212a14c757",
+  "report_sha256": "35002cc044a1c1265aebfefdb961c785c00ae5972b418d93d200944b6de05a1d",
+  "inputs_sha256": "d2ab953831fdef8641f37a3d394f90d26ecb396dd4ccc7837584a4441396c4a3",
+  "input_files": 4405,
+  "experiment_inputs_sha256": "1ac3b754e672cc2ceaab962b845667fa73f388f110799ac1cf4eb8d1cebf6137",
+  "host": {
+    "compiler": "Mojo 1.2.0 (2016d0cd)",
+    "platform": "Linux-6.18.44-fc-v185-x86_64-with-glibc2.39",
+    "machine": "x86_64",
+    "cpu": "Intel(R) Xeon(R) Processor @ 2.10GHz"
+  },
+  "host_load": "1-minute load 1.5 to 12.7: three runs and their compilations shared the host",
+  "defines": [
+    "FP_ASYNC_PROFILE=current_thread"
+  ],
+  "checks": 4,
+  "passed": 4,
+  "records": [
+    {
+      "name": "public_runtime-source-O0",
+      "passed": true,
+      "executable_sha256": "cfddcb687c5fe628df22b40509535308be806af4f81db69eacfa39eaca46b0c3",
+      "stdout_sha256": "ab582e3d606d6162fe9fb0f94a1ecdbb833d0d618357e7e36fd40facdc5a4084"
+    },
+    {
+      "name": "public_runtime-source-O3",
+      "passed": true,
+      "executable_sha256": "cb24acfbca4be6aaab34bea5f62f00fe781f1342c1d83c9a362aaa28ff4a3e62",
+      "stdout_sha256": "ab582e3d606d6162fe9fb0f94a1ecdbb833d0d618357e7e36fd40facdc5a4084"
+    },
+    {
+      "name": "public_runtime-package-O0",
+      "passed": true,
+      "executable_sha256": "3a14ce6a12e3122065c8baa862c668cf74a0d493b24f4e8c8029f30dbdfb777f",
+      "stdout_sha256": "ab582e3d606d6162fe9fb0f94a1ecdbb833d0d618357e7e36fd40facdc5a4084"
+    },
+    {
+      "name": "public_runtime-package-O3",
+      "passed": true,
+      "executable_sha256": "52f3b14a96dd210d56f74f975c32215d965beb96739a71fed6096b513cab557c",
+      "stdout_sha256": "ab582e3d606d6162fe9fb0f94a1ecdbb833d0d618357e7e36fd40facdc5a4084"
+    }
+  ]
+}

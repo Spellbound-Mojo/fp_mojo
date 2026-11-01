@@ -1,4 +1,4 @@
-# error: traverse: the callback must be repeatable
+# error: no matching function in call to 'run'
 from fp.algebra import traverse, ListFamily, pure
 from fp.effects import State, run
 from fp.callables import OnceUnary
@@ -12,4 +12,4 @@ struct Once(OnceUnary,Defaultable):
 
 def main() raises:
     var values:List[Int]=[1,2]
-    _=run[State[Int]](traverse[ListFamily,State[Int]](Once(),values^),0)
+    _=run[State[Int]](traverse[State[Int], ListFamily](values^,Once()),0)

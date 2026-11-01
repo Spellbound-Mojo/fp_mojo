@@ -18,11 +18,11 @@ def exercise(destroyed: ArcPointer[Int]) raises:
         state.calls += 1
         return value == state.calls
 
-    var first = find(next_number, iter(range(1, 2)))
+    var first = find(iter(range(1, 2)), next_number)
     assert_equal(first.take(), 1)
-    assert_true(any(next_number, iter(range(2, 3))))
-    assert_true(all(next_number, iter(range(3, 5))))
-    var fifth = find(next_number, iter(range(5, 6)))
+    assert_true(any(iter(range(2, 3)), next_number))
+    assert_true(all(iter(range(3, 5)), next_number))
+    var fifth = find(iter(range(5, 6)), next_number)
     assert_equal(fifth.take(), 5)
     assert_equal(destroyed[], 0)
     # A direct native call observes updates made by every preceding terminal.

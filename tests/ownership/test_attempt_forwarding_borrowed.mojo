@@ -1,5 +1,5 @@
-"""Borrowed Lists and captured owners remain usable through repeated attempt calls."""
-from fp.data import attempt, raise_on_err
+"""Borrowed Lists and captured owners remain usable through repeated Capture calls."""
+from fp.data import Capture, raise_on_err
 from std.testing import assert_equal
 
 @fieldwise_init
@@ -18,9 +18,9 @@ def check(anchor: List[Int]) raises:
         calls += 1
         raise AttemptForwardingBorrowedFailure(anchor[0] + value)
     for i in range(3):
-        assert_equal(raise_on_err(attempt(captured, i)), anchor[0] + i)
+        assert_equal(raise_on_err(Capture.borrow(i).run(captured)), anchor[0] + i)
         var code = 0
-        try: _ = raise_on_err(attempt(fail, i))
+        try: _ = raise_on_err(Capture[AttemptForwardingBorrowedFailure].borrow(i).run(fail))
         except error: code = error.code
         assert_equal(code, anchor[0] + i)
     assert_equal(calls, 6)
@@ -28,7 +28,7 @@ def check(anchor: List[Int]) raises:
 def main() raises:
     var values: List[Int] = [7, 8, 9]
     var offset = String("xy")
-    assert_equal(raise_on_err(attempt(inspect, values, offset)), inspect(values, offset))
+    assert_equal(raise_on_err(Capture.borrow(values).borrow(offset).run(inspect)), inspect(values, offset))
     check(values)
     assert_equal(values, [7, 8, 9])
     assert_equal(offset, "xy")

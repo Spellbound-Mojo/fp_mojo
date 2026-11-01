@@ -1,4 +1,4 @@
-# error: no matching function in call to 'reduce'
+# error: cannot prove constraint for candidate
 from fp.iteration import fold_left, reduce, reduce_optional, fold_until
 from fp.iteration import find, any, all
 from fp.data import ControlFlow, Continue
@@ -11,7 +11,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime B = type_of(b)
     print(a[0], b[0])
     def step(var acc: A, var item: Int) {b} -> B: return b
-    _ = reduce[A=A](step, iter(range(1)), initial=a)
+    _ = reduce[A=A](iter(range(1)), step, initial=a)
 
 def main():
     var first: List[Int] = [11]

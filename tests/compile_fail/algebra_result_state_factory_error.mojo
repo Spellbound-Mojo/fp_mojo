@@ -1,4 +1,4 @@
-# error: transformer: different inner family or error type
+# error: invalid call to 'map2_lazy': violated constraint
 from fp.algebra import pure, map2_lazy
 from fp.effects import State, ResultT
 from fp.callables import Binary, OnceThunk
@@ -20,4 +20,4 @@ struct Combine(Binary):
 
 def main():
     comptime I=ResultT[State[Int],Int]
-    _=map2_lazy[I](Combine(),pure[I](1),Wrong())
+    _=map2_lazy[I](pure[I](1),Wrong(),Combine())

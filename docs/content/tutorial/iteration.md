@@ -9,6 +9,13 @@ inspect the intermediate steps of a fold.
 Callbacks in lazy adapters cannot raise. To carry a failure through the chain,
 return a `Result` element and handle it when consuming the iterator.
 
+A reusable bound predicate can be written as `partial(below, limit)` and
+passed by name to several filters or prefix operations. The
+[callback guide](../start/ownership.md#reuse-callbacks-by-name) shows how to share
+callbacks between eager and lazy operations, or transfer them with `^`. The
+[prefix example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
+uses the same predicate in `.filter(...)` and `.drop_while(...)`.
+
 ## Chain operations with methods
 
 Start with `iterated(source)` to write transformations from left to right.
@@ -20,10 +27,14 @@ elements into a `List`.
 
 The first chain consumes `words`, expands each word into codepoints, and
 collects ten values. It has the same behavior as
-`collect_list(flat_map(codepoints_of, words^))`: each word's codepoint list is
+`collect_list(flat_map(words^, codepoints_of))`: each word's codepoint list is
 built only when that word is reached. The helper still materializes an inner
 list. Returning a borrowing codepoint iterator from a temporary owned string
 would require a different ownership contract.
+
+`Iter` also offers `.take(n)`, `.drop(n)`, `.enumerate(start=0)`, variadic
+`.zip(...)` and `.chain(...)`. Captured prefix predicates and consuming
+searches are covered in the [iterator reference](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals).
 
 `Iter` implements native `Iterator` and `IterableOwned`, so `enumerate`
 consumes it directly. The returned standard adapter can pass through
@@ -41,6 +52,12 @@ write `stream^.map(f)` or `stream^.to_list()`. A partially consumed iterator
 continues at its current position. The wrapper adds no buffering or allocation,
 and lazy methods do not run callbacks until an element is requested.
 
+A lazy `.filter_map(project)` infers the present value's type from the
+callback's Optional result. Named partials and shared unary adapters can be
+reused across chains; keep them alive until their iterators finish, or transfer
+them with `project^`. A present Result error is an ordinary output, not a
+failure of iteration.
+
 The method names and callback arguments match the free functions, with the
 source supplied by the receiver. For example, `stream^.fold_left(step, initial)`
 and `stream^.reduce(step, initial=initial)` preserve the existing fold contracts.
@@ -53,6 +70,11 @@ constraints. Move a closure with owned state into a lazy method with
 `callback^`. Generic raising terminal wrappers pass the error explicitly,
 as in `stream^.fold_left[E=E](step, initial^)`.
 
+Named unary partials can also be passed directly to `.count_where(predicate)`,
+`.for_each(sink)` and `.collect_fold[M=Monoid](project)`. These terminals finish
+using the callback before returning, so it can be reused immediately. The sink
+returns None; the optional fold skips absent results and combines present ones.
+
 ## Build a lazy chain and collect it
 
 This program keeps the positive values of `[-1, 1, 3]`, doubles them and
@@ -63,7 +85,7 @@ reduction.
 
 <!-- example: docs/examples/iteration.mojo -->
 
-`filter(positive, values^)` consumes the list as its source. A range such as
+`filter(values^, positive)` consumes the list as its source. A range such as
 `range(1, 4)` is already an iterator, and `iter(values)` would borrow the list
 instead.
 
@@ -75,12 +97,22 @@ are still `0` afterwards. `collect_list` then pulls every snapshot:
 3. The last pull doubles `3` to `6` and yields the total `8`.
 
 Collecting makes three predicate calls, two map calls and two scan steps, and
-the program prints `0`, `2` and `8`. If a consumer abandons the chain early,
+the first chain prints `0`, `2` and `8`. If a consumer abandons the chain early,
 native cleanup destroys the current adapter state and the rest of the owned
 source; the tail is never evaluated.
 
 The second chain makes three `odd` calls on `range(1, 4)` and two `pair`
 expansions, and yields `[1, 11, 3, 13]`.
+
+The final scans reuse `step = partial(weighted, 2)` with different initial
+totals, producing `[0, 2, 6, 12]` and `[10, 12, 16]`. Passing `step^` transfers
+the callback to the empty scan, which yields just its initial snapshot `[5]`.
+The same reuse works with shared binary compositions and binary `flip` wrappers.
+
+A projection bound with `partial(price, unit_price)` can be reused by name in
+`.sum_by(cost)` and `.max_by(cost)`, as well as eager Pipeline reductions.
+The [reusable projection example](../reference/iteration.md#reuse-projections-in-reductions)
+shows the same callback across these forms.
 
 ## Choose the terminal operation
 
@@ -91,10 +123,17 @@ expansions, and yields `[1, 11, 3, 13]`.
 | Absence instead of an empty error | `reduce_optional` | Returns native Optional absence |
 | Explicit early termination | `fold_until` | Returns `Continue(initial)` |
 
-`fold_left(subtract, 10, range(1, 4))` computes `((10 - 1) - 2) - 3 = 4`. Folds
+`fold_left(range(1, 4), 10, subtract)` computes `((10 - 1) - 2) - 3 = 4`. Folds
 run in order: they do not reassociate operations, assume numeric types, or
-reduce SIMD lanes for you. `reduce_optional(add, range(0))` returns an empty
+reduce SIMD lanes for you. `reduce_optional(range(0), add)` returns an empty
 `Optional`.
+
+A stateful library callback can be passed directly: the example's
+`.fold_left(IncreasingWeight(1), 0)` returns `14` without a separate callback
+adapter. A moved or temporary step is owned by the fold and uses its mutable
+receiver when available. Named shared callbacks remain borrowed and reusable.
+The same ownership choice works with `reduce_optional`, `reduce`, and
+`fold_until`; callbacks that can only be consumed once cannot serve a fold.
 
 `find`, `any` and `all` stop at the first result that decides the answer.
 `fold_until` stops on `Break`, with no extra pull from the source. Lazy
@@ -177,7 +216,7 @@ promotion.
 `forwarded(append, String("entries:"), range(3))` returns `"entries:012"` after
 three calls. Over `[4, -7, 9]`, `append` raises `InvalidEntry(-7)` on the
 second value. That exact error crosses both wrappers, and `9` is never pulled,
-so the call count ends at five. `find(even, range(3, 8))` returns `4`.
+so the call count ends at five. `find(range(3, 8), even)` returns `4`.
 
 Use the non-raising overload when the callback does not raise. The same
 forwarding rule applies to `reduce_optional`, both `reduce` forms, `fold_until`,

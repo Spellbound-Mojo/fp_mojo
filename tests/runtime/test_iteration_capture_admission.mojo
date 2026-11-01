@@ -8,5 +8,5 @@ def main() raises:
         return value + offset
     from fp.iteration import collect_list
     from std.testing import assert_equal
-    var values = collect_list(map(callback, iter(range(3))))
+    var values = collect_list(map(iter(range(3)), callback))
     assert_equal(values, [3, 4, 5])

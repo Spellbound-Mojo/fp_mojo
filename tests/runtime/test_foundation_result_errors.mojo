@@ -30,8 +30,8 @@ def exercise(operation: Int, ok: Bool, calls: ArcPointer[Int]) -> Int:
     var input = Result[Int, Int](Ok(7)) if ok else Result[Int, Int](Err(7))
     try:
         var output: Result[Int, Int]
-        if operation == 0: output = map[ResultFamily[type_of(input).Error]](fail, input^)
-        elif operation == 1: output = flat_map[ResultFamily[type_of(input).Error]](fail_bind, input^)
+        if operation == 0: output = map[ResultFamily[type_of(input).Error]](input^, fail)
+        elif operation == 1: output = flat_map[ResultFamily[type_of(input).Error]](input^, fail_bind)
         elif operation == 2: output = input^.map_err(fail)
         elif operation == 3: output = input^.or_else(fail_bind)
         elif operation == 4: return input.fold(fail_borrow, negative)
@@ -86,8 +86,8 @@ def main() raises:
     for ok in range(2):
         var input = Result[Int, String](Ok(123)) if ok else Result[Int, String](Err(String("error")))
         # Every operation changes an actual success/error payload type.
-        var mapped = map[ResultFamily[type_of(input).Error]](stringify, input^)
+        var mapped = map[ResultFamily[type_of(input).Error]](input^, stringify)
         var remapped = mapped^.map_err(length)
-        var bound = flat_map[ResultFamily[type_of(remapped).Error]](bind, remapped^)
+        var bound = flat_map[ResultFamily[type_of(remapped).Error]](remapped^, bind)
         var recovered = bound^.or_else(recover)
         assert_equal(recovered.fold(read, read_error), 3 if ok else 50)

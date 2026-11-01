@@ -1,16 +1,20 @@
 """Stored compositions: one tuple of stages, one plan, one pipeline traversal."""
 from std.builtin.variadics import TypeList
 from std.builtin.rebind import downcast, rebind_var
+from fp.callables._identity import Identity
+from fp.callables.protocols import CallContract
 from fp.callables.protocols import (UnaryContract, Unary, MutableUnary, OnceUnary,
     BinaryContract, Binary, MutableBinary, OnceBinary, ThunkContract, Thunk, MutableThunk, OnceThunk)
 from ._stages import (_Plan, _Arity, _StageIn, _Classify, _SharedCapability, _MutableCapability,
     _OnceCapability, _Once, _check_stage, _stage_shared, _stage_mutable, _stage_once,
     _first_thunk_shared, _first_thunk_mut, _first_binary_shared, _first_binary_mut)
-from .pipeline import _PipelineRunner, _pipe_at
-from fp.callables.native import _Thin0F, _Thin1F, _Thin2F
+from ._pipeline import _PipelineRunner, _pipe_at
+from fp.callables.native import _Thin0F, _Thin1F, _Thin2F, _NativeThunk, NativeUnary, _NativeBinary
+from fp.callables._views import _UnaryViewable, _BinaryViewable
+from fp.callables._receiver import _SharedUnaryRef
 
+from fp.callables.products import _OptionalCell as _Cell
 
-comptime _Cell[T: Movable & Deinitable]: Movable & Deinitable = Optional[T]
 
 comptime _AllShared[Fs: TypeList[Trait=Movable & Deinitable, ...]] = Fs.map[_Classify]().all_conforms_to[_SharedCapability]()
 comptime _AllMutable[Fs: TypeList[Trait=Movable & Deinitable, ...]] = Fs.map[_Classify]().all_conforms_to[_MutableCapability]()
@@ -58,6 +62,7 @@ struct _StoredExclusive[reverse: Bool, arity: Int, once: Bool, origin: MutOrigin
 
 @fieldwise_init
 struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
+    CallContract,
     Movable, Copyable where Fs.map[_Cell]().all_conforms_to[Copyable](),
     ThunkContract where arity == 0,
     UnaryContract where arity == 1,
@@ -66,9 +71,11 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     MutableThunk where arity == 0 and _AllMutable[Fs],
     OnceThunk where arity == 0 and _AllOnce[Fs],
     Unary where arity == 1 and _AllShared[Fs],
+    _UnaryViewable where arity == 1 and _AllShared[Fs],
     MutableUnary where arity == 1 and _AllMutable[Fs],
     OnceUnary where arity == 1 and _AllOnce[Fs],
     Binary where arity == 2 and _AllShared[Fs],
+    _BinaryViewable where arity == 2 and _AllShared[Fs],
     MutableBinary where arity == 2 and _AllMutable[Fs],
     OnceBinary where arity == 2 and _AllOnce[Fs],
 ):
@@ -82,6 +89,14 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     its stages support: shared (`call`, `__call__`), exclusive (`call_mut`) or
     consuming (`call_once`). Nothing runs during construction. It is `Copyable`
     when every stage is, and copying is explicit.
+
+    A named shared unary composition can be reused as a selected Pipeline or
+    Result callback without copying its stages. The operation borrows it through
+    the existing shared receiver view. Use an explicit move to transfer the
+    stages, including into deferred results. Mutable and consuming-only chains
+    retain their existing owned admission.
+    Shared binary chains can be reused by name in `zip_with`, `map_with_index`,
+    `scan_map` and `scan_left`, with the same retained callback lifetime.
 
     Parameters:
         reverse: True for `compose`, whose stages run right to left.
@@ -100,7 +115,9 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
     comptime Error: Movable & Deinitable = Self.Plan.Failure
     var _cells: Tuple[*Self.Cells]
 
-    def __init__(out self, var *functions: *Self.Fs):
+    # Construction and extension validate through the same planner.
+    @staticmethod
+    def _validate() -> Bool:
         comptime assert Self.Fs.length >= 2, "composition: use flow or compose for zero or one component"
         comptime assert Self.Fs.map[_Classify]().all_conforms_to[_OnceCapability](), "composition: unsupported component; use a Thunk, Unary or Binary value or as_unary, or pass only plain functions whose types line up"
         comptime assert _Arity[Self.Stage[0]] >= 0, "composition: the first stage must be a Thunk, Unary or Binary value or a native function promoted with as_unary, or every stage must be a plain function whose types line up"
@@ -110,13 +127,359 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
                                          Self.Plan.StageOut[index], Self.Error,
                                          "compose" if Self.reverse else "flow",
                                          Self.Fs.length - 1 - index if Self.reverse else -1]()
+        return True
+
+    def __init__(out self, var *functions: *Self.Fs):
+        comptime assert Self._validate()
         comptime assert Self.Cells.all_conforms_to[Defaultable]()
         self._cells = Tuple[*Self.Cells]()
-        @__parameter
-        def store[index: Int](var function: Self.Fs[index]):
+        def store[index: Int](var function: Self.Fs[index]) {ref self}:
             comptime assert Self.Cells[index] == Optional[Self.Fs[index]]
             self._cells[index] = rebind_var[Self.Cells[index]](Optional(function^))
-        functions^.consume_elements[store]()
+        functions^.consume_elements(store)
+
+    comptime _ExtendedStage[F: Movable & Deinitable, before: Bool, index: Int]: Movable & Deinitable = (
+        F if (index == 0 if Self.reverse != before else index == Self.Fs.length)
+        else Self.Fs[index - 1 if Self.reverse != before else index]
+    )
+    comptime _Extended[F: Movable & Deinitable, before: Bool] = TypeList.tabulate[Self.Fs.length + 1, Self._ExtendedStage[F, before, _]]()
+    comptime _WithStage[F: Movable & Deinitable, before: Bool] = Composition[Self.reverse, _Arity[F] if before else Self.arity, *Self._Extended[F, before]]
+    comptime _WithNext[F: Movable & Deinitable] = Self._WithStage[F, False]
+    comptime _WithPrevious[F: Movable & Deinitable] = Self._WithStage[F, True]
+
+    def _extend[before: Bool, F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithStage[F, before] where _Once[F]:
+        comptime Target = Self._WithStage[F, before]
+        comptime assert Target._validate()
+        # Native concat and tabulate spell symbolic packs differently; assert
+        # their exact cell equality before crossing that expression boundary.
+        comptime if Self.reverse != before:
+            var cells = Tuple(Optional(stage^)).concat(self._cells^)
+            comptime assert type_of(cells) == Tuple[*Target.Cells]
+            return Target(_cells=rebind_var[Tuple[*Target.Cells]](cells^))
+        else:
+            var cells = self._cells^.concat((Optional(stage^),))
+            comptime assert type_of(cells) == Tuple[*Target.Cells]
+            return Target(_cells=rebind_var[Tuple[*Target.Cells]](cells^))
+
+    def then[F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithNext[F] where _Once[F]:
+        """Append one stage in execution order, consuming this composition.
+
+        Nothing runs during construction. The appended stage receives the
+        current result. Its input must match that exact type, and its raised
+        error must be compatible with the chain. Shared, mutable and consuming
+        receiver modes follow all stages.
+        The existing stage tuple is extended without copying captures or
+        storing the old composition as a nested stage. Reverse compositions
+        also run the new stage last. Move a named chain with `chain^.then(...)`.
+
+        Parameters:
+            F: The appended library stage's type.
+
+        Args:
+            stage: The next stage, moved into the result.
+
+        Returns:
+            A composition with the same entry arguments and one more stage.
+        """
+        return self^._extend[False](stage^)
+
+    def compose[F: Movable & Deinitable](deinit self, var stage: F) -> Self._WithPrevious[F] where _Once[F]:
+        """Run a new first stage before this unary composition, consuming both.
+
+        The new stage may take zero, one or two arguments. Its result must
+        match this chain's input, and raised errors must be compatible.
+        The result takes the new stage's arguments and owns all stages in
+        one tuple. Nothing runs or copies captures during construction.
+        Shared, mutable and consuming receiver modes follow all stages.
+        A reverse composition also runs the new stage first.
+
+        Parameters:
+            F: The preceding library stage's type.
+
+        Args:
+            stage: The new first stage, moved into the result.
+
+        Returns:
+            A composition with the new entry arguments and the same result.
+        """
+        return self^._extend[True](stage^)
+
+    # --- composition extension admission (generated) ---
+    # Native admission delegates to the same consuming extension owner.
+
+    def then[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def then[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def then[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable):
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def then[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, Never, type_of(function), False]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def then[A: Movable & Deinitable, //](
+        deinit self, function: def(var A) thin
+    ) -> Self._WithNext[NativeUnary[A, type_of(None), Never, type_of(function), False]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+    def then[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) raises E thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def then[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable):
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def then[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable):
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def then[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithNext[NativeUnary[A, R, E, type_of(function), True]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def then[A: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin
+    ) -> Self._WithNext[NativeUnary[A, type_of(None), E, type_of(function), True]]:
+        """Append a plain function or stored pointer without invoking it."""
+        return self^.then(NativeUnary[A, type_of(None), E, type_of(function), True](function))
+
+    def compose[R: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def() thin -> R
+    ) -> Self._WithPrevious[_NativeThunk[R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[R, Never, type_of(function), False](function))
+
+    def compose[R: RegisterPassable & Deinitable, //](
+        deinit self, function: def() thin -> R
+    ) -> Self._WithPrevious[_NativeThunk[R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[R, Never, type_of(function), False](function))
+
+    def compose(
+        deinit self, function: def() thin
+    ) -> Self._WithPrevious[_NativeThunk[type_of(None), Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[type_of(None), Never, type_of(function), False](function))
+
+    def compose[R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def() raises E thin -> R
+    ) -> Self._WithPrevious[_NativeThunk[R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[R, E, type_of(function), True](function))
+
+    def compose[R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def() raises E thin -> R
+    ) -> Self._WithPrevious[_NativeThunk[R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[R, E, type_of(function), True](function))
+
+    def compose[E: Movable & Deinitable, //](
+        deinit self, function: def() raises E thin
+    ) -> Self._WithPrevious[_NativeThunk[type_of(None), E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeThunk[type_of(None), E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A) thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, //](
+        deinit self, function: def(var A) thin
+    ) -> Self._WithPrevious[NativeUnary[A, type_of(None), Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A) raises E thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin -> R
+    ) -> Self._WithPrevious[NativeUnary[A, R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A) raises E thin
+    ) -> Self._WithPrevious[NativeUnary[A, type_of(None), E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(NativeUnary[A, type_of(None), E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]] where not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), Never, type_of(function), False]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), Never, type_of(function), False](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, q: ImmOrigin, //](
+        deinit self, ref[q] function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(A, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(B, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]] where not conforms_to(R, RegisterPassable):
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin -> R
+    ) -> Self._WithPrevious[_NativeBinary[A, B, R, E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, R, E, type_of(function), True](function))
+
+    def compose[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, //](
+        deinit self, function: def(var A, var B) raises E thin
+    ) -> Self._WithPrevious[_NativeBinary[A, B, type_of(None), E, type_of(function), True]]:
+        """Prepend a plain function or stored pointer without invoking it."""
+        return self^.compose(_NativeBinary[A, B, type_of(None), E, type_of(function), True](function))
+
+    # --- end composition extension admission ---
+
+    # Shared unary compositions use the same retained receiver as Kleisli
+    # leaves. Pipeline admission can borrow the chain without copying stages.
+    comptime _View[o: ImmOrigin] = _SharedUnaryRef[downcast[Self, Unary], o]
+
+    def _unary_view[o: ImmOrigin](ref[o] self) -> Self._View[o]:
+        comptime assert Self.arity == 1 and _AllShared[Self.Fs]
+        return Self._View[o](Pointer(to=self))
 
     # Shared receiver.
     def call(self) raises Self.Error -> Self.Out:
@@ -240,39 +603,6 @@ struct Composition[reverse: Bool, arity: Int, *Fs: Movable & Deinitable](
         return rebind_var[Self.Out](_pipe_at[1, Self.Plan.Results, Self.Error, D](head^, Pointer(to=self)))
 
 
-@fieldwise_init
-struct Identity[T: Movable & Deinitable](Unary, ImplicitlyCopyable):
-    """The unary identity on `T`, returned by `flow[T]()` and `compose[T]()`.
-
-    Parameters:
-        T: The value type.
-    """
-    comptime Arg = Self.T
-    comptime Out = Self.T
-
-    def call(self, var arg: Self.Arg) -> Self.Out:
-        """Return the argument unchanged.
-
-        Args:
-            arg: The value, consumed.
-
-        Returns:
-            `arg` itself.
-        """
-        return arg^
-
-    def __call__(self, var arg: Self.T) -> Self.T:
-        """Return the argument unchanged, as `call` does.
-
-        Args:
-            arg: The value, consumed.
-
-        Returns:
-            `arg` itself.
-        """
-        return arg^
-
-
 def flow[T: Movable & Deinitable]() -> Identity[T]:
     """Return the identity on `T`: a composition with no stages."""
     return Identity[T]()
@@ -284,7 +614,7 @@ def flow[F: Movable & Deinitable](var function: F) -> F:
     return function^
 
 
-def flow[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[False, _Arity[Fs[0]], *Fs] where Fs.length >= 2:
+def flow[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[False, _Arity[Fs[0]], *Fs] where Fs.length >= 2 and _AllOnce[Fs]:
     """Compose stages left to right; nothing runs until the result is called.
 
     `flow(f, g, h)(x)` is `h(g(f(x)))`. Two to eight plain functions are accepted
@@ -294,9 +624,15 @@ def flow[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[False, _
     stage takes the previous result, or the call does not compile, with an
     error that names the stage.
 
+    Two-stage compositions also accept one plain function or stored thin
+    pointer beside one library callable, in either position. The native stage
+    needs no adapter; the composition owns both stages without calling them.
+
     Limitations:
-        At most eight plain functions per call, and plain functions mixed with
-        library values are promoted with `as_unary`, as in `pipe`.
+        At most eight plain functions per call. Longer mixed chains append
+        stages with `.then(...)`, group compositions or promote unary native
+        stages with `as_unary`.
+        Capturing unary closures use `as_unary` for stored composition.
 
     Parameters:
         Fs: The stage types.
@@ -320,7 +656,7 @@ def compose[F: Movable & Deinitable](var function: F) -> F:
     return flow(function^)
 
 
-def compose[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[True, _Arity[Fs[Fs.length - 1]], *Fs] where Fs.length >= 2:
+def compose[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[True, _Arity[Fs[Fs.length - 1]], *Fs] where Fs.length >= 2 and _AllOnce[Fs]:
     """Compose stages right to left; nothing runs until the result is called.
 
     `compose(h, g, f)(x)` is `h(g(f(x)))`: the last argument runs first and may
@@ -329,8 +665,11 @@ def compose[*Fs: Movable & Deinitable](var *functions: *Fs) -> Composition[True,
     by its position in the run order and its argument position.
 
     Limitations:
-        At most eight plain functions per call, and plain functions mixed with
-        library values are promoted with `as_unary`, as in `pipe`.
+        At most eight plain functions per call. A pair may mix one plain
+        function or stored thin pointer with one library callable directly.
+        Longer mixed chains append with `.then(...)`, group pairs or promote
+        unary native stages with `as_unary`; capturing unary closures also
+        use `as_unary`.
 
     Parameters:
         Fs: The stage types, in the order they are passed.
@@ -646,4 +985,620 @@ def compose[B0: Movable & Deinitable, B1: Movable & Deinitable, A1: Movable & De
 ) -> Composition[True, 2, _Thin1F[P7, A8, E7], _Thin1F[P6, A7, E6], _Thin1F[P5, A6, E5], _Thin1F[P4, A5, E4], _Thin1F[P3, A4, E3], _Thin1F[P2, A3, E2], _Thin1F[P1, A2, E1], _Thin2F[B0, B1, A1, E0]]:
     """Store 8 plain functions, applied right to left."""
     return compose(_Thin1F[P7, A8, E7](f7), _Thin1F[P6, A7, E6](f6), _Thin1F[P5, A6, E5](f5), _Thin1F[P4, A5, E4](f4), _Thin1F[P3, A4, E3](f3), _Thin1F[P2, A3, E2](f2), _Thin1F[P1, A2, E1](f1), _Thin2F[B0, B1, A1, E0](f0))
+
+
+def flow[R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def() thin -> R, var stage: F
+) -> Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F](_NativeThunk[R, Never, type_of(function), False](function), stage^)
+
+
+def flow[R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def() thin -> R, var stage: F
+) -> Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 0, _NativeThunk[R, Never, type_of(function), False], F](_NativeThunk[R, Never, type_of(function), False](function), stage^)
+
+
+def flow[F: Movable & Deinitable, //](
+    function: def() thin, var stage: F
+) -> Composition[False, 0, _NativeThunk[type_of(None), Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 0, _NativeThunk[type_of(None), Never, type_of(function), False], F](_NativeThunk[type_of(None), Never, type_of(function), False](function), stage^)
+
+
+def flow[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def() raises E thin -> R, var stage: F
+) -> Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F](_NativeThunk[R, E, type_of(function), True](function), stage^)
+
+
+def flow[R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def() raises E thin -> R, var stage: F
+) -> Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 0, _NativeThunk[R, E, type_of(function), True], F](_NativeThunk[R, E, type_of(function), True](function), stage^)
+
+
+def flow[E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def() raises E thin, var stage: F
+) -> Composition[False, 0, _NativeThunk[type_of(None), E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 0, _NativeThunk[type_of(None), E, type_of(function), True], F](_NativeThunk[type_of(None), E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A) thin -> R, var stage: F
+) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F](NativeUnary[A, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) thin -> R, var stage: F
+) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F](NativeUnary[A, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) thin -> R, var stage: F
+) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F](NativeUnary[A, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) thin -> R, var stage: F
+) -> Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, R, Never, type_of(function), False], F](NativeUnary[A, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) thin, var stage: F
+) -> Composition[False, 1, NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, type_of(None), Never, type_of(function), False], F](NativeUnary[A, type_of(None), Never, type_of(function), False](function), stage^)
+
+
+def flow[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A) raises E thin -> R, var stage: F
+) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F](NativeUnary[A, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R, var stage: F
+) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F](NativeUnary[A, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R, var stage: F
+) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F](NativeUnary[A, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R, var stage: F
+) -> Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, R, E, type_of(function), True], F](NativeUnary[A, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) raises E thin, var stage: F
+) -> Composition[False, 1, NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 1, NativeUnary[A, type_of(None), E, type_of(function), True], F](NativeUnary[A, type_of(None), E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A, var B) thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F](_NativeBinary[A, B, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F](_NativeBinary[A, B, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F](_NativeBinary[A, B, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F](_NativeBinary[A, B, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F](_NativeBinary[A, B, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(B, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F](_NativeBinary[A, B, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F](_NativeBinary[A, B, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, Never, type_of(function), False], F](_NativeBinary[A, B, R, Never, type_of(function), False](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) thin, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, type_of(None), Never, type_of(function), False], F](_NativeBinary[A, B, type_of(None), Never, type_of(function), False](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A, var B) raises E thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F](_NativeBinary[A, B, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) raises E thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F](_NativeBinary[A, B, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) raises E thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F](_NativeBinary[A, B, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) raises E thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F](_NativeBinary[A, B, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) raises E thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F](_NativeBinary[A, B, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) raises E thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(B, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F](_NativeBinary[A, B, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) raises E thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F](_NativeBinary[A, B, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) raises E thin -> R, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, R, E, type_of(function), True], F](_NativeBinary[A, B, R, E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A, var B) raises E thin, var stage: F
+) -> Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, 2, _NativeBinary[A, B, type_of(None), E, type_of(function), True], F](_NativeBinary[A, B, type_of(None), E, type_of(function), True](function), stage^)
+
+
+def flow[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    var stage: F, ref[q] function: def(var A) thin -> R
+) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]](stage^, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) thin -> R
+) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]](stage^, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) thin -> R
+) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]](stage^, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) thin -> R
+) -> Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, R, Never, type_of(function), False]](stage^, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def flow[A: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) thin
+) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), Never, type_of(function), False]](stage^, NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+
+def flow[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    var stage: F, ref[q] function: def(var A) raises E thin -> R
+) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]](stage^, NativeUnary[A, R, E, type_of(function), True](function))
+
+
+def flow[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) raises E thin -> R
+) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]](stage^, NativeUnary[A, R, E, type_of(function), True](function))
+
+
+def flow[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) raises E thin -> R
+) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]](stage^, NativeUnary[A, R, E, type_of(function), True](function))
+
+
+def flow[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) raises E thin -> R
+) -> Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, R, E, type_of(function), True]](stage^, NativeUnary[A, R, E, type_of(function), True](function))
+
+
+def flow[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) raises E thin
+) -> Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[False, _Arity[F], F, NativeUnary[A, type_of(None), E, type_of(function), True]](stage^, NativeUnary[A, type_of(None), E, type_of(function), True](function))
+
+
+def compose[R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    var stage: F, ref[q] function: def() thin -> R
+) -> Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]](stage^, _NativeThunk[R, Never, type_of(function), False](function))
+
+
+def compose[R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def() thin -> R
+) -> Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 0, F, _NativeThunk[R, Never, type_of(function), False]](stage^, _NativeThunk[R, Never, type_of(function), False](function))
+
+
+def compose[F: Movable & Deinitable, //](
+    var stage: F, function: def() thin
+) -> Composition[True, 0, F, _NativeThunk[type_of(None), Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 0, F, _NativeThunk[type_of(None), Never, type_of(function), False]](stage^, _NativeThunk[type_of(None), Never, type_of(function), False](function))
+
+
+def compose[R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    var stage: F, ref[q] function: def() raises E thin -> R
+) -> Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]](stage^, _NativeThunk[R, E, type_of(function), True](function))
+
+
+def compose[R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def() raises E thin -> R
+) -> Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 0, F, _NativeThunk[R, E, type_of(function), True]](stage^, _NativeThunk[R, E, type_of(function), True](function))
+
+
+def compose[E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def() raises E thin
+) -> Composition[True, 0, F, _NativeThunk[type_of(None), E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 0, F, _NativeThunk[type_of(None), E, type_of(function), True]](stage^, _NativeThunk[type_of(None), E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    var stage: F, ref[q] function: def(var A) thin -> R
+) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]](stage^, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) thin -> R
+) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]](stage^, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) thin -> R
+) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]](stage^, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) thin -> R
+) -> Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, R, Never, type_of(function), False]](stage^, NativeUnary[A, R, Never, type_of(function), False](function))
+
+
+def compose[A: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) thin
+) -> Composition[True, 1, F, NativeUnary[A, type_of(None), Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, type_of(None), Never, type_of(function), False]](stage^, NativeUnary[A, type_of(None), Never, type_of(function), False](function))
+
+
+def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    var stage: F, ref[q] function: def(var A) raises E thin -> R
+) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]](stage^, NativeUnary[A, R, E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) raises E thin -> R
+) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]](stage^, NativeUnary[A, R, E, type_of(function), True](function))
+
+
+def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) raises E thin -> R
+) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]](stage^, NativeUnary[A, R, E, type_of(function), True](function))
+
+
+def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) raises E thin -> R
+) -> Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, R, E, type_of(function), True]](stage^, NativeUnary[A, R, E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A) raises E thin
+) -> Composition[True, 1, F, NativeUnary[A, type_of(None), E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 1, F, NativeUnary[A, type_of(None), E, type_of(function), True]](stage^, NativeUnary[A, type_of(None), E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    var stage: F, ref[q] function: def(var A, var B) thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]](stage^, _NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+
+def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]](stage^, _NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+
+def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]](stage^, _NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+
+def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]](stage^, _NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+
+def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]](stage^, _NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+
+def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(B, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]](stage^, _NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+
+def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]](stage^, _NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+
+def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, Never, type_of(function), False]](stage^, _NativeBinary[A, B, R, Never, type_of(function), False](function))
+
+
+def compose[A: Movable & Deinitable, B: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) thin
+) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, type_of(None), Never, type_of(function), False]](stage^, _NativeBinary[A, B, type_of(None), Never, type_of(function), False](function))
+
+
+def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    var stage: F, ref[q] function: def(var A, var B) raises E thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]](stage^, _NativeBinary[A, B, R, E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) raises E thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(B, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]](stage^, _NativeBinary[A, B, R, E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) raises E thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable) and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]](stage^, _NativeBinary[A, B, R, E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) raises E thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]](stage^, _NativeBinary[A, B, R, E, type_of(function), True](function))
+
+
+def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) raises E thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(B, RegisterPassable) and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]](stage^, _NativeBinary[A, B, R, E, type_of(function), True](function))
+
+
+def compose[A: RegisterPassable & Deinitable, B: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) raises E thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(B, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]](stage^, _NativeBinary[A, B, R, E, type_of(function), True](function))
+
+
+def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) raises E thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]](stage^, _NativeBinary[A, B, R, E, type_of(function), True](function))
+
+
+def compose[A: RegisterPassable & Deinitable, B: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) raises E thin -> R
+) -> Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, R, E, type_of(function), True]](stage^, _NativeBinary[A, B, R, E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, B: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    var stage: F, function: def(var A, var B) raises E thin
+) -> Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, 2, F, _NativeBinary[A, B, type_of(None), E, type_of(function), True]](stage^, _NativeBinary[A, B, type_of(None), E, type_of(function), True](function))
+
+
+def compose[A: Movable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A) thin -> R, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F](NativeUnary[A, R, Never, type_of(function), False](function), stage^)
+
+
+def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) thin -> R, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F](NativeUnary[A, R, Never, type_of(function), False](function), stage^)
+
+
+def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) thin -> R, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F](NativeUnary[A, R, Never, type_of(function), False](function), stage^)
+
+
+def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) thin -> R, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, R, Never, type_of(function), False], F](NativeUnary[A, R, Never, type_of(function), False](function), stage^)
+
+
+def compose[A: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) thin, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), Never, type_of(function), False], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, type_of(None), Never, type_of(function), False], F](NativeUnary[A, type_of(None), Never, type_of(function), False](function), stage^)
+
+
+def compose[A: Movable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, q: ImmOrigin, //](
+    ref[q] function: def(var A) raises E thin -> R, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F](NativeUnary[A, R, E, type_of(function), True](function), stage^)
+
+
+def compose[A: Movable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(A, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F](NativeUnary[A, R, E, type_of(function), True](function), stage^)
+
+
+def compose[A: RegisterPassable & Deinitable, R: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F] and not conforms_to(R, RegisterPassable):
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F](NativeUnary[A, R, E, type_of(function), True](function), stage^)
+
+
+def compose[A: RegisterPassable & Deinitable, R: RegisterPassable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) raises E thin -> R, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, R, E, type_of(function), True], F](NativeUnary[A, R, E, type_of(function), True](function), stage^)
+
+
+def compose[A: Movable & Deinitable, E: Movable & Deinitable, F: Movable & Deinitable, //](
+    function: def(var A) raises E thin, var stage: F
+) -> Composition[True, _Arity[F], NativeUnary[A, type_of(None), E, type_of(function), True], F] where _Once[F]:
+    """Compose a plain function or stored pointer with one library stage."""
+    return Composition[True, _Arity[F], NativeUnary[A, type_of(None), E, type_of(function), True], F](NativeUnary[A, type_of(None), E, type_of(function), True](function), stage^)
 # --- end plain-function overloads ---

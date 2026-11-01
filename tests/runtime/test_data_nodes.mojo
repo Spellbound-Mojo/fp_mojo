@@ -68,7 +68,7 @@ def main() raises:
 
     # A value a million levels deep is built and released without recursion.
     var deep: T = NodesLeaf(0)
-    for i in range(1_000_000):
+    for _ in range(1_000_000):
         deep = NodesPair(deep, one)
     assert_equal(deep._cell[].height, 1_000_001)
     deep = one
@@ -76,5 +76,5 @@ def main() raises:
 
     # A shared value survives the release of one of its holders.
     var holder: T = NodesPair(pair, pair)
-    holder = one
+    _ = holder^
     assert_equal(pair[NodesPair[T]].left[NodesLeaf].value, 1)

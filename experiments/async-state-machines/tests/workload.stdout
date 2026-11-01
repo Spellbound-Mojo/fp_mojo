@@ -1,0 +1,1 @@
+workload: 32 bounded worker cycles; completion, timeout, cleanup failure, cancellation, exact ownership, retired registrations

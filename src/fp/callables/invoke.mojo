@@ -2,17 +2,18 @@
 
 from std.builtin.rebind import rebind_var, rebind, downcast
 from fp._internal.errors import _ErrorCompatible, _compatible, _propagate_error
-from .protocols import BorrowCallable, BorrowOnceCallable, BorrowCallContract
+from .protocols import BorrowCallable, BorrowMutableCallable, BorrowOnceCallable, BorrowCallContract
 
 
 comptime BorrowCallCompatible[E: Movable & Deinitable, H: BorrowCallContract, T: AnyType = H.Payload]: Bool = (
     T == H.Payload and (_ErrorCompatible[E, H.Failure])
 )
-"""Whether `invoke_borrowed[E]` accepts handler `H` with a payload of type `T`.
+"""Whether a borrowed payload and selected error match handler `H` exactly.
 
 True when `T` is exactly `H.Payload`, including embedded origins, and `H`
 raises `E` or nothing. A generic function that forwards a borrowed callback
-carries it in its `where` clause.
+carries it in its `where` clause. Each invocation operation separately checks
+the receiver modes it needs.
 
 Parameters:
     E: The error type of the caller.
@@ -21,6 +22,11 @@ Parameters:
 """
 
 
+# Mojo 1.2 mislowers the out-of-line ref argument when a consumed scalar is
+# forwarded through this generic boundary at O0. Inline the bridge so the
+# handler receives the original payload reference; keep admission and errors
+# here for every borrowing consumer.
+@always_inline
 def invoke_borrowed[E: Movable & Deinitable, H: BorrowCallable, T: AnyType](
     ref payload: T, handler: H
 ) raises E -> H.Result where BorrowCallCompatible[E, H, T]:
@@ -52,15 +58,65 @@ def invoke_borrowed[E: Movable & Deinitable, H: BorrowCallable, T: AnyType](
         _propagate_error[E](error^)
 
 
-def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowOnceCallable, T: AnyType](
+comptime RepeatableBorrow[C: AnyType] = conforms_to(C, BorrowCallable) or conforms_to(C, BorrowMutableCallable)
+"""Whether a borrowing callback has a shared or mutable receiver for repeated calls.
+
+Parameters:
+    C: The borrowing callback's contract type.
+"""
+
+
+def invoke_borrowed_repeated[E: Movable & Deinitable, F: BorrowCallContract & Movable & Deinitable, T: AnyType](
+    ref value: T, mut function: F
+) raises E -> F.Result where BorrowCallCompatible[E, F, T] and RepeatableBorrow[F]:
+    """Borrow a payload and call an exclusive receiver, falling back to shared invocation.
+
+    Receiver state remains in the caller. Neither receiver nor payload is copied
+    or consumed, and a consuming-only receiver is rejected.
+
+    Parameters:
+        E: The exact error or an allowed widening from Never.
+        F: The repeatable borrowing callback type.
+        T: The exact borrowed payload type, including origins.
+
+    Args:
+        value: The payload, borrowed only for this call.
+        function: The named callback, borrowed exclusively for this call.
+
+    Returns:
+        The callback's result, preserving native types and origins.
+
+    Raises:
+        The callback's error unchanged, as E.
+    """
+    comptime if conforms_to(F, BorrowMutableCallable):
+        comptime D = downcast[F, BorrowMutableCallable]
+        try:
+            return rebind_var[F.Result](rebind[D](function).invoke_mut(rebind[D.Payload](value)))
+        except error:
+            comptime assert _ErrorCompatible[E, type_of(error)]
+            _propagate_error[E](error^)
+    else:
+        comptime D = downcast[F, BorrowCallable]
+        return rebind_var[F.Result](invoke_borrowed[E](rebind[D.Payload](value), rebind[D](function)))
+
+
+comptime _OnceBorrowAvailable[C: BorrowCallContract] = conforms_to(C, BorrowOnceCallable) or RepeatableBorrow[C]
+
+
+def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowCallContract & Movable & Deinitable, T: AnyType](
     ref payload: T, var handler: H
 ) raises E -> H.Result where BorrowCallCompatible[E, H, T]:
-    """Call a `BorrowOnceCallable` once with a borrowed payload, consuming it.
+    """Consume a library handler and invoke it once with a borrowed payload.
+
+    A consuming receiver wins, followed by mutable and shared receivers.
+    The payload is never consumed. Pass `mut_ref(handler)` to retain the
+    original receiver and its updated state, including when it raises.
 
     Parameters:
         E: The error type the call raises: the handler's own error, or any
             type when the handler raises nothing.
-        H: The handler's type.
+        H: The borrowing handler contract with at least one receiver mode.
         T: The payload's type, which must be exactly `H.Payload`.
 
     Args:
@@ -73,12 +129,17 @@ def invoke_borrowed_once[E: Movable & Deinitable, H: BorrowOnceCallable, T: AnyT
     Raises:
         The handler's error, as `E`.
     """
-    # Native consuming and shared endpoint signatures require separate adapters;
-    # compatibility and error propagation remain shared with invoke_borrowed.
-    try:
-        return handler^.invoke_once(rebind[H.Payload](payload))
-    except error:
-        _propagate_error[E](error^)
+    comptime assert _OnceBorrowAvailable[H], "borrowed callback implements no receiver mode"
+    comptime if conforms_to(H, BorrowOnceCallable):
+        comptime D = downcast[H, BorrowOnceCallable]
+        comptime assert D.Payload == H.Payload and D.Result == H.Result and D.Failure == H.Failure
+        try:
+            return rebind_var[H.Result](rebind_var[D](handler^).invoke_once(rebind[D.Payload](payload)))
+        except error:
+            _propagate_error[E](error^)
+    else:
+        comptime assert RepeatableBorrow[H]
+        return invoke_borrowed_repeated[E](payload, handler)
 
 
 from .protocols import (UnaryContract, Unary, MutableUnary, OnceUnary,
@@ -89,7 +150,7 @@ from .protocols import (UnaryContract, Unary, MutableUnary, OnceUnary,
 # Fixed-arity receiver dispatch: one call prefers the consuming mode, repeated
 # calls prefer exclusive access, then a shared receiver. Each arity has its own
 # native call signature.
-comptime RepeatableUnary[F: UnaryContract] = conforms_to(F, Unary) or conforms_to(F, MutableUnary)
+comptime RepeatableUnary[F: AnyType] = conforms_to(F, Unary) or conforms_to(F, MutableUnary)
 """Whether a unary callback stays usable after a call: it has a shared or exclusive receiver.
 
 `call_repeated` requires it. Generic code that calls a callback more than once
@@ -97,20 +158,26 @@ asserts it first, so a consuming-only callback is rejected when the program
 compiles.
 
 Parameters:
-    F: The callback's type.
+    F: Any type; non-callable and consuming-only types return `False`.
 """
-comptime RepeatableBinary[F: BinaryContract] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)
+comptime RepeatableBinary[F: AnyType] = conforms_to(F, Binary) or conforms_to(F, MutableBinary)
 """Whether a binary callback stays usable after a call; `call_repeated` requires it.
 
 Parameters:
-    F: The callback's type.
+    F: Any type; non-callable and consuming-only types return `False`.
 """
-comptime RepeatableThunk[F: ThunkContract] = conforms_to(F, Thunk) or conforms_to(F, MutableThunk)
+comptime RepeatableThunk[F: AnyType] = conforms_to(F, Thunk) or conforms_to(F, MutableThunk)
 """Whether a thunk stays usable after a call; `call_repeated` requires it.
 
 Parameters:
     F: The thunk's type.
 """
+
+
+# The same receiver alternatives selected by call_once, exposed to admission.
+comptime _OnceUnaryAvailable[F: UnaryContract] = conforms_to(F, OnceUnary) or RepeatableUnary[F]
+comptime _OnceBinaryAvailable[F: BinaryContract] = conforms_to(F, OnceBinary) or RepeatableBinary[F]
+comptime _OnceThunkAvailable[F: ThunkContract] = conforms_to(F, OnceThunk) or RepeatableThunk[F]
 
 
 def call_once[F: UnaryContract & Movable & Deinitable](var f: F, var arg: F.Arg) raises F.Error -> F.Out:

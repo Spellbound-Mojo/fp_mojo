@@ -5,5 +5,5 @@ from result_once_support import Constant, Address
 
 def main():
     var subject = Result[String,Int](Ok(String('moved')))
-    _ = map[ResultFamily[type_of(subject).Error]](Constant[Int, Never, String](1), subject^)
+    _ = map[ResultFamily[type_of(subject).Error]](subject^, Constant[Int, Never, String](1))
     _ = subject^

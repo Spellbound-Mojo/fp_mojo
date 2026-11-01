@@ -12,7 +12,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime B = type_of(b)
     print(a[0], b[0])
     var subject = Result[A, Int](Ok(a))
-    _ = flat_map[ResultFamily[type_of(subject).Error]](keep[B, Int], subject^)
+    _ = flat_map[ResultFamily[type_of(subject).Error]](subject^, keep[B, Int])
 
 def main():
     var first: List[Int] = [11]

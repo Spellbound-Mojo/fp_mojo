@@ -6,7 +6,7 @@ from std.testing import assert_equal
 def selected[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](
     var function: F, var source: I
 ) -> FilterIterator[T, I, F] where I.Element == T:
-    return filter(function^, source^)
+    return filter(source^, function^)
 
 def selected_again[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](
     var function: F, var source: I
@@ -16,7 +16,7 @@ def selected_again[T: Movable & Deinitable, I: Iterator, //, F: def(T) -> Bool](
 def present[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //, F: def(var T) -> Optional[U]](
     var function: F, var source: I
 ) -> FilterMapIterator[T, U, I, F] where I.Element == T:
-    return filter_map(function^, source^)
+    return filter_map(source^, function^)
 
 def present_again[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //, F: def(var T) -> Optional[U]](
     var function: F, var source: I
@@ -26,7 +26,7 @@ def present_again[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator,
 def expanded[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //, F: def(var T) -> U](
     var function: F, var source: I
 ) -> FlatMapIterator[T, U, I, F] where I.Element == T:
-    return flat_map(function^, source^)
+    return flat_map(source^, function^)
 
 def expanded_again[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator, //, F: def(var T) -> U](
     var function: F, var source: I
@@ -36,17 +36,17 @@ def expanded_again[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator
 def thin_selected[T: Movable & Deinitable, I: Iterator](
     function: def(T) thin -> Bool, var source: I
 ) -> FilterIterator[T, I] where I.Element == T:
-    return filter(function, source^)
+    return filter(source^, function)
 
 def thin_present[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator](
     function: def(var T) thin -> Optional[U], var source: I
 ) -> FilterMapIterator[T, U, I] where I.Element == T:
-    return filter_map(function, source^)
+    return filter_map(source^, function)
 
 def thin_expanded[T: Movable & Deinitable, U: Movable & Deinitable, I: Iterator](
     function: def(var T) thin -> U, var source: I
 ) -> FlatMapIterator[T, U, I] where I.Element == T:
-    return flat_map(function, source^)
+    return flat_map(source^, function)
 
 @fieldwise_init
 struct First(Copyable):

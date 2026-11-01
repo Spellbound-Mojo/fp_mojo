@@ -47,6 +47,7 @@ nav:
   - Welcome: index.md
   - Get started:
       - Installation: start/installation.md
+      - Choose an API: start/choosing-api.md
       - Ownership and errors: start/ownership.md
   - Tutorial:
       - 1. Eager pipelines: tutorial/pipelines.md
@@ -72,9 +73,21 @@ nav:
       - Laws: architecture/laws.md
       - Performance and targets: architecture/performance.md
       - Native Mojo boundaries: architecture/native-boundaries.md
+      - Explicit async state machines: architecture/async-state-machines.md
+      - Async composition: architecture/async-composition.md
+      - Async callback registration: architecture/async-callbacks.md
+      - Async fibers: architecture/async-fibers.md
+      - Wake-driven async execution: architecture/async-scheduler.md
+      - Resumable async coordination: architecture/async-coordination.md
+      - Structured races and timeouts: architecture/async-racing.md
+      - Async integration workload: architecture/async-workload.md
+      - Async overnight qualification: architecture/async-qualification.md
+      - Async finalization and masking: architecture/async-finalization.md
+      - Async payload thread safety: architecture/async-thread-safety.md
       - Verification: architecture/verification.md
   - API reference:
       - How to read the reference: reference/index.md
+      - Combinators: reference/combinators.md
       - fp.callables: reference/callables.md
       - fp.functions: reference/functions.md
       - fp.iteration: reference/iteration.md
@@ -82,10 +95,17 @@ nav:
       - fp.adt: reference/adt.md
       - fp.data: reference/data.md
       - fp.algebra: reference/algebra.md
+      - fp.algebra.contracts: reference/algebra.contracts.md
       - fp.effects: reference/effects.md
+      - fp.effects.async_runtime: reference/effects.async_runtime.md
+      - fp.effects.async_runtime.protocols: reference/effects.async_runtime.protocols.md
       - fp.matching: reference/matching.md
   - Guides:
+      - Async runtime preview: guides/async-runtime.md
+      - Migrate to the advanced runtime: guides/async-migration.md
       - Support and limitations: guides/status.md
+      - Mojo 1.2 compatibility: guides/compatibility.md
+      - Generic wrappers: guides/generic-wrappers.md
       - Troubleshooting: guides/troubleshooting.md
   - Contributing:
       - Development: contributing/development.md

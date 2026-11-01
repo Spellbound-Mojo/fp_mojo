@@ -1,0 +1,1 @@
+par fluent: IO callbacks select AsyncPar on Pipeline, Iter and fp.iteration; Result keeps Validation

@@ -6,5 +6,5 @@ def add(total: Int, value: Int) -> Int:
 
 def main():
     var values: List[Int] = [1, 2]
-    _ = fold_left(add, 0, values)
+    _ = fold_left(values, 0, add)
     print(len(values))

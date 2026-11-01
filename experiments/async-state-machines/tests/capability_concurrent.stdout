@@ -1,0 +1,1 @@
+capability concurrent: generic Ref and Deferred, atomic interleaved updates, fresh state per run, Ref operations, parked reads

@@ -1,0 +1,1 @@
+race oneshot: offers, puts, takes, releases and closes on four threads, each value destroyed once; guards hold their lock

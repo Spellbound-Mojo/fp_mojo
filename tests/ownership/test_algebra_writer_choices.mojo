@@ -19,7 +19,7 @@ def choose(which:Int,trace:ArcPointer[Trace])->Tree:
     var leaf=pure[W](Token[2](7,trace))
     if which==0:
         return W._join_left[Pair,M](W._join_left[P,M](leaf^))
-    var mapped=map[W](Identity[Token[2]](),leaf^)
+    var mapped=map[W](leaf^,Identity[Token[2]]())
     if which==1:
         return W._join_left[Pair,M](W._join_right[P,M](mapped^))
     return W._join_right[Pair,M](mapped^)

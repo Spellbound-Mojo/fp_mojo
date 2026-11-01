@@ -1,0 +1,1 @@
+wstp_queues: ring order, spills, steals, batches, pool mixes and external MPMC, each element once

@@ -10,14 +10,17 @@ satisfy the same laws.
 
 | Layer | Location | What it establishes | What it does not |
 |---|---|---|---|
-| Runtime | `tests/runtime/` (88 programs) | Values, ordering, source pulls and composed use | Every possible type or callback |
-| Ownership | `tests/ownership/` (56) | Liveness, copies, moves and exactly-once cleanup | A universal destructor order |
-| Laws | `tests/laws/` (5) | The [laws](laws.md) under their stated assumptions | Proofs over arbitrary programs |
-| Integration | `tests/integration/` (15) | Several packages working together | — |
-| Compile-failure | `tests/compile_fail/` (287) | Invalid ownership, origins, descriptors, clauses and error combinations are rejected with the declared diagnostic | That a rejected encoding is impossible in general |
-| Examples | `docs/examples/` (31) | Every program on this site compiles and prints its reviewed output, through source and package imports at O0 and O3 | Behavior beyond those programs |
-| Benchmarks | `tests/benchmarks/` (2) | Library code against hand-written loops on identical inputs, reported as diagnostics | A performance guarantee |
+| Runtime | `tests/runtime/` | Values, ordering, source pulls and composed use | Every possible type or callback |
+| Ownership | `tests/ownership/` | Liveness, copies, moves and exactly-once cleanup | A universal destructor order |
+| Laws | `tests/laws/` | The [laws](laws.md) under their stated assumptions | Proofs over arbitrary programs |
+| Integration | `tests/integration/` | Several packages working together | — |
+| Compile-failure | `tests/compile_fail/` | Invalid ownership, origins, descriptors, clauses and error combinations are rejected with the declared diagnostic | That a rejected encoding is impossible in general |
+| Examples | `docs/examples/` | Executable examples compile and print their reviewed output at the selected import/optimization matrix | Behavior beyond those programs |
+| Benchmarks | `tests/benchmarks/` | Library code against hand-written loops on identical inputs, reported as diagnostics | A performance guarantee |
 | Tooling | `tests/tooling/` | The runners' audit rules | — |
+
+The [compatibility checkpoint](../guides/compatibility.md#qualification-checkpoint)
+records the current counts and the scope of each completed run.
 
 Each runtime, ownership, law and integration program has a `main` that asserts
 its results with `std.testing`. `pixi run suite` builds these programs, the
@@ -79,14 +82,29 @@ clause.
 ## Runner guarantees
 
 `scripts/fp_tools` reserves a fresh output directory for every run, gives each
-executable a unique path, bounds every command in time and memory, and serializes
-a report. A compiler crash or timeout is always a failure, including for an
+executable a unique path, applies its declared time and optional memory budgets,
+and serializes a report. A compiler crash or timeout is always a failure, including for an
 expected rejection. The runner hashes every input file (sources, tests, scripts,
 documentation, benchmarks, `README.md`, `pixi.toml`, `pixi.lock`, `mkdocs.yml`)
 and fails the run if any of them changes before it completes. The suite's report
 keeps its generated drivers, executables and raw build and run logs; its audit
 regenerates the drivers and re-derives every program's outcome from the logs
 instead of trusting the reported flags.
+
+The selected library has its own before/after binding. Suite and rejection
+reports record the source or bytecode files resolved by their include directory,
+including packages outside the checkout's source tree. Their independent audits
+compare those files with the original snapshot. Boundary and example matrices
+bind their fresh package in the same way. A replaced, missing or additional
+library artifact fails the gate even when the checkout inputs are unchanged.
+
+A completed gate is reusable evidence only for its recorded inputs and package.
+Check the final outcome, audit failures, input hashes and package digest before
+carrying it into a later qualification. A missing final report after an
+interruption is incomplete evidence, even if the retained compile logs contain
+successes. Keep that bundle for diagnosis and run the unfinished gate in a fresh
+output directory; completed independent gates need not be repeated when their
+inputs and package still match.
 
 ## Definition of done
 

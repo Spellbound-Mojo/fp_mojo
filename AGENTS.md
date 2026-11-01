@@ -33,6 +33,8 @@ or error semantics.
 - Ask before any public API or behavior change, and before destructive or
   outward-facing actions.
 - Commit or push only when asked.
+- Use `nightly` for authorized commits and pushes. Fetch and integrate remote
+  `nightly` before pushing so all agents share the latest work.
 - Prefer native Mojo types and mechanisms over library machinery; accept native
   limitations rather than emulating another language.
 - Test as you go with targeted runs instead of waiting for full-suite baselines.

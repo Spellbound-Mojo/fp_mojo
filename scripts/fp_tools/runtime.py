@@ -1,17 +1,19 @@
 """Shared release tooling: bounded commands, immutable inputs and strict outcomes."""
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import platform
 import re
+import shutil
 import signal
 import subprocess
 import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[2]
-PIN = 'Mojo 1.1.0 (8189361e)'
+PIN = 'Mojo 1.2.0 (2016d0cd)'
 
 
 def _appledouble_files(root):
@@ -50,11 +52,20 @@ def sha(path):
 
 def inputs(root=ROOT):
     paths = [p for folder in ('src', 'tests', 'scripts', 'benchmarks', '.github')
-             for p in (root / folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts]
-    paths += [p for p in (root / 'docs').rglob('*') if p.is_file() and '__pycache__' not in p.parts]
+             for p in (root / folder).rglob('*') if (p.is_file() or p.is_symlink()) and '__pycache__' not in p.parts]
+    paths += [p for p in (root / 'docs').rglob('*') if (p.is_file() or p.is_symlink()) and '__pycache__' not in p.parts]
     paths += [root / name for name in ('README.md', 'pixi.toml', 'pixi.lock')]
     paths += [root / 'mkdocs.yml'] if (root / 'mkdocs.yml').is_file() else []
-    return {str(p.relative_to(root)): sha(p) for p in sorted(paths)}
+    def digest(path):
+        if not path.is_symlink():
+            return sha(path)
+        # Shared fixture directories are walked at their real repository path.
+        # Also record alias routing so retargeting a link changes the snapshot.
+        data = b'symlink\0' + os.readlink(path).encode()
+        if path.is_file():
+            data += b'\0' + path.read_bytes()
+        return hashlib.sha256(data).hexdigest()
+    return {str(p.relative_to(root)): digest(p) for p in sorted(paths)}
 
 
 def input_changes(before, after):
@@ -103,28 +114,48 @@ def timed_argv(argv):
     system = platform.system()
     if system not in ('Darwin', 'Linux'):
         raise RuntimeError('Resource accounting requires Linux or macOS')
-    return ['/usr/bin/time', '-l' if system == 'Darwin' else '-v', *map(str, argv)]
+    executable = '/usr/bin/time' if Path('/usr/bin/time').is_file() else shutil.which('time')
+    if executable is None:
+        raise RuntimeError('Resource accounting requires the native time executable (GNU time on Linux)')
+    return [executable, '-l' if system == 'Darwin' else '-v', *map(str, argv)]
 
 
-def _linux_tree_rss(pid):
-    """Sample this command's descendants only; never inspect unrelated jobs."""
+def _linux_tree_rss(pid, proc_root=Path('/proc')):
+    """Sum a process tree from a parent-PID snapshot, including threaded spawns.
+
+    Some Linux proc mounts omit task/*/children; even when present, a leader's
+    children file omits children created by its other threads. Status PPid is
+    available on both mounts. Only this command and its descendants contribute
+    to the memory total; unrelated entries reconstruct the parent-PID index.
+    """
+    children, resident = {}, {}
+    for entry in proc_root.iterdir():
+        if not entry.name.isdecimal():
+            continue
+        try:
+            status = (entry / 'status').read_text()
+        except (FileNotFoundError, ProcessLookupError, PermissionError):
+            continue
+        parent = re.search(r'^PPid:\s+(\d+)', status, re.M)
+        if parent is None:
+            continue
+        child = int(entry.name)
+        children.setdefault(int(parent[1]), []).append(child)
+        match = re.search(r'^VmRSS:\s+(\d+)\s+kB', status, re.M)
+        resident[child] = int(match[1]) * 1024 if match else 0
     pending, seen, total = [pid], set(), 0
     while pending:
         child = pending.pop()
         if child in seen:
             continue
         seen.add(child)
-        try:
-            status = Path(f'/proc/{child}/status').read_text()
-            match = re.search(r'^VmRSS:\s+(\d+)\s+kB', status, re.M)
-            total += int(match[1]) * 1024 if match else 0
-            pending.extend(map(int, Path(f'/proc/{child}/task/{child}/children').read_text().split()))
-        except (FileNotFoundError, ProcessLookupError):
-            pass  # A child can finish between the two reads.
+        total += resident.get(child, 0)
+        pending.extend(children.get(child, ()))
     return total
 
 
-def command(argv, log, timeout=180, env=None, timed=False, memory_limit_bytes=None):
+def command(argv, log, timeout=180, env=None, timed=False, memory_limit_bytes=None,
+            rss_samples_log=None, rss_interval_seconds=5):
     """Kill the whole process group on timeout; retain stdout and stderr separately."""
     if memory_limit_bytes is not None:
         if type(memory_limit_bytes) is not int or memory_limit_bytes <= 0:
@@ -132,40 +163,71 @@ def command(argv, log, timeout=180, env=None, timed=False, memory_limit_bytes=No
         if platform.system() != 'Linux':
             raise RuntimeError('RSS budget enforcement currently requires Linux')
     actual = timed_argv(argv) if timed else list(map(str, argv))
+    samples = None
+    if rss_samples_log is not None:
+        if (memory_limit_bytes is None or type(rss_interval_seconds) not in (int, float)
+                or not math.isfinite(rss_interval_seconds) or rss_interval_seconds <= 0):
+            raise ValueError('RSS samples require a memory budget and positive interval')
+        rss_samples_log = Path(rss_samples_log).resolve()
+        if not rss_samples_log.is_relative_to(ROOT):
+            raise ValueError('RSS samples must remain within the project')
+        rss_samples_log.parent.mkdir(parents=True, exist_ok=True)
+        samples = rss_samples_log.open('x')
     start = time.perf_counter()
-    process = subprocess.Popen(actual, cwd=ROOT, text=True, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE, start_new_session=True, env=env)
+    try:
+        process = subprocess.Popen(actual, cwd=ROOT, text=True, stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE, start_new_session=True, env=env)
+    except Exception:
+        if samples is not None:
+            samples.close()
+        raise
     expired, memory_exceeded, sampled_peak = False, False, 0
-    while True:
-        if memory_limit_bytes is not None:
-            sampled_peak = max(sampled_peak, _linux_tree_rss(process.pid))
-            memory_exceeded = sampled_peak > memory_limit_bytes
-        remaining = timeout - (time.perf_counter() - start)
-        expired = remaining <= 0
-        if expired or memory_exceeded:
+    next_sample = 0
+    try:
+        while True:
+            elapsed = time.perf_counter() - start
+            if memory_limit_bytes is not None:
+                resident = _linux_tree_rss(process.pid)
+                sampled_peak = max(sampled_peak, resident)
+                memory_exceeded = sampled_peak > memory_limit_bytes
+                if samples is not None and elapsed >= next_sample:
+                    samples.write(json.dumps(dict(elapsed_seconds=elapsed, rss_bytes=resident)) + '\n')
+                    samples.flush()
+                    next_sample = elapsed + rss_interval_seconds
+            remaining = timeout - elapsed
+            expired = remaining <= 0
+            if expired or memory_exceeded:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                out, err = process.communicate()
+                break
             try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            out, err = process.communicate()
-            break
-        try:
-            out, err = process.communicate(timeout=min(remaining, .1) if memory_limit_bytes else remaining)
-            break
-        except subprocess.TimeoutExpired:
-            continue
+                out, err = process.communicate(timeout=min(remaining, .1) if memory_limit_bytes else remaining)
+                break
+            except subprocess.TimeoutExpired:
+                continue
+    finally:
+        if samples is not None:
+            samples.close()
     log.parent.mkdir(parents=True, exist_ok=True)
     marker = ('\nTIMEOUT\n' if expired else '') + ('\nMEMORY LIMIT\n' if memory_exceeded else '')
     log.write_text((out + err + marker).replace(str(ROOT), '<PROJECT>'))
     rss = re.search(r'(\d+)\s+maximum resident set size', err) if timed else None
     linux_rss = re.search(r'Maximum resident set size \(kbytes\):\s*(\d+)', err) if timed else None
     peak = int(rss[1]) if rss else int(linux_rss[1]) * 1024 if linux_rss else None
-    return dict(command=actual, exit_code=process.returncode, timeout=expired,
+    record = dict(command=actual, exit_code=process.returncode, timeout=expired,
                 memory_limit_bytes=memory_limit_bytes, memory_limit_exceeded=memory_exceeded,
                 sampled_tree_peak_rss_bytes=sampled_peak or None,
                 crashed=bool(CRASH.search(out + err)) or (process.returncode < 0 and not expired and not memory_exceeded),
                 seconds=time.perf_counter() - start, stdout=out, stderr=err,
                 peak_rss_bytes=peak, log=str(log.resolve().relative_to(ROOT)))
+    if samples is not None:
+        record.update(rss_samples_log=str(rss_samples_log.relative_to(ROOT)),
+                      rss_samples_sha256=sha(rss_samples_log),
+                      rss_interval_seconds=rss_interval_seconds)
+    return record
 
 
 def accepted(record, expected_errors=None):
@@ -223,6 +285,11 @@ def audit_command(record, root=ROOT):
         if not log.is_relative_to(root.resolve()) or not log.is_file(): return False
         raw = (record['stdout'] + record['stderr'] + ('\nTIMEOUT\n' if record['timeout'] else '')
                + ('\nMEMORY LIMIT\n' if record.get('memory_limit_exceeded') else ''))
+        if 'rss_samples_log' in record:
+            samples = resolved(record['rss_samples_log'], root).resolve()
+            if (not samples.is_relative_to(root.resolve()) or not samples.is_file()
+                    or sha(samples) != record.get('rss_samples_sha256')):
+                return False
         return log.read_text() == normalized(raw, root)
     except (KeyError, TypeError, OSError):
         return False

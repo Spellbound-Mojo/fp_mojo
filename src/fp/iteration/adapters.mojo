@@ -6,24 +6,41 @@ Standard `chain`, `zip`, `take` and the like stay in `std.iter` and
 `std.itertools`.
 """
 
+from fp.callables.products import _OptionalCell
+from fp.callables._views import _UnaryViewable, _BorrowViewable, _BinaryViewable
+from fp.callables._receiver import _SharedBinaryRef
+from fp.algebra.instances import _OptionalElement
+from fp.callables._scan import _Carry
+from ._callbacks import _snapshot_step
+from fp.callables._predicates import _filter_decision
 from std.iter import Iterator, IterableOwned, iter
 from std.builtin.rebind import downcast, rebind_var
 from fp.iteration._advance import _next_fused, _Source, _source
 from fp.iteration._terminal import _find, _quantify, _collect_list
-from fp.iteration._callbacks import _predicate_plain, _predicate_raising, _LazyUnary, _LazyStep, _apply_lazy_unary, _apply_lazy_step, _LazyPredicate, _LazyOptional, _apply_lazy_predicate, _apply_lazy_optional
-from fp.callables.protocols import Unary, Binary
-from fp.callables.protocols import BorrowCallable
-from fp.iteration._callbacks import _predicate_callable
+from fp.iteration._callbacks import _predicate_plain, _predicate_raising, _predicate_thin, _LazyUnary, _LazyStep, _apply_lazy_unary, _apply_lazy_step, _LazyPredicate, _LazyOptional, _apply_lazy_predicate, _apply_lazy_optional
+from fp.callables.protocols import UnaryContract, BinaryContract
+from fp.callables.invoke import RepeatableUnary, RepeatableBinary, RepeatableBorrow
+from fp.callables.protocols import BorrowCallable, BorrowCallContract
+from fp.iteration._callbacks import _predicate_callable, _predicate_repeated
 
 
+# Inline optional cells preserve native callback witnesses on Mojo 1.2. Each
+# adapter initializes its cell once and borrows it mutably for every pull;
+# ordinary native destruction still releases captures exactly once.
 @fieldwise_init
 struct _Map[T: Movable & Deinitable, U: Movable & Deinitable,
-            I: Iterator, F: Movable & Deinitable = def(var T) thin -> U](Iterator, IterableOwned):
+            I: Iterator, F: Movable & Deinitable = def(var T) thin -> U,
+            apply: def(mut F, var T) thin -> U = _apply_lazy_unary[T, U, F]](Iterator, IterableOwned):
     comptime Element = Self.U
     comptime IteratorOwnedType = Self
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
     var source: Self.I
     var done: Bool
+
+    def __init__(out self, var function: Self.F, var source: Self.I, done: Bool):
+        self._function = Optional(function^)
+        self.source = source^
+        self.done = done
 
     def __iter__(var self) -> Self:
         return self^
@@ -32,10 +49,10 @@ struct _Map[T: Movable & Deinitable, U: Movable & Deinitable,
         comptime assert Self.I.Element == Self.T, "map: source element type must match T"
         var item = _next_fused(self.source, self.done)
         var value = rebind_var[Self.T](item^)
-        return _apply_lazy_unary[Self.T, Self.U](self.function, value^)
+        return Self.apply(self._function.value(), value^)
 
 def map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, //](
-    function: def(var T) thin -> U, var source: I
+    var source: I, function: def(var T) thin -> U
 ) -> _Map[T, U, _Source[I]] where _Source[I].Element == T:
     """Lazily apply `function` to each element: `function(x0), function(x1), ...`.
 
@@ -50,8 +67,8 @@ def map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitabl
             (`IterableOwned`, such as `List`), which is consumed.
 
     Args:
-        function: A plain function, stored.
         source: The source, consumed.
+        function: A plain function, stored.
 
     Returns:
         A `MapIterator`, a native iterator of the results.
@@ -60,19 +77,24 @@ def map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitabl
 
 
 def map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, //,
-        F: _LazyUnary[T, U]](var function: F, var source: I) -> _Map[T, U, _Source[I], F] where _Source[I].Element == T:
+        F: _LazyUnary[T, U]](var source: I, var function: F) -> _Map[T, U, _Source[I], F] where _Source[I].Element == T:
     """Lazily apply a closure; move one that owns non-trivial state in with `function^`."""
     return _Map[T, U, _Source[I], F](function^, _source(source^), False)
 
 
 @fieldwise_init
 struct _Filter[T: Movable & Deinitable, I: Iterator,
-               F: Movable & Deinitable = def(T) thin -> Bool](Iterator, IterableOwned):
+               F: Movable & Deinitable = def(T) thin -> Bool, inverted: Bool = False](Iterator, IterableOwned):
     comptime Element = Self.T
     comptime IteratorOwnedType = Self
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
     var source: Self.I
     var done: Bool
+
+    def __init__(out self, var function: Self.F, var source: Self.I, done: Bool):
+        self._function = Optional(function^)
+        self.source = source^
+        self.done = done
 
     def __iter__(var self) -> Self:
         return self^
@@ -82,10 +104,14 @@ struct _Filter[T: Movable & Deinitable, I: Iterator,
         while True:
             var item = _next_fused(self.source, self.done)
             var value = rebind_var[Self.T](item^)
-            if _apply_lazy_predicate[Self.T](self.function, value): return value^
+            # Share the decision with eager filtering without wrapping an owned
+            # native callback in a read-only BorrowCallable. Lazy invocation must
+            # retain mutable access to captures (including at O3 on Mojo 1.1).
+            if _filter_decision[Self.inverted](_apply_lazy_predicate[Self.T, Self.F](self._function.value(), value)):
+                return value^
 
 def filter[T: Movable & Deinitable, I: Movable & Deinitable, //](
-    function: def(T) thin -> Bool, var source: I
+    var source: I, function: def(T) thin -> Bool
 ) -> _Filter[T, _Source[I]] where _Source[I].Element == T:
     """Lazily keep the elements `predicate` accepts.
 
@@ -98,8 +124,8 @@ def filter[T: Movable & Deinitable, I: Movable & Deinitable, //](
             (`IterableOwned`, such as `List`), which is consumed.
 
     Args:
-        function: The predicate, a plain function, stored.
         source: The source, consumed.
+        function: The predicate, a plain function, stored.
 
     Returns:
         A `FilterIterator`, a native iterator of the accepted elements.
@@ -108,10 +134,55 @@ def filter[T: Movable & Deinitable, I: Movable & Deinitable, //](
 
 
 def filter[T: Movable & Deinitable, I: Movable & Deinitable, //, F: _LazyPredicate[T]](
-    var function: F, var source: I
+    var source: I, var function: F
 ) -> _Filter[T, _Source[I], F] where _Source[I].Element == T:
     """Lazily keep the elements a closure predicate accepts."""
     return _Filter[T, _Source[I], F](function^, _source(source^), False)
+
+
+def filter_not[T: Movable & Deinitable, I: Movable & Deinitable, //](
+    var source: I, function: def(T) thin -> Bool
+) -> _Filter[T, _Source[I], def(T) thin -> Bool, True] where _Source[I].Element == T:
+    """Lazily retain elements the borrowing predicate rejects.
+
+    Construction pulls nothing. Each next call tests candidates once in source
+    order until the predicate returns False. Retained values move unchanged;
+    discarded values are destroyed. Exhaustion is fused, and abandoning the
+    iterator destroys owned source and callback state without further calls.
+    Callbacks cannot raise. Borrowed captures and source origins must remain
+    alive and unmoved while used; move an owned closure in with callback^.
+
+    Parameters:
+        T: The element type, including origins.
+        I: A native iterator or owned iterable, consumed without restarting it.
+
+    Args:
+        source: The source, consumed.
+        function: The borrowing Bool predicate, stored.
+
+    Returns:
+        A FilterNotIterator of the original rejected elements, in source order.
+    """
+    return _Filter[T, _Source[I], def(T) thin -> Bool, True](function, _source(source^), False)
+
+
+def filter_not[T: Movable & Deinitable, I: Movable & Deinitable, //, F: _LazyPredicate[T]](
+    var source: I, var function: F
+) -> _Filter[T, _Source[I], F, True] where _Source[I].Element == T:
+    """Lazily retain rejected elements with a stored native closure."""
+    return _Filter[T, _Source[I], F, True](function^, _source(source^), False)
+
+
+def filter_not[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](var source: I, ref[o] predicate: C
+) -> _Filter[_Source[I].Element, _Source[I], C._BorrowView[o], True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C._BorrowView[o].Payload == _Source[I].Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+    """Retain a shared predicate until lazy filtering completes or is discarded."""
+    return filter_not(source^, predicate._borrow_view())
+
+
+def filter_not[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var source: I, var predicate: C
+) -> _Filter[_Source[I].Element, _Source[I], C, True] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
+    """Lazily retain rejected elements with an owned library borrowing predicate."""
+    return _Filter[_Source[I].Element, _Source[I], C, True](predicate^, _source(source^), False)
 
 
 @fieldwise_init
@@ -119,9 +190,14 @@ struct _FilterMap[T: Movable & Deinitable, U: Movable & Deinitable,
                   I: Iterator, F: Movable & Deinitable = def(var T) thin -> Optional[U]](Iterator, IterableOwned):
     comptime Element = Self.U
     comptime IteratorOwnedType = Self
-    var function: Self.F
+    var _function: _OptionalCell[Self.F]
     var source: Self.I
     var done: Bool
+
+    def __init__(out self, var function: Self.F, var source: Self.I, done: Bool):
+        self._function = Optional(function^)
+        self.source = source^
+        self.done = done
 
     def __iter__(var self) -> Self:
         return self^
@@ -131,12 +207,12 @@ struct _FilterMap[T: Movable & Deinitable, U: Movable & Deinitable,
         while True:
             var item = _next_fused(self.source, self.done)
             var value = rebind_var[Self.T](item^)
-            var result = _apply_lazy_optional[Self.T, Self.U](self.function, value^)
+            var result = _apply_lazy_optional[Self.T, Self.U, Self.F](self._function.value(), value^)
             if result: return result.take()
 
-def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, //](
-    function: def(var T) thin -> Optional[U], var source: I
-) -> _FilterMap[T, U, _Source[I]] where _Source[I].Element == T:
+def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, R: Movable & Deinitable, //](
+    var source: I, function: def(var T) thin -> R
+) -> _FilterMap[T, U, _Source[I], def(var T) thin -> R] where _Source[I].Element == T and R == Optional[U]:
     """Lazily apply `function` and keep the present results.
 
     Each element is moved into the function. Only `None` is skipped: a present
@@ -147,19 +223,20 @@ def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & De
         U: The type of a present result.
         I: The source's type: a native iterator, or an owned collection
             (`IterableOwned`, such as `List`), which is consumed.
+        R: The callback result, checked against the required output type.
 
     Args:
-        function: A plain function returning `Optional[U]`, stored.
         source: The source, consumed.
+        function: A plain function returning `Optional[U]`, stored.
 
     Returns:
         A `FilterMapIterator`, a native iterator of the present results.
     """
-    return _FilterMap[T, U, _Source[I]](function, _source(source^), False)
+    return _FilterMap[T, U, _Source[I], def(var T) thin -> R](function, _source(source^), False)
 
 
-def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, //,
-               F: _LazyOptional[T, U]](var function: F, var source: I) -> _FilterMap[T, U, _Source[I], F] where _Source[I].Element == T:
+def filter_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, R: Movable & Deinitable, //,
+               F: def(var T) -> R](var source: I, var function: F) -> _FilterMap[T, U, _Source[I], F] where _Source[I].Element == T and R == Optional[U]:
     """Lazily apply a closure returning `Optional[U]` and keep the present results."""
     return _FilterMap[T, U, _Source[I], F](function^, _source(source^), False)
 
@@ -216,9 +293,9 @@ def flatten[I: Movable & Deinitable, S: Movable & Deinitable](
 
 
 def flat_map[T: Movable & Deinitable, S: Movable & Deinitable, I: Movable & Deinitable](
-    function: def(var T) thin -> S, var source: I
+    var source: I, function: def(var T) thin -> S
 ) -> _Flatten[_Map[T, S, _Source[I]], S] where _Source[I].Element == T:
-    """Lazily apply `function` and concatenate the inner sources it returns: `flatten(map(function, source))`.
+    """Lazily apply `function` and concatenate the inner sources it returns: `flatten(map(source, function))`.
 
     The returned inner iterator or iterable is kept until it is exhausted or
     the adapter is abandoned.
@@ -230,54 +307,68 @@ def flat_map[T: Movable & Deinitable, S: Movable & Deinitable, I: Movable & Dein
             (`IterableOwned`, such as `List`), which is consumed.
 
     Args:
-        function: A plain function, stored.
         source: The source, consumed.
+        function: A plain function, stored.
 
     Returns:
         A `FlatMapIterator`, a native iterator of the inner elements.
     """
-    var mapped = map(function, source^)
+    var mapped = map(source^, function)
     return flatten(mapped^)
 
 
 # Keep T/U aligned with the native alias: the tested T/S spelling loses
 # callable conformance through the nested map on Mojo 1.1.0.
 def flat_map[T: Movable & Deinitable, U: Movable & Deinitable, I: Movable & Deinitable, //,
-             F: _LazyUnary[T, U]](var function: F, var source: I) -> _Flatten[_Map[T, U, _Source[I], F], U] where _Source[I].Element == T:
+             F: _LazyUnary[T, U]](var source: I, var function: F) -> _Flatten[_Map[T, U, _Source[I], F], U] where _Source[I].Element == T:
     """Lazily apply a closure and concatenate the inner sources it returns."""
     comptime assert conforms_to(U, Iterator) or conforms_to(U, IterableOwned), "flat_map: native inner required"
-    var mapped = map(function^, source^)
+    var mapped = map(source^, function^)
     return flatten(mapped^)
 
 
-@fieldwise_init
-struct _Scan[A: Copyable & Deinitable, T: Movable & Deinitable,
-             I: Iterator, F: Movable & Deinitable = def(var A, var T) thin -> A](Iterator, IterableOwned):
-    comptime Element = Self.A
+struct _ScanDriver[A: Movable & Deinitable, T: Movable & Deinitable, Y: Movable & Deinitable,
+                   I: Iterator, F: Movable & Deinitable, initial_snapshot: Bool,
+                   apply: def(mut F, var A, var T) thin -> Tuple[A,Y]](Iterator, IterableOwned):
+    comptime Element = Self.Y
     comptime IteratorOwnedType = Self
-    var function: Self.F
-    var accumulator: Self.A
+    var _function: _OptionalCell[Self.F]
+    var carry: _Carry[Self.A]
     var source: Self.I
     var started: Bool
     var done: Bool
+
+    def __init__(out self, var function: Self.F, var initial: Self.A, var source: Self.I,
+                 started: Bool, done: Bool):
+        self._function = Optional(function^)
+        self.carry = _Carry(initial^)
+        self.source = source^
+        self.started = started
+        self.done = done
 
     def __iter__(var self) -> Self:
         return self^
 
     def __next__(mut self) raises StopIteration -> Self.Element:
-        comptime assert Self.I.Element == Self.T, "scan_left: source element type must match T"
+        comptime assert Self.I.Element == Self.T, "scan_left: source element type must match T" if Self.initial_snapshot else "scan_map: source element type must match T"
         if self.done: raise StopIteration()
-        if not self.started:
-            self.started = True
-            return self.accumulator.copy()
+        comptime if Self.initial_snapshot:
+            comptime assert conforms_to(Self.A, Copyable) and Self.Y == Self.A
+            if not self.started:
+                self.started = True
+                return rebind_var[Self.Y](self.carry.snapshot())
         var item = _next_fused(self.source, self.done)
-        self.accumulator = _apply_lazy_step[Self.A, Self.T](self.function, self.accumulator^, rebind_var[Self.T](item^))
-        return self.accumulator.copy()
+        var pair = Self.apply(self._function.value(), self.carry.take(), rebind_var[Self.T](item^))
+        return self.carry.replace(pair^)
 
 
-def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable](
-    function: def(var A, var T) thin -> A, var initial: A, var source: I
-) -> _Scan[A, T, _Source[I]] where _Source[I].Element == T:
+comptime _Scan[A: Copyable & Deinitable, T: Movable & Deinitable, I: Iterator,
+               F: Movable & Deinitable = def(var A, var T) thin -> A] = _ScanDriver[A,T,A,I,F,True,_snapshot_step[A,T,F]]
+
+
+def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, R: Movable & Deinitable](
+    var source: I, var initial: A, function: def(var A, var T) thin -> R
+) -> _Scan[A, T, _Source[I], def(var A, var T) thin -> R] where _Source[I].Element == T and R == A:
     """Lazily yield `initial` and then the accumulator after each step: `n + 1` values for `n` elements.
 
     The initial value is yielded before the first pull. Each yielded value is a
@@ -290,22 +381,25 @@ def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable, I: Movable & De
         T: The element type.
         I: The source's type: a native iterator, or an owned collection
             (`IterableOwned`, such as `List`), which is consumed.
+        R: The callback result, checked against the required output type.
 
     Args:
-        function: A plain function `(var A, var T) -> A`, stored.
-        initial: The first accumulator, consumed.
         source: The source, consumed.
+        initial: The first accumulator, consumed.
+        function: A plain function `(var A, var T) -> A`, stored.
 
     Returns:
         A `ScanIterator`, a native iterator of the accumulator snapshots.
     """
-    return _Scan[A, T, _Source[I]](function, initial^, _source(source^), False, False)
+    return _Scan[A, T, _Source[I], def(var A, var T) thin -> R](function, initial^, _source(source^), False, False)
 
 
-def scan_left[A: Copyable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, //,
-              F: _LazyStep[A, T]](var function: F, var initial: A, var source: I) -> _Scan[A, T, _Source[I], F] where _Source[I].Element == T:
+def scan_left[A0: Copyable & Deinitable, A: Copyable & Deinitable, T: Movable & Deinitable, I: Movable & Deinitable, R: Movable & Deinitable, //,
+              F: def(var A, var T) -> R](var source: I, var initial: A0, var function: F) -> _Scan[A, T, _Source[I], F] where A0 == A and _Source[I].Element == T and R == A:
     """Lazily yield the snapshots of a scan with a closure step."""
-    return _Scan[A, T, _Source[I], F](function^, initial^, _source(source^), False, False)
+    # initial has its own type parameter: a closure input fixed by an earlier
+    # argument crashes Mojo 1.2 on mismatched callbacks; where relates them.
+    return _Scan[A, T, _Source[I], F](function^, rebind_var[A](initial^), _source(source^), False, False)
 
 
 def collect_list[T: Movable & Deinitable, I: Movable & Deinitable](
@@ -327,92 +421,116 @@ def collect_list[T: Movable & Deinitable, I: Movable & Deinitable](
     return _collect_list[T, _Source[I]](_source(source^))
 
 
-def find[T: Movable & Deinitable, I: Movable & Deinitable, //, F: def(T) -> Bool](
-    predicate: F, var source: I
-) -> Optional[T] where _Source[I].Element == T:
+def find[P: Movable & Deinitable, I: Movable & Deinitable, //, F: def(P) -> Bool, T: Movable & Deinitable = P](
+    var source: I, predicate: F
+) -> Optional[T] where _Source[I].Element == T and P == T:
     """Return the first element `predicate` accepts, without pulling another.
 
     The predicate borrows each candidate; the accepted element is returned as
     it is, and rejected ones are destroyed.
 
     Parameters:
-        T: The element type.
+        P: The callback input, inferred with its origins.
         I: The source's type: a native iterator, or an owned collection
             (`IterableOwned`, such as `List`), which is consumed.
         F: The predicate's type: a plain function or a closure.
+        T: The requested element type; defaults to P and must match it.
 
     Args:
-        predicate: The predicate, borrowed.
         source: The source, consumed.
+        predicate: The predicate, borrowed.
 
     Returns:
         The first accepted element, or `None` when there is none.
     """
-    return _find[T, _Source[I], Never, F, _predicate_plain[T, F]](predicate, _source(source^))
+    return rebind_var[Optional[T]](_find[P, _Source[I], Never, F, _predicate_plain[P, Bool, F]](predicate, _source(source^)))
 
-def any[T: Movable & Deinitable, I: Movable & Deinitable, //, F: def(T) -> Bool](
-    predicate: F, var source: I
-) -> Bool where _Source[I].Element == T:
+def any[P: Movable & Deinitable, I: Movable & Deinitable, //, F: def(P) -> Bool, T: Movable & Deinitable = P](
+    var source: I, predicate: F
+) -> Bool where _Source[I].Element == T and P == T:
     """Whether `predicate` accepts some element; stops at the first accepted one.
 
     Parameters:
-        T: The element type.
+        P: The callback input, inferred with its origins.
         I: The source's type: a native iterator, or an owned collection
             (`IterableOwned`, such as `List`), which is consumed.
         F: The predicate's type: a plain function or a closure.
+        T: The requested element type; defaults to P and must match it.
 
     Args:
-        predicate: The predicate, borrowed; it borrows each candidate.
         source: The source, consumed.
+        predicate: The predicate, borrowed; it borrows each candidate.
 
     Returns:
         `True` at the first accepted element; `False` for an empty source.
     """
-    return _quantify[T, _Source[I], Never, F, _predicate_plain[T, F]](predicate, _source(source^), True)
+    return _quantify[P, _Source[I], Never, F, _predicate_plain[P, Bool, F]](predicate, _source(source^), True)
 
 
-def all[T: Movable & Deinitable, I: Movable & Deinitable, //, F: def(T) -> Bool](
-    predicate: F, var source: I
-) -> Bool where _Source[I].Element == T:
+def all[P: Movable & Deinitable, I: Movable & Deinitable, //, F: def(P) -> Bool, T: Movable & Deinitable = P](
+    var source: I, predicate: F
+) -> Bool where _Source[I].Element == T and P == T:
     """Whether `predicate` accepts every element; stops at the first rejected one.
 
     Parameters:
-        T: The element type.
+        P: The callback input, inferred with its origins.
         I: The source's type: a native iterator, or an owned collection
             (`IterableOwned`, such as `List`), which is consumed.
         F: The predicate's type: a plain function or a closure.
+        T: The requested element type; defaults to P and must match it.
 
     Args:
-        predicate: The predicate, borrowed; it borrows each candidate.
         source: The source, consumed.
+        predicate: The predicate, borrowed; it borrows each candidate.
 
     Returns:
         `False` at the first rejected element; `True` for an empty source.
     """
-    return _quantify[T, _Source[I], Never, F, _predicate_plain[T, F]](predicate, _source(source^), False)
+    return _quantify[P, _Source[I], Never, F, _predicate_plain[P, Bool, F]](predicate, _source(source^), False)
 
 
-def find[T: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
-         F: def(T) raises E -> Bool](
-    predicate: F, var source: I
-) raises E -> Optional[T] where _Source[I].Element == T:
+def find[P: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
+         F: def(P) raises E -> Bool, T: Movable & Deinitable = P](
+    var source: I, predicate: F
+) raises E -> Optional[T] where _Source[I].Element == T and P == T:
     """Return the first accepted element with a raising predicate; its error stops the search."""
-    return _find[T, _Source[I], E, F, _predicate_raising[T, E, F]](predicate, _source(source^))
+    return rebind_var[Optional[T]](_find[P, _Source[I], E, F, _predicate_raising[P, E, Bool, F]](predicate, _source(source^)))
 
-def any[T: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
-         F: def(T) raises E -> Bool](
-    predicate: F, var source: I
-) raises E -> Bool where _Source[I].Element == T:
+def any[P: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
+         F: def(P) raises E -> Bool, T: Movable & Deinitable = P](
+    var source: I, predicate: F
+) raises E -> Bool where _Source[I].Element == T and P == T:
     """Whether a raising predicate accepts some element; its error stops the search."""
-    return _quantify[T, _Source[I], E, F, _predicate_raising[T, E, F]](predicate, _source(source^), True)
+    return _quantify[P, _Source[I], E, F, _predicate_raising[P, E, Bool, F]](predicate, _source(source^), True)
 
 
-def all[T: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
-         F: def(T) raises E -> Bool](
-    predicate: F, var source: I
-) raises E -> Bool where _Source[I].Element == T:
+def all[P: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //,
+         F: def(P) raises E -> Bool, T: Movable & Deinitable = P](
+    var source: I, predicate: F
+) raises E -> Bool where _Source[I].Element == T and P == T:
     """Whether a raising predicate accepts every element; its error stops the search."""
-    return _quantify[T, _Source[I], E, F, _predicate_raising[T, E, F]](predicate, _source(source^), False)
+    return _quantify[P, _Source[I], E, F, _predicate_raising[P, E, Bool, F]](predicate, _source(source^), False)
+
+
+def find[P: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //, T: Movable & Deinitable = P](
+    var source: I, predicate: def(P) raises E thin -> Bool
+) raises E -> Optional[T] where _Source[I].Element == T and P == T:
+    """Preserve a plain raising predicate's thin representation, including Never."""
+    return rebind_var[Optional[T]](_find[P, _Source[I], E, def(P) raises E thin -> Bool, _predicate_thin[P, E]](predicate, _source(source^)))
+
+
+def any[P: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //, T: Movable & Deinitable = P](
+    var source: I, predicate: def(P) raises E thin -> Bool
+) raises E -> Bool where _Source[I].Element == T and P == T:
+    """Preserve a plain raising predicate's thin representation, including Never."""
+    return _quantify[P, _Source[I], E, def(P) raises E thin -> Bool, _predicate_thin[P, E]](predicate, _source(source^), True)
+
+
+def all[P: Movable & Deinitable, I: Movable & Deinitable, E: Movable & Deinitable, //, T: Movable & Deinitable = P](
+    var source: I, predicate: def(P) raises E thin -> Bool
+) raises E -> Bool where _Source[I].Element == T and P == T:
+    """Preserve a plain raising predicate's thin representation, including Never."""
+    return _quantify[P, _Source[I], E, def(P) raises E thin -> Bool, _predicate_thin[P, E]](predicate, _source(source^), False)
 
 
 # Stable return-annotation names for values constructed by the lazy factories.
@@ -437,6 +555,16 @@ Parameters:
     T: The element type.
     I: The native iterator over the source.
     F: The step's type; the thin function type by default.
+"""
+
+
+comptime FilterNotIterator[T: Movable & Deinitable, I: Iterator, F: Movable & Deinitable = def(T) thin -> Bool] = _Filter[T, I, F, True]
+"""The type filter_not returns, for a generic function's return annotation.
+
+Parameters:
+    T: The element type.
+    I: The native iterator over the source.
+    F: The predicate's type; the thin function type by default.
 """
 
 
@@ -468,50 +596,109 @@ Parameters:
 """
 
 
-# Fixed-arity library callables with a shared receiver, such as partials.
-def map[I: Movable & Deinitable, F: Unary](var function: F, var source: I
-) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never:
-    """Lazily apply a library `Unary` value, such as a partial or a composition."""
+# Fixed-arity library callbacks use their shared or mutable receiver on each pull.
+def map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin](var source: I, ref[o] function: F
+) -> _Map[F._View[o].Arg, F._View[o].Out, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Error == Never:
+    """Retain a shared callable view in the lazy iterator."""
+    return map(source^, function._unary_view())
+
+
+def map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var source: I, var function: F
+) -> _Map[F.Arg, F.Out, _Source[I], F] where _Source[I].Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
+    """Lazily apply a repeatable library unary value, such as a partial or a composition."""
     return _Map[F.Arg, F.Out, _Source[I], F](function^, _source(source^), False)
 
 
-def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: Unary](var function: F, var source: I
-) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never:
-    """Lazily apply a library `Unary` value returning `Optional[U]`; name `U` explicitly."""
+def filter_map[U: Movable & Deinitable, I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var source: I, var function: F
+) -> _FilterMap[F.Arg, U, _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[U] and F.Error == Never and RepeatableUnary[F]:
+    """Lazily apply a repeatable library unary callback with an explicit Optional payload binding."""
     return _FilterMap[F.Arg, U, _Source[I], F](function^, _source(source^), False)
 
 
-def flat_map[I: Movable & Deinitable, F: Unary](var function: F, var source: I
-) -> _Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out] where _Source[I].Element == F.Arg and F.Error == Never:
-    """Lazily apply a library `Unary` value and concatenate the inner sources it returns."""
-    return flatten(map(function^, source^))
+def filter_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //](var source: I, var function: F
+) -> _FilterMap[F.Arg, _OptionalElement[F.Out], _Source[I], F] where _Source[I].Element == F.Arg and F.Out == Optional[_OptionalElement[F.Out]] and F.Error == Never and RepeatableUnary[F]:
+    """Infer the Optional payload and move a library callable into the iterator."""
+    return filter_map[U=_OptionalElement[F.Out]](source^, function^)
 
 
-def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: Binary](var function: F, var initial: A, var source: I
-) -> _Scan[A, F.Second, _Source[I], F] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never:
-    """Lazily yield the snapshots of a scan with a library `Binary` step."""
+def filter_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin, //,
+               U: Movable & Deinitable = _OptionalElement[F._View[o].Out]](
+    var source: I, ref[o] function: F
+) -> _FilterMap[F._View[o].Arg, U, _Source[I], F._View[o]] where _Source[I].Element == F._View[o].Arg and F._View[o].Out == Optional[U] and F._View[o].Error == Never:
+    """Infer the Optional payload and retain a shared callback until consumption."""
+    return filter_map[U=U](source^, function._unary_view())
+
+
+def flat_map[I: Movable & Deinitable, F: _UnaryViewable, o: ImmOrigin](var source: I, ref[o] function: F
+) -> _Flatten[_Map[F._View[o].Arg, F._View[o].Out, _Source[I], F._View[o]], F._View[o].Out] where _Source[I].Element == F._View[o].Arg and F._View[o].Error == Never:
+    """Retain a shared callable view in the lazy iterator."""
+    return flat_map(source^, function._unary_view())
+
+
+def flat_map[I: Movable & Deinitable, F: UnaryContract & Movable & Deinitable](var source: I, var function: F
+) -> _Flatten[_Map[F.Arg, F.Out, _Source[I], F], F.Out] where _Source[I].Element == F.Arg and F.Error == Never and RepeatableUnary[F]:
+    """Lazily apply a repeatable library unary value and concatenate the inner sources it returns."""
+    return flatten(map(source^, function^))
+
+
+def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: BinaryContract & Movable & Deinitable](var source: I, var initial: A, var function: F
+) -> _Scan[A, F.Second, _Source[I], F] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never and RepeatableBinary[F]:
+    """Lazily yield the snapshots of a scan with a shared or mutable library binary step."""
     return _Scan[A, F.Second, _Source[I], F](function^, initial^, _source(source^), False, False)
 
 
-def filter[I: Movable & Deinitable, C: BorrowCallable](var predicate: C, var source: I
-) -> _Filter[_Source[I].Element, _Source[I], C] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never:
+def scan_left[A: Copyable & Deinitable, I: Movable & Deinitable, F: _BinaryViewable, o: ImmOrigin](
+    var source: I, var initial: A, ref[o] function: F
+) -> _Scan[A, F.Second, _Source[I], _SharedBinaryRef[F, o]] where F.First == A and F.Second == _Source[I].Element and F.Out == A and F.Error == Never:
+    """Retain a shared step while yielding the same native accumulator snapshots."""
+    return scan_left(source^, initial^, _SharedBinaryRef[F, o](Pointer(to=function)))
+
+
+def filter[I: Movable & Deinitable, C: _BorrowViewable, o: ImmOrigin](var source: I, ref[o] predicate: C
+) -> _Filter[_Source[I].Element, _Source[I], C._BorrowView[o]] where conforms_to(_Source[I].Element, Movable & Deinitable) and C._BorrowView[o].Payload == _Source[I].Element and C._BorrowView[o].Result == Bool and C._BorrowView[o].Failure == Never:
+    """Retain a shared predicate until lazy filtering completes or is discarded."""
+    return filter(source^, predicate._borrow_view())
+
+
+def filter[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var source: I, var predicate: C
+) -> _Filter[_Source[I].Element, _Source[I], C] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and C.Failure == Never and RepeatableBorrow[C]:
     """Lazily keep the elements a `BorrowCallable` predicate accepts."""
     return _Filter[_Source[I].Element, _Source[I], C](predicate^, _source(source^), False)
 
 
-def find[I: Movable & Deinitable, C: BorrowCallable](predicate: C, var source: I
+def find[I: Movable & Deinitable, C: BorrowCallable](var source: I, predicate: C
 ) raises C.Failure -> Optional[_Source[I].Element] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool:
     """Return the first element a `BorrowCallable` predicate accepts."""
     return _find[_Source[I].Element, _Source[I], C.Failure, C, _predicate_callable[_Source[I].Element, C]](predicate, _source(source^))
 
 
-def any[I: Movable & Deinitable, C: BorrowCallable](predicate: C, var source: I
+def any[I: Movable & Deinitable, C: BorrowCallable](var source: I, predicate: C
 ) raises C.Failure -> Bool where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool:
     """Whether a `BorrowCallable` predicate accepts some element."""
     return _quantify[_Source[I].Element, _Source[I], C.Failure, C, _predicate_callable[_Source[I].Element, C]](predicate, _source(source^), True)
 
 
-def all[I: Movable & Deinitable, C: BorrowCallable](predicate: C, var source: I
+def all[I: Movable & Deinitable, C: BorrowCallable](var source: I, predicate: C
 ) raises C.Failure -> Bool where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool:
     """Whether a `BorrowCallable` predicate accepts every element."""
     return _quantify[_Source[I].Element, _Source[I], C.Failure, C, _predicate_callable[_Source[I].Element, C]](predicate, _source(source^), False)
+
+
+# --- iterator expansion syntax (generated) ---
+# Generated by scripts/generate_plain_overloads.py; algorithms live in the operation owners.
+
+def find[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var source: I, var predicate: C) raises C.Failure -> Optional[_Source[I].Element] where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and RepeatableBorrow[C]:
+    """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
+    """
+    return _find[_Source[I].Element, _Source[I], C.Failure, Pointer[C, origin_of(predicate)], _predicate_repeated[_Source[I].Element, C, origin_of(predicate)]](Pointer(to=predicate), _source(source^))
+
+def any[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var source: I, var predicate: C) raises C.Failure -> Bool where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and RepeatableBorrow[C]:
+    """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
+    """
+    return _quantify[_Source[I].Element, _Source[I], C.Failure, Pointer[C, origin_of(predicate)], _predicate_repeated[_Source[I].Element, C, origin_of(predicate)]](Pointer(to=predicate), _source(source^), True)
+
+def all[I: Movable & Deinitable, C: BorrowCallContract & Movable & Deinitable](var source: I, var predicate: C) raises C.Failure -> Bool where conforms_to(_Source[I].Element, Movable & Deinitable) and C.Payload == _Source[I].Element and C.Result == Bool and RepeatableBorrow[C]:
+    """Search with an owned repeatable borrowing predicate, preferring its mutable receiver.
+    """
+    return _quantify[_Source[I].Element, _Source[I], C.Failure, Pointer[C, origin_of(predicate)], _predicate_repeated[_Source[I].Element, C, origin_of(predicate)]](Pointer(to=predicate), _source(source^), False)
+# --- end iterator expansion syntax ---

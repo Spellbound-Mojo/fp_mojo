@@ -41,16 +41,16 @@ def exercise(library: Bool, mode: Int, length: Int, fail_at: Int, stop_at: Int,
     var source = Source(length, pulls)
     if library and mode == 1:
         try:
-            return reduce(step, source^)
+            return reduce(source^, step)
         except error:
             if error.isa[EmptyReductionError]():
                 return -900
             return -1000 - error^.unwrap[ReductionStepError[Failure]]().into_error().code
     try:
         if library and mode == 0:
-            return reduce(step, source^, initial=20)
+            return reduce(source^, step, initial=20)
         if library:
-            var result = fold_until(control, 20, source^)
+            var result = fold_until(source^, 20, control)
             if result.isa[Break[Halt]]():
                 return 2000 + result^.unwrap[Break[Halt]]().into_payload().item
             return result^.unwrap[Continue[Int]]().into_payload()
@@ -95,8 +95,8 @@ def pure_control(var acc: Int, var item: Int) -> ControlFlow[Int, Int]:
 def pure() -> Int:
     var a = List[Int]()
     var b = List[Int]()
-    var c = fold_until(pure_control, 5, iter(b^))
-    return reduce(pure_step, iter(a^), initial=2) + c^.unwrap[Continue[Int]]().into_payload()
+    var c = fold_until(iter(b^), 5, pure_control)
+    return reduce(iter(a^), pure_step, initial=2) + c^.unwrap[Continue[Int]]().into_payload()
 
 def main() raises:
     assert_equal(pure(), 7)
@@ -118,7 +118,7 @@ def main() raises:
         var failed = False
         if mode == 1:
             try:
-                _ = reduce(stop, Source(4, pulls))
+                _ = reduce(Source(4, pulls), stop)
             except error:
                 comptime assert type_of(error) == ReductionError[StopIteration]
                 assert_true(error.isa[ReductionStepError[StopIteration]]())
@@ -126,9 +126,9 @@ def main() raises:
         else:
             try:
                 if mode == 0:
-                    _ = reduce(stop, Source(4, pulls), initial=0)
+                    _ = reduce(Source(4, pulls), stop, initial=0)
                 else:
-                    _ = fold_until(stop_control, 0, Source(4, pulls))
+                    _ = fold_until(Source(4, pulls), 0, stop_control)
             except error:
                 comptime assert type_of(error) == StopIteration
                 failed = True
@@ -139,7 +139,7 @@ def main() raises:
         var outcome = 0
         var value = 0
         try:
-            value = reduce(callback_empty, Source(length, pulls))
+            value = reduce(Source(length, pulls), callback_empty)
         except error:
             outcome = 1 if error.isa[EmptyReductionError]() else 2
             assert_equal(error.isa[ReductionStepError[EmptyReductionError]](), length == 2)

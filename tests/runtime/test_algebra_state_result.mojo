@@ -8,7 +8,7 @@ from std.builtin.rebind import rebind_var
 from std.testing import assert_equal
 
 
-def check[retain:Bool]() raises:
+def check[retain:Bool]() raises where Stack[retain].Element[Endpoint[retain]] == Next[retain].Arg and Stack[retain].BindCompatible[Endpoint[retain],Next[retain]] and Base[retain].RunCompatible[Stack[retain].Bound[Endpoint[retain],Next[retain]]]:
     comptime I=Stack[retain]
     comptime C=I.Bound[Endpoint[retain],Next[retain]]
     for source_failure in range(3):
@@ -16,7 +16,7 @@ def check[retain:Bool]() raises:
             var trace=ArcPointer(List[Int]())
             var computation:C
             try:
-                computation=flat_map[I](Next[retain](trace,next_failure),step[retain](trace,1,5,source_failure))
+                computation=flat_map[I](step[retain](trace,1,5,source_failure),Next[retain](trace,next_failure))
             except error:
                 comptime assert type_of(error)==Never
                 _propagate_error[Never](error^)

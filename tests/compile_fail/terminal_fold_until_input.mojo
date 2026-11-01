@@ -1,4 +1,4 @@
-# error: no matching function in call to 'fold_until'
+# error: cannot prove constraint for candidate
 from fp.iteration import fold_left, reduce, reduce_optional, fold_until
 from fp.iteration import find, any, all
 from fp.data import ControlFlow, Continue
@@ -11,7 +11,7 @@ def wrong(first: List[Int], second: List[Int]):
     comptime B = type_of(b)
     print(a[0], b[0])
     def step(var acc: B, var item: Int) -> ControlFlow[B, A]: return ControlFlow[B, A](Continue(acc))
-    _ = fold_until[A=A, B=A](step, a, iter(range(1)))
+    _ = fold_until[A=A, B=A](iter(range(1)), a, step)
 
 def main():
     var first: List[Int] = [11]

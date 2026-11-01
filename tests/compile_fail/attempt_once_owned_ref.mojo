@@ -1,6 +1,6 @@
 # error: origin_of(self.value)
 from fp.callables import OnceThunk
-from fp.data import attempt_once
+from fp.data import Capture
 
 
 @fieldwise_init
@@ -13,4 +13,4 @@ struct Invalid[origin: ImmOrigin](OnceThunk):
 
 def main():
     var owner = String('external')
-    _ = attempt_once(Invalid[origin_of(owner)](String('consumed')))
+    _ = Capture().run(Invalid[origin_of(owner)](String('consumed')))

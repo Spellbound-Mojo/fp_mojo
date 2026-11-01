@@ -1,0 +1,1 @@
+par_traverse bounded: at most limit live children by Ref and diagnostics; limit = 1 matches traverse

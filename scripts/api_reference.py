@@ -10,6 +10,7 @@ import re
 import textwrap
 
 from api_docs import balanced_end, split_items
+from module_layout import split_public_name
 
 KINDS = (('function', 'Functions'), ('struct', 'Structs'), ('trait', 'Traits'), ('alias', 'Aliases'))
 _BOUND = re.compile(r'\s*:\s*(?:Movable & Deinitable|Deinitable & Movable)(?=\s*[,\]])')
@@ -185,6 +186,25 @@ def type_markdown(name, entry, anchor, source=''):
     return out
 
 
+def documentation_owners(api):
+    """Choose an existing public export for each declaration's reference entry.
+
+    Prefer the provider's package when it exports that name. A private lower
+    layer need not export its implementation; use an actual public route then.
+    """
+    groups = {}
+    for full, entry in api['entries'].items():
+        package, name = split_public_name(full, api['packages'])
+        groups.setdefault((entry['provider'], name), []).append(package)
+    owners = {}
+    for (provider, name), packages in groups.items():
+        physical = provider.rsplit('/', 1)[0].replace('/', '.')
+        owner = physical if physical in packages else min(packages)
+        for package in packages:
+            owners[package + '.' + name] = owner
+    return owners
+
+
 def package_markdown(package, api, page_of, source_of=None):
     """A package page: overview, a summary table, then one entry per public name.
 
@@ -192,10 +212,11 @@ def package_markdown(package, api, page_of, source_of=None):
     and `source_of(provider)`, when given, the link to a provider's source file.
     """
     info = api['packages'][package]
-    entries = {full.split('.', 1)[1]: entry for full, entry in api['entries'].items()
-               if full.split('.', 1)[0] == package}
+    entries = {split_public_name(full, api['packages'])[1]: entry for full, entry in api['entries'].items()
+               if split_public_name(full, api['packages'])[0] == package}
     out = [info['summary'], '', info['description'], '', '## Summary', '', '| Name | Kind | Summary |', '|---|---|---|']
-    own = {name: e for name, e in entries.items() if e['provider'].split('/')[0] == package}
+    owners = documentation_owners(api)
+    own = {name: e for name, e in entries.items() if owners[package + '.' + name] == package}
     for kind, _ in KINDS:
         for name, entry in own.items():
             if entry['kind'] == kind:
@@ -203,7 +224,7 @@ def package_markdown(package, api, page_of, source_of=None):
                 out.append(f'| [`{name}`](#{name}) | {kind} | {summary} |')
     for name, entry in entries.items():
         if name not in own:
-            owner = entry['provider'].split('/')[0]
+            owner = owners[package + '.' + name]
             out.append(f'| [`{name}`]({page_of(owner, name)}) | re-export | Re-exported from `fp.{owner}`. |')
     out.append('')
     for kind, title in KINDS:

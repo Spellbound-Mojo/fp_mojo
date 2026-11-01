@@ -1,0 +1,7 @@
+sleeps across workers: ok
+precision: ok
+timeouts and cancellation across workers: ok
+no leak of marked nodes: ok
+stolen timers: ok
+descriptors across workers: ok
+foreign cancellation: ok

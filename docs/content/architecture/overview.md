@@ -3,7 +3,8 @@
 FP Mojo builds functional programming abstractions on Mojo's native types,
 ownership and error handling. Its packages cover function composition, partial
 application, folds and lazy iteration, typed results, algebraic and inductive
-data types, exhaustive pattern matching, and monad transformers.
+data types, exhaustive pattern matching, monad transformers, and structured
+asynchronous concurrency.
 
 Shared mechanisms have one implementation: packages delegate invocation, data
 storage, iteration and error propagation to their respective owners. This page
@@ -25,9 +26,11 @@ write `fp.match(...)`.
 | `fp.iteration` | Lazy adapters, scans, folds, reductions and predicate terminals over native iterators and owned collections | `adapters`, `folds`, `_terminal`, `_advance`, `_callbacks` |
 | `fp.control` | Functional `while_loop`, `fori_loop` and carry/output `scan` | `loops`, `scan`, `_loops` |
 | `fp.adt` | Algebraic and inductive data types: shared `Node`s and `Choice`s stored in place (`Data`, `Cases`, `Node`, `Choice`) | `data` |
-| `fp.data` | `Result`, `ControlFlow` and native-error bridges | `_result`, `result`, `control` |
-| `fp.algebra` | Functor, Applicative, Monad, Traversable and Monoid interfaces with native instances | `protocols`, `operations`, `instances`, `_derived`, `monoids` |
+| `fp.data` | `Result`, `Ior`, `ControlFlow`, `NonEmptyList` and native-error bridges | `_result`, `result`, `control`, `non_empty_list`, `ior` |
+| `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid interfaces with native instances | `protocols`, `operations`, `filtering`, `instances`, `collections`, `_derived`, `monoids` |
+| `fp.algebra.contracts` | Operation contracts (`MapContract` and others) for generic wrappers | Re-exports from the algebra modules that own each operation |
 | `fp.effects` | Reader, State and Writer computations and the OptionalT, ResultT, ReaderT, StateT and WriterT transformers | `protocols`, `reader`, `state`, `writer`, `layers`, `operations`, `_adapt` |
+| `fp.effects.async_runtime` and `.protocols` | Pure-Mojo async `IO`, structured ownership, cooperative host driving and extension contracts | Public exports over canonical `_async` owners; [state-machine architecture](async-state-machines.md) |
 | `fp.matching` | `match` over data values, `Optional` and tuples, `rewrite` over `Node` values, `when` guards and `Next` | `matcher`, `clauses`, `_engine`, `_inline` |
 
 `fp._internal.errors` checks error compatibility and propagates errors without
@@ -49,19 +52,29 @@ Layer  Modules                         Builds on
   1    fp._internal                    Mojo
        fp.adt (Data, Node, Choice)     Mojo
   2    fp.callables                    _internal
-  3    fp.functions                    callables
-       fp.data (Result, ControlFlow)   callables, adt
+  3    functions (composition, etc.)   callables
+       fp.data (Result, ControlFlow)   callables, adt, composition
+       data.non_empty_list             std.List, std.iter
        fp.matching                     adt, _internal
   4    fp.iteration                    callables, data.control
+       iteration.chaining              iteration adapters and folds
   5    fp.control                      iteration, adt
        fp.algebra                      data, functions (Identity), iteration
-  6    fp.effects                      algebra, data
+  6    functions.pipeline              callables, iteration, algebra
+       fp.effects                      algebra, data
        data.result (integration)       algebra (collect_results)
+  7    fp.effects.async_runtime        effects, algebra, _internal
 ```
 
 Dependencies are tracked by module. For example, the Result carrier
 (`data._result`) sits below algebra, while the public `data.result` module
 implements `collect_results` by delegating to algebra's collection kernel.
+Algebra conveniences (`map2`, `product`, `ap`, `map_n`, `product_n`,
+`par_map_n`, `par_product_n`, `if_effect`) belong to `pipeline(result)`.
+Result itself retains native branch transformations, folds and error bridges.
+The dependency checks in `tests/tooling/test_module_layers.py` verify both the
+whole import DAG and the transitive leaf boundaries.
+
 The following rules keep the dependency graph acyclic:
 
 - `adt.data` depends only on Mojo itself. `Result` and `ControlFlow` build on
@@ -88,12 +101,20 @@ Higher packages compose that implementation and add only their own behavior.
 | Fixed-arity callback invocation mode | `Unary`/`Binary`/`Thunk` with `call_once` and `call_repeated`; error-adapting helpers in `callables._receiver` | Algebra instances, deferred effects, traversal, iteration and control callbacks, Result transformations, compositions |
 | Sequential consuming terminal loop | `iteration._terminal` with `data.ControlFlow` and `iteration._advance` | Folds, reductions, `collect_list`, `find`, `any`, `all` |
 | Iteration sources (an iterator as it is, or a consumed owned collection) | `iteration._advance` (`_Source`, `_source`) | Every public iteration entry point, and `flatten` for inner values |
+| Shared pipeline execution | `functions._pipeline` (`_PipelineRunner`, `_pipe_at`) | Composition and immediate pipelines; composition never imports pipeline integration |
+| Borrowing and retaining an owned payload | `callables._retention._Retain` with a finishing callback | Result adapters and `algebra._sequencing._EffectRetain` |
+| Result combination and error policies | `algebra._result_accumulation` | ResultFamily and ValidationFamily |
+| Non-empty shape | `data.non_empty_list` over native List storage | `algebra.non_empty` mapping, traversal, filtering and concatenation |
 | Native functions as library values | `callables.native` (`NativeUnary` through `as_unary`, `_NativeUnaryRef`, `_ThinFunction`, `_NativeBorrow`, one native call in `_call_native`) | Pipelines and compositions, algebra and effect callbacks, Result methods |
+| First-present and monoid accumulation policies | `algebra._accumulation` (`_FirstPresent`, `_Combine`) | Pure reductions, effectful searches and `fold_map_effect` |
+| Eager payload traversal and accumulation | `algebra.protocols._map_accumulate` and `_Accumulate` | Identity traversal, List mapping, native collection adapters |
+| Native container mapping | Existing algebra instances and `algebra.collections` | `Pipeline.map`; explicit families retain their own semantics |
 | Result transformations | `data._result` (`_transform_result_owned` and the four methods) | `ResultFamily.map` and `flat_map`, generic Result code |
 | Algebra operations and their result types | `algebra.protocols` (static methods and associated aliases) | Native and third-party instances, transformers |
 | Runtime-sized owned traversal | `algebra.protocols._loop` with an accumulation policy (`_Accumulate`) | `collect`; one loop per family; OptionalT, ResultT and WriterT wrap the policy and delegate to their base |
 | Choice between two carriers of one family | `Monad._Joined`, `_join_left`, `_join_right` | OptionalT/ResultT bind and map2 steps, Writer, Reader and State choices |
 | Lazy right operand, produced once | `algebra.protocols._Lazy` | State, OptionalT and ResultT map2 steps |
+| Owned scan carry replacement | `callables._scan` (`_Carry`) | `scan_left`, `scan_map`, `control.scan` |
 | Owned pair split | `callables.products` (`_take_pair`) | State and Writer steps, `scan` |
 
 Borrowed and owned results stay separate because Mojo gives them different

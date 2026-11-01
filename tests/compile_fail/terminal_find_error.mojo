@@ -1,4 +1,4 @@
-# error: invalid call to 'find': lacking evidence to prove correctness
+# error: no matching function in call to 'find'
 from fp.iteration import fold_left, reduce, reduce_optional, fold_until
 from fp.iteration import find, any, all
 from fp.data import ControlFlow, Continue
@@ -12,7 +12,7 @@ def wrong(first: List[Int], second: List[Int]):
     print(a[0], b[0])
     def step(value: A) raises B -> Bool: return True
     try:
-        _ = find[T=A, E=A](step, iter(List[A]()))
+        _ = find[T=A, E=A](iter(List[A]()), step)
     except: pass
 
 def main():

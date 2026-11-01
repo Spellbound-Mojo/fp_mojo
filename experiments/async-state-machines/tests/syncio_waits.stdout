@@ -1,0 +1,3 @@
+bridge: one hook call per request, at once when already requested, none after unsubscribing
+interruptible: inline sleeps and descriptor waits return False at once on a request made during them
+sleep_io: a request during the sleep ends it at once; a mask defers it

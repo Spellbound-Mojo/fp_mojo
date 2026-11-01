@@ -15,6 +15,6 @@ def main():
     def expand(var value: Int) raises StopIteration {var offset} -> List[Int]:
         if value == offset: raise StopIteration()
         return [value]
-    _ = filter(predicate, iter(range(3)))
-    _ = filter_map(optional, iter(range(3)))
-    _ = flat_map(expand, iter(range(3)))
+    _ = filter(iter(range(3)), predicate)
+    _ = filter_map(iter(range(3)), optional)
+    _ = flat_map(iter(range(3)), expand)

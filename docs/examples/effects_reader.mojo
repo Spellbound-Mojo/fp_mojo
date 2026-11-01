@@ -1,11 +1,11 @@
 """Read pricing configuration with Reader and scope a change with local."""
-from fp.algebra import map
-from fp.effects import Reader, ask, local, run
+from fp.functions import pipeline
+from fp.effects import Reader, asks
 from std.testing import assert_equal
 
 
 @fieldwise_init
-struct TutorialPricing(Copyable):
+struct TutorialPricing(Movable):
     var unit_price: Int
     var shipping: Int
 
@@ -21,21 +21,20 @@ def main() raises:
     var pricing = TutorialPricing(12, 5)
     var calls = 0
 
-    def quote(var settings: TutorialPricing) {mut calls} -> Int:
+    def quote(settings: TutorialPricing) {mut calls} -> Int:
         calls += 1
         return settings.unit_price * 3 + settings.shipping
 
-    var standard = map[PricingReader](quote, ask[PricingReader]())
+    var standard = pipeline(asks[PricingReader](quote))
     assert_equal(calls, 0)
     print("before run: calls =", calls)
-    var total = run[PricingReader](standard^, pricing)
+    var total = standard^.run(pricing)
     assert_equal(total, 41)
     assert_equal(calls, 1)
     print("standard total:", total)
 
-    var quoted = map[PricingReader](quote, ask[PricingReader]())
-    var promotion = local[PricingReader](free_shipping, quoted^)
-    var discounted = run[PricingReader](promotion^, pricing)
+    var promotion = pipeline(asks[PricingReader](quote)).local(free_shipping)
+    var discounted = promotion^.run(pricing)
     assert_equal(discounted, 36)
     assert_equal(pricing.shipping, 5)
     assert_equal(calls, 2)

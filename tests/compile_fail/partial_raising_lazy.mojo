@@ -10,4 +10,4 @@ def checked(limit: Int, x: Int) raises String -> Int:
     return x
 def main():
     var xs: List[Int] = [1, 2]
-    _ = map(partial(checked, 1), iter(xs))
+    _ = map(iter(xs), partial(checked, 1))

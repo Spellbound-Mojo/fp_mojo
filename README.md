@@ -1,15 +1,22 @@
 # FP Mojo
 
-FP Mojo is a functional programming library for Mojo. You can compose functions
-into pipelines, map, filter, and fold over collections, handle failures with
-typed `Result` values, and define algebraic and inductive data types from your
-own structs. Pattern matching checks that every constructor is covered at
-compile time. Functions and closures keep their native ownership conventions
-and error types.
+FP Mojo provides native, high-performance functional programming foundations for
+[Mojo](https://modular.com/mojo). Compose fluent pipelines, iterate lazily over
+collections with zero intermediate allocations, handle failures predictably with
+typed `Result` values, and build expressive algebraic and inductive data types with
+compile-time exhaustive pattern matching. Functions and closures retain their
+native argument conventions (`var`, `ref`, `mut`) and exact error types.
 
-The library is verified with Mojo 1.1.0 on Linux x86-64 and macOS arm64.
+For side effects and concurrency, FP Mojo brings pure synchronous IO, scoped
+resource safety, and structured asynchronous concurrency inspired by
+[Cats](https://github.com/typelevel/cats) and [Cats Effect](https://github.com/typelevel/cats-effect)—reimagined
+around Mojo's ownership model and bare-metal execution speed.
 
-![Mojo 1.1.0](https://img.shields.io/badge/Mojo-1.1.0-orange)
+FP Mojo 1.0.2 targets **Mojo 1.2.0**, with unified pipelines, richer error
+recovery and the async runtime. FP Mojo 1.0.0 and 1.0.1 target Mojo 1.1.0; see
+[installation](docs/content/start/installation.md).
+
+![Mojo 1.2.0](https://img.shields.io/badge/Mojo-1.2.0-orange)
 ![Platforms](https://img.shields.io/badge/platforms-Linux%20x86--64%20%7C%20macOS%20arm64-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
 
@@ -23,7 +30,7 @@ def add(total: Int, value: Int) -> Int: return total + value
 
 def sum_of_squares(var values: List[Int]) -> Int:
     # Lazy: filter and map run one element at a time as fold_left pulls.
-    return fold_left(add, 0, map(square, filter(positive, values^)))
+    return fold_left(map(filter(values^, positive), square), 0, add)
 
 def report(total: Int) -> String: return "sum of squares = " + String(total)
 
@@ -38,37 +45,55 @@ one value at a time through `map` and `filter`.
 
 ## What you get
 
-- **Native values and callbacks.** Use `List`, `Optional`, `Variant`, tuples
-  and your own structs with ordinary Mojo functions and closures. Their types
-  remain known to the compiler, without boxing or runtime interpretation.
-- **Ownership and borrowing.** Operations support move-only values and borrowed
-  views through Mojo's `var`, read and `mut` conventions. References keep their
-  origins, tying borrowed payloads to their owners.
-- **Typed errors.** A callback that `raises ParseError` makes the pipeline, fold
-  or match raise `ParseError`. A stored `Err` remains a value until you
-  explicitly raise it with `raise_on_err`.
-- **Exhaustive pattern matching.** The compiler rejects a match that misses a
-  constructor or includes an unreachable clause. It also checks the types
-  between pipeline stages and names a stage whose input does not fit.
-- **Structural recursion.** Write clauses for the constructors of an inductive
-  data type, and `fp.match` evaluates recursive fields with an explicit stack.
-  A value a million levels deep can be matched without overflowing the native
-  stack. Matching traverses finite, acyclic values; code inside a clause follows
-  the usual rules for Mojo functions.
+- **Native values and zero-cost abstractions.** Use standard Mojo structs,
+  tuples, `List`, `Optional`, and `Variant` with ordinary functions and closures.
+  Borrowing (`ref`), mutation (`mut`), and moves (`var`, `^`) are tracked at
+  compile time without runtime wrapping overhead.
+- **Unified pipelines and function composition.** Compose functions with `pipeline`
+  and `pipe`, adapt signatures with `partial` and `flip`, and build reusable
+  transforms with `flow`. Intermediate types and error channels infer automatically.
+- **Lazy iteration.** Zero-allocation iterator pipelines (`map`, `filter`,
+  `fold_left`, `scan_left`, `fold_until`, `collect_list`) pull values on demand
+  without intermediate buffer allocation.
+- **Typed errors and principled recovery.** A callback that `raises ParseError`
+  propagates typed errors without generic exception degradation. Or preserve errors
+  as values with `Result[T, E]`, sequence with `flat_map`, recover conditionally
+  with `recover_if`, or observe failures with `flat_tap_err`.
+- **Exhaustive compile-time pattern matching.** `fp.match` guarantees at compile time
+  that every constructor of an algebraic data type (`Choice`) or inductive recursive tree
+  (`Node`) is handled, rejecting missing cases before runtime.
+- **Structural recursion without stack overflows.** Traverse inductive data structures
+  millions of levels deep with `Node[F]` and `fp.match` via an explicit evaluation stack.
+- **Category-theoretic foundations.** Functor, Filterable, Applicative, Monad, and
+  Traversable instances for collections and effects, alongside Reader, State, Writer,
+  and monad transformers (`ResultT`, `StateT`).
+- **Pure IO and scoped resources.** Defer computations with `delay`, guarantee
+  safe acquisition and release with `Resource` scopes in reverse order of creation,
+  and run with `run_io()`, preserving error order in structured `Outcome` values.
+- **Structured async concurrency.** Pure-Mojo `IO[T, E]` coordinates lightweight
+  fibers, concurrent execution (`both`), racing (`race`, `race_pair`), timeouts,
+  and dynamic background tasks (`background`, `Supervisor`). Coordinate fibers with
+  `Deferred`, `Ref`, `Queue`, and `Semaphore`.
+- **Deterministic testing with TestControl.** Control virtual time, advance
+  scheduled fibers step by step, explore scheduling interleavings, and replay test
+  runs deterministically without wall-clock sleeps.
 
 ## Choose a package
 
 | Package | What it gives you | Highlights |
 |---|---|---|
-| `fp.functions` | Pipelines and composition | `pipe`, `piped`, `flow`, `compose`, `flip`, `partial`, `identity` |
+| `fp.functions` | Pipelines and composition | `pipeline`, `pipe`, `flow`, `compose`, `flip`, `partial`, `identity` |
+| `fp.combinators` | Ordinary iterator operations shared with fluent pipelines | `map`, `filter`, `fold_left` |
 | `fp.iteration` | Lazy adapters and terminal folds over iterators and owned collections | `map`, `filter`, `filter_map`, `flat_map`, `flatten`, `scan_left`, `fold_left`, `fold_until`, `reduce`, `find`, `any`, `all`, `collect_list` |
 | `fp.control` | Loops as expressions | `while_loop`, `fori_loop`, carry/output `scan` |
 | `fp.data` | Typed results and error bridges | `Result` with `map`, `flat_map`, `map_err`, `or_else`, `fold`; `attempt`, `raise_on_err`, `collect_results`, `ControlFlow` |
 | `fp.adt` | Algebraic and inductive data types from your own structs | `Data`, `Cases`; `Node` (shared, recursive) and `Choice` (stored in place) |
 | `fp.matching` | Pattern matching | `fp.match` (a `Node`, `Choice`, `Result` or `Optional`, a context, or several values), `fp.rewrite`, `fp.when`, `Next` |
-| `fp.algebra` | Functor, Applicative, Monad, Traversable and Monoid | `map`, `pure`, `flat_map`, `map2`, `ap`, `traverse`, `sequence`; Identity, Optional, Result and List instances |
-| `fp.effects` | Reader, State and Writer, and monad transformers | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`; `ask`, `local`, `get`, `put`, `modify`, `tell`, `listen`, `censor`, `run` |
-| `fp.callables` | The calling protocols shared by other components | `Unary`, `Binary`, `Thunk`, `as_unary`, `call_once`, `call_repeated` |
+| `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid | `map`, `filter`, `pure`, `flat_map`, `tail_rec_m`, `map2`, `ap`, `traverse`, `sequence`; Identity, Optional, Result and List instances |
+| `fp.effects` | Reader, State, Writer, monad transformers, synchronous IO and resource scopes | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`, `IO`, `Resource`, `IOResource`, `Outcome`; `delay`, `run_io`, `guarantee`, `fold_outcome` |
+| `fp.effects.async_runtime` | Cooperative async IO and structured concurrency (preview) | `IO`, `Fiber`, `background`, `Supervisor`, `Resource`, `Driver`, `TestControl`, `Runtime`, `Deferred`, `Queue`, `Semaphore`; `both`, `race`, `sleep`, `timeout_to` |
+| `fp.effects.async_runtime.protocols` | Extension contracts for custom async leaves lifted into `IO` and scoped borrowing | `Machine`, `ScopedMachine`, `CleanupMachine`, `Context`, `Step`, `Wait`, `Signal` |
+| `fp.callables` | Calling protocols shared by other components | `Unary`, `Binary`, `Thunk`, `as_unary`, `call_once`, `call_repeated` |
 
 ## See it in action
 
@@ -79,7 +104,7 @@ If a stage raises, the pipeline stops and propagates its error. In this example,
 the caller catches a `ParseError` and can read the text that failed to parse.
 
 ```mojo
-from fp.functions import pipe, piped, flow, partial
+from fp.functions import pipe, pipeline, flow, partial
 
 @fieldwise_init
 struct ParseError(Movable, Writable):
@@ -108,14 +133,14 @@ def main() raises:
     print(triple(7))                                 # 21
 
     # One stage per call, with no limit on the number of stages
-    print(piped(String("21")).then(parse).then(twice).then(label).get())   # value = 42
+    print(pipeline(String("21")).then(parse).then(twice).then(label).get())   # value = 42
 ```
 
 `"21"` parses to 21, doubles to 42 and prints as `value = 42`. With `"abc"`,
 `parse` raises, `twice` and `label` never run, and the `except` block reads the
 `ParseError`'s text. `pipe` takes up to eight plain functions in one call; for
-longer chains, or to use closures without promoting them with `as_unary`, use
-`piped(...).then(...)`, as on the last line.
+longer chains, or to combine functions, closures and values fluently, use
+`pipeline(...).then(...)`, as on the last line.
 
 ### Iterate lazily
 
@@ -137,11 +162,11 @@ def main():
         return value * value
 
     var values: List[Int] = [3, -1, 4, -1, 5]
-    var squares = map(square, filter(positive, values^))   # a lazy iterator
+    var squares = map(filter(values^, positive), square)   # a lazy iterator
     print(calls)                                           # 0: nothing has run yet
-    var running = collect_list(scan_left(add, 0, squares^))
+    var running = collect_list(scan_left(squares^, 0, add))
     print(running[3], calls)                               # 50 3
-    print(find(large, range(100)).value())                 # 11: stops at the first match
+    print(find(range(100), large).value())                 # 11: stops at the first match
 ```
 
 Building `squares` calls nothing, so `calls` is still 0. Collecting the running
@@ -261,7 +286,7 @@ and Writer let you compose computations that read an environment, pass state
 between steps or accumulate a log.
 
 ```mojo
-from fp.algebra import map, traverse, ListFamily, OptionalFamily
+from fp.algebra import map, traverse
 from fp.effects import State, run, get, modify
 
 def positive(value: Int) -> Optional[Int]:
@@ -272,11 +297,11 @@ def twice(value: Int) -> Int: return value * 2
 def main() raises:
     var good: List[Int] = [1, 2, 3]
     var bad: List[Int] = [1, -2, 3]
-    print(Bool(traverse[ListFamily, OptionalFamily](positive, good^)))  # True: every value present
-    print(Bool(traverse[ListFamily, OptionalFamily](positive, bad^)))   # False: stops at -2
+    print(Bool(traverse(good^, positive)))  # True: every value present
+    print(Bool(traverse(bad^, positive)))   # False: stops at -2
 
     # A State computation is an ordinary value until you run it.
-    var doubled = map[State[Int]](twice, get[State[Int]]())
+    var doubled = map[State[Int]](get[State[Int]](), twice)
     var outcome = run[State[Int]](doubled^, 21)
     print(outcome[0], outcome[1])                                       # 42 21
     print(run[State[Int]](modify[State[Int]](twice), 21)[1])            # 42
@@ -291,12 +316,123 @@ a failure: `ResultT[State[S], E]` keeps the state, while
 `StateT[ResultFamily[E], S]` returns only the error. Third-party types can
 provide instances by implementing the same traits.
 
+### Defer IO and keep cleanup in scope
+
+`delay` stores a callback without running it. `pipeline` selects the IO family
+and composes the work; `.run_io()` consumes it and returns an `Outcome`.
+`guarantee` runs its finalizer after an entered body, including cancellation.
+These examples use the Mojo 1.2.0 `nightly` checkout; see
+[getting started](#getting-started).
+
+```mojo
+from fp.functions import pipeline
+from fp.effects import delay, canceled
+
+def read_number() -> Int:
+    print("read")
+    return 21
+
+def twice(value: Int) -> Int:
+    return value * 2
+
+def finish():
+    print("finalize")
+
+def main():
+    var program = pipeline(delay[Error](read_number)).map(twice).guarantee(delay[Error](finish))
+    print("program ready")
+    var outcome = program^.run_io()
+    if outcome:
+        var result = outcome.take()
+        try:
+            print("value:", result^.raise_on_err())
+        except failure:
+            print("errors:", len(failure.errors))
+    var cancellation = pipeline(canceled[Error]()).guarantee(delay[Error](finish)).run_io()
+    print("canceled:", not cancellation)
+```
+
+This prints `program ready`, `read`, `finalize`, `value: 42`, `finalize`, then
+`canceled: True`. Construction performs no work, and both entered programs
+finalize. The [runnable example](docs/examples/io_execution.mojo) is also part
+of the documentation checks.
+
+For acquisition and release, use native `resource` scopes or effectful
+`resource_io` scopes. Dependent resources release in reverse acquisition order;
+cleanup failures are retained alongside the original failure and cancellation
+state. See [IO and finalization](docs/content/reference/effects.md#io-cancellation-and-finalization)
+and [effectful resources](docs/content/reference/effects.md#effectful-resources).
+
+### Sequence asynchronous work
+
+An async `IO` uses the same `pipeline(...).map(...).flat_map(...)` style.
+`run` drives a self-contained program to completion, and `fold_outcome` handles
+success, the complete failure, or cancellation. An `IO` runs once; build a
+fresh one to repeat work.
+
+```mojo
+from fp.effects import EffectFailure, fold_outcome
+from fp.effects.async_runtime import IO, run
+from fp.functions import pipeline
+
+
+def next_value(value: Int) -> IO[Int, Int]:
+    return IO[Int, Int].pure(value + 2)
+
+
+def initial() -> Int:
+    return 40
+
+
+def success(value: Int) -> Int:
+    return value
+
+
+def failure(var errors: EffectFailure[Int]) -> Int:
+    print("failed:", errors.errors.first(), "canceled:", errors.canceled)
+    return -100
+
+
+def canceled() -> Int:
+    return -200
+
+
+def main():
+    var program = pipeline(IO[Int, Int].delay(initial)).flat_map(next_value).get()
+    print(fold_outcome(run(program^), success, failure, canceled))
+```
+
+The [runnable example](docs/examples/async_sequencing.mojo) prints `42`.
+`flat_map` sequences asynchronous steps in constant native stack without call-stack
+growth, supporting deep recursion through `IO.defer` and loops with `tail_rec_m`.
+Concurrent children combine via `.both(...)`, race with `.race(...)`, and clean up
+dependently under cancellation and timeouts.
+
+Key async capabilities on `nightly`:
+
+- **Structured concurrency**: Child fibers started with `.both()` or `Supervisor`
+  remain owned; when a scope closes, uncompleted child fibers are automatically
+  cancelled and drained before the parent finishes.
+- **Dynamic fibers & background work**: Start detached work with `background`
+  or `Supervisor`, obtaining typed fiber handles for joining or cancellation.
+- **Blocking offload**: Safely run blocking system calls without starving
+  worker threads using `IO.blocking(...)` or `IO.interruptible(...)` with a `BlockingPool`.
+- **Coordination primitives**: Synchronize fibers using `Deferred`, `Ref`,
+  `Queue`, and `Semaphore`.
+- **Deterministic virtual time**: Test asynchronous interactions with `TestControl`—advancing
+  time instantly without wall-clock sleep and deterministically exploring scheduling orders.
+
+The [async guide](docs/content/guides/async-runtime.md) includes runnable
+examples for fibers, coordination, timeouts, blocking offload, and Cats Effect
+concept mapping. The multi-threaded work-stealing engine targets 64-bit Linux;
+deterministic `TestControl` and core effects run across macOS and Linux.
+
 ## Getting started
 
 FP Mojo is published as `fp_mojo` in the
 [Modular community channel](https://github.com/modular/modular-community). Add
-the channel to your [Pixi](https://pixi.sh) project and install the package. It
-is verified with Mojo 1.1.0 on Linux x86-64 and macOS arm64:
+the channel to your [Pixi](https://pixi.sh) project and install the package.
+FP Mojo 1.0.2 requires Mojo 1.2.0:
 
 ```toml
 # pixi.toml
@@ -305,7 +441,7 @@ channels = ["https://conda.modular.com/max", "https://repo.prefix.dev/modular-co
 ```
 
 ```sh
-pixi add fp_mojo "mojo==1.1.0"
+pixi add fp_mojo "mojo==1.2.0"
 ```
 
 Save [quickstart.mojo](docs/examples/quickstart.mojo) beside your project's
@@ -318,13 +454,20 @@ pixi run mojo run quickstart.mojo          # prints 42; no -I flag needed
 For a new project, the [installation guide](docs/content/start/installation.md)
 walks through creating the environment, saving the program and running it.
 
-To work from a checkout instead:
+To work from source, clone the repository. The `nightly` branch is the
+development branch and pins Mojo 1.2.0:
 
 ```sh
-git clone https://github.com/Spellbound-Mojo/fp_mojo.git
+git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
 cd fp_mojo
 pixi install --locked
 pixi run mojo run -I src docs/examples/quickstart.mojo   # prints 42
+```
+
+On Linux x86-64, run the async example from that checkout:
+
+```sh
+pixi run mojo run -I src docs/examples/async_sequencing.mojo   # prints 42
 ```
 
 From the checkout, point the compiler at the sources, or at a precompiled
@@ -359,37 +502,35 @@ pixi run docs-serve
 | [Tutorial](docs/content/tutorial/pipelines.md) | Nine runnable lessons covering pipelines, data types, a configuration processor, algebra and effects |
 | [Algebra](docs/content/tutorial/algebra.md) | When to use mapping, applicative combination, monadic bind and traversal |
 | [Effects](docs/content/tutorial/effects.md) | Reader, State and Writer before combining them with monad transformers |
+| [IO and resources](docs/content/reference/effects.md#io-cancellation-and-finalization) | Deferred execution, outcomes, cancellation, finalizers and effectful resource scopes |
+| [Async runtime](docs/content/guides/async-runtime.md) | Typed sequencing, iterative loops, structured children, timers, callbacks and host integration |
+| [Async API reference](docs/content/reference/effects.async_runtime.md) | Application operations and their ownership and cancellation contracts |
 | [Examples](docs/content/examples/index.md) | Every example program, with its output |
 | [Ownership and errors](docs/content/start/ownership.md) | How borrowing, moving and failures work across the library |
 | [API reference](docs/content/reference/index.md) | Every public name, with its contract |
 | [Architecture](docs/content/architecture/overview.md) | How it is built, and why |
 | [Support and limitations](docs/content/guides/status.md) | What is covered today, and what is not |
 
-## Status
+## Status & Compatibility
 
-FP Mojo 1.0.0 targets Mojo 1.1. The allocation-free core also cross-compiles for
-NVIDIA and AMD GPUs; execution on GPU hardware has not yet been verified. See
-[support and limitations](docs/content/guides/status.md) for supported uses and
-[native boundaries](docs/content/architecture/native-boundaries.md) for the
-Mojo 1.1 constraints that shape the API.
+- **Compiler & Toolchain**: FP Mojo 1.0.2 and the `nightly` branch target **Mojo 1.2.0**. FP Mojo 1.0.0 and 1.0.1 target Mojo 1.1.0.
+- **Platform Support**:
+  - **Linux x86-64**: Complete library support, including the multi-threaded work-stealing async runtime and POSIX driver.
+  - **macOS arm64**: Core library support (pipelines, iteration, ADTs, pattern matching, algebra, synchronous effects, and deterministic `TestControl` virtual-time async testing).
+- **Architecture & Boundaries**: See [support and limitations](docs/content/guides/status.md) and [native Mojo boundaries](docs/content/architecture/native-boundaries.md) for compiler constraints shaping the API.
 
-## Development
+## Development & Verification
 
-Tests, examples and benchmarks run as one suite of four executables, built in
-parallel and run together in about two minutes on four cores. Compile-failure
-programs are checked separately:
+To build and verify the library locally through Pixi:
 
 ```sh
 pixi run build --format precompiled --output .cache/package-run
 pixi run suite --package .cache/package-run          # tests, examples and benchmarks
-pixi run compile-fail --package .cache/package-run   # programs that must not compile
-pixi run -e docs docs-check
+pixi run compile-fail --package .cache/package-run   # compile-rejection verification
+pixi run -e docs docs-check                         # documentation integrity checks
 ```
 
-Every suite run also prints benchmarks against hand-written loops, as
-diagnostics. See the [development guide](docs/content/contributing/development.md)
-for the full set of gates, the compile-time budget and the project's working
-rules.
+For contribution rules, benchmark harnesses, and coding standards, see the [development guide](docs/content/contributing/development.md).
 
 ## License
 

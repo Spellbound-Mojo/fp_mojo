@@ -14,15 +14,15 @@ def in_stock(quantity: Int) -> Optional[Int]:
 
 def main() raises:
     var quantity = pure[OptionalFamily](3)
-    var priced = map[OptionalFamily](partial(subtotal, 12), quantity)
+    var priced = map[OptionalFamily](quantity, partial(subtotal, 12))
     assert_equal(priced.value(), 36)
     print("mapped price:", priced.value())
 
     # Mapping a fallible computation keeps its Optional inside the outer one.
-    var nested = map[OptionalFamily](in_stock, Optional(8))
+    var nested = map[OptionalFamily](Optional(8), in_stock)
     assert_equal(Bool(nested), True)
     assert_equal(Bool(nested.value()), False)
-    var checked = flat_map[OptionalFamily](in_stock, Optional(8))
+    var checked = flat_map[OptionalFamily](Optional(8), in_stock)
     assert_equal(Bool(checked), False)
     print("map: outer present =", Bool(nested), "; inner present =", Bool(nested.value()))
     print("flat_map: present =", Bool(checked))

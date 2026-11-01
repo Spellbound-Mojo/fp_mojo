@@ -7,7 +7,11 @@ Changing one requires an explicit design decision and updated documentation.
 
 1. **Ordinary Mojo only.** The library is used through normal imports,
    functions, closures, structs, traits and parameters. There is no parser,
-   transpiler, source rewriting, mandatory code generation, FFI or Python runtime.
+   transpiler, source rewriting, mandatory code generation or Python runtime.
+   The optional 64-bit Linux fiber backend uses public Mojo FFI for POSIX
+   thread creation and joining; core operations require no foreign runtime.
+   Its [thread ownership contract](algebra.md#fibers-and-shared-coordination)
+   is an explicit, narrowly scoped exception.
 2. **Add the smallest missing piece.** When a native capability covers part of
    a contract, add only the missing adapter or specialization, reuse native
    control flow, ownership and storage, and state the exact gap it fills.
@@ -62,13 +66,15 @@ and is [measured cold](../contributing/benchmarks.md#measuring-compile-time).
 The library covers function composition and partial application, sequential
 folds and lazy iteration, typed results, algebraic and inductive data types with
 exhaustive pattern matching, functional control flow, and algebraic interfaces
-with monad transformers. Recursion is over finite acyclic data; general
+with monad transformers, consumed resource scopes, cooperative IO execution,
+explicitly started fibers, and shared coordination.
+Recursion is over finite acyclic data; general
 well-founded recursion is outside this contract. The scope also includes
 documented laws and device-compatible specializations of the non-allocating,
 non-raising core.
 
 Out of scope for now: automatic currying, persistent collections, optics, memoization,
-asynchronous effects, implicit parallelism, a distributed runtime, a GPU kernel
+implicit parallelism, a distributed runtime, a GPU kernel
 framework, open-world runtime class matching, regular-expression matching,
 iterator backtracking, dependent pattern matching, proof checking and automatic
 termination proofs. Conveniences such as `partial_right`, `curry`, `juxt` and
@@ -87,7 +93,7 @@ Some words have deliberately narrow meanings:
 
 ## Compiler pin
 
-The library is pinned to one exact compiler, Mojo 1.1.0, through
+The library is pinned to one exact compiler, Mojo 1.2.0, through
 Pixi. The supported range grows only after the full verification gates pass on
 a new compiler. Checking a newer compiler for new features or breakage never
 silently changes the compiler used to qualify a release. The upgrade procedure is

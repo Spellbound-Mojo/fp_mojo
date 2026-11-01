@@ -13,7 +13,7 @@ def main() raises:
     var initial=map2[S](Add(),get[S](),lift[S](writer[W,Int](Tuple(String("a"),2))))
     var computation=map2[R](Add(),ask[R](),lift[R](initial^))
     var stateful=run[R](computation^,environment)
-    var updated=flat_map[S](as_unary(state_next),stateful^)
+    var updated=flat_map[S](stateful^,as_unary(state_next))
     var output=run_writer[W](run[S](updated^,10))
     assert_equal(output[0],"ab")
     assert_equal(output[1][0],49)

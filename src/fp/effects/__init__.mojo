@@ -2,9 +2,9 @@
 
 | Family | Value | Additional operations |
 |---|---|---|
-| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `local` |
-| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `lift`, `get`, `put`, `modify` |
-| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run_writer`, `lift`, `tell`, `listen`, `censor` |
+| `ReaderT[M, R]` | A `ReaderAction`: borrows `R` when run, returns `M`'s carrier | `action`, `run`, `lift`, `ask`, `asks`, `local` |
+| `StateT[M, S]` | A `StateAction`: consumes `S` when run, returns `M`'s carrier of `(A, S)` | `action`, `run`, `run_value`, `run_state`, `lift`, `get`, `inspect`, `put`, `modify` |
+| `WriterT[M, W]` | A `WriterValue` wrapping `M`'s carrier of `(W.Value, A)` | `writer`, `run`, `run_value`, `run_log`, `lift`, `tell`, `listen`, `censor` |
 | `OptionalT[M]` | `M`'s carrier of `Optional[A]` | `lift` |
 | `ResultT[M, E]` | `M`'s carrier of `Result[A, E]` | `lift` |
 
@@ -13,6 +13,19 @@
 and `ResultFamily[E]` themselves. Each family is a `Monad` of `fp.algebra`, so
 `map`, `pure`, `flat_map`, `map2_lazy` and `traverse` apply to its values.
 Reader and State values are deferred computations: nothing runs until `run`.
+
+Ask/Local and Stateful are compile-time capability dictionaries. Reader and
+State select their own environment or state; LiftAsk, LiftLocal and
+LiftStateful explicitly select a capability from the immediate base. Generic
+programs use the selected dictionary's Family for algebra operations.
+Tell/Listen/Censor select a log; LiftTell, LiftListen and LiftCensor transport
+those operations through one layer. Listen pairs the payload with an observed
+log, while censor transforms only the selected computation's output log.
+LiftDefer and LiftRaise lift Defer and Raise through any layer; LiftCancel and
+LiftSpawn forward Cancel and Spawn through OptionalT and ResultT, whose
+programs are the base's programs, as do LiftConcurrent, LiftTemporal and
+LiftEvalOn;
+LiftTiming lifts Timing through any layer.
 
 Transformer order matters. `StateT` over `Result` returns no state on failure;
 `ResultT` over `State` can return a failed `Result` together with the updated
@@ -23,10 +36,10 @@ run with that StateT, whose result is `Result[Tuple[A, S], E]`.
 
 | Stack | Evaluation order | Final shape |
 |---|---|---|
-| `WriterT[Reader[R], W]` | `run_writer`, then Reader `run` | `(log, value)` |
-| `ReaderT[Writer[W], R]` | Reader `run`, then `run_writer` | `(log, value)` |
-| `WriterT[State[S], W]` | `run_writer`, then State `run` | `((log, value), state)` |
-| `StateT[Writer[W], S]` | State `run`, then `run_writer` | `(log, (value, state))` |
+| `WriterT[Reader[R], W]` | Writer `run`, then Reader `run` | `(log, value)` |
+| `ReaderT[Writer[W], R]` | Reader `run`, then Writer `run` | `(log, value)` |
+| `WriterT[State[S], W]` | Writer `run`, then State `run` | `((log, value), state)` |
+| `StateT[Writer[W], S]` | State `run`, then Writer `run` | `(log, (value, state))` |
 
 `OptionalT[ResultT[M, E]]` carries `M[Result[Optional[A], E]]`, and
 `ResultT[OptionalT[M], E]` carries `M[Optional[Result[A, E]]]`. Either an
@@ -39,10 +52,33 @@ accumulation rule, so the count of pulls and callback calls is the same over
 eager, deferred and third-party bases. A deferred computation can be copied or
 replayed only when its stored inputs and callbacks support it; copying an owner
 does not make a consuming callback reusable.
+
+Resource owns native scopes; IOResource composes effectful acquisition, use
+and outcome-aware release through the same lifecycle. IO uses the existing
+Reader, Result and Optional families for typed outcomes and cooperative
+cancellation. Ref, Deferred, Semaphore and Queue construct IO recipes over
+shared state. The optional Fiber backend requires explicit unsafe_start and
+its documented thread-safety obligations.
 """
-from .protocols import ReaderAction, StateAction
-from .reader import ReaderT, Reader, ask, local
-from .state import StateT, State, get, put, modify
-from .writer import WriterT, Writer, WriterValue, writer, run_writer, tell, listen, censor
+from .protocols import Project, Ask, Local, Stateful, Tell, Listen, Censor, Defer, Raise, Cancel, Spawn, Concurrent, Timing, Temporal, Blocking, EvalOn, ReaderAction, StateAction, ReaderFamily, StateFamily, WriterFamily
+from .reader import ReaderT, Reader
+from .capabilities import LiftAsk, LiftLocal, LiftStateful, LiftTell, LiftListen, LiftCensor, LiftDefer, LiftRaise, LiftCancel, LiftSpawn, LiftConcurrent, LiftTiming, LiftTemporal, LiftBlocking, LiftEvalOn, TellContract, ask, local, get, put, modify, tell, listen, censor, defer, raise_error, start, join, cancel, never, cede, make_ref, make_deferred, get_ref, set_ref, update_ref, modify_ref, complete_deferred, get_deferred, monotonic, real_time, timed, sleep, timeout_to, timeout_after, timeout, delay_by, and_wait, blocking, interruptible, eval_on, start_on, execution_context, background, background_on
+from ._interruption import Interruption
+from .state import StateT, State
+from .writer import WriterT, Writer, WriterValue, writer, run_writer
 from .layers import OptionalT, ResultT
-from .operations import run, action, lift
+from .operations import run, run_value, run_state, run_log, RunValueContract, RunStateContract, WriterValueContract, WriterLogContract, action, lift
+from .projections import LiftProject, asks, inspect
+from .outcomes import EffectFailure, Outcome, ExitCase, FoldOutcomeContract, fold_outcome
+from .resources import Resource, ResourceContract, resource, pure_resource
+from .io import IO, IOContract, IOContext, CancellationToken, delay, run_io, capture_io, guarantee, uncancelable, canceled, sleep_io, use_resource
+from ._io_core import restore
+from .fibers import Fiber, unsafe_start
+from .coordination import Ref, Deferred, Semaphore, Permit, Queue
+from fp._internal.thread_safety import ThreadTransferable, assert_thread_transferable
+
+from .scoped import ScopedIO, scoped_io
+from .finalization import GuaranteeCaseContract, guarantee_case, on_cancel, Poll, uncancelable_with, SyncIO
+from ._io_core import DelayContract
+
+from .effectful_resources import IOResource, IOResourceContract, IOResourceCaseContract, IOResourceFullContract, resource_io, resource_io_case, resource_io_full, resource_io_case_full, eval_resource, lift_resource

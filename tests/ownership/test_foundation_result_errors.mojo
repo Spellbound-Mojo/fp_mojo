@@ -52,9 +52,9 @@ def transform(library: Bool, operation: Int, ok: Bool, mode: Int,
         if library:
             var value = Result[FoundationResultErrorsToken, FoundationResultErrorsToken](native^.unwrap[Ok[FoundationResultErrorsToken]]()) if ok else Result[FoundationResultErrorsToken, FoundationResultErrorsToken](native^.unwrap[Err[FoundationResultErrorsToken]]())
             if operation == 0:
-                output = map[ResultFamily[type_of(value).Error]](mapper, value^)
+                output = map[ResultFamily[type_of(value).Error]](value^, mapper)
             elif operation == 1:
-                output = flat_map[ResultFamily[type_of(value).Error]](bind, value^)
+                output = flat_map[ResultFamily[type_of(value).Error]](value^, bind)
             elif operation == 2:
                 output = value^.map_err(mapper)
             else:

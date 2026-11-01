@@ -1,0 +1,123 @@
+"""N-ary combination derived once from Applicative map and map2_lazy."""
+from std.builtin.variadics import TypeList
+from std.builtin.rebind import rebind_var, rebind
+from fp.algebra.protocols import Applicative, _map_as, _map2_lazy_as
+from fp.algebra._contracts import MapContract, Map2Contract
+from fp.callables.protocols import Unary, UnaryContract, Binary
+from fp.callables._transforms import _ValueThunk
+from fp._internal.errors import _CommonError, _ErrorCompatible
+from fp.algebra._admission import _CarrierCompatible
+
+from fp.callables.products import _OptionalCell
+@fieldwise_init
+struct _Singleton[A: Movable & Deinitable](Unary, Copyable, Defaultable):
+    comptime Arg = Self.A
+    comptime Out = Tuple[Self.A]
+    def call(self, var arg: Self.Arg) -> Self.Out: return (arg^,)
+@fieldwise_init
+struct _AppendTuple[B: Movable & Deinitable, *As: Movable & Deinitable](Binary, Copyable, Defaultable):
+    comptime First = Tuple[*Self.As]
+    comptime Second = Self.B
+    comptime Out = Tuple[*TypeList._concat[Self.As.values, TypeList.of[Trait=Movable & Deinitable, Self.B]().values]()]
+    def call(self, var first: Self.First, var second: Self.Second) -> Self.Out:
+        var joined = first^.concat((second^,))
+        comptime assert type_of(joined) == Self.Out
+        return rebind_var[Self.Out](joined^)
+struct _ProductRun[I: Applicative, V: Movable & Deinitable, *Ws: Movable & Deinitable]:
+    """Consume operands once and left-associate the family combination.
+
+    Optional slots own unvisited operands if construction raises. Each right
+    value enters map2_lazy through the canonical already-computed thunk. The
+    exact output and error are supplied by admission, then checked here; this
+    keeps variadic execution independent of native return-type inference.
+    """
+    comptime Element[index: Int]: Movable & Deinitable = Self.I.Element[Self.V] if index == 0 else Self.I.Element[Self.Ws[index-1]]
+    comptime Of[From: Movable & Deinitable]: Movable & Deinitable = Self.I.Element[From]
+    comptime Elements = TypeList._concat[TypeList.of[Trait=Movable & Deinitable, Self.I.Element[Self.V]]().values, Self.Ws.map[Self.Of[_]]().values]()
+    comptime Prefix[index: Int] = Self.Elements.slice[0,index]()
+    comptime Step[index: Int] = _AppendTuple[Self.Element[index], *Self.Prefix[index]]
+    comptime Native[W: Movable & Deinitable]: Bool = W == Self.I.Pure[Self.I.Element[W]]
+    comptime NativeInputs = Self.Native[Self.V] and Self.Ws.all[Self.Native[_]]()
+    comptime Admitted[W: Movable & Deinitable] = _CarrierCompatible[Self.I, W]
+    comptime AdmittedInputs = Self.Admitted[Self.V] and Self.Ws.all[Self.Admitted[_]]()
+    comptime Payload = Tuple[*Self.Elements]
+    comptime Slots = Self.Ws.map[_OptionalCell]()
+    @staticmethod
+    def step[index: Int, Out: Movable & Deinitable, X: Movable & Deinitable, Current: Movable & Deinitable](var value: Current, mut cells: Tuple[*Self.Slots]) raises X -> Out:
+        comptime if index == Self.Ws.length:
+            comptime assert Current == Out
+            return rebind_var[Out](value^)
+        else:
+            comptime assert Self.Slots[index] == Optional[Self.Ws[index]]
+            var next_value = rebind[Optional[Self.Ws[index]]](cells[index]).unsafe_take()
+            comptime assert _ErrorCompatible[X, Self.I.CombineError[Current, Self.Step[index+1], _ValueThunk[Self.Ws[index]]]]
+            var joined = _map2_lazy_as[X, Self.I](Self.Step[index+1](), value^, _ValueThunk(next_value^))
+            return Self.step[index+1,Out,X](joined^,cells)
+    @staticmethod
+    def run[Out: Movable & Deinitable, X: Movable & Deinitable](var first: Self.V, var others: Tuple[*Self.Ws]) raises X -> Out:
+        comptime assert Self.Slots.all_conforms_to[Defaultable]()
+        var cells = Tuple[*Self.Slots]()
+        def store[index: Int](var value: Self.Ws[index]) {ref cells}:
+            comptime assert Self.Slots[index] == Optional[Self.Ws[index]]
+            rebind[Optional[Self.Ws[index]]](cells[index]) = Optional(value^)
+        others^.consume_elements(store)
+        comptime assert _ErrorCompatible[X, Self.I.MapError[Self.V, _Singleton[Self.I.Element[Self.V]]]]
+        var start = _map_as[X, Self.I](_Singleton[Self.I.Element[Self.V]](), first^)
+        return Self.step[0,Out,X](start^,cells)
+
+
+def _map_n_as[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, //,
+              I: Applicative, Product: Movable & Deinitable, Out: Movable & Deinitable,
+              X: Movable & Deinitable, *Ws: Movable & Deinitable](
+    var function: F, var first: V, var others: Tuple[*Ws]
+) raises X -> Out:
+    comptime assert F.Arg == _ProductRun[I,V,*Ws].Payload, "map_n: exact tuple payload required"
+    var combined = _ProductRun[I,V,*Ws].run[Product,X](first^,others^)
+    comptime assert I.Mapped[Product,F] == Out
+    comptime assert _ErrorCompatible[X, I.MapError[Product, F]]
+    return rebind_var[Out](_map_as[X, I](function^, combined^))
+
+
+# --- n-ary type inference (generated) ---
+# Generated by scripts/generate_nary_syntax.py; only native type descriptions live here.
+
+struct _ProductTypes[I: Applicative, V: Movable & Deinitable, *Ws: Movable & Deinitable]:
+    # Finite native boundaries describe types through canonical contracts;
+    # _ProductRun owns all sequencing, cleanup and errors.
+    comptime Run = _ProductRun[Self.I, Self.V, *Self.Ws]
+    comptime C0 = MapContract[Self.I, Self.V, _Singleton[Self.I.Element[Self.V]]]
+    comptime S0 = Self.C0.Out
+    comptime E0 = Self.C0.Error
+    comptime C1 = Map2Contract[Self.I, Self.S0, Self.Ws[0], _AppendTuple[Self.I.Element[Self.Ws[0]], Self.I.Element[Self.V]]]
+    comptime S1: Movable & Deinitable = Self.C1.Out if Self.Ws.length >= 1 else Self.S0
+    comptime E1: Movable & Deinitable = _CommonError[Self.E0, Self.C1.Error] if Self.Ws.length >= 1 else Self.E0
+    comptime C2 = Map2Contract[Self.I, Self.S1, Self.Ws[1], _AppendTuple[Self.I.Element[Self.Ws[1]], Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]]]]
+    comptime S2: Movable & Deinitable = Self.C2.Out if Self.Ws.length >= 2 else Self.S1
+    comptime E2: Movable & Deinitable = _CommonError[Self.E1, Self.C2.Error] if Self.Ws.length >= 2 else Self.E1
+    comptime C3 = Map2Contract[Self.I, Self.S2, Self.Ws[2], _AppendTuple[Self.I.Element[Self.Ws[2]], Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]], Self.I.Element[Self.Ws[1]]]]
+    comptime S3: Movable & Deinitable = Self.C3.Out if Self.Ws.length >= 3 else Self.S2
+    comptime E3: Movable & Deinitable = _CommonError[Self.E2, Self.C3.Error] if Self.Ws.length >= 3 else Self.E2
+    comptime C4 = Map2Contract[Self.I, Self.S3, Self.Ws[3], _AppendTuple[Self.I.Element[Self.Ws[3]], Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]], Self.I.Element[Self.Ws[1]], Self.I.Element[Self.Ws[2]]]]
+    comptime S4: Movable & Deinitable = Self.C4.Out if Self.Ws.length >= 4 else Self.S3
+    comptime E4: Movable & Deinitable = _CommonError[Self.E3, Self.C4.Error] if Self.Ws.length >= 4 else Self.E3
+    comptime C5 = Map2Contract[Self.I, Self.S4, Self.Ws[4], _AppendTuple[Self.I.Element[Self.Ws[4]], Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]], Self.I.Element[Self.Ws[1]], Self.I.Element[Self.Ws[2]], Self.I.Element[Self.Ws[3]]]]
+    comptime S5: Movable & Deinitable = Self.C5.Out if Self.Ws.length >= 5 else Self.S4
+    comptime E5: Movable & Deinitable = _CommonError[Self.E4, Self.C5.Error] if Self.Ws.length >= 5 else Self.E4
+    comptime C6 = Map2Contract[Self.I, Self.S5, Self.Ws[5], _AppendTuple[Self.I.Element[Self.Ws[5]], Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]], Self.I.Element[Self.Ws[1]], Self.I.Element[Self.Ws[2]], Self.I.Element[Self.Ws[3]], Self.I.Element[Self.Ws[4]]]]
+    comptime S6: Movable & Deinitable = Self.C6.Out if Self.Ws.length >= 6 else Self.S5
+    comptime E6: Movable & Deinitable = _CommonError[Self.E5, Self.C6.Error] if Self.Ws.length >= 6 else Self.E5
+    comptime C7 = Map2Contract[Self.I, Self.S6, Self.Ws[6], _AppendTuple[Self.I.Element[Self.Ws[6]], Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]], Self.I.Element[Self.Ws[1]], Self.I.Element[Self.Ws[2]], Self.I.Element[Self.Ws[3]], Self.I.Element[Self.Ws[4]], Self.I.Element[Self.Ws[5]]]]
+    comptime S7: Movable & Deinitable = Self.C7.Out if Self.Ws.length >= 7 else Self.S6
+    comptime E7: Movable & Deinitable = _CommonError[Self.E6, Self.C7.Error] if Self.Ws.length >= 7 else Self.E6
+    comptime Closed: Bool = Self.Run.NativeInputs and Self.S0 == Self.I.Pure[Tuple[Self.I.Element[Self.V]]] and (Self.S1 == Self.I.Pure[Tuple[Self.I.Element[Self.V], Self.I.Element[Self.Ws[0]]]] if Self.Ws.length >= 1 else True)
+    comptime Out: Movable & Deinitable = Self.I.Pure[Self.Run.Payload] if Self.Ws.length >= 8 and Self.Closed else Self.S7
+    comptime Error = Self.E7
+    comptime Admitted: Bool = Self.Ws.length < 8 or Self.Closed
+
+struct _MapNTypes[I: Applicative, V: Movable & Deinitable, F: UnaryContract & Movable & Deinitable, *Ws: Movable & Deinitable]:
+    comptime Product = _ProductTypes[Self.I, Self.V, *Self.Ws]
+    comptime Mapping = MapContract[Self.I, Self.Product.Out, Self.F]
+    comptime Out = Self.Mapping.Out
+    comptime Error = _CommonError[Self.Product.Error, Self.Mapping.Error]
+
+# --- end n-ary type inference ---

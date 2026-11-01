@@ -7,4 +7,115 @@ Most calls to other packages accept native functions or closures directly.
 [Ownership and errors](../start/ownership.md#keep-callable-state) explains how
 each receiver mode treats a callable's state.
 
+`as_unary` also accepts a stored thin function pointer without extra type
+arguments. For example, both a declaration `increment` and a variable declared
+as `var step: def(var Int) thin -> Int = increment` can be adapted with
+`as_unary(step)`. The adapter owns a copy of that pointer; reassigning `step`
+does not change the adapter. Its argument, return and error types remain exact,
+including `raises Never` and no-value returns. Native pointers remain implicitly
+copyable; captured closures retain their own copyability and borrowed origins.
+Creating an adapter never invokes the callback.
+
+Use `as_binary(function)` for a plain binary function or a stored thin pointer.
+It creates a `NativeBinary` that consumes two arguments and keeps the native
+result and error types. A named adapter works in `zip_with`, `map_with_index`,
+`scan_map` and `scan_left`, so the same callback can be reused across operations.
+Call it as `combine(left, right)` or `combine.call(left, right)`.
+As with `NativeUnary`, `.function()` borrows the stored callable and
+`adapter^.into_function()` moves it out. This factory accepts thin functions;
+it does not infer capturing closures. A callable struct gives explicit control
+over captures and receiver modes.
+
+Capture a binary closure with `BinarySignature[A, B, R, E].capture(closure^)`.
+Select the two input types and result type; `E` defaults to `Never` for pure
+callbacks and explicit `raises Never`. A raising callback supplies its error
+type as the fourth parameter. The result is the same reusable `NativeBinary`,
+with its closure type, copyability and capture origins retained automatically.
+The example uses `BinarySignature[Int, Int, String]` for a formatter that owns
+its prefix, without naming the closure's generated type or a raising flag.
+A closure containing only borrowed references can be passed by name.
+
+Use `BorrowSignature[A, R, E].capture(callback)` to store a native predicate,
+observer or projection that reads its payload. For example,
+`BorrowSignature[Int, Bool].capture(below)` produces a `NativeBorrow` reusable
+by name in `iterated(values).filter(selected)` and `pipeline[Int](values).filter(selected)`.
+The callback and its captures belong to the adapter; each invocation only
+borrows its payload. Move an owned capture into it with `capture(callback^)`.
+This avoids defining a callable struct simply to reuse a captured predicate.
+
+`E` defaults to `Never`; supply the exact error type for a raising callback.
+Plain functions, capturing closures and stored thin pointers (including type
+aliases) are accepted. Named pointer capture copies the pointer, so reassigning
+its source does not change the adapter. Use `.invoke(value)` for a direct call,
+`.function()` to borrow the native callback or `adapter^.into_function()` to
+recover it. Callbacks that require mutable access to their captures need an
+explicit mutable callable or an operation that owns that mutable callback.
+
+For a predicate or observer with mutable state, implement
+`BorrowMutableCallable`. It fixes `Payload`, `Result`, and optional `Failure`
+(`Never` by default), and defines `invoke_mut(mut self, ref payload)`.
+The example's `EveryOther` keeps its counter between filter calls while
+borrowing each input. `RunningKey` uses the same contract for a projection,
+passed directly to `pair_with`. These need no native closure capture annotation.
+
+`invoke_borrowed_repeated[E](value, callback)` borrows a named callback
+exclusively and preserves its updated state in the caller. It prefers
+`invoke_mut` when available, otherwise `BorrowCallable.invoke`; neither the
+callback nor payload is consumed or copied. `RepeatableBorrow[C]` records
+that choice for generic code and excludes consuming-only callbacks. The
+result retains its native type and origins. Errors must match `E`, with
+widening permitted from `Never`, as with `invoke_borrowed`.
+
+Use `shared_ref(callback)` to lend a shared library callable explicitly. For
+example, `Capture().run(shared_ref(factory))` leaves the factory available for
+another call, even when it owns noncopyable captures. A stored reference can be
+passed by name repeatedly. It supports the original's shared thunk, unary,
+binary and borrowed-argument shapes, including distinct native error types.
+It always selects the shared receiver, even if the original also has mutable
+or consuming receivers. Adapt native functions before taking a reference.
+
+`SharedRef[F, o]` is implicitly copyable: copying it copies only the reference.
+It retains the original origin through iterators and deferred computations;
+the owner must remain alive. Consuming a reference leaves the original intact.
+Use this public type when describing a borrowed callback in a generic operation
+contract; see [generic wrappers](../guides/generic-wrappers.md#forward-a-shared-callback).
+Ordinary named callbacks in APIs that already borrow them need no extra wrapper.
+
+Use `mut_ref(callback)` when an operation owns its callback but you want to
+inspect or reuse the original state afterward. For example,
+`iterated(range(5)).filter(mut_ref(predicate)).to_list()` updates a named
+`EveryOther` in place; its `calls` field remains available afterward. The
+executable example below also reuses it in a second operation.
+
+The same spelling works for unary transformations, binary folds, thunks,
+predicates, and observers. No callback type or origin annotation is needed.
+A reference keeps every repeatable shape of a callback that supports several.
+Calls prefer its mutable receiver and fall back to its shared receiver.
+Consuming the reference never selects the original's consuming receiver.
+
+`MutableRef` is movable and noncopyable. It retains the original callback's
+mutable origin, including while a lazy iterator or deferred computation stores
+it. Finish or discard that computation before moving the original callback.
+Payloads, results, and errors keep their exact types and origins. Creating or
+discarding the reference does not invoke, copy, or destroy the original.
+`mut_ref` requires a named mutable library callable with at least one repeatable
+receiver; adapt native callbacks first, and move consuming-only callbacks
+directly into operations that allow a single call.
+
+A procedure with no return value differs from a function returning `NoneType`.
+Pipeline and composition mismatch diagnostics name the former
+`type_of(None) (no return value)`. Declare an explicit `-> NoneType` result
+when the next stage expects a unit payload of that type.
+
+A named `as_unary` adapter can be reused in supported Pipeline, Result and
+iterator callbacks, including with noncopyable captures. The example borrows
+`formatter` twice and then moves it. See [callback reuse](../start/ownership.md#reuse-callbacks-by-name)
+for lifetimes and the distinction between receiver and payload ownership.
+The example also reuses one binary adapter to compute running sums and combine
+two iterators.
+Native functions and closures can still be passed directly when storage as
+a library callable is unnecessary.
+
+<!-- example: docs/examples/native_callback_reuse.mojo -->
+
 <!-- api: callables -->

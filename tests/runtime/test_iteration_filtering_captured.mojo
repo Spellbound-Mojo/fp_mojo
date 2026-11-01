@@ -32,7 +32,7 @@ def exercise(library: Bool, optional: Bool, length: Int, bias: Int, count: Int,
     var output = List[String]()
     if library:
         if optional:
-            var selected = filter_map(transform, source^)
+            var selected = filter_map(source^, transform)
             assert_equal(calls, 0)
             assert_equal(len(trace[]), 0)
             for _ in range(count): output.append(next(selected))
@@ -43,7 +43,7 @@ def exercise(library: Bool, optional: Bool, length: Int, bias: Int, count: Int,
                     except: exhausted = True
                     assert_equal(exhausted, True)
         else:
-            var selected = filter(predicate, source^)
+            var selected = filter(source^, predicate)
             assert_equal(calls, 0)
             assert_equal(len(trace[]), 0)
             for _ in range(count): output.append(String(next(selected)))

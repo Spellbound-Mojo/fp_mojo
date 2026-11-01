@@ -1,0 +1,194 @@
+[
+  {
+    "source": "clients/binding_bad_consuming_arity_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_consuming_arity_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_consuming_convention_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_consuming_convention_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_consuming_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_arity_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_arity_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_convention_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_convention_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_kwargs_arity_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_kwargs_arity_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_kwargs_convention_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_kwargs_convention_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mut_owned_kwargs_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mutating_arity_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mutating_arity_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mutating_convention_nonraising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mutating_convention_raising.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_bad_mutating_error.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_capture_consuming_nonraising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_capture_consuming_raising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_capture_mut_owned_kwargs_nonraising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_capture_mut_owned_kwargs_raising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_capture_mut_owned_nonraising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_capture_mut_owned_raising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_capture_mutating_nonraising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_capture_mutating_raising.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_default_error.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_fixed_keywords.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_generic.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_keyword_never_void.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_native_capture_control.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_never_void.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_ordinary.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_origins.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_ownership.mojo",
+    "kind": "positive"
+  },
+  {
+    "source": "clients/binding_reject_alias_capture.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_alias_keywords.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_alias_mut_owned.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_callback_move.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_consumed_argument.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_error_origin.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_readonly.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_result_origin.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_wrong_input.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_reject_wrong_run_arity.mojo",
+    "kind": "rejection"
+  },
+  {
+    "source": "clients/binding_captures.mojo",
+    "kind": "positive"
+  }
+]

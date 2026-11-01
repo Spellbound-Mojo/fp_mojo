@@ -10,7 +10,8 @@ scope and the ownership of shared mechanisms.
 Set up the environment as in [installation](../start/installation.md). The
 tooling scripts call `pixi` and `mojo` from `PATH`, so make sure
 `$HOME/.pixi/bin` is on it. The compile-time measurement and its tooling test use
-GNU `time` (`/usr/bin/time`); on Debian or Ubuntu install it with
+GNU `time` (`/usr/bin/time`, or `time` on `PATH` when that path is absent);
+on Debian or Ubuntu install it with
 `apt-get install time`.
 
 Mojo shares one compile cache per environment under
@@ -27,7 +28,7 @@ tooling does this for you).
 | `tests/benchmarks/` | Programs that time library code against hand-written loops; the suite reports them as diagnostics |
 | `tests/compile_fail/` | Programs that must be rejected, with `# error:` lines naming the expected diagnostics |
 | `tests/tooling/` | Python unit tests for the scripts |
-| `scripts/` | Test, build, measurement and documentation tooling, and the generator of the plain-function `pipe`, `flow`, `compose`, `match` and `rewrite` overloads (`python scripts/generate_plain_overloads.py`; `--check` reports drift) |
+| `scripts/` | Test, build, measurement and documentation tooling, and the generator of plain-function `pipe`, `flow`, `compose`, `match` and `rewrite` overloads (`python scripts/generate_plain_overloads.py`; `--check` reports drift). Capture and selected Pipeline signatures use `generate_capture.py` and `generate_context.py`; tooling tests check their generated output |
 | `docs/content/` | This site's pages; navigation is in `mkdocs.yml` |
 | `docs/examples/` | The runnable examples |
 | `docs/theme/` | The MkDocs theme: templates, styles, scripts and bundled fonts |
@@ -38,15 +39,33 @@ tooling does this for you).
 Run from the repository root. Commands with `--output` need a directory that
 does not exist yet; use a new name under `.cache/` each time.
 
-| Command | Checks | Time |
+| Command | Checks | Compilation workload |
 |---|---|---|
-| `pixi run suite --package .cache/b2` | Every runtime, ownership, law and integration test, every example on the site (with its reviewed output) and the runtime benchmarks, at O3, as four executables | About 2 minutes on 4 cores |
-| `pixi run compile-fail --package .cache/b2` | Every compile-failure fixture is rejected with its declared diagnostics; one compile per fixture, in parallel | About 2 minutes on 4 cores |
-| `pixi run build --output .cache/b1` | Builds a source package in `<output>/fp/`, precompiles the whole package with `--Werror`, then runs `docs/examples/algebra_core.mojo` against it | About 15 s |
-| `pixi run build --format precompiled --output .cache/b2` | The same with `fp.mojoc` | About 15 s |
-| `pixi run -e docs docs-check` | Strict MkDocs build, then links, anchors, assets and the search index | Seconds |
-| `pixi run docs-test --output .cache/d1 --jobs 4` | Every example on the site through source and package imports at O0 and O3 with `--Werror` | A few minutes |
-| `pixi run python -m unittest discover -s tests/tooling` | Tooling unit tests | Seconds |
+| `pixi run suite --package .cache/b2` | Runtime, ownership, law and integration tests, reviewed example output and benchmark diagnostics at O3 | Four executables; `--jobs` limits concurrent builds |
+| `pixi run compile-fail --package .cache/b2` | Every rejection fixture produces its declared diagnostics | One compile per fixture; `--jobs` limits concurrency |
+| `pixi run build --output .cache/b1` | Builds a source package in `<output>/fp/`, precompiles with `--Werror`, then runs `docs/examples/algebra_core.mojo` against it | Package precompile and a bounded client build/run |
+| `pixi run build --format precompiled --output .cache/b2` | The same with `fp.mojoc` | Package precompile and a bounded client build/run |
+| `pixi run -e docs docs-check` | Strict MkDocs build, then links, anchors, assets and the search index | No Mojo compilation |
+| `pixi run boundaries-test --output .cache/native-admission --jobs 4` | Capture and selected Pipeline tests, including rejection diagnostics and lifetime controls | Fresh package, then source/package builds at O0/O3 per fixture |
+| `pixi run docs-test --output .cache/d1 --jobs 4` | Every example prints its reviewed output with `--Werror` | Fresh package, then four builds and runs per example |
+| `pixi run docs-test --output .cache/d2 --jobs 4 --define FP_ASYNC_PROFILE=current_thread` | The same examples on the current-thread profile; the run above uses the host's default, the work-stealing pool on more than one processor | As above |
+| `pixi run python experiments/async-state-machines/qualify.py --output .cache/async-1 --jobs 4` | Every async runtime client and rejection fixture in `experiments/async-state-machines/tests/`, which `suite` does not run | Four routes per client (source and package, O0 and O3); four more for each client that also runs on the work-stealing pool |
+| `pixi run python experiments/async-state-machines/stress.py --output .cache/async-stress-1 --seconds 3600 --jobs 2` | Sustained-load soaks of the stress clients on both profiles; required only before a claim about sustained load ([async qualification](../architecture/async-qualification.md)) | Twenty-four one-hour cases; about twelve hours at two jobs |
+| `pixi run python -m unittest discover -s tests/tooling` | Tooling unit tests | Python checks, including bounded subprocess/resource controls |
+
+Choose concurrency from the available memory as well as the CPU count. The
+suite builds large groups of programs, while rejection and example runners
+compile separate clients; the same `--jobs` setting does not imply the same
+memory use. Elapsed time also depends on the selected fixtures, optimization,
+compiler cache and competing work. Use retained build/run timings to estimate
+the next comparable run; benchmark diagnostics collected under shared load do
+not establish a performance regression.
+
+The opt-in [async overnight qualification](../architecture/async-qualification.md)
+has its own bounded runner and evidence audit. Run it from an immutable checkout;
+its default twelve one-hour cases take approximately six hours with two workers,
+plus compilation and separate serial performance measurements. It is not part of
+the routine suite, and short calibrations do not qualify as overnight results.
 
 `suite` and `compile-fail` test the library a `build` produced: pass its output
 directory to `--package`. `--source` compiles against `src/` instead, and with
@@ -55,8 +74,15 @@ neither option they precompile `src/fp` into their own output folder first.
 several times longer to build and up to about 5 GB each, so pass `--jobs 2` on a
 16 GB machine. `--filter <text>` selects the programs whose path contains the text, and
 `--output <dir>` names the report folder (a fresh one under `.cache/` by
-default). `build` bounds the client with a 60-second compile limit, two compiler
-threads and a 4 GiB memory limit on Linux.
+default). `build` defaults to a 60-second limit for each package and client compilation,
+with two compiler threads and a 4 GiB memory limit on Linux. Select a longer
+recorded budget with `--compile-timeout 180` when a larger package exceeds that
+limit. A timeout remains a failed run; retain it and use a fresh output directory
+for the new budget.
+The Linux resource test checks the whole timed process group. It accepts a killed
+child reaped by the timer or by the test's subreaper, while requiring that the
+child is gone. Reaping ownership is a scheduling detail, not the memory-limit
+contract. The correction passed 20 repeated runs of the resource checks.
 
 The suite keeps every program standalone: each still has its own `main` and can
 be run alone with `pixi run mojo run -I src <path>`. `scripts/suite.py`
@@ -96,9 +122,21 @@ Rules that matter:
 - **Precompile after changing traits or generic signatures.** A package
   precompile type-checks generic declarations that no client instantiates;
   several Mojo 1.1 trait errors appear only there.
+- **Interrupted runs are incomplete evidence.** Keep their partial logs, then
+  start the interrupted gate in a fresh output directory. Individual successful
+  compiles do not replace its final report and audit. Reuse a completed gate only
+  after checking its recorded inputs against the current tree and its package
+  digest against the package being used. See the
+  [runner guarantees](../architecture/verification.md#runner-guarantees).
 - **Stopping a run.** `pkill -f "<pattern>"` also matches your own shell if the
   pattern appears in its command line. Use a bracketed pattern such as
   `pkill -f "scripts/[s]uite.py"`, and stop orphaned `mojo build` children too.
+
+The local documentation audit also checks `docs/compatibility.json` against the
+reviewed public export inventory. New Pipeline methods must have a family,
+callback, ownership, error and evaluation contract; completed migration names
+move out of the pending assignment. Qualification checkpoints name the tested
+source commit and retain report digests. Update them only from completed gates.
 
 ## Making a change
 
@@ -121,10 +159,10 @@ Rules that matter:
 6. **Update the documentation** in the same change (see
    [maintaining the docs](documentation.md)).
 
-## Working with Mojo 1.1
+## Working with the pinned compiler
 
-These practices come from building this library on the pinned compiler; the
-limits behind them are recorded in
+These practices were established on Mojo 1.1 and retained for the Mojo 1.2
+migration. The limits and compatibility changes are recorded in
 [native Mojo boundaries](../architecture/native-boundaries.md).
 
 - **Keep the type-level program small.** Associated types should name only a
@@ -153,6 +191,24 @@ limits behind them are recorded in
   structs, such as a result computed from a list of clauses, can take compile
   time exponential in the chain's length when it appears in a signature. Spell
   it over the parameters directly and pass it to the implementation explicitly.
+- **Never borrow a shared object mutably from two threads.** A `mut`
+  argument, `mut self` included, is an exclusive borrow, so the compiler may
+  assume nothing else touches the borrowed value during the call. An atomic
+  stored inline in a struct that several threads borrow mutably at once can
+  therefore lose updates. This hung `close` in the async scheduler until its
+  counters moved out. An object reached from several threads takes immutable
+  `self` in every method that can run concurrently. Its atomics and mutable
+  state live in separate allocations behind pointers: an `ArcPointer`, or a
+  `Pointer[..., MutUntrackedOrigin]` as in the work-stealing structures.
+- **Tie a guard's references to the guard.** Mojo destroys a value after its
+  last use, and a reference derived from a raw pointer the value holds does not
+  count as a use of it. Code such as `guard.cell[].slot.value().append(x)`,
+  where `cell` is a borrowed `Pointer`, may release the lock before `append`
+  runs, and a probe double-freed that way. A guard therefore keeps its pointer
+  private and returns the guarded value as `ref[self]`, as `_CellGuard.value()`
+  does, so every use of the reference keeps the guard alive. A reference
+  derived from a field the guard owns, such as `_Guard`'s `ArcPointer`, is
+  already tied to it.
 - **Check hot paths in assembly.** `Optional` and `Variant` storage of
   non-trivial types is initialized and taken out of line, and `Optional.take()`
   is not inlined; use untagged `MaybeUninit` slots where it matters. Compare O3
@@ -177,5 +233,5 @@ limits behind them are recorded in
 - **Test heap contents.** A `String`'s `byte_length()` reads inline metadata and
   can look correct for a dangling buffer; compare contents.
 - **Read the pinned standard library.** Clone
-  `https://github.com/modular/modular` at branch `mojo/v1.1.0` and read
+  `https://github.com/modular/modular` at branch `mojo/v1.2.0` and read
   `Mojo/stdlib/std`; `mojo doc` cannot read the compiled `std.mojoc`.

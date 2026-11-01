@@ -44,8 +44,10 @@ def native_reference(
     counter: ArcPointer[Int], node: Int, fail: Bool
 ) raises CleanupFailure -> Resource:
     var children = List[Resource]()
-    for i in range(3 if node == 0 else 0):
-        children.append(native_reference(counter, i + 1, fail))
+    # Only the root recurses; keep the leaf path explicit for the compiler.
+    if node == 0:
+        for i in range(3):
+            children.append(native_reference(counter, i + 1, fail))
     if fail and node == 3:
         raise CleanupFailure(node)
     return Resource(counter, node)
@@ -89,7 +91,7 @@ def run_result(counter: ArcPointer[Int], success: Bool):
         value = Result[R, R](Ok(R(counter, 10)))
     else:
         value = Result[R, R](Err(R(counter, 20)))
-    var mapped = map[ResultFamily[type_of(value).Error]](preserve, value^)
+    var mapped = map[ResultFamily[type_of(value).Error]](value^, preserve)
     debug_assert[assert_mode="safe"](mapped.is_ok() == success)
 
 

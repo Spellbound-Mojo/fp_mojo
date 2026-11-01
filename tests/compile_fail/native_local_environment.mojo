@@ -19,4 +19,4 @@ def grow(value: Int) -> Int:
 def main() raises:
     var environment = Environment(5)
     var source = action[Reader[Environment], Int](ReadEnvironment())
-    _ = run[Reader[Environment]](local[Reader[Environment]](grow, source^), environment)
+    _ = run[Reader[Environment]](local[Reader[Environment]](source^, grow), environment)

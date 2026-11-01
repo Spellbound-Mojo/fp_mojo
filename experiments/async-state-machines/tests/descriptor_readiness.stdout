@@ -1,0 +1,5 @@
+pipes: reads and writes wait for readiness from another thread; hang-up counts as ready
+cancellation: a canceled or timed-out wait removes its registration
+poll: readiness is found without waiting whenever a descriptor is watched
+park: returns at once when runnable; wakes on readiness, deadlines, foreign wakes and its timeout
+test control: readiness is observed at the next tick

@@ -29,27 +29,27 @@ def vectors[dtype: DType, width: Int]() raises:
     var inputs: List[V] = [first, second]
     var expected = V(0)
     for value in inputs: expected += value
-    var actual = fold_left(vector[dtype, width], V(0), iter(inputs))
+    var actual = fold_left(iter(inputs), V(0), vector[dtype, width])
     comptime assert type_of(actual) == V
     assert_equal(actual, expected)
     assert_equal(actual.reduce_add(), Scalar[dtype](11 * width + width * (width - 1)))
-    assert_equal(fold_left(vector[dtype, width], first, List[V]()), first)
+    assert_equal(fold_left(List[V](), first, vector[dtype, width]), first)
 
 def main() raises:
     var numbers: List[Int] = [1, 2, 3]
     var expected = 0
     for value in numbers: expected += value
-    assert_equal(fold_left(scalar, 0, iter(numbers)), expected)
-    assert_equal(fold_left(scalar, 7, List[Int]()), 7)
+    assert_equal(fold_left(iter(numbers), 0, scalar), expected)
+    assert_equal(fold_left(List[Int](), 7, scalar), 7)
     vectors[DType.int32, 4]()
     vectors[DType.float64, 2]()
     var words: List[String] = ["native", "functional", "composition"]
     var native = Document(String(), 0)
     for word in words: native = append_word(native^, word)
-    var document = fold_left(append_word, Document(String(), 0), words^)
+    var document = fold_left(words^, Document(String(), 0), append_word)
     assert_equal(document.text, native.text)
     assert_equal(document.words, native.words)
-    var empty = fold_left(append_word, document^, List[String]())
+    var empty = fold_left(List[String](), document^, append_word)
     assert_equal(empty.text, "native functional composition")
     assert_equal(empty.words, 3)
     print("scalar=", expected, "; document=", empty.text)
