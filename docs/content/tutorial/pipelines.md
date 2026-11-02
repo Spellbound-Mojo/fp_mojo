@@ -173,6 +173,25 @@ stage runs once; abandoning it releases both inputs. Move-only accumulators and
 borrowed origins are preserved. Use `.fold_effect[Target](initial).run(step)` to
 select a custom or deferred Monad policy explicitly.
 
+## Choose between effects with an effectful condition
+
+When the condition is itself an effect, such as a `Result[Bool, E]`,
+`.if_effect(on_true, on_false)` reads it and then builds one of two effects:
+
+<!-- example: docs/examples/effectful_reductions.mojo -->
+
+`.any_effect[ResultFamily[String]](is_large)` calls `is_large` on 3, 5 and 8
+in order and stops at the first `Ok(True)`, from 8. `.if_effect(large, small)`
+then calls only `large`; `small` never runs. Each branch is a factory with no
+arguments, called at most once, and its effect must belong to the condition's
+family, here `Result[String, String]`. A stored error in the condition skips
+both factories and becomes the result. `.raise_on_err()` then takes the
+message, `large value found`.
+
+The same program totals the values with `fold_effect` (16), checks them all
+with `all_effect`, and shows a fold stopping at the first stored error: for 3,
+-1 and 8, `checked_add` fails at -1, so 8 is never added.
+
 ## Sum effectful values
 
 Use `.sum_by_effect(transform)` when each item produces a numeric Optional,

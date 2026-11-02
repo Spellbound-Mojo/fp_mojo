@@ -7,7 +7,9 @@ comptime A = Async[Int]
 
 
 def value[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:
-    return outcome.take()._take_ok()
+    """The program's success value; a failure or cancellation aborts."""
+    var success = outcome.take().to_optional()
+    return success.take()
 
 
 def bump(var count: Int) -> Int:

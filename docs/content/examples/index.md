@@ -114,6 +114,9 @@ compile them through source and precompiled package imports at O0 and O3 with
 | `io_program_cleanup.mojo` | Cleanup on success, failure and cancellation, and failures raised by cleanup | [Programs with IO](../tutorial/io.md#run-cleanup-whatever-the-outcome) |
 | `fibers_unjoined.mojo` | An unjoined fiber's failure reaches the reporter | [Concurrency with fibers](../tutorial/fibers.md#report-a-failure-that-nobody-joins) |
 | `fibers_timeout.mojo` | A timeout's fallback and its timeout error | [Concurrency with fibers](../tutorial/fibers.md#bound-a-program-with-a-timeout) |
+| `async_iteration.mojo` | A `tail_rec_m` loop whose step returns an IO | [Programs with IO](../tutorial/io.md#iterate-with-an-asynchronous-step) |
+| `async_callback_timeout.mojo` | Wrap a callback API with `IO.async`, withdrawn when a timeout cancels it | [Programs with IO](../tutorial/io.md#wrap-a-callback-based-api) |
+| `async_capabilities.mojo` | `Spawn`, `Concurrent`, `Timing` and `Temporal` through `Async[E]` | [Concurrency with fibers](../tutorial/fibers.md#write-concurrent-code-generic-over-the-family) |
 | `running_contexts.mojo` | `eval_on`, `start_on`, `background_on` and `execution_context` | [Running and testing async programs](../tutorial/running.md#run-part-of-a-program-somewhere-else) |
 
 ## Build an application

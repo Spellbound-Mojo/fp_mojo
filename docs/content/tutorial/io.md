@@ -125,6 +125,23 @@ Neither operation recovers a cancellation, or a failure whose `canceled` flag
 is set. These outcomes reach `run` unchanged, and `fold_outcome` still sees
 them.
 
+## Iterate with an asynchronous step
+
+`tail_rec_m[Async[E]](initial, step)` repeats an asynchronous step that owns
+its state. Each call to `step` consumes the current state and returns an
+`IO[ControlFlow[S, A], E]`: `Continue(next)` passes the next state to another
+call, and `Break(result)` ends the loop with its result.
+
+<!-- example: docs/examples/async_iteration.mojo -->
+
+`Increment` starts at 0 and continues with `state + 1` until the state is 42,
+when it breaks with 42, which `fold_outcome` prints. The loop calls the step 43
+times, but its frames live on the run loop's own stack, so a loop of any
+length uses constant native stack, and a long run yields to the host after a
+fixed number of steps. `Increment` is a library callable because callbacks
+stored in an IO must own their state; a capturing closure is rejected at
+compile time.
+
 ## Pause with IO.sleep
 
 `IO[NoneType, E].sleep(duration)` waits for at least `duration`, measured
@@ -146,6 +163,39 @@ negative or exceeds 10**18 nanoseconds. Build durations where you can handle
 that error, as in a `main` that raises. A non-raising callback can't build
 one. The [async runtime guide](../guides/async-runtime.md) describes the
 clock, `timed` and the timeouts.
+
+Sleeps and timeouts use a monotonic clock. Wall-clock time is separate:
+`IO.real_time()` reads a `SystemTime`, signed nanoseconds since the Unix epoch.
+The wall clock moves backward when the system time is set, so measure elapsed
+time with the monotonic clock (`timed`), not with two `SystemTime` readings;
+`later.since(earlier)` returns `None` when the clock stepped back. Under
+`TestControl` the wall clock starts at the epoch and moves with virtual time.
+
+## Wrap a callback-based API
+
+Many libraries deliver a result through a callback. `IO.async(register,
+withdrawal)` turns such an API into an IO. When the run reaches it, `register`
+receives a `Completion[T, E]`, hands it to the producer and returns; the fiber
+then suspends until someone calls `complete` on that completion, from any
+thread. `withdrawal` is an `IO[NoneType, E]` that runs after every entered
+registration, whether it completed, failed or was canceled, so it is where you
+release what `register` set up. `IO.async_` has no withdrawal.
+
+<!-- example: docs/examples/async_callback_timeout.mojo -->
+
+`Register` stores the completion where an external producer could find it, and
+here no producer ever completes it. `timeout_to(duration, IO.pure(-1))` bounds
+the wait at 5 ms: when the deadline passes, the timeout requests cancellation,
+drains the source, which runs `withdrawn`, and then selects the fallback, so
+the program prints `withdrawn` and then `-1`. The example drives the program
+with a `Driver` on a manual clock, which moves only when advanced, so the
+timeout fires without real waiting; [chapter 14](running.md) covers drivers and
+test clocks.
+
+Copies of a `Completion` share one decision: the first `complete` wins, and
+late or duplicate values are destroyed on the thread that sent them. Like
+every callback stored in an IO, `register` is a library callable that owns its
+state.
 
 ## Run cleanup whatever the outcome
 

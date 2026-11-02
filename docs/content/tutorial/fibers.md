@@ -258,6 +258,40 @@ inside a closure, `Dict` values, or the payloads of `Variant`, `Tuple` and
 states the full contract. The [payload thread safety](../architecture/async-thread-safety.md)
 page explains the check and audits the runtime's own shared structures.
 
+## Write concurrent code generic over the family
+
+The operations in this chapter are `IO` methods, but generic code can ask for
+only the capabilities it uses, as the functions in
+[chapter 11](capabilities.md) ask for `Ask` or `Stateful`. Each async
+capability is a compile-time dictionary that forwards to an existing
+operation:
+
+| Capability | Operations |
+|---|---|
+| `Spawn` | `start[I]`, `join[I, T]`, `cancel[I, T]`, `never[I, A]`, `cede[I]`, `background[I]` |
+| `Concurrent` | `make_ref[I]`, `get_ref[I, T]`, `set_ref[I]`, `update_ref[I]`, `modify_ref[I, A]`, `make_deferred[I, T]`, `complete_deferred[I]`, `get_deferred[I, T]` |
+| `Timing` | `monotonic[I]()`, `real_time[I]()`, `timed[I](program)` |
+| `Temporal` | `sleep[I]`, `timeout_to[I]`, `timeout_after[I]`, `timeout[I]`, `delay_by[I]`, `and_wait[I]` |
+
+`Async[E]` provides all four for `IO[T, E]`. The synchronous `SyncIO[E]`
+provides `Timing` but none of the others, because it has no fibers and cannot
+suspend. A function written as `def f[I: Spawn & Temporal](...)` runs on any
+provider of both, and a provider that lacks one is rejected at the call.
+
+<!-- example: docs/examples/async_capabilities.mojo -->
+
+The example fixes `A = Async[Int]` and calls each capability through it.
+`make_ref[A](41)` creates a cell, and `BumpThenRead` updates it with
+`update_ref` and reads it with `get_ref`, so the program prints `ref: 42`.
+`start[A]` starts a child and `join[A, Int]` joins it, giving `joined: 7`.
+`timed[A](sleep[A](...))` measures a 5 ms sleep on the monotonic clock, and
+`real_time[A]()` reads the wall clock described in [chapter 12](io.md).
+Generic signatures state what they admit in `where` clauses through each
+provider's associated types; the
+[async runtime guide](../guides/async-runtime.md#write-programs-generic-over-the-family)
+gives the full contract, including `Defer`, `Raise`, `Cancel`, `Blocking` and
+`EvalOn`.
+
 ## Where to go next
 
 Continue with [running and testing async programs](running.md).

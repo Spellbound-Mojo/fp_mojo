@@ -7,10 +7,10 @@ def value[P: ReaderAction](var program: P) raises -> P.Value where IOContract[P]
     var outcome = run_io(program^)
     if not outcome:
         raise Error("operation canceled")
-    var result = outcome.take()
-    if result.is_err():
+    var success = outcome.take().to_optional()
+    if not success:
         raise Error("operation failed")
-    return result^._take_ok()
+    return success.take()
 
 
 def increment(var current: Int) -> Int:

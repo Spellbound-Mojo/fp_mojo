@@ -5,7 +5,9 @@ from fp.effects.async_runtime import IO, BlockingPool, Duration, IORuntimeConfig
 
 
 def value[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:
-    return outcome.take()._take_ok()
+    """The program's success value; a failure or cancellation aborts."""
+    var success = outcome.take().to_optional()
+    return success.take()
 
 
 def slow_read() -> Int:

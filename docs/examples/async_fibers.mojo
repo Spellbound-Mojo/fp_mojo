@@ -5,6 +5,12 @@ from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Deferred, Duration, Fiber, RaceResult, Supervisor, run
 
 
+def value[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:
+    """The program's success value; a failure or cancellation aborts."""
+    var success = outcome.take().to_optional()
+    return success.take()
+
+
 def times_seven(value: Int) -> Int:
     return value * 7
 
@@ -15,7 +21,7 @@ struct TakeValue(OnceUnary):
     comptime Out = Int
 
     def call_once(deinit self, var outcome: Outcome[Int, Int]) -> Int:
-        return outcome.take()._take_ok()
+        return value(outcome^)
 
 
 @fieldwise_init
@@ -119,21 +125,21 @@ struct SuperviseAndJoin(OnceUnary):
 def main() raises:
     # A fiber runs beside its owner; joining it produces its outcome.
     var joined = run(IO[Int, Int].pure(6).map(times_seven).start().flat_map(Join()))
-    print("joined:", joined.take()._take_ok())
+    print("joined:", value(joined^))
 
     # Canceling a child that has started runs its finalizers, then joins as canceled.
     var canceled = run(cancel_running())
-    print("canceled:", canceled.take()._take_ok())
+    print("canceled:", value(canceled^))
 
     # both runs two fibers and keeps both values.
     var both = run(IO[Int, Int].pure(20).both(IO[Int, Int].pure(22)).map(add_pair))
-    print("both:", both.take()._take_ok())
+    print("both:", value(both^))
 
     # race keeps the first to finish and cancels the other.
     var sleeper = IO[NoneType, Int].sleep(Duration.milliseconds(1)).map(one)
     var raced = run(sleeper^.race(IO[Int, Int].never()).map(left_won))
-    print("left won the race:", raced.take()._take_ok())
+    print("left won the race:", value(raced^))
 
     # A supervisor owns fibers beyond the program that started them.
     var supervised = run(Supervisor[Int].scoped(SuperviseAndJoin()))
-    print("supervised:", supervised.take()._take_ok())
+    print("supervised:", value(supervised^))

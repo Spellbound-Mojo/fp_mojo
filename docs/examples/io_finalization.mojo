@@ -33,8 +33,8 @@ struct CancelableRegion(OnceUnary):
 
 def main():
     var success = pipeline(pure[IO[Int]](42)).guarantee_case(report_exit).run_io()
-    var result = success.take()
-    print("result:", result^._take_ok())
+    var result = success.take().to_optional()
+    print("result:", result.take())
     var body = uncancelable_with[Int](CancelableRegion())
     var canceled_result = pipeline(body^).guarantee_case(report_exit).run_io()
     print("canceled:", not canceled_result)

@@ -4,6 +4,12 @@ from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Fiber, IORuntimeConfig, Profile, Runtime
 
 
+def value[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:
+    """The program's success value; a failure or cancellation aborts."""
+    var success = outcome.take().to_optional()
+    return success.take()
+
+
 def square(value: Int) -> Int:
     return value * value
 
@@ -26,7 +32,7 @@ struct AddTo(OnceUnary):
     comptime Out = Int
 
     def call_once(deinit self, var outcome: Outcome[Int, Int]) -> Int:
-        return self.mine + outcome.take()._take_ok()
+        return self.mine + value(outcome^)
 
 
 def program(n: Int) -> IO[Int, Int]:
@@ -41,6 +47,6 @@ def main() raises:
     print("profile:", config.profile)
     for n in range(1, 4):
         var outcome = runtime.run(program(n))
-        print(n, "->", outcome.take()._take_ok())
+        print(n, "->", value(outcome^))
     print("live fibers:", len(runtime.fibers()))
     # Dropping the last copy of the runtime stops and joins its two workers.

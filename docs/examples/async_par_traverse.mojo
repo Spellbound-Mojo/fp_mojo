@@ -8,7 +8,9 @@ from fp.functions import pipeline
 
 
 def value[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:
-    return outcome.take()._take_ok()
+    """The program's success value; a failure or cancellation aborts."""
+    var success = outcome.take().to_optional()
+    return success.take()
 
 
 def square_later(var value: Int) -> IO[Int, Int]:
@@ -64,9 +66,15 @@ def main() raises:
     # The first failure stops the rest; every error observed by then is kept,
     # in element order. Here only element 3 fails.
     var failed = run(par_traverse(List[Int]([2, 3, 4]), reject_odd))
-    print("failed with:", failed.take()._take_err().errors.first())
+    try:
+        _ = failed.take().raise_on_err()
+    except failure:
+        print("failed with:", failure.errors.first())
 
     # A Result callback selects error-accumulating validation instead: no
     # fibers, and every element's error is collected.
     var checked = pipeline(List[Int]([2, -3, -5])).par_traverse(positive).get()
-    print("validation errors:", len(checked^._take_err()))
+    try:
+        _ = checked^.raise_on_err()
+    except errors:
+        print("validation errors:", len(errors))

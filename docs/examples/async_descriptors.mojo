@@ -11,7 +11,9 @@ comptime O_NONBLOCK = Int32(platform_map[T=Int, "O_NONBLOCK", linux=0o4000, maco
 
 
 def value[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:
-    return outcome.take()._take_ok()
+    """The program's success value; a failure or cancellation aborts."""
+    var success = outcome.take().to_optional()
+    return success.take()
 
 
 @fieldwise_init
