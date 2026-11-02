@@ -432,7 +432,9 @@ and macOS arm64.
 FP Mojo is published as `fp_mojo` in the
 [Modular community channel](https://github.com/modular/modular-community). Add
 the channel to your [Pixi](https://pixi.sh) project and install the package.
-FP Mojo 1.0.2 requires Mojo 1.2.0:
+FP Mojo 1.0.2 requires Mojo 1.2.0 and is available from the channel once
+[modular/modular-community#443](https://github.com/modular/modular-community/pull/443)
+is merged:
 
 ```toml
 # pixi.toml
