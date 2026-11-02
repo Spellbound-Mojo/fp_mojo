@@ -101,7 +101,20 @@ compile them through source and precompiled package imports at O0 and O3 with
 | `effects_reader.mojo` | Pricing configuration with `ask`, `local` and a borrowed deferred callback | [Effects tutorial](../tutorial/effects.md#read-configuration-with-reader) |
 | `effects_state.mojo` | Reading, updating and resetting a counter with State | [Effects tutorial](../tutorial/effects.md#pass-an-evolving-counter-through-state) |
 | `effects_writer.mojo` | Ordered logs with Writer, `tell`, `listen` and `censor` | [Effects tutorial](../tutorial/effects.md#accumulate-output-with-writer) |
+| `accumulate_signup.mojo` | First error with `map_n`, every error with `par_map_n`, then a dependent check | [Accumulating errors](../tutorial/accumulation.md#report-the-first-error-or-every-error) |
+| `accumulate_warnings.mojo` | Combine independent checks that keep warnings with `Ior` | [Accumulating errors](../tutorial/accumulation.md#keep-a-value-with-its-warnings) |
+| `capabilities_checkout.mojo` | One checkout written against `Ask` and `Stateful`, run through two transformer stacks | [Capabilities tutorial](../tutorial/capabilities.md#write-each-step-once-and-choose-its-layer) |
 | `state_result.mojo` | How transformer order decides whether a failure keeps its state | [fp.effects](../reference/effects.md#choose-whether-a-failure-keeps-its-state) |
+
+## Run async programs
+
+| Example | What it shows | Page |
+|---|---|---|
+| `io_program_first.mojo` | Building an IO runs nothing; running it runs each step once, in order | [Programs with IO](../tutorial/io.md#describe-a-program-before-running-it) |
+| `io_program_cleanup.mojo` | Cleanup on success, failure and cancellation, and failures raised by cleanup | [Programs with IO](../tutorial/io.md#run-cleanup-whatever-the-outcome) |
+| `fibers_unjoined.mojo` | An unjoined fiber's failure reaches the reporter | [Concurrency with fibers](../tutorial/fibers.md#report-a-failure-that-nobody-joins) |
+| `fibers_timeout.mojo` | A timeout's fallback and its timeout error | [Concurrency with fibers](../tutorial/fibers.md#bound-a-program-with-a-timeout) |
+| `running_contexts.mojo` | `eval_on`, `start_on`, `background_on` and `execution_context` | [Running and testing async programs](../tutorial/running.md#run-part-of-a-program-somewhere-else) |
 
 ## Build an application
 

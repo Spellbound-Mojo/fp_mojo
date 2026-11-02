@@ -73,7 +73,9 @@ how a failing stage stops it.
 | Learn through runnable programs | [Tutorial](tutorial/pipelines.md) |
 | Choose between mapping, combination and bind | [Functors, applicatives and monads](tutorial/algebra.md) |
 | Compose configuration, state and logging | [Reader, State and Writer](tutorial/effects.md) |
-| Coordinate concurrent fibers, timers and async IO | [Async runtime preview](guides/async-runtime.md) |
+| Collect every independent error | [Accumulating errors](tutorial/accumulation.md) |
+| Write async programs step by step | [Programs with IO](tutorial/io.md) |
+| Coordinate concurrent fibers, timers and async IO | [Async runtime guide](guides/async-runtime.md) |
 | Understand borrowing, movement, and failure | [Ownership and errors](start/ownership.md) |
 | Look up a function or type | [API reference](reference/index.md) |
 | Understand the implementation boundaries | [Architecture](architecture/overview.md) |

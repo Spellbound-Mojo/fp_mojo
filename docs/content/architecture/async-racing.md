@@ -5,7 +5,7 @@ and cancellation-aware selection through `race` and `timeout_to`. Each method
 starts its sides as [fibers](async-fibers.md) of the running fiber and waits in a
 private leaf that only forwards cancellation and combines outcomes; fibers own
 and drain the children. `race_pair` exposes the same start, producing the first
-side's outcome and the other side's fiber. All are part of the opt-in preview.
+side's outcome and the other side's fiber. All are part of the public async runtime.
 
 Each side has its own token, and the host ticks ready fibers in FIFO order, so a
 root poll can advance both sides. With `race_first`, the first child observed terminal selects the result, whether success, error,

@@ -163,7 +163,7 @@ deferred computations preserve their types, ownership and origins.
 
 ## Where to go next
 
-This concludes the foundational tutorial covering pure pipelines, data types,
-algebra, and synchronous effects. To explore asynchronous execution,
-lightweight fibers, and structured concurrency, continue with the
-[Async Runtime Guide](../guides/async-runtime.md).
+Next, [Accumulating errors](accumulation.md) collects every independent error
+instead of stopping at the first one. Chapter 11 writes these effects once,
+against capabilities, and chapters 12 to 14 turn to asynchronous programs,
+starting with [Programs with IO](io.md).

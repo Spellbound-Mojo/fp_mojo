@@ -1,16 +1,16 @@
-# Async runtime preview
+# Async runtime guide
 
 `fp.effects.async_runtime` provides pure-Mojo asynchronous programs with Cats
 Effect vocabulary: `IO`, `Resource`, `Ref`, `Deferred`, `Queue`, `Semaphore`,
-races, and timeouts. This opt-in preview is qualified on the pinned Mojo 1.2.0 Linux
-x86-64 checkout. By default it runs fibers in parallel on a work-stealing
+races, and timeouts. It is qualified with Mojo 1.2.0 on Linux x86-64 and macOS
+arm64. By default it runs fibers in parallel on a work-stealing
 pool, with one worker per logical processor; the current-thread profile runs
 them cooperatively on one thread (see
 [run programs on a runtime](#run-programs-on-a-runtime)). Callbacks must
 return promptly; `IO.delay` and `IO.eval_io` perform synchronous work inside
 their step. Blocking work belongs in `IO.blocking` or `IO.interruptible`, which
 run it on a pool of worker threads (see
-[run blocking calls](#run-blocking-calls)). The preview does not use compiler
+[run blocking calls](#run-blocking-calls)). The runtime does not use compiler
 coroutines. Code written for an earlier preview, or for the current-thread
 default it had, can follow the [migration guide](async-migration.md).
 
@@ -570,7 +570,7 @@ needs stating.
 | Idle parking | The root's thread parks in its poller | Each idle worker parks in its own poller |
 | `Completion.complete` and other foreign wakes | From any thread; the continuation runs on the root's thread | From any thread; the continuation runs on any worker |
 | Payload check | Every erased payload is checked at compile time | The same check: one contract on both profiles |
-| Callbacks under a coordination lock (`Ref.modify`) | Never contended | A contended lock polls (see [known limits](#known-limits-of-the-preview)) |
+| Callbacks under a coordination lock (`Ref.modify`) | Never contended | A contended lock polls (see [known limits](#known-limits)) |
 | `runtime.run` from inside a program | A current-thread runtime has no threads of its own | On one of the runtime's workers it aborts with a message; use `start` and `join` |
 | `Runtime.fibers()`, `Driver.fibers()` | Both; a snapshot between polls | `Runtime.fibers()`; each fiber as it stood at some moment during the call |
 
@@ -1000,7 +1000,7 @@ runs) and the round trip are the `sleep`, `idle` and `rtt` cases of
 These are local diagnostics, not service-level objectives. Shared host load
 moves the tails.
 
-## Known limits of the preview
+## Known limits
 
 - **Two qualified platforms.** Linux x86-64 and macOS arm64 are qualified. OS
   threads compile only on 64-bit Linux and macOS; Linux ARM64 builds, but its
@@ -1120,11 +1120,11 @@ synchronization and drain in-flight work before release. This architecture has
 no identified fundamental obstacle to host GPU orchestration; GPU execution and
 foreign-thread completion bridges are not implemented or qualified here.
 
-Focused source/package checks at O0/O3 cover the preview. The completed
+Focused source/package checks at O0/O3 cover the runtime on Linux x86-64 and
+macOS arm64. The completed
 [overnight qualification](../architecture/async-qualification.md#overnight-results)
-adds twelve one-hour stress cases, retained-storage checks, and separate local
-performance measurements. The runtime remains an opt-in preview on the pinned
-Linux x86-64 toolchain.
+on Linux x86-64 adds twelve one-hour stress cases, retained-storage checks, and
+separate local performance measurements.
 
 For architectural details on execution state machines, fiber scheduling, and
 thread safety contracts, see [explicit async state machines](../architecture/async-state-machines.md)

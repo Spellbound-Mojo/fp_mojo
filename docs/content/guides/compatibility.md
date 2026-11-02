@@ -126,9 +126,9 @@ release versions, deprecations and supported-platform claims must follow the
 demonstrated contract. The [development guide](../contributing/development.md)
 lists the maintained verification commands.
 
-## Async preview qualification
+## Async runtime qualification
 
-The opt-in [async runtime preview](async-runtime.md) introduces structured
+The [async runtime](async-runtime.md) introduces structured
 asynchronous execution, lightweight fibers, deterministic virtual-time testing,
 and multi-threaded work-stealing scheduling. The implementation is verified
 through focused source and precompiled-package suites, bounded-storage stress

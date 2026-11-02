@@ -59,6 +59,11 @@ nav:
       - 7. A configuration processor: tutorial/application.md
       - 8. Functors, applicatives and monads: tutorial/algebra.md
       - 9. Reader, State and Writer: tutorial/effects.md
+      - 10. Accumulating errors: tutorial/accumulation.md
+      - 11. Programming against capabilities: tutorial/capabilities.md
+      - 12. Programs with IO: tutorial/io.md
+      - 13. Concurrency with fibers: tutorial/fibers.md
+      - 14. Running and testing async programs: tutorial/running.md
   - Examples:
       - Example gallery: examples/index.md
   - Architecture:
@@ -101,7 +106,7 @@ nav:
       - fp.effects.async_runtime.protocols: reference/effects.async_runtime.protocols.md
       - fp.matching: reference/matching.md
   - Guides:
-      - Async runtime preview: guides/async-runtime.md
+      - Async runtime guide: guides/async-runtime.md
       - Migrate to the advanced runtime: guides/async-migration.md
       - Support and limitations: guides/status.md
       - Mojo 1.2 compatibility: guides/compatibility.md

@@ -76,5 +76,5 @@ error families, and escaped masked results.
 The maintained source/package O0/O3 qualification includes checkpoint, lexical
 masking, scope ownership and synchronous IO regression clients. The
 [overnight workload](async-qualification.md) adds sustained suspending withdrawal,
-cleanup failures, cancellation draining and exact ownership checks. Public
-release scope remains the [opt-in preview](../guides/async-runtime.md).
+cleanup failures, cancellation draining and exact ownership checks. The public
+surface is described in the [async runtime guide](../guides/async-runtime.md).

@@ -1,12 +1,11 @@
 # Migrate to the advanced runtime
 
-The async runtime preview changed in four ways that need code or review
-changes. Earlier previews built programs from typed recipes; every operation
-now returns one `IO[T, E]`. Fibers ran on the calling thread; they now run on
-a work-stealing pool by default. `par_*` now has two meanings, chosen by the
-callback's result type. And `Spawn` gained a member, `background`. The
-[async runtime guide](async-runtime.md) describes each feature; this page
-lists what to change.
+The async runtime changed in four ways that need code or review changes. Earlier
+previews built programs from typed recipes; every operation now returns one
+`IO[T, E]`. Fibers ran on the calling thread; they now run on a work-stealing
+pool by default. `par_*` now has two meanings, chosen by the callback's result
+type. And `Spawn` gained a member, `background`. The [async runtime
+guide](async-runtime.md) describes each feature; this page lists what to change.
 
 ## From typed recipes to `IO`
 

@@ -1,12 +1,12 @@
-"""Pure-Mojo async IO with Cats Effect vocabulary and structured cooperative execution.
+"""Pure-Mojo async IO with Cats Effect vocabulary and structured concurrency.
 
-This opt-in preview targets the pinned Mojo 1.2 Linux x86-64 toolchain. An
+It targets Mojo 1.2 on Linux x86-64 and macOS arm64. An
 `IO[T, E]` describes asynchronous work producing T or failing with the exact
 domain error E; it runs once, when a host drives it. Methods and Pipeline
 compose IO values, and `Async[E]` is their family for tail_rec_m, traversal and
 attempt. Long sequences run iteratively in constant native stack. Callbacks
-stored in an IO must own their state. Native callbacks run on the host thread
-and must return cooperatively. No detached work or GPU backend is provided.
+stored in an IO must own their state. Native callbacks run on the thread that
+runs their fiber, a pool worker by default, and must return promptly. No detached work or GPU backend is provided.
 
 Use protocols for custom leaf machines, lifted with IO.lift. Driver owns entered
 roots linearly: request cancellation, continue polling, then finish. Checked

@@ -1,15 +1,15 @@
 # Async overnight qualification
 
 This repeatable Linux qualification protocol checks sustained behavior of the
-pure-Mojo async preview, complementing its deterministic public-contract and
+pure-Mojo async runtime, complementing its deterministic public-contract and
 source/package tests. Launching a run or passing its short calibration does not
 complete overnight qualification.
 
 **Status: overnight qualification passed.** The twelve one-hour source/package O0/O3 stress
 cases and both serial O3 performance runs passed on commit `b753ce9`. An
 independent replay of the retained evidence audit also passed. These results
-qualify the tested opt-in preview without changing its release status or
-platform scope.
+qualify the tested runtime on Linux x86-64; macOS arm64 is covered by the
+focused source/package suites and a one-hour soak.
 
 ## Workloads and storage contracts
 

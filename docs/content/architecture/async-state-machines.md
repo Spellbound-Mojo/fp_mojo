@@ -131,6 +131,6 @@ pixi run python experiments/async-state-machines/qualify.py \
 
 Use a fresh output directory. The [overnight qualification](async-qualification.md)
 records completed sustained reuse, ownership, retained-storage and performance
-checks. The supported surface remains an opt-in preview on pinned Mojo 1.2.0
-Linux x86-64; qualification does not extend to arbitrary platforms, parallel
-payload execution, GPU adapters, or unlimited leaf type depth.
+checks. The supported surface is qualified with Mojo 1.2.0 on Linux x86-64 and
+macOS arm64; qualification does not extend to other platforms, GPU adapters, or
+unlimited leaf type depth.

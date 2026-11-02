@@ -91,7 +91,7 @@ one value at a time through `map` and `filter`.
 | `fp.matching` | Pattern matching | `fp.match` (a `Node`, `Choice`, `Result` or `Optional`, a context, or several values), `fp.rewrite`, `fp.when`, `Next` |
 | `fp.algebra` | Functor, Filterable, Applicative, Monad, Traversable and Monoid | `map`, `filter`, `pure`, `flat_map`, `tail_rec_m`, `map2`, `ap`, `traverse`, `sequence`; Identity, Optional, Result and List instances |
 | `fp.effects` | Reader, State, Writer, monad transformers, synchronous IO and resource scopes | `ReaderT`, `StateT`, `WriterT`, `OptionalT`, `ResultT`, `IO`, `Resource`, `IOResource`, `Outcome`; `delay`, `run_io`, `guarantee`, `fold_outcome` |
-| `fp.effects.async_runtime` | Cooperative async IO and structured concurrency (preview) | `IO`, `Fiber`, `background`, `Supervisor`, `Resource`, `Driver`, `TestControl`, `Runtime`, `Deferred`, `Queue`, `Semaphore`; `both`, `race`, `sleep`, `timeout_to` |
+| `fp.effects.async_runtime` | Async IO, fibers and structured concurrency | `IO`, `Fiber`, `background`, `Supervisor`, `Resource`, `Driver`, `TestControl`, `Runtime`, `Deferred`, `Queue`, `Semaphore`; `both`, `race`, `sleep`, `timeout_to` |
 | `fp.effects.async_runtime.protocols` | Extension contracts for custom async leaves lifted into `IO` and scoped borrowing | `Machine`, `ScopedMachine`, `CleanupMachine`, `Context`, `Step`, `Wait`, `Signal` |
 | `fp.callables` | Calling protocols shared by other components | `Unary`, `Binary`, `Thunk`, `as_unary`, `call_once`, `call_repeated` |
 
@@ -490,7 +490,7 @@ Import each name from the package that owns it, such as
 
 The documentation is published at
 [spellbound-mojo.github.io/fp_mojo](https://spellbound-mojo.github.io/fp_mojo/):
-a nine-part tutorial, runnable examples and an API reference generated from the
+a fourteen-part tutorial, runnable examples and an API reference generated from the
 source. Its sources are in [`docs/content`](docs/content/index.md); to browse
 them locally:
 
@@ -501,7 +501,7 @@ pixi run docs-serve
 
 | Start with | For |
 |---|---|
-| [Tutorial](docs/content/tutorial/pipelines.md) | Nine runnable lessons covering pipelines, data types, a configuration processor, algebra and effects |
+| [Tutorial](docs/content/tutorial/pipelines.md) | Fourteen runnable lessons covering pipelines, data types, a configuration processor, algebra, effects, error accumulation and async programs |
 | [Algebra](docs/content/tutorial/algebra.md) | When to use mapping, applicative combination, monadic bind and traversal |
 | [Effects](docs/content/tutorial/effects.md) | Reader, State and Writer before combining them with monad transformers |
 | [IO and resources](docs/content/reference/effects.md#io-cancellation-and-finalization) | Deferred execution, outcomes, cancellation, finalizers and effectful resource scopes |

@@ -111,8 +111,8 @@ forms every pair, in left-major order. Prices `[10, 20]` and quantities
 ## Collect results with traverse and sequence
 
 `traverse[OptionalFamily, ListFamily]` transforms a list of inputs into one
-optional list of outputs. The first family names the source shape; the second
-names the context returned by the callback.
+optional list of outputs. The first family names the context returned by the
+callback; the second names the source shape.
 
 <!-- example: docs/examples/algebra_traversal.mojo -->
 

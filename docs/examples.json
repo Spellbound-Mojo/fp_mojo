@@ -398,6 +398,30 @@
     },
     "docs/examples/async_descriptors.mojo": {
       "stdout": "read: 42\n"
+    },
+    "docs/examples/accumulate_signup.mojo": {
+      "stdout": "map_n: rejected: name is empty\npar_map_n: rejected: name is empty; password is shorter than 8 bytes; age 12 is under 18\npar_product_n: ana, 30\ncomparing the password with the name\naccepted: welcome ana, age 30\ncomparing the password with the name\nconflict: rejected: password contains the name\nskipped: rejected: name is empty; password is shorter than 8 bytes; age 12 is under 18\n"
+    },
+    "docs/examples/accumulate_warnings.mojo": {
+      "stdout": "accepted ana, 30\naccepted ana, 120 with 2 warnings, first: name trimmed\nrejected: name trimmed; age -4 is negative\nrejected: name is empty; age -4 is negative\n"
+    },
+    "docs/examples/capabilities_checkout.mojo": {
+      "stdout": "state over reader: total = 41 ; ticket = 11\nreader over state: total = 41 ; ticket = 11\n"
+    },
+    "docs/examples/io_program_first.mojo": {
+      "stdout": "build order\nbuilt\ndeferred\nread quantity\nprice 3 items\nadd shipping to 36\ntotal: 41\nbuild order\nread quantity\nprice 3 items\nadd shipping to 36\ntotal: 41\n"
+    },
+    "docs/examples/io_program_cleanup.mojo": {
+      "stdout": "write lines\nclose report\nsuccess: 3\nwrite lines\nclose report\nfailure: [disk full] canceled: False\nclose report\nnote cancellation\ncanceled\nwrite lines\nfailure: [disk full] [close failed] canceled: False\nfailure: [close failed] canceled: True\n"
+    },
+    "docs/examples/fibers_unjoined.mojo": {
+      "stdout": "reporter: unhandled fiber failure: disk full\nowner: ok 1\n"
+    },
+    "docs/examples/fibers_timeout.mojo": {
+      "stdout": "quick source: ok 7\nstuck source: ok -1\nstuck source: failed 'lookup timed out'\n"
+    },
+    "docs/examples/running_contexts.mojo": {
+      "stdout": "free run: none\nruntime.run: runtime(work_stealing(2))\neval_on(compute): runtime(work_stealing(2))\neval_on(files): blocking_pool, then none\nnested: blocking_pool, then runtime(work_stealing(2))\nstart_on: 505550\nbackground_on: blocking_pool\n"
     }
   },
   "version": 1

@@ -39,7 +39,7 @@ Queue and Semaphore construction delegate validation to the synchronous types.
 Methods build unentered `IO` values, which may be dropped normally. Entered
 work belongs to a linear `Task` or `Driver` and must drain. All values, captures,
 and errors retain their native types and origins. The async names are part of
-the opt-in public preview; synchronous operations keep their existing contracts.
+the public async runtime; synchronous operations keep their existing contracts.
 
 Cancellation before a transition leaves shared state intact. A committed enqueue
 or dequeue survives late cancellation. A dequeued result that is suppressed by
@@ -57,8 +57,9 @@ permit on success, failure, or cancellation.
 The driver bounds scheduling operations, not instructions inside user code or
 destructors. Canonical Ref callbacks and payload destruction are synchronous;
 they must not block or reenter a state guard they already hold. Permit destruction
-uses the existing synchronous release path. The supported boundary is cooperative
-single-thread execution, not contention between parallel execution threads.
+uses the existing synchronous release path. On the current-thread profile these
+locks are never contended; on the work-stealing profile a contended lock polls
+(see the guide's [known limits](../guides/async-runtime.md#known-limits)).
 FIFO buffered values and FIFO scheduler readiness do not imply FIFO waiter
 fairness: notification makes waiters eligible, and the host controls root order.
 
