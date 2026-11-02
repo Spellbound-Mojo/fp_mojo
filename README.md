@@ -39,6 +39,29 @@ def main():
 the total to 50. Execution is strictly lazy: elements stream one at a time through `map`
 and `filter` as `fold_left` requests them, without intermediate heap allocations.
 
+## What's new in FP Mojo 1.0.2
+
+Release 1.0.2 targets **Mojo 1.2.0** and introduces a production-ready structured asynchronous
+runtime alongside significant functional capabilities:
+
+- **Structured Async Concurrency Runtime (`fp.effects.async_runtime`)**:
+  - Pure-Mojo `IO[T, E]` programs with constant native stack, eliminating recursion limits for deep binds and `tail_rec_m` loops.
+  - Cancelable lightweight `Fiber`s: fork, join, or cancel concurrent tasks with `.start()`, `.both()`, `.race()`, and supervised backgrounds via `Supervisor` and `background`.
+  - Multi-threaded work-stealing scheduler (`Profile.work_stealing`) enabled by default on multi-core systems, featuring per-worker timer heaps, descriptor event polling, and blocking handoff.
+  - Dedicated single-thread cooperative profile (`Profile.current_thread`) for deterministic, embedded, and single-threaded execution.
+- **Deterministic Virtual-Time Testing (`TestControl`)**:
+  - Advance virtual time instantly, control scheduling steps cooperatively, and test concurrent races without wall-clock sleeps or non-deterministic test flakes.
+- **Isolated Blocking Offload**:
+  - `IO.blocking(...)` and cancelable `IO.interruptible(...)` safely offload blocking syscalls or compute-bound workloads to a dedicated `BlockingPool`, protecting worker thread availability.
+- **Resumable Coordination Primitives**:
+  - Pure-Mojo asynchronous `Deferred[T]`, `Ref[T]`, bounded `Queue[T]`, and `Semaphore` permits for safe inter-fiber communication.
+- **Independent Error Accumulation**:
+  - Validate multiple independent inputs without fail-fast short-circuiting via `par_map_n`, `par_traverse`, `par_product_n`, `NonEmptyList`, and `Ior` (preserving valid outcomes alongside accumulated warnings).
+- **Cats MTL Capability Traits**:
+  - Abstract effect capabilities (`Ask`, `Stateful`, `Tell`, `Listen`, `Censor`) with explicit monad transformer lifting.
+- **Dual-Platform Qualification**:
+  - Comprehensive qualification on **64-bit Linux** and **macOS arm64**, compact `Node` storage, and static `ThreadTransferable` payload verification.
+
 ## Core capabilities
 
 - **Pipelines & function composition.** Build fluent data-transformation pipelines with `pipeline`
@@ -197,6 +220,37 @@ def main():
 `refuse`. `"old"` fails to parse, so `adult` never runs. `attempt(f, args...)`
 turns a raising call into a `Result`, and `raise_on_err` turns it back, with
 the original error type both ways.
+
+### Independent error accumulation with par_map_n
+
+While `flat_map` short-circuits on the first error, `par_map_n` aggregates failures across
+independent validation checks. When all validations succeed, it applies a combining function;
+if any fail, all accumulated errors are preserved:
+
+```mojo
+from fp.data import Result, Ok, Err
+from fp.functions import pipeline
+
+comptime Checked = Result[Int, List[String]]
+
+def positive(value: Int) -> Checked:
+    if value <= 0:
+        return Err(List[String]([String(value) + " must be positive"]))
+    return Ok(value)
+
+def total(a: Int, b: Int, c: Int) -> Int:
+    return a + b + c
+
+def main():
+    # Both negative inputs fail independently; par_map_n reports all errors together
+    var invalid = pipeline(positive(-2)).par_map_n((positive(3), positive(-4)), total).get()
+    if not invalid:
+        var errors = invalid.take_err()
+        for error in errors:
+            print("validation error:", error)
+        # validation error: -2 must be positive
+        # validation error: -4 must be positive
+```
 
 ### Compile-time exhaustive pattern matching
 
@@ -416,6 +470,32 @@ examples for fibers, coordination, timeouts, blocking offload, and Cats Effect
 concept mapping. The multi-threaded work-stealing runtime is qualified on 64-bit Linux
 and macOS arm64.
 
+### Asynchronous racing, timeouts, and TestControl
+
+Structured concurrency manages deadlines through `timeout_to` and `timeout_after`. In test environments,
+`TestControl` provides deterministic virtual-time progression so timed programs execute instantly without
+wall-clock sleeps:
+
+```mojo
+from fp.effects import EffectFailure, fold_outcome
+from fp.effects.async_runtime import IO, Duration, TestControl
+
+def success(value: Int) -> Int: return value
+def failure(var errors: EffectFailure[Int]) -> Int: return -1
+def canceled() -> Int: return 0
+
+def main() raises:
+    # A 60-second asynchronous sleep with a 5-second timeout fallback:
+    var slow = IO[NoneType, Int].sleep(Duration.seconds(60)).map(lambda (unit: NoneType) -> Int: 42)
+    var program = slow^.timeout_to(Duration.seconds(5), IO[Int, Int].pure(7))
+
+    # TestControl advances virtual time instantly without wall-clock waiting:
+    var control = TestControl(program^)
+    control.tick()       # Advances to the first scheduling point (5s deadline)
+    control.tick_all()   # Drains virtual-time deadlines and completes execution
+    print("result:", fold_outcome(control^.results(), success, failure, canceled))  # result: 7
+```
+
 ## Getting started
 
 FP Mojo is published as `fp_mojo` in the
@@ -491,12 +571,16 @@ pixi run docs-serve
 | Start with | For |
 |---|---|
 | [Tutorial](docs/content/tutorial/pipelines.md) | Fourteen runnable lessons covering pipelines, data types, a configuration processor, algebra, effects, error accumulation and async programs |
-| [Algebra](docs/content/tutorial/algebra.md) | When to use mapping, applicative combination, monadic bind and traversal |
-| [Effects](docs/content/tutorial/effects.md) | Reader, State and Writer before combining them with monad transformers |
-| [IO and resources](docs/content/reference/effects.md#io-cancellation-and-finalization) | Deferred execution, outcomes, cancellation, finalizers and effectful resource scopes |
-| [Async runtime](docs/content/guides/async-runtime.md) | Typed sequencing, iterative loops, structured children, timers, callbacks and host integration |
+| [Algebra & Monads](docs/content/tutorial/algebra.md) | When to use mapping, applicative combination, monadic bind and traversal |
+| [Effects & Transformers](docs/content/tutorial/effects.md) | Reader, State and Writer before combining them with monad transformers |
+| [Error accumulation](docs/content/tutorial/accumulation.md) | Validating independent inputs with `par_map_n`, `ValidationFamily`, `NonEmptyList`, and `Ior` |
+| [Capabilities](docs/content/tutorial/capabilities.md) | Cats MTL pattern with `Ask`, `Stateful`, and `Tell` capability dictionaries |
+| [Async programs with IO](docs/content/tutorial/io.md) | Suspended side effects, resource scopes, and cooperative execution |
+| [Fibers & Concurrency](docs/content/tutorial/fibers.md) | Cancelable fibers, joins, races, timeouts, and structured supervision |
+| [Running & Testing](docs/content/tutorial/running.md) | Execution profiles, work-stealing pool, blocking offload, and `TestControl` virtual time |
+| [Async runtime guide](docs/content/guides/async-runtime.md) | Architectural overview of typed sequencing, child lifecycles, and host integration |
 | [Async API reference](docs/content/reference/effects.async_runtime.md) | Application operations and their ownership and cancellation contracts |
-| [Examples](docs/content/examples/index.md) | Every example program, with its output |
+| [Examples](docs/content/examples/index.md) | Every example program, with its reviewed output |
 | [Ownership and errors](docs/content/start/ownership.md) | How borrowing, moving and failures work across the library |
 | [API reference](docs/content/reference/index.md) | Every public name, with its contract |
 | [Architecture](docs/content/architecture/overview.md) | How it is built, and why |
