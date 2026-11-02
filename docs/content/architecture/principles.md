@@ -8,10 +8,12 @@ Changing one requires an explicit design decision and updated documentation.
 1. **Ordinary Mojo only.** The library is used through normal imports,
    functions, closures, structs, traits and parameters. There is no parser,
    transpiler, source rewriting, mandatory code generation or Python runtime.
-   The optional fiber backend uses public Mojo FFI for POSIX thread creation
-   and joining on 64-bit Linux and macOS; core operations require no foreign runtime.
+   The multithreaded runtime pools use public Mojo FFI for POSIX thread
+   management qualified on 64-bit Linux and macOS arm64; core functional operations
+   require no foreign runtime.
    Its [thread ownership contract](algebra.md#fibers-and-shared-coordination)
-   is an explicit, narrowly scoped exception.
+   and [payload thread safety](async-thread-safety.md)
+   are explicit, narrowly scoped boundaries.
 2. **Add the smallest missing piece.** When a native capability covers part of
    a contract, add only the missing adapter or specialization, reuse native
    control flow, ownership and storage, and state the exact gap it fills.
@@ -63,11 +65,11 @@ and is [measured cold](../contributing/benchmarks.md#measuring-compile-time).
 
 ## Scope
 
-The library covers function composition and partial application, sequential
-folds and lazy iteration, typed results, algebraic and inductive data types with
-exhaustive pattern matching, functional control flow, and algebraic interfaces
-with monad transformers, consumed resource scopes, cooperative IO execution,
-explicitly started fibers, and shared coordination.
+The library covers eager function composition, positional partial application, sequential
+folds and lazy streaming iteration, algebraic results, in-place and inductive sum types
+with exhaustive pattern matching, functional control flow, pure algebraic interfaces
+with monad transformers, and structured asynchronous concurrency with cancelable
+fibers, resource scopes, and shared coordination primitives.
 Recursion is over finite acyclic data; general
 well-founded recursion is outside this contract. The scope also includes
 documented laws and device-compatible specializations of the non-allocating,

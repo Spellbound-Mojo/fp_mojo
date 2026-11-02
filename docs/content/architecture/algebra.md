@@ -1226,6 +1226,9 @@ native calls. Cancellation remains separate from this error recovery.
 
 ## Fibers and shared coordination
 
+> [!NOTE]
+> This section covers the low-level 1:1 OS-thread execution backend (`unsafe_start`). For the structured, M:N cooperative runtime with cancelable `Fiber`s, work-stealing execution, and zero-allocation frame loops, see [Async fibers](async-fibers.md) and the [Structured async runtime guide](../guides/async-runtime.md).
+
 The optional fiber backend starts one OS thread per IO recipe using the public
 Mojo `std.ffi` interface to POSIX `pthread_create` and `pthread_join`. Its current
 contract is 64-bit Linux and macOS; other targets reject `unsafe_start` before

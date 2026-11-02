@@ -136,7 +136,24 @@ design:
 - [Result, Optional and ControlFlow](data.md): typed outcomes and error bridges.
 - [Algebraic data and matching](matching.md): declared data, shared and
   in-place values, and matching.
-- [Algebra and effects](algebra.md).
+- [Algebra and effects](algebra.md): algebraic interfaces, instance dictionaries,
+  and monad transformers.
+- [Async state machines](async-state-machines.md): pure-Mojo suspension, cancellation,
+  and scoped resource lifecycles.
+- [Async composition](async-composition.md): iterative run loop, frame stack, and child
+  lifecycles.
+- [Wake-driven execution](async-scheduler.md): task registries, cooperative queues,
+  and host driver loops.
+- [Async fibers](async-fibers.md): concurrent child tasks, join claims, and zero-allocation
+  frame loops.
+- [Resumable coordination](async-coordination.md): `Ref`, `Deferred`, `Queue`, and `Semaphore`.
+- [Structured races and timeouts](async-racing.md): first-terminal and cancellation-aware racing.
+- [Async finalization and lexical masking](async-finalization.md): `guarantee`, `on_cancel`,
+  `uncancelable`, and `Poll`.
+- [Async payload thread safety](async-thread-safety.md): work-stealing pool transferability
+  and shared state.
+- [Async overnight qualification](async-qualification.md): sustained stress protocols,
+  RSS memory plateaus, and verification evidence.
 - [Laws](laws.md), [performance](performance.md),
   [native Mojo boundaries](native-boundaries.md) and
   [verification](verification.md).

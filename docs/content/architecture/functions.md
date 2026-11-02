@@ -1,7 +1,7 @@
 # Functions and partial application
 
 `fp.functions` provides eager application with `identity` and `pipe`, function
-composition with `flow` and `compose`, argument flipping with `flip`, and partial
+composition with `flow` and `compose`, argument flipping with `flip`, partial
 application with `partial`, and explicit pair adaptation with `tupled`. The reusable callables implement the fixed-arity
 protocols in [fp.callables](callables.md). Pipelines and compositions share the
 same stage planner and traversal.
