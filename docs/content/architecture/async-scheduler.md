@@ -384,6 +384,8 @@ the pool.
 - **A push onto the worker's own ring** notifies only when the ring then
   holds more than one entry. Otherwise the worker runs that entry next
   itself.
+- **A task displaced from the LIFO slot** onto the ring always notifies
+  (below).
 - **A wake while the task runs** marks it notified, and the end of the run
   requeues it (`_Runtime.park`), as on the current-thread profile.
 - **Foreign wakes.** A wake from a thread outside the pool is two dispatch
@@ -450,23 +452,17 @@ incurring ring insertion and thread unpark overhead.
   external batches. So a task that yields still goes to the back of the
   ring, not ahead of it.
 - **Notification.** Filling an empty slot never notifies: the worker runs
-  that task next. A displaced occupant notifies under the ring's rule for a
-  worker that is not running a task, that is, only when the ring then holds
-  more than one entry. Tokio notifies on every displacement. Here that kept
-  one cross-worker wake in every fiber pair, because starting the second
-  child displaces the first, and the pair stayed at the old cost. A fan-out
-  still notifies from its third start on.
-- **The displaced task's latency bound.** A displaced task left on a busy
-  worker's ring without a notify can be stolen at once by any worker that is
-  active or searching. A parked worker learns of it by the end of the
-  running task's run at the latest, which its transition slice bounds. The
-  run then ends, and either the worker takes the entry itself or its own
-  requeue makes a second ring entry, which notifies. `wstp_lifo` measures
-  this. With every other worker parked, a root displaces a fiber and keeps
-  running short steps, and a parked worker steals the fiber after 509 of
-  them, which is one 1024-transition slice. Only user code that blocks the
-  thread stretches the bound, and it delays the ring's other entries as
-  much.
+  that task next. A displaced occupant always notifies, as in Tokio. The
+  worker runs the slot's new occupant before its ring, so without a notify
+  the displaced task would wait out that whole run: a parent that starts two
+  children and waits for them runs the second from the slot while the first
+  sits on the ring
+  ([displaced tasks](#displaced-tasks-and-two-sided-fan-outs)).
+- **The displaced task's latency.** The notify wakes a parked worker, which
+  steals the displaced task at the poller's wake latency; a worker already
+  active or searching can steal it at once. `wstp_lifo` checks that a parked
+  worker takes a fiber displaced by a busy root, and `wstp_parallel` that
+  the two single-step sides of a `both` on a two-worker pool overlap.
 - **The bound.** At the top of every iteration the worker takes the slot's
   task before `_find`, at most `_MAX_LIFO_RUNS` (3, Tokio's
   `MAX_LIFO_POLLS_PER_TICK`) times in a row. A fourth occupant goes to the
@@ -514,8 +510,9 @@ with the range in brackets.
 | Join racing a completion | 5.92 µs [5.79–6.01] | 17.8 µs [17.0–18.4] | 5.84 µs [5.76–5.98] | 6.00 µs [5.75–6.04] |
 | IO loop step | 38 ns | 39 ns | 39 ns | 38 ns |
 
-- **The pool's fiber pair and join match the current-thread profile**,
-  fulfilling the parity requirement for default pool scheduling.
+- **The pool's join matches the current-thread profile.** Its fiber pair
+  matched it too while a displaced task did not notify; it no longer does
+  ([displaced tasks](#displaced-tasks-and-two-sided-fan-outs)).
 - **The current-thread profile is unchanged**: the slot is pool code.
 - **Pairs that cede** still cost more on the pool (about 27 µs, against 42 µs
   before): a ceding run requeues onto the ring, where a second entry
@@ -1157,11 +1154,15 @@ Throughput with many workers, from the clients and probes that measure it:
 - **Where the pool costs more.** A trivial `run()` makes a pool for the call
   (about 1 µs). A fiber that cedes requeues onto the ring, where a second
   entry wakes another worker, so a ceding pair costs about twice the
-  current-thread profile ([see notification policy](#ceding-pairs-and-notification-policy)). `both` and `race` start their sides as fibers and
-  cost 15–25% more. An idle pool parks its worker in a poller like the
-  current thread, but a 2 s run uses about 0.3 ms more CPU.
-- **Where it wins.** Fiber pairs and joins match the current-thread profile
-  (the LIFO slot), and fan-outs run in parallel: `par_traverse`'s
+  current-thread profile ([see notification policy](#ceding-pairs-and-notification-policy)). Two fibers that finish at
+  once cost about four times the current-thread profile, because the second
+  start wakes another worker for the first, and `both` and `race` start
+  their sides the same way
+  ([displaced tasks](#displaced-tasks-and-two-sided-fan-outs)). An idle pool
+  parks its worker in a poller like the current thread, but a 2 s run uses
+  about 0.3 ms more CPU.
+- **Where it wins.** Joins match the current-thread profile (the LIFO slot),
+  and fan-outs of two or more children run in parallel: `par_traverse`'s
   per-element cost falls by a quarter even for elements that only cede, and
   CPU-bound fibers speed up nearly linearly.
 - **Latency.** Timers fire 0.1–0.2 ms after their deadlines on both profiles,
@@ -1222,6 +1223,39 @@ the current-thread profile. For code dominated by ceding hand-offs, choose
 wakes come from the running task and take the LIFO slot's path, which needs
 no notify. The probe stays in the repository as evidence.
 
+### Displaced tasks and two-sided fan-outs
+
+Starting a fiber from a running task puts it in the worker's LIFO slot, and
+starting a second displaces the first onto the ring. The parent then waits,
+and the worker runs the second child from the slot before its ring. The
+first rule notified for a displaced task only when the ring then held more
+than one entry, which kept a fiber pair at the current-thread cost. But with
+every other worker parked, the first child then waited out the second
+child's whole run: one transition slice, or the whole child when its step
+never yields. So the two sides of a CPU-bound `both` or `race`, or a
+two-element `par_traverse`, ran one after the other, while three or more
+children ran in parallel, since the third start made a second ring entry.
+
+A displaced task now always notifies, as in Tokio. The same choice as for
+ceding pairs ([above](#ceding-pairs-and-notification-policy)): a two-sided
+fan-out reaches another worker, and a pair of fibers that finish at once
+pays for the wake. This regresses the fiber-pair case of the performance
+gates on the pool, by design. Measured at O3 on the 16-thread Linux x86-64
+development host through the public `run`, before and after the change,
+built from the same tree:
+
+| Case | Before | After |
+|---|---|---|
+| CPU-bound `par_traverse`, each element one 100 ms step: 1, 2, 3, 4 elements | 100, 200, 100, 100 ms | 100, 100, 100, 100 ms |
+| CPU-bound `a.both(b)`, each side one 100 ms step | 200 ms | 100 ms |
+| `profile_compare` fiber pair, no yields, pool (two runs) | 9.35, 9.31 µs | 38.4, 38.8 µs |
+| The same, current thread | 9.41, 9.32 µs | 9.35, 9.47 µs |
+| Fiber pair, one cede each, pool | 66.0, 65.6 µs | 63.2, 64.2 µs |
+| Join racing a completion, pool | 5.62, 5.67 µs | 5.59, 5.63 µs |
+
+For code dominated by pairs of tiny fibers, choose
+`Profile.current_thread()`.
+
 ### Qualification
 
 `wstp_parallel`, `wstp_wakes` and `wstp_ownership` run on four-worker pools
@@ -1229,7 +1263,8 @@ through `_run_pooled`; they check invariants, never which worker ran what or
 which side won.
 
 - **`wstp_parallel`** checks results, the absence of overlap on one worker,
-  overlap on two and four workers, and a speedup of at least 15%.
+  overlap on two and four workers, a speedup of at least 15%, and that the
+  two single-step sides of a `both` on a two-worker pool overlap.
 - **`wstp_wakes`** covers three cases:
   - a storm of `IO.async` completions from three OS threads;
   - a relay of a token through one-slot queues between fibers on different

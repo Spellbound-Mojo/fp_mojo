@@ -10,7 +10,11 @@ spin on arithmetic, then joins them all. The same program runs on pools of 1,
   atomic count of steps in progress records its high-water mark), which shows
   fibers running in parallel without relying on timing;
 - two and four workers finish faster than one, with a margin wide enough for
-  a second qualification job on the same machine.
+  a second qualification job on the same machine;
+- the two sides of a `both` on a two-worker pool, each a single step that
+  waits up to `MEET_NS` for the other to start, overlap: the first side,
+  displaced from the LIFO slot by the second, reaches the other worker
+  instead of waiting out the second side's run.
 
 Timings go to standard error, so the expected output stays fixed.
 """
@@ -29,6 +33,7 @@ comptime FIBERS = 16
 comptime STEPS = 40
 comptime SPIN = 40_000
 comptime TRIALS = 3
+comptime MEET_NS = 2_000_000_000
 
 
 def check(condition: Bool, message: String):
@@ -143,6 +148,31 @@ def program(gauge: ArcPointer[Gauge]) -> IO[List[Int], Int]:
     return chain(0, gauge).start().flat_map(StartRest(1, List[Fiber[Int, Int]](), gauge.copy()))
 
 
+@fieldwise_init
+struct Meet(OnceUnary):
+    """One step that waits, up to `MEET_NS`, until the other side's step is in progress too."""
+    var gauge: ArcPointer[Gauge]
+    comptime Arg = NoneType
+    comptime Out = Int
+
+    def call_once(deinit self, var unit: NoneType) -> Int:
+        self.gauge[].enter()
+        var start = perf_counter_ns()
+        while self.gauge[].high() < 2 and perf_counter_ns() - start < MEET_NS:
+            pass
+        self.gauge[].leave()
+        return 1
+
+
+def pair_overlaps() -> Bool:
+    var gauge = ArcPointer(Gauge())
+    var left = IO[NoneType, Int].pure(None).map(Meet(gauge.copy()))
+    var right = IO[NoneType, Int].pure(None).map(Meet(gauge.copy()))
+    var outcome = _run_pooled(left^.both(right^), CancellationToken(), IORuntimeConfig(), 2)
+    check(Bool(outcome) and outcome.value().is_ok(), "the pair succeeds")
+    return gauge[].high() == 2
+
+
 def trial(workers: Int, mut high: Int) -> Int:
     var gauge = ArcPointer(Gauge())
     var start = perf_counter_ns()
@@ -178,4 +208,5 @@ def main():
     check(two_high > 1 and four_high > 1, "more workers run steps in parallel")
     check(Float64(two) < 0.85 * Float64(one), "two workers are faster than one")
     check(Float64(four) < 0.85 * Float64(one), "four workers are faster than one")
+    check(pair_overlaps(), "the two sides of a both run in parallel")
     print("wstp_parallel: CPU-bound fibers run in parallel and speed up with 2 and 4 workers")

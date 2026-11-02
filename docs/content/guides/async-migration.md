@@ -96,10 +96,13 @@ under `TestControl`, which stays deterministic; see
   ([ceding pairs](../architecture/async-scheduler.md#ceding-pairs-and-notification-policy));
 - each free `run` makes a pool for the call, about 1 µs more: create one
   `Runtime` and run many programs on it;
-- `both` and `race` of pure sides cost 15 to 25% more;
+- `both` and `race` of pure sides, and any two fibers that finish at once,
+  cost about four times as much, because the second start wakes another
+  worker for the first;
 - an idle program uses about 0.3 ms more CPU per 2 s;
 - CPU-bound fibers run in parallel: about 1.9 times faster on 2 cores, and
-  3.5 to 4 times on 4. Fiber pairs and joins cost the same on both profiles.
+  3.5 to 4 times on 4, from two fibers on. Joins cost the same on both
+  profiles.
 
 **Blocking and locks.** A blocking call runs on the thread that made it, and
 the worker's queue moves to a replacement thread. A configured

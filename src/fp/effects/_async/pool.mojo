@@ -33,9 +33,11 @@ of its workers otherwise, onto that worker's ring; from any other thread,
 onto the external queue. After the registry lock is released, `notify` wakes
 a parked worker when no worker is searching and not all are active. Filling
 an empty LIFO slot never notifies, and a push onto the worker's own ring
-(including a slot occupant it displaces) notifies only when the ring then
-holds more than one entry; otherwise the worker is about to run the entry
-itself, which is what keeps a `run` that never starts a fiber on one thread.
+notifies only when the ring then holds more than one entry; otherwise the
+worker is about to run the entry itself, which is what keeps a `run` that
+never starts a fiber on one thread. A slot occupant displaced onto the ring
+always notifies, as in Tokio: the worker runs the slot's new occupant first,
+so the displaced task would otherwise wait out that whole run.
 A wake while the task runs marks it notified, and the run's end requeues it
 (`_Runtime.park`) onto the ring.
 
@@ -51,10 +53,7 @@ waking each other cannot starve the ring. The worker flushes the slot to the
 ring (`_flush_lifo`) before it parks and when it leaves its loop, unless it
 retired, when the slot belongs to its replacement with the ring. A task in a
 busy worker's slot is invisible to idle workers only until the current run
-ends, which its transition slice bounds. The same slice bounds how long a
-displaced task waits un-notified on a busy worker's ring: workers already
-active or searching can steal it at once, and the end of the run either
-takes it or requeues the running task beside it, which notifies.
+ends, which its transition slice bounds.
 
 The worker loop (`run_worker`), after `WorkerThread.run`:
 
@@ -321,17 +320,18 @@ def _pool_push(target: Int, var task: _Entry) -> Bool:
         var random = Pointer(to=slot[].random).unsafe_origin_cast[MutUntrackedOrigin]()
         if slot[].running:
             # Woken by the running task: into the LIFO slot, which needs no
-            # notify. A displaced occupant goes to the back of the ring, which
-            # notifies only when it then holds more than one entry (the
-            # own-ring rule; Tokio always notifies here, which kept a fiber
-            # pair at about 23 µs).
+            # notify. A displaced occupant goes to the back of the ring and
+            # always notifies, as in Tokio. This worker runs the slot's new
+            # occupant before its ring, so without a notify the displaced
+            # task waits out that whole run, and the two sides of a `both`
+            # or a two-element `par_traverse` run one after the other.
             var lifo = Pointer(to=slot[].lifo).unsafe_origin_cast[MutUntrackedOrigin]()
             var previous = lifo[].take() if lifo[] else Optional[_Entry](None)
             lifo[] = Optional(task^)
             if not previous:
                 return False
             queue[].enqueue(previous.take(), pool[].external, random[])
-            return queue[].len() > 1
+            return True
         queue[].enqueue(task^, pool[].external, random[])
         # The worker runs its next entry itself unless it has more.
         return queue[].len() > 1
