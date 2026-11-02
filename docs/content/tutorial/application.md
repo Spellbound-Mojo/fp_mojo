@@ -1,10 +1,11 @@
 # 7. A configuration processor
 
-The two programs in this chapter combine lazy iteration, Result composition and
-pattern matching. The first parses and validates configuration, stopping when a
-line or setting is invalid. The second routes a queue of commands with guarded
-clauses and handles a typed dispatch error. Both express their parsing,
-validation and dispatch rules as plain functions.
+This case study demonstrates how to synthesize lazy streams, monadic `Result` sequencing,
+and exhaustive pattern matching into cohesive real-world workflows. The first program
+parses and validates structured configuration files using fail-fast pipelines.
+The second routes command queues using guarded pattern-matching clauses and typed
+dispatch error propagation. Both examples illustrate how to structure complex logic
+using pure, composable native functions.
 
 ## Parse and validate configuration
 

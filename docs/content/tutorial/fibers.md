@@ -1,23 +1,22 @@
 # 13. Concurrency with fibers
 
-A fiber is an `IO` running beside the program that started it, its owner.
-`fp.effects.async_runtime` keeps concurrency structured: a fiber never
-outlives its owner. When the owner's program finishes, it cancels the
-children that are still running and completes only after they have
-finished, cleanup included. This chapter builds on the `IO[T, E]`, `run`,
-`Outcome` and recovery operations from [chapter 12](io.md).
+A *fiber* is a lightweight, cooperatively scheduled unit of execution that runs an
+`IO` computation concurrently alongside its parent task. The `fp.effects.async_runtime`
+package guarantees **structured concurrency**: a child fiber can never outlive its
+enclosing scope or parent task. When an owner finishes or fails, the runtime
+automatically cancels any live child fibers, waiting for their finalizers to finish
+cleanly before completing the parent.
 
-By default, `run` uses the work-stealing profile, where fibers run in
-parallel on worker threads. The current-thread profile runs them in turn on
-one thread. [Chapter 14](running.md) explains both. Every program in this
-chapter prints the same output on either profile. Each one is built so that
-its result does not depend on which fiber runs first.
+By default on 64-bit Linux, `run` utilizes a high-throughput work-stealing pool where ready
+fibers execute in parallel across OS worker threads. On single-core environments, on macOS,
+or during deterministic testing, the current-thread executor processes fibers in turn
+([chapter 14](running.md)). The examples in this chapter produce identical,
+deterministic results across both execution profiles.
 
-IO callbacks must own their state. A plain function qualifies; a capturing
-closure is rejected at compile time. A step that needs a value from earlier
-in the program, such as a fiber handle, is written as a small struct
-conforming to `OnceUnary`. The struct holds the value and consumes it in
-`call_once`.
+Because async tasks can be dispatched across worker threads, IO callbacks must strictly
+own their state. Plain functions qualify directly; closures capturing local stack
+references are rejected at compile time. Steps requiring parameters from earlier stages
+(such as a child fiber handle) are expressed as lightweight structs implementing `OnceUnary`.
 
 ## Start a fiber, then join or cancel it
 

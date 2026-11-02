@@ -1,10 +1,12 @@
 # 1. Eager pipelines
 
-Start with `pipeline(value)`, chain the operations you need, and finish with
-`.get()`. Plain functions, closures and library callables work together without
-adapters or a fixed stage limit. These tutorials use FP Mojo 1.0.2 with
-Mojo 1.2; follow [installation](../start/installation.md#work-from-a-checkout)
-and read [ownership and errors](../start/ownership.md) first.
+Pipelines provide a fluent, type-safe interface for transforming values step by step.
+Start with `pipeline(value)`, chain arbitrary operations, and finish with `.get()`
+or a recovery terminal. Plain functions, capturing closures, and library callables
+compose naturally without manual adapters or stage limits. This tutorial uses
+FP Mojo 1.0.2 on Mojo 1.2.0; review [installation](../start/installation.md) and
+[ownership and errors](../start/ownership.md) for prerequisite toolchain setup and
+ownership rules.
 
 <a id="run-a-pipeline-over-a-list"></a>
 <a id="use-combinators-for-collection-stages"></a>
@@ -42,21 +44,22 @@ A type-changing map can produce strings while keeping the same length.
 
 ## Choose between payloads and the whole value
 
-`.map(transform)` follows the selected container: it maps List elements,
-a present Optional payload, or a successful Result payload. Empty or failed
-cases skip the callback. `.flat_map(next)` continues with another value in the
-same selected context, such as a Result that can itself fail.
+Pipelines distinguish between container payload transformation and whole-carrier processing:
 
-`.then(stage)` consumes the whole current value once. Use it to format a total,
-process a complete collection, or switch to another carrier. Its returned List,
-Optional or Result selects that native family for the next operation; other
-values use Identity. A bare-value pipeline such as `pipeline(21)` also starts
-with Identity, where `.map` applies once to the whole value.
+- `.map(transform)` operates within the selected container: it transforms `List` elements,
+  an unwrapped `Optional` value, or a successful `Result.Ok` payload. Empty collections,
+  `None`, or `Result.Err` bypass the callback automatically.
+- `.flat_map(next)` performs monadic sequencing: its callback returns a new container
+  of the same family (such as a subsequent `Result` that may fail), flattening the structure.
+- `.then(stage)` consumes the entire current carrier once. Use it to compute aggregate totals,
+  inspect complete collections, or switch to a different carrier type. If the returned value
+  is a `List`, `Optional`, or `Result`, the pipeline switches its active family accordingly;
+  arbitrary types use the `Identity` family.
 
-For a named collection, `pipeline(values^)` moves it into the chain. Temporary
-values need no move marker. `.get()` extracts the already computed carrier;
-it does not trigger evaluation. Native collection operations are eager. An
-explicit custom family can define deferred execution under its own contract.
+For named variables, `pipeline(values^)` explicitly moves the value into the pipeline.
+Temporary expressions need no move operator. Invoking `.get()` extracts the accumulated
+carrier directly without triggering re-evaluation, as native pipeline transformations
+execute eagerly.
 
 <a id="mix-closures-and-library-values"></a>
 

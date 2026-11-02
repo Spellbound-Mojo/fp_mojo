@@ -1,16 +1,16 @@
 # 14. Running and testing async programs
 
-The programs in [chapter 12](io.md) and [chapter 13](fibers.md) ran through
-the free `run`, which blocks the calling thread until the program and its
-cleanup finish. This chapter covers where a program runs: on a runtime you
-keep, on a pool of threads for blocking calls, or on another execution
-context for part of its length. It also covers how a host cancels a running
-program and how a test runs one on virtual time and in chosen scheduling
-orders.
+Previous chapters executed `IO` computations via the convenience function `run(...)`,
+which instantiates an ad-hoc runner, evaluates the program to completion, and drains
+finalizers. In production services and test harnesses, application architectures require
+explicit execution topologies: persistent runtime instances, dedicated thread pools
+for blocking system calls, external execution contexts, host-level cancellation signals,
+and deterministic testing using virtual time.
 
-The examples import their names from `fp.effects.async_runtime`, and
-`CancellationToken`, `Interruption`, `Outcome` and `fold_outcome` from
-`fp.effects`. The runtime runs on Linux x86-64 and macOS arm64.
+This chapter details the deployment, configuration, and testing of async systems using
+FP Mojo's runtime infrastructure across 64-bit Linux and macOS arm64. Imports are organized
+under `fp.effects.async_runtime` (runtimes, profiles, and `TestControl`) and `fp.effects`
+(`Outcome`, `CancellationToken`, `Interruption`, `fold_outcome`).
 
 ## Keep a runtime for many programs
 

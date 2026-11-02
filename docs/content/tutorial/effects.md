@@ -1,20 +1,21 @@
 # 9. Reader, State and Writer
 
-Some computations need configuration, an evolving state or accumulated output
-as well as their main result. Reader, State and Writer describe these needs as
-values that you can compose with the algebra operations from
-[chapter 8](algebra.md).
+Real-world computations often require contextual configuration, mutable state
+transitions, or diagnostic logging alongside primary calculation results. Rather
+than relying on global variables or parameter drilling, the `Reader`, `State`,
+and `Writer` monads reify these cross-cutting concerns as pure, composable values.
+You can sequence them using the algebraic interfaces introduced in [chapter 8](algebra.md).
 
-| Effect | What passes between steps | How to get the result |
+| Effect Monad | Propagated Context | Evaluation & Terminal Extraction |
 |---|---|---|
-| `Reader[R]` | A shared environment of type `R` | Pipeline `.run(environment)` borrows the environment and returns the payload |
-| `State[S]` | A state of type `S`, updated by each step | Pipeline `.run(state)` consumes the initial state and returns `(payload, final_state)` |
-| `Writer[W]` | Output combined by the monoid `W` | Pipeline `.run()` returns the base carrier of `(log, payload)` |
+| `Reader[R]` | Shared, read-only environment `R` | `.run(environment)` borrows the context and returns the computed payload |
+| `State[S]` | Threaded state `S`, transformed by each step | `.run(state)` consumes the initial state and returns `(payload, final_state)` |
+| `Writer[W]` | Diagnostic log combined via monoid `W` | `.run()` extracts the accumulated `(log, payload)` pair |
 
-Reader and State are deferred: constructing a computation does not execute its
-steps. Writer over the default `IdentityFamily` combines its values eagerly;
-`.run()` unwraps the result. Writer over a deferred base follows that base's
-evaluation rules; unwrapping does not execute that base.
+`Reader` and `State` represent deferred computations: assembling stages performs
+no work until `.run(...)` is invoked at the execution boundary. `Writer` evaluates
+eagerly over the default `IdentityFamily`, or mirrors the deferred evaluation of its
+underlying base effect when layered in a transformer stack.
 
 ## Read configuration with Reader
 

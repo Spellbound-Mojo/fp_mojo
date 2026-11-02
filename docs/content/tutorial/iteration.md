@@ -1,20 +1,18 @@
 # 2. Folds and lazy iteration
 
-`map`, `filter` and `scan_left` transform a sequence lazily: constructing an
-iterator does not run its callbacks. A consumer such as `fold_left` then pulls
-values through the chain and combines them into one result. `scan_left` yields
-snapshots of the initial accumulator and each updated accumulator, so you can
-inspect the intermediate steps of a fold.
+Lazy iteration provides memory-efficient, on-demand sequence processing. Transformations
+such as `map`, `filter`, and `scan_left` compose without executing callbacks or allocating
+intermediate buffers. Work occurs only when a consumer—such as `fold_left`, `to_list()`,
+or a native `for` loop—pulls elements through the iterator pipeline.
 
-Callbacks in lazy adapters cannot raise. To carry a failure through the chain,
-return a `Result` element and handle it when consuming the iterator.
+Because lazy adapters execute during iteration pulls, their transformation callbacks
+cannot raise native errors. To signal failures without interrupting stream consumption,
+yield a `Result[T, E]` element and handle recovery at the terminal boundary.
 
-A reusable bound predicate can be written as `partial(below, limit)` and
-passed by name to several filters or prefix operations. The
-[callback guide](../start/ownership.md#reuse-callbacks-by-name) shows how to share
-callbacks between eager and lazy operations, or transfer them with `^`. The
-[prefix example](../reference/iteration.md#prefixes-indexed-mapping-and-consuming-terminals)
-uses the same predicate in `.filter(...)` and `.drop_while(...)`.
+Reusable predicates can be defined using `partial(predicate, threshold)` and passed
+by name across multiple filter or prefix operations. The
+[callback guide](../start/ownership.md#reuse-callbacks-by-name) details how to share
+callbacks between eager and lazy operations, or transfer them explicitly with `^`.
 
 ## Chain operations with methods
 

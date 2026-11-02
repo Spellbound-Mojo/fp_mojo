@@ -1,13 +1,15 @@
 # 6. Inductive data types
 
-An inductive data type builds finite values from its constructors. An
-expression, for example, can be a number or an addition of two expressions.
-Declare recursive fields with the parameter `R` and store values in `Node`.
+Inductive data types define recursive structures—such as abstract syntax trees,
+document object models, and hierarchical graphs—where complex values are built
+from base cases and self-referential subtrees. In FP Mojo, recursive fields are
+declared using the generic type parameter `R` and stored within `Node`.
 
-`fp.match` supports structural recursion over these values. Each clause chooses
-whether to receive a recursive field as stored or as the result of matching
-that child. Evaluation uses an explicit stack, so matching a value a million
-levels deep does not overflow the native stack.
+The pattern-matching engine (`fp.match`) provides first-class structural recursion
+and tree folds. Clauses choose whether to receive a child subtree in its raw stored
+form or as the pre-evaluated result of matching that child. Because tree traversal
+executes on an explicit heap stack, matching structures millions of levels deep
+never overflows the native call stack.
 
 ## Evaluate, render and simplify an expression
 

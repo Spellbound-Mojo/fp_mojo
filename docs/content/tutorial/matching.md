@@ -1,14 +1,15 @@
 # 4. Algebraic data and pattern matching
 
-An algebraic data type describes a value through its possible constructors and
-the fields each constructor carries. A shape, for example, can be a circle with
-a radius, a rectangle with two sides, or a dot with no fields. The choice of
-constructor is a sum type; the fields within a constructor form a product.
+Algebraic Data Types (ADTs) model domain structures by combining sum types
+(disjoint variants or choices) with product types (records of fields). For example,
+a geometric shape can be represented as a circle with a radius, a rectangle with two
+dimensions, or a dimensionless point.
 
-Pattern matching handles each constructor with a clause. `fp.match` checks
-exhaustiveness at compile time, so leaving a constructor uncovered is an error.
-Clauses are plain functions or lambdas without captures. Pass any additional
-data through a context or as another matched value.
+Pattern matching decomposes ADT values into their underlying constructors. In FP Mojo,
+`fp.match` enforces exhaustive pattern matching at compile time: leaving any constructor
+unhandled results in an immediate compilation failure. Clauses are non-capturing functions
+or lambdas; additional runtime parameters can be passed explicitly through a borrow context
+or as multi-subject tuples.
 
 ## Declare a type and match it
 

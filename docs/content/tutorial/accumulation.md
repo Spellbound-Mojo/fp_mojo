@@ -1,20 +1,22 @@
 # 10. Accumulating errors
 
-A signup form can be wrong in three places at once. `flat_map` from
-[chapter 3](results.md) and `traverse` from [chapter 8](algebra.md) return the
-first stored error, which is the right rule when each step needs the previous
-step's value. When the checks are independent, you can report every failure
-together. This chapter combines independent Results so that their errors
-accumulate, chooses the collection that holds those errors, and keeps a
-value together with its warnings.
+In user-facing validation—such as processing user input or ingest schemas—failing
+at the very first invalid field leads to poor user experiences. While monadic
+`flat_map` ([chapter 3](results.md)) is ideal for dependent steps that must
+short-circuit, independent validations should run to completion and aggregate
+all discovered errors.
 
-| Operation | Which checks run | What a failure reports |
+This chapter demonstrates how to combine independent `Result` values so that errors
+accumulate into a monoid (such as `List[String]`), select the `ValidationFamily`
+applicative, and pair successful computations with non-fatal warnings using `Writer`.
+
+| Combinator | Execution Strategy | Error Behavior |
 |---|---|---|
-| `flat_map` | Each step, only after the previous one succeeded | The first `Err` |
-| `map_n`, `product_n` over Result | Every operand, before the call | The first `Err`, receiver first |
-| `par_map_n`, `par_product_n` | Every operand, before the call | Every `Err`, combined in order |
-| `traverse` into `ResultFamily` | Elements up to the first `Err` | The first `Err` |
-| `par_traverse` | Every element | Every `Err`, in source order |
+| `flat_map` | Sequential; dependent steps execute only on previous success | Short-circuits on first `Err` |
+| `map_n`, `product_n` | Eager evaluation of all operands | Short-circuits on first `Err` (receiver priority) |
+| `par_map_n`, `par_product_n` | Eager evaluation of all operands | Aggregates all `Err` values via monoid |
+| `traverse` (into `ResultFamily`) | Sequential collection processing | Short-circuits on first `Err` |
+| `par_traverse` | Complete collection traversal | Aggregates all `Err` values in encounter order |
 
 ## Report the first error or every error
 

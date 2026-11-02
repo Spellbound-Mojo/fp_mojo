@@ -1,13 +1,14 @@
 # Ownership and errors
 
-FP Mojo uses Mojo's ownership and error conventions. An operation's signature
-tells you whether it borrows or consumes a value and which errors it can raise.
-The same rules apply to higher-order functions: a pipeline, fold or match
-preserves the ownership and error types of its callbacks.
+FP Mojo is built directly on Mojo's native ownership, lifetime, and error-handling
+mechanisms. Every operation's signature explicitly declares whether it borrows,
+mutates, or consumes values, and which error types it can raise. Higher-order
+functions—including pipelines, iterator combinators, folds, and pattern matches—preserve
+the argument conventions, origins, and exact error channels of their callbacks
+without hidden allocations or type erasure.
 
-This page explains the conventions used throughout the
-[tutorial](../tutorial/pipelines.md). Each reference chapter gives the details
-for its operations.
+This guide outlines the ownership conventions, callable protocols, and error
+separation rules applied throughout the library and [tutorials](../tutorial/pipelines.md).
 
 ## Read an argument convention
 
@@ -195,11 +196,12 @@ The library keeps these outcomes apart:
 
 | Outcome | Representation | Who handles it |
 |---|---|---|
-| Domain failure | `Result[T, E]` holding `Err[E]` | Result operations, matching or an explicit bridge |
-| Callback or projection failure | Native `raises E` | An enclosing `try`/`except` or propagation |
-| No applicable clause | Not a run-time outcome: `fp.match` is exhaustive, and a match that leaves a constructor without a clause that cannot decline does not compile | The compiler |
-| Iterator exhausted | `StopIteration` raised by the source | The iterator consumer |
-| Empty uninitialized reduction | `EmptyReductionError`, or its `ReductionError` alternative | The caller of `reduce` |
+| Domain failure | `Result[T, E]` holding `Err[E]` | Result combinators, matching, or explicit bridges |
+| Callback or projection failure | Native `raises E` | Enclosing `try`/`except` block or caller propagation |
+| Asynchronous failure or cancellation | `EffectFailure[E]` in `IO[T, E]` | `fold_outcome`, `handle_error_with`, or fiber join |
+| No applicable clause | Compile-time rejection (`fp.match` is exhaustive) | The Mojo compiler |
+| Iterator exhausted | `StopIteration` raised by the source | The iterator consumer or terminal reduction |
+| Empty uninitialized reduction | `EmptyReductionError` or `ReductionError` | Caller of `reduce` |
 
 The same payload type can travel through different channels. A callback that
 raises `String` differs from one that returns `Err[String]`. A callback that

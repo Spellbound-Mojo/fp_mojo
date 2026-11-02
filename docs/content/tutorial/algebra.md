@@ -1,14 +1,15 @@
 # 8. Functors, applicatives and monads
 
-The `Result` methods from [chapter 3](results.md) are examples of operations
-that also make sense for other types. Mapping changes the value inside an
-`Optional`, each element of a `List`, or the successful value of a `Result`.
-`fp.algebra` gives these operations shared interfaces, so you can use the same
-operation with different contexts.
+Mathematical abstractions like Functors, Applicatives, and Monads unify common
+data-transformation patterns across diverse container and effect types. Mapping
+applies equally to values inside `Optional`, elements within a `List`, success payloads
+in a `Result`, and deferred computations in `IO`. The `fp.algebra` package defines
+these shared interfaces, enabling generic programming over arbitrary computational
+contexts without compromising type safety or performance.
 
-This chapter starts with the native instances, then uses optional order values
-to explain mapping, applicative combination and monadic bind. The final example
-collects optional results with `traverse` and `sequence`.
+This chapter introduces the core typeclass hierarchy, explores applicative combination
+versus monadic sequencing using e-commerce orders, and concludes with structural
+traversals (`traverse` and `sequence`).
 
 ## Choose an instance
 

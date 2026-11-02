@@ -1,18 +1,17 @@
 # 11. Programming against capabilities
 
-In [chapter 9](effects.md), every computation named one concrete family.
-`asks[PricingReader](quote)` is a `Reader[TutorialPricing]` computation, and
-`put[State[Int]](15)` is a `State[Int]` computation. To use that `put` inside
-`ResultT[State[Int], String]`, the transformer example wrapped it in
-`lift[Keep]`. A helper written this way is tied to its family: each caller
-with another stack wraps its result in one `lift` per layer above that family,
-and adding a layer to the stack changes those call sites.
+In [chapter 9](effects.md), effect computations were coupled to concrete monad families
+(e.g., `Reader[TutorialPricing]` or `State[Int]`). When combining effects through monad
+transformers, intermediate operations had to be manually promoted using `lift[Keep]`.
+Hardcoding concrete transformer stacks creates brittle architecture: inserting or reordering
+layers requires updating every intermediate call site.
 
-A capability names an effect operation and the layer it acts on, without
-naming the rest of the stack. A helper takes the capability as a type
-parameter, and the caller passes a selection for its own stack. In chapter 9's
-transformer example, the selected form `put[LiftStateful[Keep, State[Int]]](15)`
-has exactly the type that `lift[Keep](put[State[Int]](15))` produced.
+Capabilities solve this by abstracting effect operations from the concrete stack layout,
+following the [Cats MTL](https://typelevel.org/cats-mtl/) pattern. Instead of specifying
+a concrete monad transformer, functions declare generic capability bounds (such as
+`C: Ask` or `C: Stateful`). Callers supply the capability dictionary corresponding to their
+chosen stack, enabling shared business logic to run across different transformer configurations
+without boilerplate.
 
 | Capability | Operations | Selects | Implemented by | Lift through one layer |
 |---|---|---|---|---|

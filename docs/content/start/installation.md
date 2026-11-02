@@ -1,12 +1,11 @@
 # Installation and first run
 
-Install the [published package](#install-the-package), or work from a
-[source checkout](#work-from-a-checkout). FP Mojo 1.0.2 requires Mojo 1.2.0;
-a source checkout pins Mojo 1.2.0 and Python 3.14 through
-[Pixi](https://pixi.sh). FP Mojo 1.0.0 and 1.0.1 require Mojo 1.1.0. See the
-[compatibility guide](../guides/compatibility.md) and
-[support and limitations](../guides/status.md) for platform support, migration
-details, and known compiler boundaries.
+FP Mojo can be installed as a [precompiled package](#install-the-package) in an
+existing Pixi project, or used directly from a [source checkout](#work-from-a-checkout).
+FP Mojo 1.0.2 is qualified for Mojo 1.2.0; the repository source checkout pins
+Mojo 1.2.0 and Python 3.14 through [Pixi](https://pixi.sh). For platform qualification,
+release history, and compiler boundaries, see the [compatibility guide](../guides/compatibility.md)
+and [support and limitations](../guides/status.md).
 
 ## Work from a checkout
 
@@ -35,17 +34,21 @@ uses MAX 26.7.0, whose compiler dependency matches Mojo 1.2.0.
 
 ## Import from source
 
-The package lives in `src/fp`. Pass `-I src` so imports such as
-`from fp.functions import pipe` resolve. The package root `fp` re-exports the
-everyday names, so most programs need one import:
+The library sources reside in `src/fp`. Supply `-I src` when invoking the compiler
+so module paths resolve cleanly. The root `fp` package re-exports the primary
+prelude, enabling most programs to start with a concise import:
 `from fp import pipeline, iterated, Result, Ok, Err, Capture, map, filter`.
-It also provides `pipeline_values`, `flow`, `partial`, `flat_map`, `traverse`,
-`sequence`, `fold_map`, `combine_all`, `sum_by`, `find_map`, the canonical
+
+The top-level prelude also exposes `pipeline_values`, `flow`, `partial`, `flat_map`,
+`traverse`, `sequence`, `fold_map`, `combine_all`, `sum_by`, `find_map`, canonical
 monoids (`StringMonoid`, `ListMonoid`, `IntSumMonoid`, `IntProductMonoid`),
-`Accumulate`, `ValidationFamily`, `match`, `when` and `rewrite`. `map` and
-`filter` there are the eager family operations of `fp.algebra`; the lazy forms
-are `iterated(source).map(f)` or `fp.iteration.map`. Import anything else from
-the package that owns it; `import fp` is enough to write `fp.match(...)`.
+`Accumulate`, `ValidationFamily`, `match`, `when`, and `rewrite`.
+
+The operations `map` and `filter` at the root represent eager transformations
+(`fp.algebra`); for lazy zero-allocation pipelines, use `iterated(source).map(...)`
+or `fp.iteration`. Pure and asynchronous effects are organized under `fp.effects`
+and `fp.effects.async_runtime`. To inspect algebraic data types, `import fp` suffices
+to invoke `fp.match(...)`.
 
 ```sh
 pixi run mojo run -I src docs/examples/callable_pipeline.mojo
@@ -154,10 +157,12 @@ search index.
 Next, read [ownership and errors](ownership.md) or start the
 [pipeline tutorial](../tutorial/pipelines.md).
 
-## Async runtime
+## Structured async runtime
 
-FP Mojo 1.0.2 includes the pure-Mojo async runtime on Linux x86-64 and macOS
-arm64. Import `fp.effects.async_runtime` for `IO` and host execution, or
-`fp.effects.async_runtime.protocols` for custom machines. FP Mojo 1.0.0 and
-1.0.1, the Mojo 1.1 releases, do not contain it. Follow the
-[async guide](../guides/async-runtime.md) for executable examples and boundaries.
+FP Mojo 1.0.2 includes a pure-Mojo structured asynchronous runtime supporting
+Linux x86-64 and macOS arm64. Import `fp.effects.async_runtime` (or `fp.effects`)
+for `IO`, lightweight cancelable fibers, and host runners. The multi-threaded
+work-stealing pool targets 64-bit Linux, while single-threaded execution and
+deterministic virtual-time testing via `TestControl` run on both macOS and Linux.
+Follow the [async runtime guide](../guides/async-runtime.md) for architectural
+guidance, concurrency primitives, and runnable examples.

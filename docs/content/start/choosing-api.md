@@ -6,15 +6,15 @@ a reusable callable when you need to store or compose a computation.
 
 | Your task | Start with | Finish with |
 |---|---|---|
-| Transform or recover one success/failure value | Direct `Result` methods: `map`, `flat_map`, `recover`, `fill`, `void` | `get_or`, `value_or`, `to_optional` or `raise_on_err`, according to the desired failure behavior |
+| Transform or recover one success/failure value | Direct `Result` methods: `map`, `flat_map`, `recover`, `fill`, `void` | `get_or`, `value_or`, `to_optional`, or `raise_on_err`, according to the desired failure behavior |
 | Chain operations on a collection, Optional or Result | `pipeline(value)` | `.get()` for the carrier, or a terminal such as `.fold(...)` or `.get_or(...)` |
-| Process a sequence lazily or stop after a prefix | `iterated(source)` | `.to_list()`, a fold, a search, or native iteration |
+| Process a sequence lazily with early termination | `iterated(source)` | `.to_list()`, a reduction fold, a predicate search, or native `for` loop |
 | Capture an immediate native call's raised error | `Capture[E]` | `.run(callback)` after binding any arguments |
-| Build a function to call later | `flow`, `compose` or `partial` | Pass the resulting callable directly to an operation |
-| Repeatedly call a native function with owned mutable state | `Capture[E]().stateful(step, state^)` | Pass `mut_ref(owner)` to map or traverse; inspect `state()` or consume `into_state()` afterward |
-| Acquire resources and release them after use | `resource[E](acquire, release)` | `.use(callback)` on the consumed scope |
-| Describe deferred IO with explicit finalization or cancellation | `pipeline(delay[E](callback))` and `.guarantee(cleanup)` | `.run_io()` or `.run_io(token)` at the execution boundary |
-| Run concurrent tasks, timers, or fibers with structured cleanup | `IO[T, E].delay(...)` or `IO[T, E].pure(...)` | `run(program^)` or `TestControl(program^)` |
+| Build a reusable function composition | `flow`, `compose`, or `partial` | Pass the resulting callable directly to an operation |
+| Repeatedly invoke a native function with owned state | `Capture[E]().stateful(step, state^)` | Pass `mut_ref(owner)` to map or traverse; inspect `state()` or consume `into_state()` afterward |
+| Acquire resources and guarantee cleanup | `resource[E](acquire, release)` | `.use(callback)` on the consumed scope |
+| Describe synchronous IO with explicit cleanup | `pipeline(delay[E](callback))` and `.guarantee(cleanup)` | `.run_io()` or `.run_io(token)` at the execution boundary |
+| Coordinate asynchronous I/O, concurrent fibers, and timers | `IO[T, E].delay(...)` or `IO[T, E].pure(...)` | `run(program^)` or `TestControl(program^)` |
 
 The [pipeline tutorial](../tutorial/pipelines.md), [iteration tutorial](../tutorial/iteration.md)
 and [Result tutorial](../tutorial/results.md) develop the first four choices.
@@ -75,18 +75,18 @@ receiver and source contracts.
 
 ## Select how errors are handled
 
-A stored Result error, a native raised error and IO cancellation are different
-outcomes. Select the behavior at the boundary where it matters:
+Stored `Result` errors, native raised exceptions, and asynchronous cancellation
+represent distinct failure modes. Manage each outcome at its appropriate boundary:
 
-- A Result transformation preserves Err; a recovery operation handles it.
-- `.raising[E]()` selects subsequent native callback admission on a Pipeline;
-  it does not catch errors or change the stored Result error type. A raising
-  plain function selects its own error when none is selected.
-- `Capture[E]().run(callback)` catches a zero-argument native call immediately.
-  Bind owned arguments with `.args(...)`, or mixed conventions with `.borrow`,
-  `.mutable` and `.take`, before `.run(callback)`.
-- IO construction defers execution. `run_io` distinguishes cancellation from
-  completed success or failure; finalization follows the IO contract.
+- **Stored algebraic errors**: A `Result` transformation propagates `Err[E]` downstream
+  automatically; recovery combinators (`recover`, `get_or`) intercept or replace it.
+- **Native raised exceptions**: `.raising[E]()` configures native callback error admission
+  on a `Pipeline`; it establishes the type parameter for raising closures. To convert
+  an immediate raising native call into a `Result`, use `Capture[E]().run(callback)`.
+  Arguments can be pre-bound using `.args(...)`, `.borrow`, `.mutable`, or `.take`.
+- **Asynchronous failure & cancellation**: `IO[T, E]` distinguishes successful results
+  from unhandled errors and cancellation. Finalizers registered via `guarantee` or
+  `Resource` run reliably regardless of whether the fiber succeeded, failed, or was canceled.
 
 Prefer a native function or closure for a single callback. `partial` binds a
 positional prefix for reuse and has explicit copying semantics. Use `flow` or

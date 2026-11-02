@@ -2,12 +2,14 @@
 
 <div class="hero" markdown="1">
 
-FP Mojo provides native, high-performance functional programming foundations for
-Mojo. You can compose functions into fluent pipelines, iterate lazily over
-collections with zero intermediate allocations, handle failures predictably with
-typed `Result` values, and define algebraic and inductive data types with compile-time
-exhaustive pattern matching. Functions and closures retain their native argument
-conventions (`var`, `ref`, `mut`) and exact error types.
+FP Mojo is a functional programming toolkit and structured asynchronous runtime
+for Mojo. It combines composable functional abstractions—fluent pipelines,
+zero-allocation lazy iterators, pure monadic effects, and compile-time exhaustive
+pattern matching—with a high-performance concurrency engine. Programs coordinate
+asynchronous I/O through lightweight cancelable fibers, cooperative work-stealing
+scheduling, and deterministic virtual-time testing, all while preserving Mojo's
+native argument conventions (`var`, `ref`, `mut`), explicit memory ownership,
+and exact compiler error types without runtime overhead.
 
 The documentation describes FP Mojo 1.0.2, which requires Mojo 1.2.0.
 [Install the package](start/installation.md#install-the-package), or follow the
@@ -24,46 +26,47 @@ source.
 
 <div class="cards" markdown="1">
 <div class="card" markdown="1">
-[Pipelines](tutorial/pipelines.md)
+[Pipelines & composition](tutorial/pipelines.md)
 
-Chain operations with `pipeline`, compose reusable functions with `flow`, and
-bind arguments with `partial`. Plain functions, closures and library callables
-work together without adapters in a fluent chain.
+Build fluent data-transformation pipelines with `pipeline`, compose reusable stages
+with `flow`, and bind arguments with `partial`. Native functions, closures, and
+library callables interoperate seamlessly with exact error propagation.
 </div>
 <div class="card" markdown="1">
-[Pattern matching](tutorial/matching.md)
+[Pattern matching & ADTs](tutorial/matching.md)
 
-Define algebraic and inductive data types, then handle their constructors with
-exhaustive pattern matching.
+Model domain structures with algebraic sum types (`Choice`) and recursive trees (`Node`).
+Inspect variants safely using compile-time exhaustive pattern matching and expressive guards.
 </div>
 <div class="card" markdown="1">
-[Effects](tutorial/effects.md)
+[Pure effects & transformers](tutorial/effects.md)
 
-Compose Reader, State and Writer computations with Functor, Applicative and
-Monad operations. Combine effects with monad transformers.
+Manage application dependencies, mutable state, and structured logs with `Reader`, `State`,
+and `Writer`. Stack independent effect layers predictably using composable monad transformers.
 </div>
 <div class="card" markdown="1">
 [Structured concurrency](guides/async-runtime.md)
 
-Sequence asynchronous work with `IO`, combine concurrent child tasks with `both`,
-race steps, offload blocking calls, and test deterministically with `TestControl`.
+Coordinate asynchronous I/O and parallel workloads with `IO`. Spawn lightweight cancelable
+fibers, combine branches with `both` and `race`, safely offload blocking tasks, and
+verify timing deterministically with `TestControl`.
 </div>
 </div>
 
 ## Run a first program
 
-Follow the [checkout steps](start/installation.md#work-from-a-checkout), then run
-this program from the repository root:
+To verify your installation, follow the [checkout steps](start/installation.md#work-from-a-checkout)
+and execute this sample from the repository root:
 
 <!-- example: docs/examples/pipeline_quickstart.mojo -->
 
-The program prints `42`. `pipeline(21).then(twice).get()` calls `twice` once
-and returns its `Int` result. Add `.then(...)` stages to continue with whole
-values, or use `.map(...)` and `.filter(...)` for selected payloads. For native
-closures that raise, select their error once with `.raising[MyError]()`;
-a raising plain function selects its own. The
-[pipeline tutorial](tutorial/pipelines.md) builds a longer pipeline and shows
-how a failing stage stops it.
+The program executes and prints `42`. Calling `pipeline(21).then(twice).get()` evaluates
+`twice` once and extracts the computed integer. You can append additional `.then(...)`
+stages to transform values, or use `.map(...)` and `.filter(...)` over collections and
+optional payloads. When working with raising native closures, declare the error type
+explicitly via `.raising[MyError]()`; plain raising functions infer their error automatically.
+The [pipeline tutorial](tutorial/pipelines.md) explores multi-stage pipelines and
+fail-fast error handling in depth.
 
 ## Choose where to start
 
@@ -75,7 +78,7 @@ how a failing stage stops it.
 | Compose configuration, state and logging | [Reader, State and Writer](tutorial/effects.md) |
 | Collect every independent error | [Accumulating errors](tutorial/accumulation.md) |
 | Write async programs step by step | [Programs with IO](tutorial/io.md) |
-| Coordinate concurrent fibers, timers and async IO | [Async runtime guide](guides/async-runtime.md) |
+| Coordinate concurrent fibers, timers and async IO | [Structured async runtime](guides/async-runtime.md) |
 | Understand borrowing, movement, and failure | [Ownership and errors](start/ownership.md) |
 | Look up a function or type | [API reference](reference/index.md) |
 | Understand the implementation boundaries | [Architecture](architecture/overview.md) |

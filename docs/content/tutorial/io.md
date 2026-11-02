@@ -1,22 +1,21 @@
 # 12. Programs with IO
 
-An `IO[T, E]` from `fp.effects.async_runtime` is a value that describes a
-program: when it runs, it produces a `T` or fails with domain errors of the
-exact type `E`. Building one runs nothing. You compose the steps first, then
-hand the whole description to `run`, which executes it and returns its
-`Outcome`.
+`IO[T, E]` from `fp.effects.async_runtime` represents a suspended computation—a pure
+data structure describing asynchronous, effectful actions. When executed by a runtime,
+it produces a success value of type `T` or terminates with a typed error `E`.
+Constructing an `IO` performs no immediate side effects; programs are assembled
+purely as declarative descriptions before being submitted to `run`, which returns
+an explicit `Outcome[T, E]`.
 
-Reader and State from [chapter 9](effects.md) are deferred in the same way:
-their callbacks wait until `run`. `IO`'s family is `Async[E]`, so the algebra
-operations from [chapter 8](algebra.md) and `pipeline` accept it. `fp.effects`
-also has a synchronous `IO[E]`, built from the Reader, Result and Optional
-families and run with `run_io`. Both share `Outcome`, `EffectFailure` and
-`fold_outcome`. The asynchronous `IO` can also sleep without blocking a
-thread and run several fibers at once.
+Like `Reader` and `State` from [chapter 9](effects.md), `IO` decouples program description
+from execution. Its underlying typeclass family is `Async[E]`, enabling seamless
+integration with `pipeline` and the algebraic combinators from [chapter 8](algebra.md).
+Unlike synchronous effects, asynchronous `IO` can suspend cooperatively, perform
+non-blocking timer sleeps without occupying OS threads, and schedule concurrent child fibers.
 
-This chapter stays on one fiber. Import the types from
-`fp.effects.async_runtime`, and `Outcome`, `EffectFailure` and `fold_outcome`
-from `fp.effects`.
+This chapter introduces single-fiber sequential execution, error recovery, and guaranteed
+resource cleanup. Primary async types are imported from `fp.effects.async_runtime`, with
+shared outcome primitives (`Outcome`, `EffectFailure`, `fold_outcome`) residing in `fp.effects`.
 
 ## Describe a program before running it
 

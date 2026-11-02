@@ -1,13 +1,14 @@
 # 5. Algebraic data types stored in place
 
-Use `Choice[F]` for a non-recursive algebraic data type whose value should be
-stored in place. It holds one constructor inside a native `Variant`, without
-allocating storage for the `Choice` itself. Declare the constructors with
-`Cases`, as in [chapter 4](matching.md), and match them with `fp.match`.
+`Choice[F]` provides stack-allocated, in-place storage for non-recursive algebraic
+sum types. Backed by a native Mojo `Variant`, a `Choice` avoids heap allocation
+and pointer indirections entirely. Constructors are declared using `Cases`—exactly
+as shown in [chapter 4](matching.md)—and matched exhaustively with `fp.match`.
 
-`Choice` uses the same clause syntax as `Node`. The distinction is storage:
-`Node` supports shared values and recursive fields, while `Choice` owns a
-constructor directly. A bare native `Variant` is not a match subject.
+`Choice` shares the exact same pattern-matching syntax as `Node`. The difference
+lies in memory layout: `Node` uses reference counting to support recursive/inductive
+graphs and immutable sharing, whereas `Choice` holds its active constructor inline.
+A bare native `Variant` is not a match subject.
 
 ## Store a value in a Choice
 

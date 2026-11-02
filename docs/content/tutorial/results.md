@@ -1,12 +1,14 @@
 # 3. Results and recovery
 
-`Result[T, E]` is a sum type with two constructors: `Ok[T]` for success and
-`Err[E]` for failure. Use it to return, store or collect an outcome that the
-caller will handle later. `map` transforms a successful value; `flat_map`
-sequences computations that can themselves return an `Err`.
+`Result[T, E]` represents an explicit algebraic disjunction between two possible outcomes:
+`Ok[T]` for successful computations and `Err[E]` for domain failures. Unlike unchecked
+exceptions, `Result` values force callers to account for error paths explicitly at compile
+time. Use `map` to transform success payloads, and `flat_map` to sequence dependent
+computations that may themselves fail.
 
-Stored failures and raised errors are separate. If a callback raises, its
-error propagates to the caller. Use `Capture[E]` to catch it in a `Result`.
+Stored algebraic failures and native raised exceptions remain strictly separate.
+If a native callback raises an exception, it propagates immediately; use `Capture[E]`
+when you wish to convert an immediate raising native call into a typed `Result`.
 
 ## Construct a Result with one type argument
 
