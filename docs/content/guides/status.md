@@ -46,28 +46,22 @@ errors remain part of every operation's contract.
 | 17 | Shared success validation (`ensure`) | Implemented through Monad and ApplicativeError |
 | 18 | Shared outcome composition (`redeem`, `redeem_with`, `attempt_tap`) | Implemented with a fixed stored-error type |
 
-The acyclic layering contract is enforced by tooling. Algebra conveniences on
-Result now use `pipeline(result^)`; see the [migration](../architecture/data.md#migration-from-the-first-nightly-fluent-api).
-NonEmptyList, its concatenation Semigroup and its shape-preserving family are
-implemented; see [non-empty validation](../reference/data.md#non-empty-collections-and-validation).
-Success with warnings is implemented as Ior with explicit sequential and
-accumulating families; see [inclusive-or](../reference/data.md#success-with-warnings).
-The first public MTL slice, Ask/Local with explicit transformer lifting, is
-implemented; see [environment capabilities](../reference/effects.md#program-against-environment-capabilities).
-Stateful with explicit transformer lifting is implemented; see
-[selected state capabilities](../reference/effects.md#program-against-a-selected-state).
-Tell/Listen/Censor with explicit transformer lifting is implemented; see
-[selected log capabilities](../reference/effects.md#program-against-a-selected-log).
-Fallible stream transformations and composable Resource scopes remain subsequent
-slices.
+The library enforces an acyclic layering architecture across all modules.
+Algebra conveniences on `Result` operate through `pipeline(result^)`.
+`NonEmptyList`, its concatenation `Semigroup`, and shape-preserving families are
+fully supported (see [non-empty validation](../reference/data.md#non-empty-collections-and-validation)).
+Computations producing values alongside non-fatal warnings are modeled via `Ior`
+with sequential and accumulating families (see [inclusive-or](../reference/data.md#success-with-warnings)).
 
-Before fallible streams, an [iterator expansion](../architecture/iteration.md#iterator-expansion)
-adds native adapter method chains, consuming terminals, lazy partitioning with
-explicit buffering policies, and alignment, with stateful and effectful
-follow-ups. Partition, partition_map and unzip return iterator branches;
-collection stays explicit. I1 through I6 are implemented: native adapter method
-chains, consuming terminals, branching with explicit buffering, alignment, scans
-and effectful searches. See the [implementation contracts](../architecture/iteration.md#implementation-passes).
+Type-level capabilities (Cats MTL pattern) decouple effectful operations from concrete
+monad transformer stacks:
+- Environment access: `Ask` and `Local` (see [environment capabilities](../reference/effects.md#program-against-environment-capabilities)).
+- State transitions: `Stateful` (see [selected state capabilities](../reference/effects.md#program-against-a-selected-state)).
+- Logging: `Tell`, `Listen`, and `Censor` (see [selected log capabilities](../reference/effects.md#program-against-a-selected-log)).
+
+Iterator capabilities include fluent method chaining, consuming terminals,
+lazy partitioning with explicit buffering policies, multi-stream alignment, scans,
+and effectful searches (see [iterator architecture](../architecture/iteration.md)).
 
 Combinator operations are unified across supported capability families. Shared
 operations derive from fundamental family primitives rather than requiring

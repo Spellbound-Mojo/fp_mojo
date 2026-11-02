@@ -1,18 +1,25 @@
 # Async runtime guide
 
-`fp.effects.async_runtime` provides pure-Mojo asynchronous programs with Cats
-Effect vocabulary: `IO`, `Resource`, `Ref`, `Deferred`, `Queue`, `Semaphore`,
-races, and timeouts. It is qualified with Mojo 1.2.0 on Linux x86-64 and macOS
-arm64. By default it runs fibers in parallel on a work-stealing
-pool, with one worker per logical processor; the current-thread profile runs
-them cooperatively on one thread (see
-[run programs on a runtime](#run-programs-on-a-runtime)). Callbacks must
-return promptly; `IO.delay` and `IO.eval_io` perform synchronous work inside
-their step. Blocking work belongs in `IO.blocking` or `IO.interruptible`, which
-run it on a pool of worker threads (see
-[run blocking calls](#run-blocking-calls)). The runtime does not use compiler
-coroutines. Code written for an earlier preview, or for the current-thread
-default it had, can follow the [migration guide](async-migration.md).
+The `fp.effects.async_runtime` module delivers a high-performance, structured
+asynchronous runtime for Mojo, modeled on the principled semantics of Cats Effect
+and Tokio: suspended `IO` effects, `Resource` management, coordination primitives
+(`Ref`, `Deferred`, `Queue`, `Semaphore`), cancelable lightweight fibers, parallel
+combinators (`both`, `race`), and virtual timers.
+
+FP Mojo 1.0.2 is qualified with Mojo 1.2.0 across 64-bit Linux and macOS arm64.
+By default on 64-bit Linux, the runtime schedules fibers in parallel across a
+multi-threaded work-stealing pool with one worker thread per logical processor;
+on macOS, single-core environments, or for deterministic virtual-time testing,
+the current-thread executor processes fibers cooperatively without thread hopping
+(see [run programs on a runtime](#run-programs-on-a-runtime)).
+
+Async callbacks must yield promptly. Synchronous CPU computation can be embedded
+directly using `IO.delay` and `IO.eval_io`, while long-running or blocking system
+calls should be isolated using `IO.blocking` or `IO.interruptible` to run on a
+dedicated worker thread pool (see [run blocking calls](#run-blocking-calls)).
+The runtime operates without compiler coroutines or language-level hooks, relying
+entirely on pure Mojo ownership semantics, atomic memory ordering, and cooperative
+state machines. For upgrading earlier codebases, see the [migration guide](async-migration.md).
 
 Import application types from `fp.effects.async_runtime`, preferably as `ar`
 when the synchronous `fp.effects.IO` family is also in scope. Custom leaf and

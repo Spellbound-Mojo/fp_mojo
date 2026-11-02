@@ -9,7 +9,7 @@ FP Mojo 1.0.2 targets Mojo 1.2; FP Mojo 1.0.0 and 1.0.1 target Mojo 1.1.
 
 ## Qualification checkpoint
 
-FP Mojo is qualified on Mojo 1.2.0 on 64-bit Linux. The qualification suite
+FP Mojo is qualified on Mojo 1.2.0 across 64-bit Linux and macOS arm64. The qualification suite
 verifies both direct source imports and precompiled `.mojoc` package imports
 across optimization levels (`O0` and `O3`), ensuring exact runtime output and
 predictable compiler diagnostics.

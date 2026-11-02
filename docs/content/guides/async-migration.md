@@ -1,11 +1,15 @@
 # Migrate to the advanced runtime
 
-The async runtime changed in four ways that need code or review changes. Earlier
-previews built programs from typed recipes; every operation now returns one
-`IO[T, E]`. Fibers ran on the calling thread; they now run on a work-stealing
-pool by default. `par_*` now has two meanings, chosen by the callback's result
-type. And `Spawn` gained a member, `background`. The [async runtime
-guide](async-runtime.md) describes each feature; this page lists what to change.
+FP Mojo 1.0.2 introduces several key evolutionary changes to the async runtime architecture.
+Programs previously constructed with separate typed recipe structs now unify under a single
+monadic carrier, `IO[T, E]`. On 64-bit Linux, execution defaults to a high-throughput
+work-stealing thread pool rather than running strictly on the caller thread. Concurrency
+primitives (`par_*`) dynamically select between error accumulation (`ValidationFamily`)
+and concurrent fiber execution (`AsyncPar`) based on callback return types, and `Spawn`
+adds first-class `background` task management.
+
+The [async runtime guide](async-runtime.md) covers full architecture and semantics;
+this guide provides a concise checklist for upgrading existing codebases.
 
 ## From typed recipes to `IO`
 
