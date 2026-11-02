@@ -321,7 +321,7 @@ provide instances by implementing the same traits.
 `delay` stores a callback without running it. `pipeline` selects the IO family
 and composes the work; `.run_io()` consumes it and returns an `Outcome`.
 `guarantee` runs its finalizer after an entered body, including cancellation.
-These examples use the Mojo 1.2.0 `nightly` checkout; see
+These examples use FP Mojo 1.0.2 with Mojo 1.2.0; see
 [getting started](#getting-started).
 
 ```mojo
@@ -408,7 +408,7 @@ growth, supporting deep recursion through `IO.defer` and loops with `tail_rec_m`
 Concurrent children combine via `.both(...)`, race with `.race(...)`, and clean up
 dependently under cancellation and timeouts.
 
-Key async capabilities on `nightly`:
+Key async capabilities:
 
 - **Structured concurrency**: Child fibers started with `.both()` or `Supervisor`
   remain owned; when a scope closes, uncompleted child fibers are automatically
@@ -456,11 +456,11 @@ pixi run mojo run quickstart.mojo          # prints 42; no -I flag needed
 For a new project, the [installation guide](docs/content/start/installation.md)
 walks through creating the environment, saving the program and running it.
 
-To work from source, clone the repository. The `nightly` branch is the
-development branch and pins Mojo 1.2.0:
+To work from source, clone the repository. Its `main` branch pins Mojo
+1.2.0:
 
 ```sh
-git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
+git clone https://github.com/Spellbound-Mojo/fp_mojo.git
 cd fp_mojo
 pixi install --locked
 pixi run mojo run -I src docs/examples/quickstart.mojo   # prints 42
@@ -515,7 +515,7 @@ pixi run docs-serve
 
 ## Status & Compatibility
 
-- **Compiler & Toolchain**: FP Mojo 1.0.2 and the `nightly` branch target **Mojo 1.2.0**. FP Mojo 1.0.0 and 1.0.1 target Mojo 1.1.0.
+- **Compiler & Toolchain**: FP Mojo 1.0.2 and the `main` branch target **Mojo 1.2.0**. FP Mojo 1.0.0 and 1.0.1 target Mojo 1.1.0.
 - **Platform Support**:
   - **Linux x86-64 and macOS arm64**: Complete library support, including the multi-threaded work-stealing async runtime and POSIX driver.
 - **Architecture & Boundaries**: See [support and limitations](docs/content/guides/status.md) and [native Mojo boundaries](docs/content/architecture/native-boundaries.md) for compiler constraints shaping the API.

@@ -2,7 +2,7 @@
 
 Install the [published package](#install-the-package), or work from a
 [source checkout](#work-from-a-checkout). FP Mojo 1.0.2 requires Mojo 1.2.0;
-the `nightly` development checkout pins Mojo 1.2.0 and Python 3.14 through
+a source checkout pins Mojo 1.2.0 and Python 3.14 through
 [Pixi](https://pixi.sh). FP Mojo 1.0.0 and 1.0.1 require Mojo 1.1.0. See the
 [compatibility guide](../guides/compatibility.md) and
 [support and limitations](../guides/status.md) for platform support, migration
@@ -21,7 +21,7 @@ Then clone the repository, install the locked environment and run the
 quickstart:
 
 ```sh
-git clone --branch nightly https://github.com/Spellbound-Mojo/fp_mojo.git
+git clone https://github.com/Spellbound-Mojo/fp_mojo.git
 cd fp_mojo
 pixi install --locked
 pixi run mojo --version

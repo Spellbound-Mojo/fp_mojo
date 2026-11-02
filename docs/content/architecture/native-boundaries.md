@@ -1,6 +1,6 @@
 # Native Mojo boundaries
 
-The `nightly` library is pinned to Mojo 1.2.0 (2016d0cd). The tables below
+FP Mojo 1.0.2 is pinned to Mojo 1.2.0 (2016d0cd). The tables below
 record the Mojo 1.1 behaviors that originally shaped the design. They remain
 historical evidence for retained boundaries, not a claim that every defect
 persists in 1.2. New native features do not broaden the library's supported
@@ -168,10 +168,10 @@ fixtures; it is not the historical 22-fixture inventory below. Generic forwards
 using a symbolic binding such as `F=F` were not part of this removal audit.
 
 A small reproduction needs no FP import. The maintained
-[inferred-error client](https://github.com/Spellbound-Mojo/fp_mojo/blob/nightly/experiments/mojo12-diagnostics/inferred_error.mojo)
+[inferred-error client](https://github.com/Spellbound-Mojo/fp_mojo/blob/main/experiments/mojo12-diagnostics/inferred_error.mojo)
 passes a consuming callback to a function requiring a borrowing callback.
 The paired
-[selected-error client](https://github.com/Spellbound-Mojo/fp_mojo/blob/nightly/experiments/mojo12-diagnostics/selected_error.mojo)
+[selected-error client](https://github.com/Spellbound-Mojo/fp_mojo/blob/main/experiments/mojo12-diagnostics/selected_error.mojo)
 keeps the same invalid convention and fixes only the expected error type.
 Both clients are intentionally invalid; the inferred variant records an
 unresolved compiler failure under `experiments/`.

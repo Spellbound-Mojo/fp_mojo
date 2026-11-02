@@ -2,8 +2,8 @@
 
 Start with `pipeline(value)`, chain the operations you need, and finish with
 `.get()`. Plain functions, closures and library callables work together without
-adapters or a fixed stage limit. These tutorials use the Mojo 1.2 nightly
-checkout; follow [installation](../start/installation.md#work-from-a-checkout)
+adapters or a fixed stage limit. These tutorials use FP Mojo 1.0.2 with
+Mojo 1.2; follow [installation](../start/installation.md#work-from-a-checkout)
 and read [ownership and errors](../start/ownership.md) first.
 
 <a id="run-a-pipeline-over-a-list"></a>

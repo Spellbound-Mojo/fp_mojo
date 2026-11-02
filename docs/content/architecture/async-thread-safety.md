@@ -433,7 +433,7 @@ enough, because the walk stops there. `IOContext` is not marked: it holds an
 `ArcPointer` region and budget and is not a sharing owner.
 
 **Measurements** (before adoption, empty compile cache, one run each, back
-to back on nightly `4388584`). The package precompile is unchanged (86.0 s
+to back on commit `4388584`). The package precompile is unchanged (86.0 s
 without the check, 85.3 s with it), because a precompile never instantiates
 the check. Clients pay about 2 to 3 s at O0: `io_operations` 41.8 s to
 43.9 s, `async_coordination` 43.3 s to 46.5 s, `public_resources` 46.6 s to

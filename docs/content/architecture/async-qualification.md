@@ -176,7 +176,7 @@ measure performance and allocation scaling under Mojo 1.2.0:
 
 - **The foundation**: the single-threaded cooperative host with typed recipes;
 - **Unified `IO`**: replacing typed recipes with unified `IO[T, E]`;
-- **`nightly` multi-threaded runtime**: configured with both single-threaded and
+- **The multi-threaded runtime**: configured with both single-threaded and
   work-stealing profiles.
 
 The foundation comparison reuses the maintained clients under
@@ -282,7 +282,7 @@ retained reproducer and a targeted correction before a fresh qualifying run.
 
 A bundle stays in the checkout that produced it: its executables and raw logs
 are too large to commit. What is committed is a summary, one JSON file per
-bundle under [`evidence/`](https://github.com/spellbound-mojo/fp_mojo/tree/nightly/docs/content/architecture/evidence),
+bundle under [`evidence/`](https://github.com/spellbound-mojo/fp_mojo/tree/main/docs/content/architecture/evidence),
 written by `scripts/retain_evidence.py` (`fp_tools/evidence.py`). A summary
 records:
 

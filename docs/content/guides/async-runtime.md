@@ -961,7 +961,7 @@ test under `TestControl`, see readiness at the next poll or tick.
 ## Responsiveness
 
 How quickly the runtime reacts, measured on both profiles at O3 on the 4-core
-Linux x86-64 development host, with the pool at four workers, at `nightly`
+Linux x86-64 development host, with the pool at four workers, at commit
 `335a667`. The 1-minute load average was 1.0 to 1.4, from these measurements
 alone. Three values in a cell are the median, 90th percentile and maximum of
 200 samples. `experiments/async-state-machines/probes/responsiveness.mojo`

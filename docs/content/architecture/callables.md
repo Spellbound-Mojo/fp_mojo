@@ -136,7 +136,7 @@ programs take minutes to compile (see
 
 ## Native functions and closures
 
-On the Mojo 1.2 nightly branch, `NativeUnary` stores its callback in the same
+On Mojo 1.2, `NativeUnary` stores its callback in the same
 inline optional cell used by composition. Direct generic fields lose native
 function witnesses on this compiler. The cell remains occupied until the
 wrapper is consumed; construction and calls neither allocate nor copy captures.
