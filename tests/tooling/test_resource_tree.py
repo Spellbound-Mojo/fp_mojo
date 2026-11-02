@@ -9,11 +9,11 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
-from fp_tools.runtime import ROOT, _linux_tree_rss, command, audit_command
+from fp_tools.runtime import ROOT, _darwin_tree_rss, _linux_tree_rss, command, audit_command
 
 
 class ResourceTreeTests(unittest.TestCase):
-    @unittest.skipUnless(sys.platform == "linux", "Linux process accounting")
+    @unittest.skipUnless(sys.platform in ("linux", "darwin"), "Linux or macOS process accounting")
     def test_retained_rss_trace_is_audited_and_never_overwritten(self):
         with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as name:
             folder = Path(name)
@@ -55,6 +55,15 @@ class ResourceTreeTests(unittest.TestCase):
             # A zombie or exiting intermediate process can have no VmRSS field.
             (root / "11/status").write_text("PPid:\t10\n")
             self.assertEqual(_linux_tree_rss(10, root), 18 * 1024)
+
+    def test_ps_snapshot_includes_descendants_only(self):
+        # pid, ppid and rss in KiB, as `ps -axo pid=,ppid=,rss=` prints them on macOS.
+        snapshot = "    1     0  9000\n   10     1     5\n   11    10    20\n   12    11     0\n   20     1  1000\n"
+        self.assertEqual(_darwin_tree_rss(10, snapshot), 25 * 1024)
+        self.assertEqual(_darwin_tree_rss(11, snapshot), 20 * 1024)
+        self.assertEqual(_darwin_tree_rss(30, snapshot), 0)
+        # A header or a truncated row is ignored.
+        self.assertEqual(_darwin_tree_rss(10, "  PID  PPID   RSS\n" + snapshot + "   13    10\n"), 25 * 1024)
 
     @unittest.skipUnless(sys.platform == "linux", "Linux process accounting")
     def test_memory_limit_reaches_the_timers_child_and_kills_it(self):

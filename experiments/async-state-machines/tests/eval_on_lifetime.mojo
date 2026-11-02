@@ -19,6 +19,7 @@ from std.time import sleep
 from fp.callables import OnceUnary
 from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Fiber, Deferred, BlockingPool, ExecutionContext, IORuntimeConfig, Profile, Runtime, run
+from fp._internal.os import process_thread_count
 
 
 def check(condition: Bool, message: String):
@@ -31,25 +32,13 @@ def value_of[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:
     return outcome.take()._take_ok()
 
 
-def os_threads() -> Int:
-    """The process's thread count, from /proc/self/status."""
-    try:
-        with open("/proc/self/status", "r") as f:
-            for line in f.read().split("\n"):
-                if line.startswith("Threads:"):
-                    return Int(String(line[byte=8:].strip()))
-    except:
-        pass
-    abort("eval_on_lifetime: cannot read the thread count")
-
-
 def settle_threads(expected: Int, name: String):
     """Wait up to 5 s for detached threads to exit back to `expected`."""
     for _ in range(500):
-        if os_threads() <= expected:
+        if process_thread_count() <= expected:
             return
         sleep(0.01)
-    check(False, String(name, ": ", os_threads(), " threads left, expected ", expected))
+    check(False, String(name, ": ", process_thread_count(), " threads left, expected ", expected))
 
 
 def pooled_runtime() -> Runtime:
@@ -98,7 +87,7 @@ def kind_name(kind: Int) -> String:
 
 def dropped_before(kind: Int):
     var name = kind_name(kind)
-    var baseline = os_threads()
+    var baseline = process_thread_count()
     var target = make_target(kind)
     var program = IO[Int, Int].pure(11).eval_on(target)
     _ = target^
@@ -166,7 +155,7 @@ struct WaitThenRelease(OnceUnary):
 
 def dropped_during(kind: Int):
     var name = kind_name(kind)
-    var baseline = os_threads()
+    var baseline = process_thread_count()
     var running = Deferred[Int]()
     var gate = Deferred[Int]()
     var target = make_target(kind)
@@ -232,7 +221,7 @@ def listed():
 
 
 def many():
-    var baseline = os_threads()
+    var baseline = process_thread_count()
     for i in range(50):
         var target = make_target(i % 3)
         var program = IO[Int, Int].pure(i).eval_on(target)

@@ -532,7 +532,7 @@ def _node_of[F: Data](frame: _Frame[F], owned: List[Node[F]]) -> Pointer[Node[F]
 @always_inline
 def _key[F: Data](node: Node[F]) -> Int:
     """The memo key of a shared value: the address of its cell."""
-    return Int(Pointer(to=node._cell[]))
+    return node._address()
 
 
 # What a frame's steps produced.
@@ -545,10 +545,10 @@ comptime _AGAIN = 3   # It continued with a smaller value (`Next`); step it agai
 def _enter[F: Data, C: _ClauseSet, R: Value, rewrite: Bool](mut frame: _Frame[F], owned: List[Node[F]]):
     """Start a frame again at the first step of its constructor's first candidate."""
     comptime S = F.Layer[Node[F]]
-    ref layer = _node_of(frame, owned)[]._cell[].layer
+    var tag = _node_of(frame, owned)[]._tag()
     frame.sub = 0
     comptime for i in range(S.count):
-        if S.is_case[i](layer):
+        if tag == i:
             frame.ctor = UInt16(i)
             frame.pc = Int32(_step_after[F, C, R, rewrite, i, 0, -1]())
             return
@@ -572,16 +572,16 @@ def _start[F: Data, C: _ClauseSet, R: Value, E: Value, X: AnyType, Memo: Copyabl
     """
     comptime S = F.Layer[Node[F]]
     comptime if memoize:
-        if frame.handle[]._cell.count() > 1:
+        if frame.handle[]._shared():
             var known = memo.get(_key(frame.handle[]))
             if known:
                 values.append(rebind_var[R](known.take()))
                 return _KNOWN
             frame.shared = True
-    ref layer = frame.handle[]._cell[].layer
+    var tag = frame.handle[]._tag()
     frame.base = len(values)
     comptime for i in range(S.count):
-        if S.is_case[i](layer):
+        if tag == i:
             frame.ctor = UInt16(i)
             frame.pc = Int32(_step_after[F, C, R, rewrite, i, 0, -1]())
             var outcome = _steps[F, C, R, E, X, rewrite, i](frame, values, owned, clauses, context, child)
@@ -611,7 +611,7 @@ def _continue_with[F: Data, C: _ClauseSet, R: Value, rewrite: Bool](
     An owned value is never looked up in or added to the memo: its address can
     be reused once it is released.
     """
-    if target._cell[].height >= _node_of(frame, owned)[]._cell[].height:
+    if target._height() >= _node_of(frame, owned)[]._height():
         abort("fp.match: Next must continue with a smaller value")
     values.shrink(frame.base)
     if frame.owned:
@@ -631,7 +631,7 @@ def _call_candidate[F: Data, C: _ClauseSet, R: Value, E: Value, X: AnyType, rewr
     comptime A = C.Sig[j].First
     comptime keep = _guarded[C, j]()
     var node = _node_of(frame, owned)
-    ref stored = F.Layer[Node[F]].get[i](node[]._cell[].layer)
+    ref stored = node[]._get[i]()
     comptime if A == Node[F]:
         comptime if not keep:
             values.shrink(frame.base)
@@ -669,7 +669,7 @@ def _steps[F: Data, C: _ClauseSet, R: Value, E: Value, X: AnyType, rewrite: Bool
     comptime fields = reflect[Stored].field_count()
     comptime count = _candidates[F, C, rewrite, i]()
     var node = _node_of(frame, owned)
-    ref stored = S.get[i](node[]._cell[].layer)
+    ref stored = node[]._get[i]()
     while True:
         comptime for t in range(count):
             comptime for f in range(fields):

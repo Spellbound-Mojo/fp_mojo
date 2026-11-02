@@ -7,7 +7,6 @@ the resulting package can be used by the pinned compiler.
 import argparse
 from dataclasses import asdict
 from pathlib import Path
-import platform
 import shutil
 import uuid
 
@@ -29,7 +28,7 @@ def main():
     args = parser.parse_args()
     run = RunContext.start(args.output or f'.cache/packages/{uuid.uuid4().hex}',
                            'package')
-    memory_limit = 4096 * 1024 * 1024 if platform.system() == 'Linux' else None
+    memory_limit = 4096 * 1024 * 1024
     built = None
     if args.format == 'source':
         # Copy only production Mojo modules, preserving their import paths. Do

@@ -1,12 +1,13 @@
 """Wait for a file descriptor to become readable, as library authors build pipes and sockets."""
 from std.ffi import external_call
+from std.sys.info import platform_map
 from fp.callables import OnceUnary
 from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Duration, run
 from fp.effects.async_runtime.protocols import await_readable
 
 comptime F_SETFL: Int32 = 4
-comptime O_NONBLOCK: Int32 = 2048  # Linux
+comptime O_NONBLOCK = Int32(platform_map[T=Int, "O_NONBLOCK", linux=0o4000, macos=0x0004]())
 
 
 def value[T: Movable & Deinitable](var outcome: Outcome[T, Int]) -> T:
@@ -50,7 +51,9 @@ def main() raises:
         raise Error("pipe failed")
     var read_end = fds[0]
     var write_end = fds[1]
-    _ = external_call["fcntl", Int32](read_end, F_SETFL, O_NONBLOCK)
+    # fcntl is variadic in C: two fixed arguments, then the flags, which ARM64
+    # macOS passes differently from a fixed argument.
+    _ = external_call["fcntl", Int32, num_fixed_args=2](read_end, F_SETFL, O_NONBLOCK)
 
     # The reader parks in the poller until the writer's byte arrives; it
     # does not poll on a timer. The caller keeps both ends open until the IO ends.

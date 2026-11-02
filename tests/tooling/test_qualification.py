@@ -41,7 +41,7 @@ class QualificationTests(unittest.TestCase):
             result = command([sys.executable, '-c', 'print("Stack dump: expected error"); exit(1)'], log)
             self.assertFalse(accepted(result, ['expected error']))
 
-    @unittest.skipUnless(sys.platform == 'linux', 'Linux RSS budget')
+    @unittest.skipUnless(sys.platform in ('linux', 'darwin'), 'Linux or macOS RSS budget')
     def test_memory_budget_is_an_unsuccessful_auditable_outcome(self):
         from fp_tools.runtime import audit_command
         with tempfile.TemporaryDirectory(dir=ROOT / '.cache') as folder:

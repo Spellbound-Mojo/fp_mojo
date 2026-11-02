@@ -424,8 +424,8 @@ Key async capabilities on `nightly`:
 
 The [async guide](docs/content/guides/async-runtime.md) includes runnable
 examples for fibers, coordination, timeouts, blocking offload, and Cats Effect
-concept mapping. The multi-threaded work-stealing engine targets 64-bit Linux;
-deterministic `TestControl` and core effects run across macOS and Linux.
+concept mapping. The multi-threaded work-stealing runtime runs on Linux x86-64
+and macOS arm64.
 
 ## Getting started
 
@@ -515,8 +515,7 @@ pixi run docs-serve
 
 - **Compiler & Toolchain**: FP Mojo 1.0.2 and the `nightly` branch target **Mojo 1.2.0**. FP Mojo 1.0.0 and 1.0.1 target Mojo 1.1.0.
 - **Platform Support**:
-  - **Linux x86-64**: Complete library support, including the multi-threaded work-stealing async runtime and POSIX driver.
-  - **macOS arm64**: Core library support (pipelines, iteration, ADTs, pattern matching, algebra, synchronous effects, and deterministic `TestControl` virtual-time async testing).
+  - **Linux x86-64 and macOS arm64**: Complete library support, including the multi-threaded work-stealing async runtime and POSIX driver.
 - **Architecture & Boundaries**: See [support and limitations](docs/content/guides/status.md) and [native Mojo boundaries](docs/content/architecture/native-boundaries.md) for compiler constraints shaping the API.
 
 ## Development & Verification

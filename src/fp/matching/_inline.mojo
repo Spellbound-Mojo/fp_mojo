@@ -151,7 +151,7 @@ def _applies[S: AnyType, A: AnyType](subject: S) -> Bool:
         return True
     elif kind == _NODE:
         comptime F = downcast[S, _NodeType].Of
-        return F.Layer[Node[F]].is_case[k](rebind[Node[F]](subject)._cell[].layer)
+        return rebind[Node[F]](subject)._tag() == k
     elif kind == _CHOICE:
         comptime F = downcast[S, _ChoiceType].Of
         return F.Layer[Node[F]].is_case[k](_layer[F](subject))
@@ -170,7 +170,7 @@ def _view[S: AnyType, A: AnyType](subject: S, none: Pointer[NoneType, ImmUntrack
         return Pointer(to=rebind[A](subject)).as_imm().unsafe_origin_cast[ImmUntrackedOrigin]()
     elif kind == _NODE:
         comptime F = downcast[S, _NodeType].Of
-        ref stored = F.Layer[Node[F]].get[k](rebind[Node[F]](subject)._cell[].layer)
+        ref stored = rebind[Node[F]](subject)._get[k]()
         return Pointer(to=rebind[A](stored)).as_imm().unsafe_origin_cast[ImmUntrackedOrigin]()
     elif kind == _CHOICE:
         comptime F = downcast[S, _ChoiceType].Of

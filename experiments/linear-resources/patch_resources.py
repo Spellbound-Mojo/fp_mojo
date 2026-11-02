@@ -1,7 +1,7 @@
 """Overlay patch: admit linear acquired values in native resource scopes.
 
-Applied by `overlay.py --patch resources` to a copy of `src/fp`; `src/` is never
-changed. Every lease stores its value in `_Held`, which is Deinitable whatever
+Applied by `experiments/overlay.py --patch experiments/linear-resources/patch_resources.py`
+to a copy of `src/fp`; `src/` is never changed. Every lease stores its value in `_Held`, which is Deinitable whatever
 the value is. `_Held` destroys a Deinitable value normally and aborts only if a
 linear value is still inside when the lease is destroyed, which the scope never
 allows. A `comptime if` in its destructor chooses the behavior. The probe's first
@@ -23,9 +23,10 @@ def sub(text, old, new, count=1):
 PARTS = ('widen', 'held', 'linear')
 
 
-def patch(folder, parts=PARTS):
+def patch(folder, parts=None):
     """Apply the named parts: `widen` (releasers may hold linear values), `held`
     (leases store values in _Held), `linear` (the linear entry point; needs both)."""
+    parts = parts or PARTS
     path = folder / 'fp' / 'effects' / 'resources.mojo'
     s = path.read_text()
     if 'linear' in parts and not {'widen', 'held'} <= set(parts):

@@ -14,7 +14,8 @@ from fp_tools.runtime import input_changes
 class CompilationMeasurementTests(unittest.TestCase):
     def test_package_and_source_copy_changes_are_visible(self):
         with tempfile.TemporaryDirectory() as name:
-            folder = Path(name)
+            # library_inputs resolves its folder; macOS's temporary folder is a symlink.
+            folder = Path(name).resolve()
             source = folder/'fp/core.mojo'
             source.parent.mkdir()
             source.write_text('before')

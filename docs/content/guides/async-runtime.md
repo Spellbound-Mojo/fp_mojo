@@ -398,7 +398,7 @@ and running calls, then stops and joins its workers. A pool whose last copy is
 dropped on one of its own workers lets that worker exit on its own. A blocking
 call outside a `Driver`, `run`, or `TestControl` aborts.
 
-**On the work-stealing profile** (the default on 64-bit Linux), a root with no
+**On the work-stealing profile** (the default on more than one processor), a root with no
 configured pool does not queue its calls. The worker running the fiber hands
 its queue of fibers to a replacement thread and runs the call on the thread
 that made it, as Cats Effect's `prepareForBlocking` does, so other fibers keep
@@ -523,9 +523,8 @@ Every operation that Cats Effect's `Sync` and `Async` type classes define, with
 its provider for `IO[T, E]` (through `Async[E]`) and for the synchronous family
 (through `SyncIO[E]`), or the obligation that stands in for one. Operations they
 inherit from `MonadCancel`, `GenSpawn`, `GenConcurrent`, and `GenTemporal` are in
-the [capability table](#write-programs-generic-over-the-family). Linux x86-64 is
-the qualified platform; every row on macOS is an obligation until macOS is
-qualified.
+the [capability table](#write-programs-generic-over-the-family). Every row holds
+on both qualified platforms, Linux x86-64 and macOS arm64.
 
 | Cats Effect operation | `IO[T, E]`, `Async[E]` | `SyncIO[E]` | Obligation or contract | Current thread and pool |
 |---|---|---|---|---|
@@ -1003,10 +1002,11 @@ moves the tails.
 
 ## Known limits of the preview
 
-- **macOS is unqualified.** Linux x86-64 is the only qualified platform. The
-  POSIX layer is written for both, but every macOS row of the
-  [provider matrix](#provider-matrix) is an obligation until macOS is
-  qualified.
+- **Two qualified platforms.** Linux x86-64 and macOS arm64 are qualified. OS
+  threads compile only on 64-bit Linux and macOS; Linux ARM64 builds, but its
+  threaded runtime has not been qualified. Pool and blocking threads get glibc's
+  default stack on Linux and 8 MiB on macOS, whose own default for secondary
+  threads is 512 KiB.
 - **Thread safety verification.** The pool's correctness rests on the
   [ordering audit](../architecture/async-thread-safety.md#memory-ordering-audit),
   comprehensive multi-threaded stress clients, and soak tests.

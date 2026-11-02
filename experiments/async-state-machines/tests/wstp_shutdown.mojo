@@ -12,10 +12,10 @@
   the detached thread finishes the program, leaves its loop and destroys the
   pool on its own.
 
-Thread counts come from /proc, which can still count a joined thread for a
-moment after its join returns, so every check bounds the count from above and
-waits for it to settle (as `blocking_pool` does), which keeps them
-deterministic. `SHUTDOWN_SCALE` multiplies the rounds for soaks.
+Thread counts come from `process_thread_count`, which can still count a joined
+thread for a moment after its join returns, so every check bounds the count
+from above and waits for it to settle (as `blocking_pool` does), which keeps
+them deterministic. `SHUTDOWN_SCALE` multiplies the rounds for soaks.
 """
 from std.atomic import Atomic
 from std.memory import ArcPointer
@@ -25,6 +25,7 @@ from fp.callables import OnceUnary
 from fp.effects import CancellationToken, Outcome
 from fp.effects.async_runtime import IO, Fiber, IORuntimeConfig, Profile, Runtime
 from fp.effects._async.pool import _submit_root
+from fp._internal.os import process_thread_count
 
 comptime WORKERS = 4
 
@@ -44,23 +45,11 @@ def scale() -> Int:
         return 1
 
 
-def os_threads() -> Int:
-    """The process's thread count, from /proc/self/status."""
-    try:
-        with open("/proc/self/status", "r") as f:
-            for line in f.read().split("\n"):
-                if line.startswith("Threads:"):
-                    return Int(String(line[byte=8:].strip()))
-    except:
-        pass
-    abort("wstp_shutdown: cannot read the thread count")
-
-
 def wait_until_threads(expected: Int) -> Bool:
-    """Wait until at most `expected` threads remain; a joined thread can linger in /proc."""
+    """Wait until at most `expected` threads remain; a joined thread can linger in the count."""
     var deadline = Int(monotonic()) + 5_000_000_000
     while Int(monotonic()) < deadline:
-        if os_threads() <= expected:
+        if process_thread_count() <= expected:
             return True
         sleep(0.002)
     return False
@@ -130,27 +119,27 @@ def mixed(count: Int) -> IO[Int, Int]:
 
 
 def joins() raises:
-    var base = os_threads()
+    var base = process_thread_count()
     for round in range(10 * scale()):
         var runtime = Runtime(stealing())
-        check(os_threads() >= base + WORKERS, "a runtime starts its workers when created")
+        check(process_thread_count() >= base + WORKERS, "a runtime starts its workers when created")
         for _ in range(5):
             check(value_of(runtime.run(mixed(6))) == 7, "programs with abandoned fibers complete")
         check(len(runtime.fibers()) == 0, "nothing is left running after the programs")
         _ = runtime^
-        check(wait_until_threads(base), String("round ", round, ": dropping the last copy joins every worker, threads ", os_threads(), " of ", base))
+        check(wait_until_threads(base), String("round ", round, ": dropping the last copy joins every worker, threads ", process_thread_count(), " of ", base))
 
 
 def copies() raises:
-    var base = os_threads()
+    var base = process_thread_count()
     var runtime = Runtime(stealing())
     var copy = runtime.copy()
     _ = runtime^
     sleep(0.01)
-    check(os_threads() >= base + WORKERS, "dropping one copy keeps the workers")
+    check(process_thread_count() >= base + WORKERS, "dropping one copy keeps the workers")
     check(value_of(copy.run(mixed(3))) == 7, "the remaining copy runs programs")
     _ = copy^
-    check(wait_until_threads(base), String("the last copy joins, threads ", os_threads(), " of ", base))
+    check(wait_until_threads(base), String("the last copy joins, threads ", process_thread_count(), " of ", base))
 
 
 struct Holder(Movable):
@@ -184,7 +173,7 @@ struct DropLast(OnceUnary):
 
 
 def last_copy_on_worker() raises:
-    var base = os_threads()
+    var base = process_thread_count()
     var released = ArcPointer(Atomic[Int](0))
     var dropped = ArcPointer(Atomic[Int](0))
     var runtime = Runtime(stealing())
@@ -199,7 +188,7 @@ def last_copy_on_worker() raises:
     var outcome = handle^.take()
     check(dropped[].load() == 1, "the program dropped the last copy")
     check(value_of(outcome^) == 42, "the program that dropped the runtime still completed")
-    check(wait_until_threads(base), String("the detached worker exited on its own, threads ", os_threads(), " of ", base))
+    check(wait_until_threads(base), String("the detached worker exited on its own, threads ", process_thread_count(), " of ", base))
 
 
 def main() raises:

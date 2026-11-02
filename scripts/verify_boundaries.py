@@ -74,7 +74,9 @@ def main():
 
     def check(job):
         route, case = job
-        name = f"{Path(case.source).stem}-{route}-O{case.optimization}"
+        # The folder keeps runtime and ownership fixtures of the same name apart.
+        source = Path(case.source)
+        name = f"{source.parent.name}-{source.stem}-{route}-O{case.optimization}"
         binary = run.binaries / name
         result = execute_case(case, binary, run.folder / "cases" / name)
         failures = audit_case(case, result, binary, folder=run.folder)

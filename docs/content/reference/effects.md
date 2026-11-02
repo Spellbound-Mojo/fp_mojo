@@ -618,7 +618,7 @@ owned value is destroyed.
 ## Owned fibers
 
 `unsafe_start(program)` immediately starts an IO recipe on one OS thread and
-returns a move-only `Fiber[P]`. The current backend supports 64-bit Linux.
+returns a move-only `Fiber[P]`. The current backend supports 64-bit Linux and macOS.
 `fiber.join()` consumes the handle and returns its exact Outcome; `fiber.cancel()`
 requests cancellation and joins. Use `fiber.request_cancel()` to signal without
 waiting, and `fiber.done()` to check completion.

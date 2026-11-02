@@ -62,9 +62,22 @@ var e: E = Add(x, E(Add(x, x)))        # x is shared
 - **Height.** Each node stores its height, the longest path to a leaf, computed
   once at construction.
 - **Destruction** runs in a loop, so dropping a value a million levels deep does
-  not recurse.
-- **Cost.** One heap allocation per node and an atomic reference count, as
-  `ArcPointer`.
+  not recurse. The loop holds the children of each value it releases; a value
+  whose children are all shared elsewhere, including every value the loop
+  itself releases, is released without allocating. Dropping a value allocates
+  at most one work list.
+- **Cost.** One allocation per node, holding a 32-bit atomic reference count,
+  the 32-bit height and the node's own constructor, not space for the largest
+  one: about 24 bytes per node of a binary tree whose leaves hold an `Int`.
+  For a data type of at most 16 constructors the handle records which
+  constructor it holds, so inspecting a node's constructor reads no memory; a
+  wider type records it in the node. Copying increments the count, and
+  releasing the only handle to a value skips the atomic decrement. Building,
+  traversing and releasing a tree of 262,143 nodes takes 0.4–0.7× the time of
+  hand-written `ArcPointer` cells
+  ([`node_*` benchmarks](../contributing/benchmarks.md#runtime-benchmarks)).
+- **Limits.** At most 4,294,967,295 handles may refer to one value, and a value
+  may be at most that many levels high; exceeding either aborts.
 
 ## Values stored in place
 
@@ -233,18 +246,22 @@ is one dispatch, the evaluated fields, the clause call and, when the result type
 is `Copyable`, one reference-count read to detect sharing.
 
 With clauses that do almost nothing, on an x86-64 host
-(`tests/benchmarks/bench_match.mojo`):
+(`tests/benchmarks/bench_match.mojo`, Mojo 1.2.0, O3):
 
-| Value | Hand-written recursion | Hand-written explicit-stack loop | `fp.match` |
-|---|---|---|---|
-| Balanced tree, 9,556 values | 1× (about 1.9 ns per value) | about 2.4× | about 3× |
-| Chain 10,000 deep | 1× | about 0.9× | about 1.2× |
+| Value | Hand-written recursion | `fp.match` |
+|---|---|---|
+| Balanced tree, 9,556 values | 1× (about 1.2 ns per value) | about 4× |
+| Chain 10,000 deep | 1× (about 3.4 ns per value) | about 3.5× |
 
-A loop keeps the state of every pending value in memory, where recursion keeps
-it in registers and return addresses; on a shallow value that costs the loop a
-factor of two, and on a deep one it costs nothing, because deep recursion is no
-better at keeping its frames in cache. `fp.rewrite`, which allocates the values
-it rebuilds, is within a few percent of the hand-written version. The trip count
+Hand-written recursion over a `Node` reads each value's constructor from its
+handle and its fields from one small cell, so it costs about a nanosecond per
+value, and the loop's own work per value (dispatch on its plan, pushing and
+popping frames and results) is most of a match's time. Before values were
+stored in compact cells, the same benchmark measured about 3× and 1.2×: the
+memory traffic of larger, scattered nodes was a larger share of both sides,
+and a hand-written explicit-stack loop then took about 2.4× and 0.9×.
+`fp.rewrite`, which allocates the values it rebuilds, takes about 1.1× the
+hand-written version. The trip count
 of the loop plays no part: recursion does not know the depth in advance either.
 
 ## Compile time

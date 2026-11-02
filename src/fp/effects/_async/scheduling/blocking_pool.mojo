@@ -547,7 +547,7 @@ struct BlockingPool(Copyable, ThreadTransferable):
         Raises:
             Error: `max_workers` is not positive.
         """
-        comptime assert threads_supported, "the blocking pool is qualified only on 64-bit Linux"
+        comptime assert threads_supported, "the blocking pool is qualified only on 64-bit Linux and macOS"
         if max_workers <= 0:
             raise Error("BlockingPool max_workers must be positive")
         self._owner = ArcPointer(_PoolOwner(max_workers, idle_timeout.to_nanoseconds()))

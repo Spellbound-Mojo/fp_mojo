@@ -8,7 +8,7 @@ from std.ffi import ErrNo, c_int
 from std.memory import ArcPointer
 from std.os import abort, getenv
 from std.time import monotonic, sleep
-from fp._internal.os import OSThread, Pipe, RUSAGE_THREAD, getrusage, is_nonblocking, write
+from fp._internal.os import OSThread, Pipe, is_nonblocking, thread_cpu_nanoseconds, write
 from fp._internal.time import Duration
 from fp._internal.waking import Signal
 from fp.effects._async.polling import READ_INTEREST, WRITE_INTEREST, _Interrupter, _Poller, _PollResult, _Registration
@@ -387,11 +387,11 @@ def idle_poll_uses_no_cpu() raises:
     var poller = _Poller()
     var data = Pipe.open_self_pipe()
     _ = poller.register(data.read_end.fd, READ_INTEREST, Signal())
-    var before = getrusage(RUSAGE_THREAD)
+    var before = thread_cpu_nanoseconds()
     var start = Int(monotonic())
     var result = poller.poll(nanoseconds(500 * millisecond))
     var elapsed = Int(monotonic()) - start
-    var used = getrusage(RUSAGE_THREAD).total_nanoseconds() - before.total_nanoseconds()
+    var used = thread_cpu_nanoseconds() - before
     check(result.expired and elapsed >= 500 * millisecond, "idle: waited the whole timeout")
     check(used < 10 * millisecond, String("idle: a 500 ms poll used ", used, " ns of CPU"))
     _ = data^

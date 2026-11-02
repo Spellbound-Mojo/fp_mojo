@@ -55,9 +55,12 @@ def stress_observation(name, stdout, seconds, minimum):
             and row["payloads"] == row["drops"] >= 2 * row["cycles"]
             and row["withdrawals"] == row["cycles"] and row["polls"] >= row["cycles"]):
         raise ValueError("lifecycle ownership or retained-storage evidence")
+    # On the pool a consumer may find a value before it parks, so the 64-cycle
+    # smoke run (seconds 0) may record no wait; the soak itself must show one.
+    least_subscriptions = 0 if seconds == 0 else 1
     if name == "workers" and not (
             row["modes"] == 4 and 0 < row["queue_capacity"] <= 64
-            and 0 < row["subscription_capacity"] <= 2):
+            and least_subscriptions <= row["subscription_capacity"] <= 2):
         raise ValueError("worker coordination evidence")
     return row
 

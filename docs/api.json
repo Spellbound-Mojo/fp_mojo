@@ -70418,7 +70418,7 @@
       "type": "Fiber[P]"
      },
      "signature": "def unsafe_start[P: ReaderAction](var program: P) raises -> Fiber[P] where IOContract[P].Compatible",
-     "summary": "Start one 64-bit Linux OS thread immediately, transferring an IO recipe to it."
+     "summary": "Start one OS thread immediately, on 64-bit Linux or macOS, transferring an IO recipe to it."
     }
    ],
    "provider": "effects/fibers",

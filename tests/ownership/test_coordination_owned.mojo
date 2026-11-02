@@ -2,11 +2,11 @@
 from std.atomic import Atomic
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
-from std.sys.info import CompilationTarget
 from fp.effects import Ref, Deferred, Queue
 from fp.effects import unsafe_start
 from fp.effects import CancellationToken, IOContract, ReaderAction, run_io, delay
 from fp.callables import OnceUnary, OnceThunk
+from fp._internal.os import threads_supported
 
 
 struct CoordOwner(Movable):
@@ -144,7 +144,7 @@ def main() raises:
     _ = unopened^
     assert_equal(drops[].load(), 6)
     _ = owned_coord_value(queue.offer[Error](CoordOwner(7, drops.copy())))
-    comptime if CompilationTarget.is_linux():
+    comptime if threads_supported:
         var blocked = unsafe_start(queue.offer[Error](CoordOwner(8, drops.copy())))
         assert_true(not blocked^.cancel())
         assert_equal(drops[].load(), 7)

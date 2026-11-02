@@ -75,7 +75,7 @@ several times longer to build and up to about 5 GB each, so pass `--jobs 2` on a
 16 GB machine. `--filter <text>` selects the programs whose path contains the text, and
 `--output <dir>` names the report folder (a fresh one under `.cache/` by
 default). `build` defaults to a 60-second limit for each package and client compilation,
-with two compiler threads and a 4 GiB memory limit on Linux. Select a longer
+with two compiler threads and a 4 GiB memory limit. Select a longer
 recorded budget with `--compile-timeout 180` when a larger package exceeds that
 limit. A timeout remains a failed run; retain it and use a fresh output directory
 for the new budget.

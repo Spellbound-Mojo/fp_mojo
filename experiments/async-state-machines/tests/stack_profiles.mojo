@@ -4,9 +4,9 @@ The same programs run on the current-thread profile, through a `Runtime` on
 the calling thread, and on a four-worker work-stealing pool whose workers
 are started with 1 MiB native stacks through the pool's private
 `stack_bytes` (`OSThread`'s pthread attribute). Each program first checks
-the stack of the thread running it: exactly 1 MiB on a pool worker; on the
-calling thread, whatever `ulimit -s` gave it, which qualification's bounded
-run sets to 1 MiB (`qualify.py`).
+the stack of the thread running it: exactly 1 MiB on a pool worker (macOS
+reports 12 KiB more); on the calling thread, whatever `ulimit -s` gave it,
+which qualification's bounded run sets to 1 MiB (`qualify.py`).
 
 Programs, each a million frames deep unless stated:
 
@@ -27,6 +27,7 @@ from std.atomic import Atomic, Ordering
 from std.memory import ArcPointer
 from std.memory.alloc import unsafe_alloc
 from std.os import abort
+from std.sys.info import CompilationTarget
 from std.time import sleep
 from fp.callables import OnceThunk, OnceUnary
 from fp.effects import CancellationToken, EffectFailure, IOContext, Outcome
@@ -37,6 +38,7 @@ from fp._internal.os import current_thread_stack_bytes
 
 comptime DEPTH = 1_000_000
 comptime STACK = 1 << 20
+comptime _REPORTED_EXTRA = 12 << 10 if CompilationTarget.is_macos() else 0
 comptime WORKERS = 4
 
 
@@ -177,7 +179,9 @@ struct CheckStack(OnceThunk):
         var bytes = current_thread_stack_bytes()
         self.counters[].set(STACK_READ, bytes)
         if self.counters[].pooled:
-            check(bytes == STACK, String("a pool worker runs on a ", bytes, "-byte stack, not 1 MiB"))
+            # glibc reports the requested size; macOS reports 12 KiB more for
+            # any requested size (measured at 1 MiB and 8 MiB).
+            check(bytes == STACK + _REPORTED_EXTRA, String("a pool worker runs on a ", bytes, "-byte stack, not 1 MiB"))
         return 0
 
 

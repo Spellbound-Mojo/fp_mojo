@@ -150,10 +150,10 @@ search index.
 Next, read [ownership and errors](ownership.md) or start the
 [pipeline tutorial](../tutorial/pipelines.md).
 
-## Async preview from nightly
+## Async runtime
 
-The pure-Mojo async preview is available from the pinned Mojo 1.2 checkout on
-Linux x86-64. Import `fp.effects.async_runtime` for `IO` and host
-execution, or `fp.effects.async_runtime.protocols` for custom machines. The
-released Mojo 1.1 package does not contain this preview. Follow the
+FP Mojo 1.0.2 includes the pure-Mojo async runtime on Linux x86-64 and macOS
+arm64. Import `fp.effects.async_runtime` for `IO` and host execution, or
+`fp.effects.async_runtime.protocols` for custom machines. FP Mojo 1.0.0 and
+1.0.1, the Mojo 1.1 releases, do not contain it. Follow the
 [async guide](../guides/async-runtime.md) for executable examples and boundaries.

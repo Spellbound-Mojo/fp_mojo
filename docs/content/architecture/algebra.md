@@ -1228,8 +1228,8 @@ native calls. Cancellation remains separate from this error recovery.
 
 The optional fiber backend starts one OS thread per IO recipe using the public
 Mojo `std.ffi` interface to POSIX `pthread_create` and `pthread_join`. Its current
-contract is 64-bit Linux; other targets reject `unsafe_start` before opening the
-program. It is deliberately separate from the portable synchronous IO boundary.
+contract is 64-bit Linux and macOS; other targets reject `unsafe_start` before
+opening the program. It is deliberately separate from the portable synchronous IO boundary.
 This is an explicit exception to the no-FFI core principle, not a compiler or
 standard-library modification. Mojo's unfinished native async types are not used.
 

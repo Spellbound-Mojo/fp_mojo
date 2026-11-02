@@ -2,5 +2,5 @@ pipe round trip: ok
 nonblocking reads: ok
 poll readiness and timeout: ok
 clocks: ok
-getrusage: ok
+cpu time: ok
 threads through the shared owner: ok

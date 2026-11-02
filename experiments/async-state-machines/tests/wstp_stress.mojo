@@ -8,8 +8,9 @@ work-stealing pool, then on the current-thread profile. Its nodes:
   blocking call that returns a tracked payload (the blocking hand-off on the
   pool, the root's `BlockingPool` otherwise), an `IO.async` registration that
   one of two foreign OS threads completes with a tracked payload after a
-  random spin (foreign wakes), a CPU spin, a failure caught by `attempt`, and
-  an unjoined fiber that fails, which the reporter sees.
+  random spin (foreign wakes), a CPU spin, a failure recovered by
+  `handle_error_with`, and an unjoined fiber that fails, which the reporter
+  sees.
 - **Composites:** `both`, `race`, a started fiber that is joined (spawn and
   join), a started fiber that is canceled and then joined, and
   `par_traverse` over two to four children.
@@ -24,13 +25,17 @@ Invariants, checked on both profiles:
 - every tracked payload is destroyed exactly once, once the foreign threads
   finished their completions, including those that lost to a cancellation;
 - every failure is observed exactly once. An unjoined fiber's failure is
-  reported once. A failure caught by `attempt` is handled once, except below
-  a race or a cancellation: `attempt` leaves a failure raised during its
+  reported once. A recovered failure is handled once, in its recovery, except
+  below a race or a cancellation: recovery leaves a failure raised during its
   fiber's cancellation terminal, so it may instead surface once as the error
   of the nearest race (which keeps a loser's errors), of a canceled fiber's
   join, or of a join that took it while its joiner was being canceled, or be
   reported once when its fiber's join was canceled first. No failure may reach
-  a round's root.
+  a round's root. Every check is reached once its failure is received: a
+  recovery counts in its own handoff, and races and joins are observed in an
+  `uncancelable` region that restores only the wait, as Cats Effect's
+  `uncancelable(poll => poll(fa).flatMap(check))` does. Cancellation observed
+  between receiving a failure and a later step would otherwise drop it.
 
 Usage: `wstp_stress [seed [rounds]]`; seed 1 and `ROUNDS` rounds by default,
 so qualification's output is fixed. Soaks pass their own seeds. Every check
@@ -47,7 +52,7 @@ from fp.algebra import par_traverse
 from fp.callables import OnceThunk, OnceUnary, Unary
 from fp.data import Left, Right, Result, Ok
 from fp.effects import EffectFailure, Outcome, ThreadTransferable
-from fp.effects.async_runtime import IO, Fiber, Completion, Duration, IORuntimeConfig, Profile, RaceResult, run
+from fp.effects.async_runtime import IO, Fiber, Completion, Duration, IORuntimeConfig, Poll, Profile, RaceResult, run
 from fp._internal.os import OSThread, Pipe
 
 comptime WORKERS = 4
@@ -310,7 +315,7 @@ struct Plan(Movable):
         return len(self.kind) - 1
 
     def fail_ids(self, node: Int, mut ids: List[Int]):
-        """The failure ids of the `attempt`-caught failures in the node's subtree."""
+        """The failure ids of the recovered failures in the node's subtree."""
         var pending = List[Int]()
         pending.append(node)
         while len(pending):
@@ -468,20 +473,24 @@ struct Raise(OnceThunk):
 
 @fieldwise_init
 struct Handle(OnceUnary):
-    """An `attempt`'s handler: the failure must be its own, and it is handled once."""
+    """The failure's recovery: it must be its own, and it is handled once.
+
+    It counts in the recovery handoff itself. Cancellation observed at that
+    handoff leaves the failure terminal; observed after it, it drops only the
+    replacement value. An `attempt` followed by a counting `map` would lose a
+    caught failure to cancellation observed between those two handoffs.
+    """
     var ledger: ArcPointer[Words]
     var id: Int
     var label: String
-    comptime Arg = Result[Int, EffectFailure[Int]]
-    comptime Out = Int
+    comptime Arg = EffectFailure[Int]
+    comptime Out = IO[Int, Int]
 
-    def call_once(deinit self, var result: Result[Int, EffectFailure[Int]]) -> Int:
-        if result.is_ok():
-            fail(self.label + ": a raised failure succeeded")
-        if result^._take_err().errors.first() != CODE_BASE + self.id:
-            fail(self.label + ": an attempt caught another failure")
+    def call_once(deinit self, var failure: EffectFailure[Int]) -> IO[Int, Int]:
+        if failure.errors.first() != CODE_BASE + self.id:
+            fail(self.label + ": a recovery caught another failure")
         self.ledger[].bump(HANDLED + self.id)
-        return 0
+        return IO[Int, Int].pure(0)
 
 
 @fieldwise_init
@@ -509,7 +518,7 @@ struct SumPair(OnceUnary):
 
 
 def observe(var failure: EffectFailure[Int], ids: List[Int], ledger: ArcPointer[Words], label: String):
-    """A failure that surfaced above its `attempt`: each error must be one raised below, counted as handled."""
+    """A failure that surfaced above its recovery: each error must be one raised below, counted as handled."""
     for code in failure^.into_errors().into_list():
         var id = code - CODE_BASE
         var known = False
@@ -518,6 +527,46 @@ def observe(var failure: EffectFailure[Int], ids: List[Int], ledger: ArcPointer[
         if not known:
             fail(String(label, ": error ", code, " surfaced where no failure below raised it"))
         ledger[].bump(HANDLED + id)
+
+
+@fieldwise_init
+struct ObserveRace(OnceUnary):
+    """Run the race cancelable through the poll, then check its result masked.
+
+    A failure the race returns is then always checked: cancellation observed
+    after the race returned can no longer drop it before `CheckRace` runs.
+    """
+    var race: IO[RaceResult[Int, Int], Int]
+    var check: CheckRace
+    comptime Arg = Poll[Int]
+    comptime Out = IO[Int, Int]
+
+    def call_once(deinit self, var poll: Poll[Int]) -> IO[Int, Int]:
+        return self.race^.restore(poll).attempt().map(self.check^)
+
+
+@fieldwise_init
+struct ObserveJoined(OnceUnary):
+    """Join cancelable through the poll, then run `CheckJoined` masked, as `ObserveRace` does."""
+    var fiber: Fiber[Int, Int]
+    var check: CheckJoined
+    comptime Arg = Poll[Int]
+    comptime Out = IO[Int, Int]
+
+    def call_once(deinit self, var poll: Poll[Int]) -> IO[Int, Int]:
+        return self.fiber^.join().restore(poll).map(self.check^)
+
+
+@fieldwise_init
+struct ObserveCanceled(OnceUnary):
+    """Join a canceled fiber cancelable through the poll, then run `CheckCanceled` masked."""
+    var fiber: Fiber[Int, Int]
+    var check: CheckCanceled
+    comptime Arg = Poll[Int]
+    comptime Out = IO[Int, Int]
+
+    def call_once(deinit self, var poll: Poll[Int]) -> IO[Int, Int]:
+        return self.fiber^.join().restore(poll).map(self.check^)
 
 
 @fieldwise_init
@@ -558,7 +607,7 @@ struct JoinIt(OnceUnary):
     comptime Out = IO[Int, Int]
 
     def call_once(deinit self, var fiber: Fiber[Int, Int]) -> IO[Int, Int]:
-        return fiber^.join().map(CheckJoined(self.expected, self.stoppable, self.ids^, self.ledger^, self.label))
+        return IO[Int, Int].uncancelable(ObserveJoined(fiber^, CheckJoined(self.expected, self.stoppable, self.ids^, self.ledger^, self.label)))
 
 
 @fieldwise_init
@@ -623,7 +672,7 @@ struct JoinCanceled(OnceUnary):
     comptime Out = IO[Int, Int]
 
     def call_once(deinit self, var unit: NoneType) -> IO[Int, Int]:
-        return self.fiber^.join().map(CheckCanceled(self.expected, self.ids^, self.ledger^, self.label))
+        return IO[Int, Int].uncancelable(ObserveCanceled(self.fiber^, CheckCanceled(self.expected, self.ids^, self.ledger^, self.label)))
 
 
 @fieldwise_init
@@ -703,7 +752,7 @@ def build(context: Context, node: Int) -> IO[Int, Int]:
     if kind == SPIN:
         return IO[Int, Int].delay(Spin(value))
     if kind == FAIL:
-        return IO[Int, Int].defer(Raise(ledger.copy(), value)).attempt().map(Handle(ledger^, value, context.label))
+        return IO[Int, Int].defer(Raise(ledger.copy(), value)).handle_error_with(Handle(ledger^, value, context.label))
     if kind == ORPHAN:
         var failing = IO[Int, Int].defer(Raise(ledger^, value))
         if value % 2 == 1:
@@ -716,7 +765,8 @@ def build(context: Context, node: Int) -> IO[Int, Int]:
         var right = plan.second[node]
         var ids = List[Int]()
         plan.fail_ids(node, ids)
-        return build(context, left).race(build(context, right)).attempt().map(CheckRace(plan.expected(left), plan.expected(right), ids^, ledger^, context.label))
+        var raced = build(context, left).race(build(context, right))
+        return IO[Int, Int].uncancelable(ObserveRace(raced^, CheckRace(plan.expected(left), plan.expected(right), ids^, ledger^, context.label)))
     if kind == JOIN:
         var child = plan.first[node]
         var ids = List[Int]()

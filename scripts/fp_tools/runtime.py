@@ -143,6 +143,32 @@ def _linux_tree_rss(pid, proc_root=Path('/proc')):
         children.setdefault(int(parent[1]), []).append(child)
         match = re.search(r'^VmRSS:\s+(\d+)\s+kB', status, re.M)
         resident[child] = int(match[1]) * 1024 if match else 0
+    return _tree_total(pid, children, resident)
+
+
+def _darwin_tree_rss(pid, snapshot=None):
+    """Sum a process tree from one `ps` snapshot of every process's parent and RSS.
+
+    macOS has no /proc; `ps -axo pid=,ppid=,rss=` lists each process with its
+    parent and its resident set in KiB. A process that exits between the
+    snapshot's rows is simply absent.
+    """
+    if snapshot is None:
+        snapshot = subprocess.run(['ps', '-axo', 'pid=,ppid=,rss='], capture_output=True,
+                                  text=True, check=True).stdout
+    children, resident = {}, {}
+    for line in snapshot.splitlines():
+        fields = line.split()
+        if len(fields) != 3 or not all(field.isdecimal() for field in fields):
+            continue
+        child, parent, kilobytes = map(int, fields)
+        children.setdefault(parent, []).append(child)
+        resident[child] = kilobytes * 1024
+    return _tree_total(pid, children, resident)
+
+
+def _tree_total(pid, children, resident):
+    """Add the resident bytes of `pid` and every descendant in a parent-PID index."""
     pending, seen, total = [pid], set(), 0
     while pending:
         child = pending.pop()
@@ -154,14 +180,18 @@ def _linux_tree_rss(pid, proc_root=Path('/proc')):
     return total
 
 
+def _tree_rss(pid):
+    return _darwin_tree_rss(pid) if platform.system() == 'Darwin' else _linux_tree_rss(pid)
+
+
 def command(argv, log, timeout=180, env=None, timed=False, memory_limit_bytes=None,
             rss_samples_log=None, rss_interval_seconds=5):
     """Kill the whole process group on timeout; retain stdout and stderr separately."""
     if memory_limit_bytes is not None:
         if type(memory_limit_bytes) is not int or memory_limit_bytes <= 0:
             raise ValueError('Memory limit must be a positive byte count')
-        if platform.system() != 'Linux':
-            raise RuntimeError('RSS budget enforcement currently requires Linux')
+        if platform.system() not in ('Darwin', 'Linux'):
+            raise RuntimeError('RSS budget enforcement requires Linux or macOS')
     actual = timed_argv(argv) if timed else list(map(str, argv))
     samples = None
     if rss_samples_log is not None:
@@ -187,7 +217,7 @@ def command(argv, log, timeout=180, env=None, timed=False, memory_limit_bytes=No
         while True:
             elapsed = time.perf_counter() - start
             if memory_limit_bytes is not None:
-                resident = _linux_tree_rss(process.pid)
+                resident = _tree_rss(process.pid)
                 sampled_peak = max(sampled_peak, resident)
                 memory_exceeded = sampled_peak > memory_limit_bytes
                 if samples is not None and elapsed >= next_sample:

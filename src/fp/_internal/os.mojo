@@ -9,10 +9,9 @@ processor counts are `std.sys.info.num_logical_cores()`, and sleeping is
 external call plus the retry or error policy documented on it; no C sources.
 
 Platform-dependent constants and structure layouts are selected at compile
-time. Linux x86-64 values were checked against glibc's headers with
-`offsetof`/`sizeof`; macOS values are from Darwin's public headers and are
-unverified until macOS is qualified. Using a Linux-only facility on another
-target is a compile-time error.
+time. Linux x86-64 values were checked against glibc's headers and macOS arm64
+values against Darwin's, both with `offsetof`/`sizeof`. Using a Linux-only
+facility on another target is a compile-time error.
 """
 from std.ffi import ErrNo, c_int, external_call, get_errno
 from std.memory import ArcPointer
@@ -77,7 +76,7 @@ struct OSError(Copyable, Writable):
 # Descriptors
 # ===------------------------------------------------------------------=== #
 
-# fcntl commands and flags. Linux x86-64 verified; macOS unverified.
+# fcntl commands and flags, verified on Linux and macOS.
 comptime F_GETFD: c_int = 1
 comptime F_SETFD: c_int = 2
 comptime F_GETFL: c_int = 3
@@ -393,7 +392,7 @@ struct Pipe(Movable):
 # poll
 # ===------------------------------------------------------------------=== #
 
-# Event bits; identical on Linux (verified) and macOS (unverified).
+# Event bits; identical on Linux and macOS (both verified).
 comptime POLLIN: Int16 = 0x001
 comptime POLLOUT: Int16 = 0x004
 comptime POLLERR: Int16 = 0x008
@@ -405,7 +404,7 @@ struct PollFd(Copyable, TrivialRegisterPassable):
     """One `struct pollfd`: a descriptor, its interest, and its readiness.
 
     The layout is int fd at 0, short events at 4, short revents at 6, eight
-    bytes in all, on Linux (verified) and macOS (unverified). A negative
+    bytes in all, on Linux and macOS (both verified). A negative
     descriptor is ignored by poll and reports no events.
     """
 
@@ -461,7 +460,7 @@ struct PollFd(Copyable, TrivialRegisterPassable):
 
 
 comptime _nfds_t = Scalar[DType.uint64 if CompilationTarget.is_linux() else DType.uint32]
-"""nfds_t: unsigned long on Linux (verified), unsigned int on macOS (unverified)."""
+"""nfds_t: unsigned long on Linux, unsigned int on macOS (both verified)."""
 
 
 def poll(mut descriptors: List[PollFd], timeout_milliseconds: Int) raises OSError -> Int:
@@ -508,6 +507,7 @@ def poll(mut descriptors: List[PollFd], timeout_milliseconds: Int) raises OSErro
 
 comptime CLOCK_REALTIME: c_int = 0
 comptime CLOCK_MONOTONIC: c_int = c_int(platform_map[T=Int, "CLOCK_MONOTONIC", linux=1, macos=6]())
+comptime CLOCK_THREAD_CPUTIME_ID: c_int = c_int(platform_map[T=Int, "CLOCK_THREAD_CPUTIME_ID", linux=3, macos=16]())
 comptime _nanoseconds_per_second = 1_000_000_000
 
 
@@ -515,7 +515,7 @@ comptime _nanoseconds_per_second = 1_000_000_000
 struct TimeSpec(Copyable, Defaultable, TrivialRegisterPassable):
     """One `struct timespec`: 64-bit seconds at 0 and nanoseconds at 8.
 
-    Sixteen bytes on 64-bit Linux (verified) and macOS (unverified).
+    Sixteen bytes on 64-bit Linux and macOS (both verified).
     """
 
     var seconds: Int64
@@ -542,7 +542,7 @@ def clock_gettime(clock: c_int) raises OSError -> TimeSpec:
     """Read a clock.
 
     Args:
-        clock: CLOCK_MONOTONIC or CLOCK_REALTIME.
+        clock: CLOCK_MONOTONIC, CLOCK_REALTIME or CLOCK_THREAD_CPUTIME_ID.
 
     Returns:
         The clock's current time.
@@ -574,13 +574,20 @@ def realtime_nanoseconds() -> Int:
     return _read_clock[CLOCK_REALTIME]()
 
 
+def thread_cpu_nanoseconds() -> Int:
+    """Read the calling thread's CPU time, user and system together.
+
+    Returns:
+        Nanoseconds of CPU time the calling thread has used.
+    """
+    return _read_clock[CLOCK_THREAD_CPUTIME_ID]()
+
+
 # ===------------------------------------------------------------------=== #
 # CPU time
 # ===------------------------------------------------------------------=== #
 
 comptime RUSAGE_SELF: c_int = 0
-comptime RUSAGE_THREAD: c_int = c_int(_linux_only["RUSAGE_THREAD", linux=1]())
-"""Linux only: macOS has no per-thread getrusage."""
 
 
 @fieldwise_init
@@ -603,8 +610,8 @@ struct CpuTime(Copyable, TrivialRegisterPassable):
 
 def _timeval_nanoseconds(usage: Array[Int64, 18], index: Int) -> Int:
     # struct timeval is 16 bytes: time_t tv_sec at 0, then tv_usec at 8, a long
-    # on Linux (verified) and a 32-bit suseconds_t followed by padding on macOS
-    # (unverified; read as the low half on little-endian targets).
+    # on Linux and a 32-bit suseconds_t followed by padding on macOS (both
+    # verified; read as the low half on little-endian targets).
     var microseconds = Int(usage[index + 1])
     comptime if CompilationTarget.is_macos():
         microseconds = Int(Int32(usage[index + 1] & 0xFFFFFFFF))
@@ -614,13 +621,13 @@ def _timeval_nanoseconds(usage: Array[Int64, 18], index: Int) -> Int:
 def getrusage(who: c_int) raises OSError -> CpuTime:
     """Read the CPU time used by the process or the calling thread.
 
-    `struct rusage` is 144 bytes on 64-bit Linux (verified) and macOS
-    (unverified): ru_utime at 0 and ru_stime at 16, then fourteen longs that
+    `struct rusage` is 144 bytes on 64-bit Linux and macOS (both
+    verified): ru_utime at 0 and ru_stime at 16, then fourteen longs that
     this wrapper does not report.
 
     Args:
-        who: RUSAGE_SELF for the whole process, or RUSAGE_THREAD (Linux) for
-            the calling thread.
+        who: RUSAGE_SELF for the whole process. The calling thread's time is
+            `thread_cpu_nanoseconds()`.
 
     Returns:
         The user and system CPU time.
@@ -635,14 +642,78 @@ def getrusage(who: c_int) raises OSError -> CpuTime:
 
 
 # ===------------------------------------------------------------------=== #
+# Process
+# ===------------------------------------------------------------------=== #
+
+comptime _PROC_PIDTASKINFO: c_int = 4
+"""macOS's proc_pidinfo flavor for `struct proc_taskinfo` (verified)."""
+
+
+def _task_info() -> Array[Int64, 12]:
+    # struct proc_taskinfo is 96 bytes on macOS (verified): the uint64
+    # pti_resident_size at 8, and the int32 pti_threadnum at 84, the high half
+    # of word 10 on little-endian targets.
+    var info = Array[Int64, 12](fill=0)
+    if external_call["proc_pidinfo", c_int](external_call["getpid", c_int](), _PROC_PIDTASKINFO, UInt64(0), info.unsafe_ptr(), c_int(96)) != 96:
+        abort("fp._internal.os: proc_pidinfo failed")
+    return info^
+
+
+def process_thread_count() -> Int:
+    """Count the calling process's threads.
+
+    From the `Threads` line of /proc/self/status on Linux and from
+    proc_pidinfo on macOS. A thread joined a moment ago may still be counted.
+
+    Returns:
+        The number of threads in the process.
+    """
+    comptime if CompilationTarget.is_macos():
+        return Int(Int32(_task_info()[10] >> 32))
+    else:
+        try:
+            with open("/proc/self/status", "r") as file:
+                for line in file.read().split("\n"):
+                    if line.startswith("Threads:"):
+                        return Int(String(line[byte=8:].strip()))
+        except:
+            pass
+        abort("fp._internal.os: cannot read Threads from /proc/self/status")
+
+
+def process_resident_bytes() -> Int:
+    """Measure the calling process's resident set.
+
+    From the second field of /proc/self/statm, in pages, on Linux and from
+    proc_pidinfo on macOS.
+
+    Returns:
+        The resident set in bytes.
+    """
+    comptime if CompilationTarget.is_macos():
+        return Int(_task_info()[1])
+    else:
+        try:
+            with open("/proc/self/statm", "r") as file:
+                return Int(file.read().split(" ")[1]) * Int(external_call["getpagesize", c_int]())
+        except:
+            pass
+        abort("fp._internal.os: cannot read /proc/self/statm")
+
+
+# ===------------------------------------------------------------------=== #
 # Threads
 # ===------------------------------------------------------------------=== #
 
-comptime threads_supported = CompilationTarget.is_linux() and is_64bit()
-"""Whether OSThread may be used: pthread_t is a 64-bit integer on 64-bit Linux.
+comptime threads_supported = (CompilationTarget.is_linux() or CompilationTarget.is_macos()) and is_64bit()
+"""Whether OSThread may be used: on 64-bit Linux and macOS, where pthread_t is
+sixty-four bits, an integer on Linux and a pointer on macOS (both verified).
+"""
 
-macOS's pthread_t is a pointer of the same size; it is unverified and off
-until macOS is qualified.
+comptime _MACOS_THREAD_STACK_BYTES = 8 << 20
+"""The native stack of a thread started without a size on macOS: 8 MiB, as
+glibc usually gives one on Linux, instead of Darwin's 512 KiB for secondary
+threads, so a callback that fits on a Linux worker fits on a macOS one.
 """
 
 comptime ThreadEntry[S: AnyType] = def(Pointer[S, MutAnyOrigin]) abi("C") thin -> OptionalPointer[NoneType, MutUntrackedOrigin]
@@ -672,15 +743,16 @@ struct OSThread[S: Movable & Deinitable](Movable):
             state: The shared state, kept until the thread is joined.
             entry: The thread body, which must not raise.
             stack_bytes: The thread's native stack size, set through a
-                pthread attribute; 0, the default, keeps the system's default
-                (glibc takes it from `RLIMIT_STACK` at process start).
+                pthread attribute; 0, the default, keeps glibc's default on
+                Linux (taken from `RLIMIT_STACK` at process start) and uses
+                `_MACOS_THREAD_STACK_BYTES` on macOS.
 
         Raises:
             OSError: The error number pthread_create returned, such as EAGAIN,
                 or pthread_attr_setstacksize's EINVAL for a size below
                 PTHREAD_STACK_MIN. No thread started, and the state is released.
         """
-        comptime assert threads_supported, "OS threads are qualified only on 64-bit Linux"
+        comptime assert threads_supported, "OS threads are qualified only on 64-bit Linux and macOS"
         self._handle = 0
         # POSIX retains this exact pointer, invisible to Mojo's origin analysis.
         var pointer = Pointer[Self.S, MutAnyOrigin](to=state[])
@@ -689,8 +761,12 @@ struct OSThread[S: Movable & Deinitable](Movable):
         # exactly as a null attribute does.
         var attributes = _ThreadAttributes()
         var status = c_int(0)
-        if stack_bytes != 0:
-            status = external_call["pthread_attr_setstacksize", c_int](Pointer(to=attributes.words), UInt(stack_bytes))
+        var size = stack_bytes
+        comptime if CompilationTarget.is_macos():
+            if size == 0:
+                size = _MACOS_THREAD_STACK_BYTES
+        if size != 0:
+            status = external_call["pthread_attr_setstacksize", c_int](Pointer(to=attributes.words), UInt(size))
         if status == 0:
             status = external_call["pthread_create", c_int](Pointer(to=self._handle), Pointer(to=attributes.words), entry, pointer)
         _ = attributes^
@@ -756,8 +832,8 @@ struct OSThread[S: Movable & Deinitable](Movable):
 struct _ThreadAttributes(Movable):
     """An initialized `pthread_attr_t`, destroyed with its owner.
 
-    glibc's `pthread_attr_t` is 56 bytes on 64-bit Linux; eight words leave
-    room and keep its alignment.
+    `pthread_attr_t` is 56 bytes in glibc on 64-bit Linux and 64 bytes on
+    macOS (both verified); eight words hold either and keep its alignment.
     """
     var words: Array[UInt64, 8]
 
@@ -771,20 +847,24 @@ struct _ThreadAttributes(Movable):
 
 
 def current_thread_stack_bytes() -> Int:
-    """The calling thread's native stack size, from pthread_getattr_np; Linux only.
+    """The calling thread's native stack size.
 
-    For the main thread glibc reports the current `RLIMIT_STACK`.
+    From pthread_getattr_np on Linux, where glibc reports the current
+    `RLIMIT_STACK` for the main thread, and pthread_get_stacksize_np on macOS.
     """
-    comptime assert threads_supported, "OS threads are qualified only on 64-bit Linux"
-    var attributes = Array[UInt64, 8](fill=0)
-    if external_call["pthread_getattr_np", c_int](external_call["pthread_self", UInt64](), Pointer(to=attributes)) != 0:
-        abort("fp._internal.os: pthread_getattr_np failed")
-    var size = UInt(0)
-    var status = external_call["pthread_attr_getstacksize", c_int](Pointer(to=attributes), Pointer(to=size))
-    _ = external_call["pthread_attr_destroy", c_int](Pointer(to=attributes))
-    if status != 0:
-        abort("fp._internal.os: pthread_attr_getstacksize failed")
-    return Int(size)
+    comptime assert threads_supported, "OS threads are qualified only on 64-bit Linux and macOS"
+    comptime if CompilationTarget.is_macos():
+        return Int(external_call["pthread_get_stacksize_np", UInt](external_call["pthread_self", UInt64]()))
+    else:
+        var attributes = Array[UInt64, 8](fill=0)
+        if external_call["pthread_getattr_np", c_int](external_call["pthread_self", UInt64](), Pointer(to=attributes)) != 0:
+            abort("fp._internal.os: pthread_getattr_np failed")
+        var size = UInt(0)
+        var status = external_call["pthread_attr_getstacksize", c_int](Pointer(to=attributes), Pointer(to=size))
+        _ = external_call["pthread_attr_destroy", c_int](Pointer(to=attributes))
+        if status != 0:
+            abort("fp._internal.os: pthread_attr_getstacksize failed")
+        return Int(size)
 
 
 def _join(handle: UInt64):
@@ -800,6 +880,10 @@ def _join(handle: UInt64):
 # ===------------------------------------------------------------------=== #
 
 
+comptime _pthread_key_t = Scalar[DType.uint32 if CompilationTarget.is_linux() else DType.uint64]
+"""pthread_key_t: unsigned int on Linux, unsigned long on macOS (both verified)."""
+
+
 struct ThreadKey(Movable):
     """An owned pthread key: one pointer-sized value per thread, zero until set.
 
@@ -811,7 +895,7 @@ struct ThreadKey(Movable):
     is deleted exactly once, when its owner is destroyed; a thread must not use
     it afterwards.
     """
-    var _key: UInt32
+    var _key: _pthread_key_t
 
     def __init__(out self) raises OSError:
         """Create a key.
@@ -820,7 +904,7 @@ struct ThreadKey(Movable):
             OSError: pthread_key_create failed, such as EAGAIN when the process
                 has no key left.
         """
-        comptime assert threads_supported, "thread keys are qualified only on 64-bit Linux"
+        comptime assert threads_supported, "thread keys are qualified only on 64-bit Linux and macOS"
         self._key = 0
         var status = external_call["pthread_key_create", c_int](Pointer(to=self._key), OptionalPointer[NoneType, ImmUntrackedOrigin]())
         if status != 0:

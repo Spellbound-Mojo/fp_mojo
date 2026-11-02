@@ -3,12 +3,12 @@ from std.atomic import Atomic
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
 from std.time import sleep, monotonic
-from std.sys.info import CompilationTarget
 from fp.effects import Ref, Deferred, Semaphore, Queue
 from fp.effects import unsafe_start
 from fp.effects import IO, IOContext, IOContract, Outcome, ReaderAction, run_io, delay, canceled, guarantee
 from fp.effects.io import _run_io
 from fp.callables import OnceThunk
+from fp._internal.os import threads_supported
 
 
 def coord_value[P: ReaderAction](var program: P) raises -> P.Value where IOContract[P].Compatible:
@@ -267,5 +267,5 @@ def coord_parallel() raises:
 
 def main() raises:
     coord_serial()
-    comptime if CompilationTarget.is_linux():
+    comptime if threads_supported:
         coord_parallel()

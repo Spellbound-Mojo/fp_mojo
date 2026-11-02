@@ -6,9 +6,9 @@ from std.os import abort
 from std.sys.info import num_logical_cores
 from std.time import monotonic, sleep
 from fp._internal.os import (
-    CLOCK_MONOTONIC, CLOCK_REALTIME, OSThread, POLLIN, POLLOUT, Pipe, PollFd, RUSAGE_SELF, RUSAGE_THREAD,
+    CLOCK_MONOTONIC, CLOCK_REALTIME, OSThread, POLLIN, POLLOUT, Pipe, PollFd, RUSAGE_SELF,
     clock_gettime, getrusage, is_close_on_exec, is_nonblocking, poll, read, realtime_nanoseconds,
-    set_close_on_exec, set_nonblocking, write,
+    set_close_on_exec, set_nonblocking, thread_cpu_nanoseconds, write,
 )
 
 comptime millisecond = 1_000_000
@@ -124,18 +124,18 @@ def clocks() raises:
 def processors_and_cpu_time() raises:
     check(num_logical_cores() >= 1, "at least one processor")
     # Idle: sleeping costs the thread almost no CPU time.
-    var before = getrusage(RUSAGE_THREAD)
+    var before = thread_cpu_nanoseconds()
     sleep(0.2)
-    var idle = getrusage(RUSAGE_THREAD).total_nanoseconds() - before.total_nanoseconds()
+    var idle = thread_cpu_nanoseconds() - before
     check(0 <= idle < 50 * millisecond, String("an idle thread uses no CPU: ", idle, " ns"))
     # Busy: spinning on the clock is charged to this thread and the process.
     var spin_until = Int(monotonic()) + 100 * millisecond
     while Int(monotonic()) < spin_until:
         pass
-    var busy = getrusage(RUSAGE_THREAD)
-    check(busy.total_nanoseconds() - before.total_nanoseconds() >= 50 * millisecond, "spinning is charged to the thread")
-    check(getrusage(RUSAGE_SELF).total_nanoseconds() >= busy.total_nanoseconds(), "the process includes its threads")
-    print("getrusage: ok")
+    var busy = thread_cpu_nanoseconds()
+    check(busy - before >= 50 * millisecond, "spinning is charged to the thread")
+    check(getrusage(RUSAGE_SELF).total_nanoseconds() >= busy, "the process includes its threads")
+    print("cpu time: ok")
 
 
 @fieldwise_init

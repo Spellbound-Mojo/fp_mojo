@@ -27,9 +27,10 @@ with the commands, diagnostics, timings and outcomes. A timeout prints
 stops at the first failure, so measure slow programs one at a time. `--timeout`
 accepts up to 180 seconds.
 
-On Linux the memory budget samples the compiler process and its descendants
-using `/proc` parent IDs. It includes children launched by other threads and
-works when the mount omits `task/*/children`. Exceeding the sampled budget
+The memory budget samples the compiler process and its descendants: on Linux
+from `/proc` parent IDs, which include children launched by other threads and
+work when the mount omits `task/*/children`, and on macOS from one
+`ps -axo pid=,ppid=,rss=` snapshot per sample. Exceeding the sampled budget
 terminates the command's process group. RSS samples are not an atomic measure
 of unique physical memory: shared pages can appear in several processes, and
 brief peaks can occur between samples. The report separately retains the native
@@ -70,13 +71,28 @@ the suite.
 | `match_balanced` | `fp.match` evaluating a 9,556-value expression tree | A recursive function |
 | `match_chain` | `fp.match` evaluating a 10,000-deep left chain | A recursive function |
 | `rewrite_balanced` | `fp.rewrite` negating every number of the same tree | A recursive function that rebuilds it |
+| `node_build` | Building a complete binary `Node` tree of 262,143 values | The same tree of hand-written `ArcPointer` cells |
+| `node_traverse` | Summing the `Node` tree by recursion | Summing the `ArcPointer` tree by recursion |
+| `node_drop` | Releasing the `Node` tree | Releasing the `ArcPointer` tree through its destructors |
+| `match_large` | `fp.match` summing the `Node` tree | Recursion over the same `Node` tree |
+| `node_revisions` | 32 path-copy edits of a 65,535-value `Node` tree, keeping the last 8 revisions and summing each with `fp.match` | The same edits and sums on the `ArcPointer` tree |
 
 On the Linux x86-64 host that runs the verification gates, `result_map` takes about 1.4× and
-`list_traverse` about 1.3× the native loop. `match_balanced` takes about 3×
-and `match_chain` about 1.2× the recursive function, and `rewrite_balanced`
-about the same time. Its clauses do almost nothing, so the matching loop is all
-that is measured: a hand-written explicit-stack loop takes about 2.4× and 0.9×
-on the same values (see [matching execution](../architecture/matching.md#execution)). A benchmark program also runs alone:
+`list_traverse` about 1.3× the native loop. `match_balanced` takes about 4×
+and `match_chain` about 3.5× the recursive function, and `rewrite_balanced`
+about 1.1×. Their clauses do almost nothing, so the matching loop is all that is
+measured (see [matching execution](../architecture/matching.md#execution)).
+
+The `node_*` benchmarks compare `Node` storage with what a program would write
+without the library. Their trees are larger than the caches, so traversal is
+bound by memory traffic and varies by tens of percent between runs on a shared
+host. On Mojo 1.2.0 in a 4-CPU Linux x86-64 container, across three runs,
+`node_build` took about 0.68×, `node_traverse` about 0.39× and `node_drop`
+about 0.5× the `ArcPointer` tree, `match_large` about 2.7× the recursion, and
+`node_revisions` about 0.8×. Before values were stored in compact cells, these
+benchmarks measured 1.02–1.06×, 0.75–0.94×, 0.8–1.0×, 1.9–2.3× and 1.7–1.9×
+(`experiments/node-storage` keeps the comparison).
+A benchmark program also runs alone:
 
 ```sh
 pixi run mojo run -I src -O3 tests/benchmarks/bench_algebra.mojo

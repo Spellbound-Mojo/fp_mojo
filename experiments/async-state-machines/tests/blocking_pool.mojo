@@ -18,7 +18,7 @@ from std.sys import stderr
 from std.time import monotonic, sleep
 from fp.callables import OnceThunk, OnceUnary, BorrowCallable
 from fp._internal.erased import _Erased
-from fp._internal.os import getrusage, RUSAGE_SELF, Pipe, write as os_write
+from fp._internal.os import getrusage, RUSAGE_SELF, Pipe, write as os_write, process_thread_count
 from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Interruption, BlockingPool, IORuntimeConfig, Duration, run
 from fp.effects._async.scheduling.blocking_pool import _WorkerContext, _Job, _Calls
@@ -57,28 +57,16 @@ def scale() -> Int:
         return 1
 
 
-def os_threads() -> Int:
-    """The process's thread count, from /proc/self/status."""
-    try:
-        with open("/proc/self/status", "r") as f:
-            for line in f.read().split("\n"):
-                if line.startswith("Threads:"):
-                    return Int(String(line[byte=8:].strip()))
-    except:
-        pass
-    abort("blocking pool: cannot read the thread count")
-
-
 def wait_until_threads(expected: Int) -> Bool:
     """Wait until at most `expected` threads remain.
 
-    A joined thread can still be counted in /proc for a moment after its join
+    A joined thread can still be counted for a moment after its join
     returns, so a baseline read just after a join may be one too high: the
     checks bound the count from above rather than match it.
     """
     var deadline = Int(monotonic()) + 2_000_000_000
     while Int(monotonic()) < deadline:
-        if os_threads() <= expected:
+        if process_thread_count() <= expected:
             return True
         sleep(0.002)
     return False
@@ -373,7 +361,7 @@ def nothing() -> Int:
 
 
 def reuse_and_retire() raises:
-    var base = os_threads()
+    var base = process_thread_count()
     # Long enough that no scheduling delay between calls retires the worker.
     var pool = BlockingPool(4, ms(400))
     for _ in range(10):
@@ -381,7 +369,9 @@ def reuse_and_retire() raises:
         check(wait_until_parked(pool, 1), "the worker parks after its call")
     check(pool._started() == 1, String("sequential calls reuse one worker, started ", pool._started()))
     check(pool._live() == 1, "the worker is still idle before the timeout")
-    check(os_threads() <= base + 1, "no more than one worker thread exists")
+    # On the work-stealing profile each run's own workers were just joined, and
+    # a joined thread can still be counted for a moment.
+    check(wait_until_threads(base + 1), "no more than one worker thread exists")
     var retired_by = Int(monotonic()) + 3_000_000_000
     while pool._live() != 0 and Int(monotonic()) < retired_by:
         sleep(0.01)
@@ -629,7 +619,7 @@ def run_holder(var body: _Erased, worker: _WorkerContext):
 
 def drop_on_worker() raises:
     """Drop every other copy while the call runs, so the call drops the last one."""
-    var base = os_threads()
+    var base = process_thread_count()
     var done = ArcPointer(Atomic[Int](0))
     var pool = BlockingPool(2)
     var released = ArcPointer(Atomic[Int](0))
@@ -644,7 +634,7 @@ def drop_on_worker() raises:
     while calls.in_flight() != 0 and Int(monotonic()) < deadline:
         sleep(0.0005)
     check(done[].load() == 1 and calls.in_flight() == 0, "the call that dropped the last copy finished")
-    check(wait_until_threads(base), String("the detached worker exited on its own, threads ", os_threads(), " of ", base))
+    check(wait_until_threads(base), String("the detached worker exited on its own, threads ", process_thread_count(), " of ", base))
 
 
 def main() raises:

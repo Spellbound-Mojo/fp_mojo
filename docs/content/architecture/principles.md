@@ -8,8 +8,8 @@ Changing one requires an explicit design decision and updated documentation.
 1. **Ordinary Mojo only.** The library is used through normal imports,
    functions, closures, structs, traits and parameters. There is no parser,
    transpiler, source rewriting, mandatory code generation or Python runtime.
-   The optional 64-bit Linux fiber backend uses public Mojo FFI for POSIX
-   thread creation and joining; core operations require no foreign runtime.
+   The optional fiber backend uses public Mojo FFI for POSIX thread creation
+   and joining on 64-bit Linux and macOS; core operations require no foreign runtime.
    Its [thread ownership contract](algebra.md#fibers-and-shared-coordination)
    is an explicit, narrowly scoped exception.
 2. **Add the smallest missing piece.** When a native capability covers part of

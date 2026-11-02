@@ -3,8 +3,8 @@ from fp.effects import IOContract, ReaderAction, delay, run_io
 from fp.callables import OnceThunk, BorrowCallable
 from fp.effects import Fiber, unsafe_start
 from fp.effects import Ref, Queue
+from fp._internal.os import threads_supported
 from std.testing import assert_equal
-from std.sys.info import CompilationTarget
 
 
 def start_forward[P: ReaderAction](var program: P) raises -> Fiber[P] where IOContract[P].Compatible:
@@ -49,7 +49,7 @@ def main() raises:
     var view = inspected_result^._take_ok()
     assert_equal(view[1], 8)
     queue_borrow(owner)
-    comptime if CompilationTarget.is_linux():
+    comptime if threads_supported:
         # The worker only reads this owner and joins before the owner dies.
         var child = start_forward(delay[Error](FiberIndependent(Pointer(to=owner))))
         var outcome = join_forward(child^)

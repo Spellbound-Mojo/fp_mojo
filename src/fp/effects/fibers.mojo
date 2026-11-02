@@ -114,7 +114,7 @@ struct _JoinFiber[P: ReaderAction](ReaderAction):
 
 
 def unsafe_start[P: ReaderAction](var program: P) raises -> Fiber[P] where IOContract[P].Compatible:
-    """Start one 64-bit Linux OS thread immediately, transferring an IO recipe to it.
+    """Start one OS thread immediately, on 64-bit Linux or macOS, transferring an IO recipe to it.
 
     The caller must ensure that every captured value, its callbacks, and its
     destructors may run on a different thread, and that shared mutations are
@@ -144,4 +144,4 @@ def unsafe_start[P: ReaderAction](var program: P) raises -> Fiber[P] where IOCon
         except:
             raise Error("fp.effects: pthread_create failed")
     else:
-        raise Error("fp.effects: fibers currently require 64-bit Linux")
+        raise Error("fp.effects: fibers currently require 64-bit Linux or macOS")

@@ -19,7 +19,7 @@ Invariants checked every round: each program's value; every tracked payload
 destroyed exactly once; one report per unjoined failure; and no live fiber
 left on the runtime (`Runtime.fibers()`).
 
-Storage. The resident set is sampled from `/proc/self/statm` after every
+Storage. The resident set is sampled with `process_resident_bytes` after every
 round. When the allocation counter of `probes/alloc_counter.c` is preloaded,
 the live Mojo allocations (allocations minus frees) are sampled too; without
 it they read -1 and are skipped. After a warm-up the samples may not grow:
@@ -45,7 +45,7 @@ from fp.callables import OnceThunk, OnceUnary, Unary
 from fp.data import Right, Result
 from fp.effects import EffectFailure, Outcome
 from fp.effects.async_runtime import IO, Deferred, Fiber, Duration, IORuntimeConfig, RaceResult, Runtime
-from fp._internal.os import Pipe
+from fp._internal.os import Pipe, process_resident_bytes
 
 comptime ROUNDS = 300
 comptime WARMUP = 100
@@ -446,17 +446,6 @@ def one_round(runtime: Runtime, ledger: ArcPointer[Words], pipe: Pipe, round: In
 # ===--- Storage samples ---=== #
 
 
-def resident_bytes() -> Int:
-    """The resident set from /proc/self/statm: its second field, in pages."""
-    try:
-        with open("/proc/self/statm", "r") as file:
-            var fields = file.read().split(" ")
-            return Int(fields[1]) * 4096
-    except:
-        fail("/proc/self/statm is unreadable")
-    return 0
-
-
 def allocation_counts() -> Int:
     """The address of the preloaded counter's words, or 0 without it."""
     var name = List[UInt8]()
@@ -497,7 +486,7 @@ struct Samples(Movable):
         self.live = List[Int]()
 
     def take(mut self, elapsed: Int, round: Int, timed: Bool):
-        var rss = resident_bytes()
+        var rss = process_resident_bytes()
         var live = live_allocations(0)
         self.rss.append(rss)
         self.live.append(live)

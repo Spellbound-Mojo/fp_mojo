@@ -11,7 +11,7 @@ compiler constraints behind these choices.
 |---|---|
 | Compiler | Mojo 1.2.0, pinned through Pixi; FP Mojo 1.0.2 requires it. FP Mojo 1.0.0 and 1.0.1 require Mojo 1.1.0 |
 | Linux x86-64 | Full library support: positive and rejection test suites, precompiled packages, and the multi-threaded work-stealing async runtime. |
-| macOS arm64 | Core functional support: pipelines, lazy iteration, algebraic data types, pattern matching, algebra, synchronous effects, and deterministic `TestControl` virtual-time async testing. |
+| macOS arm64 | Full library support: positive and rejection test suites, precompiled packages, and the multi-threaded work-stealing async runtime. |
 
 The [compatibility guide](compatibility.md) documents API migration and
 operational contracts between Mojo versions.

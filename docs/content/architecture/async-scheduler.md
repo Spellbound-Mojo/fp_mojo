@@ -1396,7 +1396,7 @@ The `poller` client runs every cross-thread case on `OSThread`s:
   the pipe released afterwards;
 - timeouts from 0 to 10 ms, including sub-millisecond deadlines;
 - a 500 ms idle poll that uses almost no thread CPU time
-  (`getrusage(RUSAGE_THREAD)`).
+  (`thread_cpu_nanoseconds()`, the thread's CPU clock).
 
 Measurements from `probes/poller_cost.mojo` at O3 on the same 4-core host:
 

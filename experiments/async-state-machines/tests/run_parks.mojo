@@ -1,7 +1,7 @@
 """`run` parks in the root's poller instead of sleeping on a timer.
 
 - An idle `run` over a long sleep uses almost no CPU on its thread
-  (`getrusage(RUSAGE_THREAD)`).
+  (`thread_cpu_nanoseconds()`).
 - Timers fire close to their deadlines.
 - Wakes from OS threads, through an `IO.async` completion, a `Signal` a custom
   leaf waits on, and a cancellation, reach a root that is about to park or is
@@ -21,7 +21,7 @@ from fp.effects import IO as SyncIO
 from fp.effects.protocols import ReaderAction
 from fp.effects.async_runtime import IO, Completion, Duration, run
 from fp.effects.async_runtime.protocols import Machine, Step, Wait, Signal
-from fp._internal.os import getrusage, RUSAGE_THREAD
+from fp._internal.os import thread_cpu_nanoseconds
 
 
 comptime ROUNDS = 300
@@ -39,13 +39,6 @@ def spin(nanoseconds: Int):
         pass
 
 
-def thread_cpu() -> Int:
-    try:
-        return getrusage(RUSAGE_THREAD).total_nanoseconds()
-    except:
-        abort("run parks: getrusage failed")
-
-
 struct Random(Movable):
     var state: UInt64
 
@@ -59,11 +52,11 @@ struct Random(Movable):
 
 def idle_sleep() raises:
     """A one-second sleep parks once: almost no CPU on the polling thread."""
-    var before = thread_cpu()
+    var before = thread_cpu_nanoseconds()
     var started = Int(monotonic())
     var outcome = run(IO[NoneType, Int].sleep(Duration.seconds(1)))
     var elapsed = Int(monotonic()) - started
-    var used = thread_cpu() - before
+    var used = thread_cpu_nanoseconds() - before
     check(Bool(outcome) and outcome.value().is_ok(), "the sleep completes")
     check(elapsed >= 1_000_000_000, "the sleep lasts its duration")
     # A 1 ms idle loop wakes a thousand times here; parking wakes about once.

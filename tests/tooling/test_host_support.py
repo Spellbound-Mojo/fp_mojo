@@ -43,15 +43,15 @@ class HostSupportTests(unittest.TestCase):
                 with self.assertRaises(RuntimeError):
                     self.host(system, machine, measured=measured, version=version)
 
-    @unittest.skipUnless(sys.platform == 'linux', 'Linux resource accounting')
-    def test_linux_resource_accounting_does_not_enable_historical_profile(self):
+    @unittest.skipUnless(sys.platform in ('linux', 'darwin'), 'Linux or macOS resource accounting')
+    def test_native_resource_accounting_does_not_enable_historical_profile(self):
         with tempfile.TemporaryDirectory(dir=ROOT/'.cache') as name:
             result = command([sys.executable, '-c', 'print("ok")'],
                              Path(name)/'time.log', timed=True)
             self.assertEqual(result['stdout'], 'ok\n')
             self.assertGreater(result['peak_rss_bytes'], 0)
             self.assertEqual(Path(result['command'][0]).name, 'time')
-            self.assertEqual(result['command'][1], '-v')
+            self.assertEqual(result['command'][1], '-l' if sys.platform == 'darwin' else '-v')
 
 
 

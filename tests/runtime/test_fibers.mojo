@@ -3,10 +3,10 @@ from std.atomic import Atomic
 from std.memory import ArcPointer
 from std.testing import assert_equal, assert_true
 from std.time import sleep, monotonic
-from std.sys.info import CompilationTarget
 from fp.effects import unsafe_start
 from fp.effects import IO, IOContext, IOContract, Outcome, ReaderAction, CancellationToken, delay, guarantee, run_io
 from fp.callables import OnceThunk
+from fp._internal.os import threads_supported
 
 
 @fieldwise_init
@@ -124,7 +124,7 @@ struct FiberLifetimeFinalizer(OnceThunk):
         return None
 
 
-def fiber_test_linux() raises:
+def fiber_test_threads() raises:
     var count = ArcPointer(Atomic(Int(0)))
     var ready = ArcPointer(Atomic(UInt8(0)))
     var child = unsafe_start(guarantee(FiberTestWait(ready.copy()), delay[Int](FiberTestFinish(count.copy(), False))))
@@ -191,8 +191,8 @@ def fiber_test_linux() raises:
 
 
 def main() raises:
-    comptime if CompilationTarget.is_linux():
-        fiber_test_linux()
+    comptime if threads_supported:
+        fiber_test_threads()
     else:
         var rejected = False
         try:

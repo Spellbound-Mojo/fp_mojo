@@ -30,7 +30,7 @@ from std.time import monotonic, sleep
 from fp.callables import OnceUnary
 from fp.effects import Outcome
 from fp.effects.async_runtime import IO, Fiber, FiberInfo, FiberStatus, Deferred, IORuntimeConfig, Profile, Runtime, run
-from fp._internal.os import OSThread
+from fp._internal.os import OSThread, process_thread_count
 from fp.effects._async.profile import _AUTO, _PER_CORE, _PROFILE
 
 
@@ -51,18 +51,6 @@ def scale() -> Int:
 
 def thread_id() -> UInt64:
     return external_call["pthread_self", UInt64]()
-
-
-def os_threads() -> Int:
-    """The process's thread count, from /proc/self/status."""
-    try:
-        with open("/proc/self/status", "r") as f:
-            for line in f.read().split("\n"):
-                if line.startswith("Threads:"):
-                    return Int(String(line[byte=8:].strip()))
-    except:
-        pass
-    abort("public runtime: cannot read the thread count")
 
 
 def stealing(workers: Int) -> IORuntimeConfig:
@@ -346,9 +334,11 @@ def numbered_roots() raises:
 
 
 def per_call_starts_no_thread() raises:
-    var base = os_threads()
-    var seen = value_of(run(IO[Int, Int].delay(os_threads), stealing(4)))
-    check(seen == base, String("a trivial per-call run starts no thread: ", seen, " of ", base))
+    # A worker joined by an earlier check can still be counted for a moment
+    # (on macOS more often than on Linux), so the count is bounded from above.
+    var base = process_thread_count()
+    var seen = value_of(run(IO[Int, Int].delay(process_thread_count), stealing(4)))
+    check(seen <= base, String("a trivial per-call run starts no thread: ", seen, " of ", base))
     check(value_of(run(churn(20), stealing(4))) == expected_churn(20), "a per-call run with fibers completes")
 
 
