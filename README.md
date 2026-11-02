@@ -39,29 +39,6 @@ def main():
 the total to 50. Execution is strictly lazy: elements stream one at a time through `map`
 and `filter` as `fold_left` requests them, without intermediate heap allocations.
 
-## What's new in FP Mojo 1.0.2
-
-Release 1.0.2 targets **Mojo 1.2.0** and introduces a production-ready structured asynchronous
-runtime alongside significant functional capabilities:
-
-- **Structured Async Concurrency Runtime (`fp.effects.async_runtime`)**:
-  - Pure-Mojo `IO[T, E]` programs with constant native stack, eliminating recursion limits for deep binds and `tail_rec_m` loops.
-  - Cancelable lightweight `Fiber`s: fork, join, or cancel concurrent tasks with `.start()`, `.both()`, `.race()`, and supervised backgrounds via `Supervisor` and `background`.
-  - Multi-threaded work-stealing scheduler (`Profile.work_stealing`) enabled by default on multi-core systems, featuring per-worker timer heaps, descriptor event polling, and blocking handoff.
-  - Dedicated single-thread cooperative profile (`Profile.current_thread`) for deterministic, embedded, and single-threaded execution.
-- **Deterministic Virtual-Time Testing (`TestControl`)**:
-  - Advance virtual time instantly, control scheduling steps cooperatively, and test concurrent races without wall-clock sleeps or non-deterministic test flakes.
-- **Isolated Blocking Offload**:
-  - `IO.blocking(...)` and cancelable `IO.interruptible(...)` safely offload blocking syscalls or compute-bound workloads to a dedicated `BlockingPool`, protecting worker thread availability.
-- **Resumable Coordination Primitives**:
-  - Pure-Mojo asynchronous `Deferred[T]`, `Ref[T]`, bounded `Queue[T]`, and `Semaphore` permits for safe inter-fiber communication.
-- **Independent Error Accumulation**:
-  - Validate multiple independent inputs without fail-fast short-circuiting via `par_map_n`, `par_traverse`, `par_product_n`, `NonEmptyList`, and `Ior` (preserving valid outcomes alongside accumulated warnings).
-- **Cats MTL Capability Traits**:
-  - Abstract effect capabilities (`Ask`, `Stateful`, `Tell`, `Listen`, `Censor`) with explicit monad transformer lifting.
-- **Dual-Platform Qualification**:
-  - Comprehensive qualification on **64-bit Linux** and **macOS arm64**, compact `Node` storage, and static `ThreadTransferable` payload verification.
-
 ## Core capabilities
 
 - **Pipelines & function composition.** Build fluent data-transformation pipelines with `pipeline`
