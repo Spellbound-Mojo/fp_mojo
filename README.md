@@ -1,20 +1,19 @@
 # FP Mojo
 
-FP Mojo provides native, high-performance functional programming foundations for
-[Mojo](https://modular.com/mojo). Compose fluent pipelines, iterate lazily over
-collections with zero intermediate allocations, handle failures predictably with
-typed `Result` values, and build expressive algebraic and inductive data types with
-compile-time exhaustive pattern matching. Functions and closures retain their
-native argument conventions (`var`, `ref`, `mut`) and exact error types.
+FP Mojo provides native functional programming foundations for [Mojo](https://modular.com/mojo).
+Compose fluent pipelines, stream collections lazily without intermediate allocations,
+handle failures with typed `Result` values, and model business domains with algebraic and
+inductive data types checked by compile-time exhaustive pattern matching. Functions and closures
+retain their native argument conventions (`var`, `ref`, `mut`) and exact error types.
 
-For side effects and concurrency, FP Mojo brings pure synchronous IO, scoped
-resource safety, and structured asynchronous concurrency inspired by
-[Cats](https://github.com/typelevel/cats) and [Cats Effect](https://github.com/typelevel/cats-effect)—reimagined
-around Mojo's ownership model and bare-metal execution speed.
+For side effects and concurrency, FP Mojo provides pure synchronous IO, scoped
+resource management, and structured asynchronous concurrency inspired by
+[Cats](https://github.com/typelevel/cats) and [Cats Effect](https://github.com/typelevel/cats-effect)—engineered
+around Mojo's ownership model, compile-time parameterization, and zero-cost abstraction principles.
 
-FP Mojo 1.0.2 targets **Mojo 1.2.0**, with unified pipelines, richer error
-recovery and the async runtime. FP Mojo 1.0.0 and 1.0.1 target Mojo 1.1.0; see
-[installation](docs/content/start/installation.md).
+FP Mojo 1.0.2 targets **Mojo 1.2.0**, featuring unified pipelines, extensible error
+recovery, and a structured async runtime qualified on 64-bit Linux and macOS arm64. (FP Mojo 1.0.0 and 1.0.1 target Mojo 1.1.0; see
+[installation](docs/content/start/installation.md)).
 
 ![Mojo 1.2.0](https://img.shields.io/badge/Mojo-1.2.0-orange)
 ![Platforms](https://img.shields.io/badge/platforms-Linux%20x86--64%20%7C%20macOS%20arm64-blue)
@@ -43,44 +42,43 @@ def main():
 squares to 50. Nothing is copied into an intermediate list: `fold_left` pulls
 one value at a time through `map` and `filter`.
 
-## What you get
+## Core capabilities
 
-- **Native values and zero-cost abstractions.** Use standard Mojo structs,
-  tuples, `List`, `Optional`, and `Variant` with ordinary functions and closures.
-  Borrowing (`ref`), mutation (`mut`), and moves (`var`, `^`) are tracked at
-  compile time without runtime wrapping overhead.
-- **Unified pipelines and function composition.** Compose functions with `pipeline`
-  and `pipe`, adapt signatures with `partial` and `flip`, and build reusable
+- **Native values and zero-cost abstractions.** Work directly with standard Mojo structs,
+  tuples, `List`, `Optional`, and `Variant` using ordinary functions and closures.
+  Borrowing (`ref`), exclusive mutation (`mut`), and ownership transfer (`var`, `^`)
+  are verified at compile time with zero heap overhead for abstraction wrappers.
+- **Unified pipelines and function composition.** Compose functions eagerly with `pipeline`
+  and `pipe`, adapt signatures with `partial` and `flip`, and construct reusable
   transforms with `flow`. Intermediate types and error channels infer automatically.
-- **Lazy iteration.** Zero-allocation iterator pipelines (`map`, `filter`,
-  `fold_left`, `scan_left`, `fold_until`, `collect_list`) pull values on demand
-  without intermediate buffer allocation.
-- **Typed errors and principled recovery.** A callback that `raises ParseError`
-  propagates typed errors without generic exception degradation. Or preserve errors
-  as values with `Result[T, E]`, sequence with `flat_map`, recover conditionally
-  with `recover_if`, or observe failures with `flat_tap_err`.
-- **Exhaustive compile-time pattern matching.** `fp.match` guarantees at compile time
+- **Lazy streaming iteration.** Zero-allocation iterator pipelines (`map`, `filter`,
+  `fold_left`, `scan_left`, `fold_until`, `collect_list`) pull elements on demand
+  without materializing intermediate collections.
+- **Typed errors and principled recovery.** Propagate native raised errors without
+  exception degradation, or retain failures as values with `Result[T, E]`. Sequence operations
+  with `flat_map`, recover conditionally with `recover_if`, or inspect failures with `flat_tap_err`.
+- **Exhaustive compile-time pattern matching.** `fp.match` proves at compile time
   that every constructor of an algebraic data type (`Choice`) or inductive recursive tree
   (`Node`) is handled, rejecting missing cases before runtime.
 - **Structural recursion without stack overflows.** Traverse inductive data structures
   millions of levels deep with `Node[F]` and `fp.match` via an explicit evaluation stack.
-- **Category-theoretic foundations.** Functor, Filterable, Applicative, Monad, and
-  Traversable instances for collections and effects, alongside Reader, State, Writer,
+- **Pure algebraic foundations.** Functor, Filterable, Applicative, Monad, and
+  Traversable instances for collections and pure effects, alongside Reader, State, Writer,
   and monad transformers (`ResultT`, `StateT`).
 - **Pure IO and scoped resources.** Defer computations with `delay`, guarantee
-  safe acquisition and release with `Resource` scopes in reverse order of creation,
-  and run with `run_io()`, preserving error order in structured `Outcome` values.
+  safe acquisition and deterministic release with `Resource` scopes in reverse order of creation,
+  and evaluate with `run_io()`, preserving error order in structured `Outcome` values.
 - **Structured async concurrency.** Pure-Mojo `IO[T, E]` coordinates lightweight
   fibers, concurrent execution (`both`), racing (`race`, `race_pair`), timeouts,
-  and dynamic background tasks (`background`, `Supervisor`). Coordinate fibers with
+  and dynamic background tasks (`background`, `Supervisor`). Synchronize fibers with
   `Deferred`, `Ref`, `Queue`, and `Semaphore`.
 - **Deterministic testing with TestControl.** Control virtual time, advance
-  scheduled fibers step by step, explore scheduling interleavings, and replay test
+  scheduled fibers cooperatively step by step, explore scheduling interleavings, and replay test
   runs deterministically without wall-clock sleeps.
 
 ## Choose a package
 
-| Package | What it gives you | Highlights |
+| Package | Description | Highlights |
 |---|---|---|
 | `fp.functions` | Pipelines and composition | `pipeline`, `pipe`, `flow`, `compose`, `flip`, `partial`, `identity` |
 | `fp.combinators` | Ordinary iterator operations shared with fluent pipelines | `map`, `filter`, `fold_left` |
@@ -466,7 +464,7 @@ pixi install --locked
 pixi run mojo run -I src docs/examples/quickstart.mojo   # prints 42
 ```
 
-On Linux x86-64, run the async example from that checkout:
+On 64-bit Linux or macOS arm64, run the async sequencing example:
 
 ```sh
 pixi run mojo run -I src docs/examples/async_sequencing.mojo   # prints 42
