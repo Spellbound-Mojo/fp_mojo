@@ -82,11 +82,8 @@ same into a fresh directory and also runs an example against the result (see
 
 ## Install the package
 
-FP Mojo 1.0.2, the release for Mojo 1.2, is available from the channel once
-[modular/modular-community#443](https://github.com/modular/modular-community/pull/443)
-is merged. Until then the channel serves FP Mojo 1.0.0 for Mojo 1.1, so the
-commands below do not resolve with Mojo 1.2.0; use a
-[source checkout](#work-from-a-checkout) instead.
+FP Mojo 1.0.2, the release for Mojo 1.2, is published as `fp_mojo` in the
+Modular community channel.
 
 Install [Pixi](https://pixi.sh) if it is not already on your `PATH`. Then create
 a project with the Mojo and
