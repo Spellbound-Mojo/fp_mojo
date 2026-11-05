@@ -18,7 +18,7 @@ FP Mojo 1.0.2 targets **Mojo 1.2.0**, qualified on **64-bit Linux** and **macOS 
 
 ```mojo
 from fp.functions import pipe
-from fp.iteration import map, filter, fold_left
+from fp.iteration import iterated
 
 def positive(value: Int) -> Bool: return value > 0
 def square(value: Int) -> Int: return value * value
@@ -26,7 +26,7 @@ def add(total: Int, value: Int) -> Int: return total + value
 
 def sum_of_squares(var values: List[Int]) -> Int:
     # Lazy: filter and map run one element at a time as fold_left pulls.
-    return fold_left(map(filter(values^, positive), square), 0, add)
+    return iterated(values^).filter(positive).map(square).fold_left(add, 0)
 
 def report(total: Int) -> String: return "sum of squares = " + String(total)
 
@@ -133,12 +133,13 @@ longer chains, or to combine functions, closures and values fluently, use
 
 ### Zero-allocation lazy streaming iteration
 
-`map`, `filter`, and `scan_left` construct composable iterator pipelines that perform
-no work until a terminal consumer (`collect_list`, `find`, `fold_left`) pulls elements.
-Pass collections with `^` to transfer ownership, or borrow an iterator directly:
+`iterated(...)` starts a method chain over a collection or iterator. `map`, `filter`,
+and `scan_left` build a lazy pipeline that performs no work until a terminal consumer
+(`collect_list`, `find`, `fold_left`) pulls elements. Pass collections with `^` to
+transfer ownership, or borrow an iterator directly:
 
 ```mojo
-from fp.iteration import map, filter, scan_left, collect_list, find
+from fp.iteration import iterated
 
 def positive(value: Int) -> Bool: return value > 0
 def add(total: Int, value: Int) -> Int: return total + value
@@ -151,11 +152,11 @@ def main():
         return value * value
 
     var values: List[Int] = [3, -1, 4, -1, 5]
-    var squares = map(filter(values^, positive), square)   # a lazy iterator
-    print(calls)                                           # 0: nothing has run yet
-    var running = collect_list(scan_left(squares^, 0, add))
-    print(running[3], calls)                               # 50 3
-    print(find(range(100), large).value())                 # 11: stops at the first match
+    var squares = iterated(values^).filter(positive).map(square)   # a lazy iterator
+    print(calls)                                                   # 0: nothing has run yet
+    var running = squares^.scan_left(add, 0).collect_list()
+    print(running[3], calls)                                       # 50 3
+    print(iterated(range(100)).find(large).value())                # 11: stops at the first match
 ```
 
 Building `squares` calls nothing, so `calls` is still 0. Collecting the running
@@ -304,8 +305,8 @@ to each element and collects the results, short-circuiting on the first failure 
 or accumulate an ordered log:
 
 ```mojo
-from fp.algebra import map, traverse
-from fp.effects import State, run, get, modify
+from fp.effects import State, get, modify
+from fp.functions import pipeline
 
 def positive(value: Int) -> Optional[Int]:
     return Optional(value) if value > 0 else Optional[Int]()
@@ -315,14 +316,14 @@ def twice(value: Int) -> Int: return value * 2
 def main() raises:
     var good: List[Int] = [1, 2, 3]
     var bad: List[Int] = [1, -2, 3]
-    print(Bool(traverse(good^, positive)))  # True: every value present
-    print(Bool(traverse(bad^, positive)))   # False: stops at -2
+    print(Bool(pipeline(good^).traverse(positive).get()))  # True: every value present
+    print(Bool(pipeline(bad^).traverse(positive).get()))   # False: stops at -2
 
     # A State computation is an ordinary value until you run it.
-    var doubled = map[State[Int]](get[State[Int]](), twice)
-    var outcome = run[State[Int]](doubled^, 21)
-    print(outcome[0], outcome[1])                                       # 42 21
-    print(run[State[Int]](modify[State[Int]](twice), 21)[1])            # 42
+    var doubled = pipeline(get[State[Int]]()).map(twice)
+    var outcome = doubled^.run(21)
+    print(outcome[0], outcome[1])                               # 42 21
+    print(pipeline(modify[State[Int]](twice)).run_state(21))    # 42
 ```
 
 `doubled` reads the state and doubles it, so running it from 21 returns the
@@ -391,7 +392,6 @@ upon scope termination:
 ```mojo
 from fp.effects import EffectFailure, fold_outcome
 from fp.effects.async_runtime import IO, run
-from fp.functions import pipeline
 
 
 def next_value(value: Int) -> IO[Int, Int]:
@@ -416,7 +416,7 @@ def canceled() -> Int:
 
 
 def main():
-    var program = pipeline(IO[Int, Int].delay(initial)).flat_map(next_value).get()
+    var program = IO[Int, Int].delay(initial).flat_map(next_value)
     print(fold_outcome(run(program^), success, failure, canceled))
 ```
 
