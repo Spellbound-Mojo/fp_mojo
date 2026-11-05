@@ -58,7 +58,12 @@ terminal program can win the initial left-first tie.
 One private pair leaf serves `both`, `race`, and `race_first` by policy: a race
 cancels the other side once one finishes, and `both` cancels it when one side
 ends unsuccessfully. Outcomes combine through the canonical `_winner`, `_loser`,
-`_finish`, and `_zip_outcomes`; there is no other child-draining policy.
+`_finish`, and `_zip_outcomes`; there is no other child-draining policy. The
+side `both` stops after the other fails folds through `_loser`, as a race's
+loser does, and so do the elements AsyncPar's loop stops: their errors remain,
+but the cancellation the combinator caused does not mark the failure canceled.
+A side that canceled itself first, or the parent's own cancellation, still
+yields cancellation.
 
 ## Validation
 

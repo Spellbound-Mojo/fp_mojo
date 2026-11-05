@@ -171,6 +171,11 @@ POOL_CLIENTS = {
 } | WSTP_CLIENTS | CONTEXT_CLIENTS
 # The layers' Parallel runs on both profiles.
 POOL_CLIENTS.add("par_layers")
+# Failures that stop their siblings recover, as in Cats Effect.
+PAR_CLIENTS.add("recover_after_stop")
+POSITIVE.add("recover_after_stop")
+CLIENT_COMPILE_TIMEOUTS["recover_after_stop"] = 900
+POOL_CLIENTS.add("recover_after_stop")
 
 
 def experiment_inputs():

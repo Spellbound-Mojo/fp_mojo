@@ -1,0 +1,1 @@
+recover_after_stop: par_traverse and both failures recover; self-cancellation still cancels

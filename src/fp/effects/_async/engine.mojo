@@ -2123,7 +2123,7 @@ struct _AwaitPair[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable &
     comptime Out = IO[_PairValue[Self.T, Self.U, Self.policy], Self.E]
 
     def call_once(deinit self, var right: Fiber[Self.U, Self.E]) -> Self.Out:
-        return Self.Out._lifted(_PairJoin[Self.T, Self.U, Self.E, Self.policy](Optional(self.left^), Optional(right^), -1, False))
+        return Self.Out._lifted(_PairJoin[Self.T, Self.U, Self.E, Self.policy](Optional(self.left^), Optional(right^), -1, False, -1))
 
 
 @fieldwise_init
@@ -2134,6 +2134,12 @@ struct _PairJoin[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & 
     combines. A race stops the other side once one finishes; both stops the
     other side when one ends unsuccessfully. The parent's request is forwarded
     when observed, and every entered child finishes before the leaf completes.
+
+    As in Cats Effect, a side that both stops because the other failed ends
+    canceled as expected, like a race's loser: `_loser` keeps its errors and
+    drops that cancellation, so the result is the failure, which
+    `handle_error_with` can recover. A side that canceled itself first, or a
+    forwarded parent request, still yields cancellation.
     Stopping and draining waits are the child-group helpers `_stop_child` and
     `_child_wait`, and `_zip_outcomes` combines through `_finish`, which
     AsyncPar's loop shares for any number of children.
@@ -2144,6 +2150,9 @@ struct _PairJoin[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & 
     var right: Optional[Fiber[Self.U, Self.E]]
     var winner: Int
     var stopping: Bool
+    # Both only: the side that ended unsuccessfully before anything stopped
+    # the pair, or -1. Observed together, the left side is first.
+    var failed: Int
 
     def stop(mut self):
         if not self.stopping:
@@ -2167,12 +2176,23 @@ struct _PairJoin[T: Movable & Deinitable, U: Movable & Deinitable, E: Movable & 
                 if self.winner >= 0:
                     self.stop()
         comptime if Self.policy == _BOTH:
+            if self.failed < 0 and not self.stopping:
+                if _unsuccessful(left):
+                    self.failed = 0
+                elif _unsuccessful(right):
+                    self.failed = 1
             if _unsuccessful(left) or _unsuccessful(right):
                 self.stop()
         if left.done() and right.done():
             var left_outcome = _typed[Self.T](self.left.take()._take_outcome())
             var right_outcome = _typed[Self.U](self.right.take()._take_outcome())
             comptime if Self.policy == _BOTH:
+                # The side stopped because the other failed folds as a race's
+                # loser; errors stay in left-to-right order.
+                if self.failed == 0:
+                    return Step[Self.Value, Self.E].ready(rebind_var[Outcome[Self.Value, Self.E]](_failure_as[Tuple[Self.T, Self.U]](_finish(left_outcome^, _loser(right_outcome^)))))
+                if self.failed == 1:
+                    return Step[Self.Value, Self.E].ready(rebind_var[Outcome[Self.Value, Self.E]](_failure_as[Tuple[Self.T, Self.U]](_finish(_loser(left_outcome^), right_outcome^))))
                 return Step[Self.Value, Self.E].ready(rebind_var[Outcome[Self.Value, Self.E]](_zip_outcomes(left_outcome^, right_outcome^)))
             else:
                 var selected = self.winner
@@ -2657,10 +2677,13 @@ struct _ParSlot[T: Movable & Deinitable, E: Movable & Deinitable](Movable):
     """One started element: its fiber until it finishes, then its outcome."""
     var fiber: Optional[Fiber[Self.T, Self.E]]
     var outcome: Optional[Outcome[Self.T, Self.E]]
+    # Whether the outcome was taken after the loop stopped its children.
+    var stopped: Bool
 
     def __init__(out self):
         self.fiber = None
         self.outcome = None
+        self.stopped = False
 
 
 comptime _PAR_UNBOUNDED = Int.MAX
@@ -2750,10 +2773,12 @@ struct _ParState[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitabl
             return True
         if not self.slots[position].fiber.value()._claim.record[].done():
             return False
+        var after_stop = self.stopping
         var outcome = _typed[Self.T](self.slots[position].fiber.take()._take_outcome())
         if not outcome or outcome.value().is_err():
             self.stop()
         self.slots[position].outcome = Optional(outcome^)
+        self.slots[position].stopped = after_stop
         self.live -= 1
         return True
 
@@ -2802,12 +2827,22 @@ struct _ParState[V: Movable & Deinitable, F: UnaryContract & Movable & Deinitabl
             self.head = 0
 
     def outcome(mut self) -> Outcome[NoneType, Self.E]:
-        """After draining: every unaccumulated element's outcome folded in element order."""
+        """After draining: every unaccumulated element's outcome folded in element order.
+
+        An element taken after the loop stopped its children folds as a race's
+        loser, as in Cats Effect: its errors remain, but the cancellation the
+        loop caused does not mark the failure canceled, so `handle_error_with`
+        recovers it. An element that canceled itself, or a forwarded parent
+        request, still yields cancellation.
+        """
         var unit: NoneType = None
         var folded: Outcome[NoneType, Self.E] = Optional(Result[NoneType, EffectFailure[Self.E]](Ok(unit)))
         for position in range(self.head, len(self.slots)):
             if self.slots[position].outcome:
-                folded = _finish(folded^, self.slots[position].outcome.take())
+                if self.slots[position].stopped:
+                    folded = _finish(folded^, _loser(self.slots[position].outcome.take()))
+                else:
+                    folded = _finish(folded^, self.slots[position].outcome.take())
         if self.forwarded:
             if not folded:
                 return None

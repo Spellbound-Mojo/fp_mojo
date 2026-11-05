@@ -91,7 +91,8 @@ two sides produce `20` and `22`, and `add_pair` prints `both: 42`.
 
 When one side ends unsuccessfully, `both` cancels the other side, waits for
 it to finish, and fails. The failure lists the left side's errors before the
-right side's. Both sides need the same error type `E`; their value types may
+right side's. Canceling the other side does not mark the failure canceled, so
+`handle_error_with` can recover it, as in Cats Effect. Both sides need the same error type `E`; their value types may
 differ, and move-only values are supported.
 
 ## Take the first result with race

@@ -97,7 +97,9 @@ def failure_stops_the_rest() raises:
     check(since_zero(control.now()) == 0, "the failure stops the sleeping elements at once")
     var seen = errors_of(control^.results())
     check(len(seen[0]) == 2 and seen[0][0] == 2 and seen[0][1] == 7, "errors in element order, not in time order")
-    check(seen[1], "the stopped elements record cancellation")
+    # As in Cats Effect, the cancellation the failure caused is expected, as a
+    # race loser's is, so the failure is not marked canceled and recovers.
+    check(not seen[1], "stopping the rest does not mark the failure canceled")
     check(count_of(finalized) == 9, "every finalizer runs exactly once")
     check(calls[] == 10, "the callback runs once per element")
 
@@ -111,8 +113,9 @@ def callback_error_stops_pulling() raises:
     check(calls[] == 6, "elements after the failing callback are never pulled")
     # Elements 0 to 4 start in the same step as the failing callback, so they
     # are stopped before their first poll: like a fiber canceled before it
-    # runs, they run no finalizer and report only cancellation.
-    check(len(seen[0]) == 1 and seen[0][0] == 5 and seen[1], "the callback's error, with the stopped elements' cancellation")
+    # runs, they run no finalizer, and their expected cancellation does not
+    # mark the failure canceled.
+    check(len(seen[0]) == 1 and seen[0][0] == 5 and not seen[1], "the callback's error alone, not marked canceled")
     check(count_of(finalized) == 0, "elements stopped before they ran run no finalizer")
 
 

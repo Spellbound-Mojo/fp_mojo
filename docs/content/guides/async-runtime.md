@@ -79,8 +79,9 @@ Cats Effect's `Resource.makeCase`.
 `handle_error_with` consumes the complete noncanceled `EffectFailure[E]` and
 builds a replacement. `attempt` materializes ordinary failure as a `Result`.
 Cancellation-only outcomes and failures with a cancellation flag bypass both
-recovery operations. Full ordered errors remain available through canonical
-`fold_outcome`. `guarantee`, `guarantee_case`, and `on_cancel` run their
+recovery operations. A `both` or `par_traverse` failure is not flagged for the
+branches it stopped, so both operations recover it, as in Cats Effect. Full
+ordered errors remain available through canonical `fold_outcome`. `guarantee`, `guarantee_case`, and `on_cancel` run their
 cleanup masked after the body, innermost first, with body errors before cleanup
 errors.
 
@@ -194,9 +195,11 @@ The contract follows `both`:
   Every started child finishes, cleanup included, before the IO completes, and
   the failure carries every error observed by then, in element order rather
   than in time order. Cats Effect reports only the first. A child stopped
-  before it first ran runs nothing, not even its finalizers, and the failure
-  records the cancellation. An error the callback raises takes its element's
-  place. Elements not yet pulled are never started.
+  before it first ran runs nothing, not even its finalizers. Stopping the
+  others does not mark the failure canceled, so `handle_error_with` recovers it
+  and `attempt` observes it, as in Cats Effect; an element that cancels itself
+  cancels the program. An error the callback raises takes its element's place.
+  Elements not yet pulled are never started.
 - **Cancellation.** Canceling the program forwards the request to every child
   and completes only after all of them finish; the program then completes
   canceled, or with the failures observed while draining. An outer
@@ -1061,7 +1064,7 @@ moves the tails.
 | `IO[A]` | `IO[T, E]` | Exact domain error; one value runs once |
 | `IO.pure`, `IO.delay`, `IO.defer`, `IO.raiseError` | `IO[T, E].pure`, `.delay`, `.defer`, `.raise_error` | `defer` builds recursive programs lazily |
 | `flatMap`, `map`, `tailRecM` | `flat_map`, `map`, `tail_rec_m[Async[E]]` | Constant native stack |
-| `attempt`, `handleErrorWith` | `attempt`, `handle_error_with` | Complete failures; mixed cancellation bypasses recovery |
+| `attempt`, `handleErrorWith` | `attempt`, `handle_error_with` | Complete failures, including a `both` or `par_traverse` failure that stopped the other branches; a failure mixed with the program's own cancellation bypasses recovery |
 | `guarantee`, `guaranteeCase`, `onCancel`, `uncancelable` | `guarantee`, `guarantee_case`, `on_cancel`, `IO.uncancelable` | Masked cleanup with the exact exit |
 | `IO.async`, `IO.async_` | `IO.async`, `IO.async_` | Withdrawal runs after every entered registration, not only on cancellation; `complete` from any thread |
 | `IO.cede`, `IO.never`, `IO.sleep`, `IO.canceled` | the same, on `IO[T, E]` | |
