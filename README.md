@@ -221,9 +221,9 @@ def total(a: Int, b: Int, c: Int) -> Int:
 def main():
     # Both negative inputs fail independently; par_map_n reports all errors together
     var invalid = pipeline(positive(-2)).par_map_n((positive(3), positive(-4)), total).get()
-    if not invalid:
-        var errors = invalid.take_err()
-        for error in errors:
+    if invalid.is_err():
+        var errors = invalid^.swap().to_optional()
+        for error in errors.value():
             print("validation error:", error)
         # validation error: -2 must be positive
         # validation error: -4 must be positive
