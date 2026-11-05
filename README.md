@@ -447,6 +447,80 @@ examples for fibers, coordination, timeouts, blocking offload, and Cats Effect
 concept mapping. The multi-threaded work-stealing runtime is qualified on 64-bit Linux
 and macOS arm64.
 
+### Concurrent pipelines with bounded parallelism
+
+`par_traverse_n` processes a collection concurrently with a concurrency limit, keeping
+results in source order; the first failure cancels the elements still running and waits
+for their cleanup. `.eval_on()` shifts a program onto a dedicated `BlockingPool`, and
+`TestControl` runs timeouts in virtual time. The same program runs on the work-stealing
+pool or, with `Profile.current_thread()`, on a single thread:
+
+```mojo
+from fp.algebra import par_traverse_n
+from fp.effects.async_runtime import (
+    IO, BlockingPool, Duration, IORuntimeConfig, Profile, Runtime, TestControl
+)
+
+def parse_rows(var partition: Int) -> IO[Int, Int]:
+    if partition == 4:
+        print("corrupt partition:", partition)
+        return IO[Int, Int].raise_error(partition)
+    return IO[Int, Int].pure(partition * 1000)         # rows read
+
+def load_partition(var partition: Int) -> IO[Int, Int]:
+    # Simulated fetch: 20 ms of I/O per partition, giving up after 100 ms
+    try:
+        var fetch = IO[Int, Int].pure(partition).delay_by(Duration.milliseconds(20))
+        return fetch^.flat_map(parse_rows).timeout_to(Duration.milliseconds(100), IO[Int, Int].raise_error(partition))
+    except:  # Duration constructors raise only on overflow
+        return IO[Int, Int].raise_error(partition)
+
+def show(var value: Int) -> NoneType:
+    print("value:", value)
+    return None
+
+def show_rows(var rows: List[Int]) -> NoneType:
+    print("rows:", rows[0], rows[1], rows[2])
+    return None
+
+def main() raises:
+    # Switch between multi-threaded work-stealing or deterministic single-thread IO
+    var config = IORuntimeConfig()
+    config.profile = Profile.work_stealing(4)   # or Profile.current_thread()
+    var compute = Runtime(config)
+    var blocking_io = BlockingPool(max_workers=2)
+
+    # Load partitions concurrently, at most 2 at a time; results keep partition order
+    _ = compute.run(par_traverse_n(2, List[Int]([1, 2, 3]), load_partition).map(show_rows))
+    # rows: 1000 2000 3000
+
+    # The first failure cancels the partitions still running and waits for their cleanup
+    var loaded = compute.run(par_traverse_n(2, List[Int]([1, 4, 5, 6]), load_partition)).value().is_ok()
+    print("all loaded:", loaded)
+    # corrupt partition: 4
+    # all loaded: False
+
+    # Shift work to a blocking pool and return, just like Cats Effect's evalOn
+    _ = compute.run(IO[Int, Int].pure(100).eval_on(blocking_io).map(show))
+    # value: 100
+
+    # Virtual time testing: a 60s sleep with a 5s timeout finishes instantaneously
+    var timed = (
+        IO[NoneType, Int].sleep(Duration.seconds(60))
+        .map(lambda (u: NoneType) -> Int: 42)
+        .timeout_to(Duration.seconds(5), IO[Int, Int].pure(7))
+        .map(show)
+    )
+    var control = TestControl(timed^)
+    control.tick_all() # Advances virtual clock through deadlines without wall-clock waiting
+    _ = control^.results()
+    # value: 7
+```
+
+Partition 4 is corrupt, so the second load stops there: the partitions still running are
+canceled, and `.is_ok()` reports the failure. Each program prints its result with
+`.map(show)` inside the program, so nothing needs to be unwrapped afterwards.
+
 ### Asynchronous racing, timeouts, and TestControl
 
 Structured concurrency manages deadlines through `timeout_to` and `timeout_after`. In test environments,
